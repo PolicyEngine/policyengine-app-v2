@@ -22,14 +22,35 @@ describe('v3ApiRoutes', () => {
     expect(metadataRoutesForRouteGroup(null, 'v2')).toBe('v1');
   });
 
-  test('given a page that only redirects into v3 then, after the switch, no metadata loads', () => {
-    expect(metadataRoutesForPage([], 'v2')).toBeNull();
-    expect(metadataRoutesForPage(['(calculator)', 'tracker'], 'v2')).toBeNull();
-  });
+  /** Every page below `[countryId]` that only redirects into v3, by its segments. */
+  const REDIRECTS_INTO_V3: [string, string[]][] = [
+    ['the country index', []],
+    ['(calculator)/home', ['(calculator)', 'home']],
+    ['(calculator)/library', ['(calculator)', 'library']],
+    ['(calculator)/tracker', ['(calculator)', 'tracker']],
+    ['(workspace)/ask', [V3_WORKSPACE_ROUTE_GROUP, 'ask']],
+  ];
 
-  test('given a page that only redirects, before the switch, then it loads v1 as today', () => {
-    expect(metadataRoutesForPage([], 'v1')).toBe('v1');
-    expect(metadataRoutesForPage(['(calculator)', 'tracker'], 'v1')).toBe('v1');
+  test.each(REDIRECTS_INTO_V3)(
+    'given %s, which only redirects into v3, then after the switch no metadata loads',
+    (_, segments) => {
+      expect(metadataRoutesForPage(segments, 'v2')).toBeNull();
+    }
+  );
+
+  test.each(REDIRECTS_INTO_V3)(
+    'given %s, which only redirects, before the switch, then it loads as today',
+    (_, segments) => {
+      expect(metadataRoutesForPage(segments, 'v1')).toBe(
+        metadataRoutesForRouteGroup(segments[0] ?? null, 'v1')
+      );
+    }
+  );
+
+  test('given a page that redirects into the older report builder then it keeps v1', () => {
+    expect(
+      metadataRoutesForPage(['(calculator)', 'reports', 'create', '[userReportId]'], 'v2')
+    ).toBe('v1');
   });
 
   test('given other pages then the route group decides, as before', () => {

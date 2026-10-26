@@ -66,8 +66,13 @@ describe('CalculatorProviders metadata routes', () => {
     expect(mockUseFetchMetadata).toHaveBeenLastCalledWith('us', null);
   });
 
-  test('given the tracker route, which only redirects into v3, then no metadata download starts', () => {
-    renderCountryPage(['(calculator)', 'tracker']);
+  test.each([
+    ['the old Home launcher, sent on to Build', ['(calculator)', 'home']],
+    ['the old Library, sent on to Reforms', ['(calculator)', 'library']],
+    ['the old bill tracker, sent on to Reforms', ['(calculator)', 'tracker']],
+    ['the paused Ask page, sent on to Build', ['(workspace)', 'ask']],
+  ])('given %s, which only redirects into v3, then no metadata download starts', (_, segments) => {
+    renderCountryPage(segments);
 
     expect(mockUseFetchMetadata).toHaveBeenLastCalledWith('us', null);
   });
