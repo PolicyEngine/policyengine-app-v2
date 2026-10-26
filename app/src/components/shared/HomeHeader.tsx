@@ -1,22 +1,10 @@
 import HeaderContent from '@/components/homeHeader/HeaderContent';
 import { NavItemSetup } from '@/components/homeHeader/NavItem';
-import { WEBSITE_URL } from '@/constants';
-import featuredToolsData from '@/data/featuredTools.json';
+import { CALCULATOR_URL, WEBSITE_URL } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useWebsitePath } from '@/hooks/useWebsitePath';
-
-interface FeaturedToolEntry {
-  slug: string;
-  label: string;
-}
-
-const featuredToolsByCountry: Record<string, FeaturedToolEntry[]> = featuredToolsData;
-
-/** The Tools menu shared with the website header (website/src/lib/featuredTools.ts). */
-function getFeaturedTools(countryId: string): FeaturedToolEntry[] {
-  return Object.hasOwn(featuredToolsByCountry, countryId) ? featuredToolsByCountry[countryId] : [];
-}
+import { getToolsMenuEntries, MAIN_APP_LABEL } from '@/utils/toolsMenu';
 
 interface HeaderNavigationProps {
   navbarOpened?: boolean;
@@ -31,7 +19,7 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
   // Vercel rewrites — use absolute URLs so the browser performs a full
   // navigation across zones rather than routing client-side.
   const modelBase = `${WEBSITE_URL}/${countryId}/model`;
-  const featuredTools = getFeaturedTools(countryId);
+  const tools = getToolsMenuEntries(countryId);
 
   const navItems: NavItemSetup[] = [
     {
@@ -39,22 +27,20 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
       href: getWebsitePath('/research'),
       hasDropdown: false,
     },
-    // Each tool is also a separate app on the website's domain, so its links
-    // are absolute too.
-    ...(featuredTools.length > 0
+    // The main app first, then the tools, as in the website header. Each tool
+    // is also a separate app on the website's domain, so its links are
+    // absolute too. A country with no tools gets no menu.
+    ...(tools.length > 0
       ? [
           {
             label: 'Tools',
             hasDropdown: true,
             dropdownItems: [
-              ...featuredTools.map((tool) => ({
+              { label: MAIN_APP_LABEL, href: `${CALCULATOR_URL}/${countryId}` },
+              ...tools.map((tool) => ({
                 label: tool.label,
                 href: `${WEBSITE_URL}/${countryId}/${tool.slug}`,
               })),
-              {
-                label: 'All interactive tools',
-                href: `${WEBSITE_URL}/${countryId}/research?types=interactive`,
-              },
             ],
           },
         ]

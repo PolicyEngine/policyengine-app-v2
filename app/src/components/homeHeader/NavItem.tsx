@@ -63,8 +63,12 @@ function NavUnderline({ visible }: { visible: boolean }) {
   );
 }
 
+/**
+ * A path in this app: one leading slash. "//host" and "/\host" name another
+ * host, and so does "/<tab>/host": the URL parser drops tabs and line breaks.
+ */
 function isInternalHref(href: string | undefined): href is string {
-  return !!href && href.startsWith('/');
+  return !!href && !/[\t\n\r]/.test(href) && /^\/(?![/\\])/.test(href);
 }
 
 function itemMatches(href: string | undefined, pathname: string): boolean {
@@ -91,48 +95,64 @@ function DropdownRow({
   index,
   visible,
   onSelect,
+  onNavigate,
 }: {
   item: DropdownItem;
   depth: number;
   index: number;
   visible: boolean;
   onSelect: (item: DropdownItem) => void;
+  onNavigate: () => void;
 }) {
   const isChild = depth > 0;
+  const restColor = isChild ? colors.primary[700] : colors.primary[800];
+  const style: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    boxSizing: 'border-box',
+    width: '100%',
+    textAlign: 'left',
+    textDecoration: 'none',
+    padding: `${isChild ? 8 : 11}px 16px ${isChild ? 8 : 11}px ${16 + depth * 16}px`,
+    borderRadius: '10px',
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    fontSize: isChild ? '13px' : '14px',
+    fontFamily: typography.fontFamily.primary,
+    fontWeight: isChild ? typography.fontWeight.medium : typography.fontWeight.semibold,
+    color: restColor,
+    transition: `background-color 0.12s ease 0ms, color 0.12s ease 0ms, opacity 0.3s ease ${
+      visible ? index * 30 : 0
+    }ms`,
+    opacity: visible ? 1 : 0,
+    lineHeight: '1.3',
+    letterSpacing: '-0.01em',
+  };
+  const hoverHandlers = {
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+      e.currentTarget.style.backgroundColor = colors.primary[500];
+      e.currentTarget.style.color = colors.text.inverse;
+    },
+    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+      e.currentTarget.style.backgroundColor = 'transparent';
+      e.currentTarget.style.color = restColor;
+    },
+  };
+
+  // A row whose href isn't a path in this app (another site, "#top",
+  // "mailto:") is a real anchor: the browser follows it itself, so
+  // modifier-clicks and "Open link in new tab" work.
+  if (item.href && !isInternalHref(item.href)) {
+    return (
+      <a href={item.href} onClick={onNavigate} style={style} {...hoverHandlers}>
+        {item.label}
+      </a>
+    );
+  }
+
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(item)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        width: '100%',
-        textAlign: 'left',
-        padding: `${isChild ? 8 : 11}px 16px ${isChild ? 8 : 11}px ${16 + depth * 16}px`,
-        borderRadius: '10px',
-        border: 'none',
-        background: 'transparent',
-        cursor: 'pointer',
-        fontSize: isChild ? '13px' : '14px',
-        fontFamily: typography.fontFamily.primary,
-        fontWeight: isChild ? typography.fontWeight.medium : typography.fontWeight.semibold,
-        color: isChild ? colors.primary[700] : colors.primary[800],
-        transition: `background-color 0.12s ease 0ms, color 0.12s ease 0ms, opacity 0.3s ease ${
-          visible ? index * 30 : 0
-        }ms`,
-        opacity: visible ? 1 : 0,
-        lineHeight: '1.3',
-        letterSpacing: '-0.01em',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = colors.primary[500];
-        e.currentTarget.style.color = colors.text.inverse;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = 'transparent';
-        e.currentTarget.style.color = isChild ? colors.primary[700] : colors.primary[800];
-      }}
-    >
+    <button type="button" onClick={() => onSelect(item)} style={style} {...hoverHandlers}>
       {item.label}
     </button>
   );
@@ -223,6 +243,7 @@ function DropdownPanel({
               index={i}
               visible={visible}
               onSelect={handleSelect}
+              onNavigate={onClose}
             />
           ))}
         </div>
@@ -298,13 +319,11 @@ export default function NavItem({ setup }: NavItemProps) {
 
   const underlineVisible = active || hovered || dropdownOpen;
 
+  // Rows whose href isn't a path in this app are anchors (DropdownRow), so only
+  // in-app paths and callbacks reach here.
   const handleDropdownSelect = (item: DropdownItem) => {
     if (item.href) {
-      if (isInternalHref(item.href)) {
-        nav.push(item.href);
-      } else {
-        window.location.href = item.href;
-      }
+      nav.push(item.href);
     } else if (item.onClick) {
       item.onClick();
     }

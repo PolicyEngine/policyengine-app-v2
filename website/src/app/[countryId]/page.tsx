@@ -1,5 +1,6 @@
 import HeroSection from "@/components/home/HeroSection";
 import HomeBlogPreview from "@/components/home/HomeBlogPreview";
+import HomeFeaturedResearch from "@/components/home/HomeFeaturedResearch";
 import HomeToolsPreview from "@/components/home/HomeToolsPreview";
 import OrgLogos from "@/components/home/OrgLogos";
 import FeaturedResearchBanner from "@/components/home/FeaturedResearchBanner";
@@ -21,6 +22,7 @@ export default async function HomePage({
         <OrgLogos countryId={countryId} />
         <FeaturedResearchBanner countryId={countryId} />
         <HomeBlogPreview countryId={countryId} />
+        <HomeFeaturedResearch countryId={countryId} />
         <HomeToolsPreview countryId={countryId} />
       </div>
     </>

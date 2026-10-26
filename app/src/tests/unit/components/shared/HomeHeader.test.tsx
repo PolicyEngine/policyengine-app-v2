@@ -1,7 +1,7 @@
 import { renderWithCountry, screen, userEvent, within } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import HeaderNavigation from '@/components/shared/HomeHeader';
-import featuredToolsData from '@/data/featuredTools.json';
+import appsData from '@/data/apps/apps.json';
 import { EXPECTED_HEADER_TEXT } from '@/tests/fixtures/components/homeHeader/HeaderMocks';
 
 /**
@@ -13,6 +13,42 @@ const TEST_COUNTRIES = {
 } as const;
 
 const WEBSITE_URL = 'https://policyengine.org';
+const CALCULATOR_URL = 'https://app.policyengine.org';
+
+// The tools menus Max ruled on (2026-10-25): the main app, then calculators
+// that work for any household under current law, by label.
+const US_TOOLS_ROWS = [
+  'PolicyEngine app',
+  'CliffWatch',
+  'Coverage Compass',
+  'GiveCalc',
+  'Marriage calculator',
+  'QBI deduction calculator',
+  'SPM threshold calculator',
+  'TANF calculator',
+];
+const UK_TOOLS_ROWS = [
+  'PolicyEngine app',
+  'Marriage calculator',
+  'Student loan calculator',
+  'UK CliffWatch',
+];
+
+interface AppEntry {
+  slug: string;
+  countryId: string;
+  toolsMenu?: { label: string };
+}
+
+/** Each apps.json entry flagged for the menu, as the row it should get. */
+function flaggedToolRows(countryId: string) {
+  return (appsData as AppEntry[])
+    .filter((app) => app.countryId === countryId && app.toolsMenu)
+    .map((app) => ({
+      label: app.toolsMenu!.label,
+      href: `${WEBSITE_URL}/${countryId}/${app.slug}`,
+    }));
+}
 
 describe('HeaderNavigation', () => {
   describe('rendering', () => {
@@ -109,49 +145,124 @@ describe('HeaderNavigation', () => {
       return within(screen.getByRole('dialog'));
     }
 
-    test.each(['calculator', 'website'] as const)(
-      'given %s mode and US country then the desktop tools menu lists CliffWatch and the OBBBA household explorer',
-      async (mode) => {
-        // Given
-        const user = userEvent.setup();
-        renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US, '/us', mode);
+    /** The mobile menu's Tools rows, in order. */
+    async function mobileToolsRows() {
+      const menu = await openMobileMenu();
+      // "Tools" label → its section, which holds the rows.
+      const section = menu.getByText('Tools').parentElement!;
+      return within(section)
+        .getAllByRole('link')
+        .map((link) => ({ label: link.textContent, href: link.getAttribute('href') }));
+    }
 
-        // When
-        await user.click(screen.getByRole('button', { name: /tools/i }));
+    /** The desktop Tools dropdown's rows, in order. */
+    async function desktopToolsRows() {
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: 'Tools' }));
+      // row → padding div → panel
+      const panel = screen.getByRole('link', { name: 'PolicyEngine app' }).parentElement!;
+      expect(within(panel).queryAllByRole('button')).toEqual([]);
+      return within(panel)
+        .getAllByRole('link')
+        .map((link) => ({ label: link.textContent, href: link.getAttribute('href') }));
+    }
+
+    test.each([
+      ['us', US_TOOLS_ROWS],
+      ['uk', UK_TOOLS_ROWS],
+    ] as const)(
+      'given %s then the desktop tools menu lists the main app, then the tools by label',
+      async (countryId, rows) => {
+        // Given
+        renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
 
         // Then
-        expect(screen.getByRole('button', { name: 'CliffWatch' })).toBeInTheDocument();
-        expect(
-          screen.getByRole('button', { name: 'OBBBA household explorer' })
-        ).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'All interactive tools' })).toBeInTheDocument();
+        expect((await desktopToolsRows()).map((row) => row.label)).toEqual(rows);
+      }
+    );
+
+    // Each row is a real link, so modifier-clicks and "Open link in new tab"
+    // work, and it goes where the mobile menu's row does.
+    test.each(['us', 'uk'])(
+      'given %s then each desktop tools row is a link to the same URL as its mobile row',
+      async (countryId) => {
+        // Given
+        renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
+
+        // When
+        const desktop = await desktopToolsRows();
+        const mobile = await mobileToolsRows();
+
+        // Then
+        expect(desktop[0]).toEqual({
+          label: 'PolicyEngine app',
+          href: `${CALCULATOR_URL}/${countryId}`,
+        });
+        expect(desktop).toEqual(mobile);
+      }
+    );
+
+    test.each([
+      ['us', US_TOOLS_ROWS],
+      ['uk', UK_TOOLS_ROWS],
+    ] as const)(
+      'given %s then the mobile tools menu lists the main app, then the tools by label',
+      async (countryId, rows) => {
+        // Given
+        renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
+
+        // Then
+        expect((await mobileToolsRows()).map((row) => row.label)).toEqual(rows);
       }
     );
 
     test.each(['calculator', 'website'] as const)(
-      'given %s mode and US country then tool links are absolute website URLs',
+      'given %s mode then the main app links to the calculator and each tool to its website zone',
       async (mode) => {
         // Given
         renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US, '/us', mode);
 
         // When
-        const menu = await openMobileMenu();
+        const rows = await mobileToolsRows();
 
         // Then
-        expect(menu.getByRole('link', { name: 'CliffWatch' })).toHaveAttribute(
-          'href',
-          `${WEBSITE_URL}/us/cliffwatch`
-        );
-        expect(menu.getByRole('link', { name: 'OBBBA household explorer' })).toHaveAttribute(
-          'href',
-          `${WEBSITE_URL}/us/obbba-households`
-        );
-        expect(menu.getByRole('link', { name: 'All interactive tools' })).toHaveAttribute(
-          'href',
-          `${WEBSITE_URL}/us/research?types=interactive`
-        );
+        expect(rows[0]).toEqual({ label: 'PolicyEngine app', href: `${CALCULATOR_URL}/us` });
+        expect(rows).toContainEqual({ label: 'CliffWatch', href: `${WEBSITE_URL}/us/cliffwatch` });
+        expect(rows).toContainEqual({
+          label: 'SPM threshold calculator',
+          href: `${WEBSITE_URL}/us/spm-calculator`,
+        });
       }
     );
+
+    test.each(['us', 'uk'])(
+      'given %s then the menu links exactly the tools apps.json flags, after the main app',
+      async (countryId) => {
+        // Given
+        renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
+
+        // When
+        const rows = await mobileToolsRows();
+
+        // Then
+        expect(rows[0].href).toBe(`${CALCULATOR_URL}/${countryId}`);
+        expect(rows.slice(1)).toHaveLength(flaggedToolRows(countryId).length);
+        expect(rows.slice(1)).toEqual(expect.arrayContaining(flaggedToolRows(countryId)));
+      }
+    );
+
+    test('given the US then the OBBBA explorer and the bill tracker are research, not tools', async () => {
+      // Given
+      renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US, '/us', 'calculator');
+
+      // When
+      const hrefs = (await mobileToolsRows()).map((row) => row.href);
+
+      // Then
+      expect(hrefs).not.toContain(`${WEBSITE_URL}/us/obbba-households`);
+      expect(hrefs).not.toContain(`${WEBSITE_URL}/us/bill-tracker`);
+      expect(hrefs).not.toContain(`${WEBSITE_URL}/us/research?types=interactive`);
+    });
 
     test('given the US tools menu then its panel takes a max-content width over its 220px minimum', async () => {
       // Given
@@ -163,7 +274,7 @@ describe('HeaderNavigation', () => {
 
       // Then: row → padding div → panel. jsdom has no layout, so this checks
       // the style rather than the wrapping it prevents.
-      const row = screen.getByRole('button', { name: 'OBBBA household explorer' });
+      const row = screen.getByRole('link', { name: 'SPM threshold calculator' });
       expect(row.parentElement!.parentElement).toHaveStyle({
         width: 'max-content',
         minWidth: '220px',
@@ -171,7 +282,7 @@ describe('HeaderNavigation', () => {
     });
 
     test.each(['ca', 'ng', 'il'])(
-      'given %s, which has no featured tools, then there is no tools menu',
+      'given %s, which has no tools, then there is no tools menu, not even for the main app',
       async (countryId) => {
         // Given
         renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
@@ -180,7 +291,7 @@ describe('HeaderNavigation', () => {
         expect(screen.queryByRole('button', { name: /tools/i })).not.toBeInTheDocument();
         const menu = await openMobileMenu();
         expect(menu.queryByText('Tools')).not.toBeInTheDocument();
-        expect(menu.queryByRole('link', { name: 'All interactive tools' })).not.toBeInTheDocument();
+        expect(menu.queryByRole('link', { name: 'PolicyEngine app' })).not.toBeInTheDocument();
       }
     );
 
@@ -200,36 +311,17 @@ describe('HeaderNavigation', () => {
       renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.UK, '/uk', 'calculator');
 
       // When
-      const menu = await openMobileMenu();
+      const rows = await mobileToolsRows();
 
       // Then
-      expect(menu.getByRole('link', { name: 'UK CliffWatch' })).toHaveAttribute(
-        'href',
-        `${WEBSITE_URL}/uk/uk-cliff-watch`
-      );
-      const hrefs = menu.getAllByRole('link').map((link) => link.getAttribute('href'));
+      expect(rows).toContainEqual({
+        label: 'UK CliffWatch',
+        href: `${WEBSITE_URL}/uk/uk-cliff-watch`,
+      });
+      const hrefs = rows.map((row) => row.href);
       expect(hrefs).not.toContain(`${WEBSITE_URL}/uk/cliffwatch`);
       expect(hrefs).not.toContain(`${WEBSITE_URL}/uk/obbba-households`);
       expect(hrefs).not.toContain(`${WEBSITE_URL}/uk/bill-tracker`);
     });
-
-    test.each(Object.entries(featuredToolsData))(
-      'given %s then the tools menu links every tool in the shared list',
-      async (countryId, tools) => {
-        // Given
-        renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
-
-        // When
-        const menu = await openMobileMenu();
-
-        // Then
-        for (const tool of tools) {
-          expect(menu.getByRole('link', { name: tool.label })).toHaveAttribute(
-            'href',
-            `${WEBSITE_URL}/${countryId}/${tool.slug}`
-          );
-        }
-      }
-    );
   });
 });
