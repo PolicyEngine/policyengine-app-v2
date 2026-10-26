@@ -278,6 +278,7 @@ describe('NavItem', () => {
         document.addEventListener('click', preventNavigation);
         const consoleError = vi.spyOn(console, 'error');
         const url = window.location.href;
+        const historyLength = window.history.length;
         vi.useFakeTimers();
 
         // When
@@ -296,6 +297,7 @@ describe('NavItem', () => {
         expect(push).not.toHaveBeenCalled();
         expect(navigationsReported(consoleError)).toEqual([]);
         expect(window.location.href).toBe(url);
+        expect(window.history.length).toBe(historyLength);
         expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute(
           'aria-expanded',
           'false'
