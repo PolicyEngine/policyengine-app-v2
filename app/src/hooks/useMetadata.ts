@@ -14,15 +14,20 @@ import type { MetadataRoutes } from '@/types/metadata';
  * - The metadata in state came from other routes than `routes` (v1's
  *   whole-model route, or v2's small model catalog; see v3ApiRoutes)
  *
+ * Nothing loads when `routes` is null (a page that only redirects).
+ *
  * Components should use useSelector to read metadata from Redux state
  */
-export function useFetchMetadata(countryId: string, routes: MetadataRoutes = 'v1'): void {
+export function useFetchMetadata(countryId: string, routes: MetadataRoutes | null = 'v1'): void {
   const dispatch = useDispatch<AppDispatch>();
   const metadata = useSelector((state: RootState) => state.metadata);
   const loadedRoutes = metadata.routes ?? 'v1';
 
   useEffect(() => {
     // Only fetch if we don't already have metadata for this country from these routes
+    if (routes === null) {
+      return;
+    }
     if (!metadata.version || countryId !== metadata.currentCountry || loadedRoutes !== routes) {
       dispatch(fetchMetadataThunk(metadataRequest(countryId, routes)));
     }

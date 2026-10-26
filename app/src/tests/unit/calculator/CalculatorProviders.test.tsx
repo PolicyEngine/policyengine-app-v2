@@ -3,11 +3,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { CalculatorProviders } from '../../../../../calculator-app/src/app/[countryId]/providers';
 
-const selectedLayout = vi.hoisted(() => ({ routeGroup: null as string | null }));
+const selectedLayout = vi.hoisted(() => ({ segments: [] as string[] }));
 const mockUseFetchMetadata = vi.hoisted(() => vi.fn());
 
 vi.mock('next/navigation', () => ({
-  useSelectedLayoutSegment: () => selectedLayout.routeGroup,
+  useSelectedLayoutSegments: () => selectedLayout.segments,
 }));
 
 vi.mock('@/hooks/useMetadata', () => ({
@@ -23,13 +23,12 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => {
   return {
     ...original,
     V3_API_ROUTES: 'v2',
-    metadataRoutesForRouteGroup: (routeGroup: string | null) =>
-      original.metadataRoutesForRouteGroup(routeGroup, 'v2'),
+    metadataRoutesForPage: (segments: string[]) => original.metadataRoutesForPage(segments, 'v2'),
   };
 });
 
-function renderCountryPage(routeGroup: string | null) {
-  selectedLayout.routeGroup = routeGroup;
+function renderCountryPage(segments: string[]) {
+  selectedLayout.segments = segments;
   render(
     <CountryProvider value="us">
       <CalculatorProviders>
@@ -46,7 +45,7 @@ describe('CalculatorProviders metadata routes', () => {
 
   test('given a v3 workspace page then metadata is fetched from the v3 routes', () => {
     // When
-    renderCountryPage('(workspace)');
+    renderCountryPage(['(workspace)', 'build']);
 
     // Then
     expect(screen.getByText('Country page')).toBeInTheDocument();
@@ -55,9 +54,21 @@ describe('CalculatorProviders metadata routes', () => {
 
   test('given a legacy calculator page then metadata is fetched from v1', () => {
     // When
-    renderCountryPage('(calculator)');
+    renderCountryPage(['(calculator)', 'reports']);
 
     // Then
     expect(mockUseFetchMetadata).toHaveBeenLastCalledWith('us', 'v1');
+  });
+
+  test('given the country index, which only redirects, then no metadata download starts', () => {
+    renderCountryPage([]);
+
+    expect(mockUseFetchMetadata).toHaveBeenLastCalledWith('us', null);
+  });
+
+  test('given the tracker route, which only redirects into v3, then no metadata download starts', () => {
+    renderCountryPage(['(calculator)', 'tracker']);
+
+    expect(mockUseFetchMetadata).toHaveBeenLastCalledWith('us', null);
   });
 });
