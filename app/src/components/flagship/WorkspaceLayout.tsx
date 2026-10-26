@@ -1,3 +1,4 @@
+import ModelCatalogGate from '@/components/flagship/ModelCatalogGate';
 import { spacing } from '@/designTokens';
 import { useV3SearchFileInBackground } from '@/hooks/useV3SearchCatalog';
 
@@ -18,5 +19,9 @@ export default function WorkspaceLayout({ children, wide = false }: WorkspaceLay
   // rendered, so it is in by the time someone searches (nothing on v1).
   useV3SearchFileInBackground();
 
-  return <div style={{ maxWidth: contentWidth, margin: `${spacing.md} auto 0` }}>{children}</div>;
+  return (
+    <div style={{ maxWidth: contentWidth, margin: `${spacing.md} auto 0` }}>
+      <ModelCatalogGate>{children}</ModelCatalogGate>
+    </div>
+  );
 }

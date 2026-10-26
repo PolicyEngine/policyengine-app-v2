@@ -1,10 +1,13 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@test-utils';
+import { render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
-import { clearMetadata } from '@/reducers/metadataReducer';
+import { clearMetadata, fetchMetadataThunk, metadataRequest } from '@/reducers/metadataReducer';
 import { store } from '@/store';
-import { TEST_POLICYENGINE_VERSION } from '@/tests/fixtures/api/publicApi/modelCatalogMocks';
+import {
+  modelCatalogEnvelope,
+  TEST_POLICYENGINE_VERSION,
+} from '@/tests/fixtures/api/publicApi/modelCatalogMocks';
 import {
   jsonResponse,
   requestsTo,
@@ -50,5 +53,61 @@ describe('WorkspaceLayout with v3 on the v2 routes', () => {
     expect(
       requestsTo(fetchStub, SEARCH_FILE_PATH)[0].searchParams.get('policyengine_version')
     ).toBe(TEST_POLICYENGINE_VERSION);
+  });
+});
+
+function renderLayout() {
+  return render(
+    <QueryClientProvider client={testQueryClient()}>
+      <WorkspaceLayout>
+        <p>Page content</p>
+      </WorkspaceLayout>
+    </QueryClientProvider>
+  );
+}
+
+describe('WorkspaceLayout while the model catalog loads, on the v2 routes', () => {
+  afterEach(() => {
+    store.dispatch(clearMetadata());
+    vi.unstubAllGlobals();
+  });
+
+  test('given the model catalog is loading then a short loading page stands for the page', () => {
+    // Given
+    stubPublicApiFetch({ '/v2/model-catalog': () => new Promise<Response>(() => {}) });
+    store.dispatch(clearMetadata());
+    void store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+
+    // When
+    renderLayout();
+
+    // Then
+    expect(screen.getByRole('status', { name: 'Loading the model' })).toBeInTheDocument();
+    expect(screen.queryByText('Page content')).not.toBeInTheDocument();
+  });
+
+  test('given the model catalog failed then the page says so and try again asks again', async () => {
+    // Given
+    const user = userEvent.setup();
+    let attempts = 0;
+    const fetchStub = stubPublicApiFetch({
+      '/v2/model-catalog': () => {
+        attempts += 1;
+        return attempts === 1
+          ? jsonResponse({ status: 'error', message: 'Unavailable' }, 503)
+          : jsonResponse(modelCatalogEnvelope());
+      },
+    });
+    store.dispatch(clearMetadata());
+    await store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+    renderLayout();
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not load the model');
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(await screen.findByText('Page content')).toBeInTheDocument();
+    expect(requestsTo(fetchStub, '/v2/model-catalog')).toHaveLength(2);
   });
 });
