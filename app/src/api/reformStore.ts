@@ -422,6 +422,9 @@ export class ApiReformStore implements ReformStore {
 
 type V2PolicyItem = components['schemas']['PolicyItem'];
 type V2PolicyCreateBody = components['schemas']['PolicyCreateRequest'];
+/** The `/v2/user-policies` bodies, as the Public API's OpenAPI document gives them. */
+type UserPolicyCreateRequest = components['schemas']['UserPolicyCreateRequest'];
+type UserPolicyPatchRequest = components['schemas']['UserPolicyPatchRequest'];
 
 /** A v2 policy's JSON value: infinities as the API spells them (JSON has none). */
 function v2PolicyValue(value: unknown): unknown {
@@ -634,10 +637,10 @@ export class ApiV2ReformStore implements ReformStore {
 
   async create(reform: NewReform): Promise<Reform> {
     const countryId = this.routes.writeCountry(reform.countryId);
-    const policyId = isAccountId(reform.policyId)
-      ? reform.policyId
+    const policyId = isAccountId(reform.v2PolicyId)
+      ? reform.v2PolicyId
       : await this.materialize(countryId, reform.parameters);
-    const item = await this.routes.create<UserPolicyCreateBody>({
+    const item = await this.routes.create<UserPolicyCreateRequest>({
       country_id: countryId,
       policy_id: policyId,
       ...(reform.label ? { name: clampStoreText(reform.label) } : {}),
@@ -672,7 +675,7 @@ export class ApiV2ReformStore implements ReformStore {
     if (!isAccountId(reformId)) {
       throw new BrowserOnlyIdError();
     }
-    const body: UserPolicyPatchBody = {};
+    const body: UserPolicyPatchRequest = {};
     if (updates.label !== undefined) {
       body.name = clampStoreText(updates.label) || null;
     }
@@ -684,8 +687,8 @@ export class ApiV2ReformStore implements ReformStore {
     }
     if (updates.parameters !== undefined) {
       body.policy_id = await this.materialize(this.context.countryId, updates.parameters);
-    } else if (isAccountId(updates.policyId)) {
-      body.policy_id = updates.policyId;
+    } else if (isAccountId(updates.v2PolicyId)) {
+      body.policy_id = updates.v2PolicyId;
     }
     const item = await this.routes.patch(reformId, body);
     return updates.parameters !== undefined
@@ -712,7 +715,8 @@ export class ApiV2ReformStore implements ReformStore {
       id: item.id,
       countryId: item.country_id,
       label: item.name ?? undefined,
-      policyId: item.policy_id ?? String(item.legacy_policy_id),
+      policyId: isLegacyId(item.legacy_policy_id) ? String(item.legacy_policy_id) : null,
+      v2PolicyId: item.policy_id,
       parameters,
       baseline: (item.baseline ?? 'current-law') as ReformBaseline,
       provenance: provenanceFromWire(item.provenance),

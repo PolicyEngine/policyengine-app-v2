@@ -262,7 +262,8 @@ describe('ApiV2ReformStore', () => {
     });
     expect(created).toMatchObject({
       id: ASSOCIATION_IDS.REFORM,
-      policyId: V2_POLICY_ID,
+      policyId: null,
+      v2PolicyId: V2_POLICY_ID,
       parameters: REFORM_INPUT.parameters,
     });
   });
@@ -273,7 +274,7 @@ describe('ApiV2ReformStore', () => {
     fetchMock.mockResolvedValue(itemResponse(V2_REFORM_ROW, 201));
 
     // When
-    await store.create({ ...REFORM_INPUT, policyId: V2_POLICY_ID });
+    await store.create({ ...REFORM_INPUT, v2PolicyId: V2_POLICY_ID });
 
     // Then
     expect(createPolicy).not.toHaveBeenCalled();
@@ -317,9 +318,10 @@ describe('ApiV2ReformStore', () => {
     // Then
     expect(fetchV2Policy).toHaveBeenCalledWith('us', V2_POLICY_ID);
     expect(fetchPolicyJson).toHaveBeenCalledWith('us', String(LEGACY_ONLY_POLICY_ID));
-    expect(reforms.map((reform) => [reform.id, reform.policyId])).toEqual([
-      [ASSOCIATION_IDS.REFORM, V2_POLICY_ID],
-      [legacyRow.id, String(LEGACY_ONLY_POLICY_ID)],
+    // Each kind of policy in its own field: a v2 UUID, or a v1 numeric ID.
+    expect(reforms.map((reform) => [reform.id, reform.v2PolicyId, reform.policyId])).toEqual([
+      [ASSOCIATION_IDS.REFORM, V2_POLICY_ID, null],
+      [legacyRow.id, null, String(LEGACY_ONLY_POLICY_ID)],
     ]);
     expect(reforms[0].parameters).toEqual(parametersFromV2Policy(v2Policy()));
     expect(reforms[1].parameters).toEqual([
@@ -366,7 +368,7 @@ describe('ApiV2ReformStore', () => {
     expect(call.method).toBe('PATCH');
     expect(call.path).toBe(`/v2/user-policies/${ASSOCIATION_IDS.REFORM}`);
     expect(call.body).toEqual({ name: 'CTC to $4,000', policy_id: REPLACEMENT_V2_POLICY_ID });
-    expect(updated.policyId).toBe(REPLACEMENT_V2_POLICY_ID);
+    expect(updated.v2PolicyId).toBe(REPLACEMENT_V2_POLICY_ID);
     expect(updated.parameters).toEqual(changed);
   });
 

@@ -226,7 +226,7 @@ describe('useReformStore with v3 on the v2 routes', () => {
       tax_benefit_model_id: V2_MODEL_ID,
       parameter_values: [{ parameter_id: V2_PARAMETER_IDS.CTC_AMOUNT, value: 3600 }],
     });
-    expect(saved.policyId).toBe(V2_POLICY_ID);
+    expect(saved.v2PolicyId).toBe(V2_POLICY_ID);
   });
 
   test('given the reform list is loaded again then each v2 policy is fetched only once', async () => {

@@ -42,8 +42,17 @@ export interface Reform {
   id?: string;
   countryId: (typeof countryIds)[number];
   label?: string | null;
-  /** Canonical policy id in api.policyengine.org once materialized */
+  /**
+   * The v1 policy the reform is saved as: its numeric ID in the Public
+   * API's v1 routes (`/{country}/policy/{id}`), as text. Null for a reform
+   * saved only as a v2 policy.
+   */
   policyId?: string | null;
+  /**
+   * The v2 policy the reform is saved as: its `/v2/policies` UUID, on the
+   * v2 routes. Null or absent for a reform saved only as a v1 policy.
+   */
+  v2PolicyId?: string | null;
   parameters: Parameter[];
   /**
    * Set when the reform's changes could not be loaded (a saved reform
