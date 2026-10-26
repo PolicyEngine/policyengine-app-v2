@@ -114,10 +114,11 @@ function listsOutline(list: string): boolean {
  * letter, and keeps the rest of the name as written. The browser compares
  * property names case-insensitively and reads `-webkit-transition…` as
  * `transition…`. A name with a CSS escape, such as `transition\\-delay`, counts
- * as a `transition` shorthand. So does a transition property with a `/`
+ * as a `transition` shorthand. So does a transition property with any `/`
  * modifier: the compiler keeps the value as written when the modifier is 100%,
- * as in `[transition:all_1s]/100`, and otherwise mixes it into a colour the
- * browser rejects. A custom property is never one.
+ * as in `[transition:all_1s]/100` or `/[1]`, and otherwise emits nothing or
+ * mixes the value into a colour the browser rejects. A custom property is
+ * never one.
  *
  * On the site, Tailwind's scanner finds the classes in source files, and it
  * extracts none of the mixed-case or escaped transition names tested here. So
@@ -126,9 +127,7 @@ function listsOutline(list: string): boolean {
 function arbitraryProperty(
   utility: string,
 ): { property: string; value: string } | undefined {
-  const match = utility.match(
-    /^\[([^:]+):(.*?)\](\/(?:[^/[\]()]+|\[[^\]]*\]|\([^)]*\)))?$/,
-  );
+  const match = utility.match(/^\[([^:]+):(.*?)\](\/.+)?$/);
   if (!match || !/^[-a-z]/.test(match[1])) return undefined;
   const name = match[1].toLowerCase().replace(/^-webkit-/, "");
   const modified =
@@ -364,9 +363,21 @@ describe("homepage card focus", () => {
       ),
       card("ease-out", "[transition-delay:100ms]/100"),
       card("ease-out", "[transition-delay:100ms]/[1]"),
-      // Any other modifier mixes the value into a colour, which the browser
+      // A modifier of 50 mixes the value into a colour, which the browser
       // rejects, keeping the initial `all`.
       card("[transition-property:box-shadow]/50", "duration-300"),
+      // A variable modifier, even one with a fallback, keeps the value as
+      // written and adds a mixed override.
+      card(
+        "transition-[box-shadow,translate]",
+        "duration-300",
+        "[transition-property:all]/(--x)",
+      ),
+      card(
+        "transition-[box-shadow,translate]",
+        "duration-300",
+        "[transition-property:all]/(--x,var(--y))",
+      ),
     ];
     const still = [
       card("transition-[box-shadow,translate]", "duration-300", "ease-out"),
