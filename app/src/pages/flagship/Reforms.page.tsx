@@ -1004,7 +1004,13 @@ export default function ReformsPage() {
                 report.apiReportId,
                 (policyCountryId, policyId) => readV1Policy(queryClient, policyCountryId, policyId)
               )
-                .catch(() => [])
+                // Without the report, the re-run compares with the saved
+                // comparison reform's own policy (see rerunSettings): check that.
+                .catch(() =>
+                  report.baselineReformId
+                    ? reformMissingParameters(savedReform(report.baselineReformId))
+                    : []
+                )
                 .finally(() => setRerunChecking(false));
               if (missing.length > 0) {
                 setRerunMissingParameters(missing);

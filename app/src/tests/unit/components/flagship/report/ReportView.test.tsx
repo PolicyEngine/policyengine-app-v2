@@ -523,6 +523,14 @@ describe('ReportView UK local areas', () => {
     expect(economyRequests()).toEqual([]);
   });
 
+  test('given runs are blocked then the overview card does not say local areas calculate in the background', () => {
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS, { runsBlocked: true });
+
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).not.toHaveTextContent(
+      /calculate in the background/i
+    );
+  });
+
   test('given the report switched to another year then the breakdown request for that year goes too', async () => {
     // Given
     vi.stubGlobal(
