@@ -25,6 +25,7 @@ vi.mock("next/link", () => ({
 }));
 
 import Header from "@/components/Header";
+import { getToolsMenu } from "@/lib/toolsMenu";
 
 function openDesktopToolsMenu() {
   const desktopNav = screen.getByTestId("desktop-nav");
@@ -34,6 +35,41 @@ function openDesktopToolsMenu() {
 
 function mobileMenuPanel() {
   return screen.getByText("Menu").parentElement!.parentElement!;
+}
+
+function rowsOf(links: HTMLElement[]) {
+  return links.map((link) => ({
+    label: link.textContent,
+    href: link.getAttribute("href"),
+    clientSide: link.hasAttribute("data-next-link"),
+  }));
+}
+
+/** The desktop Tools dropdown's rows, in order. */
+function desktopToolsRows() {
+  const desktopNav = openDesktopToolsMenu();
+  // row → padding div, which holds every row
+  const rowList = within(desktopNav).getByRole("link", {
+    name: "PolicyEngine app",
+  }).parentElement!;
+  return rowsOf(within(rowList).getAllByRole("link"));
+}
+
+/** The mobile menu's Tools rows, in order. */
+function mobileToolsRows() {
+  fireEvent.click(screen.getByRole("button", { name: "Toggle navigation" }));
+  // "Tools" label → its section, which holds the rows
+  const section = within(mobileMenuPanel()).getByText("Tools").parentElement!;
+  return rowsOf(within(section).getAllByRole("link"));
+}
+
+/** The rows getToolsMenu says the country should get, all full page loads. */
+function expectedRows(countryId: string) {
+  return getToolsMenu(countryId).map((tool) => ({
+    label: tool.label,
+    href: tool.href,
+    clientSide: false,
+  }));
 }
 
 describe("Header tools menu", () => {
@@ -65,7 +101,7 @@ describe("Header tools menu", () => {
     const desktopNav = openDesktopToolsMenu();
 
     const row = within(desktopNav).getByRole("link", {
-      name: "OBBBA household explorer",
+      name: "SPM threshold calculator",
     });
     // row → padding div → panel
     expect(row.parentElement!.parentElement).toHaveStyle({
@@ -80,89 +116,63 @@ describe("Header tools menu", () => {
     expect(mobileMenuPanel()).toHaveStyle({ overflowY: "auto" });
   });
 
-  test("given the US site then the desktop Tools menu links CliffWatch and the OBBBA household explorer", () => {
-    render(<Header />);
-    const desktopNav = openDesktopToolsMenu();
+  test.each(["us", "uk"])(
+    "given %s then the desktop Tools menu lists the main app, then the tools, each a full page load",
+    (countryId) => {
+      vi.mocked(usePathname).mockReturnValue(`/${countryId}`);
+      render(<Header />);
 
-    expect(
-      within(desktopNav).getByRole("link", { name: "CliffWatch" }),
-    ).toHaveAttribute("href", "/us/cliffwatch");
-    expect(
-      within(desktopNav).getByRole("link", {
-        name: "OBBBA household explorer",
-      }),
-    ).toHaveAttribute("href", "/us/obbba-households");
-    expect(
-      within(desktopNav).getByRole("link", {
-        name: "State legislative tracker",
-      }),
-    ).toHaveAttribute("href", "/us/bill-tracker");
-    expect(
-      within(desktopNav).getByRole("link", { name: "All interactive tools" }),
-    ).toHaveAttribute("href", "/us/research?types=interactive");
+      expect(desktopToolsRows()).toEqual(expectedRows(countryId));
+    },
+  );
+
+  test.each(["us", "uk"])(
+    "given %s then the mobile Tools menu lists the main app, then the tools, each a full page load",
+    (countryId) => {
+      vi.mocked(usePathname).mockReturnValue(`/${countryId}`);
+      render(<Header />);
+
+      expect(mobileToolsRows()).toEqual(expectedRows(countryId));
+    },
+  );
+
+  test("given the US then the first row opens the main app and the tools follow", () => {
+    render(<Header />);
+
+    const rows = desktopToolsRows();
+    expect(rows[0]).toEqual({
+      label: "PolicyEngine app",
+      href: "https://app.policyengine.org/us",
+      clientSide: false,
+    });
+    expect(rows).toContainEqual({
+      label: "CliffWatch",
+      href: "/us/cliffwatch",
+      clientSide: false,
+    });
   });
 
-  const US_TOOLS_ROWS = [
-    "CliffWatch",
-    "OBBBA household explorer",
-    "State legislative tracker",
-    "All interactive tools",
-  ];
-
-  test("given the US site then every desktop Tools link is a full page load", () => {
+  test("given the US then the OBBBA explorer and the bill tracker are not in the Tools menu", () => {
     render(<Header />);
-    const desktopNav = openDesktopToolsMenu();
 
-    for (const name of US_TOOLS_ROWS) {
-      expect(
-        within(desktopNav).getByRole("link", { name }),
-      ).not.toHaveAttribute("data-next-link");
-    }
-  });
-
-  test("given the US site then every mobile Tools link is a full page load", () => {
-    render(<Header />);
-    fireEvent.click(screen.getByRole("button", { name: "Toggle navigation" }));
-    const panel = mobileMenuPanel();
-
-    for (const name of US_TOOLS_ROWS) {
-      expect(within(panel).getByRole("link", { name })).not.toHaveAttribute(
-        "data-next-link",
-      );
-    }
-  });
-
-  test("given the US site then the mobile menu lists the same tools", () => {
-    render(<Header />);
-    fireEvent.click(screen.getByRole("button", { name: "Toggle navigation" }));
-    const panel = mobileMenuPanel();
-
-    expect(within(panel).getByText("Tools")).toBeInTheDocument();
-    expect(
-      within(panel).getByRole("link", { name: "CliffWatch" }),
-    ).toHaveAttribute("href", "/us/cliffwatch");
-    expect(
-      within(panel).getByRole("link", { name: "OBBBA household explorer" }),
-    ).toHaveAttribute("href", "/us/obbba-households");
-    expect(
-      within(panel).getByRole("link", { name: "All interactive tools" }),
-    ).toHaveAttribute("href", "/us/research?types=interactive");
+    const hrefs = desktopToolsRows().map((row) => row.href);
+    expect(hrefs).not.toContain("/us/obbba-households");
+    expect(hrefs).not.toContain("/us/bill-tracker");
+    expect(hrefs).not.toContain("/us/research?types=interactive");
   });
 
   test("given the UK site then the Tools menu offers UK CliffWatch and no US-only tool", () => {
     vi.mocked(usePathname).mockReturnValue("/uk");
     const { container } = render(<Header />);
-    const desktopNav = openDesktopToolsMenu();
 
-    expect(
-      within(desktopNav).getByRole("link", { name: "UK CliffWatch" }),
-    ).toHaveAttribute("href", "/uk/uk-cliff-watch");
-    expect(
-      within(desktopNav).getByRole("link", { name: "All interactive tools" }),
-    ).toHaveAttribute("href", "/uk/research?types=interactive");
+    expect(desktopToolsRows()).toContainEqual({
+      label: "UK CliffWatch",
+      href: "/uk/uk-cliff-watch",
+      clientSide: false,
+    });
 
-    // /uk/cliffwatch serves the US tool; the OBBBA explorer and the state
-    // tracker are US-only.
+    // /uk/cliffwatch only redirects to UK CliffWatch, so link that directly;
+    // the OBBBA explorer and the state tracker are US-only.
     const hrefs = Array.from(container.querySelectorAll("a")).map((link) =>
       link.getAttribute("href"),
     );
@@ -171,11 +181,12 @@ describe("Header tools menu", () => {
     expect(hrefs).not.toContain("/uk/bill-tracker");
   });
 
-  test("given a country with no featured tools then shows no Tools menu", () => {
+  test("given a country with no tools then shows no Tools menu, not even for the main app", () => {
     vi.mocked(usePathname).mockReturnValue("/ca");
     render(<Header />);
 
     expect(screen.queryByRole("button", { name: "Tools" })).toBeNull();
     expect(screen.queryByText("Tools")).toBeNull();
+    expect(screen.queryByText("PolicyEngine app")).toBeNull();
   });
 });

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 
 import HeroCTA from "@/components/home/HeroCTA";
+import { getToolsMenu } from "@/lib/toolsMenu";
 
 describe("HeroCTA", () => {
   // The calculator's country root sends each country to its current
@@ -14,6 +15,17 @@ describe("HeroCTA", () => {
       expect(
         screen.getByRole("link", { name: "Enter PolicyEngine" }),
       ).toHaveAttribute("href", `https://app.policyengine.org/${countryId}`);
+    },
+  );
+
+  test.each(["us", "uk"])(
+    "links %s to the same place as the Tools menu's main app row",
+    (countryId) => {
+      render(<HeroCTA countryId={countryId} />);
+
+      expect(
+        screen.getByRole("link", { name: "Enter PolicyEngine" }),
+      ).toHaveAttribute("href", getToolsMenu(countryId)[0].href);
     },
   );
 });

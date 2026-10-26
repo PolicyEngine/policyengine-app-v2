@@ -23,6 +23,7 @@ interface AppEntry {
   image?: string;
   date?: string;
   authors?: string[];
+  toolsMenu?: unknown;
 }
 
 const apps = appsData as AppEntry[];
@@ -108,6 +109,25 @@ describe("apps.json", () => {
     expect(
       duplicates(apps.map((app) => `${app.countryId}/${app.slug}`)),
     ).toEqual([]);
+  });
+
+  // The Tools menus read this flag (website/src/lib/toolsMenu.ts); the label is
+  // the name a menu row shows. The header tests check the dropdown's
+  // max-content width, which sizes it to its longest label.
+  test("toolsMenu, where set, is exactly a non-empty, trimmed label", () => {
+    const invalid = apps.filter((app) => {
+      if (app.toolsMenu === undefined) return false;
+      const menu = app.toolsMenu as { label?: unknown };
+      return (
+        typeof menu !== "object" ||
+        menu === null ||
+        Object.keys(menu).join() !== "label" ||
+        typeof menu.label !== "string" ||
+        menu.label.trim() !== menu.label ||
+        menu.label.length === 0
+      );
+    });
+    expect(invalid.map((app) => `${app.countryId}/${app.slug}`)).toEqual([]);
   });
 
   test("apps listed with research have an image, a date and authors", () => {

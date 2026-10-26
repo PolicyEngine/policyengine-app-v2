@@ -67,3 +67,29 @@ describe("buildResearchSearchIndex", () => {
     );
   });
 });
+
+// Research search finds the interactive research the homepage features by the
+// names people use for it (moved here from the old featured-tools tests).
+describe("research search over apps.json", () => {
+  test.each(["obbba", "OBBBA", "One Big Beautiful Bill"])(
+    "finds the OBBBA household explorer for %s",
+    (query) => {
+      const results = searchResearchItems(getResearchItems(), [], query);
+
+      expect(
+        results.some((item) => item.isApp && item.slug === "obbba-households"),
+      ).toBe(true);
+    },
+  );
+
+  test("finds CliffWatch for cliffwatch", () => {
+    const results = searchResearchItems(getResearchItems(), [], "cliffwatch");
+
+    expect(
+      results.some(
+        (item) =>
+          item.isApp && item.slug === "cliffwatch" && item.countryId === "us",
+      ),
+    ).toBe(true);
+  });
+});

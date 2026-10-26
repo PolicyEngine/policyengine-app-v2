@@ -12,7 +12,7 @@ import {
 import { colors, spacing, typography } from "@/designTokens";
 import OptimisedImage from "@/components/ui/OptimisedImage";
 import { useCountryId } from "@/hooks/useCountryId";
-import { getAllToolsHref, getFeaturedTools } from "@/lib/featuredTools";
+import { getToolsMenu } from "@/lib/toolsMenu";
 
 const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
@@ -762,31 +762,22 @@ export default function Header() {
   const countryId = useCountryId();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const featuredTools = getFeaturedTools(countryId);
+  const toolsMenu = getToolsMenu(countryId);
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
-    // Each tool is a separate zone, so every row is a plain <a>. "All
-    // interactive tools" is too: ResearchClient reads its filters from the
-    // URL only when it mounts, so a client-side transition from /research
-    // can leave the old filters in place.
-    ...(featuredTools.length > 0
+    // The main app, then the tools. The main app is on another domain and
+    // each tool is a separate zone, so every row is a plain <a>.
+    ...(toolsMenu.length > 0
       ? [
           {
             label: "Tools",
             hasDropdown: true,
-            dropdownItems: [
-              ...featuredTools.map((tool) => ({
-                label: tool.label,
-                href: tool.href,
-                external: true,
-              })),
-              {
-                label: "All interactive tools",
-                href: getAllToolsHref(countryId),
-                external: true,
-              },
-            ],
+            dropdownItems: toolsMenu.map((tool) => ({
+              label: tool.label,
+              href: tool.href,
+              external: true,
+            })),
           },
         ]
       : []),

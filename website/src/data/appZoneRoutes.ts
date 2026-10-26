@@ -188,11 +188,9 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://cliff-watch.vercel.app/",
     deepDestination: "https://cliff-watch.vercel.app/:path*",
   },
-  {
-    source: "/uk/cliffwatch",
-    destination: "https://cliff-watch.vercel.app/?country=uk",
-    deepDestination: "https://cliff-watch.vercel.app/:path*?country=uk",
-  },
+  // No /uk/cliffwatch entry: that app is US-only, so next.config.ts 308s
+  // /uk/cliffwatch to UK CliffWatch at /uk/uk-cliff-watch (and old US share
+  // links, which carry ?s=<state>, to /us/cliffwatch).
   {
     source: "/us/marriage",
     destination: "https://marriage-zeta-beryl.vercel.app/us/marriage",
