@@ -8,7 +8,7 @@ import {
   type FlagshipReportRecord,
   type FlagshipReportStore,
 } from '@/api/flagshipReportStore';
-import { fetchV1PolicyContent, getReformStore, type ReformStore } from '@/api/reformStore';
+import { getReformStore, type ReformStore } from '@/api/reformStore';
 import { fetchSharedReport } from '@/api/sharedReport';
 import { isAccountId, type ApiStoreContext } from '@/api/v2Associations';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -16,8 +16,8 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
+import { readV1Policy } from '@/libs/flagship/policyChecks';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
-import { V1_POLICY_CONTENT_GC_TIME, v1PolicyContentKey } from '@/libs/queryKeys';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
 
@@ -76,13 +76,7 @@ export function useReformStore(): ReformStore {
         getParameterMetadata: () => parametersRef.current,
         // v1 policies never change, so each is fetched once per session
         // rather than on every list of the account's reforms.
-        fetchPolicy: (countryId, policyId) =>
-          queryClient.fetchQuery({
-            queryKey: v1PolicyContentKey(countryId, policyId),
-            queryFn: () => fetchV1PolicyContent(countryId, policyId),
-            staleTime: Infinity,
-            gcTime: V1_POLICY_CONTENT_GC_TIME,
-          }),
+        fetchPolicy: (countryId, policyId) => readV1Policy(queryClient, countryId, policyId),
       }),
     [account, queryClient]
   );

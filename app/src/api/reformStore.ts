@@ -1,5 +1,4 @@
 import { convertDateRangeMapToValueIntervals } from '@/adapters/conversionHelpers';
-import { fetchPolicyById } from '@/api/policy';
 import {
   AccountAssociationRoutes,
   BrowserOnlyIdError,
@@ -8,6 +7,7 @@ import {
   type ApiStoreContext,
 } from '@/api/v2Associations';
 import { policyMissingParameters } from '@/libs/flagship/missingParameters';
+import { fetchV1Policy } from '@/libs/flagship/policyChecks';
 import { createReformPolicy } from '@/libs/flagship/runReport';
 import { clampStoreText } from '@/libs/flagship/storeText';
 import { Reform, ReformBaseline, ReformProvenance } from '@/types/ingredients/Reform';
@@ -143,7 +143,8 @@ export class LocalStorageReformStore implements ReformStore {
   }
 
   async findById(reformId: string): Promise<Reform | null> {
-    return this.getStoredReforms().find((r) => r.id === reformId) || null;
+    const reform = this.getStoredReforms().find((r) => r.id === reformId);
+    return reform ? this.checked(reform) : null;
   }
 
   async update(reformId: string, updates: ReformUpdates): Promise<Reform> {
@@ -303,22 +304,6 @@ export function materializeReformPolicy(
 }
 
 /**
- * A v1 policy's parameter map, and the parameters it sets that the current
- * model no longer has. v1 policies never change once created; the second
- * part changes only when the API's model does.
- */
-export async function fetchV1PolicyContent(
-  countryId: string,
-  policyId: string
-): Promise<V1PolicyContent> {
-  const policy = await fetchPolicyById(countryId, policyId);
-  return {
-    policy_json: policy.policy_json ?? {},
-    missing_parameters: policy.missing_parameters,
-  };
-}
-
-/**
  * Reforms in the account (`/v2/user-policies`). Parameter edits create a
  * new v1 policy and repoint the row (`legacy_policy_id`); a rename only
  * patches the name. Only account IDs open: a reform saved in this browser
@@ -337,7 +322,7 @@ export class ApiReformStore implements ReformStore {
     this.routes = new AccountAssociationRoutes(context, 'user-policies', 'Reform');
     this.getParameterMetadata = options.getParameterMetadata ?? (() => null);
     this.materializePolicy = options.materializePolicy ?? materializeReformPolicy;
-    this.fetchPolicy = options.fetchPolicy ?? fetchV1PolicyContent;
+    this.fetchPolicy = options.fetchPolicy ?? fetchV1Policy;
   }
 
   /** The row for a reform; its parameters become a v1 policy first when they are not one yet. */

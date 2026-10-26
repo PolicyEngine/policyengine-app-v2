@@ -419,6 +419,21 @@ describe('LocalStorageReformStore', () => {
     expect(reform.parameters).toEqual(mockReformInput.parameters);
   });
 
+  it('given a saved reform whose v1 policy sets parameters the model no longer has, when read by ID, then it names them', async () => {
+    // Given
+    const fetchPolicy = vi
+      .fn()
+      .mockResolvedValue(v1PolicyContent(POLICY_JSON, [REMOVED_US_PARAMETER]));
+    const checkedStore = new LocalStorageReformStore({ materializePolicy, fetchPolicy });
+    const created = await checkedStore.create(mockReformInput);
+
+    // When
+    const reform = await checkedStore.findById(created.id!);
+
+    // Then
+    expect(reform?.missingParameters).toEqual([REMOVED_US_PARAMETER]);
+  });
+
   it('given a saved reform whose v1 policy cannot be read, when listed, then it lists as saved', async () => {
     // Given
     const fetchPolicy = vi.fn().mockRejectedValue(new Error('Failed to fetch policy 95762'));
