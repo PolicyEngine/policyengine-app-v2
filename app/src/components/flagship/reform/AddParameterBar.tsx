@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { IconListTree, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
-import PolicyBrowser from '@/components/flagship/policyBrowser/PolicyBrowser';
+import V3PolicyBrowser from '@/components/flagship/policyBrowser/V3PolicyBrowser';
 import ParametersStatus from '@/components/flagship/reform/ParametersStatus';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -62,7 +62,6 @@ export default function AddParameterBar({
   const stateLabels = useSelector(getStateLabels);
   // Current-law values, for the parameters loaded so far on the v2 routes.
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const parameterTree = useSelector((state: RootState) => state.metadata.parameterTree);
   const draft = useDraftReform();
   const draftPaths = new Set(
     draft?.countryId === countryId ? draft.provisions.map((p) => p.path) : []
@@ -249,8 +248,7 @@ export default function AddParameterBar({
           >
             <IconX size={16} />
           </button>
-          <PolicyBrowser
-            tree={parameterTree}
+          <V3PolicyBrowser
             addablePaths={addablePaths}
             draftPaths={draftPaths}
             path={browsePath}

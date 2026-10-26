@@ -21,34 +21,45 @@ interface PolicyBrowserProps {
   valueFor: (path: string) => string | null;
 }
 
+/** What the policy browser shows, however the tree was read. */
+export interface PolicyBrowserViewProps {
+  /** Shown in place of the tree until the level is in (null once it is). */
+  placeholder: React.ReactNode | null;
+  /** The top level's folders. */
+  roots: ParameterTreeNode[];
+  /** The open folder's trail from the top level, itself last; empty at the top level. */
+  trail: ParameterTreeNode[];
+  folders: ParameterTreeNode[];
+  parameters: ParameterTreeNode[];
+  /** How many parameters a reform can change at or below a folder. */
+  count: (path: string) => number;
+  draftPaths: Set<string>;
+  onNavigate: (path: string | null) => void;
+  onAdd: (path: string) => void;
+  valueFor: (path: string) => string | null;
+}
+
 /**
  * The policy tree as a first-class way in, beside search. The top level
  * is a grid of programs; inside one, a folder is a breadcrumb, its name,
  * and a single list — subfolders that open, then parameters that add.
  * One way to move (the breadcrumb), one list to read.
  */
-export default function PolicyBrowser({
-  tree,
-  addablePaths,
+export function PolicyBrowserView({
+  placeholder,
+  roots,
+  trail,
+  folders,
+  parameters,
+  count,
   draftPaths,
-  path,
   onNavigate,
   onAdd,
   valueFor,
-}: PolicyBrowserProps) {
+}: PolicyBrowserViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const index = useMemo(
-    () => (tree ? buildPolicyTreeIndex(tree, addablePaths) : null),
-    [tree, addablePaths]
-  );
-  // A path the tree does not hold (stale, or a search folder the tree
-  // groups differently) falls back to the top level rather than a blank.
-  const folder = path && index?.nodes.get(path) ? path : null;
-  const trail = useMemo(() => (index && folder ? folderTrail(index, folder) : []), [index, folder]);
-  const contents = useMemo(
-    () => (index && folder ? folderContents(index, folder) : null),
-    [index, folder]
-  );
+  const current = trail[trail.length - 1];
+  const ancestors = trail.slice(0, -1);
 
   // Deep in a long folder, opening the next one should show its top.
   useEffect(() => {
@@ -56,13 +67,7 @@ export default function PolicyBrowser({
     if (content && content.getBoundingClientRect().top < 0) {
       content.scrollIntoView({ block: 'start', behavior: 'smooth' });
     }
-  }, [folder]);
-
-  const count = (node: string) => index?.counts.get(node) ?? 0;
-  const current = trail[trail.length - 1];
-  const ancestors = trail.slice(0, -1);
-  const folders = contents?.folders ?? [];
-  const parameters = contents?.parameters ?? [];
+  }, [current?.name]);
 
   return (
     <section aria-labelledby="policy-browser-heading">
@@ -72,24 +77,9 @@ export default function PolicyBrowser({
         Browse the policy tree
       </h2>
 
-      {!index ? (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: spacing.sm,
-            padding: spacing['3xl'],
-            border: `1px dashed ${colors.border.medium}`,
-            borderRadius: spacing.radius.feature,
-            fontSize: typography.fontSize.sm,
-            color: colors.text.secondary,
-          }}
-        >
-          <Spinner size="sm" />
-          Loading the policy tree…
-        </div>
-      ) : !folder || !current ? (
+      {placeholder ? (
+        placeholder
+      ) : !current ? (
         <div
           style={{
             display: 'grid',
@@ -97,7 +87,7 @@ export default function PolicyBrowser({
             gap: spacing.md,
           }}
         >
-          {index.roots.map((node) => (
+          {roots.map((node) => (
             <FolderCard
               key={node.name}
               node={node}
@@ -171,6 +161,64 @@ export default function PolicyBrowser({
         </div>
       )}
     </section>
+  );
+}
+
+/** The policy browser over the whole metadata tree (the v1 routes). */
+export default function PolicyBrowser({
+  tree,
+  addablePaths,
+  draftPaths,
+  path,
+  onNavigate,
+  onAdd,
+  valueFor,
+}: PolicyBrowserProps) {
+  const index = useMemo(
+    () => (tree ? buildPolicyTreeIndex(tree, addablePaths) : null),
+    [tree, addablePaths]
+  );
+  // A path the tree does not hold (stale, or a search folder the tree
+  // groups differently) falls back to the top level rather than a blank.
+  const folder = path && index?.nodes.get(path) ? path : null;
+  const trail = useMemo(() => (index && folder ? folderTrail(index, folder) : []), [index, folder]);
+  const contents = useMemo(
+    () => (index && folder ? folderContents(index, folder) : null),
+    [index, folder]
+  );
+
+  return (
+    <PolicyBrowserView
+      placeholder={
+        index ? null : (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: spacing.sm,
+              padding: spacing['3xl'],
+              border: `1px dashed ${colors.border.medium}`,
+              borderRadius: spacing.radius.feature,
+              fontSize: typography.fontSize.sm,
+              color: colors.text.secondary,
+            }}
+          >
+            <Spinner size="sm" />
+            Loading the policy tree…
+          </div>
+        )
+      }
+      roots={index?.roots ?? []}
+      trail={trail}
+      folders={contents?.folders ?? []}
+      parameters={contents?.parameters ?? []}
+      count={(node) => index?.counts.get(node) ?? 0}
+      draftPaths={draftPaths}
+      onNavigate={onNavigate}
+      onAdd={onAdd}
+      valueFor={valueFor}
+    />
   );
 }
 
