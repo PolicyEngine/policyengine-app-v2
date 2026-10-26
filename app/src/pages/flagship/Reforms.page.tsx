@@ -18,6 +18,7 @@ import { fetchSimulationById } from '@/api/simulation';
 import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
+import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReformReports, { LatestReportBadge } from '@/components/flagship/ReformReports';
 import {
@@ -55,6 +56,7 @@ import {
 } from '@/libs/flagship/billProvisions';
 import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
+import { reformMissingParameters } from '@/libs/flagship/missingParameters';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -732,6 +734,8 @@ export default function ReformsPage() {
       countryId
     );
     const changesNothing = !selectedReform.parametersUnavailable && runProvisions.length === 0;
+    // Its policy sets parameters the model no longer has: nothing may run it.
+    const missingParameters = reformMissingParameters(selectedReform);
     return (
       <WorkspaceLayout>
         <Stack style={{ gap: spacing.xl }}>
@@ -751,6 +755,9 @@ export default function ReformsPage() {
                 : ''}
             </Text>
           </Stack>
+          {missingParameters.length > 0 && (
+            <MissingParametersNotice subject="This reform" parameterPaths={missingParameters} />
+          )}
           {selectedReform.parametersUnavailable && (
             <Stack role="alert" style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
               <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
@@ -925,7 +932,10 @@ export default function ReformsPage() {
                 );
               }}
               disabled={
-                runReport.isRunning || selectedReform.parametersUnavailable || changesNothing
+                runReport.isRunning ||
+                selectedReform.parametersUnavailable ||
+                missingParameters.length > 0 ||
+                changesNothing
               }
               title={
                 changesNothing
@@ -970,6 +980,13 @@ export default function ReformsPage() {
               const reform = savedReform(reformId);
               return reform ? reform.label || 'Untitled reform' : undefined;
             }}
+            // Neither the reform nor the reform it was compared with may set
+            // parameters the model no longer has.
+            canRerun={(report) =>
+              missingParameters.length === 0 &&
+              (!report.baselineReformId ||
+                reformMissingParameters(savedReform(report.baselineReformId)).length === 0)
+            }
             onRerun={async (report) => {
               setRerunError(null);
               // The same report on today's model: its reform as it ran, its
@@ -1194,7 +1211,9 @@ export default function ReformsPage() {
                 eyebrow={
                   reform.parametersUnavailable
                     ? 'Changes could not be loaded'
-                    : `${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`
+                    : reformMissingParameters(reform).length > 0
+                      ? 'Uses parameters the model no longer has'
+                      : `${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`
                 }
                 badge={(() => {
                   const latest = latestReport(reform.id);
