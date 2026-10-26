@@ -16,6 +16,25 @@ import type { paths } from './schema';
  */
 export type PublicApiClient = Client<paths>;
 
+/** A country the v2 routes serve, as the generated client types it. */
+export type PublicApiCountryId =
+  paths['/v2/model-catalog']['get']['parameters']['query']['country_id'];
+
+/** Every country the v2 routes serve: the type requires each one, and no other. */
+const PUBLIC_API_COUNTRIES: Record<PublicApiCountryId, true> = { us: true, uk: true };
+
+function isPublicApiCountryId(countryId: string): countryId is PublicApiCountryId {
+  return Object.hasOwn(PUBLIC_API_COUNTRIES, countryId);
+}
+
+/** The app's country ID for a v2 request; one the v2 routes do not serve throws. */
+export function publicApiCountryId(countryId: string): PublicApiCountryId {
+  if (!isPublicApiCountryId(countryId)) {
+    throw new Error(`The Public API does not serve the country "${countryId}".`);
+  }
+  return countryId;
+}
+
 export interface CreatePublicApiClientOptions {
   /** Who requests are made as; metadata routes need no one. */
   credentials?: V2Credentials;

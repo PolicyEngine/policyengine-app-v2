@@ -1,6 +1,11 @@
 import { convertDateRangeMapToValueIntervals } from '@/adapters/conversionHelpers';
 import { fetchPolicyById } from '@/api/policy';
-import { createPublicApiClient, requireResult, type PublicApiClient } from '@/api/publicApi/client';
+import {
+  createPublicApiClient,
+  publicApiCountryId,
+  requireResult,
+  type PublicApiClient,
+} from '@/api/publicApi/client';
 import type { components } from '@/api/publicApi/schema';
 import {
   AccountAssociationRoutes,
@@ -450,7 +455,7 @@ export function v2ReformPolicyBody(
   metadata?: ParameterMetadataCollection
 ): V2PolicyCreateBody {
   return {
-    country_id: countryId as V2PolicyCreateBody['country_id'],
+    country_id: publicApiCountryId(countryId),
     tax_benefit_model_id: catalog.taxBenefitModelId,
     parameter_values: parameters.flatMap((parameter) => {
       const parameterId = parameterIds[parameter.name];
@@ -519,7 +524,7 @@ export async function fetchV2PolicyItem(
     client.GET('/v2/policies/{policy_id}', {
       params: {
         path: { policy_id: policyId },
-        query: { country_id: countryId as V2PolicyCreateBody['country_id'] },
+        query: { country_id: publicApiCountryId(countryId) },
       },
     })
   );

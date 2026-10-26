@@ -1,4 +1,9 @@
-import { createPublicApiClient, requireBody, type PublicApiClient } from '@/api/publicApi/client';
+import {
+  createPublicApiClient,
+  publicApiCountryId,
+  requireBody,
+  type PublicApiClient,
+} from '@/api/publicApi/client';
 import type { components } from '@/api/publicApi/schema';
 
 /**
@@ -29,7 +34,7 @@ export async function fetchParameterSearchFile(
     client.GET('/v2/parameters/search-file', {
       params: {
         query: {
-          country_id: countryId as 'us' | 'uk',
+          country_id: publicApiCountryId(countryId),
           policyengine_version: policyengineVersion,
         },
       },

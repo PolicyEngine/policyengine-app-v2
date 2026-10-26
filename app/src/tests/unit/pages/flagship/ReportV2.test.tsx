@@ -12,6 +12,7 @@ import {
   stubPublicApiFetch,
 } from '@/tests/fixtures/api/publicApi/publicApiFetchStub';
 import { STANDARD_DEDUCTION_SINGLE } from '@/tests/fixtures/api/publicApi/searchFileMocks';
+import { REFORM_POLICY } from '@/tests/fixtures/api/publicApi/v2ReportPolicyMocks';
 import {
   EXISTING_REPORT,
   EXISTING_REPORT_ID,
@@ -19,7 +20,6 @@ import {
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
 import { seedV2ModelCatalog } from '@/tests/fixtures/hooks/v3MetadataWrapper';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
-import type { Policy } from '@/types/ingredients/Policy';
 
 const mockUseFlagshipReport = vi.fn();
 const mockRetry = vi.fn();
@@ -92,17 +92,6 @@ const COMPLETE_STATUS = {
 };
 
 /** The report's reform policy, as v1 stores it: a larger standard deduction. */
-const REFORM_POLICY: Policy = {
-  id: '98557',
-  countryId: 'us',
-  parameters: [
-    {
-      name: STANDARD_DEDUCTION_SINGLE,
-      values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 20000 }],
-    },
-  ],
-};
-
 function answerParameters(url: URL) {
   return jsonResponse({
     status: 'ok',
