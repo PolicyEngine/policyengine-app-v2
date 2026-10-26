@@ -17,6 +17,7 @@ import {
   useDraftReform,
 } from '@/libs/draftReform';
 import { focusProvision } from '@/libs/flagship/draftEditorFocus';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { draftParameterNames, groupMemberPaths } from '@/libs/flagship/v3ParameterNames';
 import { ParameterSearchEntry } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
@@ -111,7 +112,14 @@ export default function BuildPage() {
               // the last one ends: a reform takes as many as it needs.
               <DraftTable draft={current} addRow={<AddParameterBar onPick={pick} inTable />} />
             )}
-            <DraftRunBar draft={current} />
+            <DraftRunBar
+              draft={current}
+              // On the v1 routes the values come with the whole metadata, as before.
+              currentLawUnavailable={
+                draftParameters.waiting ||
+                (V3_API_ROUTES === 'v2' && draftParameters.status === 'error')
+              }
+            />
           </>
         ) : (
           <>

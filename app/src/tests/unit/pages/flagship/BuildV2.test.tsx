@@ -102,6 +102,48 @@ describe('BuildPage with v3 on the v2 routes', () => {
     expect(screen.getByRole('combobox', { name: 'Search parameters' })).toBeInTheDocument();
   });
 
+  test("given the draft's parameters still loading then its Save buttons wait for current law", async () => {
+    // Given: a changed value, which saving compares with current law.
+    let releaseParameters: () => void = () => {};
+    const held = new Promise<void>((resolve) => {
+      releaseParameters = resolve;
+    });
+    stubPublicApiFetch({
+      [SEARCH_FILE_PATH]: () => jsonResponse(US_SEARCH_FILE),
+      [PARAMETERS_PATH]: async (url) => {
+        await held;
+        return jsonResponse({
+          status: 'ok',
+          message: null,
+          result: catalogParametersResult(url.searchParams.getAll('name')),
+        });
+      },
+    });
+    await seedV2ModelCatalog();
+    startDraftReform('us', 'manual');
+    addDraftProvision('us', { ...SINGLE_DEDUCTION, value: 20000 });
+    const saveButtons = () => [
+      screen.getByRole('button', { name: 'Save' }),
+      screen.getByRole('button', { name: /Save and run/ }),
+    ];
+
+    // When
+    renderPage();
+
+    // Then
+    expect(screen.getAllByRole('status', { name: 'Loading parameters' })).toHaveLength(1);
+    for (const button of saveButtons()) {
+      expect(button).toBeDisabled();
+    }
+    releaseParameters();
+    await waitFor(() =>
+      expect(screen.queryByRole('status', { name: 'Loading parameters' })).not.toBeInTheDocument()
+    );
+    for (const button of saveButtons()) {
+      expect(button).toBeEnabled();
+    }
+  });
+
   test('given the search file has not arrived then the page keeps its loading state, with no time limit', async () => {
     stubCatalog(() => new Promise<Response>(() => {}));
     await seedV2ModelCatalog();
