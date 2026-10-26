@@ -9,16 +9,22 @@ import {
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import {
   ARDS_AND_NORTH_DOWN,
+  ENGLISH_CONSTITUENCY_CODE,
   METADATA_CONSTITUENCY_COUNT,
   METADATA_LOCAL_AUTHORITY_COUNT,
   PUBLISHED_CONSTITUENCY_NAMES,
   PUBLISHED_LOCAL_AUTHORITY_NAMES,
+  PUBLISHED_WELSH_CONSTITUENCY_CODES,
+  PUBLISHED_WELSH_CONSTITUENCY_NAMES,
+  SCOTLAND_CONSTITUENCY_COUNT,
   UK_METADATA_REGIONS,
   UK_METADATA_REGIONS_WITHOUT_ARDS_AND_NORTH_DOWN,
   UK_WIDE_WITHHELD_CONSTITUENCIES,
   UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
   UNLISTED_CONSTITUENCY_NAME,
   UNLISTED_LOCAL_AUTHORITY_NAME,
+  WALES_LOCAL_AUTHORITY_COUNT,
+  WALES_WITHHELD_CONSTITUENCIES,
 } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   NATIONAL_OUTPUT_WITHOUT_AREAS,
@@ -111,7 +117,7 @@ describe('countWithheldUKAreas', () => {
     ['constituency', PUBLISHED_CONSTITUENCY_NAMES],
     ['local_authority', PUBLISHED_LOCAL_AUTHORITY_NAMES],
   ] as const)(
-    'given a nation report then gives no %s count, as the metadata has no code or nation per area',
+    'given a nation report without the published areas’ codes then gives no %s count',
     (level, publishedNames) => {
       // When
       const result = countWithheldUKAreas({
@@ -144,6 +150,65 @@ describe('countWithheldUKAreas', () => {
       expect(result).toBeNull();
     }
   );
+
+  test('given a nation report then counts its published areas by code against the nation’s areas', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedNames: PUBLISHED_WELSH_CONSTITUENCY_NAMES,
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      regions: UK_METADATA_REGIONS,
+    });
+
+    // Then
+    expect(result).toEqual(WALES_WITHHELD_CONSTITUENCIES);
+  });
+
+  test('given a nation report that publishes no areas then all of the nation’s areas are withheld', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'local_authority',
+      region: 'country/wales',
+      publishedNames: [],
+      publishedCodes: [],
+      regions: [],
+    });
+
+    // Then
+    expect(result).toEqual({
+      withheld: WALES_LOCAL_AUTHORITY_COUNT,
+      total: WALES_LOCAL_AUTHORITY_COUNT,
+    });
+  });
+
+  test('given a nation report that publishes an area of another nation then gives no count', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedNames: [...PUBLISHED_WELSH_CONSTITUENCY_NAMES, 'Aldershot'],
+      publishedCodes: [...PUBLISHED_WELSH_CONSTITUENCY_CODES, ENGLISH_CONSTITUENCY_CODE],
+      regions: UK_METADATA_REGIONS,
+    });
+
+    // Then
+    expect(result).toBeNull();
+  });
+
+  test('given a nation report that publishes an area without a code then gives no count', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedNames: PUBLISHED_WELSH_CONSTITUENCY_NAMES,
+      publishedCodes: [PUBLISHED_WELSH_CONSTITUENCY_CODES[0], undefined],
+      regions: UK_METADATA_REGIONS,
+    });
+
+    // Then
+    expect(result).toBeNull();
+  });
 
   test('given no region metadata then gives no count', () => {
     // When
@@ -185,12 +250,18 @@ describe('withheldUKAreasOf', () => {
     });
   });
 
-  test('given a nation report then neither level is counted', () => {
+  test('given a Scotland report then its Scottish constituency is counted and an English local authority leaves its level uncounted', () => {
     // When
     const result = withheldUKAreasOf(NORMALIZED_BREAKDOWN, 'country/scotland', UK_METADATA_REGIONS);
 
     // Then
-    expect(result).toEqual({ constituency: null, local_authority: null });
+    expect(result).toEqual({
+      constituency: {
+        withheld: SCOTLAND_CONSTITUENCY_COUNT - 1,
+        total: SCOTLAND_CONSTITUENCY_COUNT,
+      },
+      local_authority: null,
+    });
   });
 
   test('given a level the API returned as null then counts it as publishing no areas', () => {

@@ -98,9 +98,10 @@ export function UKAreaChoroplethMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const boundaryFile = UK_BOUNDARY_FILES[level];
 
-  const mergedRef = useCallback(
+  // Downloads capture the frame and the licence credit under it, which the
+  // Open Government Licence asks for wherever the boundaries are used.
+  const exportWrapperRef = useCallback(
     (node: HTMLDivElement | null) => {
-      (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
       if (typeof exportRef === 'function') {
         exportRef(node);
       } else if (exportRef) {
@@ -244,9 +245,9 @@ export function UKAreaChoroplethMap({
   const gradientId = `choropleth-gradient-${uniqueId.replace(/:/g, '')}`;
 
   return (
-    <Stack style={{ gap: spacing.xs }}>
+    <Stack ref={exportWrapperRef} style={{ gap: spacing.xs }}>
       <div
-        ref={mergedRef}
+        ref={containerRef}
         className="tw:flex tw:items-stretch"
         style={{
           height: navigable ? fullConfig.height : '100%',

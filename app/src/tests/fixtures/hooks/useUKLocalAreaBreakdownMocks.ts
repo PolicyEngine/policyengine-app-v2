@@ -102,3 +102,10 @@ export const NATIONAL_RESULT_FOR_BREAKDOWN_RESPONSE = {
 /** The message the hook gives for such a response. */
 export const NOT_A_BREAKDOWN_MESSAGE =
   'The API returned national results instead of a local-area breakdown. Its deployment may not support breakdown=local_areas yet.';
+
+/** A poll that fails before reaching the API, e.g. a gateway's 502. */
+export const POLL_FAILURE = new Error('Local-area breakdown failed: 502 Bad Gateway');
+
+/** The message the hook gives once a run computes past its time limit. */
+export const TIME_LIMIT_MESSAGE =
+  'The local-area breakdown is taking much longer than expected. It may still finish on the server: retry to check it again.';

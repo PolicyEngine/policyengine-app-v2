@@ -2,6 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
 import {
+  UK_AREA_COUNTS_BY_NATION,
+  ukNationFromCode,
+} from '@/components/visualization/choropleth/ukAreaBoundaries';
+import {
   BOUNDARY_FILE_DIRECTORY,
   CONSTITUENCY_BOUNDARY_FILE,
   EXPECTED_CONSTITUENCY_COUNT,
@@ -38,6 +42,7 @@ function signedArea(ring: Ring): number {
 const LEVELS = [
   {
     level: 'constituency',
+    countsLevel: 'constituency' as const,
     boundaryFile: CONSTITUENCY_BOUNDARY_FILE,
     referenceFile: PY_CONSTITUENCIES_CSV,
     codeProperty: 'PCON24CD',
@@ -46,6 +51,7 @@ const LEVELS = [
   },
   {
     level: 'local authority',
+    countsLevel: 'local_authority' as const,
     boundaryFile: LOCAL_AUTHORITY_BOUNDARY_FILE,
     referenceFile: PY_LOCAL_AUTHORITIES_CSV,
     codeProperty: 'LAD23CD',
@@ -56,7 +62,21 @@ const LEVELS = [
 
 describe.each(LEVELS)(
   'UK $level boundary file',
-  ({ boundaryFile, referenceFile, codeProperty, nameProperty, expectedCount }) => {
+  ({ countsLevel, boundaryFile, referenceFile, codeProperty, nameProperty, expectedCount }) => {
+    test("given the file's codes then each nation has the area count the withheld notes use", () => {
+      // Given
+      const counts: Record<string, number> = {};
+
+      // When
+      for (const feature of readBoundaries(boundaryFile)) {
+        const nation = ukNationFromCode(feature.properties[codeProperty]) ?? 'none';
+        counts[nation] = (counts[nation] ?? 0) + 1;
+      }
+
+      // Then
+      expect(counts).toEqual(UK_AREA_COUNTS_BY_NATION[countsLevel]);
+    });
+
     test(`given .py 6.10.0's list then the file holds exactly its ${expectedCount} codes, once each`, () => {
       // Given
       const referenceCodes = readPyAreaList(referenceFile).map((area) => area.code);

@@ -31,8 +31,8 @@ export interface UKLocalAreaOutput {
   areaOutput: SocietyWideReportOutput | null;
   /**
    * The areas withheld at each level the breakdown supplied, counted
-   * against the UK region metadata where the lists allow
-   * (countWithheldUKAreas). Saved levels get none.
+   * against the UK region metadata, or a nation's areas, where the lists
+   * allow (countWithheldUKAreas). Saved levels get none.
    */
   withheld: UKBreakdownWithheldAreas | undefined;
 }

@@ -148,7 +148,7 @@ export interface UKAreaChoroplethMapProps {
   geoDataPath?: string;
   /** A nation to draw alone, fitted to the frame, as `focusState` does for a US state. */
   focusNation?: UKNation | null;
-  /** Optional ref to the map container for image export */
+  /** Optional ref for image export: the map's frame with the boundaries' licence credit under it */
   exportRef?: React.Ref<HTMLDivElement>;
   /**
    * What an area with no result reads in its tooltip, e.g. "Not published"

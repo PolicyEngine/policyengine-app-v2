@@ -78,3 +78,23 @@ export const UK_WIDE_WITHHELD_LOCAL_AUTHORITIES = {
   withheld: METADATA_LOCAL_AUTHORITY_COUNT - PUBLISHED_LOCAL_AUTHORITY_NAMES.length,
   total: METADATA_LOCAL_AUTHORITY_COUNT,
 };
+
+/** Wales's constituencies and local authorities in the boundary files. */
+export const WALES_CONSTITUENCY_COUNT = 32;
+export const WALES_LOCAL_AUTHORITY_COUNT = 22;
+
+/** Two Welsh constituencies a Wales breakdown published, by name and ONS code. */
+export const PUBLISHED_WELSH_CONSTITUENCY_NAMES = ['Gower', 'Cardiff East'];
+export const PUBLISHED_WELSH_CONSTITUENCY_CODES = ['W07000094', 'W07000084'];
+
+/** An English constituency's code, which no Wales breakdown publishes. */
+export const ENGLISH_CONSTITUENCY_CODE = 'E14001063';
+
+/** The withheld constituencies of a Wales breakdown of the two above. */
+export const WALES_WITHHELD_CONSTITUENCIES = {
+  withheld: WALES_CONSTITUENCY_COUNT - PUBLISHED_WELSH_CONSTITUENCY_CODES.length,
+  total: WALES_CONSTITUENCY_COUNT,
+};
+
+/** Scotland's constituencies in the boundary files. */
+export const SCOTLAND_CONSTITUENCY_COUNT = 57;

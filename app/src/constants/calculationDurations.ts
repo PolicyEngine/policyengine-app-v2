@@ -66,6 +66,12 @@ export const UK_REGION_SOCIETY_WIDE_DURATION_MS = 110 * 1000;
 export const UK_LOCAL_AREA_BREAKDOWN_DURATION_MS = 3 * 60 * 1000;
 
 /**
+ * How long a UK local-area breakdown may compute before the app stops
+ * polling it and offers Retry, in case its job is stuck.
+ */
+export const UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS = 30 * 60 * 1000;
+
+/**
  * Duration estimate for household calculations
  * These are synchronous API calls that block until complete
  */
