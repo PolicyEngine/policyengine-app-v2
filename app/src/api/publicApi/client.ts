@@ -51,14 +51,13 @@ interface ClientOutcome<Data> {
 }
 
 /**
- * The `result` of a v2 success envelope (`{status: "ok", message, result}`).
- * A failed response throws V2ApiError with its status and the API's message,
- * and a request that never reached the API throws status 0.
+ * The body of a successful response, for routes that return a document
+ * without the v2 envelope (such as the parameter search file). A failed
+ * response throws V2ApiError with its status and the API's message, and a
+ * request that never reached the API throws status 0.
  */
-export async function requireResult<Result>(
-  call: Promise<ClientOutcome<{ result: Result }>>
-): Promise<Result> {
-  let outcome: ClientOutcome<{ result: Result }>;
+export async function requireBody<Body>(call: Promise<ClientOutcome<Body>>): Promise<Body> {
+  let outcome: ClientOutcome<Body>;
   try {
     outcome = await call;
   } catch (error) {
@@ -78,5 +77,16 @@ export async function requireResult<Result>(
         : null;
     throw new V2ApiError(response.status, failureMessage(response.status, apiMessage));
   }
-  return data.result;
+  return data;
+}
+
+/**
+ * The `result` of a v2 success envelope (`{status: "ok", message, result}`).
+ * A failed response throws V2ApiError with its status and the API's message,
+ * and a request that never reached the API throws status 0.
+ */
+export async function requireResult<Result>(
+  call: Promise<ClientOutcome<{ result: Result }>>
+): Promise<Result> {
+  return (await requireBody(call)).result;
 }
