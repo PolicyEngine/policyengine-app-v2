@@ -63,10 +63,26 @@ vi.mock('@/api/report', async (importOriginal) => ({
   markReportError: (...args: unknown[]) => mockMarkReportError(...args),
 }));
 
+/** The run's details this page reads; a test may give it a budget window. */
+const mockMeta: { current: FlagshipReportMeta } = { current: META };
+
 vi.mock('@/libs/flagship/runReport', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/runReport')>()),
-  readReportMeta: () => META,
+  readReportMeta: () => mockMeta.current,
 }));
+
+const mockFetchBudgetWindow = vi.fn();
+
+vi.mock('@/api/budgetWindow', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/budgetWindow')>()),
+  fetchBudgetWindow: (...args: unknown[]) => mockFetchBudgetWindow(...args),
+}));
+
+/** A three-year window from the report's year, and a later year asked for before. */
+function withWindowAndRequestedYear() {
+  mockMeta.current = { ...META, budgetWindow: { startYear: 2026, windowSize: 3 } };
+  localStorage.setItem(`pe-flagship-report-years-${EXISTING_REPORT_ID}`, JSON.stringify(['2027']));
+}
 
 vi.mock('@/hooks/useReportValidationSnapshot', () => ({
   useReportValidationSnapshot: () => undefined,
@@ -129,6 +145,8 @@ describe('FlagshipReportPage run lifecycle', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    mockMeta.current = META;
+    localStorage.clear();
   });
 
   test('given a pending report then it runs and saves the result', async () => {
@@ -261,6 +279,38 @@ describe('FlagshipReportPage run lifecycle', () => {
       ).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /^calculate/i })).not.toBeInTheDocument();
       expect(mockFetchEconomy).not.toHaveBeenCalled();
+    });
+
+    test('then while its policies are being checked it waits, and starts no other year or window', async () => {
+      // Given
+      withWindowAndRequestedYear();
+      mockUseFlagshipReport.mockReturnValue({ ...completeReport(), policiesChecked: false });
+
+      // When
+      renderPage();
+
+      // Then
+      expect(await screen.findByText(/loading report/i)).toBeInTheDocument();
+      expect(screen.queryByRole('tab', { name: 'Validation' })).not.toBeInTheDocument();
+      expect(mockFetchEconomy).not.toHaveBeenCalled();
+      expect(mockFetchBudgetWindow).not.toHaveBeenCalled();
+    });
+
+    test('then with missing parameters and a window, no other year or window runs', async () => {
+      // Given
+      withWindowAndRequestedYear();
+      mockUseFlagshipReport.mockReturnValue({
+        ...completeReport(),
+        missingParameters: [REMOVED_US_PARAMETER],
+      });
+
+      // When
+      renderPage();
+
+      // Then
+      expect(await screen.findByRole('tab', { name: 'Validation' })).toBeInTheDocument();
+      expect(mockFetchEconomy).not.toHaveBeenCalled();
+      expect(mockFetchBudgetWindow).not.toHaveBeenCalled();
     });
 
     test('then the record is not written again', async () => {

@@ -1,24 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
-import { fetchPolicyById } from '@/api/policy';
-import { fetchV1PolicyContent } from '@/api/reformStore';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { isNotFoundError, retryUnlessNotFound } from '@/libs/flagship/loadError';
 import { combinedMissingParameters } from '@/libs/flagship/missingParameters';
+import { fetchV1Policy, readV1Policy } from '@/libs/flagship/policyChecks';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
-import type { V1PolicyContent } from '@/types/metadata/policyMetadata';
+import type { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import {
   policyKeys,
   reportKeys,
   simulationKeys,
-  V1_POLICY_CONTENT_GC_TIME,
-  v1PolicyContentKey,
+  V1_POLICY_GC_TIME,
+  v1PolicyKey,
 } from '../libs/queryKeys';
 import { extractUniqueIds, useParallelQueries } from './utils/queryUtils';
 
@@ -76,6 +75,7 @@ export interface FlagshipReportData {
  */
 export function useFlagshipReport(id: string): FlagshipReportData {
   const country = useCurrentCountry();
+  const queryClient = useQueryClient();
   const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
     useParameterMetadata(country);
   const direct = isApiReportId(id);
@@ -110,8 +110,12 @@ export function useFlagshipReport(id: string): FlagshipReportData {
   const policyIds = extractUniqueIds(simulations, 'policyId');
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
+    // The same request as the check below: each policy is asked for once.
     queryFn: async (policyId) =>
-      PolicyAdapter.fromMetadata(await fetchPolicyById(country, policyId), parameterMetadata),
+      PolicyAdapter.fromMetadata(
+        await readV1Policy(queryClient, country, policyId),
+        parameterMetadata
+      ),
     enabled: direct && isParameterMetadataReady && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
@@ -119,16 +123,21 @@ export function useFlagshipReport(id: string): FlagshipReportData {
   // Whether each policy sets parameters the model no longer has: read at
   // once, not after the parameter metadata, because the report's run
   // waits for it.
-  const policyContentResults = useParallelQueries<V1PolicyContent>(policyIds, {
-    queryKey: (policyId) => v1PolicyContentKey(country, policyId),
-    queryFn: (policyId) => fetchV1PolicyContent(country, policyId),
+  // A policy that cannot be read is not retried here: the check settles at
+  // once with nothing known to be missing, as before the check existed.
+  const policyContentResults = useParallelQueries<PolicyMetadata>(policyIds, {
+    queryKey: (policyId) => v1PolicyKey(country, policyId),
+    queryFn: (policyId) => fetchV1Policy(country, policyId),
     enabled: direct && policyIds.length > 0,
     staleTime: Infinity,
-    gcTime: V1_POLICY_CONTENT_GC_TIME,
+    gcTime: V1_POLICY_GC_TIME,
+    retry: false,
   });
+  // Every simulation is in (or failed) and every policy it names was read.
   const policiesChecked =
-    policyIds.length > 0 &&
-    policyContentResults.queries.every((query) => query.isSuccess || query.isError);
+    simulationIds.length > 0 &&
+    simulationResults.queries.every((query) => !query.isPending) &&
+    policyContentResults.queries.every((query) => !query.isPending);
   const missingParameters = combinedMissingParameters(
     policyContentResults.queries.map((query) => query.data)
   );

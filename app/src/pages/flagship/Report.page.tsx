@@ -175,6 +175,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // The report's policies set parameters the model no longer has: its
   // stored results may show, but nothing on the page may calculate.
   const runsBlocked = missingParameters.length > 0;
+  // Anything on the page may calculate only once the policies are checked
+  // and none sets a parameter the model no longer has.
+  const runsAllowed = policiesChecked && !runsBlocked;
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.
@@ -249,7 +252,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   useStartCalculationOnLoad({
     // Not before the policies are checked, and never with missing parameters.
-    enabled: !!report && !!calcConfigs && policiesChecked && !runsBlocked,
+    enabled: !!report && !!calcConfigs && runsAllowed,
     configs: calcConfigs || [],
     isComplete: calcStatus.isComplete,
   });
@@ -279,7 +282,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // year runs once it is opened, or with the rest from the All years view.
   // Blocked, the report shows its own year only: another would need a run.
   const windowYears =
-    !runsBlocked && meta?.budgetWindow && meta.budgetWindow.windowSize > 1 && report?.year
+    runsAllowed && meta?.budgetWindow && meta.budgetWindow.windowSize > 1 && report?.year
       ? Array.from({ length: meta.budgetWindow.windowSize }, (_, index) =>
           String(meta.budgetWindow!.startYear + index)
         )
@@ -321,7 +324,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     reformPolicyId: reformPolicyId ? String(reformPolicyId) : undefined,
     baselinePolicyId: baselinePolicyId ? String(baselinePolicyId) : undefined,
     region,
-    years: runsBlocked ? [] : requestedYears.filter((year) => year !== reportYear),
+    years: runsAllowed ? requestedYears.filter((year) => year !== reportYear) : [],
   });
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths, report?.countryId);
@@ -379,7 +382,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     );
   }
 
-  if (!output || isLoading || awaitingProvisions) {
+  // Until the policies are checked, nothing on the page may calculate: the
+  // results wait, as they wait for the policies' details.
+  if (!output || isLoading || awaitingProvisions || !policiesChecked) {
     if (unresolvable) {
       return layout(
         <Stack
@@ -456,9 +461,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           alignItems: 'center',
         }}
       >
-        {/* A UK report's local areas calculate alongside its national run, once its policies are checked. */}
-        {policiesChecked &&
-          !runsBlocked &&
+        {/* A UK report's local areas calculate alongside its national run, once runs are allowed. */}
+        {runsAllowed &&
           report?.countryId === 'uk' &&
           report.status !== 'complete' &&
           !householdReport &&
@@ -567,7 +571,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       sourceNote={meta?.sourceNote || ''}
       populationLabel={regionLabel ?? nationalPopulationLabel(report?.countryId)}
       // A window asked for in Build opens running.
-      budgetWindow={runsBlocked ? undefined : meta?.budgetWindow}
+      budgetWindow={runsAllowed ? meta?.budgetWindow : undefined}
       provisions={meta?.provisions ?? []}
       overviewLead={
         <>

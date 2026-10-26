@@ -50,11 +50,7 @@ vi.mock('@/hooks/useUserReports', () => ({
   useUserReportById: () => ({ report: undefined, simulations: [], policies: [], isLoading: false }),
 }));
 
-function renderReportHook(id: string) {
-  // No retry delay: a failed request that retries settles at once.
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, retryDelay: 0 } },
-  });
+function renderReportHook(id: string, queryClient = noRetryClient()) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
@@ -63,6 +59,11 @@ function renderReportHook(id: string) {
     </Provider>
   );
   return { queryClient, ...renderHook(() => useFlagshipReport(id), { wrapper }) };
+}
+
+/** No retry delay: a failed request that retries settles at once. */
+function noRetryClient() {
+  return new QueryClient({ defaultOptions: { queries: { retry: false, retryDelay: 0 } } });
 }
 
 describe('useFlagshipReport', () => {
@@ -214,6 +215,38 @@ describe('useFlagshipReport', () => {
     // Then
     await waitFor(() => expect(result.current.policiesChecked).toBe(true));
     expect(result.current.missingParameters).toEqual([]);
+  });
+
+  test('given a policy that cannot be read then the check settles without waiting for retries', async () => {
+    // Given: the calculator's client, which retries failed queries by default
+    mockFetchPolicyById.mockRejectedValue(POLICY_UNAVAILABLE_ERROR);
+
+    // When
+    const { result } = renderReportHook(EXISTING_REPORT_ID, new QueryClient());
+
+    // Then: settled well before the default back-off (1 s, 2 s, 4 s) would allow
+    await waitFor(() => expect(result.current.policiesChecked).toBe(true), { timeout: 500 });
+    expect(result.current.missingParameters).toEqual([]);
+  });
+
+  test('given the parameter metadata is ready then each policy is asked for once', async () => {
+    // Given
+    seedDeductionMetadata();
+    mockFetchPolicyById.mockImplementation(async (_country: string, policyId: string) => ({
+      id: policyId,
+      country_id: 'us',
+      label: null,
+      api_version: '2.2.1',
+      policy_json: {},
+      policy_hash: `hash-${policyId}`,
+    }));
+
+    // When
+    const { result } = renderReportHook(EXISTING_REPORT_ID);
+
+    // Then
+    await waitFor(() => expect(result.current.policies).toHaveLength(2));
+    expect(mockFetchPolicyById).toHaveBeenCalledTimes(2);
   });
 
   test('given a failed simulation then retry asks for it again and the error clears', async () => {
