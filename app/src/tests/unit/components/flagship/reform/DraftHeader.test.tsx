@@ -529,7 +529,9 @@ describe('DraftHeader', () => {
       await user.click(screen.getByRole('button', { name: 'Compared with: Current law' }));
       const option = await screen.findByRole('option', { name: /Old plan/ });
       expect(option).toHaveAttribute('aria-disabled', 'true');
-      expect(option).toHaveTextContent('Uses parameters the model no longer has');
+      expect(option).toHaveTextContent(
+        `Uses parameters the model no longer has: ${REMOVED_US_PARAMETER}`
+      );
       await user.click(option);
 
       expect(getDraftReform()?.baselineReformId).toBeUndefined();

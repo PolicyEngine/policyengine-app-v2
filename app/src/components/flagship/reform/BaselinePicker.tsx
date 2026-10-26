@@ -225,7 +225,8 @@ export default function BaselinePicker({ value, onChange, reforms }: BaselinePic
               ) : (
                 reforms.map((reform) => {
                   // A reform that cannot run cannot be compared with.
-                  const unavailable = reformMissingParameters(reform).length > 0;
+                  const missingParameters = reformMissingParameters(reform);
+                  const unavailable = missingParameters.length > 0;
                   return (
                     <CommandItem
                       key={reform.id}
@@ -248,7 +249,7 @@ export default function BaselinePicker({ value, onChange, reforms }: BaselinePic
                               color: colors.text.tertiary,
                             }}
                           >
-                            Uses parameters the model no longer has
+                            Uses parameters the model no longer has: {missingParameters.join(', ')}
                           </span>
                         )}
                       </span>

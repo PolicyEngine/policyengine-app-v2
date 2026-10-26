@@ -240,7 +240,6 @@ export default function ReformReports({
   countryId,
   reports,
   onRerun,
-  canRerun,
   rerunning = false,
   reformName,
 }: {
@@ -248,8 +247,6 @@ export default function ReformReports({
   reports: FlagshipReportRecord[];
   /** Runs the report again: same reform, year, population and comparison. */
   onRerun?: (report: FlagshipReportRecord) => void;
-  /** Whether a report may run again; without it, every report may. */
-  canRerun?: (report: FlagshipReportRecord) => boolean;
   /** A run is starting; Re-run waits for it. */
   rerunning?: boolean;
   /** A saved reform's name, for the reform a report was compared with. */
@@ -288,7 +285,7 @@ export default function ReformReports({
               // A report opens at its link: the account row's ID, which anyone
               // can open, or in this browser the v1 report's number.
               onOpen={() => nav.push(`/${countryId}/report/${reportLink(report)}`)}
-              onRerun={onRerun && (canRerun?.(report) ?? true) ? () => onRerun(report) : undefined}
+              onRerun={onRerun && (() => onRerun(report))}
               rerunning={rerunning}
               reformName={reformName}
             />
