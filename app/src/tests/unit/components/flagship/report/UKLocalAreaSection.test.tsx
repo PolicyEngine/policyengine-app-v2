@@ -55,6 +55,12 @@ function renderSection(output = NATIONAL_OUTPUT_WITHOUT_AREAS, props = UK_SECTIO
 }
 
 describe('UKLocalAreaSection', () => {
+  /**
+   * The stored constituency's row in the rankings. It has no ONS code, so the
+   * hex map leaves it out; its ranking shows the constituency map is there.
+   */
+  const STORED_CONSTITUENCY_DETAILS = `Show details for ${STORED_CONSTITUENCY_NAME}`;
+
   beforeEach(() => {
     vi.stubGlobal('fetch', mockUKBoundaryFetch());
     vi.clearAllMocks();
@@ -142,12 +148,12 @@ describe('UKLocalAreaSection', () => {
   test('given a saved result with area impacts then it shows the maps with no button', async () => {
     // When
     const user = userEvent.setup();
-    const { container } = renderSection(STORED_OUTPUT_WITH_AREAS);
+    renderSection(STORED_OUTPUT_WITH_AREAS);
     await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
 
     // Then
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
-    expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
+    expect(screen.getByRole('button', { name: STORED_CONSTITUENCY_DETAILS })).toBeInTheDocument();
     expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
   });
 
@@ -220,7 +226,7 @@ describe('UKLocalAreaSection', () => {
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
     const { container } = renderSection(BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY);
     await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
-    expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
+    expect(screen.getByRole('button', { name: STORED_CONSTITUENCY_DETAILS })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
 
     // When
@@ -234,16 +240,16 @@ describe('UKLocalAreaSection', () => {
       ).not.toBeNull()
     );
     await user.click(screen.getByRole('tab', { name: 'Constituencies' }));
-    expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
+    expect(screen.getByRole('button', { name: STORED_CONSTITUENCY_DETAILS })).toBeInTheDocument();
     expect(screen.queryByText(/constituencies are not published/)).not.toBeInTheDocument();
   });
 
   test('given an older stored result with constituencies but no local authorities then it says there is no local authority data and offers no compute', async () => {
     // Given
     const user = userEvent.setup();
-    const { container } = renderSection(OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES);
+    renderSection(OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES);
     await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
-    expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
+    expect(screen.getByRole('button', { name: STORED_CONSTITUENCY_DETAILS })).toBeInTheDocument();
 
     // When
     await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
