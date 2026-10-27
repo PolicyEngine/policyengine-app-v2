@@ -7,6 +7,7 @@ import {
   REPORT_META_KEY,
   reportMetaFromRecord,
   runFlagshipReport,
+  type ReportRecordsRunner,
 } from '@/libs/flagship/runReport';
 import {
   CALIFORNIA_BASELINE_SIMULATION_ID,
@@ -625,13 +626,17 @@ describe('createReportRecords', () => {
 
   test('given a runner then each request goes through it', async () => {
     // Given
-    const runner = vi.fn(<Result>(request: () => Promise<Result>) => request());
+    let requestsThroughRunner = 0;
+    const runner: ReportRecordsRunner = (request) => {
+      requestsThroughRunner += 1;
+      return request();
+    };
 
     // When
     await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST, runner);
 
     // Then
-    expect(runner).toHaveBeenCalledTimes(3);
+    expect(requestsThroughRunner).toBe(3);
     expect(mockCreateSimulation).toHaveBeenCalledTimes(2);
     expect(mockCreateReport).toHaveBeenCalledTimes(1);
   });
