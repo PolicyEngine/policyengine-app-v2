@@ -76,11 +76,12 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const variablesStatus = useV3Variables();
-  const programmeCsvReason = variablesStatus.waiting
-    ? 'Loading programme names'
-    : variablesStatus.failed
-      ? 'Could not load the programme names'
-      : undefined;
+  const programmeCsvReason =
+    variablesStatus.state === 'waiting'
+      ? 'Loading programme names'
+      : variablesStatus.state === 'failed'
+        ? 'Could not load the programme names'
+        : undefined;
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');
   const [wealthDecileMode, setWealthDecileMode] = useState<DecileMode>('absolute');
   // The UK's results also break the budget down by program and rank households by wealth.
