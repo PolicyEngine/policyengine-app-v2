@@ -48,7 +48,7 @@ export function RelativeChangeByLocalAuthority({
     [areas]
   );
   // The hex map places each local authority by its code in the app's layout, as v3's does.
-  const hexMap = useMemo(() => placeOnUKHexLayout('local_authority', mapData), [mapData]);
+  const hexPoints = useMemo(() => placeOnUKHexLayout('local_authority', mapData), [mapData]);
   const notes = <UKAreaDisclosureNotes level="local_authority" areas={areas} withheld={withheld} />;
 
   if (!mapData.length) {
@@ -95,9 +95,9 @@ export function RelativeChangeByLocalAuthority({
         />
       ) : (
         <HexagonalMap
-          data={hexMap.points}
+          data={hexPoints}
           config={{
-            tiled: hexMap.tiled,
+            tiled: true,
             hexSize: 11,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,

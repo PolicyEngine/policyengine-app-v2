@@ -74,51 +74,41 @@ describe('ukHexPosition', () => {
 });
 
 describe('placeOnUKHexLayout', () => {
-  test('given points whose codes the layout has then each takes its layout position, tiled', () => {
+  test('given points whose codes the layout has then each takes its layout position', () => {
     // When
-    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT]);
+    const points = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT]);
 
     // Then
-    expect(placement).toEqual({
-      points: [{ ...BARNSLEY_NORTH_POINT, x: BARNSLEY_NORTH_HEX[0], y: BARNSLEY_NORTH_HEX[1] + 1 }],
-      tiled: true,
-    });
+    expect(points).toEqual([
+      { ...BARNSLEY_NORTH_POINT, x: BARNSLEY_NORTH_HEX[0], y: BARNSLEY_NORTH_HEX[1] + 1 },
+    ]);
   });
 
   test('given a local authority then it reads the local authority layout', () => {
     // When
-    const placement = placeOnUKHexLayout('local_authority', [HARTLEPOOL_POINT]);
+    const points = placeOnUKHexLayout('local_authority', [HARTLEPOOL_POINT]);
 
     // Then
-    expect(placement.points[0]).toEqual({
-      ...HARTLEPOOL_POINT,
-      x: HARTLEPOOL_HEX[0],
-      y: HARTLEPOOL_HEX[1] + 1,
-    });
+    expect(points).toEqual([
+      { ...HARTLEPOOL_POINT, x: HARTLEPOOL_HEX[0], y: HARTLEPOOL_HEX[1] + 1 },
+    ]);
   });
 
-  test('given a point without a code then it keeps its own position and the grid is not tiled', () => {
+  test('given a point without a code then it is left out and the others are placed', () => {
     // When
-    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT]);
+    const points = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT]);
 
     // Then
-    expect(placement.points[1]).toEqual(UNCODED_POINT);
-    expect(placement.tiled).toBe(false);
+    expect(points).toEqual([
+      { ...BARNSLEY_NORTH_POINT, ...ukHexPosition('constituency', BARNSLEY_NORTH_CODE) },
+    ]);
   });
 
-  test('given a point without a layout position then the others still take theirs', () => {
+  test("given a code the level's layout lacks then the point is left out", () => {
     // When
-    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT]);
+    const points = placeOnUKHexLayout('constituency', [HARTLEPOOL_POINT]);
 
     // Then
-    expect(placement.points[0]).toMatchObject(ukHexPosition('constituency', BARNSLEY_NORTH_CODE)!);
-  });
-
-  test("given a code the level's layout lacks then the point keeps its own position", () => {
-    // When
-    const placement = placeOnUKHexLayout('constituency', [HARTLEPOOL_POINT]);
-
-    // Then
-    expect(placement).toEqual({ points: [HARTLEPOOL_POINT], tiled: false });
+    expect(points).toEqual([]);
   });
 });

@@ -151,18 +151,11 @@ describe('RelativeChangeByConstituency hex map placement', () => {
     expect(v2Hexagons(container).every(isPointyTopped)).toBe(true);
   });
 
-  test('given constituencies without codes then the hex map keeps their results’ positions, as v3’s does', async () => {
-    // Given
-    const v3Arrangement = await v3HexagonArrangement(
-      UK_LOCAL_AREAS_OUTPUT_NO_CODES,
-      'constituency'
-    );
-
+  test('given constituencies without codes then the hex map draws none of them, as v3’s does', async () => {
     // When
     const container = await renderHexMap(UK_LOCAL_AREAS_OUTPUT_NO_CODES);
 
-    // Then: on the square grid of flat-topped hexagons those positions were made for
-    expect(hexagonArrangement(v2Hexagons(container))).toEqual(v3Arrangement);
-    expect(v2Hexagons(container).some(isPointyTopped)).toBe(false);
+    // Then
+    expect(v2Hexagons(container)).toHaveLength(0);
   });
 });

@@ -45,7 +45,7 @@ export function RelativeChangeByConstituency({
   // One point per area, for the geographic and hex maps alike
   const mapData = useMemo(() => (areas ? transformConstituencyRelativeChange(areas) : []), [areas]);
   // The hex map places each constituency by its code in the app's layout, as v3's does.
-  const hexMap = useMemo(() => placeOnUKHexLayout('constituency', mapData), [mapData]);
+  const hexPoints = useMemo(() => placeOnUKHexLayout('constituency', mapData), [mapData]);
   const notes = <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />;
 
   if (!mapData.length) {
@@ -92,9 +92,9 @@ export function RelativeChangeByConstituency({
         />
       ) : (
         <HexagonalMap
-          data={hexMap.points}
+          data={hexPoints}
           config={{
-            tiled: hexMap.tiled,
+            tiled: true,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,
               tickFormat: '.1%',

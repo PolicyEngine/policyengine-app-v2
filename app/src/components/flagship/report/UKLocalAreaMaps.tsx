@@ -265,8 +265,7 @@ export default function UKLocalAreaMaps({
   );
 
   // The hex map places each area by its code in the app's layout, tiled.
-  // A result without codes keeps the API's positions on their square grid.
-  const hexMap = useMemo(() => placeOnUKHexLayout(level, mapData), [level, mapData]);
+  const hexPoints = useMemo(() => placeOnUKHexLayout(level, mapData), [level, mapData]);
 
   const decimals = useMemo(() => percentDecimals(mapData.map((point) => point.value)), [mapData]);
   const formatValue = useMemo(
@@ -399,12 +398,12 @@ export default function UKLocalAreaMaps({
               />
             ) : (
               <HexagonalMap
-                data={hexMap.points}
+                data={hexPoints}
                 config={{
                   ...mapConfig,
                   // The legend reads in the rankings' units: pounds or percentages.
                   formatColorBarTick: formatValue,
-                  tiled: hexMap.tiled,
+                  tiled: true,
                 }}
                 exportRef={mapRef}
                 selectedId={selectedArea ? selectedName : null}
