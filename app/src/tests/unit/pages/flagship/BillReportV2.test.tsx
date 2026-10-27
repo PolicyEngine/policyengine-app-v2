@@ -7,6 +7,10 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { catalogParametersResult } from '@/tests/fixtures/api/publicApi/catalogParametersMocks';
 import {
+  catalogVariablesEnvelope,
+  VARIABLES_PATH,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
+import {
   jsonResponse,
   requestsTo,
   stubPublicApiFetch,
@@ -181,7 +185,8 @@ describe('BillReportPage with v3 on the v2 routes', () => {
 
   test('given the page renders then it starts loading the variables in the background', async () => {
     // Given
-    stubPublicApiFetch({
+    const fetchStub = stubPublicApiFetch({
+      [VARIABLES_PATH]: () => jsonResponse(catalogVariablesEnvelope()),
       [PARAMETERS_PATH]: (url) =>
         jsonResponse({
           status: 'ok',
@@ -196,5 +201,6 @@ describe('BillReportPage with v3 on the v2 routes', () => {
 
     // Then
     expect(mockUseV3VariablesInBackground).toHaveBeenCalled();
+    await waitFor(() => expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1));
   });
 });

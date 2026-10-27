@@ -5,6 +5,7 @@ import {
   ABSENT_PARTS_PARAMETER_PATH,
   BENEFITS_PARAMETER_PATH,
   catalogVariablesEnvelope,
+  UNLABELLED_VARIABLES_RESULT,
 } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import { TEST_POLICYENGINE_VERSION } from '@/tests/fixtures/api/publicApi/modelCatalogMocks';
 import { jsonResponse } from '@/tests/fixtures/api/publicApi/publicApiFetchStub';
@@ -139,35 +140,7 @@ describe('fetchCatalogVariables', () => {
   test('given a variable without a label then it reads as its name', async () => {
     // Given
     const fetchMock = vi.fn(async () =>
-      jsonResponse(
-        catalogVariablesEnvelope({
-          policyengine_version: TEST_POLICYENGINE_VERSION,
-          catalog_format: 2,
-          variables: [
-            {
-              id: 'variable-unlabelled',
-              name: 'unlabelled_variable',
-              label: null,
-              entity: 'person',
-              description: null,
-              data_type: 'float',
-              possible_values: null,
-              default_value: 0,
-              adds: null,
-              subtracts: null,
-              is_input_variable: null,
-              hidden_input: null,
-              module_name: null,
-              adds_parameter_path: null,
-              subtracts_parameter_path: null,
-              enum_values: null,
-              unit: null,
-              definition_period: null,
-            },
-          ],
-          part_parameter_values: {},
-        })
-      )
+      jsonResponse(catalogVariablesEnvelope(UNLABELLED_VARIABLES_RESULT))
     );
     const client = createPublicApiClient({
       baseUrl: TEST_API_BASE,

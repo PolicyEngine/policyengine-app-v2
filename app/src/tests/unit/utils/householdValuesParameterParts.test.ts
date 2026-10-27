@@ -1,37 +1,75 @@
 import { describe, expect, test } from 'vitest';
+import {
+  BENEFITS_PARAMETER_PATH,
+  BENEFITS_PART_VALUES,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import { getParameterNamedParts } from '@/utils/householdValues';
 
-const PARTS_PATH = 'gov.household.household_benefits';
-const PART_VALUES = { [PARTS_PATH]: { '0000-01-01': ['snap'], '2026-01-01': ['snap', 'ssi'] } };
+/** The same parameter in v1's whole parameter list, with a different list. */
+const V1_PARAMETERS = { [BENEFITS_PARAMETER_PATH]: { values: { '0000-01-01': ['wic'] } } };
 
 describe('getParameterNamedParts', () => {
   test('given the day before a change then the earlier list applies', () => {
-    expect(getParameterNamedParts(PARTS_PATH, '2025-12-31', {}, PART_VALUES)).toEqual(['snap']);
+    // When
+    const parts = getParameterNamedParts(
+      BENEFITS_PARAMETER_PATH,
+      '2025-12-31',
+      {},
+      BENEFITS_PART_VALUES
+    );
+
+    // Then
+    expect(parts).toEqual(['snap']);
   });
 
   test('given the day a change starts then the new list applies', () => {
-    expect(getParameterNamedParts(PARTS_PATH, '2026-01-01', {}, PART_VALUES)).toEqual([
-      'snap',
-      'ssi',
-    ]);
+    // When
+    const parts = getParameterNamedParts(
+      BENEFITS_PARAMETER_PATH,
+      '2026-01-01',
+      {},
+      BENEFITS_PART_VALUES
+    );
+
+    // Then
+    expect(parts).toEqual(['snap', 'ssi']);
   });
 
   test('given part values and a parameter list then the part values take precedence', () => {
-    const parameters = { [PARTS_PATH]: { values: { '0000-01-01': ['wic'] } } };
+    // When
+    const parts = getParameterNamedParts(
+      BENEFITS_PARAMETER_PATH,
+      '2025-01-01',
+      V1_PARAMETERS,
+      BENEFITS_PART_VALUES
+    );
 
-    expect(getParameterNamedParts(PARTS_PATH, '2025-01-01', parameters, PART_VALUES)).toEqual([
-      'snap',
-    ]);
+    // Then
+    expect(parts).toEqual(['snap']);
   });
 
   test('given no part values then the parameter list is read, as on v1', () => {
-    const parameters = { [PARTS_PATH]: { values: { '0000-01-01': ['wic'] } } };
+    // When
+    const parts = getParameterNamedParts(BENEFITS_PARAMETER_PATH, '2025-01-01', V1_PARAMETERS);
 
-    expect(getParameterNamedParts(PARTS_PATH, '2025-01-01', parameters)).toEqual(['wic']);
+    // Then
+    expect(parts).toEqual(['wic']);
   });
 
   test('given a parameter with no values or no entry then nothing is listed', () => {
-    expect(getParameterNamedParts(PARTS_PATH, '2025-01-01', {}, { [PARTS_PATH]: {} })).toEqual([]);
-    expect(getParameterNamedParts('gov.unknown', '2025-01-01', {})).toEqual([]);
+    // When
+    const withoutValues = getParameterNamedParts(
+      BENEFITS_PARAMETER_PATH,
+      '2025-01-01',
+      {},
+      {
+        [BENEFITS_PARAMETER_PATH]: {},
+      }
+    );
+    const withoutEntry = getParameterNamedParts('gov.unknown', '2025-01-01', {});
+
+    // Then
+    expect(withoutValues).toEqual([]);
+    expect(withoutEntry).toEqual([]);
   });
 });
