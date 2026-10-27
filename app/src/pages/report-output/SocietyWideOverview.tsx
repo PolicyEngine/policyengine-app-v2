@@ -14,18 +14,22 @@ import {
   normalizeDistrictId,
 } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import StateDistrictComputePanel, {
+  StateDistrictComputeButton,
+} from '@/components/flagship/report/StateDistrictComputePanel';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
-import { Group, SegmentedControl, Stack, Text } from '@/components/ui';
+import { Button, Group, Progress, SegmentedControl, Stack, Text } from '@/components/ui';
 import { MapTypeToggle } from '@/components/visualization/choropleth/MapTypeToggle';
 import type { MapVisualizationType } from '@/components/visualization/choropleth/types';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
 import { useCongressionalDistrictData } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCongressionalDistrictImpacts } from '@/hooks/useCongressionalDistrictImpacts';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportYear } from '@/hooks/useReportYear';
+import type { StateDistrictRuns } from '@/hooks/useStateDistrictRuns';
 import type { RootState } from '@/store';
-import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
@@ -447,8 +451,47 @@ function DistrictListColumn({
 }
 
 /**
+ * Above a nationwide report's map while not every state is in: how many
+ * states are in, with Compute before the run, the bar while it runs, and
+ * Retry when a failed state can be asked for again.
+ */
+function StateRunsStatusRow({ runs }: { runs: StateDistrictRuns }) {
+  const counts = `${runs.completedCount} of ${runs.totalStates} states`;
+  const percent = Math.max(0, Math.min(Math.round(runs.progress), 99));
+  return (
+    <Group gap="sm" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+      <Text size="sm" c={colors.text.secondary} style={{ whiteSpace: 'nowrap' }}>
+        {runs.status === 'checking'
+          ? 'Checking for saved state results…'
+          : runs.status === 'idle'
+            ? `${counts} saved`
+            : runs.status === 'partial'
+              ? `${counts} are in`
+              : counts}
+      </Text>
+      {runs.status === 'computing' && (
+        <Progress
+          value={runs.progress}
+          aria-label={`Computing district impacts, about ${percent}%`}
+          style={{ flex: 1 }}
+        />
+      )}
+      <StateDistrictComputeButton runs={runs} />
+      {(runs.status === 'partial' || runs.status === 'error') && runs.canRetry && (
+        <Button type="button" variant="outline" size="sm" onClick={runs.retry}>
+          Retry
+        </Button>
+      )}
+    </Group>
+  );
+}
+
+/**
  * Congressional district card content — must be rendered inside a
  * CongressionalDistrictDataProvider for district labels and focus metadata.
+ * A nationwide report's districts come from each state's own run: the card
+ * shows the state district panel until a state is in, then the map, filling
+ * in state by state, with how many states are in.
  */
 function CongressionalDistrictCard({
   output,
@@ -473,20 +516,16 @@ function CongressionalDistrictCard({
   const changeMetric = congressionalMode === 'relative' ? 'relative' : 'absolute';
   const outcomeMetric = congressionalMode === 'winner-pct' ? 'winner' : 'loser';
 
-  // Check if output already has district data (from nationwide calculation)
-  const savedDistricts = useMemo(() => {
-    if (!('congressional_district_impact' in output)) {
-      return null;
-    }
-    const districtData = (output as ReportOutputSocietyWideUS).congressional_district_impact;
-    if (!districtData?.districts) {
-      return null;
-    }
-    return districtData.districts.map((d) => ({
-      ...d,
-      district: normalizeDistrictId(d.district),
-    }));
-  }, [output]);
+  // A state report's own districts; a nationwide report's from each state's
+  // own run, never the districts stored on the nationwide result.
+  const {
+    districts: savedDistricts,
+    runs,
+    pendingStates,
+    failedStates,
+  } = useCongressionalDistrictImpacts(output);
+  // A nationwide report's runs, while not every state is in.
+  const unfinishedRuns = runs && runs.status !== 'complete' ? runs : null;
 
   const savedDistrictAvailability = useMemo(
     () =>
@@ -636,9 +675,19 @@ function CongressionalDistrictCard({
       districtErrorSummary(
         savedDistricts,
         savedDistrictAvailability?.expectedDistrictIds ??
-          getExpectedDistrictIds(labelLookup, stateCode)
+          getExpectedDistrictIds(labelLookup, stateCode),
+        // States still to come are not missing; failed states are marked.
+        runs ? { pendingStates, failedStates } : undefined
       ),
-    [labelLookup, savedDistrictAvailability, savedDistricts, stateCode]
+    [
+      failedStates,
+      labelLookup,
+      pendingStates,
+      runs,
+      savedDistrictAvailability,
+      savedDistricts,
+      stateCode,
+    ]
   );
 
   const visibleErrorCount =
@@ -656,7 +705,11 @@ function CongressionalDistrictCard({
       expandedRows={3}
       shrunkenHeader={header}
       shrunkenBody={
-        mapData.length === 0 ? (
+        unfinishedRuns && !savedDistricts ? (
+          <Stack justify="center" style={{ height: '100%' }}>
+            <StateDistrictComputePanel runs={unfinishedRuns} />
+          </Stack>
+        ) : mapData.length === 0 ? (
           <Stack gap="sm" align="center" justify="center" style={{ height: '100%' }}>
             <Text size="sm" c={colors.text.secondary}>
               No congressional district data available
@@ -677,71 +730,82 @@ function CongressionalDistrictCard({
               left: 0,
               right: 0,
               bottom: 0,
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr',
-              gap: spacing.md,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: spacing.sm,
             }}
           >
-            {/* Left half: small hex choropleth map, zoomed in */}
-            <div style={{ height: '100%', overflow: 'hidden' }}>
-              <div
-                style={{
-                  transform: stateCode ? 'scale(1)' : 'scale(1.35)',
-                  transformOrigin: 'center center',
-                  height: '100%',
-                }}
-              >
-                <USDistrictChoroplethMap
-                  data={mapData}
-                  visualizationType="hex"
-                  config={{
-                    ...mapConfig,
-                    height: 300,
-                    showColorBar: false,
-                  }}
-                  focusState={stateCode ?? undefined}
-                  errorStates={mapErrorStates}
-                />
-              </div>
-            </div>
-            {/* Right third: rankings stacked — winners on top */}
+            {unfinishedRuns && <StateRunsStatusRow runs={unfinishedRuns} />}
             <div
               style={{
-                display: 'flex',
-                flexDirection: 'column',
+                flex: 1,
+                minHeight: 0,
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr',
                 gap: spacing.md,
-                overflow: 'hidden',
               }}
             >
-              {isOutcomeMode ? (
-                <>
-                  <DistrictListColumn
-                    items={top5}
-                    header={listHeaders.top}
-                    formatValue={rankingFormatValue}
+              {/* Left half: small hex choropleth map, zoomed in */}
+              <div style={{ height: '100%', overflow: 'hidden' }}>
+                <div
+                  style={{
+                    transform: stateCode ? 'scale(1)' : 'scale(1.35)',
+                    transformOrigin: 'center center',
+                    height: '100%',
+                  }}
+                >
+                  <USDistrictChoroplethMap
+                    data={mapData}
+                    visualizationType="hex"
+                    config={{
+                      ...mapConfig,
+                      height: 300,
+                      showColorBar: false,
+                    }}
+                    focusState={stateCode ?? undefined}
+                    errorStates={mapErrorStates}
                   />
-                  <DistrictListColumn
-                    items={bottom5}
-                    header={listHeaders.bottom}
-                    formatValue={rankingFormatValue}
-                  />
-                </>
-              ) : (
-                <>
-                  <DistrictRankColumn
-                    items={top5}
-                    gainHeader={signedHeaders.topGain}
-                    lossHeader={signedHeaders.topLoss}
-                    formatValue={rankingFormatValue}
-                  />
-                  <DistrictRankColumn
-                    items={bottom5}
-                    gainHeader={signedHeaders.bottomGain}
-                    lossHeader={signedHeaders.bottomLoss}
-                    formatValue={rankingFormatValue}
-                  />
-                </>
-              )}
+                </div>
+              </div>
+              {/* Right third: rankings stacked — winners on top */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: spacing.md,
+                  overflow: 'hidden',
+                }}
+              >
+                {isOutcomeMode ? (
+                  <>
+                    <DistrictListColumn
+                      items={top5}
+                      header={listHeaders.top}
+                      formatValue={rankingFormatValue}
+                    />
+                    <DistrictListColumn
+                      items={bottom5}
+                      header={listHeaders.bottom}
+                      formatValue={rankingFormatValue}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <DistrictRankColumn
+                      items={top5}
+                      gainHeader={signedHeaders.topGain}
+                      lossHeader={signedHeaders.topLoss}
+                      formatValue={rankingFormatValue}
+                    />
+                    <DistrictRankColumn
+                      items={bottom5}
+                      gainHeader={signedHeaders.bottomGain}
+                      lossHeader={signedHeaders.bottomLoss}
+                      formatValue={rankingFormatValue}
+                    />
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )
@@ -759,6 +823,7 @@ function CongressionalDistrictCard({
       }
       expandedContent={
         <Stack gap="sm">
+          {unfinishedRuns && <StateDistrictComputePanel runs={unfinishedRuns} />}
           {visibleErrorCount > 0 && (
             <Text size="sm" c={colors.text.secondary}>
               {isOutcomeMode
@@ -774,7 +839,7 @@ function CongressionalDistrictCard({
               focusState={stateCode ?? undefined}
               errorStates={mapErrorStates}
             />
-          ) : (
+          ) : unfinishedRuns && !savedDistricts ? null : (
             <Stack align="center" justify="center" style={{ height: CONGRESSIONAL_MAP_H }}>
               <Text c={colors.text.secondary}>
                 {isOutcomeMode

@@ -1,4 +1,5 @@
 import BreakdownComputePanel, {
+  BreakdownComputeButton,
   type BreakdownComputeCopy,
 } from '@/components/flagship/report/BreakdownComputePanel';
 import { RunLoading } from '@/components/flagship/report/RunProgress';
@@ -29,6 +30,18 @@ export function listStates(labels: string[]): string {
     return labels[0] ?? '';
   }
   return `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`;
+}
+
+/** The button that computes the remaining states; shown only before they are computed. */
+export function StateDistrictComputeButton({ runs }: { runs: StateDistrictRuns }) {
+  return (
+    <BreakdownComputeButton
+      status={runs.status === 'checking' ? 'computing' : runs.status}
+      copy={{ ...DISTRICT_COPY, intro: '' }}
+      canStart={runs.canStart}
+      onStart={runs.start}
+    />
+  );
 }
 
 function intro(runs: StateDistrictRuns): string {

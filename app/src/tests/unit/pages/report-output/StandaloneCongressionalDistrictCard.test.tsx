@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { StandaloneCongressionalDistrictCard } from '@/pages/report-output/SocietyWideOverview';
@@ -41,7 +42,11 @@ describe('StandaloneCongressionalDistrictCard', () => {
   });
 
   test('given the flagship districts section then the card opens expanded and collapses on demand', () => {
-    render(<StandaloneCongressionalDistrictCard output={output as any} />);
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <StandaloneCongressionalDistrictCard output={output as any} />
+      </QueryClientProvider>
+    );
 
     const collapse = screen.getByRole('button', { name: 'Collapse' });
     fireEvent.click(collapse);
