@@ -141,6 +141,39 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(2);
   });
 
+  test('given the current load cached then its entry outlives the old five-minute lifetime', async () => {
+    // Given
+    const queryClient = testQueryClient();
+    renderHook(() => useV3VariablesInBackground(), { wrapper: v3Wrapper(queryClient) });
+
+    // When
+    await waitFor(() => expect(store.getState().metadata.v2VariablesLoadId).toBeDefined());
+
+    // Then
+    const [cached] = queryClient.getQueryCache().findAll({ queryKey: ['v2-catalog-variables'] });
+    expect(cached.gcTime).toBe(Infinity);
+  });
+
+  test("given the store already holds this load's variables then a later page asks for nothing, even without the cached entry", async () => {
+    // Given
+    const queryClient = testQueryClient();
+    const first = renderHook(() => useV3VariablesInBackground(), {
+      wrapper: v3Wrapper(queryClient),
+    });
+    await waitFor(() => expect(store.getState().metadata.v2VariablesLoadId).toBeDefined());
+    first.unmount();
+    queryClient.removeQueries({ queryKey: ['v2-catalog-variables'] });
+
+    // When
+    renderHook(() => useV3VariablesInBackground(), { wrapper: v3Wrapper(queryClient) });
+    const reader = renderHook(() => useV3Variables(), { wrapper: v3Wrapper(queryClient) });
+
+    // Then
+    expect(reader.result.current.state).toBe('ready');
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+    expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1);
+  });
+
   test('given a new model catalog load then only its variables stay cached', async () => {
     // Given
     const queryClient = testQueryClient();
