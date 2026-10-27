@@ -44,7 +44,8 @@ export interface HexMapDataPoint {
 
 /**
  * An area the hex map places but has no value for, such as one disclosure
- * control withheld. The map draws it hatched, outside its colour scale.
+ * control withheld. The map draws it hatched with a grey edge, outside its
+ * colour scale.
  */
 export interface HexMapMissingArea {
   /** Unique identifier for this area, e.g. its code */
