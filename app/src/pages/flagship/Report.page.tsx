@@ -39,6 +39,7 @@ import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
+import { useV3VariablesInBackground } from '@/hooks/useV3Variables';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
 import {
   isUntitledReform,
@@ -107,6 +108,8 @@ function runStartedAt(...stamps: Array<string | null | undefined>): number | und
 export default function FlagshipReportPage({ userReportId: propId }: FlagshipReportPageProps) {
   const params = useParams<{ userReportId: string }>();
   const userReportId = propId ?? params.userReportId ?? '';
+  // On v2, the variables (household builder, breakdown, programme names) start loading at once.
+  useV3VariablesInBackground();
   // A report's link is its saved report's ID, which anyone can open with its
   // owner's details. Without accounts (sign-in off, or outside the US and
   // UK) nothing is shared, so the link is the v1 report's number; where
