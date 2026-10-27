@@ -490,6 +490,34 @@ describe('HexagonalMap default view', () => {
   });
 });
 
+describe('HexagonalMap tiled frame', () => {
+  test('given a tiled map of a few areas then every hexagon stays inside the frame', () => {
+    // When: three areas, so each hexagon is drawn large
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} config={{ tiled: true }} onSelect={vi.fn()} />
+    );
+
+    // Then
+    const extent = hexagonExtent(container);
+    expect(extent.minY).toBeGreaterThanOrEqual(0);
+    expect(extent.maxY).toBeLessThanOrEqual(380);
+    expect(extent.minX).toBeGreaterThanOrEqual(0);
+  });
+
+  test('given a tiled UK-shaped map then every hexagon stays inside the frame', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} config={{ tiled: true }} onSelect={vi.fn()} />
+    );
+
+    // Then
+    const extent = hexagonExtent(container);
+    expect(extent.minY).toBeGreaterThanOrEqual(0);
+    expect(extent.maxY).toBeLessThanOrEqual(380);
+    expect(extent.minX).toBeGreaterThanOrEqual(0);
+  });
+});
+
 describe('HexagonalMap fillWidth', () => {
   test('given fillWidth then the map takes the frame width and the legend ends at the logo inset', () => {
     // Given a frame 1000 pixels wide

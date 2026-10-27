@@ -33,7 +33,11 @@ export interface HexMapConfig {
   /** Height of the plot in pixels */
   height?: number;
 
-  /** Size of each hexagon marker */
+  /**
+   * On the untiled grid, the size of each hexagon. On either grid, twice it
+   * is the margin around the map. A tiled hexagon's size follows the scale
+   * instead, so its neighbours touch.
+   */
   hexSize?: number;
 
   /**
