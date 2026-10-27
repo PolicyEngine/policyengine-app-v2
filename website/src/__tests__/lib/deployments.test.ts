@@ -325,7 +325,7 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
     data_basis: null,
   });
   expect(household.served.detail).toBe(
-    "Not deployed as declared: it serves model 2.42.4, but the lock declares 2.53.1. " +
+    "Live differs from main: it serves model 2.42.4, but the lock on main declares 2.53.1. " +
       "Its frontier channel, which is not yet serving users, runs policyengine-us 2.53.1.",
   );
   expect(app.served.detail).toBe(
@@ -420,8 +420,8 @@ test("a served data build that differs from the declared one is not deployed", (
   expect(served.data_build_id).toBe("uk-old");
   expect(served.data_basis).toBe("served_py_bundle");
   expect(served.detail).toBe(
-    "Not deployed as declared: it serves .py 6.10.0, but the lock declares 6.11.1; " +
-      "it serves data build uk-old, but the lock declares uk-new.",
+    "Live differs from main: it serves .py 6.10.0, but the lock on main declares 6.11.1; " +
+      "it serves data build uk-old, but the lock on main declares uk-new.",
   );
   expect(
     compareServed(row, { error: "timeout", source_url: "u" }, bundles([]), "us")
@@ -559,7 +559,7 @@ test("a gateway worker that serves another build than its .py certifies is flagg
   );
   expect(served.status).toBe("differs");
   expect(served.detail).toBe(
-    "Not deployed as declared: it serves data build uk-rebuilt, but the lock declares uk-old; " +
+    "Live differs from main: it serves data build uk-rebuilt, but the lock on main declares uk-old; " +
       "its gateway worker for .py 6.10.0 serves data build uk-rebuilt, but .py 6.10.0 certifies uk-old.",
   );
 });

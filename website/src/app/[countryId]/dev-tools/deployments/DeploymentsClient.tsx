@@ -40,8 +40,8 @@ const DECLARED: Record<DeploymentStatus, { label: string; tone: Tone }> = {
 };
 
 const SERVED: Record<ServedStatus, { label: string; tone: Tone }> = {
-  matches: { label: "Deployed", tone: "success" },
-  differs: { label: "Not deployed", tone: "danger" },
+  matches: { label: "Same as main", tone: "success" },
+  differs: { label: "Differs from main", tone: "danger" },
   no_worker: { label: "No worker", tone: "danger" },
   unavailable: { label: "Report unavailable", tone: "warning" },
   not_reported: { label: "Not reported", tone: "neutral" },
@@ -192,7 +192,7 @@ function Stat({
 
 const DRIFT_BG = TONES.danger.bg;
 
-// One overview value: the declared value, or "lock → serving" when the
+// One overview value: the declared value, or "main → live" when the
 // running service reports something else.
 function DriftValue({
   declared,
@@ -224,8 +224,8 @@ function DriftValue({
   if (servedKnown && served && declared && served !== declared) {
     return (
       <span style={{ color: TONES.danger.text }}>
-        <span className="tw:block">lock&nbsp;{show(declared)}</span>
-        <span className="tw:block">serving&nbsp;{show(served)}</span>
+        <span className="tw:block">main&nbsp;{show(declared)}</span>
+        <span className="tw:block">live&nbsp;{show(served)}</span>
       </span>
     );
   }
@@ -273,7 +273,7 @@ function Overview({
             }}
           >
             <th className={`${head} tw:w-[12rem]`}>Service</th>
-            <th className={head}>Deployment</th>
+            <th className={head}>Live vs main</th>
             <th className={head}>Vs latest .py</th>
             <th className={head}>.py</th>
             <th className={head}>{modelLabel}</th>

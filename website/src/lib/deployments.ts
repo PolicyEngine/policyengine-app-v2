@@ -480,7 +480,7 @@ export function compareServed(
   ) => {
     if (served && declared && served !== declared) {
       differences.push(
-        `it serves ${label} ${served}, but the lock declares ${declared}`,
+        `it serves ${label} ${served}, but the lock on main declares ${declared}`,
       );
     }
   };
@@ -509,13 +509,13 @@ export function compareServed(
     return {
       ...state,
       status: "differs",
-      detail: `Not deployed as declared: ${differences.join("; ")}.${report.note}${others}`,
+      detail: `Live differs from main: ${differences.join("; ")}.${report.note}${others}`,
     };
   }
   return {
     ...state,
     status: "matches",
-    detail: `Serves what the lock declares.${workerNote}${report.note}${others}`,
+    detail: `Serves what the lock on main declares.${workerNote}${report.note}${others}`,
   };
 }
 

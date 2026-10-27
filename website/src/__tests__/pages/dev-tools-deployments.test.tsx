@@ -50,7 +50,7 @@ const response: DeploymentsResponse = {
         source_url:
           "https://api.policyengine.org/v2/tax-benefit-models/by-country/us",
         detail:
-          "Not deployed as declared: it serves .py 6.10.0, but the lock declares 6.11.1.",
+          "Live differs from main: it serves .py 6.10.0, but the lock on main declares 6.11.1.",
       },
     }),
     row({
@@ -95,7 +95,9 @@ describe("Deployments developer tool", () => {
     ).toBeInTheDocument();
     // The overview shows lock and served values where they drift.
     const overviewApi = screen.getByText("PolicyEngine API").closest("tr")!;
-    expect(within(overviewApi).getByText("Not deployed")).toBeInTheDocument();
+    expect(
+      within(overviewApi).getByText("Differs from main"),
+    ).toBeInTheDocument();
     expect(within(overviewApi).getByText("6.11.1")).toBeInTheDocument();
     expect(within(overviewApi).getByText("6.10.0")).toBeInTheDocument();
     const overviewHousehold = screen.getByText("Household API").closest("tr")!;
@@ -107,9 +109,9 @@ describe("Deployments developer tool", () => {
     ).toBeInTheDocument();
 
     // The status explains itself on hover.
-    expect(within(overviewApi).getByText("Not deployed")).toHaveAttribute(
+    expect(within(overviewApi).getByText("Differs from main")).toHaveAttribute(
       "title",
-      "Not deployed as declared: it serves .py 6.10.0, but the lock declares 6.11.1.",
+      "Live differs from main: it serves .py 6.10.0, but the lock on main declares 6.11.1.",
     );
     expect(global.fetch).toHaveBeenCalledWith("/api/deployments?country=us");
   });
