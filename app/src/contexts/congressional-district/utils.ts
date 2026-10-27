@@ -8,6 +8,22 @@ import type { FetchState, StateDistrictData } from './types';
 const STATE_REGION_PREFIX = 'state/';
 
 /**
+ * Which congressional districts a report's region has: every state's, for
+ * the whole country (no region, or `us`); one state's, for `state/*`; or
+ * none, for a district, a place or anything else.
+ */
+export type CongressionalDistrictScope = 'nationwide' | 'state';
+
+export function congressionalDistrictScope(
+  region: string | null | undefined
+): CongressionalDistrictScope | null {
+  if (!region || region.toLowerCase() === 'us') {
+    return 'nationwide';
+  }
+  return isStateLevelRegion(region) ? 'state' : null;
+}
+
+/**
  * Check if a region string represents a state-level report.
  * State regions have the format 'state/ca', 'state/dc', etc.
  *

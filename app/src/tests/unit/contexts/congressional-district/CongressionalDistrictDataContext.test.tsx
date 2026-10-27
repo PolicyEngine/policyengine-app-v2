@@ -127,6 +127,28 @@ describe('CongressionalDistrictDataContext', () => {
       expect(result.current.stateCode).toBeNull();
     });
 
+    test.each([
+      ['a nationwide report', 'nationwide', 'us'],
+      ['a report with no region', 'nationwide', undefined],
+      ['a state report', 'state', 'state/ca'],
+      ['a district report', null, 'congressional_district/CA-01'],
+    ])('given %s then the scope is %s', (_label, expected, region) => {
+      // Given
+      const store = createMockStore(MOCK_REGIONS);
+      const wrapper = createWrapper(store, {
+        reformPolicyId: '123',
+        baselinePolicyId: '456',
+        year: '2024',
+        region,
+      });
+
+      // When
+      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
+
+      // Then
+      expect(result.current.scope).toBe(expected);
+    });
+
     test('given state-level report then isStateLevelReport is true', () => {
       // Given
       const store = createMockStore(MOCK_REGIONS);

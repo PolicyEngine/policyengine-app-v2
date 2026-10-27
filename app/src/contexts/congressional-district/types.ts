@@ -4,6 +4,7 @@
 
 import type { DistrictLabelLookup } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { USCongressionalDistrictBreakdown } from '@/types/metadata/ReportOutputSocietyWideByCongressionalDistrict';
+import type { CongressionalDistrictScope } from './utils';
 
 /** Polling interval in milliseconds */
 export const POLL_INTERVAL_MS = 1000;
@@ -78,6 +79,8 @@ export interface CongressionalDistrictDataContextValue {
   labelLookup: DistrictLabelLookup;
   /** Whether this is a state-level report (single state) vs national */
   isStateLevelReport: boolean;
+  /** The report's districts: every state's, one state's, or none (a district or place report). */
+  scope: CongressionalDistrictScope | null;
   /** The region code for state-level reports (e.g., 'ca', 'dc'), null for national */
   stateCode: string | null;
   /** Start fetching data (no-op if already started) */

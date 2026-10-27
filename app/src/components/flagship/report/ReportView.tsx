@@ -23,6 +23,7 @@ import ReportContents, {
 } from '@/components/flagship/ReportContents';
 import type { ModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Tabs, TabsContent, TabsList, TabsTrigger, Text, Title } from '@/components/ui';
+import { congressionalDistrictScope } from '@/contexts/congressional-district/utils';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -284,9 +285,7 @@ export default function ReportView({
 
   // Whether the report's scope has districts at all, results loaded or not:
   // nationwide or one state. showUSDistricts also needs the run's policies.
-  const districtScope =
-    countryId === 'us' &&
-    (!region || region.toLowerCase() === 'us' || region.toLowerCase().startsWith('state/'));
+  const districtScope = countryId === 'us' && congressionalDistrictScope(region) !== null;
   const showUSDistricts = canShowCongressionalDistrictImpactCard({
     countryId,
     reformPolicyId,

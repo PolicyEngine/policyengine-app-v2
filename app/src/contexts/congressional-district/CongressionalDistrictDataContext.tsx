@@ -27,6 +27,7 @@ import {
 import {
   calculateTotalDistrictsLoaded,
   computeFetchStatus,
+  congressionalDistrictScope,
   extractStateCode,
   getStateCodesToFetch,
   isStateLevelRegion,
@@ -204,6 +205,8 @@ export function CongressionalDistrictDataProvider({
     [isStateLevelReport, region]
   );
 
+  const scope = useMemo(() => congressionalDistrictScope(region), [region]);
+
   // Build context value
   const contextValue = useMemo<CongressionalDistrictDataContextValue>(
     () => ({
@@ -222,6 +225,7 @@ export function CongressionalDistrictDataProvider({
       erroredStates: state.erroredStates,
       labelLookup,
       isStateLevelReport,
+      scope,
       stateCode: stateCodeValue,
       startFetch,
       validateAllLoaded,
@@ -244,6 +248,7 @@ export function CongressionalDistrictDataProvider({
       errorCount,
       labelLookup,
       isStateLevelReport,
+      scope,
       stateCodeValue,
       startFetch,
       validateAllLoaded,

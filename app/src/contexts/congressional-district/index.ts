@@ -19,7 +19,10 @@ export type {
 
 export { POLL_INTERVAL_MS, MAX_POLL_ATTEMPTS } from './types';
 
+export type { CongressionalDistrictScope } from './utils';
+
 export {
+  congressionalDistrictScope,
   isStateLevelRegion,
   extractStateCode,
   getStateCodesToFetch,

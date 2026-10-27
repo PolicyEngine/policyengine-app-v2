@@ -7,6 +7,7 @@ import type { StateDistrictData } from '@/contexts/congressional-district/types'
 import {
   calculateTotalDistrictsLoaded,
   computeFetchStatus,
+  congressionalDistrictScope,
   extractStateCode,
   getStateCodesToFetch,
   isStateLevelRegion,
@@ -24,6 +25,31 @@ import {
   TEST_STATE_CODES,
   TEST_STRIPPED_STATE_CODES,
 } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
+
+describe('congressionalDistrictScope', () => {
+  test.each([
+    ['no region', undefined],
+    ['the US', TEST_REGION_FORMATS.NATIONAL],
+    ['the US in capitals', TEST_REGION_FORMATS.NATIONAL_UPPERCASE],
+  ])('given %s then the scope is nationwide', (_label, region) => {
+    expect(congressionalDistrictScope(region)).toBe('nationwide');
+  });
+
+  test.each([TEST_REGION_FORMATS.STATE_CA, TEST_REGION_FORMATS.STATE_UPPERCASE])(
+    'given %s then the scope is a state',
+    (region) => {
+      expect(congressionalDistrictScope(region)).toBe('state');
+    }
+  );
+
+  test.each([
+    TEST_REGION_FORMATS.CONGRESSIONAL_DISTRICT,
+    TEST_REGION_FORMATS.PLACE,
+    TEST_REGION_FORMATS.LEGACY_CA,
+  ])('given %s then there is no district scope', (region) => {
+    expect(congressionalDistrictScope(region)).toBeNull();
+  });
+});
 
 describe('isStateLevelRegion', () => {
   test('given state/ca region then returns true', () => {

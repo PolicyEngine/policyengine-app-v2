@@ -35,7 +35,9 @@ export const TEST_REGION_FORMATS = {
   STATE_UPPERCASE: 'STATE/CA',
   LEGACY_CA: 'ca',
   NATIONAL: 'us',
+  NATIONAL_UPPERCASE: 'US',
   CONGRESSIONAL_DISTRICT: 'congressional_district/CA-01',
+  PLACE: 'place/CA-44000',
 } as const;
 
 export const TEST_POLICY_IDS = {
@@ -266,6 +268,7 @@ export function createMockContextValue(
     erroredStates: new Set<string>(),
     labelLookup: new Map(),
     isStateLevelReport: false,
+    scope: 'nationwide',
     stateCode: null,
     startFetch: () => {},
     validateAllLoaded: () => false,
@@ -318,6 +321,7 @@ export const MOCK_DC_STATE_LEVEL_CONTEXT: CongressionalDistrictDataContextValue 
     isComplete: true,
     hasStarted: true,
     isStateLevelReport: true,
+    scope: 'state',
     stateCode: TEST_STRIPPED_STATE_CODES.DC,
     getCompletedStates: () => [TEST_STATE_CODES.DC],
   });
@@ -335,6 +339,7 @@ export const MOCK_CA_STATE_LEVEL_CONTEXT: CongressionalDistrictDataContextValue 
     isComplete: true,
     hasStarted: true,
     isStateLevelReport: true,
+    scope: 'state',
     stateCode: TEST_STRIPPED_STATE_CODES.CALIFORNIA,
     getCompletedStates: () => [TEST_STATE_CODES.CALIFORNIA],
   });
