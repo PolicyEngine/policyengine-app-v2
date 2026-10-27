@@ -10,6 +10,9 @@ import DistrictImpactCard, {
 import {
   MARYLAND_4327_DISTRICTS,
   MARYLAND_DISTRICT_LABELS,
+  TEXAS_REGION,
+  UTAH_AND_TEXAS_LABELS,
+  UTAH_RUN_DISTRICTS,
   withTinyRelativeLoss,
 } from '@/tests/fixtures/components/flagship/report/districtImpactMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -242,6 +245,39 @@ describe('DistrictImpactCard district details', () => {
 
     // Then
     expect(screen.queryByRole('region', { name: /details/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('DistrictImpactCard with states still running', () => {
+  beforeEach(() => {
+    vi.mocked(DistrictChoroplethMap).mockClear();
+    mockUseCongressionalDistrictData.mockReturnValue({
+      labelLookup: UTAH_AND_TEXAS_LABELS,
+      stateCode: null,
+    });
+  });
+
+  /** The states the card last asked the map to mark as missing. */
+  const markedStates = () => vi.mocked(DistrictChoroplethMap).mock.calls.at(-1)?.[0].errorStates;
+
+  test('given a state still pending then its districts are not called missing or marked', () => {
+    // When
+    render(<DistrictImpactCard districts={UTAH_RUN_DISTRICTS} pendingStates={[TEXAS_REGION]} />);
+
+    // Then
+    expect(screen.queryByText(/congressional districts are missing/)).not.toBeInTheDocument();
+    expect(markedStates()).toEqual([]);
+  });
+
+  test('given a state that failed then its districts are called missing and it is marked', () => {
+    // When
+    render(<DistrictImpactCard districts={UTAH_RUN_DISTRICTS} failedStates={[TEXAS_REGION]} />);
+
+    // Then
+    expect(
+      screen.getByText('2 congressional districts are missing impact data.')
+    ).toBeInTheDocument();
+    expect(markedStates()).toEqual(['TX']);
   });
 });
 

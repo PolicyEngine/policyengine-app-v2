@@ -463,6 +463,8 @@ export default function DistrictImpactCard({
   output,
   districts,
   modes,
+  pendingStates,
+  failedStates,
 }: {
   /** The full results, whose district breakdown the card maps. */
   output?: SocietyWideReportOutput;
@@ -470,6 +472,13 @@ export default function DistrictImpactCard({
   districts?: DistrictImpactRow[];
   /** The views to offer, e.g. without "Relative" where the data lacks it. */
   modes?: CongressionalMode[];
+  /**
+   * With districts from each state's own run: the states (`state/ca`) still
+   * to come, whose districts are not called missing or marked on the map.
+   */
+  pendingStates?: string[];
+  /** With districts from each state's own run: the states that failed, which are marked. */
+  failedStates?: string[];
 }) {
   const { labelLookup, stateCode } = useCongressionalDistrictData();
   const modeOptions = modes
@@ -642,8 +651,12 @@ export default function DistrictImpactCard({
   // Detect districts that are expected from metadata but missing from the saved report output.
   const savedErrorSummary = useMemo(
     () =>
-      districtErrorSummary(savedDistricts, savedDistrictAvailability?.expectedDistrictIds ?? []),
-    [savedDistrictAvailability, savedDistricts]
+      districtErrorSummary(
+        savedDistricts,
+        savedDistrictAvailability?.expectedDistrictIds ?? [],
+        pendingStates || failedStates ? { pendingStates, failedStates } : undefined
+      ),
+    [failedStates, pendingStates, savedDistrictAvailability, savedDistricts]
   );
 
   const visibleErrorCount =

@@ -81,3 +81,31 @@ export function withTinyRelativeLoss(
     row.district === districtId ? { ...row, relative_household_income_change: -1e-9 } : row
   );
 }
+
+/** A nationwide report's labels for two states' districts, Utah's and Texas's. */
+export const UTAH_AND_TEXAS_LABELS = new Map([
+  ['UT-01', "Utah's 1st congressional district"],
+  ['UT-02', "Utah's 2nd congressional district"],
+  ['TX-01', "Texas's 1st congressional district"],
+  ['TX-02', "Texas's 2nd congressional district"],
+]);
+
+/** Utah's districts, in from its own run; Texas's are not. */
+export const UTAH_RUN_DISTRICTS: DistrictImpactRow[] = [
+  {
+    district: 'UT-01',
+    average_household_income_change: 120,
+    relative_household_income_change: 0.004,
+    winner_percentage: 0.3,
+    loser_percentage: 0.1,
+  },
+  {
+    district: 'UT-02',
+    average_household_income_change: 80,
+    relative_household_income_change: 0.003,
+    winner_percentage: 0.2,
+    loser_percentage: 0.1,
+  },
+];
+
+export const TEXAS_REGION = 'state/tx';
