@@ -704,6 +704,37 @@ describe('ReportView US districts from state runs', () => {
     );
   });
 
+  test('given a nationwide report then the overview card says each state runs on its own data', () => {
+    // When
+    api = fakeStateDistrictApi();
+    vi.stubGlobal('fetch', api.fetch);
+    render(reportFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })));
+
+    // Then
+    expect(screen.getByRole('button', { name: 'Explore districts' })).toHaveTextContent(
+      'Compare income changes across districts on a map. Each state’s districts come from a run on its own data, which takes a few minutes.'
+    );
+  });
+
+  test('given a state report then the overview card reads as before', () => {
+    // When
+    api = fakeStateDistrictApi();
+    vi.stubGlobal('fetch', api.fetch);
+    render(
+      reportFor(new QueryClient({ defaultOptions: { queries: { retry: false } } }), {
+        region: UTAH,
+        output: UTAH_REPORT_OUTPUT,
+      })
+    );
+
+    // Then
+    expect(
+      within(screen.getByRole('button', { name: 'Explore districts' })).getByText(
+        'Compare income changes across districts on a map.'
+      )
+    ).toBeInTheDocument();
+  });
+
   test('given the report switched to another year then nothing is computed for it until its own Compute', async () => {
     // Given
     const { user, queryClient, rerender } = await openDistricts();

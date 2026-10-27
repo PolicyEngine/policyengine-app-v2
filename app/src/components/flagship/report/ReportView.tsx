@@ -62,6 +62,18 @@ const UK_DISTRICTS_COMPUTE_CARD_COPY: DistrictsCardCopy = {
     'Compare income changes across constituencies and local authorities on a map. They calculate in the background, in a few minutes.',
 };
 
+/**
+ * The card for a nationwide US report's results: its congressional
+ * districts come from each state's own run, on request
+ * (CongressionalDistrictSection), not from the nationwide result.
+ */
+const US_DISTRICTS_COMPUTE_CARD_COPY: DistrictsCardCopy = {
+  title: 'District impacts',
+  action: 'Explore districts',
+  preview:
+    'Compare income changes across districts on a map. Each state’s districts come from a run on its own data, which takes a few minutes.',
+};
+
 function SectionHeading({ id, title }: { id: string; title: string }) {
   return (
     <Title
@@ -441,7 +453,11 @@ export default function ReportView({
                             outputServesLocalAreaBreakdowns(output)
                             ? UK_DISTRICTS_COMPUTE_CARD_COPY
                             : UK_DISTRICTS_CARD_COPY
-                          : undefined
+                          : output &&
+                              showUSDistricts &&
+                              congressionalDistrictScope(region) === 'nationwide'
+                            ? US_DISTRICTS_COMPUTE_CARD_COPY
+                            : undefined
                       }
                       showDistricts={showDistrictsSection}
                       onOpen={openReportSection}
