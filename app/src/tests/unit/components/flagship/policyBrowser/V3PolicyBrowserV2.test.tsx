@@ -154,6 +154,36 @@ describe('V3PolicyBrowser with v3 on the v2 routes', () => {
     expect(requestsTo(fetchStub, PARAMETERS_PATH)).toHaveLength(1);
   });
 
+  test('given folders then each counts what a draft can add at or below it, and one with none is hidden', async () => {
+    // Given: the API counts direct children (IRS has two, Credits two,
+    // one of them EITC, whose only parameter a draft cannot edit).
+    const user = userEvent.setup();
+    releaseFirstLevel();
+    render(
+      <QueryClientProvider client={testQueryClient()}>
+        <Browser onAdd={vi.fn()} />
+      </QueryClientProvider>
+    );
+
+    // Then: the three addable parameters under IRS, as v1 counts them.
+    const irs = await screen.findByRole('button', { name: 'Open IRS' });
+    expect(irs).toHaveTextContent('3 parameters');
+
+    // When
+    await user.click(irs);
+
+    // Then
+    expect(await screen.findByRole('button', { name: 'Open Credits' })).toHaveTextContent('1');
+    expect(screen.getByRole('button', { name: 'Open Deductions' })).toHaveTextContent('2');
+    await user.click(screen.getByRole('button', { name: 'Open Credits' }));
+    expect(
+      await screen.findByRole('button', { name: 'Open Child Tax Credit' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Open Earned Income Tax Credit' })
+    ).not.toBeInTheDocument();
+  });
+
   test('given a parameter is added then the browser hands its path on', async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();

@@ -6,6 +6,7 @@ import { ErrorState, SkeletonLine, SkeletonRegion } from '@/components/flagship/
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
+import { addableCountsByFolder } from '@/libs/flagship/policyTreeIndex';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { selectV2CatalogVersion } from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
@@ -128,11 +129,12 @@ function OnDemandPolicyBrowser({
   // groups differently) falls back to the top level rather than a blank.
   const folderFound = trailPaths.length > 0 && trail.length === trailPaths.length;
   const contents = folderFound ? nodesOf(levels[levels.length - 1]) : [];
-  const counts = new Map<string, number>(
-    levels.flatMap((level) =>
-      (level.data ?? []).map((child) => [child.path, child.child_count ?? 0])
-    )
-  );
+  // What a draft can add at or below each folder, from the search file
+  // (as v1 counts the whole tree): the API's child_count counts a node's
+  // direct children a reform can change, so it neither matches nor says
+  // whether anything below can be added. The browser shows only once the
+  // search file is in (the add bar waits for it), so the counts are known.
+  const counts = useMemo(() => addableCountsByFolder(addablePaths), [addablePaths]);
   const folders = contents.filter(
     (node) => node.type === 'parameterNode' && (counts.get(node.name) ?? 0) > 0
   );
