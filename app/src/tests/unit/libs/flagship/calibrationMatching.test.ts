@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   calibrationFitForGeography,
   calibrationMatchesForPaths,
+  calibrationPreviewTargets,
   calibrationTargetLabel,
   calibrationValueKind,
   calibrationVariableLabel,
@@ -25,6 +26,10 @@ import {
   mockDcFitRows,
   mockEitcCalibrationRow,
   POPULACE_RELEASE_ID,
+  UC_BAND_ROWS,
+  UC_HOUSEHOLDS_ROW,
+  UC_SPENDING_ROW,
+  UC_TARGETS_BY_GAP,
 } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import {
   NATIONWIDE,
@@ -63,6 +68,31 @@ const okResponse = (body: unknown) => ({ ok: true, json: async () => body }) as 
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+describe('calibrationPreviewTargets', () => {
+  test('given a programme sorted by gap then its spending and caseload lead, then the largest gaps', () => {
+    // When
+    const { ordered, previewCount } = calibrationPreviewTargets(UC_TARGETS_BY_GAP);
+
+    // Then
+    expect(previewCount).toBe(6);
+    expect(ordered.slice(0, previewCount)).toEqual([
+      UC_SPENDING_ROW,
+      UC_HOUSEHOLDS_ROW,
+      ...UC_BAND_ROWS.slice(0, 4),
+    ]);
+    expect(ordered).toHaveLength(UC_TARGETS_BY_GAP.length);
+  });
+
+  test('given fewer targets than the preview then all show', () => {
+    // When
+    const { ordered, previewCount } = calibrationPreviewTargets([UC_HOUSEHOLDS_ROW]);
+
+    // Then
+    expect(ordered).toEqual([UC_HOUSEHOLDS_ROW]);
+    expect(previewCount).toBe(1);
+  });
 });
 
 describe('geographyForRegion', () => {
