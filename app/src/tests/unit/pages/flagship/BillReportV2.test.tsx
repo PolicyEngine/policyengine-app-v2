@@ -56,6 +56,20 @@ vi.mock('@/libs/flagship/billMetrics', async (importOriginal) => {
 });
 
 const mockUseBillEconomy = vi.fn();
+const mockUseV3VariablesInBackground = vi.fn();
+
+/** The real variables hooks, with the page's background load observed. */
+vi.mock('@/hooks/useV3Variables', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useV3Variables')>();
+  return {
+    ...actual,
+    useV3VariablesInBackground: () => {
+      mockUseV3VariablesInBackground();
+      actual.useV3VariablesInBackground();
+    },
+  };
+});
+
 /** v3 after the switch: V3_API_ROUTES is 'v2'. */
 vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/v3ApiRoutes')>()),
@@ -163,5 +177,24 @@ describe('BillReportPage with v3 on the v2 routes', () => {
     await waitFor(() =>
       expect(screen.queryByText('Could not load the parameters')).not.toBeInTheDocument()
     );
+  });
+
+  test('given the page renders then it starts loading the variables in the background', async () => {
+    // Given
+    stubPublicApiFetch({
+      [PARAMETERS_PATH]: (url) =>
+        jsonResponse({
+          status: 'ok',
+          message: null,
+          result: catalogParametersResult(url.searchParams.getAll('name')),
+        }),
+    });
+    await seedV2ModelCatalog();
+
+    // When
+    renderReport();
+
+    // Then
+    expect(mockUseV3VariablesInBackground).toHaveBeenCalled();
   });
 });
