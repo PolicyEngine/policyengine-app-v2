@@ -49,3 +49,26 @@ export const FLAT_3000_REFORM = savedReform('rf-flat', 'Flat 3000', [
 
 /** A saved reform with the phased schedule itself. */
 export const PHASED_CTC_REFORM = savedReform('rf-phased', 'Phased CTC', PHASED_CTC_INTERVALS);
+
+/** A UK personal allowance raised from £12,570 to £13,000: a UK report's one change. */
+export const UK_PERSONAL_ALLOWANCE_PROVISION: RunReportProvision = {
+  path: 'gov.hmrc.income_tax.allowances.personal_allowance.amount',
+  breadcrumb: 'HMRC → Income tax → Allowances → Personal allowance',
+  unit: 'currency-GBP',
+  baselineValue: 12570,
+  value: 13000,
+};
+
+/**
+ * The years choices for a UK report from 2026 while the UK model covers
+ * 2024 to 2032: every window ends by 2032, so ten years become seven.
+ */
+export const UK_WINDOW_CHOICES_TO_2032 = [
+  '2026 only',
+  '2026–2028 · 3 years',
+  '2026–2030 · 5 years',
+  '2026–2032 · 7 years',
+];
+
+/** A ten-year window from 2026, as a report run before the cap could keep it. */
+export const TEN_YEAR_WINDOW_FROM_2026 = { startYear: 2026, windowSize: 10 };

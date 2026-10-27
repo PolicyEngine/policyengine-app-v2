@@ -136,32 +136,45 @@ export const UK_REGIONS = [
   { name: 'local_authority/Bedford', label: 'Bedford', type: 'local_authority' },
 ];
 
-export function seedDeductionMetadata({
-  regions = [],
-  lastYear = 2027,
+type MetadataRegion = { name: string; label: string; type: string };
+
+/**
+ * Puts a country's model metadata in the store as a finished fetch would:
+ * the given parameters and regions, and economy_options.time_period
+ * listing every year from firstYear to lastYear, as the Public API's
+ * metadata lists the years its model and data cover.
+ */
+function seedMetadata({
+  countryId,
+  parameters,
+  regions,
+  firstYear,
+  lastYear,
 }: {
-  regions?: Array<{ name: string; label: string; type: string }>;
-  /** The model's last year (economy_options.time_period runs 2025 to it). */
-  lastYear?: number;
-} = {}) {
-  const meta = { arg: 'us', requestId: 'draft-editor-test', requestStatus: 'pending' };
+  countryId: string;
+  parameters: Record<string, unknown>;
+  regions: MetadataRegion[];
+  firstYear: number;
+  lastYear: number;
+}) {
+  const meta = { arg: countryId, requestId: 'draft-editor-test', requestStatus: 'pending' };
   store.dispatch({ type: fetchMetadataThunk.pending.type, meta });
   store.dispatch({
     type: fetchMetadataThunk.fulfilled.type,
     meta: { ...meta, requestStatus: 'fulfilled' },
     payload: {
-      country: 'us',
+      country: countryId,
       data: {
         result: {
-          parameters: DEDUCTION_PARAMETERS,
+          parameters,
           variables: {},
           entities: {},
           variableModules: {},
           economy_options: {
             region: regions,
-            time_period: Array.from({ length: lastYear - 2024 }, (_, index) => ({
-              name: 2025 + index,
-              label: String(2025 + index),
+            time_period: Array.from({ length: lastYear - firstYear + 1 }, (_, index) => ({
+              name: firstYear + index,
+              label: String(firstYear + index),
             })),
             datasets: [],
           },
@@ -173,4 +186,40 @@ export function seedDeductionMetadata({
       },
     },
   });
+}
+
+export function seedDeductionMetadata({
+  regions = [],
+  lastYear = 2027,
+}: {
+  regions?: MetadataRegion[];
+  /** The model's last year (economy_options.time_period runs 2025 to it). */
+  lastYear?: number;
+} = {}) {
+  seedMetadata({
+    countryId: 'us',
+    parameters: DEDUCTION_PARAMETERS,
+    regions,
+    firstYear: 2025,
+    lastYear,
+  });
+}
+
+/**
+ * A country's metadata with no parameters, only its regions and the years
+ * its model and data cover (economy_options.time_period, firstYear to
+ * lastYear): what limits the years a report can ask for.
+ */
+export function seedModelYears({
+  countryId,
+  firstYear,
+  lastYear,
+  regions = [],
+}: {
+  countryId: string;
+  firstYear: number;
+  lastYear: number;
+  regions?: MetadataRegion[];
+}) {
+  seedMetadata({ countryId, parameters: {}, regions, firstYear, lastYear });
 }
