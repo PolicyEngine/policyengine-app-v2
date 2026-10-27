@@ -40,25 +40,26 @@ export interface UKHexMapPlacement {
 }
 
 /**
- * A level's hex-map points, placed from the app's layout: each point whose
- * code the layout has takes that position. A point the layout has no
- * position for (no code, as in an older saved result, or a code the layout
- * lacks) keeps the position its result gave it, and the map then draws the
- * untiled square grid those positions were made for. v2's and v3's UK hex
- * maps both place their areas with this.
+ * A level's hex-map points, placed from the app's layout, all or none.
+ * When the layout has a position for every point's code, each point takes
+ * its position, on the tiled grid. When it lacks even one (a point with no
+ * code, as in an older saved result, or with a code the layout does not
+ * have, such as a district abolished in April 2023), every point keeps the
+ * position its result gave it, on the untiled square grid those positions
+ * were made for: the two sets of positions are different grids, so mixing
+ * them would overlap or scatter the hexagons. v2's and v3's UK hex maps
+ * both place their areas with this.
  */
 export function placeOnUKHexLayout(
   level: UKBoundaryLevel,
   points: HexMapDataPoint[]
 ): UKHexMapPlacement {
-  let tiled = true;
-  const placed = points.map((point) => {
-    const position = ukHexPosition(level, point.code);
-    if (!position) {
-      tiled = false;
-      return point;
-    }
-    return { ...point, ...position };
-  });
-  return { points: placed, tiled };
+  const positions = points.map((point) => ukHexPosition(level, point.code));
+  if (positions.some((position) => position === null)) {
+    return { points, tiled: false };
+  }
+  return {
+    points: points.map((point, index) => ({ ...point, ...positions[index] })),
+    tiled: true,
+  };
 }

@@ -36,3 +36,31 @@ export const UNCODED_POINT: HexMapDataPoint = {
   x: 3,
   y: 4,
 };
+
+/**
+ * Darlington's hex-map point, at the Public API's position (7, 18). The
+ * layout places it a row higher, at (7, 19), so the point moves when placed.
+ */
+export const DARLINGTON_POINT: HexMapDataPoint = {
+  id: 'Darlington',
+  label: 'Darlington',
+  value: 45,
+  x: 7,
+  y: 18,
+  code: 'E06000005',
+};
+
+/**
+ * Allerdale, a district abolished in April 2023, as an older saved result
+ * holds it: a code the layout, which follows the April 2023 boundaries,
+ * does not have. The position is made up.
+ */
+export const ALLERDALE_CODE = 'E07000026';
+export const ALLERDALE_POINT: HexMapDataPoint = {
+  id: 'Allerdale',
+  label: 'Allerdale',
+  value: -15,
+  x: 3,
+  y: 19,
+  code: ALLERDALE_CODE,
+};

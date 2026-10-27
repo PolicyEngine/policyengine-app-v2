@@ -265,7 +265,8 @@ export default function UKLocalAreaMaps({
   );
 
   // The hex map places each area by its code in the app's layout, tiled.
-  // A result without codes keeps the API's positions on their square grid.
+  // A result with any area the layout cannot place keeps all the API's
+  // positions, on their square grid.
   const hexMap = useMemo(() => placeOnUKHexLayout(level, mapData), [level, mapData]);
 
   const decimals = useMemo(() => percentDecimals(mapData.map((point) => point.value)), [mapData]);
