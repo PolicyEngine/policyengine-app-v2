@@ -5,9 +5,12 @@ import {
   ukHexPosition,
 } from '@/components/visualization/choropleth/ukHexLayout';
 import {
+  ALLERDALE_CODE,
+  ALLERDALE_POINT,
   BARNSLEY_NORTH_CODE,
   BARNSLEY_NORTH_HEX,
   BARNSLEY_NORTH_POINT,
+  DARLINGTON_POINT,
   HARTLEPOOL_CODE,
   HARTLEPOOL_HEX,
   HARTLEPOOL_POINT,
@@ -74,6 +77,11 @@ describe('ukHexPosition', () => {
 });
 
 describe('placeOnUKHexLayout', () => {
+  test('given the pre-2023 local authority code then the layout has no position for it', () => {
+    // Then
+    expect(ukHexPosition('local_authority', ALLERDALE_CODE)).toBeNull();
+  });
+
   test('given points whose codes the layout has then each takes its layout position', () => {
     // When
     const points = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT]);
@@ -110,5 +118,13 @@ describe('placeOnUKHexLayout', () => {
 
     // Then
     expect(points).toEqual([]);
+  });
+
+  test('given a local authority on a pre-2023 code then it is left out and the others are placed', () => {
+    // When
+    const points = placeOnUKHexLayout('local_authority', [DARLINGTON_POINT, ALLERDALE_POINT]);
+
+    // Then: Darlington at its layout position, a row above the Public API's
+    expect(points).toEqual([{ ...DARLINGTON_POINT, x: 7, y: 19 }]);
   });
 });

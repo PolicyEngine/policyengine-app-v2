@@ -36,8 +36,10 @@ export function ukHexPosition(
  * A level's areas as hex-map points, placed from the app's layout: each
  * area whose code the layout has takes that position. An area the layout
  * has no position for (no code, as in an older saved result, or a code the
- * layout lacks) is left out, as the map has nowhere to draw it. v2's and
- * v3's UK hex maps both place their areas with this, on the tiled grid.
+ * layout lacks, such as a district abolished in April 2023) is left out, as
+ * the map has nowhere to draw it; mixing in its result's position would put
+ * two different grids on one map. v2's and v3's UK hex maps both place
+ * their areas with this, on the tiled grid.
  */
 export function placeOnUKHexLayout(
   level: UKBoundaryLevel,

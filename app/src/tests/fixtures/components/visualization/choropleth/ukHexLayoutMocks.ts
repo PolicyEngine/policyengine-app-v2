@@ -30,3 +30,27 @@ export const UNCODED_POINT: UKAreaChoroplethDataPoint = {
   label: 'Westminster North',
   value: -40,
 };
+
+/**
+ * Darlington's result, as the maps' adapters give it. The layout places it
+ * at (7, 19), a row above the Public API's position for it.
+ */
+export const DARLINGTON_POINT: UKAreaChoroplethDataPoint = {
+  id: 'Darlington',
+  label: 'Darlington',
+  value: 45,
+  code: 'E06000005',
+};
+
+/**
+ * Allerdale, a district abolished in April 2023, as an older saved result
+ * holds it: a code the layout, which follows the April 2023 boundaries,
+ * does not have.
+ */
+export const ALLERDALE_CODE = 'E07000026';
+export const ALLERDALE_POINT: UKAreaChoroplethDataPoint = {
+  id: 'Allerdale',
+  label: 'Allerdale',
+  value: -15,
+  code: ALLERDALE_CODE,
+};

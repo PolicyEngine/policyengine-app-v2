@@ -17,6 +17,7 @@ import {
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_DATA,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
+  MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
   MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
@@ -145,6 +146,25 @@ describe('AbsoluteChangeByLocalAuthority hex map placement', () => {
     await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
     return container;
   }
+
+  test('given a saved result with pre-2023 local authority codes then the hex map leaves those authorities out and draws the others, tiled', async () => {
+    // When
+    const container = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA);
+
+    // Then: Hartlepool and Darlington, at their layout positions; not Allerdale, Craven or Mendip
+    expect(v2Hexagons(container)).toHaveLength(2);
+    expect(v2Hexagons(container).every(isPointyTopped)).toBe(true);
+  });
+
+  test('given a saved result with pre-2023 local authority codes then the hex map’s note counts the authorities it leaves out', async () => {
+    // When
+    await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA);
+
+    // Then
+    expect(
+      screen.getByText(UK_HEX_MAP_UNPLACED_NOTES.THREE_OF_FIVE_LOCAL_AUTHORITIES)
+    ).toBeInTheDocument();
+  });
 
   test('given local authorities the results put in one hex then the hex map draws each in its own', async () => {
     // When

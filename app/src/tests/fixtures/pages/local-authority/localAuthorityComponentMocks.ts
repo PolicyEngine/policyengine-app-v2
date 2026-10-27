@@ -253,3 +253,51 @@ export const MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA = {
     },
   },
 } as unknown as ReportOutputSocietyWideUK;
+
+/**
+ * Codes of districts abolished in April 2023: Allerdale, Craven and Mendip.
+ * The layout follows the April 2023 boundaries, so it has none of them.
+ */
+export const PRE_2023_LOCAL_AUTHORITY_CODES = {
+  ALLERDALE: 'E07000026',
+  CRAVEN: 'E07000163',
+  MENDIP: 'E07000187',
+} as const;
+
+/**
+ * A saved result from before April 2023: Hartlepool and Darlington on
+ * current codes, and three districts on pre-2023 codes, which the layout
+ * has no position for.
+ */
+export const MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA: ReportOutputSocietyWideUK = {
+  ...MOCK_UK_REPORT_OUTPUT_WITH_LA,
+  local_authority_impact: {
+    by_local_authority: {
+      Hartlepool: {
+        average_household_income_change: -210.4,
+        relative_household_income_change: -0.0081,
+        code: HARTLEPOOL_CODE,
+      },
+      Darlington: {
+        average_household_income_change: -185.3,
+        relative_household_income_change: -0.0072,
+        code: DARLINGTON_CODE,
+      },
+      Allerdale: {
+        average_household_income_change: -140.6,
+        relative_household_income_change: -0.0049,
+        code: PRE_2023_LOCAL_AUTHORITY_CODES.ALLERDALE,
+      },
+      Craven: {
+        average_household_income_change: -101.2,
+        relative_household_income_change: -0.0033,
+        code: PRE_2023_LOCAL_AUTHORITY_CODES.CRAVEN,
+      },
+      Mendip: {
+        average_household_income_change: -88.7,
+        relative_household_income_change: -0.0029,
+        code: PRE_2023_LOCAL_AUTHORITY_CODES.MENDIP,
+      },
+    },
+  },
+};

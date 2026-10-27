@@ -4,6 +4,8 @@ export const UK_HEX_MAP_UNPLACED_NOTES = {
     '1 of 3 constituencies is not on the hex map, which places each constituency by its ONS code and has no position for it.',
   TWO_OF_361_LOCAL_AUTHORITIES:
     '2 of 361 local authorities are not on the hex map, which places each local authority by its ONS code and has no position for them.',
+  THREE_OF_FIVE_LOCAL_AUTHORITIES:
+    '3 of 5 local authorities are not on the hex map, which places each local authority by its ONS code and has no position for them.',
   NO_CONSTITUENCY:
     'The hex map places each constituency by its ONS code and has no position for any constituency in this result.',
   NO_LOCAL_AUTHORITY:
