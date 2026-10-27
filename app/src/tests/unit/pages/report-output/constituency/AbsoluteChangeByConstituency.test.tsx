@@ -24,6 +24,7 @@ import {
 } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
 import {
   hexagonArrangement,
+  hexagonVertices,
   isPointyTopped,
   v2Hexagons,
   v3HexagonArrangement,
@@ -209,6 +210,20 @@ describe('AbsoluteChangeByConstituency hex map placement', () => {
 
     // Then
     expect(v2Hexagons(container).every(isPointyTopped)).toBe(true);
+  });
+
+  test('given a nation’s few constituencies then the hex map draws every hexagon inside its frame', async () => {
+    // When: three Welsh constituencies, so each hexagon is drawn large
+    const container = await renderHexMap(UK_LOCAL_AREAS_OUTPUT);
+
+    // Then
+    const hexagons = v2Hexagons(container);
+    const frameHeight = Number((hexagons[0] as SVGElement).ownerSVGElement!.getAttribute('height'));
+    const vertexYs = hexagons.flatMap((hexagon) =>
+      hexagonVertices(hexagon).map(([, vertexY]) => vertexY)
+    );
+    expect(Math.min(...vertexYs)).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...vertexYs)).toBeLessThanOrEqual(frameHeight);
   });
 
   test('given constituencies without codes then the hex map draws none of them, as v3’s does', async () => {
