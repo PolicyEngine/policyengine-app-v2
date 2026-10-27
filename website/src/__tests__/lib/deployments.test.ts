@@ -4,6 +4,7 @@ import {
   DEPLOYMENT_SURFACES,
   classifyDeployment,
   compareServed,
+  loadApiLiveSince,
   loadDeployments,
   parseApiV2Model,
   parseGatewayVersions,
@@ -254,8 +255,15 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
         frontier: { package_versions: { uk: "2.88.18", us: "2.53.1" } },
       });
     }
+    if (url === "https://api.policyengine.org/deployment") {
+      return Response.json({
+        policyengine_version: "6.9.0",
+        policyengine_version_live_since: "2026-10-20T12:00:00Z",
+      });
+    }
     if (url.endsWith("/versions")) {
       return Response.json({
+        latest_since: "2026-10-18T08:00:00Z",
         policyengine: {
           "6.2.1": "app-6-2-1",
           "6.10.0": "app-6-10-0",
@@ -352,6 +360,11 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
     "The simulation gateway has no worker for .py 6.9.0, so this service's economy simulations fail.",
   );
   const sim = response.rows.find((row) => row.surface.id === "sim-api")!;
+  // Each service's own report says when its version went live.
+  expect(sim.served.live_since).toBe("2026-10-18T08:00:00Z");
+  expect(
+    response.rows.find((row) => row.surface.id === "api")!.served.live_since,
+  ).toBe("2026-10-20T12:00:00Z");
   expect(sim.served).toMatchObject({
     py_version: "6.10.0",
     data_build_id: "us-old",
@@ -623,4 +636,17 @@ test("reads the household API's current and frontier channels", () => {
     ],
   });
   expect(() => parseHouseholdVersions({ frontier: {} }, "us", "u")).toThrow();
+});
+
+test("an API without the deployment route has no live-since date", async () => {
+  const fetchImpl = async () => new Response("not found", { status: 404 });
+  expect(
+    await loadApiLiveSince("https://api.policyengine.org", fetchImpl, 0),
+  ).toBeNull();
+  const broken = async () => {
+    throw new Error("offline");
+  };
+  expect(
+    await loadApiLiveSince("https://api.policyengine.org", broken, 0),
+  ).toBeNull();
 });

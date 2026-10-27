@@ -437,7 +437,8 @@ export function parseGatewayVersions(
     ).length,
     note: "",
     channels: [],
-    live_since: null,
+    // When latest.policyengine last changed, once the gateway records it.
+    live_since: str(versions?.latest_since),
     routes,
   };
 }
@@ -476,7 +477,7 @@ export function compareServed(
       data_basis: null,
       source_url: gateway.source_url,
       channels: [],
-      live_since: null,
+      live_since: report.live_since,
       detail:
         `The simulation gateway has no worker for .py ${report.py_version}, ` +
         "so this service's economy simulations fail.",
@@ -776,6 +777,24 @@ export async function loadBundle(
   return parseBundleManifest(await response.json(), pyVersion);
 }
 
+// GET /deployment on the API: when its policyengine.py version went live.
+// Optional: an API without the route, or without a recorded date, has none.
+export async function loadApiLiveSince(
+  origin: string,
+  fetchImpl: FetchLike,
+  revalidate: number,
+): Promise<string | null> {
+  try {
+    const response = await fetchImpl(`${origin}/deployment`, {
+      next: { revalidate },
+    });
+    if (!response.ok) return null;
+    return str(record(await response.json())?.policyengine_version_live_since);
+  } catch {
+    return null;
+  }
+}
+
 export async function loadServedReport(
   surface: DeploymentSurface,
   country: DeploymentCountry,
@@ -790,7 +809,14 @@ export async function loadServedReport(
     const json = await response.json();
     switch (surface.served.kind) {
       case "api_v2":
-        return parseApiV2Model(json, url);
+        return {
+          ...parseApiV2Model(json, url),
+          live_since: await loadApiLiveSince(
+            surface.served.origin,
+            fetchImpl,
+            revalidate,
+          ),
+        };
       case "sim_gateway":
         return parseGatewayVersions(json, country, url);
       case "household_versions":
