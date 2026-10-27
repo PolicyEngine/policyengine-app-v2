@@ -1,4 +1,10 @@
-import { createPublicApiClient, requireResult, type PublicApiClient } from '@/api/publicApi/client';
+import {
+  createPublicApiClient,
+  publicApiCountryId,
+  requireResult,
+  type PublicApiClient,
+} from '@/api/publicApi/client';
+import { v1DatedValues } from '@/api/publicApi/datedValues';
 import type { components } from '@/api/publicApi/schema';
 import type { ValuesList } from '@/types/subIngredients/valueInterval';
 
@@ -47,19 +53,6 @@ export interface V1ShapedVariable {
   hidden_input: boolean;
   moduleName: string | null;
   possibleValues?: Array<{ value: string; label: Schemas['MetadataEnumValue']['label'] }>;
-}
-
-/** v1 dated a value in force since the earliest date 0000-01-01; Python's earliest is year 1. */
-const V2_EARLIEST_DATE = '0001-01-01';
-const V1_EARLIEST_DATE = '0000-01-01';
-
-export function v1DatedValues(values: Schemas['MetadataDatedValue'][]): ValuesList {
-  return Object.fromEntries(
-    values.map((dated) => {
-      const date = dated.start_date.slice(0, 10);
-      return [date === V2_EARLIEST_DATE ? V1_EARLIEST_DATE : date, dated.value];
-    })
-  ) as ValuesList;
 }
 
 /**
@@ -121,7 +114,7 @@ export async function fetchCatalogVariables(
     client.GET('/v2/model-catalog/variables', {
       params: {
         query: {
-          country_id: countryId as 'us' | 'uk',
+          country_id: publicApiCountryId(countryId),
           policyengine_version: policyengineVersion,
         },
       },
@@ -134,7 +127,7 @@ export async function fetchCatalogVariables(
     partParameterValues: Object.fromEntries(
       Object.entries(result.part_parameter_values).map(([path, values]) => [
         path,
-        v1DatedValues(values),
+        v1DatedValues(path, values),
       ])
     ),
   };
