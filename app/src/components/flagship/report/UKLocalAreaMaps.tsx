@@ -400,8 +400,9 @@ export default function UKLocalAreaMaps({
                 config={{ ...mapConfig, height: GEOGRAPHIC_MAP_HEIGHT }}
                 focusNation={ukNationFromRegion(region)}
                 exportRef={mapRef}
-                // A breakdown's missing areas are the ones disclosure control withheld.
-                missingAreaText={withheld ? UK_WITHHELD_AREA_TEXT : undefined}
+                // A breakdown level's missing areas are the ones disclosure control
+                // withheld; a saved level's have no data.
+                missingAreaText={levelWithheld ? UK_WITHHELD_AREA_TEXT : undefined}
                 navigable
                 selectedId={selectedArea ? selectedName : null}
                 onAreaClick={toggleSelected}
