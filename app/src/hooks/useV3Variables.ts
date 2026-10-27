@@ -74,6 +74,7 @@ function useV2Variables(): V3VariablesStatus {
   const countryId = useCurrentCountry();
   const dispatch = useDispatch<AppDispatch>();
   const metadata = useFlagshipMetadataStatus();
+  const storeCountry = useSelector((state: RootState) => state.metadata.currentCountry);
   const policyengineVersion = useSelector(selectV2CatalogVersion);
   const loadId = useSelector(selectV2LoadId);
   const loadedUnder = useSelector((state: RootState) => state.metadata.v2VariablesLoadId);
@@ -81,7 +82,8 @@ function useV2Variables(): V3VariablesStatus {
   const query = useQuery({
     queryKey: v2CatalogVariablesKey(countryId, policyengineVersion, loadId),
     queryFn: () => fetchCatalogVariables(countryId, policyengineVersion!),
-    enabled: policyengineVersion !== null && loadId !== null,
+    // Not for a model catalog of another country than the page's (a country change in flight).
+    enabled: policyengineVersion !== null && loadId !== null && storeCountry === countryId,
     ...VARIABLES_QUERY_OPTIONS,
   });
 
@@ -128,24 +130,37 @@ export const useV3Variables: () => V3VariablesStatus =
 
 /**
  * Starts loading the catalog version's variables once a v3 page has
- * rendered, so they are in by the time a household is built or broken
- * down. Nothing on the v1 routes, where the whole metadata holds them.
+ * rendered, and puts them in the metadata store when they arrive, so they
+ * are in by the time a household is built or broken down, also for views
+ * that read `state.metadata.variables` without `useV3Variables`. Nothing
+ * when the store's model catalog is for another country than the page's
+ * (a country change whose catalog has not loaded yet), and nothing on the
+ * v1 routes, where the whole metadata holds the variables.
  */
 function useV2VariablesInBackground(): void {
   const countryId = useCurrentCountry();
+  const dispatch = useDispatch<AppDispatch>();
+  const storeCountry = useSelector((state: RootState) => state.metadata.currentCountry);
   const policyengineVersion = useSelector(selectV2CatalogVersion);
   const loadId = useSelector(selectV2LoadId);
   const queryClient = useQueryClient();
   useEffect(() => {
-    if (policyengineVersion === null || loadId === null) {
+    if (policyengineVersion === null || loadId === null || storeCountry !== countryId) {
       return;
     }
-    void queryClient.prefetchQuery({
-      queryKey: v2CatalogVariablesKey(countryId, policyengineVersion, loadId),
-      queryFn: () => fetchCatalogVariables(countryId, policyengineVersion),
-      ...VARIABLES_QUERY_OPTIONS,
-    });
-  }, [countryId, policyengineVersion, loadId, queryClient]);
+    queryClient
+      .fetchQuery({
+        queryKey: v2CatalogVariablesKey(countryId, policyengineVersion, loadId),
+        queryFn: () => fetchCatalogVariables(countryId, policyengineVersion),
+        ...VARIABLES_QUERY_OPTIONS,
+      })
+      .then(
+        (loaded) =>
+          dispatch(catalogVariablesLoaded({ countryId, policyengineVersion, loadId, ...loaded })),
+        // A failure stays in the query, where views waiting for the variables report it.
+        () => undefined
+      );
+  }, [countryId, storeCountry, policyengineVersion, loadId, queryClient, dispatch]);
 }
 
 function noBackgroundLoad(): void {}

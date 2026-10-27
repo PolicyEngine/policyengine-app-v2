@@ -1,5 +1,9 @@
+import type { ReactNode } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
+import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { CountryProvider } from '@/contexts/CountryContext';
 import { useV3Variables, useV3VariablesInBackground } from '@/hooks/useV3Variables';
 import { catalogVariablesLoaded, clearMetadata, selectV2LoadId } from '@/reducers/metadataReducer';
 import { store } from '@/store';
@@ -85,6 +89,38 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper(queryClient) });
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1);
+  });
+
+  test('given only the background load then the store fills, for readers without the hook', async () => {
+    // When
+    renderHook(() => useV3VariablesInBackground(), { wrapper: v3Wrapper(testQueryClient()) });
+
+    // Then
+    await waitFor(() =>
+      expect(store.getState().metadata.variables.employment_income?.label).toBe('Employment income')
+    );
+    expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1);
+  });
+
+  test('given the page has moved to another country before its model catalog loads then nothing is requested', async () => {
+    // Given
+    const queryClient = testQueryClient();
+    const ukWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient}>
+          <CountryProvider value="uk">{children}</CountryProvider>
+        </QueryClientProvider>
+      </Provider>
+    );
+
+    // When
+    renderHook(() => useV3VariablesInBackground(), { wrapper: ukWrapper });
+    const reader = renderHook(() => useV3Variables(), { wrapper: ukWrapper });
+
+    // Then
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(0);
+    expect(reader.result.current.status).toBe('loading');
   });
 
   test('given the model catalog loads again then the variables are requested again', async () => {
