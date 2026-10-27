@@ -54,6 +54,12 @@ const DEV_TOOL_CARDS = [
     description:
       "Check the current status and availability of PolicyEngine API endpoints.",
   },
+  {
+    slug: "deployments",
+    title: "Deployments",
+    description:
+      "See which policyengine.py version, country model and data build each PolicyEngine service declares and serves.",
+  },
 ];
 
 export const metadata: Metadata = {
