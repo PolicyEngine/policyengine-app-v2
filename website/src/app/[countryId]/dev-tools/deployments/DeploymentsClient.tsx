@@ -6,13 +6,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  ShadcnTable,
   Spinner,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
   Text,
 } from "@/components/ui";
 import { colors, spacing, typography } from "@/designTokens";
@@ -67,11 +61,25 @@ const mono = {
   fontSize: typography.fontSize.xs,
 };
 
-const detailStyle = {
-  marginTop: spacing.xs,
-  fontSize: typography.fontSize.xs,
+const mutedText = {
+  fontSize: typography.fontSize.sm,
   color: colors.text.secondary,
   lineHeight: typography.lineHeight.relaxed,
+};
+
+const cardStyle = {
+  backgroundColor: colors.white,
+  border: `1px solid ${colors.border.light}`,
+  borderRadius: spacing.radius.container,
+};
+
+const sectionStyle = {
+  flex: 1,
+  backgroundColor: colors.background.tertiary,
+  paddingTop: spacing["4xl"],
+  paddingBottom: spacing["4xl"],
+  paddingLeft: "6.125%",
+  paddingRight: "6.125%",
 };
 
 function Pill({ label, tone }: { label: string; tone: Tone }) {
@@ -146,79 +154,157 @@ function BuildId({
   );
 }
 
-function ServiceCell({ row }: { row: DeploymentRow }) {
-  const { surface } = row;
+// Label/value rows; a null value shows a dash.
+function Facts({ items }: { items: [string, React.ReactNode][] }) {
   return (
-    <>
-      <div style={{ fontWeight: typography.fontWeight.semibold }}>
-        {surface.label}
-      </div>
-      <div style={detailStyle}>{surface.serves}</div>
-      <div style={detailStyle}>
-        <ExternalLink href={`https://github.com/${surface.repository}`}>
-          {surface.repository.replace("PolicyEngine/", "")}
-        </ExternalLink>
-        {row.lock_url && (
-          <>
-            {" · "}
-            <ExternalLink href={row.lock_url}>lock</ExternalLink>
-          </>
-        )}
-      </div>
-    </>
+    <dl
+      className="tw:grid tw:grid-cols-[max-content_minmax(0,1fr)] tw:gap-x-3 tw:gap-y-1"
+      style={{ marginTop: spacing.sm, fontSize: typography.fontSize.sm }}
+    >
+      {items.map(([label, value]) => (
+        <div key={label} className="tw:contents">
+          <dt style={{ color: colors.text.secondary }}>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
-function ServedCell({
+function Side({
+  title,
+  pill,
+  facts,
+  detail,
+}: {
+  title: string;
+  pill: { label: string; tone: Tone };
+  facts: [string, React.ReactNode][] | null;
+  detail: React.ReactNode;
+}) {
+  return (
+    <div className="tw:min-w-0">
+      <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+        <span
+          style={{
+            fontSize: typography.fontSize.xs,
+            fontWeight: typography.fontWeight.semibold,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            color: colors.text.secondary,
+          }}
+        >
+          {title}
+        </span>
+        <Pill {...pill} />
+      </div>
+      {facts && <Facts items={facts} />}
+      <div style={{ ...mutedText, marginTop: spacing.sm }}>{detail}</div>
+    </div>
+  );
+}
+
+function ServiceCard({
   row,
   country,
+  modelLabel,
 }: {
   row: DeploymentRow;
   country: DeploymentCountry;
+  modelLabel: string;
 }) {
-  const { served } = row;
+  const { surface, served } = row;
   return (
-    <>
-      <Pill {...SERVED[served.status]} />
-      {served.py_version && (
-        <dl
-          className="tw:grid tw:grid-cols-[auto_1fr] tw:gap-x-2"
-          style={{ marginTop: spacing.xs, fontSize: typography.fontSize.xs }}
+    <section style={{ ...cardStyle, padding: spacing.xl }}>
+      <div className="tw:flex tw:flex-wrap tw:items-baseline tw:justify-between tw:gap-x-4 tw:gap-y-1">
+        <Text
+          style={{
+            fontSize: typography.fontSize.lg,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.primary,
+          }}
         >
-          <dt style={{ color: colors.text.secondary }}>.py</dt>
-          <dd>
-            <Version value={served.py_version} />
-          </dd>
-          <dt style={{ color: colors.text.secondary }}>Model</dt>
-          <dd>
-            <Version value={served.model_version} />
-          </dd>
-          {served.data_build_id && (
+          {surface.label}
+        </Text>
+        <span style={mutedText}>
+          {surface.serves} ·{" "}
+          <ExternalLink href={`https://github.com/${surface.repository}`}>
+            {surface.repository.replace("PolicyEngine/", "")}
+          </ExternalLink>
+          {row.lock_url && (
             <>
-              <dt style={{ color: colors.text.secondary }}>Data</dt>
-              <dd>
-                <BuildId buildId={served.data_build_id} country={country} />
-                {served.data_basis === "served_py_bundle" && (
-                  <span style={{ color: colors.text.secondary }}>
-                    {" "}
-                    (via served .py)
-                  </span>
-                )}
-              </dd>
+              {" · "}
+              <ExternalLink href={row.lock_url}>lock</ExternalLink>
             </>
           )}
-        </dl>
-      )}
-      <div style={detailStyle}>
-        {served.detail}
-        {served.source_url && (
-          <>
-            {" "}
-            <ExternalLink href={served.source_url}>Source</ExternalLink>
-          </>
-        )}
+        </span>
       </div>
-    </>
+
+      <div
+        className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-6"
+        style={{ marginTop: spacing.lg }}
+      >
+        <Side
+          title="Declared"
+          pill={DECLARED[row.status]}
+          facts={[
+            [".py", <PyVersion key="py" value={row.py_version} />],
+            [modelLabel, <Version key="model" value={row.model_version} />],
+            ["Core", <Version key="core" value={row.core_version} />],
+            [
+              "Data build",
+              <BuildId
+                key="data"
+                buildId={row.data_build_id}
+                country={country}
+              />,
+            ],
+          ]}
+          detail={row.detail}
+        />
+        <Side
+          title="Served"
+          pill={SERVED[served.status]}
+          facts={
+            served.py_version
+              ? [
+                  [".py", <Version key="py" value={served.py_version} />],
+                  [
+                    modelLabel,
+                    <Version key="model" value={served.model_version} />,
+                  ],
+                  [
+                    "Data build",
+                    <span key="data">
+                      <BuildId
+                        buildId={served.data_build_id}
+                        country={country}
+                      />
+                      {served.data_basis === "served_py_bundle" && (
+                        <span style={{ color: colors.text.secondary }}>
+                          {" "}
+                          (via served .py)
+                        </span>
+                      )}
+                    </span>,
+                  ],
+                ]
+              : null
+          }
+          detail={
+            <>
+              {served.detail}
+              {served.source_url && (
+                <>
+                  {" "}
+                  <ExternalLink href={served.source_url}>Source</ExternalLink>
+                </>
+              )}
+            </>
+          }
+        />
+      </div>
+    </section>
   );
 }
 
@@ -266,15 +352,6 @@ function useDeployments(country: DeploymentCountry | null) {
 
   return { data, error, loading };
 }
-
-const sectionStyle = {
-  flex: 1,
-  backgroundColor: colors.background.tertiary,
-  paddingTop: spacing["4xl"],
-  paddingBottom: spacing["4xl"],
-  paddingLeft: "6.125%",
-  paddingRight: "6.125%",
-};
 
 export default function DeploymentsClient({
   countryId,
@@ -336,16 +413,14 @@ export default function DeploymentsClient({
   return (
     <div style={sectionStyle}>
       <div
-        className="tw:flex tw:flex-wrap tw:items-center tw:gap-4"
+        className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4"
         style={{
+          ...cardStyle,
           padding: spacing.xl,
           marginBottom: spacing["2xl"],
-          backgroundColor: colors.white,
-          border: `1px solid ${colors.border.light}`,
-          borderRadius: spacing.radius.container,
         }}
       >
-        <div style={{ flex: "1 1 280px" }}>
+        <div className="tw:min-w-0" style={{ flex: "1 1 320px" }}>
           <Text
             style={{
               fontSize: typography.fontSize.lg,
@@ -356,18 +431,31 @@ export default function DeploymentsClient({
             {COUNTRY_LABELS[country]}: latest certified bundle
           </Text>
           {data.latest ? (
-            <Text style={detailStyle}>
-              .py <PyVersion value={data.latest.py_version} /> certifies{" "}
-              {modelLabel}{" "}
-              <Version value={data.latest.certified_model_version} /> with data
-              build{" "}
-              <BuildId buildId={data.latest.data_build_id} country={country} />.
-            </Text>
+            <Facts
+              items={[
+                [".py", <PyVersion key="py" value={data.latest.py_version} />],
+                [
+                  modelLabel,
+                  <Version
+                    key="model"
+                    value={data.latest.certified_model_version}
+                  />,
+                ],
+                [
+                  "Data build",
+                  <BuildId
+                    key="data"
+                    buildId={data.latest.data_build_id}
+                    country={country}
+                  />,
+                ],
+              ]}
+            />
           ) : (
-            <Text style={detailStyle}>
+            <div style={{ ...mutedText, marginTop: spacing.sm }}>
               Unknown:{" "}
               {data.latest_error ?? "the latest .py bundle could not be read."}
-            </Text>
+            </div>
           )}
         </div>
         {notDeployed > 0 ? (
@@ -380,68 +468,23 @@ export default function DeploymentsClient({
         )}
       </div>
 
-      <div
-        className="tw:overflow-x-auto"
-        style={{
-          backgroundColor: colors.white,
-          border: `1px solid ${colors.border.light}`,
-          borderRadius: spacing.radius.container,
-        }}
-      >
-        <ShadcnTable className="tw:min-w-[1100px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Service</TableHead>
-              <TableHead>Declared status</TableHead>
-              <TableHead>Served</TableHead>
-              <TableHead>Declared .py</TableHead>
-              <TableHead>{modelLabel}</TableHead>
-              <TableHead>Core</TableHead>
-              <TableHead>Declared data build</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.rows.map((row) => (
-              <TableRow key={row.surface.id} className="tw:align-top">
-                <TableCell className="tw:whitespace-normal tw:align-top tw:min-w-[200px]">
-                  <ServiceCell row={row} />
-                </TableCell>
-                <TableCell className="tw:whitespace-normal tw:align-top tw:max-w-[260px]">
-                  <Pill {...DECLARED[row.status]} />
-                  <div style={detailStyle}>{row.detail}</div>
-                </TableCell>
-                <TableCell className="tw:whitespace-normal tw:align-top tw:max-w-[300px]">
-                  <ServedCell row={row} country={country} />
-                </TableCell>
-                <TableCell className="tw:align-top">
-                  <PyVersion value={row.py_version} />
-                </TableCell>
-                <TableCell className="tw:align-top">
-                  <Version value={row.model_version} />
-                </TableCell>
-                <TableCell className="tw:align-top">
-                  <Version value={row.core_version} />
-                </TableCell>
-                <TableCell className="tw:whitespace-normal tw:align-top tw:min-w-[240px]">
-                  <BuildId buildId={row.data_build_id} country={country} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </ShadcnTable>
+      <div className="tw:flex tw:flex-col tw:gap-4">
+        {data.rows.map((row) => (
+          <ServiceCard
+            key={row.surface.id}
+            row={row}
+            country={country}
+            modelLabel={modelLabel}
+          />
+        ))}
       </div>
 
-      <Text
-        style={{
-          ...detailStyle,
-          marginTop: spacing.lg,
-        }}
-      >
+      <div style={{ ...mutedText, marginTop: spacing.lg }}>
         Declared: the lock file on each repository&apos;s default branch, and
         the data build that its .py certifies. Served: what the running service
         reports. Checked {new Date(data.checked_at).toLocaleString("en-US")};
         cached for 15 minutes.
-      </Text>
+      </div>
     </div>
   );
 }

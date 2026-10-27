@@ -93,10 +93,10 @@ describe("Deployments developer tool", () => {
     expect(
       await screen.findByText("1 service not deployed"),
     ).toBeInTheDocument();
-    const apiRow = screen.getByText("PolicyEngine API").closest("tr")!;
+    const apiRow = screen.getByText("PolicyEngine API").closest("section")!;
     expect(within(apiRow).getByText("Not deployed")).toBeInTheDocument();
     expect(within(apiRow).getByText(/\(via served \.py\)/)).toBeInTheDocument();
-    const householdRow = screen.getByText("Household API").closest("tr")!;
+    const householdRow = screen.getByText("Household API").closest("section")!;
     expect(within(householdRow).getByText("No dataset")).toBeInTheDocument();
     expect(within(householdRow).getByText("Not reported")).toBeInTheDocument();
     expect(global.fetch).toHaveBeenCalledWith("/api/deployments?country=us");
