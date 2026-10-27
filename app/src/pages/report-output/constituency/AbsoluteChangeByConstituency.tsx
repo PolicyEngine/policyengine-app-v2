@@ -11,6 +11,7 @@ import {
   ukNationFromRegion,
   type MapVisualizationType,
 } from '@/components/visualization/choropleth';
+import { placeOnUKHexLayout } from '@/components/visualization/choropleth/ukHexLayout';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -43,6 +44,8 @@ export function AbsoluteChangeByConstituency({
   const areas = (output as ReportOutputSocietyWideUK).constituency_impact?.by_constituency;
   // One point per area, for the geographic and hex maps alike
   const mapData = useMemo(() => (areas ? transformConstituencyAbsoluteChange(areas) : []), [areas]);
+  // The hex map places each constituency by its code in the app's layout, as v3's does.
+  const hexMap = useMemo(() => placeOnUKHexLayout('constituency', mapData), [mapData]);
   const notes = <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />;
 
   if (!mapData.length) {
@@ -89,8 +92,9 @@ export function AbsoluteChangeByConstituency({
         />
       ) : (
         <HexagonalMap
-          data={mapData}
+          data={hexMap.points}
           config={{
+            tiled: hexMap.tiled,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,
               tickFormat: '£,.0f',
