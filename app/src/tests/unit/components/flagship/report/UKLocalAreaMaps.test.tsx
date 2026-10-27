@@ -34,7 +34,15 @@ import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreak
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
+  MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
+  MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
+import {
+  areaNames,
+  hexagonArrangement,
+  isPointyTopped,
+  v3HexagonArrangement,
+} from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
 
 function hexagon(container: HTMLElement, name: string): Element {
   return container.querySelector(`[data-area-id="${name}"]`)!;
@@ -300,6 +308,30 @@ describe('UKLocalAreaMaps geographic map', () => {
     const points = vertices(hexagon(container, 'Gower'));
     // Flat-topped hexagons: the left and right vertices share a y.
     expect(points[0][1]).toBeCloseTo(points[3][1], 5);
+  });
+
+  test('given a saved result with pre-2023 local authority codes then every authority keeps its result’s position, untiled', async () => {
+    // Given: the same result without codes, which the map draws at its results' positions
+    const resultsArrangement = await v3HexagonArrangement(
+      MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED,
+      'local_authority'
+    );
+
+    // When
+    const user = userEvent.setup();
+    const { container } = render(
+      <UKLocalAreaMaps output={MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA} />,
+      'uk'
+    );
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+    await showHexMap(user);
+
+    // Then: one grid for every authority, not layout positions mixed with the results'
+    const hexagons = areaNames(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA, 'local_authority').map(
+      (name) => hexagon(container, name)
+    );
+    expect(hexagonArrangement(hexagons)).toEqual(resultsArrangement);
+    expect(hexagons.some(isPointyTopped)).toBe(false);
   });
 
   test('given the hex map chosen then switching the area kind keeps it', async () => {

@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@test-utils';
+import { cleanup, render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { AbsoluteChangeByLocalAuthority } from '@/pages/report-output/local-authority/AbsoluteChangeByLocalAuthority';
@@ -16,6 +16,8 @@ import {
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_DATA,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
+  MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
+  MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED,
   MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
@@ -144,6 +146,20 @@ describe('AbsoluteChangeByLocalAuthority hex map placement', () => {
     await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
     return container;
   }
+
+  test('given a saved result with pre-2023 local authority codes then every authority keeps its result’s position, untiled', async () => {
+    // Given: the same result without codes, which the map draws at its results' positions
+    const uncoded = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED);
+    const resultsArrangement = hexagonArrangement(v2Hexagons(uncoded));
+    cleanup();
+
+    // When
+    const container = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA);
+
+    // Then: one grid for every authority, not layout positions mixed with the results'
+    expect(hexagonArrangement(v2Hexagons(container))).toEqual(resultsArrangement);
+    expect(v2Hexagons(container).some(isPointyTopped)).toBe(false);
+  });
 
   test('given local authorities the results put in one hex then the hex map draws each in its own', async () => {
     // When

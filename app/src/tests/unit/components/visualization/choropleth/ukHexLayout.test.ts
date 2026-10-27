@@ -5,9 +5,12 @@ import {
   ukHexPosition,
 } from '@/components/visualization/choropleth/ukHexLayout';
 import {
+  ALLERDALE_CODE,
+  ALLERDALE_POINT,
   BARNSLEY_NORTH_CODE,
   BARNSLEY_NORTH_HEX,
   BARNSLEY_NORTH_POINT,
+  DARLINGTON_POINT,
   HARTLEPOOL_CODE,
   HARTLEPOOL_HEX,
   HARTLEPOOL_POINT,
@@ -74,6 +77,11 @@ describe('ukHexPosition', () => {
 });
 
 describe('placeOnUKHexLayout', () => {
+  test('given the pre-2023 local authority code then the layout has no position for it', () => {
+    // Then
+    expect(ukHexPosition('local_authority', ALLERDALE_CODE)).toBeNull();
+  });
+
   test('given points whose codes the layout has then each takes its layout position, tiled', () => {
     // When
     const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT]);
@@ -97,28 +105,39 @@ describe('placeOnUKHexLayout', () => {
     });
   });
 
-  test('given a point without a code then it keeps its own position and the grid is not tiled', () => {
+  test('given a point without a code then every point keeps its own position, untiled', () => {
     // When
     const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT]);
 
-    // Then
-    expect(placement.points[1]).toEqual(UNCODED_POINT);
-    expect(placement.tiled).toBe(false);
+    // Then: one grid for every point, not layout positions mixed with the result's
+    expect(placement).toEqual({ points: [BARNSLEY_NORTH_POINT, UNCODED_POINT], tiled: false });
   });
 
-  test('given a point without a layout position then the others still take theirs', () => {
-    // When
-    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT]);
+  test("given a code the level's layout lacks then every point keeps its own position, untiled", () => {
+    // When: a local authority code at the constituency level
+    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, HARTLEPOOL_POINT]);
 
     // Then
-    expect(placement.points[0]).toMatchObject(ukHexPosition('constituency', BARNSLEY_NORTH_CODE)!);
+    expect(placement).toEqual({ points: [BARNSLEY_NORTH_POINT, HARTLEPOOL_POINT], tiled: false });
   });
 
-  test("given a code the level's layout lacks then the point keeps its own position", () => {
+  test('given a local authority on a pre-2023 code then every point keeps its own position, untiled', () => {
     // When
-    const placement = placeOnUKHexLayout('constituency', [HARTLEPOOL_POINT]);
+    const placement = placeOnUKHexLayout('local_authority', [DARLINGTON_POINT, ALLERDALE_POINT]);
 
     // Then
-    expect(placement).toEqual({ points: [HARTLEPOOL_POINT], tiled: false });
+    expect(placement).toEqual({ points: [DARLINGTON_POINT, ALLERDALE_POINT], tiled: false });
+  });
+
+  test('given every code in the layout then no point keeps its own position', () => {
+    // When
+    const placement = placeOnUKHexLayout('local_authority', [DARLINGTON_POINT, HARTLEPOOL_POINT]);
+
+    // Then
+    expect(placement.points.map(({ x, y }) => [x, y])).toEqual([
+      [7, 19],
+      [HARTLEPOOL_HEX[0], HARTLEPOOL_HEX[1] + 1],
+    ]);
+    expect(placement.tiled).toBe(true);
   });
 });
