@@ -6,7 +6,7 @@ import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { CalibrationPin } from '@/components/flagship/CalibrationMatches';
 import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
 import BudgetWindowSummary from '@/components/flagship/report/BudgetWindowSummary';
-import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
+import CongressionalDistrictSection from '@/components/flagship/report/CongressionalDistrictSection';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import HouseholdImpactSection from '@/components/flagship/report/household/HouseholdImpactSection';
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
@@ -502,7 +502,7 @@ export default function ReportView({
                           year={year}
                           region={region}
                         >
-                          <DistrictImpactCard output={output} />
+                          <CongressionalDistrictSection output={output} />
                         </CongressionalDistrictDataProvider>
                       )}
                       {output && !showUSDistricts && isUK && (

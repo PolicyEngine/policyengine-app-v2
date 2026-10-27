@@ -11,6 +11,7 @@ import {
   NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
   nationalResultFromBody,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import { COMPUTE_DISTRICTS_LABEL } from '@/tests/fixtures/components/flagship/report/stateDistrictComputePanelMocks';
 import {
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY,
@@ -21,10 +22,37 @@ import {
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
+import {
+  economyWhere,
+  fakeStateDistrictApi,
+  NATIONWIDE_OUTPUT_WITH_DISTRICTS,
+  OTHER_STATE_RUNS_YEAR,
+  STATE_COMPUTING,
+  STATE_COUNT,
+  STATE_RUNS_BASELINE_POLICY_ID,
+  STATE_RUNS_REFORM_POLICY_ID,
+  STATE_RUNS_YEAR,
+  stateOk,
+  UTAH,
+  UTAH_REPORT_OUTPUT,
+  type FakeStateApi,
+} from '@/tests/fixtures/hooks/useStateDistrictRunsMocks';
 import { OTHER_BREAKDOWN_YEAR } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
+
+// US reports read the 50 states and DC; other countries read their own regions as before.
+vi.mock('@/hooks/useRegions', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useRegions')>();
+  const { US_STATE_REGIONS } = await import('@/tests/fixtures/hooks/useStateDistrictRunsMocks');
+  return {
+    useRegions: (...args: Parameters<typeof actual.useRegions>) =>
+      args[0] === 'us'
+        ? { ...actual.useRegions(...args), data: US_STATE_REGIONS }
+        : actual.useRegions(...args),
+  };
+});
 
 vi.mock('@/utils/isSocietyWideReportNoOp', () => ({
   isSocietyWideReportNoOp: () => true,
@@ -571,6 +599,126 @@ describe('ReportView UK local areas', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
     expect(economyRequests()).toEqual([]);
+  });
+});
+
+describe('ReportView US districts from state runs', () => {
+  let api: FakeStateApi;
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const reportFor = (
+    queryClient: QueryClient,
+    {
+      region = 'us',
+      year = STATE_RUNS_YEAR,
+      output = NATIONWIDE_OUTPUT_WITH_DISTRICTS,
+    }: {
+      region?: string;
+      year?: string;
+      output?: Parameters<typeof ReportView>[0]['output'];
+    } = {}
+  ) => (
+    <QueryClientProvider client={queryClient}>
+      <ReportView
+        title="Higher CTC"
+        sourceNote="Hand-built"
+        provisions={[]}
+        year={year}
+        region={region}
+        reformPolicyId={STATE_RUNS_REFORM_POLICY_ID}
+        baselinePolicyId={STATE_RUNS_BASELINE_POLICY_ID}
+        output={output}
+        calibration={null}
+        trackRecord={null}
+      />
+    </QueryClientProvider>
+  );
+
+  const openDistricts = async (
+    options: Parameters<typeof reportFor>[1] = {},
+    economy = economyWhere({ [UTAH]: () => stateOk(UTAH) }, () => STATE_COMPUTING)
+  ) => {
+    api = fakeStateDistrictApi({ economy });
+    vi.stubGlobal('fetch', api.fetch);
+    const user = userEvent.setup();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(reportFor(queryClient, options));
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
+    return { ...view, user, queryClient };
+  };
+
+  const economyRequestsFor = (year: string) =>
+    api.economyRequests().filter((url) => new URL(url).searchParams.get('time_period') === year);
+
+  test('given a nationwide report then its districts tab offers Compute and maps none of the result’s districts', async () => {
+    // When
+    await openDistricts();
+
+    // Then
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByRole('button', { name: COMPUTE_DISTRICTS_LABEL })
+    ).toBeInTheDocument();
+    expect(within(panel).queryByText('$999')).not.toBeInTheDocument();
+    expect(within(panel).queryByText('AL-01')).not.toBeInTheDocument();
+  });
+
+  test('given the districts tab opened then every state is looked up and nothing is computed', async () => {
+    // When
+    await openDistricts();
+    await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL });
+
+    // Then
+    expect(api.reportRequests()).toHaveLength(STATE_COUNT);
+    expect(api.economyRequests()).toHaveLength(0);
+  });
+
+  test('given Compute then the states fill in the map, with how many are in', async () => {
+    // Given
+    const { user } = await openDistricts();
+
+    // When
+    await user.click(await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL }));
+
+    // Then
+    expect(await screen.findByText('1 of 51 states')).toBeInTheDocument();
+    expect(within(screen.getByRole('tabpanel')).getAllByText('UT-01').length).toBeGreaterThan(0);
+    await waitFor(() => expect(api.economyRequests()).toHaveLength(STATE_COUNT));
+  });
+
+  test('given a state report then its districts tab maps its own districts and computes nothing', async () => {
+    // When
+    await openDistricts({ region: UTAH, output: UTAH_REPORT_OUTPUT });
+
+    // Then
+    const panel = screen.getByRole('tabpanel');
+    expect((await within(panel).findAllByText('UT-01')).length).toBeGreaterThan(0);
+    expect(
+      within(panel).queryByRole('button', { name: COMPUTE_DISTRICTS_LABEL })
+    ).not.toBeInTheDocument();
+    expect(api.requests().filter((request) => !request.url.endsWith('.json'))).toEqual(
+      api.requests().filter((request) => !request.url.includes('/us/'))
+    );
+  });
+
+  test('given the report switched to another year then nothing is computed for it until its own Compute', async () => {
+    // Given
+    const { user, queryClient, rerender } = await openDistricts();
+    await user.click(await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL }));
+    await waitFor(() => expect(economyRequestsFor(STATE_RUNS_YEAR)).toHaveLength(STATE_COUNT));
+
+    // When
+    rerender(reportFor(queryClient, { year: OTHER_STATE_RUNS_YEAR }));
+
+    // Then
+    expect(
+      await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL })
+    ).toBeInTheDocument();
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    expect(economyRequestsFor(OTHER_STATE_RUNS_YEAR)).toHaveLength(0);
   });
 });
 
