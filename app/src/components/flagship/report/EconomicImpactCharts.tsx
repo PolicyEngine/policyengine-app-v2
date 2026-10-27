@@ -77,9 +77,9 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
   const metadata = useSelector((state: RootState) => state.metadata);
   const variablesStatus = useV3Variables();
   const programmeCsvReason =
-    variablesStatus.state === 'waiting'
+    variablesStatus.status === 'loading'
       ? 'Loading programme names'
-      : variablesStatus.state === 'failed'
+      : variablesStatus.status === 'error'
         ? 'Could not load the programme names'
         : undefined;
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');

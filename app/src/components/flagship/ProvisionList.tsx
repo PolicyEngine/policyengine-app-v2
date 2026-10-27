@@ -103,9 +103,9 @@ export default function ProvisionList({
                 textAlign: 'right',
               }}
             >
-              {listChange && variablesStatus.state === 'waiting' ? (
+              {listChange && variablesStatus.status === 'loading' ? (
                 <VariableNamesLoading />
-              ) : listChange && variablesStatus.state === 'failed' ? (
+              ) : listChange && variablesStatus.status === 'error' ? (
                 <VariableNamesFailed onRetry={variablesStatus.retry} />
               ) : listChange ? (
                 <span

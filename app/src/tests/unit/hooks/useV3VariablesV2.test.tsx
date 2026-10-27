@@ -49,8 +49,8 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper() });
 
     // Then
-    expect(result.current.state).toBe('waiting');
-    await waitFor(() => expect(result.current.state).toBe('ready'));
+    expect(result.current.status).toBe('loading');
+    await waitFor(() => expect(result.current.status).toBe('ready'));
     const requests = requestsTo(fetchStub, VARIABLES_PATH);
     expect(requests).toHaveLength(1);
     expect(requests[0].searchParams.get('policyengine_version')).toBe(TEST_POLICYENGINE_VERSION);
@@ -71,8 +71,8 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     const second = renderHook(() => useV3Variables(), { wrapper: v3Wrapper(queryClient) });
 
     // Then
-    await waitFor(() => expect(first.result.current.state).toBe('ready'));
-    await waitFor(() => expect(second.result.current.state).toBe('ready'));
+    await waitFor(() => expect(first.result.current.status).toBe('ready'));
+    await waitFor(() => expect(second.result.current.status).toBe('ready'));
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1);
   });
 
@@ -86,7 +86,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     // Then
     await waitFor(() => expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1));
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper(queryClient) });
-    await waitFor(() => expect(result.current.state).toBe('ready'));
+    await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1);
   });
 
@@ -120,14 +120,14 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     // Both hooks have run their effects; nothing is fetching, and nothing was asked for.
     await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(0);
-    expect(reader.result.current.state).toBe('waiting');
+    expect(reader.result.current.status).toBe('loading');
   });
 
   test('given the model catalog loads again then the variables are requested again', async () => {
     // Given
     const queryClient = testQueryClient();
     const first = renderHook(() => useV3Variables(), { wrapper: v3Wrapper(queryClient) });
-    await waitFor(() => expect(first.result.current.state).toBe('ready'));
+    await waitFor(() => expect(first.result.current.status).toBe('ready'));
     first.unmount();
     await seedV2ModelCatalog();
     expect(store.getState().metadata.variables).toEqual({});
@@ -136,7 +136,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper(queryClient) });
 
     // Then
-    await waitFor(() => expect(result.current.state).toBe('ready'));
+    await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(store.getState().metadata.variables.age.label).toBe('Age');
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(2);
   });
@@ -169,7 +169,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     const reader = renderHook(() => useV3Variables(), { wrapper: v3Wrapper(queryClient) });
 
     // Then
-    expect(reader.result.current.state).toBe('ready');
+    expect(reader.result.current.status).toBe('ready');
     await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1);
   });
@@ -205,7 +205,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper() });
 
     // Then
-    await waitFor(() => expect(result.current.state).toBe('failed'));
+    await waitFor(() => expect(result.current.status).toBe('error'));
     expect(typeof result.current.retry).toBe('function');
   });
 });
@@ -224,7 +224,7 @@ describe('useV3Variables before the model catalog has loaded', () => {
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper() });
 
     // Then
-    expect(result.current.state).toBe('waiting');
+    expect(result.current.status).toBe('loading');
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(0);
   });
 });

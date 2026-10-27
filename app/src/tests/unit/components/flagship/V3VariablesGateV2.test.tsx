@@ -9,6 +9,7 @@ import {
   failOnceThenAnswerVariables,
   VARIABLES_PATH,
 } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
+import { PRE_FORMAT_2_VARIABLES_RESULT } from '@/tests/fixtures/api/publicApi/catalogVariablesRealShape';
 import {
   jsonResponse,
   requestsTo,
@@ -85,5 +86,20 @@ describe('V3VariablesGate with v3 on the v2 routes', () => {
     // Then
     expect(await screen.findByText('Household builder')).toBeInTheDocument();
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(2);
+  });
+
+  test('given a catalog version published before catalog format 2 then the failure says why', async () => {
+    // Given
+    answerVariables = () =>
+      jsonResponse({ status: 'ok', message: null, result: PRE_FORMAT_2_VARIABLES_RESULT });
+
+    // When
+    renderGate();
+
+    // Then
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent("Could not load the model's variables");
+    expect(alert).toHaveTextContent(/published before catalog format 2/);
+    expect(screen.queryByText('Household builder')).not.toBeInTheDocument();
   });
 });
