@@ -1,4 +1,5 @@
 import { render, screen, userEvent, within } from '@test-utils';
+import type { UKAreaLevel } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
 import { MAP_LEGEND_NAME } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
@@ -8,8 +9,6 @@ export interface HexagonCentre {
   x: number;
   y: number;
 }
-
-type UKAreaLevel = 'constituency' | 'local_authority';
 
 /** A hexagon polygon's vertices, in drawing order. */
 export function hexagonVertices(polygon: Element): [number, number][] {
