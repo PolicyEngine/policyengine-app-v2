@@ -89,3 +89,21 @@ export const UK_LOCAL_AREAS_OUTPUT_WITHOUT_API_POSITIONS = {
     ),
   },
 } as unknown as SocietyWideReportOutput;
+
+/**
+ * The coded output with Gower's code taken away, as from a source with no
+ * code for it: the layout cannot place every area, so the hex map keeps
+ * the result's own positions.
+ */
+export const UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED = (() => {
+  const output = UK_LOCAL_AREAS_OUTPUT as unknown as {
+    constituency_impact: { by_constituency: Record<string, { code?: string }> };
+  };
+  const { code: _gowerCode, ...gower } = output.constituency_impact.by_constituency.Gower;
+  return {
+    ...UK_LOCAL_AREAS_OUTPUT,
+    constituency_impact: {
+      by_constituency: { ...output.constituency_impact.by_constituency, Gower: gower },
+    },
+  } as unknown as SocietyWideReportOutput;
+})();

@@ -15,6 +15,7 @@ import {
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import { EXPECTED_CONSTITUENCY_COUNT } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
 import { COMPLETE_RESPONSE } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
 import {
@@ -96,10 +97,14 @@ describe('ConstituencySubPage', () => {
     expect(
       await screen.findByText('Absolute household income change by constituency')
     ).toBeInTheDocument();
-    // The map's one hexagon is the computed area: hovering it names it.
+    // The map's one hexagon with a value is the computed area: hovering it
+    // names it. The UK's other 649 constituencies are drawn as withheld.
     await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
-    const hexagons = container.querySelectorAll('svg polygon');
+    const hexagons = container.querySelectorAll('svg polygon:not([data-missing-area-id])');
     expect(hexagons).toHaveLength(1);
+    expect(container.querySelectorAll('[data-missing-area-id]').length).toBe(
+      EXPECTED_CONSTITUENCY_COUNT - 1
+    );
     await user.hover(hexagons[0]);
     expect(screen.getByText(new RegExp(`^${BREAKDOWN_CONSTITUENCY_NAME}:`))).toBeInTheDocument();
   });

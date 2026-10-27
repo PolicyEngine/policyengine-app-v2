@@ -8,6 +8,7 @@ import UKLocalAreaMaps, {
 import { LIST_SHAPE_UK_RESULT } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
 import {
   UK_LOCAL_AREAS_OUTPUT,
+  UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
   UK_LOCAL_AREAS_OUTPUT_NO_CODES,
   UK_LOCAL_AREAS_OUTPUT_WITHOUT_API_POSITIONS,
   UK_WIDE_REGION,
@@ -30,6 +31,17 @@ import {
   MONMOUTHSHIRE_CODE,
   NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import {
+  CARDIFF_EAST_NAME,
+  SWANSEA_CODE,
+  SWANSEA_NAME,
+  WELSH_CONSTITUENCY_COUNT,
+  WELSH_LOCAL_AUTHORITY_COUNT,
+} from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
+import {
+  EXPECTED_CONSTITUENCY_COUNT,
+  EXPECTED_LOCAL_AUTHORITY_COUNT,
+} from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
@@ -46,6 +58,16 @@ import {
 
 function hexagon(container: HTMLElement, name: string): Element {
   return container.querySelector(`[data-area-id="${name}"]`)!;
+}
+
+/** The hexagons of areas the result leaves out, which have no value. */
+function withheldHexagons(container: HTMLElement): Element[] {
+  return [...container.querySelectorAll('[data-missing-area-id]')];
+}
+
+/** A withheld area's hexagon, by its ONS code. */
+function withheldHexagon(container: HTMLElement, code: string): Element | null {
+  return container.querySelector(`[data-missing-area-id="${code}"]`);
 }
 
 /** An area's boundary on the geographic map, by its ONS code. */
@@ -720,5 +742,185 @@ describe('UKLocalAreaMaps missing levels', () => {
 
     expect(screen.getByText('No local authority data available')).toBeInTheDocument();
     expect(screen.queryByText('Compute these areas')).not.toBeInTheDocument();
+  });
+});
+
+describe('UKLocalAreaMaps withheld areas on the hex map', () => {
+  const breakdownWithheld = {
+    constituency: SOME_WITHHELD_CONSTITUENCIES,
+    local_authority: SOME_WITHHELD_LOCAL_AUTHORITIES,
+  };
+  const breakdownOutput = {
+    ...NATIONAL_OUTPUT_WITHOUT_AREAS,
+    constituency_impact: NORMALIZED_BREAKDOWN.constituency_impact,
+    local_authority_impact: NORMALIZED_BREAKDOWN.local_authority_impact,
+  } as typeof NATIONAL_OUTPUT_WITHOUT_AREAS;
+
+  /** v3's local-area maps of `output`, with the hex grid chosen. */
+  async function renderHexMap(props: Parameters<typeof UKLocalAreaMaps>[0]) {
+    const user = userEvent.setup();
+    const view = render(<UKLocalAreaMaps {...props} />, 'uk');
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    await showHexMap(user);
+    return { ...view, user };
+  }
+
+  test('given a Wales breakdown then the hex map draws every Welsh constituency, the withheld ones without a value', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: breakdownWithheld,
+    });
+
+    // Then: three with results, and Wales's other 29 withheld
+    expect(container.querySelectorAll('[data-area-id]')).toHaveLength(3);
+    expect(withheldHexagons(container).length).toBe(WELSH_CONSTITUENCY_COUNT - 3);
+    expect(withheldHexagon(container, CARDIFF_EAST_CODE)).toBeInTheDocument();
+  });
+
+  test('given a Wales breakdown then the local authority hex map draws every Welsh local authority', async () => {
+    // Given
+    const { container, user } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: breakdownWithheld,
+    });
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then: Cardiff and Powys with results, and Wales's other 20 withheld
+    expect(container.querySelectorAll('[data-area-id]')).toHaveLength(2);
+    expect(withheldHexagons(container).length).toBe(WELSH_LOCAL_AUTHORITY_COUNT - 2);
+    expect(withheldHexagon(container, SWANSEA_CODE)).toBeInTheDocument();
+  });
+
+  test('given a UK-wide breakdown then the hex maps draw all 650 constituencies and 361 local authorities', async () => {
+    // Given: one constituency and one local authority with results
+    const { container, user } = await renderHexMap({
+      output: breakdownOutput,
+      region: UK_WIDE_REGION,
+      withheld: breakdownWithheld,
+    });
+
+    // Then
+    expect(container.querySelectorAll('svg polygon').length).toBe(EXPECTED_CONSTITUENCY_COUNT);
+    expect(withheldHexagons(container).length).toBe(EXPECTED_CONSTITUENCY_COUNT - 1);
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(container.querySelectorAll('svg polygon').length).toBe(EXPECTED_LOCAL_AUTHORITY_COUNT);
+    expect(withheldHexagons(container).length).toBe(EXPECTED_LOCAL_AUTHORITY_COUNT - 1);
+  });
+
+  test('given a withheld hexagon hovered then its tooltip names it and reads not reported', async () => {
+    // Given
+    const { container, user } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: breakdownWithheld,
+    });
+
+    // When
+    await user.hover(withheldHexagon(container, CARDIFF_EAST_CODE)!);
+
+    // Then
+    expect(screen.getByText(`${CARDIFF_EAST_NAME}: ${NOT_REPORTED_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given a withheld local authority hovered then its tooltip names it and reads not reported', async () => {
+    // Given
+    const { container, user } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: breakdownWithheld,
+    });
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // When
+    await user.hover(withheldHexagon(container, SWANSEA_CODE)!);
+
+    // Then
+    expect(screen.getByText(`${SWANSEA_NAME}: ${NOT_REPORTED_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given withheld areas then the rankings list only the areas with results', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: breakdownWithheld,
+    });
+
+    // Then
+    expect(withheldHexagons(container).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: /^Show details for / })).toHaveLength(3);
+    expect(
+      screen.queryByRole('button', { name: `Show details for ${CARDIFF_EAST_NAME}` })
+    ).not.toBeInTheDocument();
+  });
+
+  test('given a withheld hexagon clicked then no details show', async () => {
+    // Given
+    const { container, user } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: breakdownWithheld,
+    });
+
+    const cardiffEast = withheldHexagon(container, CARDIFF_EAST_CODE);
+    expect(cardiffEast).toBeInTheDocument();
+
+    // When
+    await user.click(cardiffEast!);
+
+    // Then
+    expect(screen.queryByRole('region', { name: /details$/ })).not.toBeInTheDocument();
+  });
+
+  test('given a saved result then the hex map draws only its areas, with no withheld ones', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+    });
+
+    // Then
+    expect(container.querySelectorAll('svg polygon')).toHaveLength(3);
+    expect(withheldHexagons(container).length).toBe(0);
+  });
+
+  test('given a breakdown of a saved level and a computed one then only the computed level draws withheld areas', async () => {
+    // Given: constituencies saved, local authorities from the breakdown
+    const { container, user } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: { local_authority: SOME_WITHHELD_LOCAL_AUTHORITIES },
+    });
+
+    // Then
+    expect(withheldHexagons(container).length).toBe(0);
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(withheldHexagons(container).length).toBe(WELSH_LOCAL_AUTHORITY_COUNT - 2);
+  });
+
+  test('given a breakdown area without a code then the hex map keeps the result’s positions, untiled, and draws no withheld areas', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
+      region: WALES_REGION,
+      withheld: breakdownWithheld,
+    });
+
+    // Then
+    expect([...container.querySelectorAll('[data-area-id]')].some(isPointyTopped)).toBe(false);
+    expect(withheldHexagons(container).length).toBe(0);
   });
 });

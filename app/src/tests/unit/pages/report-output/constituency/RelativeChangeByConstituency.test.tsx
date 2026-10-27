@@ -4,6 +4,7 @@ import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { RelativeChangeByConstituency } from '@/pages/report-output/constituency/RelativeChangeByConstituency';
 import {
   UK_LOCAL_AREAS_OUTPUT,
+  UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
   UK_LOCAL_AREAS_OUTPUT_NO_CODES,
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
@@ -16,6 +17,10 @@ import {
   mockUKBoundaryFetch,
   NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import {
+  CARDIFF_EAST_NAME,
+  WELSH_CONSTITUENCY_COUNT,
+} from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
 import {
   MOCK_UK_REPORT_OUTPUT,
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
@@ -205,5 +210,73 @@ describe('RelativeChangeByConstituency disclosure control', () => {
 
     // Then
     expect(screen.getByRole('tooltip')).toHaveTextContent(`Cardiff East${NOT_REPORTED_TEXT}`);
+  });
+});
+
+describe('RelativeChangeByConstituency withheld areas on the hex map', () => {
+  /** The chart's hex map, with the hex grid chosen. */
+  async function renderHexMap(props: Parameters<typeof RelativeChangeByConstituency>[0]) {
+    const user = userEvent.setup();
+    const { container } = render(<RelativeChangeByConstituency {...props} />);
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
+    return { container, user };
+  }
+
+  /** The hexagons of areas the result leaves out, which have no value. */
+  function withheldHexagons(container: HTMLElement): Element[] {
+    return [...container.querySelectorAll('[data-missing-area-id]')];
+  }
+
+  test('given withheld constituencies then the hex map draws every Welsh constituency, the withheld ones without a value', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: SOME_WITHHELD_CONSTITUENCIES,
+    });
+
+    // Then: three with results, and Wales's other 29 withheld
+    expect(v2Hexagons(container).length).toBe(WELSH_CONSTITUENCY_COUNT);
+    expect(withheldHexagons(container).length).toBe(WELSH_CONSTITUENCY_COUNT - 3);
+  });
+
+  test('given a withheld hexagon hovered then its tooltip names it and reads not reported', async () => {
+    // Given
+    const { container, user } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: SOME_WITHHELD_CONSTITUENCIES,
+    });
+
+    // When
+    await user.hover(container.querySelector(`[data-missing-area-id="${CARDIFF_EAST_CODE}"]`)!);
+
+    // Then
+    expect(screen.getByText(`${CARDIFF_EAST_NAME}: ${NOT_REPORTED_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given a saved result then the hex map draws only its areas, with no withheld ones', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+    });
+
+    // Then
+    expect(v2Hexagons(container)).toHaveLength(3);
+    expect(withheldHexagons(container).length).toBe(0);
+  });
+
+  test('given withheld constituencies and one without a code then the hex map draws no withheld areas', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
+      region: WALES_REGION,
+      withheld: SOME_WITHHELD_CONSTITUENCIES,
+    });
+
+    // Then
+    expect(withheldHexagons(container).length).toBe(0);
   });
 });

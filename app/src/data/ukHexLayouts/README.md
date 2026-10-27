@@ -2,7 +2,7 @@
 
 Hex-grid positions for the UK local-area hex maps, one per area, keyed by ONS code. The v3 "Local areas" tab and the v2 constituency and local authority tabs place each area from these files by its ONS code, through `placeOnUKHexLayout`, instead of at the `x` and `y` that the Public API sends with each area. If any area in a result has no code, or a code these files lack (such as a district abolished in April 2023), every area in that result falls back to its `x` and `y`, on the untiled grid, so the map never mixes the two sets of positions.
 
-`withheldUKHexAreas` lists the areas of a report's region that a result leaves out, each at its position here and named from the name files below. The region's areas are every code in these files for a UK-wide report, and the nation's codes for a nation's report.
+`withheldUKHexAreas` lists the areas of a report's region that a result leaves out, each at its position here and named from the name files below. The region's areas are every code in these files for a UK-wide report, and the nation's codes for a nation's report. For a level from a local-area breakdown, which disclosure control applies to, the hex maps draw each such area hatched, outside the colour scale, with "Not reported" in its tooltip. They are drawn only on the tiled grid: a result that falls back to its `x` and `y` lists none. A saved result, which disclosure control did not apply to, draws only its own areas.
 
 | File | Areas | Boundaries | Source file |
 |---|---|---|---|
