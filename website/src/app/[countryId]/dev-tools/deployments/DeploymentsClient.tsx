@@ -120,6 +120,18 @@ const labelStyle = {
   color: colors.text.secondary,
 };
 
+// The UTC date a version went live; the full timestamp is in the tooltip.
+function LiveSince({ value }: { value: string | null }) {
+  if (!value) return <Version value={null} />;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return <Version value={null} />;
+  return (
+    <span style={mono} title={date.toISOString()}>
+      {date.toISOString().slice(0, 10)}
+    </span>
+  );
+}
+
 interface DriftLine {
   label: string;
   value: string;
@@ -239,6 +251,7 @@ function Overview({
             <th className={head}>.py</th>
             <th className={head}>{modelLabel}</th>
             <th className={`${head} tw:min-w-[12rem]`}>Data build</th>
+            <th className={head}>Live since</th>
           </tr>
         </thead>
         <tbody>
@@ -310,6 +323,9 @@ function Overview({
                       }
                     />
                   )}
+                </td>
+                <td className={cell}>
+                  <LiveSince value={row.served.live_since} />
                 </td>
               </tr>
             );

@@ -59,6 +59,7 @@ const response: DeploymentsResponse = {
         detail:
           "Live differs from main: it serves .py 6.10.0, but the lock on main declares 6.11.1.",
         channels: [],
+        live_since: null,
       },
     }),
     row({
@@ -78,6 +79,7 @@ const response: DeploymentsResponse = {
           { name: "current", model_version: "2.42.4" },
           { name: "frontier", model_version: "2.53.1" },
         ],
+        live_since: "2026-10-14T23:33:43.410557+00:00",
       },
     }),
   ],
@@ -128,6 +130,10 @@ describe("Deployments developer tool", () => {
     expect(within(overviewHousehold).getByText("current")).toBeInTheDocument();
     expect(within(overviewHousehold).getByText("frontier")).toBeInTheDocument();
     expect(within(overviewHousehold).getByText("2.42.4")).toBeInTheDocument();
+    // The household API reports when its current channel went live.
+    expect(
+      within(overviewHousehold).getByText("2026-10-14"),
+    ).toBeInTheDocument();
     // Data builds link to their Microcosm page; lock and report links are gone.
     const apiRow = screen.getByText("PolicyEngine API").closest("tr")!;
     expect(

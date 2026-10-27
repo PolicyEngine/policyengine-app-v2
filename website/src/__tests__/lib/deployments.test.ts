@@ -247,7 +247,10 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
     }
     if (url === "https://household.api.policyengine.org/versions") {
       return Response.json({
-        current: { package_versions: { uk: "2.88.18", us: "2.42.4" } },
+        current: {
+          deployed_at: "2026-10-14T23:33:43.410557+00:00",
+          package_versions: { uk: "2.88.18", us: "2.42.4" },
+        },
         frontier: { package_versions: { uk: "2.88.18", us: "2.53.1" } },
       });
     }
@@ -336,6 +339,7 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
     (row) => row.surface.id === "household-api",
   )!;
   expect(household.served).toMatchObject({
+    live_since: "2026-10-14T23:33:43.410557+00:00",
     model_version: "2.42.4",
     data_build_id: null,
     data_basis: null,
@@ -368,6 +372,7 @@ test("reads the served .py from the API's model route", () => {
     other_py_versions: 0,
     note: "",
     channels: [],
+    live_since: null,
     routes: {},
   });
   expect(() => parseApiV2Model({ result: {} }, "u")).toThrow();
@@ -394,6 +399,7 @@ test("reads the latest route and its bundle from the gateway", () => {
     other_py_versions: 1,
     note: "",
     channels: [],
+    live_since: null,
     routes: {
       "6.7.5": { model_version: null, data_build_id: null },
       "6.10.0": { model_version: "2.132.6", data_build_id: "uk-b" },
@@ -427,6 +433,7 @@ test("a served data build that differs from the declared one is not deployed", (
       other_py_versions: 0,
       note: "",
       channels: [],
+      live_since: null,
       routes: {},
     },
     bundles([
@@ -502,6 +509,7 @@ function apiReport(py: string) {
     other_py_versions: 0,
     note: "",
     channels: [],
+    live_since: null,
     routes: {},
   };
 }
@@ -516,6 +524,7 @@ function gatewayReport(routes: Record<string, string | null>) {
     other_py_versions: 0,
     note: "",
     channels: [],
+    live_since: null,
     routes: Object.fromEntries(
       Object.entries(routes).map(([py, build]) => [
         py,

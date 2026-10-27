@@ -288,6 +288,8 @@ export interface ServedReport {
   // Named release channels and the country-model version each runs, in the
   // service's own terms (the household API's `current` and `frontier`).
   channels: ServedChannel[];
+  // When the version users get now was deployed, if the service reports it.
+  live_since: string | null;
   // The gateway's worker for each routable .py version, for this country.
   routes: Record<
     string,
@@ -318,6 +320,7 @@ export interface ServedState {
   source_url: string | null;
   detail: string;
   channels: ServedChannel[];
+  live_since: string | null;
 }
 
 export const NOT_REPORTED: ServedState = {
@@ -330,6 +333,7 @@ export const NOT_REPORTED: ServedState = {
   detail:
     "The service reports no versions at runtime, so only the lock is known.",
   channels: [],
+  live_since: null,
 };
 
 export function servedUrl(
@@ -357,6 +361,7 @@ export function parseApiV2Model(
     other_py_versions: 0,
     note: "",
     channels: [],
+    live_since: null,
     routes: {},
   };
 }
@@ -391,6 +396,7 @@ export function parseHouseholdVersions(
         ? ` Its frontier channel, which is not yet serving users, runs ${modelPackage} ${frontier}.`
         : "",
     channels: named,
+    live_since: str(record(channels?.current)?.deployed_at),
     routes: {},
   };
 }
@@ -431,6 +437,7 @@ export function parseGatewayVersions(
     ).length,
     note: "",
     channels: [],
+    live_since: null,
     routes,
   };
 }
@@ -469,6 +476,7 @@ export function compareServed(
       data_basis: null,
       source_url: gateway.source_url,
       channels: [],
+      live_since: null,
       detail:
         `The simulation gateway has no worker for .py ${report.py_version}, ` +
         "so this service's economy simulations fail.",
@@ -495,6 +503,7 @@ export function compareServed(
           : "served_py_bundle",
     source_url: report.source_url,
     channels: report.channels,
+    live_since: report.live_since,
   };
 
   const differences: string[] = [];
