@@ -132,7 +132,7 @@ export const MOCK_UK_CONSTITUENCY_POINTS_WITHOUT_CODES: UKAreaChoroplethDataPoin
 ];
 
 /** The text a boundary with no result reads when disclosure control withheld it. */
-export const NOT_PUBLISHED_TEXT = 'Not published';
+export const NOT_REPORTED_TEXT = 'Not reported';
 
 /** The map type toggle's options, as MapTypeToggle labels them. */
 export const GEOGRAPHIC_MAP_TAB = 'Geographic';

@@ -151,7 +151,7 @@ export interface UKAreaChoroplethMapProps {
   /** Optional ref for image export: the map's frame with the boundaries' licence credit under it */
   exportRef?: React.Ref<HTMLDivElement>;
   /**
-   * What an area with no result reads in its tooltip, e.g. "Not published"
+   * What an area with no result reads in its tooltip, e.g. "Not reported"
    * for one disclosure control withheld. Defaults to "No data".
    */
   missingAreaText?: string;

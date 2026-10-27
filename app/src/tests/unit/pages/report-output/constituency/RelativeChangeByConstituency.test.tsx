@@ -5,12 +5,16 @@ import { RelativeChangeByConstituency } from '@/pages/report-output/constituency
 import {
   UK_LOCAL_AREAS_OUTPUT,
   UK_LOCAL_AREAS_OUTPUT_NO_CODES,
+  WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { SOME_WITHHELD_CONSTITUENCIES } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  CARDIFF_EAST_CODE,
   GOWER_CODE,
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
+  NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import {
   MOCK_UK_REPORT_OUTPUT,
@@ -164,5 +168,42 @@ describe('RelativeChangeByConstituency hex map placement', () => {
     // Then: on the square grid of flat-topped hexagons those positions were made for
     expect(hexagonArrangement(v2Hexagons(container))).toEqual(v3Arrangement);
     expect(v2Hexagons(container).some(isPointyTopped)).toBe(false);
+  });
+});
+
+describe('RelativeChangeByConstituency disclosure control', () => {
+  test('given withheld constituencies then the chart says how many were not reported', async () => {
+    // When
+    render(
+      <RelativeChangeByConstituency
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={SOME_WITHHELD_CONSTITUENCIES}
+      />
+    );
+
+    // Then
+    expect(screen.getByText(/^12 of 650 constituencies are not reported\./)).toBeInTheDocument();
+
+    // The geographic map has loaded its boundaries.
+    expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
+  });
+
+  test('given withheld constituencies then a boundary without a result reads not reported', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(
+      <RelativeChangeByConstituency
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={SOME_WITHHELD_CONSTITUENCIES}
+      />
+    );
+
+    // When
+    await user.hover(await screen.findByTestId(`area-${CARDIFF_EAST_CODE}`));
+
+    // Then
+    expect(screen.getByRole('tooltip')).toHaveTextContent(`Cardiff East${NOT_REPORTED_TEXT}`);
   });
 });

@@ -7,11 +7,13 @@ import {
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { SOME_WITHHELD_LOCAL_AUTHORITIES } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
   CARDIFF_CODE,
   HARTLEPOOL_CODE,
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
+  NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_DATA,
@@ -210,5 +212,40 @@ describe('AbsoluteChangeByLocalAuthority hex map placement', () => {
     // Then: on the square grid of flat-topped hexagons those positions were made for
     expect(hexagonArrangement(v2Hexagons(container))).toEqual(v3Arrangement);
     expect(v2Hexagons(container).some(isPointyTopped)).toBe(false);
+  });
+});
+
+describe('AbsoluteChangeByLocalAuthority disclosure control', () => {
+  test('given withheld local authorities then the chart says how many were not reported', async () => {
+    // When
+    render(
+      <AbsoluteChangeByLocalAuthority
+        output={UK_LOCAL_AREAS_OUTPUT}
+        withheld={SOME_WITHHELD_LOCAL_AUTHORITIES}
+      />
+    );
+
+    // Then
+    expect(screen.getByText(/^2 of 361 local authorities are not reported\./)).toBeInTheDocument();
+
+    // The geographic map has loaded its boundaries.
+    expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
+  });
+
+  test('given withheld local authorities then a boundary without a result reads not reported', async () => {
+    // Given: a UK-wide report, whose map draws Hartlepool, which has no result
+    const user = userEvent.setup();
+    render(
+      <AbsoluteChangeByLocalAuthority
+        output={UK_LOCAL_AREAS_OUTPUT}
+        withheld={SOME_WITHHELD_LOCAL_AUTHORITIES}
+      />
+    );
+
+    // When
+    await user.hover(await screen.findByTestId(`area-${HARTLEPOOL_CODE}`));
+
+    // Then
+    expect(screen.getByRole('tooltip')).toHaveTextContent(`Hartlepool${NOT_REPORTED_TEXT}`);
   });
 });

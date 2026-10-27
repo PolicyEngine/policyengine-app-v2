@@ -136,7 +136,7 @@ export type UKWithheldAreas = { withheld: number; total: number } | null;
 export type UKBreakdownWithheldAreas = Partial<Record<UKAreaLevel, UKWithheldAreas>>;
 
 /**
- * The areas of a level a breakdown did not publish, out of the level's areas
+ * The areas of a level a breakdown did not report, out of the level's areas
  * in the report's region; null when the app cannot count them.
  *
  * - A UK-wide report counts against the level's areas in the region list
