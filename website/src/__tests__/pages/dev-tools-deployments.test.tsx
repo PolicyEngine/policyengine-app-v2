@@ -91,7 +91,7 @@ describe("Deployments developer tool", () => {
     );
 
     expect(
-      await screen.findByText("1 service not deployed"),
+      await screen.findByText("1 service needs attention"),
     ).toBeInTheDocument();
     // The overview shows lock and served values where they drift.
     const overviewApi = screen.getByText("PolicyEngine API").closest("tr")!;

@@ -42,6 +42,7 @@ const DECLARED: Record<DeploymentStatus, { label: string; tone: Tone }> = {
 const SERVED: Record<ServedStatus, { label: string; tone: Tone }> = {
   matches: { label: "Deployed", tone: "success" },
   differs: { label: "Not deployed", tone: "danger" },
+  no_worker: { label: "No worker", tone: "danger" },
   unavailable: { label: "Report unavailable", tone: "warning" },
   not_reported: { label: "Not reported", tone: "neutral" },
 };
@@ -283,7 +284,9 @@ function Overview({
           {rows.map((row) => {
             const servedKnown =
               row.served.status === "matches" ||
-              row.served.status === "differs";
+              row.served.status === "differs" ||
+              row.served.status === "no_worker";
+            const noWorker = row.served.status === "no_worker";
             const cellStyle = (drift: boolean) =>
               drift ? { backgroundColor: DRIFT_BG } : undefined;
             return (
@@ -365,15 +368,22 @@ function Overview({
                 <td
                   className={cell}
                   style={cellStyle(
-                    differs(row, row.data_build_id, row.served.data_build_id),
+                    noWorker ||
+                      differs(row, row.data_build_id, row.served.data_build_id),
                   )}
                 >
-                  <DriftValue
-                    declared={row.data_build_id}
-                    served={row.served.data_build_id}
-                    servedKnown={servedKnown}
-                    short={shortBuildId}
-                  />
+                  {noWorker ? (
+                    <span style={{ color: TONES.danger.text }}>
+                      No gateway worker for .py {row.served.py_version}
+                    </span>
+                  ) : (
+                    <DriftValue
+                      declared={row.data_build_id}
+                      served={row.served.data_build_id}
+                      servedKnown={servedKnown}
+                      short={shortBuildId}
+                    />
+                  )}
                 </td>
               </tr>
             );
@@ -482,7 +492,8 @@ export default function DeploymentsClient({
   }
 
   const notDeployed = data.rows.filter(
-    (row) => row.served.status === "differs",
+    (row) =>
+      row.served.status === "differs" || row.served.status === "no_worker",
   ).length;
   const modelLabel = data.model_package ?? "Country model";
 
@@ -507,7 +518,7 @@ export default function DeploymentsClient({
           </span>
           {notDeployed > 0 && (
             <Pill
-              label={`${notDeployed} ${notDeployed === 1 ? "service" : "services"} not deployed`}
+              label={`${notDeployed} ${notDeployed === 1 ? "service needs" : "services need"} attention`}
               tone="danger"
             />
           )}

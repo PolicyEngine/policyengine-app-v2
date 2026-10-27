@@ -271,6 +271,7 @@ export interface DeploymentRow {
 // What a running service reports. A field is null when the service does not
 // report it.
 export interface ServedReport {
+  kind: ServedSourceKind;
   py_version: string | null;
   model_version: string | null;
   data_build_id: string | null;
@@ -278,11 +279,17 @@ export interface ServedReport {
   // Other .py versions the service also serves on request (the gateway keeps
   // older worker apps routable).
   other_py_versions: number;
+  // The gateway's worker for each routable .py version, for this country.
+  routes: Record<
+    string,
+    { model_version: string | null; data_build_id: string | null }
+  >;
 }
 
 export type ServedStatus =
   | "matches"
   | "differs"
+  | "no_worker"
   | "unavailable"
   | "not_reported";
 
@@ -326,11 +333,13 @@ export function parseApiV2Model(
   const py = str(record(record(json)?.result)?.policyengine_version);
   if (!py) throw new Error(`${sourceUrl} reported no policyengine_version`);
   return {
+    kind: "api_v2",
     py_version: py,
     model_version: null,
     data_build_id: null,
     source_url: sourceUrl,
     other_py_versions: 0,
+    routes: {},
   };
 }
 
@@ -345,8 +354,21 @@ export function parseGatewayVersions(
   const pyRoutes = record(versions?.policyengine) ?? {};
   const py = str(pyRoutes.latest);
   if (!py) throw new Error(`${sourceUrl} reported no latest .py route`);
-  const bundle = record(record(record(versions?.bundles)?.[py])?.[country]);
+  const bundles = record(versions?.bundles) ?? {};
+  const workerFor = (version: string) => {
+    const entry = record(record(bundles[version])?.[country]);
+    return {
+      model_version: str(entry?.model_version),
+      data_build_id: str(entry?.data_version),
+    };
+  };
+  const routes: ServedReport["routes"] = {};
+  for (const version of Object.keys(pyRoutes)) {
+    if (version !== "latest") routes[version] = workerFor(version);
+  }
+  const bundle = record(record(bundles[py])?.[country]);
   return {
+    kind: "sim_gateway",
     py_version: py,
     model_version:
       str(bundle?.model_version) ?? str(record(versions?.[country])?.latest),
@@ -355,15 +377,20 @@ export function parseGatewayVersions(
     other_py_versions: Object.keys(pyRoutes).filter(
       (key) => key !== "latest" && key !== py,
     ).length,
+    routes,
   };
 }
 
-// Pure: compare what a service serves with what its lock declares.
+// Pure: compare what a service serves with what its lock declares. The API
+// runs economy simulations on the simulation gateway's worker for its own
+// .py, so `gateway` (when readable) supplies the API's data build and shows a
+// missing worker.
 export function compareServed(
   row: DeploymentRow,
   report: ServedReport | { error: string; source_url: string },
   bundles: ReadonlyMap<string, BundleSummary | null>,
   country: DeploymentCountry,
+  gateway: ServedReport | null = null,
 ): ServedState {
   if ("error" in report) {
     return {
@@ -376,13 +403,34 @@ export function compareServed(
   const servedRelease = report.py_version
     ? bundles.get(report.py_version)?.countries[country]
     : undefined;
+  const usesWorker =
+    report.kind === "api_v2" && gateway !== null && report.py_version !== null;
+  const worker = usesWorker ? gateway.routes[report.py_version!] : undefined;
+  if (usesWorker && !worker) {
+    return {
+      status: "no_worker",
+      py_version: report.py_version,
+      model_version: servedRelease?.certified_model_version ?? null,
+      data_build_id: null,
+      data_basis: null,
+      source_url: gateway.source_url,
+      detail:
+        `The simulation gateway has no worker for .py ${report.py_version}, ` +
+        "so this service's economy simulations fail.",
+    };
+  }
   const reportedBuild =
-    row.surface.loads_dataset === false ? null : report.data_build_id;
+    row.surface.loads_dataset === false
+      ? null
+      : (report.data_build_id ?? worker?.data_build_id ?? null);
   const dataBuild = reportedBuild ?? servedRelease?.build_id ?? null;
   const state: Omit<ServedState, "status" | "detail"> = {
     py_version: report.py_version,
     model_version:
-      report.model_version ?? servedRelease?.certified_model_version ?? null,
+      report.model_version ??
+      worker?.model_version ??
+      servedRelease?.certified_model_version ??
+      null,
     data_build_id: row.surface.loads_dataset === false ? null : dataBuild,
     data_basis:
       row.surface.loads_dataset === false || !dataBuild
@@ -401,30 +449,42 @@ export function compareServed(
   ) => {
     if (served && declared && served !== declared) {
       differences.push(
-        `serves ${label} ${served}, but the lock declares ${declared}`,
+        `it serves ${label} ${served}, but the lock declares ${declared}`,
       );
     }
   };
   compare(".py", state.py_version, row.py_version);
   compare("model", state.model_version, row.model_version);
   compare("data build", state.data_build_id, row.data_build_id);
+  if (
+    worker?.data_build_id &&
+    servedRelease &&
+    worker.data_build_id !== servedRelease.build_id
+  ) {
+    differences.push(
+      `its gateway worker for .py ${report.py_version} serves data build ` +
+        `${worker.data_build_id}, but .py ${report.py_version} certifies ${servedRelease.build_id}`,
+    );
+  }
 
+  const workerNote = worker
+    ? ` Its economy simulations run on the gateway worker for .py ${report.py_version}.`
+    : "";
   const others =
     report.other_py_versions > 0
       ? ` It also keeps ${report.other_py_versions} older .py versions routable for callers that ask for them.`
       : "";
   if (differences.length) {
-    const text = differences.join("; it ");
     return {
       ...state,
       status: "differs",
-      detail: `Not deployed as declared: it ${text}.${others}`,
+      detail: `Not deployed as declared: ${differences.join("; ")}.${others}`,
     };
   }
   return {
     ...state,
     status: "matches",
-    detail: `Serves what the lock declares.${others}`,
+    detail: `Serves what the lock declares.${workerNote}${others}`,
   };
 }
 
@@ -747,6 +807,13 @@ export async function loadDeployments(
       `.py ${latestVersion} has no bundle manifest.`;
   }
 
+  const gatewaySurface = surfaces.find(
+    (surface) => surface.served?.kind === "sim_gateway",
+  );
+  const gatewayReport = gatewaySurface ? served.get(gatewaySurface.id) : null;
+  const gateway =
+    gatewayReport && !("error" in gatewayReport) ? gatewayReport : null;
+
   const rows = surfaces.map((surface) => {
     // A surface that calls another surface inherits its declaration.
     const source = surface.via
@@ -773,7 +840,10 @@ export async function loadDeployments(
     // A surface that calls another surface is served by it, too.
     const report = served.get(source?.id ?? surface.id);
     const withServed: DeploymentRow = report
-      ? { ...row, served: compareServed(row, report, bundles, country) }
+      ? {
+          ...row,
+          served: compareServed(row, report, bundles, country, gateway),
+        }
       : row;
     if (surface.via && source) {
       return {

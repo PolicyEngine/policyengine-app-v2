@@ -237,7 +237,8 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
   const fetchImpl = async (url: string) => {
     requested.push(url);
     if (url.endsWith("/v2/tax-benefit-models/by-country/us")) {
-      // The API still runs an older .py than its lock declares.
+      // The API still runs an older .py than its lock declares, and the
+      // gateway has no worker for it.
       return Response.json({
         status: "ok",
         result: { policyengine_version: "6.9.0" },
@@ -306,14 +307,14 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
     response.rows.map((row) => [row.surface.id, row.served.status]),
   );
   expect(served).toEqual({
-    api: "differs",
-    "app-v3": "differs",
+    api: "no_worker",
+    "app-v3": "no_worker",
     "sim-api": "matches",
     "household-api": "not_reported",
     "api-v2-alpha": "not_reported",
   });
   expect(app.served.detail).toBe(
-    "Not deployed as declared: it serves .py 6.9.0, but the lock declares 6.10.0.",
+    "The simulation gateway has no worker for .py 6.9.0, so this service's economy simulations fail.",
   );
   const sim = response.rows.find((row) => row.surface.id === "sim-api")!;
   expect(sim.served).toMatchObject({
@@ -328,11 +329,13 @@ test("reads the served .py from the API's model route", () => {
   expect(
     parseApiV2Model({ result: { policyengine_version: "6.10.0" } }, "u"),
   ).toEqual({
+    kind: "api_v2",
     py_version: "6.10.0",
     model_version: null,
     data_build_id: null,
     source_url: "u",
     other_py_versions: 0,
+    routes: {},
   });
   expect(() => parseApiV2Model({ result: {} }, "u")).toThrow();
 });
@@ -350,11 +353,16 @@ test("reads the latest route and its bundle from the gateway", () => {
     "u",
   );
   expect(report).toEqual({
+    kind: "sim_gateway",
     py_version: "6.10.0",
     model_version: "2.132.6",
     data_build_id: "uk-b",
     source_url: "u",
     other_py_versions: 1,
+    routes: {
+      "6.7.5": { model_version: null, data_build_id: null },
+      "6.10.0": { model_version: "2.132.6", data_build_id: "uk-b" },
+    },
   });
 });
 
@@ -376,11 +384,13 @@ test("a served data build that differs from the declared one is not deployed", (
   const served = compareServed(
     row,
     {
+      kind: "api_v2",
       py_version: "6.10.0",
       model_version: null,
       data_build_id: null,
       source_url: "u",
       other_py_versions: 0,
+      routes: {},
     },
     bundles([
       ["6.11.1", LATEST],
@@ -443,4 +453,102 @@ test("shortens a Microcosm build ID to the part that names the build", () => {
   expect(shortBuildId("policyengine-uk-data-1.58.1")).toBe(
     "policyengine-uk-data-1.58.1",
   );
+});
+
+function apiReport(py: string) {
+  return {
+    kind: "api_v2" as const,
+    py_version: py,
+    model_version: null,
+    data_build_id: null,
+    source_url: "api",
+    other_py_versions: 0,
+    routes: {},
+  };
+}
+
+function gatewayReport(routes: Record<string, string | null>) {
+  return {
+    kind: "sim_gateway" as const,
+    py_version: "6.10.0",
+    model_version: "2.151.0",
+    data_build_id: "uk-old",
+    source_url: "gateway",
+    other_py_versions: 0,
+    routes: Object.fromEntries(
+      Object.entries(routes).map(([py, build]) => [
+        py,
+        { model_version: "2.151.0", data_build_id: build },
+      ]),
+    ),
+  };
+}
+
+const ukApiRow = classifyDeployment(
+  api,
+  {
+    versions: { policyengine: "6.10.0", "policyengine-uk": "2.151.0" },
+    error: null,
+  },
+  "uk",
+  bundles([
+    ["6.11.1", LATEST],
+    ["6.10.0", OLDER],
+  ]),
+  LATEST,
+);
+const ukBundles = bundles([
+  ["6.11.1", LATEST],
+  ["6.10.0", OLDER],
+]);
+
+test("the API's data build is the one its gateway worker reports", () => {
+  const served = compareServed(
+    ukApiRow,
+    apiReport("6.10.0"),
+    ukBundles,
+    "uk",
+    gatewayReport({ "6.10.0": "uk-old" }),
+  );
+  expect(served).toMatchObject({
+    status: "matches",
+    data_build_id: "uk-old",
+    data_basis: "reported",
+  });
+});
+
+test("a missing gateway worker for the API's .py is flagged", () => {
+  const served = compareServed(
+    ukApiRow,
+    apiReport("6.10.0"),
+    ukBundles,
+    "uk",
+    gatewayReport({ "6.7.5": "uk-legacy" }),
+  );
+  expect(served.status).toBe("no_worker");
+  expect(served.source_url).toBe("gateway");
+});
+
+test("a gateway worker that serves another build than its .py certifies is flagged", () => {
+  const served = compareServed(
+    ukApiRow,
+    apiReport("6.10.0"),
+    ukBundles,
+    "uk",
+    gatewayReport({ "6.10.0": "uk-rebuilt" }),
+  );
+  expect(served.status).toBe("differs");
+  expect(served.detail).toBe(
+    "Not deployed as declared: it serves data build uk-rebuilt, but the lock declares uk-old; " +
+      "its gateway worker for .py 6.10.0 serves data build uk-rebuilt, but .py 6.10.0 certifies uk-old.",
+  );
+});
+
+test("without a readable gateway the API's data build comes from its .py bundle", () => {
+  const served = compareServed(ukApiRow, apiReport("6.10.0"), ukBundles, "uk");
+  expect(served).toMatchObject({
+    status: "matches",
+    data_build_id: "uk-old",
+    data_basis: "served_py_bundle",
+  });
 });
