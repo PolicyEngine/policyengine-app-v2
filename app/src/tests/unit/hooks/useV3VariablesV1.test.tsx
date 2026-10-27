@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useV3Variables, useV3VariablesInBackground } from '@/hooks/useV3Variables';
 import { clearMetadata } from '@/reducers/metadataReducer';
