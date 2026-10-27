@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Spinner,
-  Text,
-} from "@/components/ui";
+import { Alert, AlertDescription, AlertTitle, Spinner } from "@/components/ui";
 import { colors, spacing, typography } from "@/designTokens";
 import {
   DEPLOYMENT_COUNTRIES,
@@ -57,10 +51,14 @@ const COUNTRY_LABELS: Record<DeploymentCountry, string> = {
   uk: "United Kingdom",
 };
 
-const mono = {
+type ValueSize = "xs" | "base";
+
+const monoStyle = (size: ValueSize = "xs") => ({
   fontFamily: typography.fontFamily.mono,
-  fontSize: typography.fontSize.xs,
-};
+  fontSize: typography.fontSize[size],
+});
+
+const mono = monoStyle();
 
 const mutedText = {
   fontSize: typography.fontSize.sm,
@@ -130,18 +128,24 @@ function bundleUrl(pyVersion: string): string {
   return `https://github.com/${PY_REPOSITORY}/blob/${pyVersion}/${PY_BUNDLE_MANIFEST_PATH}`;
 }
 
-function Version({ value }: { value: string | null }) {
+function Version({ value, size }: { value: string | null; size?: ValueSize }) {
   return value ? (
-    <span style={mono}>{value}</span>
+    <span style={monoStyle(size)}>{value}</span>
   ) : (
     <span style={{ color: colors.text.tertiary }}>—</span>
   );
 }
 
-function PyVersion({ value }: { value: string | null }) {
+function PyVersion({
+  value,
+  size,
+}: {
+  value: string | null;
+  size?: ValueSize;
+}) {
   return value ? (
     <ExternalLink href={bundleUrl(value)}>
-      <span style={mono}>{value}</span>
+      <span style={monoStyle(size)}>{value}</span>
     </ExternalLink>
   ) : (
     <Version value={null} />
@@ -151,13 +155,17 @@ function PyVersion({ value }: { value: string | null }) {
 function BuildId({
   buildId,
   country,
+  size,
 }: {
   buildId: string | null;
   country: DeploymentCountry;
+  size?: ValueSize;
 }) {
   if (!buildId) return <Version value={null} />;
   const text = (
-    <span style={{ ...mono, wordBreak: "break-all" }}>{buildId}</span>
+    <span style={{ ...monoStyle(size), wordBreak: "break-all" }}>
+      {buildId}
+    </span>
   );
   return isMicrocosmBuild(buildId) ? (
     <ExternalLink href={microcosmBuildUrl(country, buildId)}>
@@ -168,20 +176,27 @@ function BuildId({
   );
 }
 
-// Label/value rows; a null value shows a dash.
-function Facts({ items }: { items: [string, React.ReactNode][] }) {
+const labelStyle = {
+  fontSize: typography.fontSize.xs,
+  fontWeight: typography.fontWeight.semibold,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.05em",
+  color: colors.text.secondary,
+};
+
+// One labeled value in the latest-bundle summary, at a readable size.
+function Stat({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-    <dl
-      className="tw:grid tw:grid-cols-[max-content_minmax(0,1fr)] tw:gap-x-3 tw:gap-y-1"
-      style={{ marginTop: spacing.sm, fontSize: typography.fontSize.sm }}
-    >
-      {items.map(([label, value]) => (
-        <div key={label} className="tw:contents">
-          <dt style={{ color: colors.text.secondary }}>{label}</dt>
-          <dd>{value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="tw:min-w-0">
+      <dt style={labelStyle}>{label}</dt>
+      <dd style={{ marginTop: spacing.xs }}>{children}</dd>
+    </div>
   );
 }
 
@@ -202,8 +217,16 @@ function DriftValue({
 }) {
   const show = (value: string | null) =>
     value ? (
-      <span style={{ ...mono, whiteSpace: "nowrap" }} title={value}>
-        {short(value)}
+      // A short value may wrap between its " · " parts, never inside one.
+      <span style={mono} title={value}>
+        {short(value)
+          .split(" · ")
+          .map((part, index) => (
+            <span key={index}>
+              {index > 0 && " · "}
+              <span style={{ whiteSpace: "nowrap" }}>{part}</span>
+            </span>
+          ))}
       </span>
     ) : (
       <span style={{ color: colors.text.tertiary }}>—</span>
@@ -211,12 +234,8 @@ function DriftValue({
   if (servedKnown && served && declared && served !== declared) {
     return (
       <span style={{ color: TONES.danger.text }}>
-        <span className="tw:block tw:whitespace-nowrap">
-          lock {show(declared)}
-        </span>
-        <span className="tw:block tw:whitespace-nowrap">
-          serving {show(served)}
-        </span>
+        <span className="tw:block">lock&nbsp;{show(declared)}</span>
+        <span className="tw:block">serving&nbsp;{show(served)}</span>
       </span>
     );
   }
@@ -242,8 +261,8 @@ function Overview({
   rows: DeploymentRow[];
   modelLabel: string;
 }) {
-  const head = "tw:px-4 tw:py-2.5 tw:text-left tw:font-medium";
-  const cell = "tw:px-4 tw:py-3 tw:align-top";
+  const head = "tw:px-3 tw:py-2.5 tw:text-left tw:font-medium";
+  const cell = "tw:px-3 tw:py-3 tw:align-top";
   return (
     <div
       className="tw:overflow-x-auto"
@@ -263,12 +282,12 @@ function Overview({
               borderBottom: `1px solid ${colors.border.light}`,
             }}
           >
-            <th className={head}>Service</th>
+            <th className={`${head} tw:w-[12rem]`}>Service</th>
             <th className={head}>Deployment</th>
             <th className={head}>Vs latest .py</th>
             <th className={head}>.py</th>
             <th className={head}>{modelLabel}</th>
-            <th className={head}>Data build</th>
+            <th className={`${head} tw:min-w-[12rem]`}>Data build</th>
           </tr>
         </thead>
         <tbody>
@@ -481,58 +500,50 @@ export default function DeploymentsClient({
   return (
     <div style={sectionStyle}>
       <div
-        className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4"
         style={{
           ...cardStyle,
           padding: spacing.xl,
           marginBottom: spacing["2xl"],
         }}
       >
-        <div className="tw:min-w-0" style={{ flex: "1 1 320px" }}>
-          <Text
-            style={{
-              fontSize: typography.fontSize.lg,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.text.primary,
-            }}
-          >
-            {COUNTRY_LABELS[country]}: latest certified bundle
-          </Text>
-          {data.latest ? (
-            <Facts
-              items={[
-                [".py", <PyVersion key="py" value={data.latest.py_version} />],
-                [
-                  modelLabel,
-                  <Version
-                    key="model"
-                    value={data.latest.certified_model_version}
-                  />,
-                ],
-                [
-                  "Data build",
-                  <BuildId
-                    key="data"
-                    buildId={data.latest.data_build_id}
-                    country={country}
-                  />,
-                ],
-              ]}
+        <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+          <span style={labelStyle}>
+            Latest certified bundle · {COUNTRY_LABELS[country]}
+          </span>
+          {notDeployed > 0 && (
+            <Pill
+              label={`${notDeployed} ${notDeployed === 1 ? "service" : "services"} not deployed`}
+              tone="danger"
             />
-          ) : (
-            <div style={{ ...mutedText, marginTop: spacing.sm }}>
-              Unknown:{" "}
-              {data.latest_error ?? "the latest .py bundle could not be read."}
-            </div>
           )}
         </div>
-        {notDeployed > 0 ? (
-          <Pill
-            label={`${notDeployed} ${notDeployed === 1 ? "service" : "services"} not deployed`}
-            tone="danger"
-          />
+        {data.latest ? (
+          <dl
+            className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[auto_auto_1fr] tw:gap-x-10 tw:gap-y-3"
+            style={{ marginTop: spacing.md }}
+          >
+            <Stat label=".py">
+              <PyVersion value={data.latest.py_version} size="base" />
+            </Stat>
+            <Stat label={modelLabel}>
+              <Version
+                value={data.latest.certified_model_version}
+                size="base"
+              />
+            </Stat>
+            <Stat label="Data build">
+              <BuildId
+                buildId={data.latest.data_build_id}
+                country={country}
+                size="base"
+              />
+            </Stat>
+          </dl>
         ) : (
-          <Pill label="Every reporting service is deployed" tone="success" />
+          <div style={{ ...mutedText, marginTop: spacing.sm }}>
+            Unknown:{" "}
+            {data.latest_error ?? "the latest .py bundle could not be read."}
+          </div>
         )}
       </div>
 

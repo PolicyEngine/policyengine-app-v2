@@ -430,11 +430,17 @@ test("a surface that loads no microdata has no data build to compare", () => {
   );
 });
 
-test("shortens a Microcosm build ID to its date and hash", () => {
+test("shortens a Microcosm build ID to the part that names the build", () => {
   expect(
     shortBuildId("microcosm-uk-2024-25-national-20261025T091414Z-a6299504"),
-  ).toBe("2026-10-25 · a6299504");
+  ).toBe("national · 2026-10-25 · a6299504");
   expect(shortBuildId("populace-us-2024-spm-20260915")).toBe(
-    "populace-us-2024-spm-20260915",
+    "spm · 2026-09-15",
+  );
+  expect(
+    shortBuildId("populace-us-2024-buildo-acs-local-766b7c7-20261017T030317Z"),
+  ).toBe("buildo-acs-local-766b7c7 · 2026-10-17");
+  expect(shortBuildId("policyengine-uk-data-1.58.1")).toBe(
+    "policyengine-uk-data-1.58.1",
   );
 });
