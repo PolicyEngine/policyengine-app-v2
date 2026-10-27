@@ -29,6 +29,8 @@ import {
 import { isUntitledReform, periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
+import { windowSizeChoices, windowSizeWithin } from '@/libs/flagship/supportedYears';
+import { getLastSupportedYear } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -153,11 +155,24 @@ function AdjustPanel({
   const [name, setName] = useState(title);
   const renamed = name.trim() !== '' && name.trim() !== title.trim();
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  // The year a recompute simulates; the current year when the report has none.
+  const runYear = year ? Number(year) : undefined;
+  const windowStart = budgetWindow?.startYear ?? runYear ?? Number(CURRENT_YEAR);
   // How many years a recompute scores, from the report's year: the report's own to start.
-  const reportWindow = budgetWindow?.windowSize ?? 1;
-  const [windowYears, setWindowYears] = useState(reportWindow);
-  const windowChoices = Array.from(new Set([...WINDOW_CHOICES, reportWindow])).sort(
-    (a, b) => a - b
+  // No window runs past the last year the model and data cover (from the
+  // country metadata): a longer one, the report's own too, ends on that year.
+  const lastSupportedYear = useSelector(getLastSupportedYear);
+  const reportWindow = windowSizeWithin(
+    budgetWindow?.windowSize ?? 1,
+    windowStart,
+    lastSupportedYear
+  );
+  const [chosenWindow, setChosenWindow] = useState(budgetWindow?.windowSize ?? 1);
+  const windowYears = windowSizeWithin(chosenWindow, windowStart, lastSupportedYear);
+  const windowChoices = windowSizeChoices(
+    [...WINDOW_CHOICES, reportWindow],
+    windowStart,
+    lastSupportedYear
   );
 
   const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
@@ -175,10 +190,6 @@ function AdjustPanel({
   if (provisions.length === 0) {
     return null;
   }
-
-  // The year a recompute simulates; the current year when the report has none.
-  const runYear = year ? Number(year) : undefined;
-  const windowStart = budgetWindow?.startYear ?? runYear ?? Number(CURRENT_YEAR);
 
   /**
    * The provisions as the panel has them. A value edited here holds from
@@ -369,7 +380,7 @@ function AdjustPanel({
           </span>
           <Select
             value={String(windowYears)}
-            onValueChange={(next) => setWindowYears(Number(next))}
+            onValueChange={(next) => setChosenWindow(Number(next))}
           >
             <SelectTrigger
               aria-label="Years"

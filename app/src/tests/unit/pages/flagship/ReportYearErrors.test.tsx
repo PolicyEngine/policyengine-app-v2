@@ -193,5 +193,11 @@ describe('FlagshipReportPage, a budget-window year that fails', () => {
         "PolicyEngine's servers hit an error while running this reform UK-wide."
       );
     });
+
+    test('then running the year again is offered', async () => {
+      const yearError = await openUnsupportedYear();
+
+      expect(within(yearError).getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    });
   });
 });

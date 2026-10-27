@@ -30,6 +30,7 @@ import {
   UK_FIRST_SUPPORTED_YEAR,
   UK_LAST_SUPPORTED_YEAR,
 } from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
+import { US_LAST_SUPPORTED_YEAR } from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockCreate = vi.fn();
@@ -176,7 +177,8 @@ describe('DraftHeader', () => {
   test('given a budget window is chosen then the draft and its run take it', async () => {
     Element.prototype.scrollIntoView ??= vi.fn();
     Element.prototype.hasPointerCapture ??= vi.fn(() => false);
-    seedDeductionMetadata();
+    // The US model's years as its metadata lists them: a ten-year window from 2026 fits.
+    seedDeductionMetadata({ lastYear: US_LAST_SUPPORTED_YEAR });
     const user = userEvent.setup();
     // A change to run.
     addDraftProvision('us', {

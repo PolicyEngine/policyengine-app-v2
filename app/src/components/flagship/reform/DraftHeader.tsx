@@ -38,7 +38,8 @@ import {
 import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
-import { getTaxYears } from '@/libs/metadataUtils';
+import { windowSizeChoices, windowSizeWithin } from '@/libs/flagship/supportedYears';
+import { getLastSupportedYear, getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
 import { regionKindOf, trackReportRunStarted } from '@/utils/analytics';
@@ -83,18 +84,22 @@ const fieldLabel: React.CSSProperties = {
  * The run's years in one control: the year the report scores in full,
  * and how many years of budget it adds from there. It reads "Year 2026",
  * or "Years 2026–2035" with a window; a click opens both choices, and a
- * window keeps its length when the year moves.
+ * window keeps its length when the year moves, up to the last year the
+ * model covers.
  */
 function YearsPicker({
   year,
   windowYears,
   yearOptions,
+  windowOptions,
   onYearChange,
   onWindowChange,
 }: {
   year: number;
   windowYears: number;
   yearOptions: number[];
+  /** The window lengths offered from `year`, none past the last year the model covers. */
+  windowOptions: number[];
   onYearChange: (year: number) => void;
   onWindowChange: (windowYears: number) => void;
 }) {
@@ -170,7 +175,7 @@ function YearsPicker({
               animated
               value={String(windowYears)}
               onValueChange={(next) => onWindowChange(Number(next))}
-              options={WINDOW_YEARS.map((years) => ({
+              options={windowOptions.map((years) => ({
                 value: String(years),
                 label: years === 1 ? '1 year' : `${years} years`,
               }))}
@@ -288,8 +293,12 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const year = draftYear(draft);
   const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
   // The budget's span from the report's year: the year alone, or a window
-  // scored a year at a time alongside the report.
-  const windowYears = draft.windowYears ?? 1;
+  // scored a year at a time alongside the report. No window runs past the
+  // last year the model and data cover (from the country metadata): a
+  // longer one ends on that year, and the draft keeps the length chosen.
+  const lastSupportedYear = useSelector(getLastSupportedYear);
+  const windowYears = windowSizeWithin(draft.windowYears ?? 1, year, lastSupportedYear);
+  const windowOptions = windowSizeChoices(WINDOW_YEARS, year, lastSupportedYear);
 
   // Who the report runs on: the whole country, a state, or a congressional district.
   const region = draft.population?.region;
@@ -359,6 +368,12 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         setDraftEditingReform(saved.id!);
       }
       const runYear = draftYear(runDraft);
+      // The window as the bar showed it: ending by the last year the model covers.
+      const runWindowYears = windowSizeWithin(
+        runDraft.windowYears ?? 1,
+        runYear,
+        lastSupportedYear
+      );
       void runReport.run(
         runDraft.label.trim() || UNTITLED_REFORM,
         SOURCE_NOTES[runDraft.source] ?? 'Draft reform',
@@ -369,7 +384,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         {
           fromDraft: true,
           region: runDraft.population?.region,
-          windowYears: runDraft.windowYears,
+          windowYears: runWindowYears > 1 ? runWindowYears : undefined,
           baseline: runBaseline,
         }
       );
@@ -426,6 +441,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             year={year}
             windowYears={windowYears}
             yearOptions={yearOptions}
+            windowOptions={windowOptions}
             onYearChange={setDraftYear}
             onWindowChange={setDraftWindowYears}
           />
