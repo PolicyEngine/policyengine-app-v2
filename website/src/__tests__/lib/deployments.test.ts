@@ -265,7 +265,16 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
       });
     }
     if (url.startsWith("https://pypi.org/")) {
-      return Response.json({ info: { version: "6.11.1" } });
+      const newest: Record<string, string> = {
+        policyengine: "6.11.1",
+        "policyengine-us": "2.68.0",
+        "policyengine-core": "3.33.13",
+      };
+      const name = url.split("/")[4];
+      return Response.json({ info: { version: newest[name] } });
+    }
+    if (url.includes("/api/microcosm/releases?country=us")) {
+      return Response.json({ latest_release_id: "us-new" });
     }
     if (url.includes("/policyengine.py/6.11.1/"))
       return Response.json(manifest("6.11.1", "us-new", "2.2.1"));
@@ -290,6 +299,13 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
     py_version: "6.11.1",
     data_build_id: "us-new",
     certified_model_version: "2.2.1",
+    core_version: "3.33.3",
+  });
+  expect(response.newest).toEqual({
+    py_version: "6.11.1",
+    model_version: "2.68.0",
+    core_version: "3.33.13",
+    data_build_id: "us-new",
   });
   const status = Object.fromEntries(
     response.rows.map((row) => [row.surface.id, row.status]),
@@ -351,6 +367,7 @@ test("reads the served .py from the API's model route", () => {
     source_url: "u",
     other_py_versions: 0,
     note: "",
+    channels: [],
     routes: {},
   });
   expect(() => parseApiV2Model({ result: {} }, "u")).toThrow();
@@ -376,6 +393,7 @@ test("reads the latest route and its bundle from the gateway", () => {
     source_url: "u",
     other_py_versions: 1,
     note: "",
+    channels: [],
     routes: {
       "6.7.5": { model_version: null, data_build_id: null },
       "6.10.0": { model_version: "2.132.6", data_build_id: "uk-b" },
@@ -408,6 +426,7 @@ test("a served data build that differs from the declared one is not deployed", (
       source_url: "u",
       other_py_versions: 0,
       note: "",
+      channels: [],
       routes: {},
     },
     bundles([
@@ -482,6 +501,7 @@ function apiReport(py: string) {
     source_url: "api",
     other_py_versions: 0,
     note: "",
+    channels: [],
     routes: {},
   };
 }
@@ -495,6 +515,7 @@ function gatewayReport(routes: Record<string, string | null>) {
     source_url: "gateway",
     other_py_versions: 0,
     note: "",
+    channels: [],
     routes: Object.fromEntries(
       Object.entries(routes).map(([py, build]) => [
         py,
@@ -587,6 +608,10 @@ test("reads the household API's current and frontier channels", () => {
     py_version: null,
     model_version: "2.88.18",
     note: "",
+    channels: [
+      { name: "current", model_version: "2.88.18" },
+      { name: "frontier", model_version: "2.88.18" },
+    ],
   });
   expect(() => parseHouseholdVersions({ frontier: {} }, "us", "u")).toThrow();
 });

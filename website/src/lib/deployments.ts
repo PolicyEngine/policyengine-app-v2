@@ -28,6 +28,14 @@ export const PY_BUNDLE_MANIFEST_PATH =
   "src/policyengine/data/bundle/manifest.json";
 export const PY_PYPI_URL = "https://pypi.org/pypi/policyengine/json";
 
+export function pypiUrl(packageName: string): string {
+  return `https://pypi.org/pypi/${packageName}/json`;
+}
+
+// Microcosm's current release per country, from its public dashboard API.
+export const MICROCOSM_RELEASES_API =
+  "https://calibration-diagnostics.vercel.app/calibration/dashboard/api/microcosm/releases";
+
 export type LockFormat = "uv" | "requirements";
 
 // Runtime reports. `api_v2` is the API's small model route (the full
@@ -277,11 +285,19 @@ export interface ServedReport {
   other_py_versions: number;
   // Added to the status explanation (e.g. another channel's version).
   note: string;
+  // Named release channels and the country-model version each runs, in the
+  // service's own terms (the household API's `current` and `frontier`).
+  channels: ServedChannel[];
   // The gateway's worker for each routable .py version, for this country.
   routes: Record<
     string,
     { model_version: string | null; data_build_id: string | null }
   >;
+}
+
+export interface ServedChannel {
+  name: string;
+  model_version: string;
 }
 
 export type ServedStatus =
@@ -301,6 +317,7 @@ export interface ServedState {
   data_basis: "reported" | "served_py_bundle" | null;
   source_url: string | null;
   detail: string;
+  channels: ServedChannel[];
 }
 
 export const NOT_REPORTED: ServedState = {
@@ -312,6 +329,7 @@ export const NOT_REPORTED: ServedState = {
   source_url: null,
   detail:
     "The service reports no versions at runtime, so only the lock is known.",
+  channels: [],
 };
 
 export function servedUrl(
@@ -338,6 +356,7 @@ export function parseApiV2Model(
     source_url: sourceUrl,
     other_py_versions: 0,
     note: "",
+    channels: [],
     routes: {},
   };
 }
@@ -358,6 +377,8 @@ export function parseHouseholdVersions(
   }
   const frontier = channelVersion("frontier");
   const modelPackage = countryModelPackage(country) ?? "the country model";
+  const named: ServedChannel[] = [{ name: "current", model_version: current }];
+  if (frontier) named.push({ name: "frontier", model_version: frontier });
   return {
     kind: "household_versions",
     py_version: null,
@@ -369,6 +390,7 @@ export function parseHouseholdVersions(
       frontier && frontier !== current
         ? ` Its frontier channel, which is not yet serving users, runs ${modelPackage} ${frontier}.`
         : "",
+    channels: named,
     routes: {},
   };
 }
@@ -408,6 +430,7 @@ export function parseGatewayVersions(
       (key) => key !== "latest" && key !== py,
     ).length,
     note: "",
+    channels: [],
     routes,
   };
 }
@@ -445,6 +468,7 @@ export function compareServed(
       data_build_id: null,
       data_basis: null,
       source_url: gateway.source_url,
+      channels: [],
       detail:
         `The simulation gateway has no worker for .py ${report.py_version}, ` +
         "so this service's economy simulations fail.",
@@ -470,6 +494,7 @@ export function compareServed(
           ? "reported"
           : "served_py_bundle",
     source_url: report.source_url,
+    channels: report.channels,
   };
 
   const differences: string[] = [];
@@ -528,8 +553,16 @@ export interface DeploymentsResponse {
     py_version: string;
     data_build_id: string | null;
     certified_model_version: string | null;
+    core_version: string | null;
   } | null;
   latest_error: string | null;
+  // The newest release of each part, whether or not a bundle certifies it.
+  newest: {
+    py_version: string | null;
+    model_version: string | null;
+    core_version: string | null;
+    data_build_id: string | null;
+  };
   rows: DeploymentRow[];
 }
 
@@ -762,15 +795,37 @@ export async function loadServedReport(
   }
 }
 
+export async function loadPypiVersion(
+  packageName: string,
+  fetchImpl: FetchLike,
+  revalidate: number,
+): Promise<string> {
+  const url = pypiUrl(packageName);
+  const response = await fetchImpl(url, { next: { revalidate } });
+  if (!response.ok) throw new Error(`${response.status} from ${url}`);
+  const version = str(record(record(await response.json())?.info)?.version);
+  if (!version) throw new Error(`PyPI returned no ${packageName} version`);
+  return version;
+}
+
 export async function loadLatestPyVersion(
   fetchImpl: FetchLike,
   revalidate: number,
 ): Promise<string> {
-  const response = await fetchImpl(PY_PYPI_URL, { next: { revalidate } });
-  if (!response.ok) throw new Error(`${response.status} from ${PY_PYPI_URL}`);
-  const version = str(record(record(await response.json())?.info)?.version);
-  if (!version) throw new Error("PyPI returned no policyengine version");
-  return version;
+  return loadPypiVersion("policyengine", fetchImpl, revalidate);
+}
+
+export async function loadMicrocosmCurrentRelease(
+  country: DeploymentCountry,
+  fetchImpl: FetchLike,
+  revalidate: number,
+): Promise<string> {
+  const url = `${MICROCOSM_RELEASES_API}?country=${country}`;
+  const response = await fetchImpl(url, { next: { revalidate } });
+  if (!response.ok) throw new Error(`${response.status} from ${url}`);
+  const release = str(record(await response.json())?.latest_release_id);
+  if (!release) throw new Error(`${url} reported no current release`);
+  return release;
 }
 
 export async function loadDeployments(
@@ -780,6 +835,15 @@ export async function loadDeployments(
   now: () => Date = () => new Date(),
 ): Promise<DeploymentsResponse> {
   const surfaces = DEPLOYMENT_SURFACES;
+  const modelPackage = countryModelPackage(country);
+  const orNull = (promise: Promise<string>) => promise.catch(() => null);
+  const newestPromise = Promise.all([
+    modelPackage
+      ? orNull(loadPypiVersion(modelPackage, fetchImpl, revalidate))
+      : null,
+    orNull(loadPypiVersion("policyengine-core", fetchImpl, revalidate)),
+    orNull(loadMicrocosmCurrentRelease(country, fetchImpl, revalidate)),
+  ]);
   const [declaredEntries, servedEntries] = await Promise.all([
     Promise.all(
       surfaces.map(
@@ -892,6 +956,7 @@ export async function loadDeployments(
   });
 
   const latestRelease = latest?.countries[country] ?? null;
+  const [newestModel, newestCore, newestData] = await newestPromise;
   return {
     country,
     model_package: countryModelPackage(country),
@@ -903,9 +968,16 @@ export async function loadDeployments(
           data_build_id: latestRelease?.build_id ?? null,
           certified_model_version:
             latestRelease?.certified_model_version ?? null,
+          core_version: latest.core_version,
         }
       : null,
     latest_error: latestError,
+    newest: {
+      py_version: latestVersion,
+      model_version: newestModel,
+      core_version: newestCore,
+      data_build_id: newestData,
+    },
     rows,
   };
 }

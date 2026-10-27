@@ -35,8 +35,15 @@ const response: DeploymentsResponse = {
     py_version: "6.11.1",
     data_build_id: "populace-us-2024-spm-20260915",
     certified_model_version: "2.2.1",
+    core_version: "3.33.3",
   },
   latest_error: null,
+  newest: {
+    py_version: "6.11.1",
+    model_version: "2.68.0",
+    core_version: "3.33.13",
+    data_build_id: "populace-us-2024-spm-20260915",
+  },
   rows: [
     row({
       surface: surface("api"),
@@ -51,12 +58,27 @@ const response: DeploymentsResponse = {
           "https://api.policyengine.org/v2/tax-benefit-models/by-country/us",
         detail:
           "Live differs from main: it serves .py 6.10.0, but the lock on main declares 6.11.1.",
+        channels: [],
       },
     }),
     row({
       surface: surface("household-api"),
       status: "no_dataset",
       py_version: null,
+      model_version: "2.53.1",
+      served: {
+        status: "differs",
+        py_version: null,
+        model_version: "2.42.4",
+        data_build_id: null,
+        data_basis: null,
+        source_url: "https://household.api.policyengine.org/versions",
+        detail: "Live differs from main.",
+        channels: [
+          { name: "current", model_version: "2.42.4" },
+          { name: "frontier", model_version: "2.53.1" },
+        ],
+      },
     }),
   ],
 };
@@ -89,10 +111,12 @@ describe("Deployments developer tool", () => {
     render(
       await DeploymentsPage({ params: Promise.resolve({ countryId: "us" }) }),
     );
-
-    expect(
-      await screen.findByText("1 service needs attention"),
-    ).toBeInTheDocument();
+    await screen.findByText("PolicyEngine API");
+    expect(screen.queryByText(/needs? attention/)).toBeNull();
+    // The header shows the newest release of each part next to the bundle.
+    const newestRow = screen.getByText("Newest release").closest("tr")!;
+    expect(within(newestRow).getByText("2.68.0")).toBeInTheDocument();
+    expect(within(newestRow).getByText("3.33.13")).toBeInTheDocument();
     // The overview shows lock and served values where they drift.
     const overviewApi = screen.getByText("PolicyEngine API").closest("tr")!;
     expect(
@@ -101,9 +125,10 @@ describe("Deployments developer tool", () => {
     expect(within(overviewApi).getByText("6.11.1")).toBeInTheDocument();
     expect(within(overviewApi).getByText("6.10.0")).toBeInTheDocument();
     const overviewHousehold = screen.getByText("Household API").closest("tr")!;
-    expect(
-      within(overviewHousehold).getByText("Not reported"),
-    ).toBeInTheDocument();
+    // The household API's model cell uses its own channel names.
+    expect(within(overviewHousehold).getByText("current")).toBeInTheDocument();
+    expect(within(overviewHousehold).getByText("frontier")).toBeInTheDocument();
+    expect(within(overviewHousehold).getByText("2.42.4")).toBeInTheDocument();
     expect(
       within(overviewHousehold).getByText("No dataset"),
     ).toBeInTheDocument();

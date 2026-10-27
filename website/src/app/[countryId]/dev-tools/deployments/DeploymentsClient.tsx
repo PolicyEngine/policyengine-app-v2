@@ -174,35 +174,27 @@ const labelStyle = {
   color: colors.text.secondary,
 };
 
-// One labeled value in the latest-bundle summary.
-function Stat({
-  label,
-  children,
-}: {
+interface DriftLine {
   label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="tw:min-w-0">
-      <dt style={labelStyle}>{label}</dt>
-      <dd style={{ marginTop: spacing.xs }}>{children}</dd>
-    </div>
-  );
+  value: string;
+  // True for a value that differs from the lock on main.
+  drift: boolean;
 }
 
-const DRIFT_BG = TONES.danger.bg;
-
-// One overview value: the declared value, or "main → live" when the
-// running service reports something else.
+// One overview value: the declared value, or labeled lines ("main" and
+// "live", or a service's own channel names) when the running service reports
+// something else.
 function DriftValue({
   declared,
   served,
   servedKnown,
+  lines,
   short = (value: string) => value,
 }: {
   declared: string | null;
   served: string | null;
   servedKnown: boolean;
+  lines?: DriftLine[];
   short?: (value: string) => string;
 }) {
   const show = (value: string | null) =>
@@ -221,27 +213,58 @@ function DriftValue({
     ) : (
       <span style={{ color: colors.text.tertiary }}>—</span>
     );
-  if (servedKnown && served && declared && served !== declared) {
+  const drifted = servedKnown && served && declared && served !== declared;
+  const shown: DriftLine[] | null = lines?.length
+    ? lines
+    : drifted
+      ? [
+          { label: "main", value: declared, drift: false },
+          { label: "live", value: served, drift: true },
+        ]
+      : null;
+  if (shown) {
     return (
-      <span style={{ color: TONES.danger.text }}>
-        <span className="tw:block">main&nbsp;{show(declared)}</span>
-        <span className="tw:block">live&nbsp;{show(served)}</span>
-      </span>
+      <dl className="tw:grid tw:grid-cols-[max-content_auto] tw:gap-x-2 tw:gap-y-0.5">
+        {shown.map((line) => (
+          <div key={line.label} className="tw:contents">
+            <dt
+              style={{
+                fontSize: typography.fontSize.xs,
+                color: colors.text.secondary,
+              }}
+            >
+              {line.label}
+            </dt>
+            <dd
+              style={{
+                color: line.drift ? TONES.danger.text : colors.text.primary,
+              }}
+            >
+              {show(line.value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
     );
   }
   return show(servedKnown ? (served ?? declared) : declared);
 }
 
-function differs(
-  row: DeploymentRow,
-  declared: string | null,
-  served: string | null,
-): boolean {
-  return (
-    row.served.status !== "not_reported" &&
-    row.served.status !== "unavailable" &&
-    Boolean(declared && served && declared !== served)
-  );
+// A service with named channels (the household API's current and frontier)
+// shows each channel's model version when any of them differs from main.
+function channelLines(row: DeploymentRow): DriftLine[] | undefined {
+  const { channels } = row.served;
+  if (
+    channels.length === 0 ||
+    channels.every((channel) => channel.model_version === row.model_version)
+  ) {
+    return undefined;
+  }
+  return channels.map((channel) => ({
+    label: channel.name,
+    value: channel.model_version,
+    drift: channel.model_version !== row.model_version,
+  }));
 }
 
 function Overview({
@@ -287,8 +310,6 @@ function Overview({
               row.served.status === "differs" ||
               row.served.status === "no_worker";
             const noWorker = row.served.status === "no_worker";
-            const cellStyle = (drift: boolean) =>
-              drift ? { backgroundColor: DRIFT_BG } : undefined;
             return (
               <tr
                 key={row.surface.id}
@@ -341,37 +362,22 @@ function Overview({
                 <td className={cell}>
                   <Pill {...DECLARED[row.status]} title={row.detail} />
                 </td>
-                <td
-                  className={cell}
-                  style={cellStyle(
-                    differs(row, row.py_version, row.served.py_version),
-                  )}
-                >
+                <td className={cell}>
                   <DriftValue
                     declared={row.py_version}
                     served={row.served.py_version}
                     servedKnown={servedKnown}
                   />
                 </td>
-                <td
-                  className={cell}
-                  style={cellStyle(
-                    differs(row, row.model_version, row.served.model_version),
-                  )}
-                >
+                <td className={cell}>
                   <DriftValue
                     declared={row.model_version}
                     served={row.served.model_version}
                     servedKnown={servedKnown}
+                    lines={channelLines(row)}
                   />
                 </td>
-                <td
-                  className={cell}
-                  style={cellStyle(
-                    noWorker ||
-                      differs(row, row.data_build_id, row.served.data_build_id),
-                  )}
-                >
+                <td className={cell}>
                   {noWorker ? (
                     <span style={{ color: TONES.danger.text }}>
                       No gateway worker for .py {row.served.py_version}
@@ -491,10 +497,6 @@ export default function DeploymentsClient({
     );
   }
 
-  const notDeployed = data.rows.filter(
-    (row) =>
-      row.served.status === "differs" || row.served.status === "no_worker",
-  ).length;
   const modelLabel = data.model_package ?? "Country model";
 
   return (
@@ -506,44 +508,97 @@ export default function DeploymentsClient({
           marginBottom: spacing["2xl"],
         }}
       >
-        <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
-          <span
-            style={{
-              fontSize: typography.fontSize.xl,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.text.primary,
-            }}
-          >
-            Latest certified bundle: {COUNTRY_LABELS[country]}
-          </span>
-          {notDeployed > 0 && (
-            <Pill
-              label={`${notDeployed} ${notDeployed === 1 ? "service needs" : "services need"} attention`}
-              tone="danger"
-            />
-          )}
+        <div
+          style={{
+            fontSize: typography.fontSize.xl,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.primary,
+          }}
+        >
+          Latest versions: {COUNTRY_LABELS[country]}
         </div>
-        {data.latest ? (
-          <dl
-            className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[auto_auto_1fr] tw:gap-x-10 tw:gap-y-3"
-            style={{ marginTop: spacing.md }}
+        <div className="tw:overflow-x-auto" style={{ marginTop: spacing.md }}>
+          <table
+            className="tw:w-full tw:min-w-[560px]"
+            style={{ fontSize: typography.fontSize.sm }}
           >
-            <Stat label=".py">
-              <PyVersion value={data.latest.py_version} />
-            </Stat>
-            <Stat label={modelLabel}>
-              <Version value={data.latest.certified_model_version} />
-            </Stat>
-            <Stat label="Data build">
-              <BuildId buildId={data.latest.data_build_id} country={country} />
-            </Stat>
-          </dl>
-        ) : (
-          <div style={{ ...mutedText, marginTop: spacing.sm }}>
-            Unknown:{" "}
-            {data.latest_error ?? "the latest .py bundle could not be read."}
-          </div>
-        )}
+            <thead>
+              <tr style={labelStyle}>
+                <th className="tw:py-1 tw:pr-6 tw:text-left tw:font-semibold" />
+                <th className="tw:py-1 tw:pr-6 tw:text-left tw:font-semibold">
+                  .py
+                </th>
+                <th className="tw:py-1 tw:pr-6 tw:text-left tw:font-semibold">
+                  {modelLabel}
+                </th>
+                <th className="tw:py-1 tw:pr-6 tw:text-left tw:font-semibold">
+                  Core
+                </th>
+                <th className="tw:py-1 tw:text-left tw:font-semibold">
+                  Data build
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th
+                  className="tw:py-1 tw:pr-6 tw:text-left tw:font-normal"
+                  style={{ color: colors.text.secondary }}
+                >
+                  Certified by the latest .py
+                </th>
+                {data.latest ? (
+                  <>
+                    <td className="tw:py-1 tw:pr-6">
+                      <PyVersion value={data.latest.py_version} />
+                    </td>
+                    <td className="tw:py-1 tw:pr-6">
+                      <Version value={data.latest.certified_model_version} />
+                    </td>
+                    <td className="tw:py-1 tw:pr-6">
+                      <Version value={data.latest.core_version} />
+                    </td>
+                    <td className="tw:py-1">
+                      <BuildId
+                        buildId={data.latest.data_build_id}
+                        country={country}
+                      />
+                    </td>
+                  </>
+                ) : (
+                  <td colSpan={4} className="tw:py-1" style={mutedText}>
+                    Unknown:{" "}
+                    {data.latest_error ??
+                      "the latest .py bundle could not be read."}
+                  </td>
+                )}
+              </tr>
+              <tr>
+                <th
+                  className="tw:py-1 tw:pr-6 tw:text-left tw:font-normal"
+                  style={{ color: colors.text.secondary }}
+                >
+                  Newest release
+                </th>
+                <td className="tw:py-1 tw:pr-6">
+                  <PyVersion value={data.newest.py_version} />
+                </td>
+                <td className="tw:py-1 tw:pr-6">
+                  <Version value={data.newest.model_version} />
+                </td>
+                <td className="tw:py-1 tw:pr-6">
+                  <Version value={data.newest.core_version} />
+                </td>
+                <td className="tw:py-1">
+                  <BuildId
+                    buildId={data.newest.data_build_id}
+                    country={country}
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Overview rows={data.rows} modelLabel={modelLabel} />
