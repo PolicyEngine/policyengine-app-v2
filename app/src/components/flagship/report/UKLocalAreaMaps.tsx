@@ -39,10 +39,7 @@ import {
   ukNationFromRegion,
 } from '@/components/visualization/choropleth/ukAreaBoundaries';
 import { UKAreaChoroplethMap } from '@/components/visualization/choropleth/UKAreaChoroplethMap';
-import {
-  placeOnUKHexLayout,
-  withheldUKHexAreas,
-} from '@/components/visualization/choropleth/ukHexLayout';
+import { placeUKHexMap } from '@/components/visualization/choropleth/ukHexLayout';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import { colors, spacing, typography } from '@/designTokens';
 import type { ReportOutputSocietyWideByConstituency } from '@/types/metadata/ReportOutputSocietyWideByConstituency';
@@ -266,16 +263,15 @@ export default function UKLocalAreaMaps({
     [areas, mode]
   );
 
-  // The hex map places each area by its code in the app's layout, tiled.
-  const hexPoints = useMemo(() => placeOnUKHexLayout(level, mapData), [level, mapData]);
   // A level the breakdown supplied is disclosure-controlled: the areas of
-  // the region it leaves out are the ones withheld, which the hex map draws
-  // as not reported. A saved level has none, and nor does a result whose
-  // areas the layout cannot all match (withheldUKHexAreas).
+  // the region it leaves out are the ones withheld. A saved level has none.
   const levelWithheld = withheld?.[level] !== undefined;
-  const withheldHexAreas = useMemo(
-    () => (levelWithheld ? withheldUKHexAreas(level, mapData, region) : []),
-    [levelWithheld, level, mapData, region]
+  // The hex map places each area by its code in the app's layout, tiled,
+  // leaves off any it cannot place, and draws the withheld ones as not
+  // reported.
+  const hexMap = useMemo(
+    () => placeUKHexMap(level, mapData, { disclosureControlled: levelWithheld, region }),
+    [level, mapData, levelWithheld, region]
   );
 
   const decimals = useMemo(() => percentDecimals(mapData.map((point) => point.value)), [mapData]);
@@ -410,8 +406,8 @@ export default function UKLocalAreaMaps({
               />
             ) : (
               <HexagonalMap
-                data={hexPoints}
-                missingAreas={withheldHexAreas}
+                data={hexMap.points}
+                missingAreas={hexMap.withheldAreas}
                 missingAreaText={UK_WITHHELD_AREA_TEXT}
                 config={{
                   ...mapConfig,

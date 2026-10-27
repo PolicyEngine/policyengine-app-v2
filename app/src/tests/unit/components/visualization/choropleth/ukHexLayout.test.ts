@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   placeOnUKHexLayout,
+  placeUKHexMap,
   UK_HEX_LAYOUTS,
   ukHexPosition,
   withheldUKHexAreas,
@@ -231,5 +232,48 @@ describe('withheldUKHexAreas', () => {
 
     // Then
     expect(areas).toEqual([]);
+  });
+});
+
+describe('placeUKHexMap', () => {
+  test("given a disclosure-controlled level then it places the result's areas tiled and lists the region's others as withheld", () => {
+    // When
+    const hexMap = placeUKHexMap('constituency', WELSH_CONSTITUENCY_POINTS, {
+      disclosureControlled: true,
+      region: WALES_REGION,
+    });
+
+    // Then
+    expect(hexMap.points).toEqual(placeOnUKHexLayout('constituency', WELSH_CONSTITUENCY_POINTS));
+    expect(hexMap.withheldAreas).toHaveLength(
+      WELSH_CONSTITUENCY_COUNT - WELSH_CONSTITUENCY_POINTS.length
+    );
+    expect(hexMap.withheldAreas.some((area) => area.id === CARDIFF_EAST_CODE)).toBe(true);
+  });
+
+  test('given a level that is not disclosure-controlled then it places the areas and lists no withheld ones', () => {
+    // When
+    const hexMap = placeUKHexMap('constituency', WELSH_CONSTITUENCY_POINTS, {
+      disclosureControlled: false,
+      region: WALES_REGION,
+    });
+
+    // Then
+    expect(hexMap.points).toHaveLength(WELSH_CONSTITUENCY_POINTS.length);
+    expect(hexMap.withheldAreas).toEqual([]);
+  });
+
+  test('given an area the layout cannot place then it is left out, the others are placed, and no withheld areas are listed', () => {
+    // When
+    const hexMap = placeUKHexMap('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT], {
+      disclosureControlled: true,
+      region: UK_WIDE_REGION,
+    });
+
+    // Then
+    expect(hexMap).toEqual({
+      points: [{ ...BARNSLEY_NORTH_POINT, ...ukHexPosition('constituency', BARNSLEY_NORTH_CODE) }],
+      withheldAreas: [],
+    });
   });
 });

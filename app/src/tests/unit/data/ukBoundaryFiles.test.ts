@@ -1,10 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
-import {
-  UK_AREA_COUNTS_BY_NATION,
-  ukNationFromCode,
-} from '@/components/visualization/choropleth/ukAreaBoundaries';
+import { ukNationFromCode } from '@/components/visualization/choropleth/ukAreaBoundaries';
 import {
   UK_HEX_AREA_NAMES,
   UK_HEX_LAYOUTS,
@@ -12,6 +9,7 @@ import {
 import {
   BOUNDARY_FILE_DIRECTORY,
   CONSTITUENCY_BOUNDARY_FILE,
+  EXPECTED_AREA_COUNTS_BY_NATION,
   EXPECTED_CONSTITUENCY_COUNT,
   EXPECTED_LOCAL_AUTHORITY_COUNT,
   LOCAL_AUTHORITY_BOUNDARY_FILE,
@@ -67,18 +65,18 @@ const LEVELS = [
 describe.each(LEVELS)(
   'UK $level boundary file',
   ({ boundaryLevel, boundaryFile, referenceFile, codeProperty, nameProperty, expectedCount }) => {
-    test("given the file's codes then each nation has the area count the withheld notes use", () => {
+    test("given the hex layout's codes then each nation has the area count the withheld notes use", () => {
       // Given
       const counts: Record<string, number> = {};
 
       // When
-      for (const feature of readBoundaries(boundaryFile)) {
-        const nation = ukNationFromCode(feature.properties[codeProperty]) ?? 'none';
+      for (const code of Object.keys(UK_HEX_LAYOUTS[boundaryLevel])) {
+        const nation = ukNationFromCode(code) ?? 'none';
         counts[nation] = (counts[nation] ?? 0) + 1;
       }
 
       // Then
-      expect(counts).toEqual(UK_AREA_COUNTS_BY_NATION[boundaryLevel]);
+      expect(counts).toEqual(EXPECTED_AREA_COUNTS_BY_NATION[boundaryLevel]);
     });
 
     test(`given the hex layout then it places exactly the file's ${expectedCount} codes, each on its own hex`, () => {
@@ -143,6 +141,19 @@ describe.each(LEVELS)(
 
       // Then
       expect(mismatches).toEqual([]);
+    });
+
+    test("given .py 6.10.0's list then the hex map's area names equal its names, code by code", () => {
+      // Given: withheld hexagons are named from these files, every other area from the results
+      const referenceNames = Object.fromEntries(
+        readPyAreaList(referenceFile).map((area) => [area.code, area.name])
+      );
+
+      // When
+      const names = UK_HEX_AREA_NAMES[boundaryLevel];
+
+      // Then
+      expect(names).toEqual(referenceNames);
     });
 
     test('given the file then it is simplified, under 2 MB', () => {

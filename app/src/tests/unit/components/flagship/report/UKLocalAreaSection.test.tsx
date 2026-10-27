@@ -26,21 +26,17 @@ import {
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import {
   COMPLETE_RESPONSE,
+  COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN,
   COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
   FAILED_RESPONSE,
   QUEUED_RESPONSE,
+  WITHHELD_LOCAL_AUTHORITIES_WITH_ARDS_AND_NORTH_DOWN,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
 vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchLocalAreaBreakdown: vi.fn(),
 }));
-
-vi.mock('@/hooks/useRegions', async () => {
-  const { UK_METADATA_REGIONS } =
-    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
-  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
-});
 
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
 
@@ -162,7 +158,7 @@ describe('UKLocalAreaSection', () => {
 
     // Then
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not reported\./)
+      await screen.findByText(/^649 of 650 constituencies are not reported\./)
     ).toBeInTheDocument();
   });
 
@@ -173,24 +169,26 @@ describe('UKLocalAreaSection', () => {
     renderSection();
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not reported\./)
+      await screen.findByText(/^649 of 650 constituencies are not reported\./)
     ).toBeInTheDocument();
 
     // When
     await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
 
     // Then
-    expect(screen.getByText(/^2 of 3 local authorities are not reported\./)).toBeInTheDocument();
+    expect(
+      screen.getByText(/^360 of 361 local authorities are not reported\./)
+    ).toBeInTheDocument();
   });
 
-  test('given a breakdown that publishes a local authority the region list does not name then that map has no count and the constituency map keeps its own', async () => {
+  test('given a breakdown that publishes a local authority under a name the region list lacks then that map counts it by its code', async () => {
     // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY);
     renderSection();
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not reported\./)
+      await screen.findByText(/^649 of 650 constituencies are not reported\./)
     ).toBeInTheDocument();
 
     // When
@@ -198,9 +196,27 @@ describe('UKLocalAreaSection', () => {
 
     // Then
     expect(
-      screen.getByText(/^Local authorities whose estimates fail the survey data’s disclosure rules/)
+      screen.getByText(/^359 of 361 local authorities are not reported\./)
     ).toBeInTheDocument();
-    expect(screen.queryByText(/local authorities are not reported\./)).not.toBeInTheDocument();
+  });
+
+  test('given a UK-wide breakdown that publishes Ards and North Down then the note counts the local authorities the hex map draws as withheld', async () => {
+    // Given: Ards and North Down, which a region list before PolicyEngine/policyengine-api#4024 lacks
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN);
+    const { container } = renderSection();
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    await user.click(await screen.findByRole('tab', { name: 'Local authorities' }));
+
+    // When
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+
+    // Then
+    const hatched = container.querySelectorAll('[data-missing-area-id]').length;
+    expect(hatched).toBe(WITHHELD_LOCAL_AUTHORITIES_WITH_ARDS_AND_NORTH_DOWN);
+    expect(
+      screen.getByText(new RegExp(`^${hatched} of 361 local authorities are not reported\\.`))
+    ).toBeInTheDocument();
   });
 
   test('given saved area data then no disclosure note shows', async () => {

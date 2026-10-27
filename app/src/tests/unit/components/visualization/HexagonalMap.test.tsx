@@ -2,6 +2,7 @@ import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import { HexagonalMap, zoomAbout } from '@/components/visualization/HexagonalMap';
 import {
+  FIXED_MAP_WIDTH,
   MIN_MISSING_AREA_STRIPE_PIXELS,
   MISSING_AREA_EDGE_COLOR,
   MISSING_FAR_EAST,
@@ -13,7 +14,10 @@ import {
   MOCK_POSITIVE_VALUES,
   MOCK_TILED_HEX_DATA,
   MOCK_UK_SHAPED_HEX_DATA,
+  mockRenderedSvgWidth,
   NOT_REPORTED_TEXT,
+  PHONE_WIDTH_PIXELS,
+  stripeSpacingOnScreen,
 } from '@/tests/fixtures/components/visualization/hexMapMocks';
 
 /** A hexagon polygon's vertices, in drawing order. */
@@ -685,6 +689,49 @@ describe('HexagonalMap missing areas', () => {
     const missingEdge = missingHexagon(container, MISSING_NORTH_EAST.id)!.getAttribute('stroke');
     expect(missingEdge).toBe(MISSING_AREA_EDGE_COLOR);
     expect(missingEdge).not.toBe(valuedEdge);
+  });
+
+  test('given a fixed-width map drawn on a phone then the stripes are at least 4 screen pixels apart', () => {
+    // Given: the 600-unit map drawn 375 pixels wide, so one unit is 0.625 pixels
+    const restoreWidth = mockRenderedSvgWidth(PHONE_WIDTH_PIXELS);
+
+    try {
+      // When
+      const { container } = render(
+        <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} missingAreas={[MISSING_UK_SHAPED_AREA]} />
+      );
+
+      // Then
+      expect(stripeSpacingOnScreen(container, PHONE_WIDTH_PIXELS)).toBeGreaterThanOrEqual(
+        MIN_MISSING_AREA_STRIPE_PIXELS
+      );
+    } finally {
+      restoreWidth();
+    }
+  });
+
+  test('given a zoomable map zoomed from 1 to 20 then the stripes keep their spacing on screen', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_UK_SHAPED_HEX_DATA}
+        missingAreas={[MISSING_UK_SHAPED_AREA]}
+        zoomable
+      />
+    );
+    const spacingAtZoomOne = stripeSpacingOnScreen(container, FIXED_MAP_WIDTH);
+
+    // When: eight steps of 1.5 reach the zoom limit, 20
+    for (let step = 0; step < 8; step++) {
+      await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    }
+
+    // Then
+    expect(screen.getByTestId('hex-map-zoom-layer').getAttribute('transform')).toContain(
+      'scale(20)'
+    );
+    expect(stripeSpacingOnScreen(container, FIXED_MAP_WIDTH)).toBeCloseTo(spacingAtZoomOne, 6);
   });
 
   test('given no missing areas then the map draws no hatching', () => {

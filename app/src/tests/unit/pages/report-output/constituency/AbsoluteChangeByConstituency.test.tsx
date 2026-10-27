@@ -2,6 +2,7 @@ import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { AbsoluteChangeByConstituency } from '@/pages/report-output/constituency/AbsoluteChangeByConstituency';
+import { UK_WIDE_WITHHELD_CONSTITUENCIES } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   UK_LOCAL_AREAS_OUTPUT,
   UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
@@ -23,6 +24,12 @@ import {
   WELSH_CONSTITUENCY_COUNT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
 import {
+  MIN_MISSING_AREA_STRIPE_PIXELS,
+  mockRenderedSvgWidth,
+  PHONE_WIDTH_PIXELS,
+  stripeSpacingOnScreen,
+} from '@/tests/fixtures/components/visualization/hexMapMocks';
+import {
   MOCK_UK_REPORT_OUTPUT,
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
 } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
@@ -34,7 +41,11 @@ import {
   v2Hexagons,
   v3HexagonArrangement,
 } from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
-import { withNullAreaImpacts } from '@/tests/fixtures/pages/report-output/ukLocalAreaBreakdownPageMocks';
+import {
+  BREAKDOWN_CONSTITUENCY_IMPACT,
+  V2_UK_REGION,
+  withNullAreaImpacts,
+} from '@/tests/fixtures/pages/report-output/ukLocalAreaBreakdownPageMocks';
 
 beforeEach(() => {
   vi.stubGlobal('fetch', mockUKBoundaryFetch());
@@ -326,5 +337,38 @@ describe('AbsoluteChangeByConstituency withheld areas on the hex map', () => {
 
     // Then
     expect(withheldHexagons(container).length).toBe(0);
+  });
+});
+
+describe('AbsoluteChangeByConstituency withheld hatching on a phone', () => {
+  test('given a UK-wide breakdown drawn 375 pixels wide then the withheld hatching’s stripes are at least 4 screen pixels apart', async () => {
+    // Given: the chart's 600-unit hex map measures a phone's width
+    const restoreWidth = mockRenderedSvgWidth(PHONE_WIDTH_PIXELS);
+    const output = {
+      ...NATIONAL_OUTPUT_WITHOUT_AREAS,
+      constituency_impact: BREAKDOWN_CONSTITUENCY_IMPACT,
+    } as SocietyWideReportOutput;
+
+    try {
+      const user = userEvent.setup();
+      const { container } = render(
+        <AbsoluteChangeByConstituency
+          output={output}
+          region={V2_UK_REGION}
+          withheld={UK_WIDE_WITHHELD_CONSTITUENCIES}
+        />
+      );
+      await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+
+      // When
+      await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
+
+      // Then
+      expect(stripeSpacingOnScreen(container, PHONE_WIDTH_PIXELS)).toBeGreaterThanOrEqual(
+        MIN_MISSING_AREA_STRIPE_PIXELS
+      );
+    } finally {
+      restoreWidth();
+    }
   });
 });

@@ -28,12 +28,6 @@ vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   fetchLocalAreaBreakdown: vi.fn(),
 }));
 
-vi.mock('@/hooks/useRegions', async () => {
-  const { UK_METADATA_REGIONS } =
-    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
-  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
-});
-
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
 const NOT_AVAILABLE = 'Constituency analysis not available for this region';
 
@@ -133,7 +127,7 @@ describe('ConstituencySubPage', () => {
 
     // Then
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not reported\./)
+      await screen.findByText(/^649 of 650 constituencies are not reported\./)
     ).toBeInTheDocument();
     expect(screen.getByText(/^1 constituency is approximate:/)).toBeInTheDocument();
   });
