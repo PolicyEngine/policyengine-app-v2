@@ -6,6 +6,7 @@ import {
   requireResult,
   type PublicApiClient,
 } from '@/api/publicApi/client';
+import { finiteJsonValueForApi, parameterValueFromApi } from '@/api/publicApi/jsonValues';
 import type { components } from '@/api/publicApi/schema';
 import {
   AccountAssociationRoutes,
@@ -24,13 +25,16 @@ import type { ParameterMetadataCollection } from '@/types/metadata/parameterMeta
 import type { PolicyMetadataParams } from '@/types/metadata/policyMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import type {
-  ProvenanceWire,
-  UserPolicyCreateBody,
-  UserPolicyItem,
-  UserPolicyPatchBody,
-} from '@/types/v2User';
+import type { ProvenanceWire, UserPolicyItem } from '@/types/v2User';
 import { coercePolicyParameterValue, resolvePolicyParameterValueSpec } from '@/utils/valueCoercion';
+
+/**
+ * The `/v2/user-policies` bodies, as the Public API's OpenAPI document gives
+ * them. The API refuses a row that names neither `policy_id` nor
+ * `legacy_policy_id`.
+ */
+type UserPolicyCreateRequest = components['schemas']['UserPolicyCreateRequest'];
+type UserPolicyPatchRequest = components['schemas']['UserPolicyPatchRequest'];
 
 /**
  * Store for the flagship app's reform objects.
@@ -316,7 +320,7 @@ export class ApiReformStore implements ReformStore {
   }
 
   /** The row for a reform; its parameters become a v1 policy first when they are not one yet. */
-  private async creationBody(reform: NewReform): Promise<UserPolicyCreateBody> {
+  private async creationBody(reform: NewReform): Promise<UserPolicyCreateRequest> {
     const countryId = this.routes.writeCountry(reform.countryId);
     const legacyPolicyId = isLegacyId(reform.policyId)
       ? Number(reform.policyId)
@@ -366,7 +370,7 @@ export class ApiReformStore implements ReformStore {
     if (!isAccountId(reformId)) {
       throw new BrowserOnlyIdError();
     }
-    const body: UserPolicyPatchBody = {};
+    const body: UserPolicyPatchRequest = {};
     if (updates.label !== undefined) {
       body.name = clampStoreText(updates.label) || null;
     }
@@ -422,9 +426,6 @@ export class ApiReformStore implements ReformStore {
 
 type V2PolicyItem = components['schemas']['PolicyItem'];
 type V2PolicyCreateBody = components['schemas']['PolicyCreateRequest'];
-/** The `/v2/user-policies` bodies, as the Public API's OpenAPI document gives them. */
-type UserPolicyCreateRequest = components['schemas']['UserPolicyCreateRequest'];
-type UserPolicyPatchRequest = components['schemas']['UserPolicyPatchRequest'];
 
 /** A v2 policy's JSON value: infinities as the API spells them (JSON has none). */
 function v2PolicyValue(value: unknown): unknown {
@@ -473,11 +474,14 @@ export function v2ReformPolicyBody(
           : null;
       return parameter.values.map((interval) => ({
         parameter_id: parameterId,
-        value: v2PolicyValue(
-          valueSpec
-            ? coercePolicyParameterValue(interval.value, valueSpec, parameter.name)
-            : interval.value
-        ) as V2PolicyCreateBody['parameter_values'][number]['value'],
+        value: finiteJsonValueForApi(
+          v2PolicyValue(
+            valueSpec
+              ? coercePolicyParameterValue(interval.value, valueSpec, parameter.name)
+              : interval.value
+          ),
+          parameter.name
+        ),
         start_date: utcMidnight(interval.startDate),
         end_date: utcMidnight(interval.endDate),
       }));
@@ -544,7 +548,7 @@ export function parametersFromV2Policy(
     intervals.push({
       startDate: parameterValue.start_date.slice(0, 10),
       endDate: parameterValue.end_date ? parameterValue.end_date.slice(0, 10) : FOREVER,
-      value: parameterValue.value as ValueInterval['value'],
+      value: parameterValueFromApi(parameterValue.value, parameterValue.parameter_name),
     });
     byName.set(parameterValue.parameter_name, intervals);
   }

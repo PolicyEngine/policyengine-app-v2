@@ -83,6 +83,30 @@ describe('fetchCatalogParameters', () => {
     });
   });
 
+  test('given a dated value that is not a parameter value then the load fails, naming the parameter', async () => {
+    // Given: a value missing from the response.
+    const fetchMock = vi.fn(async () => {
+      const result = structuredClone(catalogParametersResult([STANDARD_DEDUCTION_SINGLE]));
+      delete (result.parameters[0].values[0] as { value?: unknown }).value;
+      return jsonResponse({ status: 'ok', message: null, result });
+    });
+    const client = createPublicApiClient({
+      baseUrl: TEST_API_BASE,
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    // When
+    const loading = fetchCatalogParameters(
+      'us',
+      TEST_POLICYENGINE_VERSION,
+      [STANDARD_DEDUCTION_SINGLE],
+      client
+    );
+
+    // Then
+    await expect(loading).rejects.toThrow(STANDARD_DEDUCTION_SINGLE);
+  });
+
   test('given the ancestors labels then breadcrumbs read them, with v1 labels for the unlabelled', async () => {
     const { client } = catalogClient();
 

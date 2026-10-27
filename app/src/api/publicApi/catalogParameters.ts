@@ -4,6 +4,7 @@ import {
   requireResult,
   type PublicApiClient,
 } from '@/api/publicApi/client';
+import { parameterValueFromApi } from '@/api/publicApi/jsonValues';
 import type { components } from '@/api/publicApi/schema';
 import { v1FallbackLabel } from '@/libs/flagship/v2ParameterSearch';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
@@ -35,13 +36,16 @@ export interface LoadedCatalogParameters {
 const V2_EARLIEST_DATE = '0001-01-01';
 const V1_EARLIEST_DATE = '0000-01-01';
 
-function v1Values(values: Schemas['MetadataDatedValue'][]): ValuesList {
+function v1Values(parameterName: string, values: Schemas['MetadataDatedValue'][]): ValuesList {
   return Object.fromEntries(
     values.map((dated) => {
       const date = dated.start_date.slice(0, 10);
-      return [date === V2_EARLIEST_DATE ? V1_EARLIEST_DATE : date, dated.value];
+      return [
+        date === V2_EARLIEST_DATE ? V1_EARLIEST_DATE : date,
+        parameterValueFromApi(dated.value, parameterName),
+      ];
     })
-  ) as ValuesList;
+  );
 }
 
 function addResult(
@@ -62,7 +66,7 @@ function addResult(
       label: parameter.label ?? v1FallbackLabel(parameter.name),
       description: parameter.description,
       unit: parameter.unit,
-      values: v1Values(parameter.values),
+      values: v1Values(parameter.name, parameter.values),
       economy: parameter.economy ?? true,
       household: parameter.household ?? true,
     };

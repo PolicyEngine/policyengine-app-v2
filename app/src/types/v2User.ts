@@ -136,30 +136,8 @@ export interface SharedReportItem {
 
 /* Create and patch bodies (strict on the server: unknown keys are a 400). */
 
-/**
- * The policy a saved row points at. The API takes a v2 policy
- * (`policy_id`, from `/v2/policies`), a v1 policy (`legacy_policy_id`,
- * from `POST /{country}/policy`), or both when they name the same policy;
- * a row with neither is refused.
- */
-export type UserPolicyReference =
-  | { policy_id: string; legacy_policy_id?: number }
-  | { policy_id?: string; legacy_policy_id: number };
-
-export type UserPolicyCreateBody = UserPolicyReference & {
-  country_id: AssociationCountryId;
-  name?: string | null;
-  description?: string | null;
-  baseline?: BaselineWire | null;
-  provenance?: ProvenanceWire | null;
-};
-
-export type UserPolicyPatchBody = Partial<
-  Pick<
-    UserPolicyCreateBody,
-    'policy_id' | 'legacy_policy_id' | 'name' | 'description' | 'baseline' | 'provenance'
-  >
->;
+// The `/v2/user-policies` bodies are the generated UserPolicyCreateRequest
+// and UserPolicyPatchRequest (see api/reformStore.ts).
 
 export interface UserReportCreateBody {
   country_id: AssociationCountryId;

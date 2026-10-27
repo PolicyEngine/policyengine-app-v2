@@ -229,6 +229,44 @@ describe('parametersFromV2Policy', () => {
   });
 });
 
+describe('the values a v2 policy sends and reads', () => {
+  it('given a stored value that is not a parameter value then reading the policy fails, naming the parameter', () => {
+    const policy = v2Policy();
+    delete (policy.parameter_values[0] as { value?: unknown }).value;
+
+    expect(() => parametersFromV2Policy(policy)).toThrow(CTC_AMOUNT);
+  });
+
+  it('given a value that is not finite JSON then the policy is not sent, naming the parameter', async () => {
+    // Given
+    const fetchMock = vi.fn();
+    const client = createPublicApiClient({
+      baseUrl: TEST_API_BASE,
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+    const parameters = [
+      {
+        name: CTC_AMOUNT,
+        values: [{ startDate: '2026-01-01', endDate: FOREVER, value: Number.NaN }],
+      },
+    ];
+
+    // When
+    const creating = createV2ReformPolicy(
+      'us',
+      parameters,
+      CATALOG,
+      PARAMETER_IDS,
+      undefined,
+      client
+    );
+
+    // Then
+    await expect(creating).rejects.toThrow(CTC_AMOUNT);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('ApiV2ReformStore', () => {
   beforeEach(() => {
     localStorage.clear();
