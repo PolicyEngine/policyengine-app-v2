@@ -19,6 +19,7 @@ import ReportYearSwitcher, {
   type YearStatus,
 } from '@/components/flagship/report/ReportYearSwitcher';
 import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgress';
+import UKLocalAreaAutoStart from '@/components/flagship/report/UKLocalAreaAutoStart';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { ErrorState } from '@/components/flagship/states';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
@@ -54,6 +55,7 @@ import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta, reportMetaFromRecord } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
+import { isUKLocalLevelRegion } from '@/utils/geographyUtils';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
 
 /** A failed load at the top of the overview, in a dashed box. */
@@ -433,6 +435,20 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           alignItems: 'center',
         }}
       >
+        {/* A UK report's local areas calculate alongside its national run. */}
+        {report?.countryId === 'uk' &&
+          report.status !== 'complete' &&
+          !householdReport &&
+          !isUKLocalLevelRegion(region) && (
+            <UKLocalAreaAutoStart
+              output={null}
+              resultsRunning
+              region={region}
+              year={reportYear}
+              reformPolicyId={reformPolicyId}
+              baselinePolicyId={baselinePolicyId}
+            />
+          )}
         {calcStatus.status === 'pending' ? (
           <RunProgress
             title={
