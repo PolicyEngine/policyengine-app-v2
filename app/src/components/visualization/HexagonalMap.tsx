@@ -17,9 +17,10 @@ interface HexagonalMapProps {
 
   /**
    * Opt-in: areas the map places but has no value for, e.g. ones disclosure
-   * control withheld. Each is drawn hatched with a grey edge, outside the
-   * colour scale, with a tooltip of its name and `missingAreaText`. They take no part in the
-   * colour range, and cannot be selected.
+   * control withheld. Each is drawn on the same grid as the valued areas,
+   * hatched with a grey edge, outside the colour scale, with a tooltip of
+   * its name and `missingAreaText`. They take no part in the colour range,
+   * and cannot be selected.
    */
   missingAreas?: HexMapMissingArea[];
 
