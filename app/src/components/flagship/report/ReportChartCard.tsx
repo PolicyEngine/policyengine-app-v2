@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { IconArrowsMaximize, IconDownload } from '@tabler/icons-react';
 import {
   Button,
@@ -159,6 +159,7 @@ function ChartFrame({
   csvUnavailableReason?: string;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const csvReasonId = useId();
   const csvUnavailable = !!csvFilename && !!csvUnavailableReason;
   const hasCsvDownload = !!csvFilename && (!!csvData || csvUnavailable);
 
@@ -174,18 +175,29 @@ function ChartFrame({
           {hasCsvDownload && (
             <Tooltip>
               <TooltipTrigger asChild>
+                {/* While unavailable it stays focusable (aria-disabled, not disabled), so its
+                    tooltip opens, and the reason is also its description. */}
                 <Button
                   variant="ghost"
                   size="icon"
                   className="tw:shrink-0"
-                  disabled={csvUnavailable}
+                  aria-disabled={csvUnavailable || undefined}
+                  aria-describedby={csvUnavailable ? csvReasonId : undefined}
                   onClick={() => {
+                    if (csvUnavailable) {
+                      return;
+                    }
                     trackChartCsvDownloaded();
                     downloadCsv(csvData!, csvFilename!);
                   }}
                   aria-label="Download CSV"
                 >
                   <IconDownload size={18} />
+                  {csvUnavailable && (
+                    <span id={csvReasonId} className="tw:sr-only">
+                      {csvUnavailableReason}
+                    </span>
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left">
