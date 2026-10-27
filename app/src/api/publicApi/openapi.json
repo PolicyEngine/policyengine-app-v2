@@ -4689,7 +4689,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -4701,7 +4701,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -4712,7 +4712,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -4724,19 +4724,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -4839,7 +4829,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -4851,7 +4841,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -4862,7 +4852,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -4874,7 +4864,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -5005,7 +4995,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5017,7 +5007,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -5028,7 +5018,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5040,19 +5030,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -5188,7 +5168,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5200,7 +5180,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -5211,7 +5191,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5223,19 +5203,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -5354,7 +5324,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5366,7 +5336,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -5377,7 +5347,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5389,19 +5359,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -5555,7 +5515,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5567,7 +5527,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -5578,7 +5538,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5590,19 +5550,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -5721,7 +5671,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5733,7 +5683,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -5744,7 +5694,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5756,19 +5706,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -5947,7 +5887,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5959,7 +5899,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -5970,7 +5910,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -5982,19 +5922,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -6055,6 +5985,7 @@
     "/v2/parameters/children": {
       "get": {
         "summary": "List one level of a catalog version's parameter tree",
+        "description": "Lists the direct children of `parent_path` (the top level when empty). With `reform_changeable=true`, only the children a reform can change, sorted by label, with child counts that count only those. Invalid query parameters return 422, including a malformed policyengine_version, an unsupported country, and an unknown or repeated parameter. A catalog version without a tree (publication writes trees only for the versions it publishes and for the installed version with catalog format 2) returns 503 with a message naming it.",
         "operationId": "list_parameter_children_v2_parameters_children_get",
         "parameters": [
           {
@@ -6152,14 +6083,47 @@
                   "$ref": "#/components/schemas/MetadataParameterChildPageResponse"
                 }
               }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "description": "public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
+                "schema": {
+                  "type": "string"
+                }
+              }
             }
           },
-          "400": {
-            "description": "The resource request or PolicyEngine.py version is invalid.",
-            "content": {
-              "application/json": {
+          "304": {
+            "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
+            "headers": {
+              "ETag": {
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "description": "public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -6185,7 +6149,7 @@
             }
           },
           "422": {
-            "description": "The request parameters do not match the resource schema.",
+            "description": "The query parameters do not match the resource schema, for example an unknown parameter or a malformed PolicyEngine.py version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6205,7 +6169,159 @@
             }
           },
           "503": {
-            "description": "The initialized v2 catalog is unavailable.",
+            "description": "The initialized v2 catalog is unavailable, or the catalog version has no parameter tree (publication writes trees only for the versions it publishes and for the installed version with catalog format 2); the message then names the version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/parameters/search-file": {
+      "get": {
+        "summary": "Get a catalog version's parameter search file",
+        "operationId": "get_parameter_search_file_v2_parameters_search_file_get",
+        "parameters": [
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          },
+          {
+            "name": "policyengine_version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128,
+                  "description": "Canonical non-placeholder PEP 440 version"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Policyengine Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The catalog version's parameter search file, gzip-encoded when the request accepts gzip.",
+            "headers": {
+              "ETag": {
+                "description": "Strong tag of this representation: the SHA-256 of the uncompressed JSON, with \"-gzip\" appended for the gzip-encoded one.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "description": "public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Encoding": {
+                "description": "gzip when the request accepts gzip; absent otherwise.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetadataParameterSearchFileContent"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
+            "headers": {
+              "ETag": {
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "description": "public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested catalog resource is absent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The dormant v2 metadata resources support GET only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The query parameters do not match the resource schema, for example an unknown parameter or a malformed PolicyEngine.py version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The resource query failed internally.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The initialized v2 catalog is unavailable, or the catalog version has no parameter search file: only catalog format 2 versions that publication has published, or run with installed, since search files were added have one. The message then names the version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6278,7 +6394,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -6290,7 +6406,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -6301,7 +6417,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -6313,19 +6429,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -6516,7 +6622,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -6528,7 +6634,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -6539,7 +6645,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -6551,19 +6657,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -6682,7 +6778,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -6694,7 +6790,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -6705,7 +6801,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -6717,19 +6813,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -6865,7 +6951,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -6877,7 +6963,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -6888,7 +6974,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -6900,19 +6986,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -7031,7 +7107,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7043,7 +7119,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -7054,7 +7130,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7066,19 +7142,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -7232,7 +7298,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7244,7 +7310,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -7255,7 +7321,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7267,19 +7333,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -7397,7 +7453,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7409,7 +7465,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -7420,7 +7476,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7432,19 +7488,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -7563,7 +7609,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7575,7 +7621,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -7586,7 +7632,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7598,19 +7644,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -7719,7 +7755,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7731,7 +7767,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -7742,7 +7778,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7754,19 +7790,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -7876,7 +7902,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7888,7 +7914,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -7899,7 +7925,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -7911,19 +7937,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -8033,7 +8049,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -8045,7 +8061,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -8056,7 +8072,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -8068,19 +8084,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -8209,7 +8215,7 @@
             },
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -8221,7 +8227,7 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
                 }
@@ -8232,7 +8238,7 @@
             "description": "Not modified: If-None-Match names the current ETag. No body is sent.",
             "headers": {
               "ETag": {
-                "description": "Strong validator: a hash of the exact response body.",
+                "description": "Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag.",
                 "schema": {
                   "type": "string"
                 }
@@ -8244,19 +8250,9 @@
                 }
               },
               "Vary": {
-                "description": "Includes Origin, so caches keep responses apart by origin.",
+                "description": "Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value.",
                 "schema": {
                   "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
                 }
               }
             }
@@ -8283,148 +8279,6 @@
           },
           "422": {
             "description": "The query parameters do not match the resource schema, for example an unknown parameter or a malformed PolicyEngine.py version.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "The resource query failed internally.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "The initialized v2 catalog is unavailable.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v2/parameters/search-file": {
-      "get": {
-        "summary": "Get a catalog version's parameter search file",
-        "operationId": "get_parameter_search_file_v2_parameters_search_file_get",
-        "parameters": [
-          {
-            "name": "country_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "enum": [
-                "us",
-                "uk"
-              ],
-              "type": "string",
-              "description": "Supported PolicyEngine country ID",
-              "title": "Country Id"
-            },
-            "description": "Supported PolicyEngine country ID"
-          },
-          {
-            "name": "policyengine_version",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "maxLength": 128,
-                  "description": "Canonical non-placeholder PEP 440 version"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Policyengine Version"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The catalog version's parameter search file, gzip-encoded when the request accepts gzip.",
-            "headers": {
-              "ETag": {
-                "description": "Strong tag of this representation: the SHA-256 of the uncompressed JSON, with \"-gzip\" appended for the gzip-encoded one.",
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Cache-Control": {
-                "description": "public, max-age=86400 for a named policyengine_version; public, max-age=300 for the running version.",
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Content-Encoding": {
-                "description": "gzip when the request accepts gzip; absent otherwise.",
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Vary": {
-                "description": "Accept-Encoding.",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MetadataParameterSearchFileContent"
-                }
-              }
-            }
-          },
-          "304": {
-            "description": "If-None-Match names this file's content; the response has no body."
-          },
-          "400": {
-            "description": "The resource request or PolicyEngine.py version is invalid.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The requested catalog resource is absent.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "The dormant v2 metadata resources support GET only.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V2ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "The request parameters do not match the resource schema.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9228,6 +9082,8 @@
           "description",
           "data_type",
           "unit",
+          "economy",
+          "household",
           "values"
         ],
         "title": "MetadataCatalogParameter",
@@ -10570,6 +10426,186 @@
         "title": "MetadataParameterPageResponse",
         "description": "Success response holding one page of parameters."
       },
+      "MetadataParameterSearchFileContent": {
+        "properties": {
+          "format": {
+            "type": "integer",
+            "title": "Format"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "policyengine_version": {
+            "type": "string",
+            "title": "Policyengine Version"
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/components/schemas/MetadataParameterSearchFileParameter"
+            },
+            "type": "array",
+            "title": "Parameters"
+          },
+          "other_parameters": {
+            "items": {
+              "$ref": "#/components/schemas/MetadataParameterSearchFileLabel"
+            },
+            "type": "array",
+            "title": "Other Parameters"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/MetadataParameterSearchFileNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "format",
+          "country_id",
+          "policyengine_version",
+          "parameters",
+          "other_parameters",
+          "nodes"
+        ],
+        "title": "MetadataParameterSearchFileContent",
+        "description": "One catalog version's parameter search file, ordered by path.\n\nIt holds what v3's parameter search reads, without the catalog's values.\nA reader applies v1's label fallback where a label is null."
+      },
+      "MetadataParameterSearchFileEditabilityChange": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "editable": {
+            "type": "boolean",
+            "title": "Editable"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "start_date",
+          "editable"
+        ],
+        "title": "MetadataParameterSearchFileEditabilityChange",
+        "description": "From ``start_date`` (an ISO date), whether a draft can edit the value."
+      },
+      "MetadataParameterSearchFileLabel": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "path",
+          "label"
+        ],
+        "title": "MetadataParameterSearchFileLabel",
+        "description": "Another parameter under ``gov``: its path and stored label, or null."
+      },
+      "MetadataParameterSearchFileNode": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "path",
+          "label"
+        ],
+        "title": "MetadataParameterSearchFileNode",
+        "description": "``gov`` or a node under it that has a stored label."
+      },
+      "MetadataParameterSearchFileParameter": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "editable": {
+            "type": "boolean",
+            "title": "Editable"
+          },
+          "editable_changes": {
+            "items": {
+              "$ref": "#/components/schemas/MetadataParameterSearchFileEditabilityChange"
+            },
+            "type": "array",
+            "title": "Editable Changes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "path",
+          "label",
+          "unit",
+          "description",
+          "editable"
+        ],
+        "title": "MetadataParameterSearchFileParameter",
+        "description": "A parameter a reform can change, with what v3's search indexes.\n\n``label`` is the stored label, or null when none is stored. ``editable``\nsays whether a draft can edit the earliest current-law value (a number, a\nyes/no value or an infinite threshold); ``editable_changes``, present only\nwhen that changes over time and never null, lists the dates from which it\nchanges."
+      },
       "MetadataParameterSummary": {
         "properties": {
           "id": {
@@ -10656,7 +10692,9 @@
           "label",
           "description",
           "data_type",
-          "unit"
+          "unit",
+          "economy",
+          "household"
         ],
         "title": "MetadataParameterSummary",
         "description": "A policy parameter, described without its values.\n\nIts current-law values are listed by GET /v2/parameter-values. economy and\nhousehold say whether a reform of an economy or of a household may change\nit; they are null in versions published before catalog format 2."
@@ -10820,7 +10858,7 @@
           "default_dataset_id"
         ],
         "title": "MetadataRegion",
-        "description": "A region the model can simulate, such as a country, state or constituency.\n\nWhen requires_filter is true, filter_strategy says how the region selects\nhouseholds of its default dataset. With \"row_filter\", it keeps the\nhouseholds whose filter_field column equals filter_value (or is in it,\nwhen filter_value is a JSON list). With \"weight_replacement\", it keeps\nevery household and gives each the weight in row filter_value of the\nweight matrix that filter_field names in the certified data release."
+        "description": "A region the model can simulate, such as a country, state or constituency.\n\nWhen requires_filter is true, filter_strategy says how the region selects\nhouseholds of its default dataset. With \"row_filter\", it keeps the\nhouseholds whose filter_field column equals filter_value (or is in it,\nwhen filter_value is a JSON list)."
       },
       "MetadataRegionDetailResponse": {
         "properties": {
@@ -11090,6 +11128,28 @@
               }
             ],
             "title": "Enum Values"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "definition_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition Period"
           }
         },
         "additionalProperties": false,
@@ -11104,10 +11164,18 @@
           "possible_values",
           "default_value",
           "adds",
-          "subtracts"
+          "subtracts",
+          "is_input_variable",
+          "hidden_input",
+          "module_name",
+          "adds_parameter_path",
+          "subtracts_parameter_path",
+          "enum_values",
+          "unit",
+          "definition_period"
         ],
         "title": "MetadataVariable",
-        "description": "A variable the tax-benefit model computes or accepts as input.\n\nadds and subtracts, when present, list the variables summed into or\nsubtracted from this one. When the model takes that list from a\nparameter, adds_parameter_path or subtracts_parameter_path names the\nparameter, whose dated values give the list for each year (adds and\nsubtracts hold its value on 2025-01-01). The catalog format 2 fields\n(is_input_variable, hidden_input, module_name, the two parameter paths\nand enum_values) are null in versions published before that format."
+        "description": "A variable the tax-benefit model computes or accepts as input.\n\nadds and subtracts, when present, list the variables summed into or\nsubtracted from this one. When the model takes that list from a\nparameter, adds_parameter_path or subtracts_parameter_path names the\nparameter, whose dated values give the list for each year (adds and\nsubtracts hold its value on 2025-01-01). unit is the country package's\nunit (for example ``currency-USD``) and definition_period the period a\nvalue covers (``year``, ``month`` or ``eternity``). The catalog format 2\nfields (is_input_variable, hidden_input, module_name, the two parameter\npaths, enum_values, unit and definition_period) are null in versions\npublished before that format."
       },
       "MetadataVariableDetailResponse": {
         "properties": {
@@ -14141,193 +14209,6 @@
         ],
         "title": "V2ErrorResponse",
         "description": "Strict error response shared by every API v2 resource."
-      },
-      "MetadataParameterSearchFileContent": {
-        "properties": {
-          "format": {
-            "type": "integer",
-            "title": "Format"
-          },
-          "country_id": {
-            "type": "string",
-            "title": "Country Id"
-          },
-          "policyengine_version": {
-            "type": "string",
-            "title": "Policyengine Version"
-          },
-          "parameters": {
-            "items": {
-              "$ref": "#/components/schemas/MetadataParameterSearchFileParameter"
-            },
-            "type": "array",
-            "title": "Parameters"
-          },
-          "other_parameters": {
-            "items": {
-              "$ref": "#/components/schemas/MetadataParameterSearchFileLabel"
-            },
-            "type": "array",
-            "title": "Other Parameters"
-          },
-          "nodes": {
-            "items": {
-              "$ref": "#/components/schemas/MetadataParameterSearchFileNode"
-            },
-            "type": "array",
-            "title": "Nodes"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "format",
-          "country_id",
-          "policyengine_version",
-          "parameters",
-          "other_parameters",
-          "nodes"
-        ],
-        "title": "MetadataParameterSearchFileContent",
-        "description": "One catalog version's parameter search file, ordered by path.\n\nIt holds what v3's parameter search reads, without the catalog's values.\nA reader applies v1's label fallback where a label is null."
-      },
-      "MetadataParameterSearchFileEditabilityChange": {
-        "properties": {
-          "start_date": {
-            "type": "string",
-            "format": "date",
-            "title": "Start Date"
-          },
-          "editable": {
-            "type": "boolean",
-            "title": "Editable"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "start_date",
-          "editable"
-        ],
-        "title": "MetadataParameterSearchFileEditabilityChange",
-        "description": "From ``start_date`` (an ISO date), whether a draft can edit the value."
-      },
-      "MetadataParameterSearchFileLabel": {
-        "properties": {
-          "path": {
-            "type": "string",
-            "title": "Path"
-          },
-          "label": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Label"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "path",
-          "label"
-        ],
-        "title": "MetadataParameterSearchFileLabel",
-        "description": "Another parameter under ``gov``: its path and stored label, or null."
-      },
-      "MetadataParameterSearchFileNode": {
-        "properties": {
-          "path": {
-            "type": "string",
-            "title": "Path"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "path",
-          "label"
-        ],
-        "title": "MetadataParameterSearchFileNode",
-        "description": "A node under ``gov`` that has a stored label."
-      },
-      "MetadataParameterSearchFileParameter": {
-        "properties": {
-          "path": {
-            "type": "string",
-            "title": "Path"
-          },
-          "label": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Label"
-          },
-          "unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Unit"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "editable": {
-            "type": "boolean",
-            "title": "Editable"
-          },
-          "editable_changes": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/MetadataParameterSearchFileEditabilityChange"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Editable Changes"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "path",
-          "label",
-          "unit",
-          "description",
-          "editable"
-        ],
-        "title": "MetadataParameterSearchFileParameter",
-        "description": "A parameter a reform can change, with what v3's search indexes.\n\n``label`` is the stored label, or null when none is stored. ``editable``\nsays whether a draft can edit the earliest current-law value (a number, a\nyes/no value or an infinite threshold); ``editable_changes``, when\npresent, lists the dates from which that changes."
       }
     },
     "securitySchemes": {

@@ -471,8 +471,28 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List one level of a catalog version's parameter tree */
+    /**
+     * List one level of a catalog version's parameter tree
+     * @description Lists the direct children of `parent_path` (the top level when empty). With `reform_changeable=true`, only the children a reform can change, sorted by label, with child counts that count only those. Invalid query parameters return 422, including a malformed policyengine_version, an unsupported country, and an unknown or repeated parameter. A catalog version without a tree (publication writes trees only for the versions it publishes and for the installed version with catalog format 2) returns 503 with a message naming it.
+     */
     get: operations['list_parameter_children_v2_parameters_children_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/parameters/search-file': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a catalog version's parameter search file */
+    get: operations['get_parameter_search_file_v2_parameters_search_file_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -686,23 +706,6 @@ export interface paths {
      * @description Returns the named parameters (repeat name for each, at most 100) in name order, each with its economy and household flags and its current-law values by date, plus the stored labels of their ancestor nodes for breadcrumbs and the requested names the version has no parameter for. A client showing or editing a reform loads all of its parameters in this one request.
      */
     get: operations['get_catalog_parameters_v2_model_catalog_parameters_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v2/parameters/search-file': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get a catalog version's parameter search file */
-    get: operations['get_parameter_search_file_v2_parameters_search_file_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1063,9 +1066,9 @@ export interface components {
       /** Unit */
       unit: string | null;
       /** Economy */
-      economy?: boolean | null;
+      economy: boolean | null;
       /** Household */
-      household?: boolean | null;
+      household: boolean | null;
       /** Values */
       values: components['schemas']['MetadataDatedValue'][];
     };
@@ -1693,6 +1696,84 @@ export interface components {
       result: components['schemas']['MetadataPageResult_MetadataParameterSummary_'];
     };
     /**
+     * MetadataParameterSearchFileContent
+     * @description One catalog version's parameter search file, ordered by path.
+     *
+     *     It holds what v3's parameter search reads, without the catalog's values.
+     *     A reader applies v1's label fallback where a label is null.
+     */
+    MetadataParameterSearchFileContent: {
+      /** Format */
+      format: number;
+      /** Country Id */
+      country_id: string;
+      /** Policyengine Version */
+      policyengine_version: string;
+      /** Parameters */
+      parameters: components['schemas']['MetadataParameterSearchFileParameter'][];
+      /** Other Parameters */
+      other_parameters: components['schemas']['MetadataParameterSearchFileLabel'][];
+      /** Nodes */
+      nodes: components['schemas']['MetadataParameterSearchFileNode'][];
+    };
+    /**
+     * MetadataParameterSearchFileEditabilityChange
+     * @description From ``start_date`` (an ISO date), whether a draft can edit the value.
+     */
+    MetadataParameterSearchFileEditabilityChange: {
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string;
+      /** Editable */
+      editable: boolean;
+    };
+    /**
+     * MetadataParameterSearchFileLabel
+     * @description Another parameter under ``gov``: its path and stored label, or null.
+     */
+    MetadataParameterSearchFileLabel: {
+      /** Path */
+      path: string;
+      /** Label */
+      label: string | null;
+    };
+    /**
+     * MetadataParameterSearchFileNode
+     * @description ``gov`` or a node under it that has a stored label.
+     */
+    MetadataParameterSearchFileNode: {
+      /** Path */
+      path: string;
+      /** Label */
+      label: string;
+    };
+    /**
+     * MetadataParameterSearchFileParameter
+     * @description A parameter a reform can change, with what v3's search indexes.
+     *
+     *     ``label`` is the stored label, or null when none is stored. ``editable``
+     *     says whether a draft can edit the earliest current-law value (a number, a
+     *     yes/no value or an infinite threshold); ``editable_changes``, present only
+     *     when that changes over time and never null, lists the dates from which it
+     *     changes.
+     */
+    MetadataParameterSearchFileParameter: {
+      /** Path */
+      path: string;
+      /** Label */
+      label: string | null;
+      /** Unit */
+      unit: string | null;
+      /** Description */
+      description: string | null;
+      /** Editable */
+      editable: boolean;
+      /** Editable Changes */
+      editable_changes?: components['schemas']['MetadataParameterSearchFileEditabilityChange'][];
+    };
+    /**
      * MetadataParameterSummary
      * @description A policy parameter, described without its values.
      *
@@ -1717,9 +1798,9 @@ export interface components {
       /** Unit */
       unit: string | null;
       /** Economy */
-      economy?: boolean | null;
+      economy: boolean | null;
       /** Household */
-      household?: boolean | null;
+      household: boolean | null;
     };
     /**
      * MetadataParameterValueDetailResponse
@@ -1758,9 +1839,7 @@ export interface components {
      *     When requires_filter is true, filter_strategy says how the region selects
      *     households of its default dataset. With "row_filter", it keeps the
      *     households whose filter_field column equals filter_value (or is in it,
-     *     when filter_value is a JSON list). With "weight_replacement", it keeps
-     *     every household and gives each the weight in row filter_value of the
-     *     weight matrix that filter_field names in the certified data release.
+     *     when filter_value is a JSON list).
      */
     MetadataRegion: {
       /**
@@ -1866,9 +1945,12 @@ export interface components {
      *     subtracted from this one. When the model takes that list from a
      *     parameter, adds_parameter_path or subtracts_parameter_path names the
      *     parameter, whose dated values give the list for each year (adds and
-     *     subtracts hold its value on 2025-01-01). The catalog format 2 fields
-     *     (is_input_variable, hidden_input, module_name, the two parameter paths
-     *     and enum_values) are null in versions published before that format.
+     *     subtracts hold its value on 2025-01-01). unit is the country package's
+     *     unit (for example ``currency-USD``) and definition_period the period a
+     *     value covers (``year``, ``month`` or ``eternity``). The catalog format 2
+     *     fields (is_input_variable, hidden_input, module_name, the two parameter
+     *     paths, enum_values, unit and definition_period) are null in versions
+     *     published before that format.
      */
     MetadataVariable: {
       /**
@@ -1894,17 +1976,21 @@ export interface components {
       /** Subtracts */
       subtracts: string[] | null;
       /** Is Input Variable */
-      is_input_variable?: boolean | null;
+      is_input_variable: boolean | null;
       /** Hidden Input */
-      hidden_input?: boolean | null;
+      hidden_input: boolean | null;
       /** Module Name */
-      module_name?: string | null;
+      module_name: string | null;
       /** Adds Parameter Path */
-      adds_parameter_path?: string | null;
+      adds_parameter_path: string | null;
       /** Subtracts Parameter Path */
-      subtracts_parameter_path?: string | null;
+      subtracts_parameter_path: string | null;
       /** Enum Values */
-      enum_values?: components['schemas']['MetadataEnumValue'][] | null;
+      enum_values: components['schemas']['MetadataEnumValue'][] | null;
+      /** Unit */
+      unit: string | null;
+      /** Definition Period */
+      definition_period: string | null;
     };
     /**
      * MetadataVariableDetailResponse
@@ -3083,85 +3169,6 @@ export interface components {
       status: 'error';
       /** Message */
       message: string;
-    };
-    /**
-     * MetadataParameterSearchFileContent
-     * @description One catalog version's parameter search file, ordered by path.
-     *
-     *     It holds what v3's parameter search reads, without the catalog's values.
-     *     A reader applies v1's label fallback where a label is null.
-     */
-    MetadataParameterSearchFileContent: {
-      /** Format */
-      format: number;
-      /** Country Id */
-      country_id: string;
-      /** Policyengine Version */
-      policyengine_version: string;
-      /** Parameters */
-      parameters: components['schemas']['MetadataParameterSearchFileParameter'][];
-      /** Other Parameters */
-      other_parameters: components['schemas']['MetadataParameterSearchFileLabel'][];
-      /** Nodes */
-      nodes: components['schemas']['MetadataParameterSearchFileNode'][];
-    };
-    /**
-     * MetadataParameterSearchFileEditabilityChange
-     * @description From ``start_date`` (an ISO date), whether a draft can edit the value.
-     */
-    MetadataParameterSearchFileEditabilityChange: {
-      /**
-       * Start Date
-       * Format: date
-       */
-      start_date: string;
-      /** Editable */
-      editable: boolean;
-    };
-    /**
-     * MetadataParameterSearchFileLabel
-     * @description Another parameter under ``gov``: its path and stored label, or null.
-     */
-    MetadataParameterSearchFileLabel: {
-      /** Path */
-      path: string;
-      /** Label */
-      label: string | null;
-    };
-    /**
-     * MetadataParameterSearchFileNode
-     * @description A node under ``gov`` that has a stored label.
-     */
-    MetadataParameterSearchFileNode: {
-      /** Path */
-      path: string;
-      /** Label */
-      label: string;
-    };
-    /**
-     * MetadataParameterSearchFileParameter
-     * @description A parameter a reform can change, with what v3's search indexes.
-     *
-     *     ``label`` is the stored label, or null when none is stored. ``editable``
-     *     says whether a draft can edit the earliest current-law value (a number, a
-     *     yes/no value or an infinite threshold); ``editable_changes``, when
-     *     present, lists the dates from which that changes.
-     */
-    MetadataParameterSearchFileParameter: {
-      /** Path */
-      path: string;
-      /** Label */
-      label: string | null;
-      /** Unit */
-      unit: string | null;
-      /** Description */
-      description: string | null;
-      /** Editable */
-      editable: boolean;
-      /** Editable Changes */
-      editable_changes?:
-        | components['schemas']['MetadataParameterSearchFileEditabilityChange'][]
-        | null;
     };
   };
   responses: never;
@@ -6494,11 +6501,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -6509,24 +6516,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -6591,11 +6589,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -6606,11 +6604,11 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -6690,11 +6688,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -6705,24 +6703,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -6791,11 +6780,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -6806,24 +6795,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -6890,11 +6870,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -6905,24 +6885,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -6993,11 +6964,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -7008,24 +6979,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7092,11 +7054,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -7107,24 +7069,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7197,11 +7150,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -7212,24 +7165,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7302,20 +7246,30 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
+          ETag?: string;
+          /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
+          'Cache-Control'?: string;
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
+          Vary?: string;
           [name: string]: unknown;
         };
         content: {
           'application/json': components['schemas']['MetadataParameterChildPageResponse'];
         };
       };
-      /** @description The resource request or PolicyEngine.py version is invalid. */
-      400: {
+      /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
+      304: {
         headers: {
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
+          ETag?: string;
+          /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
+          'Cache-Control'?: string;
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
+          Vary?: string;
           [name: string]: unknown;
         };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
+        content?: never;
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7335,7 +7289,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The request parameters do not match the resource schema. */
+      /** @description The query parameters do not match the resource schema, for example an unknown parameter or a malformed PolicyEngine.py version. */
       422: {
         headers: {
           [name: string]: unknown;
@@ -7353,7 +7307,97 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The initialized v2 catalog is unavailable. */
+      /** @description The initialized v2 catalog is unavailable, or the catalog version has no parameter tree (publication writes trees only for the versions it publishes and for the installed version with catalog format 2); the message then names the version. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  get_parameter_search_file_v2_parameters_search_file_get: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+        policyengine_version?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The catalog version's parameter search file, gzip-encoded when the request accepts gzip. */
+      200: {
+        headers: {
+          /** @description Strong tag of this representation: the SHA-256 of the uncompressed JSON, with "-gzip" appended for the gzip-encoded one. */
+          ETag?: string;
+          /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
+          'Cache-Control'?: string;
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
+          Vary?: string;
+          /** @description gzip when the request accepts gzip; absent otherwise. */
+          'Content-Encoding'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MetadataParameterSearchFileContent'];
+        };
+      };
+      /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
+      304: {
+        headers: {
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
+          ETag?: string;
+          /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
+          'Cache-Control'?: string;
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
+          Vary?: string;
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The requested catalog resource is absent. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The dormant v2 metadata resources support GET only. */
+      405: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The query parameters do not match the resource schema, for example an unknown parameter or a malformed PolicyEngine.py version. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The resource query failed internally. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The initialized v2 catalog is unavailable, or the catalog version has no parameter search file: only catalog format 2 versions that publication has published, or run with installed, since search files were added have one. The message then names the version. */
       503: {
         headers: {
           [name: string]: unknown;
@@ -7382,11 +7426,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -7397,24 +7441,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7488,11 +7523,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -7503,24 +7538,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7587,11 +7613,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -7602,24 +7628,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7688,11 +7705,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -7703,24 +7720,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7787,11 +7795,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -7802,24 +7810,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7890,11 +7889,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -7905,24 +7904,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -7989,11 +7979,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -8004,24 +7994,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -8088,11 +8069,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -8103,24 +8084,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -8185,11 +8157,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -8200,24 +8172,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -8282,11 +8245,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -8297,24 +8260,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -8379,11 +8333,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -8394,24 +8348,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -8478,11 +8423,11 @@ export interface operations {
       /** @description Successful Response */
       200: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
@@ -8493,24 +8438,15 @@ export interface operations {
       /** @description Not modified: If-None-Match names the current ETag. No body is sent. */
       304: {
         headers: {
-          /** @description Strong validator: a hash of the exact response body. */
+          /** @description Strong validator: a hash of the uncompressed response body, so a gzip-encoded response carries the same tag. */
           ETag?: string;
           /** @description public, with max-age 86400 when the request names policyengine_version and 300 otherwise; current parameter values expire at the next UTC midnight. */
           'Cache-Control'?: string;
-          /** @description Includes Origin, so caches keep responses apart by origin. */
+          /** @description Origin, Accept-Encoding: caches keep responses apart by origin and by compression; a 304 carries the same value. */
           Vary?: string;
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description The country in the path is not supported. Query parameters are checked first: an invalid one, including the PolicyEngine.py version, returns 422. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
       };
       /** @description The requested catalog resource is absent. */
       404: {
@@ -8531,99 +8467,6 @@ export interface operations {
         };
       };
       /** @description The query parameters do not match the resource schema, for example an unknown parameter or a malformed PolicyEngine.py version. */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
-      };
-      /** @description The resource query failed internally. */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
-      };
-      /** @description The initialized v2 catalog is unavailable. */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
-      };
-    };
-  };
-  get_parameter_search_file_v2_parameters_search_file_get: {
-    parameters: {
-      query: {
-        /** @description Supported PolicyEngine country ID */
-        country_id: 'us' | 'uk';
-        policyengine_version?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The catalog version's parameter search file, gzip-encoded when the request accepts gzip. */
-      200: {
-        headers: {
-          /** @description Strong tag of this representation: the SHA-256 of the uncompressed JSON, with "-gzip" appended for the gzip-encoded one. */
-          ETag?: string;
-          /** @description public, max-age=86400 for a named policyengine_version; public, max-age=300 for the running version. */
-          'Cache-Control'?: string;
-          /** @description gzip when the request accepts gzip; absent otherwise. */
-          'Content-Encoding'?: string;
-          /** @description Accept-Encoding. */
-          Vary?: string;
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['MetadataParameterSearchFileContent'];
-        };
-      };
-      /** @description If-None-Match names this file's content; the response has no body. */
-      304: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description The resource request or PolicyEngine.py version is invalid. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
-      };
-      /** @description The requested catalog resource is absent. */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
-      };
-      /** @description The dormant v2 metadata resources support GET only. */
-      405: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
-        };
-      };
-      /** @description The request parameters do not match the resource schema. */
       422: {
         headers: {
           [name: string]: unknown;
