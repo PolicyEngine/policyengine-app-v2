@@ -30,6 +30,11 @@ interface ReportChartCardProps {
   csvData?: CsvData;
   /** CSV download filename; renders a CSV download button when csvData is provided. */
   csvFilename?: string;
+  /**
+   * Why the CSV cannot be downloaded yet (its labels are loading, or failed
+   * to): the button shows, disabled, with this as its tooltip.
+   */
+  csvUnavailableReason?: string;
 }
 
 /**
@@ -46,6 +51,7 @@ export default function ReportChartCard({
   downloadFilename,
   csvData,
   csvFilename,
+  csvUnavailableReason,
 }: ReportChartCardProps) {
   const [focused, setFocused] = useState(false);
   const chart = (enlarged: boolean) => (
@@ -54,6 +60,7 @@ export default function ReportChartCard({
       downloadFilename={downloadFilename}
       csvFilename={csvFilename}
       csvData={csvData}
+      csvUnavailableReason={csvUnavailableReason}
       headerActions={
         !enlarged && (
           <Tooltip>
@@ -141,6 +148,7 @@ function ChartFrame({
   downloadFilename,
   csvData,
   csvFilename,
+  csvUnavailableReason,
 }: {
   children: ReactNode;
   headerActions?: ReactNode;
@@ -148,9 +156,11 @@ function ChartFrame({
   downloadFilename?: string;
   csvData?: CsvData;
   csvFilename?: string;
+  csvUnavailableReason?: string;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const hasCsvDownload = !!csvFilename && !!csvData;
+  const csvUnavailable = !!csvFilename && !!csvUnavailableReason;
+  const hasCsvDownload = !!csvFilename && (!!csvData || csvUnavailable);
 
   return (
     // Fills the card, so the bordered body below can take the rest of its height.
@@ -168,6 +178,7 @@ function ChartFrame({
                   variant="ghost"
                   size="icon"
                   className="tw:shrink-0"
+                  disabled={csvUnavailable}
                   onClick={() => {
                     trackChartCsvDownloaded();
                     downloadCsv(csvData!, csvFilename!);
@@ -177,7 +188,9 @@ function ChartFrame({
                   <IconDownload size={18} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left">Download CSV</TooltipContent>
+              <TooltipContent side="left">
+                {csvUnavailable ? csvUnavailableReason : 'Download CSV'}
+              </TooltipContent>
             </Tooltip>
           )}
           {downloadFilename && (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@test-utils';
+import { render, screen, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import { clearMetadata, fetchMetadataThunk, metadataRequest } from '@/reducers/metadataReducer';
@@ -93,5 +93,43 @@ describe('EconomicImpactCharts for the UK with v3 on the v2 routes', () => {
       .getByRole('button', { name: 'Expand Budgetary impact by programme' })
       .closest('section');
     expect(programmes).toHaveTextContent('Budgetary impact (£bn)');
+  });
+
+  function programmeCsvButton() {
+    const programmes = screen
+      .getByRole('button', { name: 'Expand Budgetary impact by programme' })
+      .closest('section') as HTMLElement;
+    return within(programmes).getByRole('button', { name: 'Download CSV' });
+  }
+
+  test('given the variables still loading then the programme CSV waits for their names', () => {
+    // Given
+    answerVariables = () => new Promise<Response>(() => {});
+
+    // When
+    renderCharts();
+
+    // Then
+    expect(programmeCsvButton()).toBeDisabled();
+  });
+
+  test('given the variables fail then the programme CSV stays unavailable', async () => {
+    // Given
+    answerVariables = () => jsonResponse({ status: 'error', message: 'Unavailable' }, 503);
+
+    // When
+    renderCharts();
+
+    // Then
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(programmeCsvButton()).toBeDisabled();
+  });
+
+  test('given the variables arrive then the programme CSV can be downloaded', async () => {
+    // When
+    renderCharts();
+
+    // Then
+    await waitFor(() => expect(programmeCsvButton()).toBeEnabled());
   });
 });
