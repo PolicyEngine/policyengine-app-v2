@@ -122,11 +122,12 @@ export interface MetadataState {
    */
   v2LoadId?: string;
   /**
-   * On the v2 routes, `variables` starts empty and fills once, in the
-   * background, with every variable of the catalog version named here;
-   * absent until they are in.
+   * On the v2 routes, `variables` starts empty and fills once per model
+   * catalog load, in the background, with every variable of the catalog
+   * version: this is the load (`v2LoadId`) they were loaded under, absent
+   * until they are in.
    */
-  v2VariablesVersion?: string;
+  v2VariablesLoadId?: string;
   /**
    * On the v2 routes, the dated values of each parameter a variable's adds
    * or subtracts names (a list of variable names per date), which the

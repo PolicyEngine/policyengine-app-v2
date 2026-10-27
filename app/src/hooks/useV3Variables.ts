@@ -5,7 +5,11 @@ import { fetchCatalogVariables } from '@/api/publicApi/catalogVariables';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
-import { catalogVariablesLoaded } from '@/reducers/metadataReducer';
+import {
+  catalogVariablesLoaded,
+  selectV2CatalogVersion,
+  selectV2LoadId,
+} from '@/reducers/metadataReducer';
 import type { AppDispatch, RootState } from '@/store';
 
 /**
@@ -28,30 +32,39 @@ export interface V3VariablesStatus {
    * views that never waited for it before can ignore.
    */
   waiting: boolean;
+  /**
+   * Whether loading them failed: only ever on the v2 routes, where views
+   * then say so and offer `retry`. On v1 a failed whole metadata is the
+   * page's own concern, as before.
+   */
+  failed: boolean;
   /** The failure's message, when the status is 'error'. */
   message: string | null;
   retry: () => unknown;
 }
 
-/** The query key of a catalog version's variables. */
-export function v2CatalogVariablesKey(countryId: string, policyengineVersion: string | null) {
-  return ['v2-catalog-variables', countryId, policyengineVersion] as const;
+/**
+ * The query key of a catalog version's variables, under one load of the
+ * model catalog: a new load (a retry, or a newer catalog) empties the store
+ * and asks for them again.
+ */
+export function v2CatalogVariablesKey(
+  countryId: string,
+  policyengineVersion: string | null,
+  loadId: string | null
+) {
+  return ['v2-catalog-variables', countryId, policyengineVersion, loadId] as const;
 }
 
-/** A catalog version's variables never change, so they are fetched once per session. */
+/** A catalog version's variables never change, so they are fetched once per model catalog load. */
 const VARIABLES_QUERY_OPTIONS = { staleTime: Infinity, gcTime: Infinity } as const;
-
-function useV2CatalogVersion(): string | null {
-  return useSelector((state: RootState) =>
-    state.metadata.routes === 'v2' ? (state.metadata.v2Catalog?.policyengineVersion ?? null) : null
-  );
-}
 
 function useV1Variables(): V3VariablesStatus {
   const metadata = useFlagshipMetadataStatus();
   return {
     status: metadata.status,
     waiting: false,
+    failed: false,
     message: metadata.message,
     retry: metadata.retry,
   };
@@ -61,40 +74,48 @@ function useV2Variables(): V3VariablesStatus {
   const countryId = useCurrentCountry();
   const dispatch = useDispatch<AppDispatch>();
   const metadata = useFlagshipMetadataStatus();
-  const policyengineVersion = useV2CatalogVersion();
-  const loadedVersion = useSelector((state: RootState) => state.metadata.v2VariablesVersion);
-  const inStore = policyengineVersion !== null && loadedVersion === policyengineVersion;
+  const policyengineVersion = useSelector(selectV2CatalogVersion);
+  const loadId = useSelector(selectV2LoadId);
+  const loadedUnder = useSelector((state: RootState) => state.metadata.v2VariablesLoadId);
+  const inStore = loadId !== null && loadedUnder === loadId;
   const query = useQuery({
-    queryKey: v2CatalogVariablesKey(countryId, policyengineVersion),
+    queryKey: v2CatalogVariablesKey(countryId, policyengineVersion, loadId),
     queryFn: () => fetchCatalogVariables(countryId, policyengineVersion!),
-    enabled: policyengineVersion !== null,
+    enabled: policyengineVersion !== null && loadId !== null,
     ...VARIABLES_QUERY_OPTIONS,
   });
 
-  // The query holds the response; the store holds what views read. They
-  // part only when the store is cleared (a country change) while the query
-  // is cached, so the store is filled from the cache whenever it lacks them.
+  // The query holds the response; the store holds what views read. Several
+  // readers share one query, so whichever sees the response first fills the
+  // store, for the load it was asked under only.
   useEffect(() => {
-    if (query.data && policyengineVersion !== null && !inStore) {
-      dispatch(catalogVariablesLoaded({ countryId, policyengineVersion, ...query.data }));
+    if (query.data && policyengineVersion !== null && loadId !== null && !inStore) {
+      dispatch(catalogVariablesLoaded({ countryId, policyengineVersion, loadId, ...query.data }));
     }
-  }, [query.data, policyengineVersion, inStore, countryId, dispatch]);
+  }, [query.data, policyengineVersion, loadId, inStore, countryId, dispatch]);
 
   if (inStore) {
-    return { status: 'ready', waiting: false, message: null, retry: query.refetch };
+    return { status: 'ready', waiting: false, failed: false, message: null, retry: query.refetch };
   }
   if (metadata.status === 'error') {
-    return { status: 'error', waiting: false, message: metadata.message, retry: metadata.retry };
+    return {
+      status: 'error',
+      waiting: false,
+      failed: true,
+      message: metadata.message,
+      retry: metadata.retry,
+    };
   }
   if (query.isError) {
     return {
       status: 'error',
       waiting: false,
+      failed: true,
       message: query.error instanceof Error ? query.error.message : null,
       retry: query.refetch,
     };
   }
-  return { status: 'loading', waiting: true, message: null, retry: query.refetch };
+  return { status: 'loading', waiting: true, failed: false, message: null, retry: query.refetch };
 }
 
 /**
@@ -112,18 +133,19 @@ export const useV3Variables: () => V3VariablesStatus =
  */
 function useV2VariablesInBackground(): void {
   const countryId = useCurrentCountry();
-  const policyengineVersion = useV2CatalogVersion();
+  const policyengineVersion = useSelector(selectV2CatalogVersion);
+  const loadId = useSelector(selectV2LoadId);
   const queryClient = useQueryClient();
   useEffect(() => {
-    if (policyengineVersion === null) {
+    if (policyengineVersion === null || loadId === null) {
       return;
     }
     void queryClient.prefetchQuery({
-      queryKey: v2CatalogVariablesKey(countryId, policyengineVersion),
+      queryKey: v2CatalogVariablesKey(countryId, policyengineVersion, loadId),
       queryFn: () => fetchCatalogVariables(countryId, policyengineVersion),
       ...VARIABLES_QUERY_OPTIONS,
     });
-  }, [countryId, policyengineVersion, queryClient]);
+  }, [countryId, policyengineVersion, loadId, queryClient]);
 }
 
 function noBackgroundLoad(): void {}

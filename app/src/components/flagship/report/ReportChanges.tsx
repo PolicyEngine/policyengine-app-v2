@@ -3,7 +3,7 @@ import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import type { BillChange } from '@/api/billFeed';
 import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
-import { VariableNamesLoading } from '@/components/flagship/V3VariablesGate';
+import { VariableNamesFailed, VariableNamesLoading } from '@/components/flagship/V3VariablesGate';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -176,6 +176,8 @@ export default function ReportChanges({
             after: list ? (
               variablesStatus.waiting ? (
                 <VariableNamesLoading />
+              ) : variablesStatus.failed ? (
+                <VariableNamesFailed onRetry={variablesStatus.retry} />
               ) : (
                 describeChange(provision.baselineValue, provision.value, String, variableLabel)
               )

@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { VariableNamesLoading } from '@/components/flagship/V3VariablesGate';
+import { VariableNamesFailed, VariableNamesLoading } from '@/components/flagship/V3VariablesGate';
 import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useV3Variables } from '@/hooks/useV3Variables';
@@ -105,6 +105,8 @@ export default function ProvisionList({
             >
               {listChange && variablesStatus.waiting ? (
                 <VariableNamesLoading />
+              ) : listChange && variablesStatus.failed ? (
+                <VariableNamesFailed onRetry={variablesStatus.retry} />
               ) : listChange ? (
                 <span
                   style={{ color: colors.primary[700], fontWeight: typography.fontWeight.semibold }}

@@ -3,16 +3,6 @@ import { TEST_POLICYENGINE_VERSION } from '@/tests/fixtures/api/publicApi/modelC
 
 type Schemas = components['schemas'];
 
-/**
- * A catalog variable with its unit and definition period, which the Public
- * API serves since catalog format 2 but the generated client on this base
- * predates (see `CatalogVariable` in api/publicApi/catalogVariables).
- */
-type CatalogVariableFixture = Schemas['MetadataVariable'] & {
-  unit?: string | null;
-  definition_period?: string | null;
-};
-
 /** A parameter whose value lists the variables `household_benefits` adds. */
 export const BENEFITS_PARAMETER_PATH = 'gov.household.household_benefits';
 /** A parameter `countable_income` subtracts, which the catalog version does not have. */
@@ -20,8 +10,8 @@ export const ABSENT_PARTS_PARAMETER_PATH = 'gov.example.absent_deductions';
 
 function variable(
   name: string,
-  fields: Partial<CatalogVariableFixture> = {}
-): CatalogVariableFixture {
+  fields: Partial<Schemas['MetadataVariable']> = {}
+): Schemas['MetadataVariable'] {
   return {
     id: `variable-${name}`,
     name,
@@ -123,10 +113,7 @@ export const COUNTABLE_INCOME_VARIABLE = variable('countable_income', {
 });
 
 /** What `GET /v2/model-catalog/variables` answers for the small US catalog version. */
-export const US_CATALOG_VARIABLES_RESULT: Omit<
-  Schemas['MetadataCatalogVariablesResult'],
-  'variables'
-> & { variables: CatalogVariableFixture[] } = {
+export const US_CATALOG_VARIABLES_RESULT: Schemas['MetadataCatalogVariablesResult'] = {
   policyengine_version: TEST_POLICYENGINE_VERSION,
   catalog_format: 2,
   variables: [
@@ -153,7 +140,7 @@ export const US_CATALOG_VARIABLES_RESULT: Omit<
 };
 
 export function catalogVariablesEnvelope(
-  result: typeof US_CATALOG_VARIABLES_RESULT = US_CATALOG_VARIABLES_RESULT
+  result: Schemas['MetadataCatalogVariablesResult'] = US_CATALOG_VARIABLES_RESULT
 ) {
   return { status: 'ok', message: null, result };
 }

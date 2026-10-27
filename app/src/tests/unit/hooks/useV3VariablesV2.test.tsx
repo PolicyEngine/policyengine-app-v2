@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useV3Variables, useV3VariablesInBackground } from '@/hooks/useV3Variables';
-import { catalogVariablesLoaded, clearMetadata } from '@/reducers/metadataReducer';
+import { catalogVariablesLoaded, clearMetadata, selectV2LoadId } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   BENEFITS_PARAMETER_PATH,
@@ -87,7 +87,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1);
   });
 
-  test('given the store cleared while the response is cached then the store is filled again without a request', async () => {
+  test('given the model catalog loads again then the variables are requested again', async () => {
     // Given
     const queryClient = testQueryClient();
     const first = renderHook(() => useV3Variables(), { wrapper: v3Wrapper(queryClient) });
@@ -102,7 +102,23 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     // Then
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(store.getState().metadata.variables.age.label).toBe('Age');
-    expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1);
+    expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(2);
+  });
+
+  test('given variables asked for under an earlier model catalog load then the store drops them', () => {
+    // When
+    store.dispatch(
+      catalogVariablesLoaded({
+        countryId: 'us',
+        policyengineVersion: TEST_POLICYENGINE_VERSION,
+        loadId: 'an-earlier-load',
+        variables: { stale: { name: 'stale' } },
+        partParameterValues: {},
+      })
+    );
+
+    // Then
+    expect(store.getState().metadata.variables).toEqual({});
   });
 
   test('given the variables route fails then the status says so and can retry', async () => {
@@ -127,6 +143,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
       catalogVariablesLoaded({
         countryId: 'us',
         policyengineVersion: '0.0.1',
+        loadId: selectV2LoadId(store.getState())!,
         variables: { stale: { name: 'stale' } },
         partParameterValues: {},
       })
@@ -135,7 +152,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     // Then
     const metadata = store.getState().metadata;
     expect(metadata.variables).toEqual({});
-    expect(metadata.v2VariablesVersion).toBeUndefined();
+    expect(metadata.v2VariablesLoadId).toBeUndefined();
   });
 
   test('given variables for another country then the store drops them', () => {
@@ -144,6 +161,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
       catalogVariablesLoaded({
         countryId: 'uk',
         policyengineVersion: TEST_POLICYENGINE_VERSION,
+        loadId: selectV2LoadId(store.getState())!,
         variables: { stale: { name: 'stale' } },
         partParameterValues: {},
       })

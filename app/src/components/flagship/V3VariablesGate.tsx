@@ -39,6 +39,11 @@ export function VariableNamesLoading() {
   );
 }
 
+/** Where variable names should be, when loading them failed on the v2 routes. */
+export function VariableNamesFailed({ onRetry }: { onRetry: () => unknown }) {
+  return <ErrorState compact title="Could not load the variable names" onRetry={onRetry} />;
+}
+
 /**
  * On the v2 routes, content that reads the model's variables (the household
  * builder and breakdown, programme names) waits behind a placeholder until

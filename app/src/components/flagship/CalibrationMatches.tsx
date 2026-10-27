@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { STATE_NAMES } from '@/api/billFeed';
+import { VariableNamesFailed } from '@/components/flagship/V3VariablesGate';
 import { Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
@@ -339,6 +340,14 @@ export function GeographyFitSection({
       </>
     );
   }
+  if (variablesStatus.failed) {
+    return (
+      <>
+        {heading}
+        <VariableNamesFailed onRetry={variablesStatus.retry} />
+      </>
+    );
+  }
   if (fit === undefined) {
     return (
       <>
@@ -495,6 +504,9 @@ export function CalibrationMatchSection({
   }
   if (variablesStatus.waiting) {
     return card(<ValidationLoading label="Loading variable names" />);
+  }
+  if (variablesStatus.failed) {
+    return card(<VariableNamesFailed onRetry={variablesStatus.retry} />);
   }
   const placeName = geographyName(matches.geography);
   const related = matches.matches.length === 0 ? (matches.related ?? []) : [];
