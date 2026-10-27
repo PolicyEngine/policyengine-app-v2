@@ -62,17 +62,40 @@ export function v1DatedValues(values: Schemas['MetadataDatedValue'][]): ValuesLi
   ) as ValuesList;
 }
 
+/**
+ * v1's type name for a variable. The catalog stores the Python type's name,
+ * and .py publishes every Enum variable as "str" with its values, so a
+ * variable with enum values is v1's "Enum".
+ */
+function v1ValueType(variable: Schemas['MetadataVariable']): string | null {
+  return variable.enum_values ? 'Enum' : variable.data_type;
+}
+
+/**
+ * v1 gave a default only for numbers, yes-or-no values and enums (the
+ * default value's name); a text or date variable had none.
+ */
+function v1DefaultValue(valueType: string | null, defaultValue: unknown): unknown {
+  if (valueType === 'Enum') {
+    return defaultValue;
+  }
+  return typeof defaultValue === 'number' || typeof defaultValue === 'boolean'
+    ? defaultValue
+    : null;
+}
+
 export function v1ShapedVariable(variable: Schemas['MetadataVariable']): V1ShapedVariable {
+  const valueType = v1ValueType(variable);
   const shaped: V1ShapedVariable = {
     name: variable.name,
     // v1 always had a label; a variable without one reads as its name.
     label: variable.label ?? variable.name,
     entity: variable.entity,
     documentation: variable.description,
-    valueType: variable.data_type,
+    valueType,
     unit: variable.unit,
     definitionPeriod: variable.definition_period,
-    defaultValue: variable.default_value,
+    defaultValue: v1DefaultValue(valueType, variable.default_value),
     adds: variable.adds_parameter_path ?? variable.adds,
     subtracts: variable.subtracts_parameter_path ?? variable.subtracts,
     isInputVariable: variable.is_input_variable ?? false,
