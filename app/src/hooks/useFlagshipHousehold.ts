@@ -1,7 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
+import { PolicyAdapter } from '@/adapters/PolicyAdapter';
+import { fetchPolicyById } from '@/api/policy';
+import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useV3Policies } from '@/hooks/useV3Policies';
+import { useParallelQueries } from '@/hooks/utils/queryUtils';
 import { runFlagshipHouseholdPayload } from '@/libs/flagship/householdRun';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
+import { policyKeys } from '@/libs/queryKeys';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
+import type { Policy } from '@/types/ingredients/Policy';
 
 /**
  * A household built in full (the household builder's model), run for a
@@ -39,24 +46,41 @@ export function useFlagshipHouseholdPayload({
   });
 }
 
-/**
- * The report's policies in the app's model, for the v2 household
- * breakdowns that send a policy's parameters with their request (earnings
- * variation, marginal tax rates). Fetched as the report page fetches them,
- * under the same keys, so a policy the page already holds is not fetched
- * again. Nothing runs until `enabled`.
- */
-export function useFlagshipHouseholdPolicies({
-  countryId,
-  policyIds,
-  enabled,
-}: {
+interface HouseholdPoliciesArgs {
   countryId: string;
   policyIds: string[];
   enabled: boolean;
-}) {
-  // Read as stored, then parsed once the parameters each names are in, as
-  // the report page reads them (under the same keys).
+}
+
+/** On the v1 routes: as before v3 loaded parameters on demand. */
+function useV1HouseholdPolicies({ countryId, policyIds, enabled }: HouseholdPoliciesArgs) {
+  const { parameters, isReady } = useParameterMetadata(countryId);
+  const results = useParallelQueries<Policy>(policyIds, {
+    queryKey: policyKeys.byId,
+    queryFn: async (policyId) =>
+      PolicyAdapter.fromMetadata(await fetchPolicyById(countryId, policyId), parameters),
+    enabled: enabled && isReady && policyIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    structuralSharing: false,
+  });
+  const policies = results.queries
+    .map((query) => query.data)
+    .filter((policy): policy is Policy => !!policy);
+  const error = (results.error as Error | null) ?? null;
+  return {
+    policies,
+    /** Waiting for the model's parameters, or for a policy. */
+    isLoading: enabled && !error && policies.length < new Set(policyIds).size,
+    error,
+    retry: () => Promise.all(results.queries.map((query) => query.refetch())),
+  };
+}
+
+/**
+ * On the v2 routes: read as stored, then parsed once the parameters each
+ * names are in, as the report page reads them (under the same keys).
+ */
+function useV2HouseholdPolicies({ countryId, policyIds, enabled }: HouseholdPoliciesArgs) {
   const results = useV3Policies(countryId, policyIds, enabled);
   const { policies } = results;
   const error =
@@ -71,3 +95,14 @@ export function useFlagshipHouseholdPolicies({
     retry: results.retry,
   };
 }
+
+/**
+ * The report's policies in the app's model, for the v2 household
+ * breakdowns that send a policy's parameters with their request (earnings
+ * variation, marginal tax rates). Fetched as the report page fetches them,
+ * under the same keys, so a policy the page already holds is not fetched
+ * again. Nothing runs until `enabled`. The routes v3 uses (V3_API_ROUTES,
+ * a constant) pick the implementation.
+ */
+export const useFlagshipHouseholdPolicies =
+  V3_API_ROUTES === 'v2' ? useV2HouseholdPolicies : useV1HouseholdPolicies;
