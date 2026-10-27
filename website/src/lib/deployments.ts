@@ -448,6 +448,15 @@ export function isMicrocosmBuild(buildId: string): boolean {
   return /^(populace|microcosm)-/.test(buildId);
 }
 
+// A Microcosm build ID ends in a UTC timestamp and a short hash
+// ("microcosm-uk-2024-25-national-20261025T091414Z-a6299504"); an overview
+// shows only that part ("2026-10-25 · a6299504"). Other IDs are short enough
+// to show whole.
+export function shortBuildId(buildId: string): string {
+  const match = /(\d{4})(\d{2})(\d{2})T\d{6}Z-([0-9a-f]{6,})$/.exec(buildId);
+  return match ? `${match[1]}-${match[2]}-${match[3]} · ${match[4]}` : buildId;
+}
+
 export function microcosmBuildUrl(
   country: DeploymentCountry,
   buildId: string,

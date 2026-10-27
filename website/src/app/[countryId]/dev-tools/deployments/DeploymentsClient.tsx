@@ -17,6 +17,7 @@ import {
   isDeploymentCountry,
   isMicrocosmBuild,
   microcosmBuildUrl,
+  shortBuildId,
   type DeploymentCountry,
   type DeploymentRow,
   type DeploymentStatus,
@@ -215,7 +216,14 @@ function ServiceCard({
 }) {
   const { surface, served } = row;
   return (
-    <section style={{ ...cardStyle, padding: spacing.xl }}>
+    <section
+      id={`service-${surface.id}`}
+      style={{
+        ...cardStyle,
+        padding: spacing.xl,
+        scrollMarginTop: spacing["4xl"],
+      }}
+    >
       <div className="tw:flex tw:flex-wrap tw:items-baseline tw:justify-between tw:gap-x-4 tw:gap-y-1">
         <Text
           style={{
@@ -305,6 +313,175 @@ function ServiceCard({
         />
       </div>
     </section>
+  );
+}
+
+const DRIFT_BG = TONES.danger.bg;
+
+// One overview value: the declared value, or "lock → serving" when the
+// running service reports something else.
+function DriftValue({
+  declared,
+  served,
+  servedKnown,
+  short = (value: string) => value,
+}: {
+  declared: string | null;
+  served: string | null;
+  servedKnown: boolean;
+  short?: (value: string) => string;
+}) {
+  const show = (value: string | null) =>
+    value ? (
+      <span style={{ ...mono, whiteSpace: "nowrap" }} title={value}>
+        {short(value)}
+      </span>
+    ) : (
+      <span style={{ color: colors.text.tertiary }}>—</span>
+    );
+  if (servedKnown && served && declared && served !== declared) {
+    return (
+      <span style={{ color: TONES.danger.text }}>
+        <span className="tw:block tw:whitespace-nowrap">
+          lock {show(declared)}
+        </span>
+        <span className="tw:block tw:whitespace-nowrap">
+          serving {show(served)}
+        </span>
+      </span>
+    );
+  }
+  return show(servedKnown ? (served ?? declared) : declared);
+}
+
+function differs(
+  row: DeploymentRow,
+  declared: string | null,
+  served: string | null,
+): boolean {
+  return (
+    row.served.status !== "not_reported" &&
+    row.served.status !== "unavailable" &&
+    Boolean(declared && served && declared !== served)
+  );
+}
+
+function Overview({
+  rows,
+  modelLabel,
+}: {
+  rows: DeploymentRow[];
+  modelLabel: string;
+}) {
+  const head = "tw:px-4 tw:py-2.5 tw:text-left tw:font-medium";
+  const cell = "tw:px-4 tw:py-3 tw:align-top";
+  return (
+    <div
+      className="tw:overflow-x-auto"
+      style={{ ...cardStyle, marginBottom: spacing["2xl"] }}
+    >
+      <table
+        className="tw:w-full tw:min-w-[720px]"
+        style={{ fontSize: typography.fontSize.sm }}
+      >
+        <thead>
+          <tr
+            style={{
+              color: colors.text.secondary,
+              fontSize: typography.fontSize.xs,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              borderBottom: `1px solid ${colors.border.light}`,
+            }}
+          >
+            <th className={head}>Service</th>
+            <th className={head}>Deployment</th>
+            <th className={head}>Vs latest .py</th>
+            <th className={head}>.py</th>
+            <th className={head}>{modelLabel}</th>
+            <th className={head}>Data build</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const servedKnown =
+              row.served.status === "matches" ||
+              row.served.status === "differs";
+            const cellStyle = (drift: boolean) =>
+              drift ? { backgroundColor: DRIFT_BG } : undefined;
+            return (
+              <tr
+                key={row.surface.id}
+                style={{ borderBottom: `1px solid ${colors.border.light}` }}
+              >
+                <td className={cell}>
+                  <a
+                    href={`#service-${row.surface.id}`}
+                    style={{
+                      fontWeight: typography.fontWeight.semibold,
+                      color: colors.text.primary,
+                    }}
+                  >
+                    {row.surface.label}
+                  </a>
+                  <div
+                    style={{
+                      fontSize: typography.fontSize.xs,
+                      color: colors.text.secondary,
+                    }}
+                  >
+                    {row.surface.serves}
+                  </div>
+                </td>
+                <td className={cell}>
+                  <Pill {...SERVED[row.served.status]} />
+                </td>
+                <td className={cell}>
+                  <Pill {...DECLARED[row.status]} />
+                </td>
+                <td
+                  className={cell}
+                  style={cellStyle(
+                    differs(row, row.py_version, row.served.py_version),
+                  )}
+                >
+                  <DriftValue
+                    declared={row.py_version}
+                    served={row.served.py_version}
+                    servedKnown={servedKnown}
+                  />
+                </td>
+                <td
+                  className={cell}
+                  style={cellStyle(
+                    differs(row, row.model_version, row.served.model_version),
+                  )}
+                >
+                  <DriftValue
+                    declared={row.model_version}
+                    served={row.served.model_version}
+                    servedKnown={servedKnown}
+                  />
+                </td>
+                <td
+                  className={cell}
+                  style={cellStyle(
+                    differs(row, row.data_build_id, row.served.data_build_id),
+                  )}
+                >
+                  <DriftValue
+                    declared={row.data_build_id}
+                    served={row.served.data_build_id}
+                    servedKnown={servedKnown}
+                    short={shortBuildId}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -468,6 +645,18 @@ export default function DeploymentsClient({
         )}
       </div>
 
+      <Overview rows={data.rows} modelLabel={modelLabel} />
+
+      <Text
+        style={{
+          fontSize: typography.fontSize.lg,
+          fontWeight: typography.fontWeight.semibold,
+          color: colors.text.primary,
+          marginBottom: spacing.md,
+        }}
+      >
+        Details
+      </Text>
       <div className="tw:flex tw:flex-col tw:gap-4">
         {data.rows.map((row) => (
           <ServiceCard

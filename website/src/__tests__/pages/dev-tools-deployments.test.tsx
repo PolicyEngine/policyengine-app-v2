@@ -93,12 +93,28 @@ describe("Deployments developer tool", () => {
     expect(
       await screen.findByText("1 service not deployed"),
     ).toBeInTheDocument();
-    const apiRow = screen.getByText("PolicyEngine API").closest("section")!;
-    expect(within(apiRow).getByText("Not deployed")).toBeInTheDocument();
-    expect(within(apiRow).getByText(/\(via served \.py\)/)).toBeInTheDocument();
-    const householdRow = screen.getByText("Household API").closest("section")!;
-    expect(within(householdRow).getByText("No dataset")).toBeInTheDocument();
-    expect(within(householdRow).getByText("Not reported")).toBeInTheDocument();
+    // The overview shows lock and served values where they drift.
+    const overviewApi = screen
+      .getByRole("link", { name: "PolicyEngine API" })
+      .closest("tr")!;
+    expect(within(overviewApi).getByText("Not deployed")).toBeInTheDocument();
+    expect(within(overviewApi).getByText("6.11.1")).toBeInTheDocument();
+    expect(within(overviewApi).getByText("6.10.0")).toBeInTheDocument();
+    const overviewHousehold = screen
+      .getByRole("link", { name: "Household API" })
+      .closest("tr")!;
+    expect(
+      within(overviewHousehold).getByText("Not reported"),
+    ).toBeInTheDocument();
+    expect(
+      within(overviewHousehold).getByText("No dataset"),
+    ).toBeInTheDocument();
+
+    // The detail card names the source of the served data build.
+    const apiCard = document.getElementById("service-api")!;
+    expect(
+      within(apiCard).getByText(/\(via served \.py\)/),
+    ).toBeInTheDocument();
     expect(global.fetch).toHaveBeenCalledWith("/api/deployments?country=us");
   });
 

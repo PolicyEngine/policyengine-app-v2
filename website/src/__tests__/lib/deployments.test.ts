@@ -12,6 +12,7 @@ import {
   parseUvLock,
   isMicrocosmBuild,
   microcosmBuildUrl,
+  shortBuildId,
   type BundleSummary,
 } from "@/lib/deployments";
 
@@ -426,5 +427,14 @@ test("a surface that loads no microdata has no data build to compare", () => {
   expect(row.data_build_id).toBeNull();
   expect(row.detail).toBe(
     "Calculates single households and loads no microdata. Pins policyengine-us 2.53.1 directly, without .py.",
+  );
+});
+
+test("shortens a Microcosm build ID to its date and hash", () => {
+  expect(
+    shortBuildId("microcosm-uk-2024-25-national-20261025T091414Z-a6299504"),
+  ).toBe("2026-10-25 · a6299504");
+  expect(shortBuildId("populace-us-2024-spm-20260915")).toBe(
+    "populace-us-2024-spm-20260915",
   );
 });
