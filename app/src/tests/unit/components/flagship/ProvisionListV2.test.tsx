@@ -4,7 +4,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
-import { catalogVariablesEnvelope } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
+import {
+  catalogVariablesEnvelope,
+  failOnceThenAnswerVariables,
+  LIST_PROVISION,
+  VARIABLES_PATH,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import {
   jsonResponse,
   stubPublicApiFetch,
@@ -16,17 +21,6 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/v3ApiRoutes')>()),
   V3_API_ROUTES: 'v2',
 }));
-
-const VARIABLES_PATH = '/v2/model-catalog/variables';
-
-/** A reform that adds SSI to the benefits a household's total counts. */
-const LIST_PROVISION = {
-  path: 'gov.household.household_benefits',
-  breadcrumb: 'Household → Benefits',
-  unit: null,
-  baselineValue: ['snap'],
-  value: ['snap', 'ssi'],
-};
 
 let answerVariables: () => Response | Promise<Response>;
 
@@ -72,13 +66,7 @@ describe('ProvisionList with v3 on the v2 routes', () => {
   test('given the variables fail then the provision list says so and try again asks again', async () => {
     // Given
     const user = userEvent.setup();
-    let attempts = 0;
-    answerVariables = () => {
-      attempts += 1;
-      return attempts === 1
-        ? jsonResponse({ status: 'error', message: 'Unavailable' }, 503)
-        : jsonResponse(catalogVariablesEnvelope());
-    };
+    answerVariables = failOnceThenAnswerVariables();
     renderWithQueries(<ProvisionList provisions={[LIST_PROVISION]} />);
     const [retry] = await screen.findAllByRole('button', { name: 'Try again' });
     expect(screen.getAllByText('Could not load the variable names').length).toBeGreaterThan(0);

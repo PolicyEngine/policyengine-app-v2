@@ -4,7 +4,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { clearMetadata, fetchMetadataThunk, metadataRequest } from '@/reducers/metadataReducer';
 import { store } from '@/store';
-import { catalogVariablesEnvelope } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
+import {
+  catalogVariablesEnvelope,
+  VARIABLES_PATH,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import {
   modelCatalogEnvelope,
   TEST_POLICYENGINE_VERSION,
@@ -24,7 +27,6 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
 }));
 
 const SEARCH_FILE_PATH = '/v2/parameters/search-file';
-const VARIABLES_PATH = '/v2/model-catalog/variables';
 
 describe('WorkspaceLayout with v3 on the v2 routes', () => {
   let fetchStub: ReturnType<typeof stubPublicApiFetch>;

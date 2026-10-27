@@ -5,7 +5,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import { clearMetadata, fetchMetadataThunk, metadataRequest } from '@/reducers/metadataReducer';
 import { store } from '@/store';
-import { catalogVariablesEnvelope } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
+import {
+  catalogVariablesEnvelope,
+  VARIABLES_PATH,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import {
   jsonResponse,
   stubPublicApiFetch,
@@ -36,8 +39,6 @@ vi.mock('recharts', async () => {
     ),
   };
 });
-
-const VARIABLES_PATH = '/v2/model-catalog/variables';
 
 let answerVariables: () => Response | Promise<Response>;
 

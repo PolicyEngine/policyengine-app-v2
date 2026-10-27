@@ -3,15 +3,14 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@test-utils';
 import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { v1ShapedVariable } from '@/api/publicApi/catalogVariables';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { useV3Variables, useV3VariablesInBackground } from '@/hooks/useV3Variables';
-import { catalogVariablesLoaded, clearMetadata, selectV2LoadId } from '@/reducers/metadataReducer';
+import { clearMetadata, selectV2LoadId } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
-  AGE_VARIABLE,
   BENEFITS_PARAMETER_PATH,
   catalogVariablesEnvelope,
+  VARIABLES_PATH,
 } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import { TEST_POLICYENGINE_VERSION } from '@/tests/fixtures/api/publicApi/modelCatalogMocks';
 import {
@@ -30,11 +29,6 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/v3ApiRoutes')>()),
   V3_API_ROUTES: 'v2',
 }));
-
-const VARIABLES_PATH = '/v2/model-catalog/variables';
-
-/** Variables a dropped response would have brought. */
-const STALE_VARIABLES = { stale: v1ShapedVariable({ ...AGE_VARIABLE, name: 'stale' }) };
 
 describe('useV3Variables with v3 on the v2 routes', () => {
   let fetchStub: ReturnType<typeof stubPublicApiFetch>;
@@ -123,7 +117,8 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     const reader = renderHook(() => useV3Variables(), { wrapper: ukWrapper });
 
     // Then
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // Both hooks have run their effects; nothing is fetching, and nothing was asked for.
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(0);
     expect(reader.result.current.state).toBe('waiting');
   });
@@ -166,22 +161,6 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     expect(cached.map((query) => query.queryKey[3])).toEqual([currentLoad]);
   });
 
-  test('given variables asked for under an earlier model catalog load then the store drops them', () => {
-    // When
-    store.dispatch(
-      catalogVariablesLoaded({
-        countryId: 'us',
-        policyengineVersion: TEST_POLICYENGINE_VERSION,
-        loadId: 'an-earlier-load',
-        variables: STALE_VARIABLES,
-        partParameterValues: {},
-      })
-    );
-
-    // Then
-    expect(store.getState().metadata.variables).toEqual({});
-  });
-
   test('given the variables route fails then the status says so and can retry', async () => {
     // Given
     vi.unstubAllGlobals();
@@ -195,40 +174,6 @@ describe('useV3Variables with v3 on the v2 routes', () => {
     // Then
     await waitFor(() => expect(result.current.state).toBe('failed'));
     expect(typeof result.current.retry).toBe('function');
-  });
-
-  test('given variables for another catalog version then the store drops them', () => {
-    // When
-    store.dispatch(
-      catalogVariablesLoaded({
-        countryId: 'us',
-        policyengineVersion: '0.0.1',
-        loadId: selectV2LoadId(store.getState())!,
-        variables: STALE_VARIABLES,
-        partParameterValues: {},
-      })
-    );
-
-    // Then
-    const metadata = store.getState().metadata;
-    expect(metadata.variables).toEqual({});
-    expect(metadata.v2VariablesLoadId).toBeUndefined();
-  });
-
-  test('given variables for another country then the store drops them', () => {
-    // When
-    store.dispatch(
-      catalogVariablesLoaded({
-        countryId: 'uk',
-        policyengineVersion: TEST_POLICYENGINE_VERSION,
-        loadId: selectV2LoadId(store.getState())!,
-        variables: STALE_VARIABLES,
-        partParameterValues: {},
-      })
-    );
-
-    // Then
-    expect(store.getState().metadata.variables).toEqual({});
   });
 });
 

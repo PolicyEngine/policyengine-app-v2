@@ -4,7 +4,11 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
-import { catalogVariablesEnvelope } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
+import {
+  catalogVariablesEnvelope,
+  failOnceThenAnswerVariables,
+  VARIABLES_PATH,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import {
   jsonResponse,
   requestsTo,
@@ -17,8 +21,6 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/v3ApiRoutes')>()),
   V3_API_ROUTES: 'v2',
 }));
-
-const VARIABLES_PATH = '/v2/model-catalog/variables';
 
 function renderGate() {
   return render(
@@ -71,13 +73,7 @@ describe('V3VariablesGate with v3 on the v2 routes', () => {
   test('given the variables fail then the failure shows and try again asks again', async () => {
     // Given
     const user = userEvent.setup();
-    let attempts = 0;
-    answerVariables = () => {
-      attempts += 1;
-      return attempts === 1
-        ? jsonResponse({ status: 'error', message: 'Unavailable' }, 503)
-        : jsonResponse(catalogVariablesEnvelope());
-    };
+    answerVariables = failOnceThenAnswerVariables();
     renderGate();
     expect(await screen.findByRole('alert')).toHaveTextContent(
       "Could not load the model's variables"
