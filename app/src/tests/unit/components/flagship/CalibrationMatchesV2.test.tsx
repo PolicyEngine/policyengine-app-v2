@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@test-utils';
+import { render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CalibrationMatchSection } from '@/components/flagship/CalibrationMatches';
 import { clearMetadata } from '@/reducers/metadataReducer';
@@ -62,6 +62,29 @@ describe('CalibrationMatchSection with v3 on the v2 routes', () => {
       expect(
         screen.queryByRole('status', { name: 'Loading variable names' })
       ).not.toBeInTheDocument()
+    );
+    expect(screen.getByRole('link', { name: /View dashboard/ })).toBeInTheDocument();
+  });
+
+  test('given the variables fail then the matches say so and try again asks again', async () => {
+    // Given
+    const user = userEvent.setup();
+    let attempts = 0;
+    answerVariables = () => {
+      attempts += 1;
+      return attempts === 1
+        ? jsonResponse({ status: 'error', message: 'Unavailable' }, 503)
+        : jsonResponse(catalogVariablesEnvelope());
+    };
+    renderSection();
+    expect(await screen.findByText('Could not load the variable names')).toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    await waitFor(() =>
+      expect(screen.queryByText('Could not load the variable names')).not.toBeInTheDocument()
     );
     expect(screen.getByRole('link', { name: /View dashboard/ })).toBeInTheDocument();
   });

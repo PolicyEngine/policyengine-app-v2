@@ -21,18 +21,6 @@ import type { ValuesList } from '@/types/subIngredients/valueInterval';
 
 type Schemas = components['schemas'];
 
-/**
- * A catalog variable with its unit and definition period. The Public API
- * serves both since catalog format 2 (null for versions published earlier),
- * but the generated client on this branch predates them. This local
- * extension goes when the client is regenerated from the final Public API
- * branch, whose `MetadataVariable` carries both fields.
- */
-type CatalogVariable = Schemas['MetadataVariable'] & {
-  unit?: string | null;
-  definition_period?: string | null;
-};
-
 export interface LoadedCatalogVariables {
   /** Each variable by name, as v1's metadata described it. */
   variables: Record<string, V1ShapedVariable>;
@@ -74,7 +62,7 @@ export function v1DatedValues(values: Schemas['MetadataDatedValue'][]): ValuesLi
   ) as ValuesList;
 }
 
-export function v1ShapedVariable(variable: CatalogVariable): V1ShapedVariable {
+export function v1ShapedVariable(variable: Schemas['MetadataVariable']): V1ShapedVariable {
   const shaped: V1ShapedVariable = {
     name: variable.name,
     // v1 always had a label; a variable without one reads as its name.
@@ -82,8 +70,8 @@ export function v1ShapedVariable(variable: CatalogVariable): V1ShapedVariable {
     entity: variable.entity,
     documentation: variable.description,
     valueType: variable.data_type,
-    unit: variable.unit ?? null,
-    definitionPeriod: variable.definition_period ?? null,
+    unit: variable.unit,
+    definitionPeriod: variable.definition_period,
     defaultValue: variable.default_value,
     adds: variable.adds_parameter_path ?? variable.adds,
     subtracts: variable.subtracts_parameter_path ?? variable.subtracts,
@@ -118,10 +106,7 @@ export async function fetchCatalogVariables(
   );
   return {
     variables: Object.fromEntries(
-      (result.variables as CatalogVariable[]).map((variable) => [
-        variable.name,
-        v1ShapedVariable(variable),
-      ])
+      result.variables.map((variable) => [variable.name, v1ShapedVariable(variable)])
     ),
     partParameterValues: Object.fromEntries(
       Object.entries(result.part_parameter_values).map(([path, values]) => [

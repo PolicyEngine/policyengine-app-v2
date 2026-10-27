@@ -3,7 +3,7 @@ import { fetchCatalogVariables } from '@/api/publicApi/catalogVariables';
 import { createPublicApiClient } from '@/api/publicApi/client';
 import { inputKind } from '@/components/household/VariablePickerDialog';
 import { getBasicInputFields } from '@/libs/metadataUtils';
-import { catalogVariablesLoaded, clearMetadata } from '@/reducers/metadataReducer';
+import { catalogVariablesLoaded, clearMetadata, selectV2LoadId } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { catalogVariablesEnvelope } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import { TEST_POLICYENGINE_VERSION } from '@/tests/fixtures/api/publicApi/modelCatalogMocks';
@@ -39,6 +39,7 @@ describe('The household builder on the v2 routes', () => {
       catalogVariablesLoaded({
         countryId: 'us',
         policyengineVersion: TEST_POLICYENGINE_VERSION,
+        loadId: selectV2LoadId(store.getState())!,
         ...loaded,
       })
     );

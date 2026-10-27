@@ -137,20 +137,24 @@ const metadataSlice = createSlice({
      * Every variable of a catalog version, loaded once in the background on
      * the v2 routes, joins the store in v1's shape, with the dated values of
      * the parameters their adds or subtracts name. A response for an earlier
-     * country or version is dropped.
+     * model catalog load, country or version is dropped.
      */
     catalogVariablesLoaded(
       state,
       action: PayloadAction<{
         countryId: string;
         policyengineVersion: string;
+        /** The model catalog load the variables were asked for under. */
+        loadId: string;
         variables: Record<string, any>;
         partParameterValues: Record<string, ValuesList>;
       }>
     ) {
-      const { countryId, policyengineVersion, variables, partParameterValues } = action.payload;
+      const { countryId, policyengineVersion, loadId, variables, partParameterValues } =
+        action.payload;
       if (
         state.routes !== 'v2' ||
+        state.v2LoadId !== loadId ||
         state.currentCountry !== countryId ||
         state.v2Catalog?.policyengineVersion !== policyengineVersion
       ) {
@@ -158,7 +162,7 @@ const metadataSlice = createSlice({
       }
       state.variables = variables;
       state.v2PartParameterValues = partParameterValues;
-      state.v2VariablesVersion = policyengineVersion;
+      state.v2VariablesLoadId = loadId;
     },
   },
   extraReducers: (builder) => {
