@@ -13,6 +13,15 @@ export const PY_LOCAL_AUTHORITIES_CSV = 'local_authorities_2023.csv';
 export const EXPECTED_CONSTITUENCY_COUNT = 650;
 export const EXPECTED_LOCAL_AUTHORITY_COUNT = 361;
 
+/**
+ * How many of each level's areas each nation has: the totals a nation
+ * report's withheld note counts against.
+ */
+export const EXPECTED_AREA_COUNTS_BY_NATION = {
+  constituency: { england: 543, wales: 32, scotland: 57, northern_ireland: 18 },
+  local_authority: { england: 296, wales: 22, scotland: 32, northern_ireland: 11 },
+};
+
 /** The boundary files the geographic maps load, under app/public. */
 export const BOUNDARY_FILE_DIRECTORY = path.resolve(
   __dirname,

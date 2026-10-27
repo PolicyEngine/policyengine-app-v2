@@ -21,12 +21,6 @@ vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   fetchLocalAreaBreakdown: vi.fn(),
 }));
 
-vi.mock('@/hooks/useRegions', async () => {
-  const { UK_METADATA_REGIONS } =
-    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
-  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
-});
-
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
 
 function wrapper({ children }: { children: ReactNode }) {

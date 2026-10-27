@@ -1,6 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { transformLocalAuthorityAbsoluteChange } from '@/adapters/local-authority/localAuthorityDataAdapter';
-import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
+import {
+  UK_WITHHELD_AREA_TEXT,
+  type UKWithheldAreas,
+} from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
 import UKAreaDisclosureNotes from '@/components/report/UKAreaDisclosureNotes';
@@ -11,6 +14,7 @@ import {
   ukNationFromRegion,
   type MapVisualizationType,
 } from '@/components/visualization/choropleth';
+import { placeUKHexMap } from '@/components/visualization/choropleth/ukHexLayout';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -45,6 +49,13 @@ export function AbsoluteChangeByLocalAuthority({
   const mapData = useMemo(
     () => (areas ? transformLocalAuthorityAbsoluteChange(areas) : []),
     [areas]
+  );
+  // The hex map places each local authority by its code in the app's layout, as v3's
+  // does, and draws the ones a breakdown withheld as not reported.
+  const disclosureControlled = withheld !== undefined;
+  const hexMap = useMemo(
+    () => placeUKHexMap('local_authority', mapData, { disclosureControlled, region }),
+    [mapData, disclosureControlled, region]
   );
   const notes = <UKAreaDisclosureNotes level="local_authority" areas={areas} withheld={withheld} />;
 
@@ -88,12 +99,15 @@ export function AbsoluteChangeByLocalAuthority({
           focusNation={ukNationFromRegion(region)}
           exportRef={mapRef}
           // A breakdown's missing areas are the ones disclosure control withheld.
-          missingAreaText={withheld === undefined ? undefined : 'Not published'}
+          missingAreaText={withheld === undefined ? undefined : UK_WITHHELD_AREA_TEXT}
         />
       ) : (
         <HexagonalMap
-          data={mapData}
+          data={hexMap.points}
+          missingAreas={hexMap.withheldAreas}
+          missingAreaText={UK_WITHHELD_AREA_TEXT}
           config={{
+            tiled: hexMap.tiled,
             hexSize: 11,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,

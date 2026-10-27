@@ -1,27 +1,34 @@
 # UK hex-map layouts
 
-Hex-grid positions for the UK local-area hex maps, one per area, keyed by ONS code. The v3 "Local areas" tab draws its hex maps from these files, so it no longer depends on the `x` and `y` that the Public API sends with each area.
+Hex-grid positions for the UK local-area hex maps, one per area, keyed by ONS code. The v3 "Local areas" tab and the v2 constituency and local authority tabs place each area from these files by its ONS code, through `placeOnUKHexLayout`, instead of at the `x` and `y` that the Public API sends with each area. If any area in a result has no code, or a code these files lack (such as a district abolished in April 2023), every area in that result falls back to its `x` and `y`, on the untiled grid, so the map never mixes the two sets of positions.
+
+`withheldUKHexAreas` lists the areas of a report's region that a result leaves out, each at its position here and named from the name files below. The region's areas are every code in these files for a UK-wide report, and the nation's codes for a nation's report. For a level from a local-area breakdown, which disclosure control applies to, the hex maps draw each such area hatched with a grey edge, outside the colour scale, with "Not reported" in its tooltip. They are drawn only on the tiled grid: a result that falls back to its `x` and `y` lists none. A saved result, which disclosure control did not apply to, draws only its own areas.
 
 | File | Areas | Boundaries | Source file |
 |---|---|---|---|
 | `constituencies_2024.json` | 650 Westminster constituencies | 2024 (`PCON24CD`) | [`maps/uk-constituencies-2023.hexjson`](https://github.com/odileeds/hexmaps/blob/4d3152010cc5c54841a6a75de6cb4d6fdd31d223/maps/uk-constituencies-2023.hexjson) at `4d31520` (18 July 2024) |
 | `local_authorities_2023.json` | 361 local authority districts | April 2023 (`LAD23CD`) | [`maps/uk-local-authority-districts-2023.hexjson`](https://github.com/odileeds/hexmaps/blob/c67a3c9189c6b27efd2218897bb98ee135e9719f/maps/uk-local-authority-districts-2023.hexjson) at `c67a3c9` (30 October 2024) |
+| `constituency_names_2024.json` | 650 constituency names | 2024 (`PCON24NM`) | `public/data/geojson/uk_constituencies_2024.geojson` |
+| `local_authority_names_2023.json` | 361 local authority names | April 2023 (`LAD23NM`) | `public/data/geojson/uk_local_authorities_2023.geojson` |
 
 The constituency source file is named after the 2023 boundary review, whose constituencies took effect at the July 2024 general election: the same 650 codes as `public/data/geojson/uk_constituencies_2024.geojson`.
 
 ## Format
 
-Each file maps an ONS code to `[q, r]`, the HexJSON `odd-r` position: `q` is the column, `r` the row, rows increase northwards, and odd rows sit half a hex to the right. `ukHexPosition` in `components/visualization/choropleth/ukHexLayout.ts` converts a position to the hex map's grid. The files keep only the codes and positions; the source files also carry names, regions and colours.
+Each layout file maps an ONS code to `[q, r]`, the HexJSON `odd-r` position: `q` is the column, `r` the row, rows increase northwards, and odd rows sit half a hex to the right. `ukHexPosition` in `components/visualization/choropleth/ukHexLayout.ts` converts a position to the hex map's grid. The files keep only the codes and positions; the source files also carry names, regions and colours.
+
+Each name file maps an ONS code to the area's name in the app's boundary file (`PCON24NM` or `LAD23NM`), which is also its name in .py 6.10.0's area lists.
 
 ## Updating
 
 1. Download the new HexJSON file from [odileeds/hexmaps](https://github.com/odileeds/hexmaps) (`maps/`) at a fixed commit.
 2. Rebuild the file here as `{ code: [q, r] }`, sorted by code, and update the table above.
-3. Run `bun run vitest -- src/tests/unit/data/ukBoundaryFiles.test.ts`. It checks that the codes match the boundary files exactly and that no two areas share a position.
+3. Rebuild the name file from the boundary file as `{ code: name }`, sorted by code.
+4. Run `bun run vitest -- src/tests/unit/data/ukBoundaryFiles.test.ts`. It checks that the codes match the boundary files exactly, that no two areas share a position, and that each name file gives the boundary file's name for every code.
 
 ## Licence
 
-The layouts are by Open Innovations, under the MIT licence:
+The name files come from the boundary files, whose source and licence are in `public/data/geojson/SOURCES.md`. The layouts are by Open Innovations, under the MIT licence:
 
 ```
 MIT License

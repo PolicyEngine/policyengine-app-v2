@@ -13,7 +13,7 @@ const CONSTITUENCIES = NORMALIZED_BREAKDOWN.constituency_impact.by_constituency;
 const LOCAL_AUTHORITIES = NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority;
 
 describe('UKAreaDisclosureNotes', () => {
-  test('given counted withheld constituencies then says how many were not published and why', () => {
+  test('given counted withheld constituencies then says how many were not reported and why', () => {
     // When
     render(
       <UKAreaDisclosureNotes
@@ -27,12 +27,12 @@ describe('UKAreaDisclosureNotes', () => {
     // Then
     expect(
       screen.getByText(
-        '12 of 650 constituencies are not published. The survey data’s disclosure rules withhold an area’s estimate when too few surveyed households support it, or when it could reveal a household’s income.'
+        '12 of 650 constituencies are not reported. The survey data’s disclosure rules withhold an area’s estimate when too few surveyed households support it, or when it could reveal a household’s income.'
       )
     ).toBeInTheDocument();
   });
 
-  test('given counted withheld local authorities then says how many were not published and why, as for constituencies', () => {
+  test('given counted withheld local authorities then says how many were not reported and why, as for constituencies', () => {
     // When
     render(
       <UKAreaDisclosureNotes
@@ -46,7 +46,7 @@ describe('UKAreaDisclosureNotes', () => {
     // Then
     expect(
       screen.getByText(
-        '2 of 361 local authorities are not published. The survey data’s disclosure rules withhold an area’s estimate when too few surveyed households support it, or when it could reveal a household’s income.'
+        '2 of 361 local authorities are not reported. The survey data’s disclosure rules withhold an area’s estimate when too few surveyed households support it, or when it could reveal a household’s income.'
       )
     ).toBeInTheDocument();
   });
@@ -63,7 +63,7 @@ describe('UKAreaDisclosureNotes', () => {
     );
 
     // Then
-    expect(screen.getByText(/^1 of 650 constituencies is not published\./)).toBeInTheDocument();
+    expect(screen.getByText(/^1 of 650 constituencies is not reported\./)).toBeInTheDocument();
   });
 
   test('given withheld areas that cannot be counted then says why areas may be missing, with no count', () => {
@@ -76,7 +76,7 @@ describe('UKAreaDisclosureNotes', () => {
     // Then
     expect(
       screen.getByText(
-        'Local authorities whose estimates fail the survey data’s disclosure rules are not published. The rules withhold an area’s estimate when too few surveyed households support it, or when it could reveal a household’s income.'
+        'Local authorities whose estimates fail the survey data’s disclosure rules are not reported. The rules withhold an area’s estimate when too few surveyed households support it, or when it could reveal a household’s income.'
       )
     ).toBeInTheDocument();
   });
@@ -93,7 +93,7 @@ describe('UKAreaDisclosureNotes', () => {
     );
 
     // Then
-    expect(screen.queryByText(/not published/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/not reported/)).not.toBeInTheDocument();
   });
 
   test('given a saved result with no disclosure control then there is no note', () => {

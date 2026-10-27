@@ -3,6 +3,7 @@ import { IconChevronDown, IconSearch } from '@tabler/icons-react';
 import { areaEstimateFields } from '@/adapters/ukAreaEstimateFields';
 import {
   UK_AREA_NOUNS,
+  UK_WITHHELD_AREA_TEXT,
   type UKAreaLevel,
   type UKBreakdownWithheldAreas,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
@@ -38,7 +39,7 @@ import {
   ukNationFromRegion,
 } from '@/components/visualization/choropleth/ukAreaBoundaries';
 import { UKAreaChoroplethMap } from '@/components/visualization/choropleth/UKAreaChoroplethMap';
-import { ukHexPosition } from '@/components/visualization/choropleth/ukHexLayout';
+import { placeUKHexMap } from '@/components/visualization/choropleth/ukHexLayout';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import { colors, spacing, typography } from '@/designTokens';
 import type { ReportOutputSocietyWideByConstituency } from '@/types/metadata/ReportOutputSocietyWideByConstituency';
@@ -251,27 +252,28 @@ export default function UKLocalAreaMaps({
           mode === 'absolute'
             ? 'average_household_income_change'
             : 'relative_household_income_change';
-        // The hex map places an area by its code in the app's layout, and
-        // falls back to the API's position for a result without codes.
-        const position = ukHexPosition(level, area.code) ?? { x: area.x, y: area.y };
         return {
           id: name,
           label: name,
           value: area[field],
-          x: position.x,
-          y: position.y,
+          x: area.x,
+          y: area.y,
           ...(area.code && { code: area.code }),
           ...areaEstimateFields(area, field),
         };
       }),
-    [areas, level, mode]
+    [areas, mode]
   );
 
-  // The layout's positions tile as an odd-r grid; the API's fallback
-  // positions keep the square grid they were made for.
-  const hexLayoutOwned = useMemo(
-    () => Object.values(areas ?? {}).every((area) => ukHexPosition(level, area.code) !== null),
-    [areas, level]
+  // A level the breakdown supplied is disclosure-controlled: the areas of
+  // the region it leaves out are the ones withheld. A saved level has none.
+  const levelWithheld = withheld?.[level] !== undefined;
+  // The hex map places each area by its code in the app's layout, tiled,
+  // and draws the withheld ones as not reported. A result with any area the
+  // layout cannot place keeps all the API's positions, on their square grid.
+  const hexMap = useMemo(
+    () => placeUKHexMap(level, mapData, { disclosureControlled: levelWithheld, region }),
+    [level, mapData, levelWithheld, region]
   );
 
   const decimals = useMemo(() => percentDecimals(mapData.map((point) => point.value)), [mapData]);
@@ -396,8 +398,9 @@ export default function UKLocalAreaMaps({
                 config={{ ...mapConfig, height: GEOGRAPHIC_MAP_HEIGHT }}
                 focusNation={ukNationFromRegion(region)}
                 exportRef={mapRef}
-                // A breakdown's missing areas are the ones disclosure control withheld.
-                missingAreaText={withheld ? 'Not published' : undefined}
+                // A breakdown level's missing areas are the ones disclosure control
+                // withheld; a saved level's have no data.
+                missingAreaText={levelWithheld ? UK_WITHHELD_AREA_TEXT : undefined}
                 navigable
                 selectedId={selectedArea ? selectedName : null}
                 onAreaClick={toggleSelected}
@@ -405,12 +408,14 @@ export default function UKLocalAreaMaps({
               />
             ) : (
               <HexagonalMap
-                data={mapData}
+                data={hexMap.points}
+                missingAreas={hexMap.withheldAreas}
+                missingAreaText={UK_WITHHELD_AREA_TEXT}
                 config={{
                   ...mapConfig,
                   // The legend reads in the rankings' units: pounds or percentages.
                   formatColorBarTick: formatValue,
-                  tiled: hexLayoutOwned,
+                  tiled: hexMap.tiled,
                 }}
                 exportRef={mapRef}
                 selectedId={selectedArea ? selectedName : null}

@@ -25,10 +25,10 @@ export interface HexMapDataPoint {
   /** The value to visualize (determines color) */
   value: number;
 
-  /** X-coordinate on the hexagonal grid (0-based) */
+  /** X-coordinate on the hexagonal grid: a column, which can be negative */
   x: number;
 
-  /** Y-coordinate on the hexagonal grid (0-based) */
+  /** Y-coordinate on the hexagonal grid: a row, which can be negative */
   y: number;
 
   /** The area's code, e.g. a UK area's ONS code, when the data gives one. */
@@ -40,4 +40,23 @@ export interface HexMapDataPoint {
   /** The value's 90% interval, when the data gives one. */
   lower?: number;
   upper?: number;
+}
+
+/**
+ * An area the hex map places but has no value for, such as one disclosure
+ * control withheld. The map draws it hatched with a grey edge, outside its
+ * colour scale.
+ */
+export interface HexMapMissingArea {
+  /** Unique identifier for this area, e.g. its code */
+  id: string;
+
+  /** Display label (e.g., constituency name) */
+  label: string;
+
+  /** X-coordinate on the hexagonal grid: a column, which can be negative */
+  x: number;
+
+  /** Y-coordinate on the hexagonal grid: a row, which can be negative */
+  y: number;
 }

@@ -1,3 +1,4 @@
+import { HARTLEPOOL_CODE } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 
 /**
@@ -205,3 +206,127 @@ export const MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD = (() => {
   const { local_authority_impact: _, ...rest } = MOCK_UK_REPORT_OUTPUT_WITH_LA;
   return rest;
 })() as Omit<ReportOutputSocietyWideUK, 'local_authority_impact'>;
+
+/** Real LAD23 codes: three unitary authorities created in April 2023, and Darlington. */
+export const CUMBERLAND_CODE = 'E06000063';
+export const WESTMORLAND_AND_FURNESS_CODE = 'E06000064';
+export const NORTH_YORKSHIRE_CODE = 'E06000065';
+export const DARLINGTON_CODE = 'E06000005';
+
+/**
+ * Five local authorities at the positions the Public API gives them
+ * (`local_authorities_2021.csv`). It puts the three created in 2023,
+ * Cumberland, Westmorland and Furness, and North Yorkshire, all at (0, 0).
+ */
+export const MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA: ReportOutputSocietyWideUK = {
+  ...MOCK_UK_REPORT_OUTPUT_WITH_LA,
+  local_authority_impact: {
+    by_local_authority: {
+      Hartlepool: {
+        x: 8,
+        y: 19,
+        average_household_income_change: -210.4,
+        relative_household_income_change: -0.0081,
+        code: HARTLEPOOL_CODE,
+      },
+      Cumberland: {
+        x: 0,
+        y: 0,
+        average_household_income_change: -150.2,
+        relative_household_income_change: -0.0052,
+        code: CUMBERLAND_CODE,
+      },
+      'Westmorland and Furness': {
+        x: 0,
+        y: 0,
+        average_household_income_change: -98.6,
+        relative_household_income_change: -0.0031,
+        code: WESTMORLAND_AND_FURNESS_CODE,
+      },
+      'North Yorkshire': {
+        x: 0,
+        y: 0,
+        average_household_income_change: -120.9,
+        relative_household_income_change: -0.0039,
+        code: NORTH_YORKSHIRE_CODE,
+      },
+      Darlington: {
+        x: 7,
+        y: 18,
+        average_household_income_change: -185.3,
+        relative_household_income_change: -0.0072,
+        code: DARLINGTON_CODE,
+      },
+    },
+  },
+};
+
+/**
+ * Codes of districts abolished in April 2023: Allerdale, Craven and Mendip.
+ * The layout follows the April 2023 boundaries, so it has none of them.
+ */
+export const PRE_2023_LOCAL_AUTHORITY_CODES = {
+  ALLERDALE: 'E07000026',
+  CRAVEN: 'E07000163',
+  MENDIP: 'E07000187',
+} as const;
+
+/**
+ * A saved result from before April 2023: Hartlepool and Darlington on
+ * current codes at the Public API's positions, and three districts on
+ * pre-2023 codes at made-up positions on the same grid.
+ */
+export const MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA: ReportOutputSocietyWideUK = {
+  ...MOCK_UK_REPORT_OUTPUT_WITH_LA,
+  local_authority_impact: {
+    by_local_authority: {
+      Hartlepool: {
+        x: 8,
+        y: 19,
+        average_household_income_change: -210.4,
+        relative_household_income_change: -0.0081,
+        code: HARTLEPOOL_CODE,
+      },
+      Darlington: {
+        x: 7,
+        y: 18,
+        average_household_income_change: -185.3,
+        relative_household_income_change: -0.0072,
+        code: DARLINGTON_CODE,
+      },
+      Allerdale: {
+        x: 3,
+        y: 19,
+        average_household_income_change: -140.6,
+        relative_household_income_change: -0.0049,
+        code: PRE_2023_LOCAL_AUTHORITY_CODES.ALLERDALE,
+      },
+      Craven: {
+        x: 6,
+        y: 17,
+        average_household_income_change: -101.2,
+        relative_household_income_change: -0.0033,
+        code: PRE_2023_LOCAL_AUTHORITY_CODES.CRAVEN,
+      },
+      Mendip: {
+        x: 0,
+        y: 1,
+        average_household_income_change: -88.7,
+        relative_household_income_change: -0.0029,
+        code: PRE_2023_LOCAL_AUTHORITY_CODES.MENDIP,
+      },
+    },
+  },
+};
+
+/** The same result with its codes taken away, so the hex map draws it at its results' positions. */
+export const MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED: ReportOutputSocietyWideUK = {
+  ...MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
+  local_authority_impact: {
+    by_local_authority: Object.fromEntries(
+      Object.entries(
+        MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA.local_authority_impact!.by_local_authority
+      ).map(([name, { code: _code, ...area }]) => [name, area])
+    ),
+  },
+};

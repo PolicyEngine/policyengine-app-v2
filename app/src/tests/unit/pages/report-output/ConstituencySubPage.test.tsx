@@ -15,6 +15,7 @@ import {
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import { EXPECTED_CONSTITUENCY_COUNT } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
 import { COMPLETE_RESPONSE } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
 import {
@@ -26,12 +27,6 @@ vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchLocalAreaBreakdown: vi.fn(),
 }));
-
-vi.mock('@/hooks/useRegions', async () => {
-  const { UK_METADATA_REGIONS } =
-    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
-  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
-});
 
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
 const NOT_AVAILABLE = 'Constituency analysis not available for this region';
@@ -96,10 +91,14 @@ describe('ConstituencySubPage', () => {
     expect(
       await screen.findByText('Absolute household income change by constituency')
     ).toBeInTheDocument();
-    // The map's one hexagon is the computed area: hovering it names it.
+    // The map's one hexagon with a value is the computed area: hovering it
+    // names it. The UK's other 649 constituencies are drawn as withheld.
     await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
-    const hexagons = container.querySelectorAll('svg polygon');
+    const hexagons = container.querySelectorAll('svg polygon:not([data-missing-area-id])');
     expect(hexagons).toHaveLength(1);
+    expect(container.querySelectorAll('[data-missing-area-id]').length).toBe(
+      EXPECTED_CONSTITUENCY_COUNT - 1
+    );
     await user.hover(hexagons[0]);
     expect(screen.getByText(new RegExp(`^${BREAKDOWN_CONSTITUENCY_NAME}:`))).toBeInTheDocument();
   });
@@ -112,7 +111,7 @@ describe('ConstituencySubPage', () => {
     expect(screen.getByText(NOT_AVAILABLE)).toBeInTheDocument();
   });
 
-  test('given the areas computed for a UK-wide report then the charts say how many constituencies were not published', async () => {
+  test('given the areas computed for a UK-wide report then the charts say how many constituencies were not reported', async () => {
     // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
@@ -128,7 +127,7 @@ describe('ConstituencySubPage', () => {
 
     // Then
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not published\./)
+      await screen.findByText(/^649 of 650 constituencies are not reported\./)
     ).toBeInTheDocument();
     expect(screen.getByText(/^1 constituency is approximate:/)).toBeInTheDocument();
   });

@@ -18,10 +18,13 @@ import {
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import { EXPECTED_LOCAL_AUTHORITY_COUNT } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
 import {
   COMPLETE_RESPONSE,
+  COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN,
   COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
   FAILED_RESPONSE,
+  WITHHELD_LOCAL_AUTHORITIES_WITH_ARDS_AND_NORTH_DOWN,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
@@ -36,12 +39,6 @@ vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchLocalAreaBreakdown: vi.fn(),
 }));
-
-vi.mock('@/hooks/useRegions', async () => {
-  const { UK_METADATA_REGIONS } =
-    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
-  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
-});
 
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
 
@@ -156,17 +153,21 @@ describe('LocalAuthoritySubPage', () => {
       expect(
         await screen.findByText('Absolute household income change by local authority')
       ).toBeInTheDocument();
-      // The map's one hexagon is the computed area: hovering it names it.
+      // The map's one hexagon with a value is the computed area: hovering
+      // it names it. The UK's other 360 local authorities are drawn as withheld.
       await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
-      const hexagons = container.querySelectorAll('svg polygon');
+      const hexagons = container.querySelectorAll('svg polygon:not([data-missing-area-id])');
       expect(hexagons).toHaveLength(1);
+      expect(container.querySelectorAll('[data-missing-area-id]').length).toBe(
+        EXPECTED_LOCAL_AUTHORITY_COUNT - 1
+      );
       await user.hover(hexagons[0]);
       expect(
         screen.getByText(new RegExp(`^${BREAKDOWN_LOCAL_AUTHORITY_NAME}:`))
       ).toBeInTheDocument();
     });
 
-    test('given the areas computed for a UK-wide report then the charts say how many local authorities were not published', async () => {
+    test('given the areas computed for a UK-wide report then the charts say how many local authorities were not reported', async () => {
       // Given
       const user = userEvent.setup();
       mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
@@ -182,11 +183,11 @@ describe('LocalAuthoritySubPage', () => {
 
       // Then
       expect(
-        await screen.findByText(/^2 of 3 local authorities are not published\./)
+        await screen.findByText(/^360 of 361 local authorities are not reported\./)
       ).toBeInTheDocument();
     });
 
-    test('given a computed local authority the region list does not name then the charts say local authorities may be withheld, with no count', async () => {
+    test('given a computed local authority under a name the region list lacks then the charts count it by its code', async () => {
       // Given
       const user = userEvent.setup();
       mockFetchLocalAreaBreakdown.mockResolvedValue(
@@ -204,9 +205,31 @@ describe('LocalAuthoritySubPage', () => {
 
       // Then
       expect(
-        await screen.findByText(
-          /^Local authorities whose estimates fail the survey data’s disclosure rules are not published\./
-        )
+        await screen.findByText(/^359 of 361 local authorities are not reported\./)
+      ).toBeInTheDocument();
+    });
+
+    test('given Ards and North Down computed for a UK-wide report then the note counts the local authorities the hex map draws as withheld', async () => {
+      // Given: Ards and North Down, which a region list before PolicyEngine/policyengine-api#4024 lacks
+      const user = userEvent.setup();
+      mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN);
+      const { container } = renderWithQueryClient(
+        <LocalAuthoritySubPage
+          output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+          {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+        />
+      );
+      await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+      await screen.findByText('Absolute household income change by local authority');
+
+      // When
+      await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+
+      // Then
+      const hatched = container.querySelectorAll('[data-missing-area-id]').length;
+      expect(hatched).toBe(WITHHELD_LOCAL_AUTHORITIES_WITH_ARDS_AND_NORTH_DOWN);
+      expect(
+        screen.getByText(new RegExp(`^${hatched} of 361 local authorities are not reported\\.`))
       ).toBeInTheDocument();
     });
 

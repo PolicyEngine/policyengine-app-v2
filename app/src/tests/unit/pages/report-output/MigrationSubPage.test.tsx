@@ -54,12 +54,6 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: mockUseCurrentCountry,
 }));
 
-vi.mock('@/hooks/useRegions', async () => {
-  const { UK_METADATA_REGIONS } =
-    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
-  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
-});
-
 vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchLocalAreaBreakdown: vi.fn(),
