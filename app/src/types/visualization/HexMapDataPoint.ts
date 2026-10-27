@@ -41,3 +41,21 @@ export interface HexMapDataPoint {
   lower?: number;
   upper?: number;
 }
+
+/**
+ * An area the hex map places but has no value for, such as one disclosure
+ * control withheld. The map draws it hatched, outside its colour scale.
+ */
+export interface HexMapMissingArea {
+  /** Unique identifier for this area, e.g. its code */
+  id: string;
+
+  /** Display label (e.g., constituency name) */
+  label: string;
+
+  /** X-coordinate on the hexagonal grid (0-based) */
+  x: number;
+
+  /** Y-coordinate on the hexagonal grid (0-based) */
+  y: number;
+}
