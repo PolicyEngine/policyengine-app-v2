@@ -1,5 +1,6 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { RelativeChangeByLocalAuthority } from '@/pages/report-output/local-authority/RelativeChangeByLocalAuthority';
 import { UK_LOCAL_AREAS_OUTPUT } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
@@ -11,7 +12,16 @@ import {
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_DATA,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
+  MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
+import {
+  areaNames,
+  hexagonArrangement,
+  hexagonCentre,
+  isPointyTopped,
+  v2Hexagons,
+  v3HexagonArrangement,
+} from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
 import { withNullAreaImpacts } from '@/tests/fixtures/pages/report-output/ukLocalAreaBreakdownPageMocks';
 
 beforeEach(() => {
@@ -109,5 +119,67 @@ describe('RelativeChangeByLocalAuthority map type', () => {
     // Then
     expect(container.querySelectorAll('svg polygon')).toHaveLength(2);
     expect(screen.queryByTestId(`area-${CARDIFF_CODE}`)).not.toBeInTheDocument();
+  });
+});
+
+describe('RelativeChangeByLocalAuthority hex map placement', () => {
+  /** The chart's hex map of `output`, with the hex grid chosen. */
+  async function renderHexMap(output: SocietyWideReportOutput) {
+    const user = userEvent.setup();
+    const { container } = render(<RelativeChangeByLocalAuthority output={output} />);
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
+    return container;
+  }
+
+  test('given local authorities the results put in one hex then the hex map draws each in its own', async () => {
+    // When
+    const container = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA);
+
+    // Then
+    const centres = v2Hexagons(container).map((hexagon) => {
+      const centre = hexagonCentre(hexagon);
+      return `${centre.x.toFixed(3)},${centre.y.toFixed(3)}`;
+    });
+    expect(new Set(centres).size).toBe(
+      areaNames(MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA, 'local_authority').length
+    );
+  });
+
+  test('given local authorities with codes then the hex map puts each in the hex v3’s does', async () => {
+    // Given
+    const v3Arrangement = await v3HexagonArrangement(
+      MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA,
+      'local_authority'
+    );
+
+    // When
+    const container = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA);
+
+    // Then
+    expect(hexagonArrangement(v2Hexagons(container))).toEqual(v3Arrangement);
+  });
+
+  test('given local authorities with codes then the hex map draws the tiled grid’s pointy-topped hexagons', async () => {
+    // When
+    const container = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA);
+
+    // Then
+    expect(v2Hexagons(container).every(isPointyTopped)).toBe(true);
+  });
+
+  test('given local authorities without codes then the hex map keeps their results’ positions, as v3’s does', async () => {
+    // Given
+    const v3Arrangement = await v3HexagonArrangement(
+      MOCK_UK_REPORT_OUTPUT_WITH_LA,
+      'local_authority'
+    );
+
+    // When
+    const container = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_LA);
+
+    // Then: on the square grid of flat-topped hexagons those positions were made for
+    expect(hexagonArrangement(v2Hexagons(container))).toEqual(v3Arrangement);
+    expect(v2Hexagons(container).some(isPointyTopped)).toBe(false);
   });
 });

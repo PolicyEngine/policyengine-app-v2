@@ -11,6 +11,7 @@ import {
   ukNationFromRegion,
   type MapVisualizationType,
 } from '@/components/visualization/choropleth';
+import { placeOnUKHexLayout } from '@/components/visualization/choropleth/ukHexLayout';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -46,6 +47,8 @@ export function RelativeChangeByLocalAuthority({
     () => (areas ? transformLocalAuthorityRelativeChange(areas) : []),
     [areas]
   );
+  // The hex map places each local authority by its code in the app's layout, as v3's does.
+  const hexMap = useMemo(() => placeOnUKHexLayout('local_authority', mapData), [mapData]);
   const notes = <UKAreaDisclosureNotes level="local_authority" areas={areas} withheld={withheld} />;
 
   if (!mapData.length) {
@@ -92,8 +95,9 @@ export function RelativeChangeByLocalAuthority({
         />
       ) : (
         <HexagonalMap
-          data={mapData}
+          data={hexMap.points}
           config={{
+            tiled: hexMap.tiled,
             hexSize: 11,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,

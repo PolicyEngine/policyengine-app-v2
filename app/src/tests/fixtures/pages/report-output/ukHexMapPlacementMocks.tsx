@@ -20,7 +20,7 @@ export function hexagonVertices(polygon: Element): [number, number][] {
 }
 
 /** A hexagon polygon's centre: the mean of its vertices. */
-function hexagonCentre(polygon: Element): HexagonCentre {
+export function hexagonCentre(polygon: Element): HexagonCentre {
   const vertices = hexagonVertices(polygon);
   return {
     x: vertices.reduce((sum, [vertexX]) => sum + vertexX, 0) / vertices.length,
