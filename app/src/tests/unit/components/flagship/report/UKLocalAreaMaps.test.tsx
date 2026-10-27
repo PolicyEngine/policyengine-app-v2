@@ -15,6 +15,7 @@ import {
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { UK_HEX_MAP_UNPLACED_NOTES } from '@/tests/fixtures/components/report/UKHexMapUnplacedNoteMocks';
 import {
   ALL_WITHHELD_CONSTITUENCIES,
   SOME_WITHHELD_CONSTITUENCIES,
@@ -319,6 +320,32 @@ describe('UKLocalAreaMaps geographic map', () => {
     const points = vertices(drawn[0]);
     // Tiled hexagons are pointy-topped: the top and bottom vertices share an x.
     expect(points[1][0]).toBeCloseTo(points[4][0], 5);
+  });
+
+  test('given one area without a code then the hex map says it has no position for it', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED} />, 'uk');
+    await boundary(CLWYD_EAST_CODE);
+
+    // When
+    await showHexMap(user);
+
+    // Then
+    expect(
+      screen.getByText(UK_HEX_MAP_UNPLACED_NOTES.ONE_OF_THREE_CONSTITUENCIES)
+    ).toBeInTheDocument();
+  });
+
+  test('given the geographic map then it has no hex map note', async () => {
+    // When
+    render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED} />, 'uk');
+    await boundary(CLWYD_EAST_CODE);
+
+    // Then
+    expect(
+      screen.queryByText(UK_HEX_MAP_UNPLACED_NOTES.ONE_OF_THREE_CONSTITUENCIES)
+    ).not.toBeInTheDocument();
   });
 
   test('given the hex map chosen then switching the area kind keeps it', async () => {

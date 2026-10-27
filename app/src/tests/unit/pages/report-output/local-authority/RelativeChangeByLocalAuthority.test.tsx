@@ -4,6 +4,7 @@ import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { RelativeChangeByLocalAuthority } from '@/pages/report-output/local-authority/RelativeChangeByLocalAuthority';
 import { UK_LOCAL_AREAS_OUTPUT } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { UK_HEX_MAP_UNPLACED_NOTES } from '@/tests/fixtures/components/report/UKHexMapUnplacedNoteMocks';
 import {
   CARDIFF_CODE,
   MAP_LEGEND_NAME,
@@ -174,5 +175,24 @@ describe('RelativeChangeByLocalAuthority hex map placement', () => {
 
     // Then
     expect(v2Hexagons(container)).toHaveLength(0);
+  });
+
+  test('given local authorities without codes then the hex map says it has no position for them', async () => {
+    // When
+    await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_LA);
+
+    // Then
+    expect(screen.getByText(UK_HEX_MAP_UNPLACED_NOTES.NO_LOCAL_AUTHORITY)).toBeInTheDocument();
+  });
+
+  test('given the geographic map then it has no hex map note', async () => {
+    // When
+    render(<RelativeChangeByLocalAuthority output={MOCK_UK_REPORT_OUTPUT_WITH_LA} />);
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+
+    // Then
+    expect(
+      screen.queryByText(UK_HEX_MAP_UNPLACED_NOTES.NO_LOCAL_AUTHORITY)
+    ).not.toBeInTheDocument();
   });
 });

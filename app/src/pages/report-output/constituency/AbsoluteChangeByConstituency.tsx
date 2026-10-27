@@ -4,6 +4,7 @@ import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
 import UKAreaDisclosureNotes from '@/components/report/UKAreaDisclosureNotes';
+import UKHexMapUnplacedNote from '@/components/report/UKHexMapUnplacedNote';
 import { Group, Stack, Text, Title } from '@/components/ui';
 import {
   MapTypeToggle,
@@ -107,6 +108,13 @@ export function AbsoluteChangeByConstituency({
               }),
           }}
           exportRef={mapRef}
+        />
+      )}
+      {mapType === 'hex' && (
+        <UKHexMapUnplacedNote
+          level="constituency"
+          areaCount={mapData.length}
+          placedCount={hexPoints.length}
         />
       )}
       {notes}
