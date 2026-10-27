@@ -12,6 +12,7 @@ import HouseholdImpactSection from '@/components/flagship/report/household/House
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportValidation from '@/components/flagship/report/ReportValidation';
+import UKLocalAreaAutoStart from '@/components/flagship/report/UKLocalAreaAutoStart';
 import UKLocalAreaSection from '@/components/flagship/report/UKLocalAreaSection';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
@@ -50,11 +51,14 @@ const UK_DISTRICTS_CARD_COPY: DistrictsCardCopy = {
   action: 'Explore local areas',
   preview: 'Compare income changes across constituencies and local authorities on a map.',
 };
-/** The card for results without area impacts, which a separate run calculates on request. */
+/**
+ * The card for results without area impacts, which a separate run
+ * calculates in the background (UKLocalAreaAutoStart).
+ */
 const UK_DISTRICTS_COMPUTE_CARD_COPY: DistrictsCardCopy = {
   ...UK_DISTRICTS_CARD_COPY,
   preview:
-    'Calculate income changes across constituencies and local authorities, and compare them on a map.',
+    'Compare income changes across constituencies and local authorities on a map. They calculate in the background, in a few minutes.',
 };
 
 function SectionHeading({ id, title }: { id: string; title: string }) {
@@ -456,6 +460,16 @@ export default function ReportView({
                     )}
                     {overviewFooter}
                   </Stack>
+                )}
+                {/* The local-area run starts with the results, not when its tab opens. */}
+                {output && isUK && showDistrictsSection && !showUSDistricts && (
+                  <UKLocalAreaAutoStart
+                    output={output}
+                    region={region}
+                    year={year}
+                    reformPolicyId={reformPolicyId}
+                    baselinePolicyId={baselinePolicyId}
+                  />
                 )}
                 {tabPanel(
                   'economy',
