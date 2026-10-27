@@ -48,20 +48,18 @@ export function v2CatalogVariablesKey(
 
 const V2_CATALOG_VARIABLES = 'v2-catalog-variables';
 
-/**
- * How long an unread variables query stays cached. The store keeps the
- * variables for the current load; an earlier load's query is removed when a
- * new load starts (see useV2VariablesInBackground), so this only bounds a
- * query nothing reads any more.
- */
-const VARIABLES_QUERY_GC_TIME = 5 * 60 * 1000;
-
 /** What a variables load is for: the page's country and the store's current model catalog load. */
 interface VariablesTarget {
   countryId: string;
   policyengineVersion: string | null;
   loadId: string | null;
-  /** Not for a model catalog of another country than the page's (a country change in flight). */
+  /** The store already holds the variables of this load. */
+  inStore: boolean;
+  /**
+   * Whether to ask for them: not when the store holds them already, and not
+   * for a model catalog of another country than the page's (a country
+   * change in flight).
+   */
   enabled: boolean;
 }
 
@@ -70,11 +68,15 @@ function useV2VariablesTarget(): VariablesTarget {
   const storeCountry = useSelector((state: RootState) => state.metadata.currentCountry);
   const policyengineVersion = useSelector(selectV2CatalogVersion);
   const loadId = useSelector(selectV2LoadId);
+  const loadedUnder = useSelector((state: RootState) => state.metadata.v2VariablesLoadId);
+  const inStore = loadId !== null && loadedUnder === loadId;
   return {
     countryId,
     policyengineVersion,
     loadId,
-    enabled: policyengineVersion !== null && loadId !== null && storeCountry === countryId,
+    inStore,
+    enabled:
+      !inStore && policyengineVersion !== null && loadId !== null && storeCountry === countryId,
   };
 }
 
@@ -82,7 +84,10 @@ function useV2VariablesTarget(): VariablesTarget {
  * The one query both the readers and the background load use: it fetches
  * the catalog version's variables and puts them in the store, under the
  * load they were asked for (a response for an earlier load is dropped).
- * A catalog version's variables never change, so it is never stale.
+ * A catalog version's variables never change, so it is never stale, and the
+ * current load's entry is kept for the session (`gcTime: Infinity`); an
+ * earlier load's entry is removed when a new load starts (see
+ * useV2VariablesInBackground), so only one load's variables stay cached.
  */
 function catalogVariablesQuery(dispatch: AppDispatch, target: VariablesTarget) {
   const { countryId, policyengineVersion, loadId } = target;
@@ -101,7 +106,7 @@ function catalogVariablesQuery(dispatch: AppDispatch, target: VariablesTarget) {
       return loaded;
     },
     staleTime: Infinity,
-    gcTime: VARIABLES_QUERY_GC_TIME,
+    gcTime: Infinity,
   };
 }
 
@@ -114,10 +119,9 @@ function useV2Variables(): V3VariablesStatus {
   const dispatch = useDispatch<AppDispatch>();
   const metadata = useFlagshipMetadataStatus();
   const target = useV2VariablesTarget();
-  const loadedUnder = useSelector((state: RootState) => state.metadata.v2VariablesLoadId);
   const query = useQuery({ ...catalogVariablesQuery(dispatch, target), enabled: target.enabled });
 
-  if (target.loadId !== null && loadedUnder === target.loadId) {
+  if (target.inStore) {
     return { state: 'ready', message: null, retry: query.refetch };
   }
   if (metadata.status === 'error') {
@@ -154,7 +158,7 @@ function useV2VariablesInBackground(): void {
   const dispatch = useDispatch<AppDispatch>();
   const target = useV2VariablesTarget();
   const queryClient = useQueryClient();
-  const { countryId, policyengineVersion, loadId, enabled } = target;
+  const { countryId, policyengineVersion, loadId, inStore, enabled } = target;
   useEffect(() => {
     if (!enabled) {
       return;
@@ -166,10 +170,16 @@ function useV2VariablesInBackground(): void {
     // A failure stays in the query, where views waiting for the variables report it.
     queryClient
       .fetchQuery(
-        catalogVariablesQuery(dispatch, { countryId, policyengineVersion, loadId, enabled })
+        catalogVariablesQuery(dispatch, {
+          countryId,
+          policyengineVersion,
+          loadId,
+          inStore,
+          enabled,
+        })
       )
       .catch(() => undefined);
-  }, [countryId, policyengineVersion, loadId, enabled, queryClient, dispatch]);
+  }, [countryId, policyengineVersion, loadId, inStore, enabled, queryClient, dispatch]);
 }
 
 function noBackgroundLoad(): void {}
