@@ -33,6 +33,10 @@ import {
   UK_LAST_SUPPORTED_YEAR,
   UK_REPORT_START_YEAR,
 } from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
+import {
+  US_FIRST_SUPPORTED_YEAR,
+  US_LAST_SUPPORTED_YEAR,
+} from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
 
 const mockRun = vi.fn();
 const mockFindMine = vi.fn();
@@ -789,6 +793,34 @@ describe('ReportAdjustPanel', () => {
       // Then
       await waitFor(() => expect(mockRun).toHaveBeenCalled());
       expect(mockRun.mock.calls[0][5]).toMatchObject({ windowYears: 7 });
+    });
+  });
+
+  describe('given a US report and the years the US model covers', () => {
+    afterEach(() => {
+      store.dispatch(clearMetadata());
+    });
+
+    test('given a report from 2026 then the ten-year window is still offered', async () => {
+      // Given: the US model's years run to 2035
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+      seedModelYears({
+        countryId: 'us',
+        firstYear: US_FIRST_SUPPORTED_YEAR,
+        lastYear: US_LAST_SUPPORTED_YEAR,
+        regions: US_REGIONS,
+      });
+      const user = userEvent.setup();
+      await renderPanel({ year: '2026' });
+
+      // When
+      await user.click(screen.getByRole('combobox', { name: 'Years' }));
+
+      // Then
+      expect(
+        await screen.findByRole('option', { name: '2026–2035 · 10 years' })
+      ).toBeInTheDocument();
     });
   });
 });

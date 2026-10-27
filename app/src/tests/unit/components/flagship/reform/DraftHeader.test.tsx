@@ -31,6 +31,7 @@ import {
   UK_LAST_SUPPORTED_YEAR,
 } from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
 import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import { US_LAST_SUPPORTED_YEAR } from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockCreate = vi.fn();
@@ -186,7 +187,8 @@ describe('DraftHeader', () => {
   test('given a budget window is chosen then the draft and its run take it', async () => {
     Element.prototype.scrollIntoView ??= vi.fn();
     Element.prototype.hasPointerCapture ??= vi.fn(() => false);
-    seedDeductionMetadata();
+    // The US model's years as its metadata lists them: a ten-year window from 2026 fits.
+    seedDeductionMetadata({ lastYear: US_LAST_SUPPORTED_YEAR });
     const user = userEvent.setup();
     // A change to run, to a parameter the seeded model has.
     addDraftProvision('us', SEEDED_CHANGE);
