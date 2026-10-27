@@ -128,6 +128,16 @@ describe("Deployments developer tool", () => {
     expect(within(overviewHousehold).getByText("current")).toBeInTheDocument();
     expect(within(overviewHousehold).getByText("frontier")).toBeInTheDocument();
     expect(within(overviewHousehold).getByText("2.42.4")).toBeInTheDocument();
+    // Data builds link to their Microcosm page; lock and report links are gone.
+    const apiRow = screen.getByText("PolicyEngine API").closest("tr")!;
+    expect(
+      within(apiRow).getByRole("link", { name: /spm · 2026-09-15/ }),
+    ).toHaveAttribute(
+      "href",
+      "https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm?country=us&release=populace-us-2024-spm-20260915",
+    );
+    expect(screen.queryByRole("link", { name: "lock" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "report" })).toBeNull();
     // The status columns are gone.
     expect(screen.queryByText("Differs from main")).toBeNull();
     expect(screen.queryByText("No dataset")).toBeNull();

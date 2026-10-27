@@ -134,16 +134,20 @@ function DriftValue({
   servedKnown,
   lines,
   short = (value: string) => value,
+  href,
 }: {
   declared: string | null;
   served: string | null;
   servedKnown: boolean;
   lines?: DriftLine[];
   short?: (value: string) => string;
+  // A link for a value, or null when the value has no page.
+  href?: (value: string) => string | null;
 }) {
-  const show = (value: string | null) =>
-    value ? (
-      // A short value may wrap between its " · " parts, never inside one.
+  const show = (value: string | null) => {
+    if (!value) return <span style={{ color: colors.text.tertiary }}>—</span>;
+    // A short value may wrap between its " · " parts, never inside one.
+    const text = (
       <span style={mono} title={value}>
         {short(value)
           .split(" · ")
@@ -154,9 +158,10 @@ function DriftValue({
             </span>
           ))}
       </span>
-    ) : (
-      <span style={{ color: colors.text.tertiary }}>—</span>
     );
+    const url = href?.(value);
+    return url ? <ExternalLink href={url}>{text}</ExternalLink> : text;
+  };
   const drifted = servedKnown && served && declared && served !== declared;
   const shown: DriftLine[] | null = lines?.length
     ? lines
@@ -203,8 +208,10 @@ function channelLines(row: DeploymentRow): DriftLine[] | undefined {
 function Overview({
   rows,
   modelLabel,
+  country,
 }: {
   rows: DeploymentRow[];
+  country: DeploymentCountry;
   modelLabel: string;
 }) {
   const head = "tw:px-3 tw:py-2.5 tw:text-left tw:font-medium";
@@ -268,20 +275,6 @@ function Overview({
                     >
                       {row.surface.repository.replace("PolicyEngine/", "")}
                     </ExternalLink>
-                    {row.lock_url && (
-                      <>
-                        {" · "}
-                        <ExternalLink href={row.lock_url}>lock</ExternalLink>
-                      </>
-                    )}
-                    {row.served.source_url && (
-                      <>
-                        {" · "}
-                        <ExternalLink href={row.served.source_url}>
-                          report
-                        </ExternalLink>
-                      </>
-                    )}
                   </div>
                 </td>
                 <td className={cell}>
@@ -310,6 +303,11 @@ function Overview({
                       served={row.served.data_build_id}
                       servedKnown={servedKnown}
                       short={shortBuildId}
+                      href={(buildId) =>
+                        isMicrocosmBuild(buildId)
+                          ? microcosmBuildUrl(country, buildId)
+                          : null
+                      }
                     />
                   )}
                 </td>
@@ -523,7 +521,7 @@ export default function DeploymentsClient({
         </div>
       </div>
 
-      <Overview rows={data.rows} modelLabel={modelLabel} />
+      <Overview rows={data.rows} modelLabel={modelLabel} country={country} />
     </div>
   );
 }
