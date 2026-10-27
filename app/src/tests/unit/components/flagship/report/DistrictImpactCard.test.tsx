@@ -52,7 +52,6 @@ describe('DistrictImpactCard', () => {
     mockUseCongressionalDistrictData.mockReturnValue({
       labelLookup: new Map([['AL-01', "Alabama's 1st congressional district"]]),
       stateCode: null,
-      startFetch: vi.fn(),
     });
   });
 
@@ -72,7 +71,6 @@ describe('DistrictImpactCard with a small state reform', () => {
     mockUseCongressionalDistrictData.mockReturnValue({
       labelLookup: MARYLAND_DISTRICT_LABELS,
       stateCode: 'MD',
-      startFetch: vi.fn(),
     });
   });
 
@@ -172,7 +170,6 @@ describe('DistrictImpactCard district details', () => {
     mockUseCongressionalDistrictData.mockReturnValue({
       labelLookup: MARYLAND_DISTRICT_LABELS,
       stateCode: 'MD',
-      startFetch: vi.fn(),
     });
   });
 

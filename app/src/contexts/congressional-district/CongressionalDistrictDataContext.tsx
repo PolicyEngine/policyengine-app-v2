@@ -1,49 +1,28 @@
 /**
  * Congressional District Data Context
  *
- * Provides congressional district label lookup and an optional manual fetch path.
+ * Gives a report's congressional district views their labels, state code,
+ * policies, year and district scope.
  */
 
-import { createContext, useCallback, useContext, useMemo, useReducer, useRef } from 'react';
-import {
-  buildDistrictLabelLookup,
-  normalizeDistrictId,
-} from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
-import {
-  fetchSocietyWideCalculation,
-  SocietyWideCalculationResponse,
-} from '@/api/societyWideCalculation';
+import { createContext, useContext, useMemo } from 'react';
+import { buildDistrictLabelLookup } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import { useRegions } from '@/hooks/useRegions';
-import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
-import { getUSStates } from '@/utils/regionStrategies';
-import { fetchReducer, initialFetchState } from './reducer';
-import {
-  MAX_POLL_ATTEMPTS,
-  POLL_INTERVAL_MS,
-  type CongressionalDistrictDataContextValue,
-  type CongressionalDistrictDataProviderProps,
-  type StateDistrictData,
+import type {
+  CongressionalDistrictDataContextValue,
+  CongressionalDistrictDataProviderProps,
 } from './types';
-import {
-  calculateTotalDistrictsLoaded,
-  computeFetchStatus,
-  congressionalDistrictScope,
-  extractStateCode,
-  getStateCodesToFetch,
-  isStateLevelRegion,
-  validateAllStatesLoaded,
-} from './utils';
+import { congressionalDistrictScope, extractStateCode, isStateLevelRegion } from './utils';
 
 const CongressionalDistrictDataContext =
   createContext<CongressionalDistrictDataContextValue | null>(null);
 
 /**
- * Provider that manages congressional district label metadata.
- *
- * For current report output, district data is expected to be included in the
- * report payload for US national and state-level reports.
- *
- * Stores manual-fetch district data only when startFetch is explicitly invoked.
+ * Provider for a report's congressional district views: the district labels
+ * from the region metadata, the state code of a state report, the report's
+ * policies and year, and which districts it has (`scope`). The districts
+ * themselves come from useCongressionalDistrictImpacts: a state report's
+ * own result, or each state's own run for a nationwide report.
  */
 export function CongressionalDistrictDataProvider({
   children,
@@ -54,207 +33,20 @@ export function CongressionalDistrictDataProvider({
 }: CongressionalDistrictDataProviderProps) {
   const { data: regions = [] } = useRegions('us');
 
-  // Extract all state codes from canonical region records (e.g., ['state/al', 'state/ak', ...])
-  const allStateCodes = useMemo(() => {
-    const states = getUSStates(regions);
-    return states.map((s) => s.value);
-  }, [regions]);
-
-  // Determine if this is a state-level report
-  const isStateLevelReport = useMemo(() => isStateLevelRegion(region), [region]);
-
-  // Get the list of state codes to fetch
-  const stateCodes = useMemo(
-    () => getStateCodesToFetch(isStateLevelReport, region, allStateCodes),
-    [isStateLevelReport, region, allStateCodes]
-  );
-
-  // Build district label lookup from canonical region records
+  // District ID (e.g. "AL-01") to label, from canonical region records
   const labelLookup = useMemo(() => buildDistrictLabelLookup(regions), [regions]);
 
-  // Use reducer for atomic state updates
-  const [state, dispatch] = useReducer(fetchReducer, initialFetchState);
-
-  // Track active polling to allow cancellation
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Poll a single state until it completes or errors
-  const pollState = useCallback(
-    async (stateCode: string, signal: AbortSignal): Promise<void> => {
-      let attempts = 0;
-
-      while (attempts < MAX_POLL_ATTEMPTS) {
-        if (signal.aborted) {
-          return;
-        }
-
-        try {
-          const response: SocietyWideCalculationResponse = await fetchSocietyWideCalculation(
-            'us',
-            reformPolicyId,
-            baselinePolicyId,
-            { region: stateCode, time_period: year }
-          );
-
-          if (response.status === 'ok' && response.result) {
-            const result = response.result as ReportOutputSocietyWideUS;
-            const districtData = result.congressional_district_impact;
-
-            const stateData: StateDistrictData | null = districtData?.districts
-              ? {
-                  stateCode,
-                  districts: districtData.districts.map((d) => ({
-                    ...d,
-                    district: normalizeDistrictId(d.district),
-                  })),
-                }
-              : null;
-
-            dispatch({ type: 'STATE_COMPLETED', stateCode, data: stateData });
-            return;
-          }
-
-          if (response.status === 'error') {
-            console.error(
-              `[CongressionalDistrictDataProvider] State ${stateCode} calculation failed:`,
-              response.error
-            );
-            dispatch({ type: 'STATE_ERRORED', stateCode });
-            return;
-          }
-
-          // status === 'computing' - wait and poll again
-          attempts++;
-          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-        } catch (error) {
-          console.error(
-            `[CongressionalDistrictDataProvider] Failed to fetch state ${stateCode}:`,
-            error
-          );
-          dispatch({ type: 'STATE_ERRORED', stateCode });
-          return;
-        }
-      }
-
-      // Max attempts reached
-      console.error(
-        `[CongressionalDistrictDataProvider] State ${stateCode} timed out after ${MAX_POLL_ATTEMPTS} attempts`
-      );
-      dispatch({ type: 'STATE_ERRORED', stateCode });
-    },
-    [reformPolicyId, baselinePolicyId, year]
-  );
-
-  // Start fetching congressional district data for all states in parallel
-  const startFetch = useCallback(() => {
-    if (state.hasStarted) {
-      return;
-    }
-
-    if (stateCodes.length === 0) {
-      console.warn('[CongressionalDistrictDataProvider] No state codes available from metadata');
-      return;
-    }
-
-    // Cancel any existing polling
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Create new abort controller for this fetch session
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    // Initialize state with all states as loading
-    dispatch({ type: 'START_FETCH', stateCodes });
-
-    // Fire all state polling in parallel
-    stateCodes.forEach((stateCode) => {
-      pollState(stateCode, abortController.signal);
-    });
-  }, [state.hasStarted, stateCodes, pollState]);
-
-  // Compute derived values
-  const { completedCount, loadingCount, errorCount, isLoading, isComplete } =
-    computeFetchStatus(state);
-
-  const totalDistrictsLoaded = useMemo(
-    () => calculateTotalDistrictsLoaded(state.stateResponses),
-    [state.stateResponses]
-  );
-
-  // Utility functions
-  const validateAllLoaded = useCallback(
-    () => validateAllStatesLoaded(state.completedStates, stateCodes.length),
-    [state.completedStates, stateCodes.length]
-  );
-
-  const getCompletedStates = useCallback(
-    () => Array.from(state.completedStates),
-    [state.completedStates]
-  );
-
-  const getLoadingStates = useCallback(
-    () => Array.from(state.loadingStates),
-    [state.loadingStates]
-  );
-
-  // Extract state code for state-level reports
-  const stateCodeValue = useMemo(
-    () => (isStateLevelReport ? extractStateCode(region) : null),
-    [isStateLevelReport, region]
+  // A state report's state (e.g. 'ca'); null for a nationwide report
+  const stateCode = useMemo(
+    () => (isStateLevelRegion(region) ? extractStateCode(region) : null),
+    [region]
   );
 
   const scope = useMemo(() => congressionalDistrictScope(region), [region]);
 
-  // Build context value
   const contextValue = useMemo<CongressionalDistrictDataContextValue>(
-    () => ({
-      reformPolicyId,
-      baselinePolicyId,
-      year,
-      stateResponses: state.stateResponses,
-      completedCount,
-      loadingCount,
-      totalDistrictsLoaded,
-      totalStates: stateCodes.length,
-      isComplete,
-      isLoading,
-      hasStarted: state.hasStarted,
-      errorCount,
-      erroredStates: state.erroredStates,
-      labelLookup,
-      isStateLevelReport,
-      scope,
-      stateCode: stateCodeValue,
-      startFetch,
-      validateAllLoaded,
-      getCompletedStates,
-      getLoadingStates,
-    }),
-    [
-      reformPolicyId,
-      baselinePolicyId,
-      year,
-      state.stateResponses,
-      state.hasStarted,
-      state.erroredStates,
-      completedCount,
-      loadingCount,
-      totalDistrictsLoaded,
-      stateCodes.length,
-      isComplete,
-      isLoading,
-      errorCount,
-      labelLookup,
-      isStateLevelReport,
-      scope,
-      stateCodeValue,
-      startFetch,
-      validateAllLoaded,
-      getCompletedStates,
-      getLoadingStates,
-    ]
+    () => ({ reformPolicyId, baselinePolicyId, year, labelLookup, stateCode, scope }),
+    [reformPolicyId, baselinePolicyId, year, labelLookup, stateCode, scope]
   );
 
   return (

@@ -21,7 +21,6 @@ export const californiaDistrictContext = () =>
     baselinePolicyId: STATE_RUNS_BASELINE_POLICY_ID,
     year: STATE_RUNS_YEAR,
     scope: 'state',
-    isStateLevelReport: true,
     stateCode: 'ca',
   });
 

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
+import type { CongressionalDistrictDataContextValue } from '@/contexts/congressional-district';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { typography } from '@/designTokens';
 import { useRegions } from '@/hooks/useRegions';
@@ -16,6 +17,7 @@ import {
   UTAH_AND_TEXAS_LABELS,
 } from '@/tests/fixtures/components/flagship/report/districtImpactMocks';
 import { COMPUTE_DISTRICTS_LABEL } from '@/tests/fixtures/components/flagship/report/stateDistrictComputePanelMocks';
+import { createMockContextValue } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 import {
   economyWhere,
   fakeStateDistrictApi,
@@ -82,30 +84,16 @@ function renderWithQueries(ui: ReactNode) {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
-function createCongressionalDistrictContextMock(overrides: Record<string, unknown> = {}) {
-  return {
+function createCongressionalDistrictContextMock(
+  overrides: Partial<CongressionalDistrictDataContextValue> = {}
+) {
+  return createMockContextValue({
     reformPolicyId: '96491',
     baselinePolicyId: '2',
     year: '2026',
-    stateResponses: new Map(),
-    completedCount: 0,
-    loadingCount: 0,
-    totalDistrictsLoaded: 0,
-    totalStates: 51,
-    isComplete: false,
-    isLoading: false,
-    hasStarted: false,
-    errorCount: 0,
-    erroredStates: new Set(),
     labelLookup: new Map([['AL-01', "Alabama's 1st congressional district"]]),
-    isStateLevelReport: false,
-    stateCode: null,
-    startFetch: vi.fn(),
-    validateAllLoaded: vi.fn(),
-    getCompletedStates: vi.fn(),
-    getLoadingStates: vi.fn(),
     ...overrides,
-  };
+  });
 }
 
 // Mock useCurrentCountry hook
@@ -514,121 +502,6 @@ describe('SocietyWideOverview', () => {
         null
       )
     ).toBe(false);
-  });
-
-  test('saved districts without outcome shares do not trigger a refresh', () => {
-    const startFetch = vi.fn();
-    mockUseCongressionalDistrictData.mockReturnValue(
-      createCongressionalDistrictContextMock({ startFetch })
-    );
-
-    const output = createMockSocietyWideOutput({
-      congressional_district_impact: {
-        districts: [
-          {
-            district: 'AL-01',
-            average_household_income_change: 120,
-            relative_household_income_change: 0.01,
-          },
-        ],
-      },
-    });
-
-    renderWithQueries(<SocietyWideOverview output={output as any} showCongressionalCard />);
-
-    expect(startFetch).not.toHaveBeenCalled();
-  });
-
-  test('saved districts with outcome shares do not trigger a refresh', () => {
-    const startFetch = vi.fn();
-    mockUseCongressionalDistrictData.mockReturnValue(
-      createCongressionalDistrictContextMock({ startFetch })
-    );
-
-    const output = createMockSocietyWideOutput({
-      congressional_district_impact: {
-        districts: [
-          {
-            district: 'AL-01',
-            average_household_income_change: 120,
-            relative_household_income_change: 0.01,
-            winner_percentage: 0.58,
-            loser_percentage: 0.21,
-          },
-        ],
-      },
-    });
-
-    renderWithQueries(<SocietyWideOverview output={output as any} showCongressionalCard />);
-
-    expect(startFetch).not.toHaveBeenCalled();
-  });
-
-  test('saved districts with complete winner shares but missing loser shares do not trigger a refresh', () => {
-    const startFetch = vi.fn();
-    mockUseCongressionalDistrictData.mockReturnValue(
-      createCongressionalDistrictContextMock({
-        startFetch,
-        labelLookup: new Map([
-          ['AL-01', "Alabama's 1st congressional district"],
-          ['AL-02', "Alabama's 2nd congressional district"],
-        ]),
-      })
-    );
-
-    const output = createMockSocietyWideOutput({
-      congressional_district_impact: {
-        districts: [
-          {
-            district: 'AL-01',
-            average_household_income_change: 120,
-            relative_household_income_change: 0.01,
-            winner_percentage: 0.58,
-          },
-          {
-            district: 'AL-02',
-            average_household_income_change: 80,
-            relative_household_income_change: 0.008,
-            winner_percentage: 0.52,
-          },
-        ],
-      },
-    });
-
-    renderWithQueries(<SocietyWideOverview output={output as any} showCongressionalCard />);
-
-    expect(startFetch).not.toHaveBeenCalled();
-  });
-
-  test('truncated saved districts do not trigger a refresh', () => {
-    const startFetch = vi.fn();
-    mockUseCongressionalDistrictData.mockReturnValue(
-      createCongressionalDistrictContextMock({
-        startFetch,
-        labelLookup: new Map([
-          ['AL-01', "Alabama's 1st congressional district"],
-          ['AL-02', "Alabama's 2nd congressional district"],
-        ]),
-      })
-    );
-
-    const output = createMockSocietyWideOutput({
-      congressional_district_impact: {
-        districts: [
-          {
-            district: 'AL-01',
-            average_household_income_change: 120,
-            relative_household_income_change: 0.01,
-            winner_percentage: 0.58,
-            loser_percentage: 0.21,
-          },
-        ],
-      },
-    });
-
-    renderWithQueries(<SocietyWideOverview output={output as any} showCongressionalCard />);
-
-    expect(startFetch).not.toHaveBeenCalled();
   });
 });
 

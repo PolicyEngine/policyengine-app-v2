@@ -2,8 +2,6 @@
  * Utility functions for congressional district data processing
  */
 
-import type { FetchState, StateDistrictData } from './types';
-
 /** Prefix used for state region codes in the API */
 const STATE_REGION_PREFIX = 'state/';
 
@@ -58,82 +56,4 @@ export function extractStateCode(region: string | undefined): string | null {
   return regionLower.startsWith(STATE_REGION_PREFIX)
     ? regionLower.slice(STATE_REGION_PREFIX.length)
     : regionLower;
-}
-
-/**
- * Get the list of state codes to fetch based on whether this is a
- * state-level or national report.
- *
- * @param isStateLevelReport - Whether this is a single-state report
- * @param region - The region string for state-level reports
- * @param allStateCodes - All available state codes for national reports
- * @returns Array of state codes to fetch
- */
-export function getStateCodesToFetch(
-  isStateLevelReport: boolean,
-  region: string | undefined,
-  allStateCodes: string[]
-): string[] {
-  if (isStateLevelReport && region) {
-    return [region.toLowerCase()];
-  }
-  return allStateCodes;
-}
-
-/**
- * Calculate the total number of districts loaded across all completed states.
- *
- * @param stateResponses - Map of state code to district data
- * @returns Total count of districts
- */
-export function calculateTotalDistrictsLoaded(
-  stateResponses: Map<string, StateDistrictData>
-): number {
-  let count = 0;
-  stateResponses.forEach((data) => {
-    count += data.districts.length;
-  });
-  return count;
-}
-
-/**
- * Derive computed values from fetch state.
- *
- * @param state - The current fetch state
- * @returns Computed boolean values
- */
-export function computeFetchStatus(state: FetchState): {
-  completedCount: number;
-  loadingCount: number;
-  errorCount: number;
-  isLoading: boolean;
-  isComplete: boolean;
-} {
-  const completedCount = state.completedStates.size;
-  const loadingCount = state.loadingStates.size;
-  const errorCount = state.erroredStates.size;
-  const isLoading = loadingCount > 0;
-  const isComplete = state.hasStarted && loadingCount === 0;
-
-  return {
-    completedCount,
-    loadingCount,
-    errorCount,
-    isLoading,
-    isComplete,
-  };
-}
-
-/**
- * Check if all expected states have loaded successfully.
- *
- * @param completedStates - Set of completed state codes
- * @param expectedCount - Expected number of states
- * @returns True if all states have completed
- */
-export function validateAllStatesLoaded(
-  completedStates: Set<string>,
-  expectedCount: number
-): boolean {
-  return completedStates.size >= expectedCount;
 }
