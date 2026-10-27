@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@test-utils';
+import { render, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import { clearMetadata, fetchMetadataThunk, metadataRequest } from '@/reducers/metadataReducer';
@@ -20,6 +20,13 @@ import {
 import { testQueryClient } from '@/tests/fixtures/hooks/v3MetadataWrapper';
 
 vi.mock('@/hooks/useCurrentCountry', () => ({ useCurrentCountry: vi.fn(() => 'uk') }));
+
+const mockDownloadCsv = vi.fn();
+
+vi.mock('@/utils/chartUtils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/utils/chartUtils')>()),
+  downloadCsv: (...args: unknown[]) => mockDownloadCsv(...args),
+}));
 
 /** v3 after the switch: V3_API_ROUTES is 'v2'. */
 vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
@@ -111,7 +118,8 @@ describe('EconomicImpactCharts for the UK with v3 on the v2 routes', () => {
     renderCharts();
 
     // Then
-    expect(programmeCsvButton()).toBeDisabled();
+    expect(programmeCsvButton()).toHaveAttribute('aria-disabled', 'true');
+    expect(programmeCsvButton()).toHaveAccessibleDescription('Loading programme names');
   });
 
   test('given the variables fail then the programme CSV stays unavailable', async () => {
@@ -123,7 +131,8 @@ describe('EconomicImpactCharts for the UK with v3 on the v2 routes', () => {
 
     // Then
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    expect(programmeCsvButton()).toBeDisabled();
+    expect(programmeCsvButton()).toHaveAttribute('aria-disabled', 'true');
+    expect(programmeCsvButton()).toHaveAccessibleDescription('Could not load the programme names');
   });
 
   test('given the variables arrive then the programme CSV can be downloaded', async () => {
@@ -131,6 +140,19 @@ describe('EconomicImpactCharts for the UK with v3 on the v2 routes', () => {
     renderCharts();
 
     // Then
-    await waitFor(() => expect(programmeCsvButton()).toBeEnabled());
+    await waitFor(() => expect(programmeCsvButton()).not.toHaveAttribute('aria-disabled'));
+  });
+
+  test('given the programme CSV unavailable then clicking it downloads nothing', async () => {
+    // Given
+    const user = userEvent.setup();
+    answerVariables = () => new Promise<Response>(() => {});
+    renderCharts();
+
+    // When
+    await user.click(programmeCsvButton());
+
+    // Then
+    expect(mockDownloadCsv).not.toHaveBeenCalled();
   });
 });
