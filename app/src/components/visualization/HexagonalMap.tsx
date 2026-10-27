@@ -565,6 +565,10 @@ export function HexagonalMap({
   );
   // The selected outline keeps its width in screen pixels at any zoom.
   const outlineEffect = zoomable ? 'non-scaling-stroke' : undefined;
+  // The hatching is drawn inside the zoomed layer, which scales it by the
+  // zoom; dividing by the zoom keeps the stripes as far apart on screen at
+  // every zoom level.
+  const patternSpacing = stripeSpacing / zoom.view.k;
 
   const showTooltip = (event: React.MouseEvent<SVGPolygonElement>, text: string) => {
     const rect = (event.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
@@ -579,15 +583,15 @@ export function HexagonalMap({
           <pattern
             id={hatchingId}
             patternUnits="userSpaceOnUse"
-            width={stripeSpacing}
-            height={stripeSpacing}
+            width={patternSpacing}
+            height={patternSpacing}
             patternTransform="rotate(45)"
           >
-            <rect width={stripeSpacing} height={stripeSpacing} fill={MISSING_AREA_GROUND_COLOR} />
+            <rect width={patternSpacing} height={patternSpacing} fill={MISSING_AREA_GROUND_COLOR} />
             <path
-              d={`M${stripeSpacing / 2} 0 V${stripeSpacing}`}
+              d={`M${patternSpacing / 2} 0 V${patternSpacing}`}
               stroke={MISSING_AREA_STRIPE_COLOR}
-              strokeWidth={stripeSpacing / 2}
+              strokeWidth={patternSpacing / 2}
             />
           </pattern>
         </defs>

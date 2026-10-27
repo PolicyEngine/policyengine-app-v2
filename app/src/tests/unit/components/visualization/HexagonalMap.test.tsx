@@ -2,6 +2,7 @@ import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import { HexagonalMap, zoomAbout } from '@/components/visualization/HexagonalMap';
 import {
+  FIXED_MAP_WIDTH,
   MIN_MISSING_AREA_STRIPE_PIXELS,
   MISSING_AREA_EDGE_COLOR,
   MISSING_FAR_EAST,
@@ -751,6 +752,31 @@ describe('HexagonalMap missing areas', () => {
     } finally {
       restoreWidth();
     }
+  });
+
+  test('given a zoomable map zoomed from 1 to 20 then the stripes keep their spacing on screen', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_UK_SHAPED_HEX_DATA}
+        config={TILED_CONFIG}
+        missingAreas={[MISSING_UK_SHAPED_AREA]}
+        zoomable
+      />
+    );
+    const spacingAtZoomOne = stripeSpacingOnScreen(container, FIXED_MAP_WIDTH);
+
+    // When: eight steps of 1.5 reach the zoom limit, 20
+    for (let step = 0; step < 8; step++) {
+      await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    }
+
+    // Then
+    expect(screen.getByTestId('hex-map-zoom-layer').getAttribute('transform')).toContain(
+      'scale(20)'
+    );
+    expect(stripeSpacingOnScreen(container, FIXED_MAP_WIDTH)).toBeCloseTo(spacingAtZoomOne, 6);
   });
 
   test('given no missing areas then the map draws no hatching', () => {

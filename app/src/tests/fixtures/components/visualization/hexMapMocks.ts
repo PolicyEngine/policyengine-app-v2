@@ -160,3 +160,6 @@ export function stripeSpacingOnScreen(container: HTMLElement, width: number): nu
   const zoom = Number(zoomLayer?.getAttribute('transform')?.match(/scale\(([^)]+)\)/)?.[1] ?? 1);
   return Number(pattern.getAttribute('width')) * Math.min(width / viewBoxWidth, 1) * zoom;
 }
+
+/** The hex map's viewBox width when it does not fill its frame, and so its width in jsdom. */
+export const FIXED_MAP_WIDTH = 600;
