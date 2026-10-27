@@ -3,7 +3,7 @@ import { ChartWatermark } from '@/components/charts';
 import { Button } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { HexMapConfig } from '@/types/visualization/HexMapConfig';
-import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
+import type { HexMapDataPoint, HexMapMissingArea } from '@/types/visualization/HexMapDataPoint';
 import { getColorScale, interpolateColor } from '@/utils/visualization/colorScales';
 import {
   applyHexagonalPositioning,
@@ -14,6 +14,17 @@ import {
 interface HexagonalMapProps {
   /** Array of data points to visualize */
   data: HexMapDataPoint[];
+
+  /**
+   * Opt-in: areas the map places but has no value for, e.g. ones disclosure
+   * control withheld. Each is drawn hatched, outside the colour scale, with
+   * a tooltip of its name and `missingAreaText`. They take no part in the
+   * colour range, and cannot be selected.
+   */
+  missingAreas?: HexMapMissingArea[];
+
+  /** What a missing area's tooltip reads after its name. Defaults to "No data". */
+  missingAreaText?: string;
 
   /** Configuration for the map */
   config?: Partial<HexMapConfig>;
@@ -286,6 +297,22 @@ const HEX_RADIUS = 0.55;
 /** The margin between the map's hexagons and its frame, in SVG units. */
 const MAP_MARGIN = 16;
 
+/** A map with no missing areas: one array, so memos keep their values. */
+const NO_MISSING_AREAS: HexMapMissingArea[] = [];
+
+/** What a missing area reads, unless the caller says why it has no value. */
+const DEFAULT_MISSING_AREA_TEXT = 'No data';
+
+/**
+ * A missing area's hatching: grey stripes on the map's background, which
+ * no colour on the scale resembles. The stripes repeat at half a hexagon's
+ * radius, so each hexagon shows a few at any size.
+ */
+const MISSING_AREA_GROUND_COLOR = colors.background.primary;
+const MISSING_AREA_STRIPE_COLOR = colors.gray[300];
+const MISSING_AREA_STRIPES_PER_RADIUS = 2;
+const MIN_MISSING_AREA_STRIPE_SPACING = 2;
+
 /** SVG polygon points for a pointy-topped hexagon centred at (cx, cy). */
 function hexPoints(cx: number, cy: number, size: number): string {
   const points: string[] = [];
@@ -339,6 +366,8 @@ function useElementWidth(element: Element | null, enabled: boolean): number | nu
 
 export function HexagonalMap({
   data,
+  missingAreas = NO_MISSING_AREAS,
+  missingAreaText = DEFAULT_MISSING_AREA_TEXT,
   config = {},
   exportRef,
   selectedId,
@@ -348,7 +377,9 @@ export function HexagonalMap({
   centered = false,
   fillWidth = false,
 }: HexagonalMapProps) {
-  const clipId = `hex-map-clip-${useId().replace(/:/g, '')}`;
+  const mapId = useId().replace(/:/g, '');
+  const clipId = `hex-map-clip-${mapId}`;
+  const hatchingId = `hex-map-missing-area-hatching-${mapId}`;
   const [tooltip, setTooltip] = useState<{
     text: string;
     x: number;
@@ -377,6 +408,11 @@ export function HexagonalMap({
     () => applyHexagonalPositioning(data).map((point) => ({ ...point, y: point.y * ROW_SPACING })),
     [data]
   );
+  const positionedMissingAreas = useMemo(
+    () =>
+      applyHexagonalPositioning(missingAreas).map((area) => ({ ...area, y: area.y * ROW_SPACING })),
+    [missingAreas]
+  );
 
   // The selected hexagon draws last, so no neighbour covers its outline.
   const drawOrder = useMemo(() => {
@@ -393,15 +429,17 @@ export function HexagonalMap({
     ? (positionedData.find((point) => point.id === selectedId) ?? null)
     : null;
 
-  // Calculate data bounds. A hexagon's size is a share of the scale, so the
-  // bounds take in each hexagon's edges, not only its centre: the map of a
-  // few areas, whose hexagons are large, then still fits its frame.
+  // Calculate data bounds, over the areas with values and without. A
+  // hexagon's size is a share of the scale, so the bounds take in each
+  // hexagon's edges, not only its centre: the map of a few areas, whose
+  // hexagons are large, then still fits its frame.
   const dataBounds = useMemo(() => {
-    if (positionedData.length === 0) {
+    const placed = [...positionedData, ...positionedMissingAreas];
+    if (placed.length === 0) {
       return { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
     }
-    const xs = positionedData.map((p) => p.x);
-    const ys = positionedData.map((p) => p.y);
+    const xs = placed.map((p) => p.x);
+    const ys = placed.map((p) => p.y);
     // A pointy-top hexagon reaches its radius up and down, and √3/2 of it sideways.
     const verticalReach = HEX_RADIUS;
     const horizontalReach = (HEX_RADIUS * Math.sqrt(3)) / 2;
@@ -411,9 +449,9 @@ export function HexagonalMap({
       yMin: Math.min(...ys) - verticalReach,
       yMax: Math.max(...ys) + verticalReach,
     };
-  }, [positionedData]);
+  }, [positionedData, positionedMissingAreas]);
 
-  // Calculate color range
+  // Calculate color range: from the areas with values alone
   const colorValues = positionedData.map((p) => p.value);
   const colorRange = useMemo(() => {
     if (colorValues.length === 0) {
@@ -448,6 +486,10 @@ export function HexagonalMap({
   const availH = height - padding * 2;
   const scale = Math.min(availW / dataWidth, availH / dataHeight);
   const hexPixelSize = scale * HEX_RADIUS;
+  const stripeSpacing = Math.max(
+    MIN_MISSING_AREA_STRIPE_SPACING,
+    hexPixelSize / MISSING_AREA_STRIPES_PER_RADIUS
+  );
 
   const formatTick = fullConfig.formatColorBarTick ?? defaultFormatTick;
   const ticks = colorBarTicks(colorRange.min, colorRange.max);
@@ -483,8 +525,45 @@ export function HexagonalMap({
   // The selected outline keeps its width in screen pixels at any zoom.
   const outlineEffect = zoomable ? 'non-scaling-stroke' : undefined;
 
+  const showTooltip = (event: React.MouseEvent<SVGPolygonElement>, text: string) => {
+    const rect = (event.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
+    setTooltip({ text, x: event.clientX - rect.left, y: event.clientY - rect.top - 10 });
+  };
+
   const mapLayer = (
     <>
+      {/* Areas without a value: hatched, outside the colour scale, and not selectable. */}
+      {positionedMissingAreas.length > 0 && (
+        <defs>
+          <pattern
+            id={hatchingId}
+            patternUnits="userSpaceOnUse"
+            width={stripeSpacing}
+            height={stripeSpacing}
+            patternTransform="rotate(45)"
+          >
+            <rect width={stripeSpacing} height={stripeSpacing} fill={MISSING_AREA_GROUND_COLOR} />
+            <path
+              d={`M${stripeSpacing / 2} 0 V${stripeSpacing}`}
+              stroke={MISSING_AREA_STRIPE_COLOR}
+              strokeWidth={stripeSpacing / 2}
+            />
+          </pattern>
+        </defs>
+      )}
+      {positionedMissingAreas.map((area) => (
+        <polygon
+          key={`missing-${area.id}`}
+          points={hexPoints(toSvgX(area.x), toSvgY(area.y), hexPixelSize)}
+          fill={`url(#${hatchingId})`}
+          stroke={colors.background.primary}
+          strokeWidth={0.5}
+          data-missing-area-id={area.id}
+          onMouseEnter={(event) => showTooltip(event, `${area.label}: ${missingAreaText}`)}
+          onMouseLeave={() => setTooltip(null)}
+        />
+      ))}
+
       {/* Hexagon data points */}
       {drawOrder.map((point) => {
         const cx = toSvgX(point.x);
@@ -505,16 +584,7 @@ export function HexagonalMap({
             onClick={onSelect ? () => onSelect(point.id) : undefined}
             data-area-id={onSelect ? point.id : undefined}
             data-selected={isSelected || undefined}
-            onMouseEnter={(e) => {
-              const rect = (
-                e.currentTarget.ownerSVGElement as SVGSVGElement
-              ).getBoundingClientRect();
-              setTooltip({
-                text: hoverText,
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top - 10,
-              });
-            }}
+            onMouseEnter={(event) => showTooltip(event, hoverText)}
             onMouseLeave={() => setTooltip(null)}
           />
         );

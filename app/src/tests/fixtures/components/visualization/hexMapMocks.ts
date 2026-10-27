@@ -1,4 +1,4 @@
-import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
+import type { HexMapDataPoint, HexMapMissingArea } from '@/types/visualization/HexMapDataPoint';
 
 export const WESTMINSTER_NORTH: HexMapDataPoint = {
   id: 'westminster-north',
@@ -81,3 +81,25 @@ export const MOCK_TILED_HEX_DATA: HexMapDataPoint[] = [
   { id: 'east', label: 'East', value: 20, x: 1, y: 0 },
   { id: 'north', label: 'North', value: 30, x: 0, y: 1 },
 ];
+
+/** An area without a value, in the next row up from MOCK_TILED_HEX_DATA's, beside North. */
+export const MISSING_NORTH_EAST: HexMapMissingArea = {
+  id: 'north-east',
+  label: 'North East',
+  x: 1,
+  y: 1,
+};
+
+/**
+ * An area without a value, twenty columns east of MOCK_TILED_HEX_DATA's:
+ * a map that fits only its valued areas would draw it outside its frame.
+ */
+export const MISSING_FAR_EAST: HexMapMissingArea = {
+  id: 'far-east',
+  label: 'Far East',
+  x: 20,
+  y: 0,
+};
+
+/** The text a missing area's tooltip reads when the caller says why it has no value. */
+export const NOT_REPORTED_TEXT = 'Not reported';
