@@ -8,9 +8,14 @@ import { CountryProvider } from '@/contexts/CountryContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
+import type { CountryId } from '@/libs/countries';
 import { flagshipReportQueryKeys, type RunReportProvision } from '@/libs/flagship/runReport';
 import { store } from '@/store';
-import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import {
+  seedDeductionMetadata,
+  seedModelYears,
+} from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { UK_PERSONAL_ALLOWANCE_PROVISION } from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
 import {
   EARLIER_REPORT_ID,
   EARLIER_REPORTS,
@@ -25,6 +30,11 @@ import {
   makeAuthValue,
   signedInAuthValue,
 } from '@/tests/fixtures/libs/auth/authMocks';
+import {
+  UK_FIRST_SUPPORTED_YEAR,
+  UK_LAST_SUPPORTED_YEAR,
+  UK_REPORT_START_YEAR,
+} from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
 
 const mockRunFlagshipReport = vi.fn();
 const mockFindMine = vi.fn();
@@ -48,12 +58,12 @@ const PROVISIONS: RunReportProvision[] = [
 /** The scope a session with sign-in off keeps its saved work under. */
 const BROWSER_SCOPE = 'browser';
 
-function renderRunWithAuth(auth: AuthContextValue, push = vi.fn()) {
+function renderRunWithAuth(auth: AuthContextValue, push = vi.fn(), countryId: CountryId = 'us') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <ReduxProvider store={store}>
-        <CountryProvider value="us">
+        <CountryProvider value={countryId}>
           <AuthTestProvider value={auth}>
             <NavigationProvider value={{ push, replace: vi.fn(), back: vi.fn() }}>
               {children}
@@ -126,6 +136,33 @@ describe('useRunFlagshipReport', () => {
 
       // Then
       expect(push).toHaveBeenCalledWith(`/us/report/${reportRowId}`);
+    });
+  });
+
+  describe('the years a run asks for', () => {
+    test('given a window past the last year the model covers then the run scores only the years up to it', async () => {
+      // Given: the UK model covers 2024 to 2032, and a run asks for ten years from 2026
+      seedModelYears({
+        countryId: 'uk',
+        firstYear: UK_FIRST_SUPPORTED_YEAR,
+        lastYear: UK_LAST_SUPPORTED_YEAR,
+      });
+      const { result } = renderRunWithAuth(makeAuthValue({ status: 'disabled' }), vi.fn(), 'uk');
+
+      // When
+      await act(() =>
+        result.current.run(
+          'Higher personal allowance',
+          'Hand-built',
+          [UK_PERSONAL_ALLOWANCE_PROVISION],
+          null,
+          UK_REPORT_START_YEAR,
+          { windowYears: 10 }
+        )
+      );
+
+      // Then: 2026 to 2032
+      expect(runArguments().windowYears).toBe(7);
     });
   });
 
