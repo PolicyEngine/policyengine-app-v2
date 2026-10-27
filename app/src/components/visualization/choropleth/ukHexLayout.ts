@@ -119,3 +119,33 @@ export function withheldUKHexAreas(
         : [];
     });
 }
+
+/** A level's hex map: its result's areas, placed, and the areas drawn as withheld. */
+export interface UKHexMap extends UKHexMapPlacement {
+  /**
+   * The region's areas the result leaves out, which the map draws as not
+   * reported: only for a disclosure-controlled level, on the tiled grid.
+   */
+  withheldAreas: HexMapMissingArea[];
+}
+
+/**
+ * A level's hex map, as v2's charts and v3's local-area map draw it: the
+ * result's areas placed from the layout, all or none (placeOnUKHexLayout),
+ * and, for a level from a disclosure-controlled breakdown, the region's
+ * areas the result leaves out (withheldUKHexAreas). Withheld areas are
+ * listed only when the map is tiled: a result that keeps its own positions
+ * cannot be matched to the layout. A saved level has none.
+ */
+export function placeUKHexMap(
+  level: UKBoundaryLevel,
+  points: HexMapDataPoint[],
+  { disclosureControlled, region }: { disclosureControlled: boolean; region?: string | null }
+): UKHexMap {
+  const placement = placeOnUKHexLayout(level, points);
+  return {
+    ...placement,
+    withheldAreas:
+      disclosureControlled && placement.tiled ? withheldUKHexAreas(level, points, region) : [],
+  };
+}

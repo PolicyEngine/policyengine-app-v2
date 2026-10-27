@@ -14,10 +14,7 @@ import {
   ukNationFromRegion,
   type MapVisualizationType,
 } from '@/components/visualization/choropleth';
-import {
-  placeOnUKHexLayout,
-  withheldUKHexAreas,
-} from '@/components/visualization/choropleth/ukHexLayout';
+import { placeUKHexMap } from '@/components/visualization/choropleth/ukHexLayout';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -50,17 +47,12 @@ export function RelativeChangeByConstituency({
   const areas = (output as ReportOutputSocietyWideUK).constituency_impact?.by_constituency;
   // One point per area, for the geographic and hex maps alike
   const mapData = useMemo(() => (areas ? transformConstituencyRelativeChange(areas) : []), [areas]);
-  // The hex map places each constituency by its code in the app's layout, as v3's does.
-  const hexMap = useMemo(() => placeOnUKHexLayout('constituency', mapData), [mapData]);
-  // The constituencies a breakdown leaves out are the ones disclosure control
-  // withheld: the hex map draws each in its place, as not reported,
-  // on the tiled grid only.
-  const withheldHexAreas = useMemo(
-    () =>
-      withheld === undefined || !hexMap.tiled
-        ? []
-        : withheldUKHexAreas('constituency', mapData, region),
-    [withheld, hexMap.tiled, mapData, region]
+  // The hex map places each constituency by its code in the app's layout, as v3's
+  // does, and draws the ones a breakdown withheld as not reported.
+  const disclosureControlled = withheld !== undefined;
+  const hexMap = useMemo(
+    () => placeUKHexMap('constituency', mapData, { disclosureControlled, region }),
+    [mapData, disclosureControlled, region]
   );
   const notes = <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />;
 
@@ -109,7 +101,7 @@ export function RelativeChangeByConstituency({
       ) : (
         <HexagonalMap
           data={hexMap.points}
-          missingAreas={withheldHexAreas}
+          missingAreas={hexMap.withheldAreas}
           missingAreaText={UK_WITHHELD_AREA_TEXT}
           config={{
             tiled: hexMap.tiled,
