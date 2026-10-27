@@ -119,9 +119,8 @@ describe("Deployments developer tool", () => {
     expect(within(newestRow).getByText("3.33.13")).toBeInTheDocument();
     // The overview shows lock and served values where they drift.
     const overviewApi = screen.getByText("PolicyEngine API").closest("tr")!;
-    expect(
-      within(overviewApi).getByText("Differs from main"),
-    ).toBeInTheDocument();
+    expect(within(overviewApi).getByText("main")).toBeInTheDocument();
+    expect(within(overviewApi).getByText("live")).toBeInTheDocument();
     expect(within(overviewApi).getByText("6.11.1")).toBeInTheDocument();
     expect(within(overviewApi).getByText("6.10.0")).toBeInTheDocument();
     const overviewHousehold = screen.getByText("Household API").closest("tr")!;
@@ -129,15 +128,9 @@ describe("Deployments developer tool", () => {
     expect(within(overviewHousehold).getByText("current")).toBeInTheDocument();
     expect(within(overviewHousehold).getByText("frontier")).toBeInTheDocument();
     expect(within(overviewHousehold).getByText("2.42.4")).toBeInTheDocument();
-    expect(
-      within(overviewHousehold).getByText("No dataset"),
-    ).toBeInTheDocument();
-
-    // The status explains itself on hover.
-    expect(within(overviewApi).getByText("Differs from main")).toHaveAttribute(
-      "title",
-      "Live differs from main: it serves .py 6.10.0, but the lock on main declares 6.11.1.",
-    );
+    // The status columns are gone.
+    expect(screen.queryByText("Differs from main")).toBeNull();
+    expect(screen.queryByText("No dataset")).toBeNull();
     expect(global.fetch).toHaveBeenCalledWith("/api/deployments?country=us");
   });
 

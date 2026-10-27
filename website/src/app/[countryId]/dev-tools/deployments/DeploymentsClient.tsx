@@ -14,38 +14,8 @@ import {
   shortBuildId,
   type DeploymentCountry,
   type DeploymentRow,
-  type DeploymentStatus,
   type DeploymentsResponse,
-  type ServedStatus,
 } from "@/lib/deployments";
-
-type Tone = "success" | "warning" | "danger" | "neutral";
-
-const TONES: Record<Tone, { bg: string; text: string }> = {
-  success: { bg: colors.primary[50], text: colors.primary[700] },
-  warning: { bg: "#FEF9E7", text: "#92400E" },
-  danger: { bg: "#FEF2F2", text: "#991B1B" },
-  neutral: { bg: colors.gray[100], text: colors.gray[700] },
-};
-
-const DECLARED: Record<DeploymentStatus, { label: string; tone: Tone }> = {
-  current: { label: "Latest data", tone: "success" },
-  behind: { label: "Older data", tone: "warning" },
-  model_mismatch: { label: "Model mismatch", tone: "danger" },
-  no_bundle: { label: "No certified data", tone: "danger" },
-  no_py: { label: "No .py", tone: "warning" },
-  not_in_bundle: { label: "Country not in bundle", tone: "neutral" },
-  no_dataset: { label: "No dataset", tone: "neutral" },
-  unavailable: { label: "Lock unavailable", tone: "neutral" },
-};
-
-const SERVED: Record<ServedStatus, { label: string; tone: Tone }> = {
-  matches: { label: "Same as main", tone: "success" },
-  differs: { label: "Differs from main", tone: "danger" },
-  no_worker: { label: "No worker", tone: "danger" },
-  unavailable: { label: "Report unavailable", tone: "warning" },
-  not_reported: { label: "Not reported", tone: "neutral" },
-};
 
 const COUNTRY_LABELS: Record<DeploymentCountry, string> = {
   us: "United States",
@@ -77,30 +47,6 @@ const sectionStyle = {
   paddingLeft: "6.125%",
   paddingRight: "6.125%",
 };
-
-function Pill({
-  label,
-  tone,
-  title,
-}: {
-  label: string;
-  tone: Tone;
-  title?: string;
-}) {
-  return (
-    <span
-      className="tw:inline-flex tw:items-center tw:rounded-full tw:px-2 tw:py-0.5 tw:text-xs tw:font-medium tw:whitespace-nowrap"
-      style={{
-        backgroundColor: TONES[tone].bg,
-        color: TONES[tone].text,
-        cursor: title ? "help" : undefined,
-      }}
-      title={title}
-    >
-      {label}
-    </span>
-  );
-}
 
 function ExternalLink({
   href,
@@ -177,8 +123,6 @@ const labelStyle = {
 interface DriftLine {
   label: string;
   value: string;
-  // True for a value that differs from the lock on main.
-  drift: boolean;
 }
 
 // One overview value: the declared value, or labeled lines ("main" and
@@ -218,30 +162,20 @@ function DriftValue({
     ? lines
     : drifted
       ? [
-          { label: "main", value: declared, drift: false },
-          { label: "live", value: served, drift: true },
+          { label: "main", value: declared },
+          { label: "live", value: served },
         ]
       : null;
   if (shown) {
     return (
-      <dl className="tw:grid tw:grid-cols-[max-content_auto] tw:gap-x-2 tw:gap-y-0.5">
+      // Labels and values share the table's font and baseline.
+      <dl className="tw:grid tw:grid-cols-[max-content_auto] tw:items-baseline tw:gap-x-3 tw:gap-y-1">
         {shown.map((line) => (
           <div key={line.label} className="tw:contents">
-            <dt
-              style={{
-                fontSize: typography.fontSize.xs,
-                color: colors.text.secondary,
-              }}
-            >
+            <dt style={{ ...mono, color: colors.text.secondary }}>
               {line.label}
             </dt>
-            <dd
-              style={{
-                color: line.drift ? TONES.danger.text : colors.text.primary,
-              }}
-            >
-              {show(line.value)}
-            </dd>
+            <dd>{show(line.value)}</dd>
           </div>
         ))}
       </dl>
@@ -263,7 +197,6 @@ function channelLines(row: DeploymentRow): DriftLine[] | undefined {
   return channels.map((channel) => ({
     label: channel.name,
     value: channel.model_version,
-    drift: channel.model_version !== row.model_version,
   }));
 }
 
@@ -296,8 +229,6 @@ function Overview({
             }}
           >
             <th className={`${head} tw:w-[12rem]`}>Service</th>
-            <th className={head}>Live vs main</th>
-            <th className={head}>Vs latest .py</th>
             <th className={head}>.py</th>
             <th className={head}>{modelLabel}</th>
             <th className={`${head} tw:min-w-[12rem]`}>Data build</th>
@@ -354,15 +285,6 @@ function Overview({
                   </div>
                 </td>
                 <td className={cell}>
-                  <Pill
-                    {...SERVED[row.served.status]}
-                    title={row.served.detail}
-                  />
-                </td>
-                <td className={cell}>
-                  <Pill {...DECLARED[row.status]} title={row.detail} />
-                </td>
-                <td className={cell}>
                   <DriftValue
                     declared={row.py_version}
                     served={row.served.py_version}
@@ -379,7 +301,7 @@ function Overview({
                 </td>
                 <td className={cell}>
                   {noWorker ? (
-                    <span style={{ color: TONES.danger.text }}>
+                    <span>
                       No gateway worker for .py {row.served.py_version}
                     </span>
                   ) : (
