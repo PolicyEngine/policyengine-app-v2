@@ -249,12 +249,18 @@ export interface FakeStateApi {
   reportWrites: () => RecordedRequest[];
   /** The base report ID the Public API gives a state. */
   reportIdFor: (region: string) => number;
+  /** The simulation ID the Public API gives a state's baseline or reform. */
+  simulationIdFor: (region: string, policy: 'baseline' | 'reform') => number;
   /** The most requests in flight at once so far. */
   maxInFlight: () => number;
   /** Lets record requests fail, or succeed again, by state. */
   setFailingRecords: (regions: string[]) => void;
   /** Sends the economy responses held so far, and holds no more. */
   releaseEconomy: () => void;
+  /** Holds these states' simulation requests until `releaseRecords()`. */
+  holdRecords: (regions: string[]) => void;
+  /** Sends the simulation responses held so far, and holds no more. */
+  releaseRecords: () => void;
 }
 
 function ok(result: unknown): Response {
@@ -275,18 +281,26 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
   let inFlight = 0;
   let maxInFlight = 0;
   let holdEconomy = options.holdEconomy ?? false;
+  let heldRecordStates = new Set<string>();
+  const heldRecords: Array<() => void> = [];
   const heldEconomy: Array<() => void> = [];
 
   const reportIdFor = (region: string) => 5000 + ALL_US_STATE_CODES.indexOf(region);
+  const simulationIdFor = (region: string, policy: 'baseline' | 'reform') =>
+    1000 + ALL_US_STATE_CODES.indexOf(region) * 10 + (policy === 'baseline' ? 1 : 2);
 
   const respond = async (method: string, url: string, body: any): Promise<Response> => {
     if (url.startsWith(`${BASE_URL}/us/simulation`) && method === 'POST') {
+      if (heldRecordStates.has(body.population_id)) {
+        await new Promise<void>((release) => heldRecords.push(release));
+      }
       if (failingRecords.has(body.population_id)) {
         return new Response('Service unavailable', { status: 503 });
       }
-      const index = ALL_US_STATE_CODES.indexOf(body.population_id);
-      const simulationId =
-        1000 + index * 10 + (String(body.policy_id) === STATE_RUNS_BASELINE_POLICY_ID ? 1 : 2);
+      const simulationId = simulationIdFor(
+        body.population_id,
+        String(body.policy_id) === STATE_RUNS_BASELINE_POLICY_ID ? 'baseline' : 'reform'
+      );
       simulationRegions.set(simulationId, body.population_id);
       return ok({ id: simulationId });
     }
@@ -366,9 +380,17 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
         (request) => request.url === `${BASE_URL}/us/report` && request.method === 'PATCH'
       ),
     reportIdFor,
+    simulationIdFor,
     maxInFlight: () => maxInFlight,
     setFailingRecords: (regions) => {
       failingRecords = new Set(regions);
+    },
+    holdRecords: (regions) => {
+      heldRecordStates = new Set(regions);
+    },
+    releaseRecords: () => {
+      heldRecordStates = new Set();
+      heldRecords.splice(0).forEach((release) => release());
     },
     releaseEconomy: () => {
       holdEconomy = false;

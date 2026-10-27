@@ -7,6 +7,7 @@ import { clockProgress } from '@/components/flagship/report/RunProgress';
 import { useRegions } from '@/hooks/useRegions';
 import { useStateDistrictRuns } from '@/hooks/useStateDistrictRuns';
 import { MAX_FAILED_POLLS } from '@/libs/calculations/polledRun';
+import { reportKeys } from '@/libs/queryKeys';
 import { ALL_US_STATE_CODES } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 import {
   allStatesComplete,
@@ -369,6 +370,30 @@ describe('useStateDistrictRuns compute', () => {
     );
   });
 
+  test('given a state result written then the report cache holds the whole base report, with its simulations', async () => {
+    // Given
+    serveApi({ economy: economyWhere({ [UTAH]: () => stateOk(UTAH) }, () => STATE_COMPUTING) });
+    const queryClient = createQueryClient();
+
+    // When
+    await computeAll(STATE_RUNS_REQUEST, queryClient);
+
+    // Then
+    await waitFor(() => expect(api.reportWrites()).toHaveLength(1));
+    const reportId = String(api.reportIdFor(UTAH));
+    await waitFor(() =>
+      expect(queryClient.getQueryData(reportKeys.byId(reportId))).toMatchObject({
+        id: reportId,
+        status: 'complete',
+        year: STATE_RUNS_YEAR,
+        simulationIds: [
+          String(api.simulationIdFor(UTAH, 'baseline')),
+          String(api.simulationIdFor(UTAH, 'reform')),
+        ],
+      })
+    );
+  });
+
   test('given a base report already complete without districts then its run is not written over it', async () => {
     // Given
     serveApi({
@@ -546,6 +571,27 @@ describe('useStateDistrictRuns compute', () => {
     expect(api.economyRequests().slice(requestsBefore)).toEqual([stateEconomyUrl(TEXAS)]);
     expect(result.current.status).toBe('partial');
     expect(result.current.canRetry).toBe(false);
+  });
+
+  test('given a state whose records failed then Retry asks for them again, the state waits meanwhile, and then it runs', async () => {
+    // Given
+    serveApi({ failingRecords: [OHIO], economy: (region) => stateOk(region) });
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.failedStates).toEqual([OHIO]);
+    api.setFailingRecords([]);
+    api.holdRecords([OHIO]);
+
+    // When
+    act(() => result.current.retry());
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('computing'));
+    expect(result.current.failedStates).toEqual([]);
+    expect(result.current.pendingStates).toEqual([OHIO]);
+    api.releaseRecords();
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    expect(api.economyRequestsFor(OHIO)).toEqual([stateEconomyUrl(OHIO)]);
   });
 
   test('given a result whose districts are null then the state is settled as failed, not pending', async () => {

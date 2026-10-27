@@ -17,6 +17,7 @@ import { useRegions } from '@/hooks/useRegions';
 import { pollRun, type PolledRun, type PollRunOptions } from '@/libs/calculations/polledRun';
 import { ResultPersister } from '@/libs/calculations/ResultPersister';
 import { createReportRecords } from '@/libs/flagship/runReport';
+import { reportKeys } from '@/libs/queryKeys';
 import type { EconomyOutput, Report } from '@/types/ingredients/Report';
 import type { USCongressionalDistrictBreakdownItem } from '@/types/metadata/ReportOutputSocietyWideByCongressionalDistrict';
 import { createConcurrencyLimit, type ConcurrencyLimit } from '@/utils/concurrencyLimit';
@@ -53,6 +54,8 @@ export interface StateDistrictRecords {
   reportStatus: Report['status'];
   /** The base report's districts, only when it is complete and holds them. */
   districts: District[] | null;
+  /** The base report as found, without its output, for the write to start from. */
+  baseReport: Report;
 }
 
 /** A state's run as the query cache holds it: its districts once complete, or null. */
@@ -195,6 +198,7 @@ async function lookUpStateRecords(
       report.status === 'complete'
         ? districtsOf(report.output as EconomyOutput | null | undefined)
         : null,
+    baseReport: { ...report, output: null },
   };
 }
 
@@ -214,10 +218,17 @@ const STATE_RUN_POLL_OPTIONS: PollRunOptions<SocietyWideReportOutput, SocietyWid
  */
 async function saveStateResult(
   queryClient: QueryClient,
-  reportId: string,
+  records: StateDistrictRecords,
   run: PolledRun<SocietyWideReportOutput>,
   year: string
 ): Promise<void> {
+  const reportId = records.reportId;
+  // The write starts from the cached report and caches the result under the
+  // base report's ID, where a report page opening it reads: start from the
+  // whole report, with its simulations, rather than an empty one.
+  if (!queryClient.getQueryData<Report>(reportKeys.byId(reportId))) {
+    queryClient.setQueryData(reportKeys.byId(reportId), records.baseReport);
+  }
   try {
     await new ResultPersister(queryClient).persist(
       {
@@ -267,7 +278,7 @@ async function pollStateRun(
     );
   }, signal);
   if (run.status === 'complete' && records.reportStatus !== 'complete') {
-    void saveStateResult(queryClient, records.reportId, run, year);
+    void saveStateResult(queryClient, records, run, year);
   }
   return { ...run, result: run.status === 'complete' ? districtsOf(run.result) : null };
 }
