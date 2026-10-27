@@ -76,3 +76,10 @@ export const WELSH_CONSTITUENCY_POINTS: UKAreaChoroplethDataPoint[] = [
   { id: 'Monmouthshire', label: 'Monmouthshire', value: -90.78, code: 'W07000101' },
   { id: 'Gower', label: 'Gower', value: 237.22, code: 'W07000097' },
 ];
+
+/** Wales's local authorities in the layout, by code prefix. */
+export const WELSH_LOCAL_AUTHORITY_COUNT = 22;
+
+/** Swansea, a Welsh local authority, and its name in the boundary file. */
+export const SWANSEA_CODE = 'W06000011';
+export const SWANSEA_NAME = 'Swansea';

@@ -17,6 +17,11 @@ import {
   NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import {
+  SWANSEA_CODE,
+  SWANSEA_NAME,
+  WELSH_LOCAL_AUTHORITY_COUNT,
+} from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
+import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_DATA,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
   MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
@@ -264,5 +269,72 @@ describe('AbsoluteChangeByLocalAuthority disclosure control', () => {
 
     // Then
     expect(screen.getByRole('tooltip')).toHaveTextContent(`Hartlepool${NOT_REPORTED_TEXT}`);
+  });
+});
+
+describe('AbsoluteChangeByLocalAuthority withheld areas on the hex map', () => {
+  /** The chart's hex map, with the hex grid chosen. */
+  async function renderHexMap(props: Parameters<typeof AbsoluteChangeByLocalAuthority>[0]) {
+    const user = userEvent.setup();
+    const { container } = render(<AbsoluteChangeByLocalAuthority {...props} />);
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
+    return { container, user };
+  }
+
+  /** The hexagons of areas the result leaves out, which have no value. */
+  function withheldHexagons(container: HTMLElement): Element[] {
+    return [...container.querySelectorAll('[data-missing-area-id]')];
+  }
+
+  test('given withheld local authorities then the hex map draws every Welsh local authority, the withheld ones without a value', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: SOME_WITHHELD_LOCAL_AUTHORITIES,
+    });
+
+    // Then: Cardiff and Powys with results, and Wales's other 20 withheld
+    expect(v2Hexagons(container).length).toBe(WELSH_LOCAL_AUTHORITY_COUNT);
+    expect(withheldHexagons(container).length).toBe(WELSH_LOCAL_AUTHORITY_COUNT - 2);
+  });
+
+  test('given a withheld hexagon hovered then its tooltip names it and reads not reported', async () => {
+    // Given
+    const { container, user } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+      withheld: SOME_WITHHELD_LOCAL_AUTHORITIES,
+    });
+
+    // When
+    await user.hover(container.querySelector(`[data-missing-area-id="${SWANSEA_CODE}"]`)!);
+
+    // Then
+    expect(screen.getByText(`${SWANSEA_NAME}: ${NOT_REPORTED_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given a saved result then the hex map draws only its areas, with no withheld ones', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: UK_LOCAL_AREAS_OUTPUT,
+      region: WALES_REGION,
+    });
+
+    // Then
+    expect(v2Hexagons(container)).toHaveLength(2);
+    expect(withheldHexagons(container).length).toBe(0);
+  });
+
+  test('given withheld local authorities on pre-2023 codes then the hex map draws no withheld areas', async () => {
+    // When
+    const { container } = await renderHexMap({
+      output: MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
+      withheld: SOME_WITHHELD_LOCAL_AUTHORITIES,
+    });
+
+    // Then
+    expect(withheldHexagons(container).length).toBe(0);
   });
 });
