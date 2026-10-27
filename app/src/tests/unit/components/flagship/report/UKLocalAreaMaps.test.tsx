@@ -29,7 +29,7 @@ import {
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
   MONMOUTHSHIRE_CODE,
-  NOT_PUBLISHED_TEXT,
+  NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import {
@@ -452,7 +452,7 @@ describe('UKLocalAreaMaps geographic map', () => {
     expect(await boundary(MONMOUTHSHIRE_CODE)).toHaveAttribute('data-selected', 'true');
   });
 
-  test('given a breakdown that withheld an area then its boundary reads not published', async () => {
+  test('given a breakdown that withheld an area then its boundary reads not reported', async () => {
     // Given
     render(
       <UKLocalAreaMaps
@@ -472,7 +472,7 @@ describe('UKLocalAreaMaps geographic map', () => {
     // Then
     const tooltip = screen.getByRole('tooltip');
     expect(within(tooltip).getByText('Cardiff East')).toBeInTheDocument();
-    expect(within(tooltip).getByText(NOT_PUBLISHED_TEXT)).toBeInTheDocument();
+    expect(within(tooltip).getByText(NOT_REPORTED_TEXT)).toBeInTheDocument();
   });
 
   test('given a saved result without an area then its boundary reads no data, not withheld', async () => {
@@ -641,7 +641,7 @@ describe('UKLocalAreaMaps disclosure-controlled areas', () => {
   const approximateConstituency =
     NORMALIZED_BREAKDOWN.constituency_impact.by_constituency['East Kilbride and Strathaven'];
 
-  test('given withheld areas then each map says how many of its areas were not published', async () => {
+  test('given withheld areas then each map says how many of its areas were not reported', async () => {
     const user = userEvent.setup();
     render(
       <UKLocalAreaMaps
@@ -655,11 +655,11 @@ describe('UKLocalAreaMaps disclosure-controlled areas', () => {
       'uk'
     );
 
-    expect(screen.getByText(/^12 of 650 constituencies are not published\./)).toBeInTheDocument();
+    expect(screen.getByText(/^12 of 650 constituencies are not reported\./)).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
 
-    expect(screen.getByText(/^2 of 361 local authorities are not published\./)).toBeInTheDocument();
+    expect(screen.getByText(/^2 of 361 local authorities are not reported\./)).toBeInTheDocument();
   });
 
   test('given local authorities that cannot be counted then the map says why areas may be missing, with no count', async () => {
@@ -695,7 +695,7 @@ describe('UKLocalAreaMaps disclosure-controlled areas', () => {
       'uk'
     );
 
-    expect(screen.getByText(/^650 of 650 constituencies are not published\./)).toBeInTheDocument();
+    expect(screen.getByText(/^650 of 650 constituencies are not reported\./)).toBeInTheDocument();
   });
 
   test('given an approximate area then the map notes it and its details mark it with its 90% ranges', async () => {

@@ -166,7 +166,7 @@ describe('LocalAuthoritySubPage', () => {
       ).toBeInTheDocument();
     });
 
-    test('given the areas computed for a UK-wide report then the charts say how many local authorities were not published', async () => {
+    test('given the areas computed for a UK-wide report then the charts say how many local authorities were not reported', async () => {
       // Given
       const user = userEvent.setup();
       mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
@@ -182,7 +182,7 @@ describe('LocalAuthoritySubPage', () => {
 
       // Then
       expect(
-        await screen.findByText(/^2 of 3 local authorities are not published\./)
+        await screen.findByText(/^2 of 3 local authorities are not reported\./)
       ).toBeInTheDocument();
     });
 
@@ -205,7 +205,7 @@ describe('LocalAuthoritySubPage', () => {
       // Then
       expect(
         await screen.findByText(
-          /^Local authorities whose estimates fail the survey data’s disclosure rules are not published\./
+          /^Local authorities whose estimates fail the survey data’s disclosure rules are not reported\./
         )
       ).toBeInTheDocument();
     });

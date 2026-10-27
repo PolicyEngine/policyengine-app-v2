@@ -112,7 +112,7 @@ describe('ConstituencySubPage', () => {
     expect(screen.getByText(NOT_AVAILABLE)).toBeInTheDocument();
   });
 
-  test('given the areas computed for a UK-wide report then the charts say how many constituencies were not published', async () => {
+  test('given the areas computed for a UK-wide report then the charts say how many constituencies were not reported', async () => {
     // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
@@ -128,7 +128,7 @@ describe('ConstituencySubPage', () => {
 
     // Then
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not published\./)
+      await screen.findByText(/^2 of 3 constituencies are not reported\./)
     ).toBeInTheDocument();
     expect(screen.getByText(/^1 constituency is approximate:/)).toBeInTheDocument();
   });

@@ -89,7 +89,7 @@ export function RelativeChangeByConstituency({
           focusNation={ukNationFromRegion(region)}
           exportRef={mapRef}
           // A breakdown's missing areas are the ones disclosure control withheld.
-          missingAreaText={withheld === undefined ? undefined : 'Not published'}
+          missingAreaText={withheld === undefined ? undefined : 'Not reported'}
         />
       ) : (
         <HexagonalMap

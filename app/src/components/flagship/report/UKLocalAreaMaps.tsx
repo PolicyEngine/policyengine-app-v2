@@ -389,7 +389,7 @@ export default function UKLocalAreaMaps({
                 focusNation={ukNationFromRegion(region)}
                 exportRef={mapRef}
                 // A breakdown's missing areas are the ones disclosure control withheld.
-                missingAreaText={withheld ? 'Not published' : undefined}
+                missingAreaText={withheld ? 'Not reported' : undefined}
                 navigable
                 selectedId={selectedArea ? selectedName : null}
                 onAreaClick={toggleSelected}

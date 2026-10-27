@@ -16,7 +16,7 @@ import {
   GOWER_CODE,
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
-  NOT_PUBLISHED_TEXT,
+  NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import {
   MOCK_UK_REPORT_OUTPUT,
@@ -102,7 +102,7 @@ describe('AbsoluteChangeByConstituency', () => {
     expect(screen.getByText('No constituency data available')).toBeInTheDocument();
   });
 
-  test('given withheld constituencies then the chart says how many were not published', async () => {
+  test('given withheld constituencies then the chart says how many were not reported', async () => {
     // When
     render(
       <AbsoluteChangeByConstituency
@@ -112,7 +112,7 @@ describe('AbsoluteChangeByConstituency', () => {
     );
 
     // Then
-    expect(screen.getByText(/^12 of 650 constituencies are not published\./)).toBeInTheDocument();
+    expect(screen.getByText(/^12 of 650 constituencies are not reported\./)).toBeInTheDocument();
 
     // The geographic map has loaded its boundaries.
     expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
@@ -123,7 +123,7 @@ describe('AbsoluteChangeByConstituency', () => {
     render(<AbsoluteChangeByConstituency output={MOCK_UK_REPORT_OUTPUT} />);
 
     // Then
-    expect(screen.queryByText(/not published/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/not reported/)).not.toBeInTheDocument();
 
     // The geographic map has loaded its boundaries.
     expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe('AbsoluteChangeByConstituency map type', () => {
     expect(screen.queryByTestId(`area-${ALDERSHOT_CODE}`)).not.toBeInTheDocument();
   });
 
-  test('given withheld constituencies then a boundary without a result reads not published', async () => {
+  test('given withheld constituencies then a boundary without a result reads not reported', async () => {
     // Given
     const user = userEvent.setup();
     render(
@@ -179,7 +179,7 @@ describe('AbsoluteChangeByConstituency map type', () => {
     await user.hover(await screen.findByTestId(`area-${CARDIFF_EAST_CODE}`));
 
     // Then
-    expect(screen.getByRole('tooltip')).toHaveTextContent(`Cardiff East${NOT_PUBLISHED_TEXT}`);
+    expect(screen.getByRole('tooltip')).toHaveTextContent(`Cardiff East${NOT_REPORTED_TEXT}`);
   });
 });
 
