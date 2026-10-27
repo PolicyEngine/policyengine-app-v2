@@ -81,9 +81,10 @@ export const RATING_AREA_VARIABLE = variable('medicaid_rating_area', {
   hidden_input: true,
 });
 
+/** As the catalog publishes an enum: data type "str", with its values. */
 export const FILING_STATUS_VARIABLE = variable('filing_status', {
   label: 'Filing status',
-  data_type: 'Enum',
+  data_type: 'str',
   default_value: 'SINGLE',
   possible_values: ['SINGLE', 'JOINT'],
   is_input_variable: true,
