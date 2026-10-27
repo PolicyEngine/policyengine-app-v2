@@ -251,6 +251,9 @@ export default function AskPage() {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    // The turn this question starts: work that finishes after another
+    // question (the reform's draft step) still belongs to it.
+    const turnIndex = turns.length;
 
     const history: AskChatMessage[] = turns.flatMap((turn) => {
       const messages: AskChatMessage[] = [{ role: 'user', content: turn.question }];
@@ -303,7 +306,7 @@ export default function AskPage() {
         onToolUse: ({ toolName, toolInput }) => {
           const reform = reformFromToolInput(toolName, toolInput);
           if (reform) {
-            void bridgeChatReform(reform, patchLastChat);
+            void bridgeChatReform(reform, patchChatAt(turnIndex));
           }
         },
         onSuggestions: (suggestions) => patchLastChat((chat) => ({ ...chat, suggestions })),
