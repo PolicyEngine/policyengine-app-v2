@@ -54,3 +54,25 @@ export const ALLERDALE_POINT: UKAreaChoroplethDataPoint = {
   value: -15,
   code: ALLERDALE_CODE,
 };
+
+/** Report regions: the UK, a nation, and one constituency, which has no local-area maps. */
+export const UK_WIDE_REGION = 'uk';
+export const WALES_REGION = 'country/wales';
+export const CONSTITUENCY_REGION = 'constituency/Aldershot';
+
+/** Wales's constituencies in the layout, by code prefix. */
+export const WELSH_CONSTITUENCY_COUNT = 32;
+
+/** Cardiff East, a Welsh constituency, and its name in the boundary file. */
+export const CARDIFF_EAST_CODE = 'W07000089';
+export const CARDIFF_EAST_NAME = 'Cardiff East';
+
+/** Hartlepool's name in the local authority boundary file. */
+export const HARTLEPOOL_NAME = 'Hartlepool';
+
+/** Three of Wales's 32 constituencies' results, as the maps' adapters give them. */
+export const WELSH_CONSTITUENCY_POINTS: UKAreaChoroplethDataPoint[] = [
+  { id: 'Clwyd East', label: 'Clwyd East', value: -355.03, code: 'W07000094' },
+  { id: 'Monmouthshire', label: 'Monmouthshire', value: -90.78, code: 'W07000101' },
+  { id: 'Gower', label: 'Gower', value: 237.22, code: 'W07000097' },
+];
