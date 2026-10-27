@@ -33,15 +33,19 @@ function renderBreakdown(year: string): void {
 
 describe('VariableArithmetic on a real variable whose parts a parameter names', () => {
   test('given a 2017 report then the list in force in 2017 applies', () => {
+    // When
     renderBreakdown('2017');
 
+    // Then
     expect(screen.getByText(/Domestic production deduction/)).toBeInTheDocument();
     expect(screen.getByText(/Student loan interest deduction/)).toBeInTheDocument();
   });
 
   test('given a 2018 report then the list from 2018 applies, without the dropped part', () => {
+    // When
     renderBreakdown('2018');
 
+    // Then
     expect(screen.queryByText(/Domestic production deduction/)).not.toBeInTheDocument();
     expect(screen.getByText(/Student loan interest deduction/)).toBeInTheDocument();
   });

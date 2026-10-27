@@ -174,3 +174,24 @@ export function failOnceThenAnswerVariables(): () => Response {
         });
   };
 }
+
+/** A variable without a label and without catalog format 2's details. */
+export const UNLABELLED_VARIABLE = variable('unlabelled_variable', {
+  is_input_variable: null,
+  hidden_input: null,
+  unit: null,
+  definition_period: null,
+});
+
+/** The variables route's answer holding only the unlabelled variable. */
+export const UNLABELLED_VARIABLES_RESULT: Schemas['MetadataCatalogVariablesResult'] = {
+  policyengine_version: TEST_POLICYENGINE_VERSION,
+  catalog_format: 2,
+  variables: [UNLABELLED_VARIABLE],
+  part_parameter_values: {},
+};
+
+/** A parameter's list of parts by date, as the store holds part values. */
+export const BENEFITS_PART_VALUES = {
+  [BENEFITS_PARAMETER_PATH]: { '0000-01-01': ['snap'], '2026-01-01': ['snap', 'ssi'] },
+};

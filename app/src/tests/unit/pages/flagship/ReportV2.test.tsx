@@ -208,7 +208,10 @@ describe('FlagshipReportPage with v3 on the v2 routes', () => {
 
   test('given the page renders then it starts loading the variables in the background', async () => {
     // Given
-    stubPublicApiFetch({ [PARAMETERS_PATH]: answerParameters });
+    const fetchStub = stubPublicApiFetch({
+      [VARIABLES_PATH]: () => jsonResponse(catalogVariablesEnvelope()),
+      [PARAMETERS_PATH]: answerParameters,
+    });
     await seedV2ModelCatalog();
 
     // When
@@ -216,5 +219,6 @@ describe('FlagshipReportPage with v3 on the v2 routes', () => {
 
     // Then
     expect(mockUseV3VariablesInBackground).toHaveBeenCalled();
+    await waitFor(() => expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1));
   });
 });
