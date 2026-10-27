@@ -1,6 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
+import {
+  UK_AREA_COUNTS_BY_NATION,
+  ukNationFromCode,
+} from '@/components/visualization/choropleth/ukAreaBoundaries';
 import { UK_HEX_LAYOUTS } from '@/components/visualization/choropleth/ukHexLayout';
 import {
   BOUNDARY_FILE_DIRECTORY,
@@ -39,7 +43,7 @@ function signedArea(ring: Ring): number {
 const LEVELS = [
   {
     level: 'constituency',
-    hexLevel: 'constituency' as const,
+    boundaryLevel: 'constituency' as const,
     boundaryFile: CONSTITUENCY_BOUNDARY_FILE,
     referenceFile: PY_CONSTITUENCIES_CSV,
     codeProperty: 'PCON24CD',
@@ -48,7 +52,7 @@ const LEVELS = [
   },
   {
     level: 'local authority',
-    hexLevel: 'local_authority' as const,
+    boundaryLevel: 'local_authority' as const,
     boundaryFile: LOCAL_AUTHORITY_BOUNDARY_FILE,
     referenceFile: PY_LOCAL_AUTHORITIES_CSV,
     codeProperty: 'LAD23CD',
@@ -59,10 +63,24 @@ const LEVELS = [
 
 describe.each(LEVELS)(
   'UK $level boundary file',
-  ({ hexLevel, boundaryFile, referenceFile, codeProperty, nameProperty, expectedCount }) => {
+  ({ boundaryLevel, boundaryFile, referenceFile, codeProperty, nameProperty, expectedCount }) => {
+    test("given the file's codes then each nation has the area count the withheld notes use", () => {
+      // Given
+      const counts: Record<string, number> = {};
+
+      // When
+      for (const feature of readBoundaries(boundaryFile)) {
+        const nation = ukNationFromCode(feature.properties[codeProperty]) ?? 'none';
+        counts[nation] = (counts[nation] ?? 0) + 1;
+      }
+
+      // Then
+      expect(counts).toEqual(UK_AREA_COUNTS_BY_NATION[boundaryLevel]);
+    });
+
     test(`given the hex layout then it places exactly the file's ${expectedCount} codes, each on its own hex`, () => {
       // Given
-      const layout = UK_HEX_LAYOUTS[hexLevel];
+      const layout = UK_HEX_LAYOUTS[boundaryLevel];
       const boundaryCodes = readBoundaries(boundaryFile).map(
         (feature) => feature.properties[codeProperty]
       );

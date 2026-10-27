@@ -3,6 +3,11 @@ import {
   hasLocalAuthorityImpacts,
 } from '@/adapters/societyWideOutputNormalizer';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import {
+  UK_AREA_COUNTS_BY_NATION,
+  ukNationFromCode,
+  ukNationFromRegion,
+} from '@/components/visualization/choropleth/ukAreaBoundaries';
 import type { UKReportLocalAreaRequest } from '@/hooks/useUKLocalAreaBreakdown';
 import type { Region } from '@/models/region';
 import type { Geography } from '@/types/ingredients/Geography';
@@ -131,34 +136,49 @@ export type UKWithheldAreas = { withheld: number; total: number } | null;
 export type UKBreakdownWithheldAreas = Partial<Record<UKAreaLevel, UKWithheldAreas>>;
 
 /**
- * The areas of a level a breakdown did not publish, counted against the
- * level's areas in the region list from the country metadata. Both levels
- * follow one rule. A count needs the two lists to name the same areas, so
- * it is given only:
- * - for a UK-wide report. The metadata gives each area's name, label and
- *   type, but not its code or nation, so a nation's areas cannot be picked
- *   out of the list;
- * - when every published name is in the list. Otherwise the lists
- *   disagree, and no count is given.
+ * The areas of a level a breakdown did not publish, out of the level's areas
+ * in the report's region; null when the app cannot count them.
  *
- * The Public API lists the same 650 constituencies as .py, and from
- * PolicyEngine/policyengine-api#4024 on the same 361 local authorities as
- * .py 6.10.0. An earlier deployment lists 360, without Ards and North Down;
- * a breakdown that publishes that area then gets no local authority count.
+ * - A UK-wide report counts against the level's areas in the region list
+ *   from the country metadata, by name. The count needs every published
+ *   name to be in the list; otherwise the lists disagree, and no count is
+ *   given. The Public API lists the same 650 constituencies as .py, and
+ *   from PolicyEngine/policyengine-api#4024 on the same 361 local
+ *   authorities as .py 6.10.0. An earlier deployment lists 360, without
+ *   Ards and North Down; a breakdown that publishes that area then gets no
+ *   local authority count.
+ * - A nation report counts against the nation's areas in the boundary files
+ *   (UK_AREA_COUNTS_BY_NATION), by each published area's ONS code, because
+ *   the metadata gives an area's name, label and type but not its code or
+ *   nation. The count needs every published area to have a code in the
+ *   nation.
  */
 export function countWithheldUKAreas({
   level,
   region,
   publishedNames,
+  publishedCodes = [],
   regions,
 }: {
   level: UKAreaLevel;
   region?: string | null;
   publishedNames: string[];
+  /** The published areas' ONS codes, one per area, for a nation report. */
+  publishedCodes?: (string | undefined)[];
   regions: Region[];
 }): UKWithheldAreas {
   if (region && region.toLowerCase() !== 'uk') {
-    return null;
+    const nation = ukNationFromRegion(region);
+    if (
+      !nation ||
+      publishedCodes.length !== publishedNames.length ||
+      publishedCodes.some((code) => ukNationFromCode(code) !== nation)
+    ) {
+      return null;
+    }
+    const total = UK_AREA_COUNTS_BY_NATION[level][nation];
+    const published = new Set(publishedCodes).size;
+    return published <= total ? { withheld: total - published, total } : null;
   }
   const prefix = `${level}/`;
   const listedNames = new Set(
@@ -181,17 +201,21 @@ export function withheldUKAreasOf(
   region: string | null | undefined,
   regions: Region[]
 ): UKBreakdownWithheldAreas {
+  const constituencies = breakdown.constituency_impact?.by_constituency ?? {};
+  const localAuthorities = breakdown.local_authority_impact?.by_local_authority ?? {};
   return {
     constituency: countWithheldUKAreas({
       level: 'constituency',
       region,
-      publishedNames: Object.keys(breakdown.constituency_impact?.by_constituency ?? {}),
+      publishedNames: Object.keys(constituencies),
+      publishedCodes: Object.values(constituencies).map((area) => area.code),
       regions,
     }),
     local_authority: countWithheldUKAreas({
       level: 'local_authority',
       region,
-      publishedNames: Object.keys(breakdown.local_authority_impact?.by_local_authority ?? {}),
+      publishedNames: Object.keys(localAuthorities),
+      publishedCodes: Object.values(localAuthorities).map((area) => area.code),
       regions,
     }),
   };

@@ -41,6 +41,16 @@ export const UK_NATION_BY_CODE_PREFIX: Record<string, UKNation> = {
   N: 'northern_ireland',
 };
 
+/**
+ * How many areas of each level each nation has, counted by code prefix in
+ * the boundary files above (650 constituencies, 361 local authorities). A
+ * test checks these against the files.
+ */
+export const UK_AREA_COUNTS_BY_NATION: Record<UKBoundaryLevel, Record<UKNation, number>> = {
+  constituency: { england: 543, wales: 32, scotland: 57, northern_ireland: 18 },
+  local_authority: { england: 296, wales: 22, scotland: 32, northern_ireland: 11 },
+};
+
 /** The nation a report's region names, e.g. "country/wales" is Wales. */
 const UK_NATION_BY_REGION: Record<string, UKNation> = {
   'country/england': 'england',

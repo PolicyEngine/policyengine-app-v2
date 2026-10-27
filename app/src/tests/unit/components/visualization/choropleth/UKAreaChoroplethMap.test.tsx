@@ -1,5 +1,7 @@
+import { createRef } from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { UK_BOUNDARY_ATTRIBUTION } from '@/components/visualization/choropleth/ukAreaBoundaries';
 import { UKAreaChoroplethMap } from '@/components/visualization/choropleth/UKAreaChoroplethMap';
 import { colors } from '@/designTokens';
 import {
@@ -251,6 +253,27 @@ describe('UKAreaChoroplethMap', () => {
     const legend = await screen.findByRole('img', { name: 'Color scale legend' });
     expect(within(legend).getByText('£355')).toBeInTheDocument();
     expect(within(legend).getByText('£-355')).toBeInTheDocument();
+  });
+
+  test('given an export ref then the exported node holds the map and its licence credit', async () => {
+    // Given
+    const exportRef = createRef<HTMLDivElement>();
+
+    // When
+    render(
+      <UKAreaChoroplethMap
+        data={MOCK_UK_CONSTITUENCY_POINTS}
+        level="constituency"
+        exportRef={exportRef}
+      />
+    );
+
+    // Then
+    const area = await boundary(GOWER_CODE);
+    expect(exportRef.current).toContainElement(area);
+    expect(exportRef.current).toContainElement(
+      screen.getByText(UK_BOUNDARY_ATTRIBUTION.constituency)
+    );
   });
 
   test('given boundaries that fail to load then the map says so', async () => {

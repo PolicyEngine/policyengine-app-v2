@@ -6,12 +6,25 @@ import {
   type LocalAreaBreakdownResponse,
 } from '@/api/societyWideCalculation';
 import { clockProgress, runProgressValue } from '@/components/flagship/report/RunProgress';
-import { UK_LOCAL_AREA_BREAKDOWN_DURATION_MS } from '@/constants/calculationDurations';
+import {
+  UK_LOCAL_AREA_BREAKDOWN_DURATION_MS,
+  UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS,
+} from '@/constants/calculationDurations';
 import type { RunStage } from '@/types/calculation';
 import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 
 /** How often a run that is still computing is polled. */
 const POLL_INTERVAL_MS = 2000;
+
+/**
+ * Failed polls in a row (for example a 502 from a gateway) that a computing
+ * run outlasts. The job may still run on the server, so the run keeps
+ * polling and fails only on the next failure after these.
+ */
+export const MAX_FAILED_POLLS = 3;
+
+const TIME_LIMIT_MESSAGE =
+  'The local-area breakdown is taking much longer than expected. It may still finish on the server: retry to check it again.';
 
 const NOT_A_BREAKDOWN_MESSAGE =
   'The API returned national results instead of a local-area breakdown. Its deployment may not support breakdown=local_areas yet.';
@@ -56,6 +69,8 @@ interface BreakdownRun {
   stage?: string;
   queuePosition?: number;
   error?: string;
+  /** Failed polls in a row while computing, up to MAX_FAILED_POLLS. */
+  failedPolls?: number;
 }
 
 /**
@@ -97,6 +112,9 @@ function toRun(
   previous: BreakdownRun | undefined
 ): BreakdownRun {
   if (response.status === 'computing') {
+    if (Date.now() - startedAt > UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS) {
+      return { status: 'error', startedAt, breakdown: null, error: TIME_LIMIT_MESSAGE };
+    }
     const estimate = clockProgress(Date.now() - startedAt, UK_LOCAL_AREA_BREAKDOWN_DURATION_MS);
     const progress = runProgressValue(estimate, runStageOf(response));
     return {
@@ -130,7 +148,9 @@ function toRun(
  * request by a separate run of the economy endpoint
  * (`breakdown=local_areas`) for the report's region and year. Nothing is sent
  * until `start()`. The run is polled every 2 s while it computes, and its
- * result is kept for the session.
+ * result is kept for the session. A computing run outlasts a few failed
+ * polls in a row (MAX_FAILED_POLLS), and fails, with Retry, once it computes
+ * for longer than UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS.
  *
  * Every view of the same report shares one run through the query key: a view
  * opened while another view's run computes, or after it completes, follows
@@ -167,6 +187,11 @@ export function useUKLocalAreaBreakdown(
         );
         return toRun(response, startedAt, previous);
       } catch (error) {
+        // A computing run outlasts a few failed polls: its job may still run.
+        const failedPolls = (previous?.failedPolls ?? 0) + 1;
+        if (previous?.status === 'computing' && failedPolls <= MAX_FAILED_POLLS) {
+          return { ...previous, failedPolls };
+        }
         return {
           status: 'error',
           startedAt,
