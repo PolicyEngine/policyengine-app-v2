@@ -12,6 +12,7 @@ import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { baselineProvisions, customBaseline } from '@/libs/flagship/reportBaseline';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import type { ReportMetadata } from '@/types/metadata/reportMetadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { coercePolicyParameterValue, resolvePolicyParameterValueSpec } from '@/utils/valueCoercion';
@@ -291,6 +292,63 @@ export async function createReformPolicy(
   return Number(policyResponse.result.policy_id);
 }
 
+/** What a report's records are for: its population, its two policies and its year. */
+export interface ReportRecordsRequest {
+  /** A state or congressional district as the API names it; the whole country when unset. */
+  region?: string;
+  baselinePolicyId: number | string;
+  reformPolicyId: number | string;
+  year: number | string;
+}
+
+/**
+ * Sends one of the records' requests, e.g. through a concurrency limit.
+ * By default each request is sent at once.
+ */
+export type ReportRecordsRunner = <Result>(request: () => Promise<Result>) => Promise<Result>;
+
+const sendAtOnce: ReportRecordsRunner = (request) => request();
+
+/**
+ * Creates, or reuses, a report's two simulations (the baseline's and the
+ * reform's, on the same population) and the base report that pairs them
+ * for the year. API v1 reuses a simulation with the same population and
+ * policy, and a base report with the same simulations, year and cache
+ * version, so a report that already exists comes back as stored, with its
+ * status and output. Each of the three requests goes through `run`.
+ */
+export async function createReportRecords(
+  countryId: CountryId,
+  { region, baselinePolicyId, reformPolicyId, year }: ReportRecordsRequest,
+  run: ReportRecordsRunner = sendAtOnce
+): Promise<ReportMetadata> {
+  const populationId = region ?? countryId;
+  const [baseline, reform] = await Promise.all([
+    run(() =>
+      createSimulation(countryId, {
+        population_id: populationId,
+        population_type: 'geography',
+        policy_id: Number(baselinePolicyId),
+      })
+    ),
+    run(() =>
+      createSimulation(countryId, {
+        population_id: populationId,
+        population_type: 'geography',
+        policy_id: Number(reformPolicyId),
+      })
+    ),
+  ]);
+
+  return run(() =>
+    createReport(countryId, {
+      simulation_1_id: Number(baseline.result.simulation_id),
+      simulation_2_id: Number(reform.result.simulation_id),
+      year: String(year),
+    })
+  );
+}
+
 /**
  * Runs a report and records it. Answers the report's link: the account
  * row's ID with accounts, otherwise the v1 report's (see reportLink).
@@ -324,30 +382,16 @@ export async function runFlagshipReport({
         : currentLawId),
   ]);
 
-  const [baseline, reform] = await Promise.all([
-    createSimulation(countryId, {
-      population_id: region ?? countryId,
-      population_type: 'geography',
-      policy_id: baselineId,
-    }),
-    createSimulation(countryId, {
-      population_id: region ?? countryId,
-      population_type: 'geography',
-      policy_id: reformPolicyId,
-    }),
-  ]);
-
-  const payload = {
-    simulation_1_id: Number(baseline.result.simulation_id),
-    simulation_2_id: Number(reform.result.simulation_id),
-    year: String(year),
-  };
-
   // The v1 report comes first. Then exactly one record of it: through the
   // API with accounts, whose ID is the report's link (anyone can open it),
   // otherwise this browser's flagship record, with the v1 report's ID as
   // the link (v3 never writes the legacy report keys).
-  const reportMetadata = await createReport(countryId, payload);
+  const reportMetadata = await createReportRecords(countryId, {
+    region,
+    baselinePolicyId: baselineId,
+    reformPolicyId,
+    year,
+  });
   const reportId = String(reportMetadata.id);
   const budgetWindow =
     windowYears && windowYears > 1 ? { startYear: year, windowSize: windowYears } : undefined;

@@ -1,12 +1,23 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportRecord, FlagshipReportStore } from '@/api/flagshipReportStore';
 import {
+  createReportRecords,
   forgetAccountReportMeta,
   readReportMeta,
   REPORT_META_KEY,
   reportMetaFromRecord,
   runFlagshipReport,
 } from '@/libs/flagship/runReport';
+import {
+  CALIFORNIA_BASELINE_SIMULATION_ID,
+  CALIFORNIA_RECORDS_REQUEST,
+  CALIFORNIA_REFORM_SIMULATION_ID,
+  CALIFORNIA_REGION,
+  STATE_RECORDS_BASELINE_POLICY_ID,
+  STATE_RECORDS_REFORM_POLICY_ID,
+  STATE_RECORDS_YEAR,
+  STORED_CALIFORNIA_REPORT,
+} from '@/tests/fixtures/libs/flagship/runReportMocks';
 
 const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
@@ -568,6 +579,73 @@ describe('runFlagshipReport', () => {
         accountReportStore: accountStore,
       })
     ).rejects.toThrow('Saved work is temporarily unavailable.');
+  });
+});
+
+describe('createReportRecords', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Responses queued by earlier runs are not this one's.
+    mockCreateSimulation.mockReset();
+    mockCreateSimulation
+      .mockResolvedValueOnce({ result: { simulation_id: CALIFORNIA_BASELINE_SIMULATION_ID } })
+      .mockResolvedValueOnce({ result: { simulation_id: CALIFORNIA_REFORM_SIMULATION_ID } });
+    mockCreateReport.mockResolvedValue(STORED_CALIFORNIA_REPORT);
+  });
+
+  test('given a state then both simulations run on it with each policy and the base report pairs them for the year', async () => {
+    // When
+    await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST);
+
+    // Then
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(1, 'us', {
+      population_id: CALIFORNIA_REGION,
+      population_type: 'geography',
+      policy_id: STATE_RECORDS_BASELINE_POLICY_ID,
+    });
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(2, 'us', {
+      population_id: CALIFORNIA_REGION,
+      population_type: 'geography',
+      policy_id: STATE_RECORDS_REFORM_POLICY_ID,
+    });
+    expect(mockCreateReport).toHaveBeenCalledWith('us', {
+      simulation_1_id: Number(CALIFORNIA_BASELINE_SIMULATION_ID),
+      simulation_2_id: Number(CALIFORNIA_REFORM_SIMULATION_ID),
+      year: String(STATE_RECORDS_YEAR),
+    });
+  });
+
+  test('given a stored report then it comes back with its status and output', async () => {
+    // When
+    const report = await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST);
+
+    // Then
+    expect(report).toEqual(STORED_CALIFORNIA_REPORT);
+  });
+
+  test('given a runner then each request goes through it', async () => {
+    // Given
+    const runner = vi.fn(<Result>(request: () => Promise<Result>) => request());
+
+    // When
+    await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST, runner);
+
+    // Then
+    expect(runner).toHaveBeenCalledTimes(3);
+    expect(mockCreateSimulation).toHaveBeenCalledTimes(2);
+    expect(mockCreateReport).toHaveBeenCalledTimes(1);
+  });
+
+  test('given no region then the records are for the whole country', async () => {
+    // When
+    await createReportRecords('us', { ...CALIFORNIA_RECORDS_REQUEST, region: undefined });
+
+    // Then
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(1, 'us', {
+      population_id: 'us',
+      population_type: 'geography',
+      policy_id: STATE_RECORDS_BASELINE_POLICY_ID,
+    });
   });
 });
 
