@@ -16,7 +16,6 @@ import {
 } from '@/components/flagship/report/DistrictImpactCard';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
 import UKAreaDisclosureNotes from '@/components/report/UKAreaDisclosureNotes';
-import UKHexMapUnplacedNote from '@/components/report/UKHexMapUnplacedNote';
 import {
   Command,
   CommandEmpty,
@@ -412,16 +411,9 @@ export default function UKLocalAreaMaps({
                 fillWidth
               />
             )}
-            <Stack style={{ gap: spacing.xs, marginTop: spacing.sm }}>
-              {mapType === 'hex' && (
-                <UKHexMapUnplacedNote
-                  level={level}
-                  areaCount={mapData.length}
-                  placedCount={hexPoints.length}
-                />
-              )}
+            <div style={{ marginTop: spacing.sm }}>
               <UKAreaDisclosureNotes level={level} areas={areas} withheld={withheld?.[level]} />
-            </Stack>
+            </div>
           </div>
           <div
             style={{

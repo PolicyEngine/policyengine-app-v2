@@ -7,7 +7,6 @@ import {
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
-import { UK_HEX_MAP_UNPLACED_NOTES } from '@/tests/fixtures/components/report/UKHexMapUnplacedNoteMocks';
 import {
   CARDIFF_CODE,
   HARTLEPOOL_CODE,
@@ -22,6 +21,7 @@ import {
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
   areaNames,
+  HEX_MAP_OMISSION_NOTE_PATTERN,
   hexagonArrangement,
   hexagonCentre,
   isPointyTopped,
@@ -156,14 +156,12 @@ describe('AbsoluteChangeByLocalAuthority hex map placement', () => {
     expect(v2Hexagons(container).every(isPointyTopped)).toBe(true);
   });
 
-  test('given a saved result with pre-2023 local authority codes then the hex map’s note counts the authorities it leaves out', async () => {
+  test('given a saved result with pre-2023 local authority codes then no note says the hex map leaves them out', async () => {
     // When
     await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA);
 
     // Then
-    expect(
-      screen.getByText(UK_HEX_MAP_UNPLACED_NOTES.THREE_OF_FIVE_LOCAL_AUTHORITIES)
-    ).toBeInTheDocument();
+    expect(screen.queryByText(HEX_MAP_OMISSION_NOTE_PATTERN)).not.toBeInTheDocument();
   });
 
   test('given local authorities the results put in one hex then the hex map draws each in its own', async () => {
@@ -210,22 +208,11 @@ describe('AbsoluteChangeByLocalAuthority hex map placement', () => {
     expect(v2Hexagons(container)).toHaveLength(0);
   });
 
-  test('given local authorities without codes then the hex map says it has no position for them', async () => {
+  test('given local authorities without codes then no note says the hex map leaves them out', async () => {
     // When
     await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_LA);
 
     // Then
-    expect(screen.getByText(UK_HEX_MAP_UNPLACED_NOTES.NO_LOCAL_AUTHORITY)).toBeInTheDocument();
-  });
-
-  test('given the geographic map then it has no hex map note', async () => {
-    // When
-    render(<AbsoluteChangeByLocalAuthority output={MOCK_UK_REPORT_OUTPUT_WITH_LA} />);
-    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
-
-    // Then
-    expect(
-      screen.queryByText(UK_HEX_MAP_UNPLACED_NOTES.NO_LOCAL_AUTHORITY)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(HEX_MAP_OMISSION_NOTE_PATTERN)).not.toBeInTheDocument();
   });
 });

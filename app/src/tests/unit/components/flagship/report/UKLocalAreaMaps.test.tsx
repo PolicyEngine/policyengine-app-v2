@@ -14,7 +14,6 @@ import {
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
-import { UK_HEX_MAP_UNPLACED_NOTES } from '@/tests/fixtures/components/report/UKHexMapUnplacedNoteMocks';
 import {
   ALL_WITHHELD_CONSTITUENCIES,
   SOME_WITHHELD_CONSTITUENCIES,
@@ -37,7 +36,10 @@ import {
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
   MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
-import { isPointyTopped } from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
+import {
+  HEX_MAP_OMISSION_NOTE_PATTERN,
+  isPointyTopped,
+} from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
 
 function hexagon(container: HTMLElement, name: string): Element {
   return container.querySelector(`[data-area-id="${name}"]`)!;
@@ -320,7 +322,7 @@ describe('UKLocalAreaMaps geographic map', () => {
     expect(points[1][0]).toBeCloseTo(points[4][0], 5);
   });
 
-  test('given one area without a code then the hex map says it has no position for it', async () => {
+  test('given one area without a code then no note says the hex map leaves it out', async () => {
     // Given
     const user = userEvent.setup();
     render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED} />, 'uk');
@@ -330,20 +332,7 @@ describe('UKLocalAreaMaps geographic map', () => {
     await showHexMap(user);
 
     // Then
-    expect(
-      screen.getByText(UK_HEX_MAP_UNPLACED_NOTES.ONE_OF_THREE_CONSTITUENCIES)
-    ).toBeInTheDocument();
-  });
-
-  test('given the geographic map then it has no hex map note', async () => {
-    // When
-    render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED} />, 'uk');
-    await boundary(CLWYD_EAST_CODE);
-
-    // Then
-    expect(
-      screen.queryByText(UK_HEX_MAP_UNPLACED_NOTES.ONE_OF_THREE_CONSTITUENCIES)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(HEX_MAP_OMISSION_NOTE_PATTERN)).not.toBeInTheDocument();
   });
 
   test('given a saved result with pre-2023 local authority codes then the hex map leaves those authorities out and draws the others, tiled', async () => {
@@ -367,7 +356,7 @@ describe('UKLocalAreaMaps geographic map', () => {
     expect(drawn.every(isPointyTopped)).toBe(true);
   });
 
-  test('given a saved result with pre-2023 local authority codes then the hex map’s note counts the authorities it leaves out', async () => {
+  test('given a saved result with pre-2023 local authority codes then no note says the hex map leaves them out', async () => {
     // Given
     const user = userEvent.setup();
     render(<UKLocalAreaMaps output={MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA} />, 'uk');
@@ -377,9 +366,7 @@ describe('UKLocalAreaMaps geographic map', () => {
     await showHexMap(user);
 
     // Then
-    expect(
-      screen.getByText(UK_HEX_MAP_UNPLACED_NOTES.THREE_OF_FIVE_LOCAL_AUTHORITIES)
-    ).toBeInTheDocument();
+    expect(screen.queryByText(HEX_MAP_OMISSION_NOTE_PATTERN)).not.toBeInTheDocument();
   });
 
   test('given the hex map chosen then switching the area kind keeps it', async () => {
