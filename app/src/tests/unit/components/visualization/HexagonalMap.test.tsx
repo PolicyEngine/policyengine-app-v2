@@ -2,8 +2,11 @@ import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import { HexagonalMap, zoomAbout } from '@/components/visualization/HexagonalMap';
 import {
+  MIN_MISSING_AREA_STRIPE_PIXELS,
+  MISSING_AREA_EDGE_COLOR,
   MISSING_FAR_EAST,
   MISSING_NORTH_EAST,
+  MISSING_UK_SHAPED_AREA,
   MOCK_HEX_MAP_DATA,
   MOCK_MIXED_VALUES,
   MOCK_NEGATIVE_VALUES,
@@ -687,6 +690,41 @@ describe('HexagonalMap missing areas', () => {
     expect(Math.max(...allVertices.map(([vertexX]) => vertexX))).toBeLessThanOrEqual(frameWidth);
     expect(Math.min(...allVertices.map(([, vertexY]) => vertexY))).toBeGreaterThanOrEqual(0);
     expect(Math.max(...allVertices.map(([, vertexY]) => vertexY))).toBeLessThanOrEqual(frameHeight);
+  });
+
+  test('given a map as dense as the UK constituency map then the hatching’s stripes are at least 4 pixels apart', () => {
+    // When: hexagons about 4.7 pixels across their radius, whose stripes would otherwise blend into a grey on the scale
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_UK_SHAPED_HEX_DATA}
+        config={TILED_CONFIG}
+        missingAreas={[MISSING_UK_SHAPED_AREA]}
+      />
+    );
+
+    // Then
+    const hatching = container.querySelector('pattern')!;
+    expect(Number(hatching.getAttribute('width'))).toBeGreaterThanOrEqual(
+      MIN_MISSING_AREA_STRIPE_PIXELS
+    );
+  });
+
+  test('given a missing area then its edge is grey, unlike the valued hexagons’ edges', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        config={TILED_CONFIG}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then
+    const valuedEdge = container.querySelector('[data-area-id="west"]')!.getAttribute('stroke');
+    const missingEdge = missingHexagon(container, MISSING_NORTH_EAST.id)!.getAttribute('stroke');
+    expect(missingEdge).toBe(MISSING_AREA_EDGE_COLOR);
+    expect(missingEdge).not.toBe(valuedEdge);
   });
 
   test('given no missing areas then the map draws no hatching', () => {

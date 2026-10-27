@@ -301,14 +301,19 @@ const NO_MISSING_AREAS: HexMapMissingArea[] = [];
 const DEFAULT_MISSING_AREA_TEXT = 'No data';
 
 /**
- * A missing area's hatching: grey stripes on the map's background, which
- * no colour on the scale resembles. The stripes repeat at half a hexagon's
- * radius, so each hexagon shows a few at any size.
+ * A missing area's look: grey stripes on the map's background, which no
+ * colour on the scale resembles, inside a grey edge where a valued
+ * hexagon's edge is the background colour. The stripes repeat at half a
+ * hexagon's radius, but never closer than 4 SVG units (4 pixels on a map
+ * drawn at full width): closer, they blend into a flat grey that the
+ * scale's grey arm holds, as on the UK constituency map.
  */
 const MISSING_AREA_GROUND_COLOR = colors.background.primary;
 const MISSING_AREA_STRIPE_COLOR = colors.gray[300];
+const MISSING_AREA_EDGE_COLOR = colors.gray[400];
+const MISSING_AREA_EDGE_WIDTH = 0.75;
 const MISSING_AREA_STRIPES_PER_RADIUS = 2;
-const MIN_MISSING_AREA_STRIPE_SPACING = 2;
+const MIN_MISSING_AREA_STRIPE_SPACING = 4;
 
 /**
  * SVG polygon points for a hexagon centred at (cx, cy): flat-topped, or
@@ -585,8 +590,9 @@ export function HexagonalMap({
           key={`missing-${area.id}`}
           points={hexPoints(toSvgX(area.x), toSvgY(area.y), hexPixelSize, tiled)}
           fill={`url(#${hatchingId})`}
-          stroke={colors.background.primary}
-          strokeWidth={0.5}
+          stroke={MISSING_AREA_EDGE_COLOR}
+          strokeWidth={MISSING_AREA_EDGE_WIDTH}
+          vectorEffect={outlineEffect}
           data-missing-area-id={area.id}
           onMouseEnter={(event) => showTooltip(event, `${area.label}: ${missingAreaText}`)}
           onMouseLeave={() => setTooltip(null)}
