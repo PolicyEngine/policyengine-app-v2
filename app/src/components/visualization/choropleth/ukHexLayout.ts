@@ -43,7 +43,12 @@ export function ukHexPosition(
   code?: string | null
 ): { x: number; y: number } | null {
   const position = code ? UK_HEX_LAYOUTS[level][code] : undefined;
-  return position ? { x: position[0], y: position[1] + 1 } : null;
+  return position ? gridPosition(position) : null;
+}
+
+/** A layout's `[q, r]` position on the hex map's grid: `y = r + 1`, as ukHexPosition explains. */
+function gridPosition([q, r]: number[]): { x: number; y: number } {
+  return { x: q, y: r + 1 };
 }
 
 /** A level's hex-map points placed on its layout, and whether the map tiles them. */
@@ -142,12 +147,12 @@ export function withheldUKHexAreas(
     points.map((point) => point.code),
     region
   );
-  return (withheld?.codes ?? []).flatMap((code) => {
-    const position = ukHexPosition(level, code);
-    return position
-      ? [{ id: code, label: UK_HEX_AREA_NAMES[level][code] ?? code, ...position }]
-      : [];
-  });
+  // Each withheld code is one of the layout's own keys, so it has a position.
+  return (withheld?.codes ?? []).map((code) => ({
+    id: code,
+    label: UK_HEX_AREA_NAMES[level][code] ?? code,
+    ...gridPosition(UK_HEX_LAYOUTS[level][code]),
+  }));
 }
 
 /** A level's hex map: its result's areas, placed, and the areas drawn as withheld. */
