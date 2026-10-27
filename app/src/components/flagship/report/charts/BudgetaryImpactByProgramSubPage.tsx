@@ -37,6 +37,8 @@ interface ProgramBudgetItem {
   baseline: number;
   difference: number;
   reform: number;
+  /** Whether the program is a tax; absent from outputs built before the simulation API sent it. */
+  is_tax?: boolean | null;
 }
 
 /** "−£296.5m": each bar in its own unit, the minus before the currency symbol. */
@@ -46,9 +48,10 @@ function formatBarAmount(value: number, countryId: CountryId): string {
 }
 
 /**
- * The benefit programmes in a detailed budget. The simulation API reports
- * each programme's own total, so a benefit's change is a change in
- * spending, and it costs the budget when it rises.
+ * The benefit programmes in a detailed budget, for outputs whose rows
+ * don't say whether each is a tax. The simulation API reports each
+ * programme's own total, so a benefit's change is a change in spending,
+ * and it costs the budget when it rises.
  */
 const BENEFIT_PROGRAMS = new Set([
   'universal_credit',
@@ -70,6 +73,15 @@ const BENEFIT_PROGRAMS = new Set([
 ]);
 
 /**
+ * Whether a row is a benefit: its own `is_tax` flag when the output has
+ * one, which covers every programme the model reports, otherwise the
+ * fixed list.
+ */
+function isBenefit(key: string, values: ProgramBudgetItem): boolean {
+  return typeof values.is_tax === 'boolean' ? !values.is_tax : BENEFIT_PROGRAMS.has(key);
+}
+
+/**
  * Whether the benefits' differences are spending changes, to negate into
  * budget changes. The simulation API sends spending; the legacy API sent
  * each benefit already as its budget effect. The sign that lets the bars
@@ -85,7 +97,7 @@ function benefitsAreSpending(
     if (typeof values?.difference !== 'number') {
       continue;
     }
-    if (BENEFIT_PROGRAMS.has(key)) {
+    if (isBenefit(key, values)) {
       benefits += values.difference;
     } else {
       taxes += values.difference;
@@ -111,7 +123,7 @@ export function getChangedPrograms(
     .map(([key, values]) => ({
       key,
       label: variableLabels[key]?.label || key,
-      value: negateBenefits && BENEFIT_PROGRAMS.has(key) ? -values.difference : values.difference,
+      value: negateBenefits && isBenefit(key, values) ? -values.difference : values.difference,
     }));
 }
 

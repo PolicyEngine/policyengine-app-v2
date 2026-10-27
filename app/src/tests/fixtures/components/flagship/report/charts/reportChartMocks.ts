@@ -338,3 +338,24 @@ export function withUCFreezeBudget(output: SocietyWideReportOutput): SocietyWide
     detailed_budget: UC_FREEZE_DETAILED_BUDGET,
   } as unknown as SocietyWideReportOutput;
 }
+
+/**
+ * Report 4738's detailed budget once the simulation API sends a row for
+ * every programme the reform changes, each with its `is_tax` flag:
+ * Scottish Child Payment, which no fixed list names, is a benefit.
+ */
+export const UC_FREEZE_FLAGGED_DETAILED_BUDGET = {
+  universal_credit: { baseline: 82244.8e6, reform: 81311.3e6, difference: -933.5e6, is_tax: false },
+  scottish_child_payment: { baseline: 600e6, reform: 575e6, difference: -25e6, is_tax: false },
+  income_tax: { baseline: 300e9, reform: 300e9, difference: 0, is_tax: true },
+};
+
+/** A report's output with report 4738's budget and its flagged detailed budget. */
+export function withFlaggedUCFreezeBudget(
+  output: SocietyWideReportOutput
+): SocietyWideReportOutput {
+  return {
+    ...withBudget(output, { federal: 0, state: 0, benefits: -UC_FREEZE_TOTAL }),
+    detailed_budget: UC_FREEZE_FLAGGED_DETAILED_BUDGET,
+  } as unknown as SocietyWideReportOutput;
+}
