@@ -1,10 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { v1ShapedVariable } from '@/api/publicApi/catalogVariables';
 import metadataReducer, {
   catalogParametersLoaded,
+  catalogVariablesLoaded,
   fetchMetadataThunk,
   metadataRequest,
 } from '@/reducers/metadataReducer';
+import {
+  AGE_VARIABLE,
+  BENEFITS_PARAMETER_PATH,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import {
   TEST_POLICYENGINE_VERSION,
   TEST_TAX_BENEFIT_MODEL_ID,
@@ -193,5 +199,60 @@ describe('metadataReducer with the v2 routes', () => {
     // Then
     expect(store.getState().metadata.v2LoadId).not.toBe(earlierLoad);
     expect(store.getState().metadata.parameters).toEqual({});
+  });
+
+  test('given variables loaded under the current model catalog load then they join the store', async () => {
+    // Given
+    mockFetchV2ModelCatalogMetadata.mockResolvedValue(v2Payload());
+    const store = testStore();
+    await store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+    const loadId = store.getState().metadata.v2LoadId!;
+
+    // When
+    store.dispatch(
+      catalogVariablesLoaded({
+        countryId: 'us',
+        policyengineVersion: TEST_POLICYENGINE_VERSION,
+        loadId,
+        variables: { age: v1ShapedVariable(AGE_VARIABLE) },
+        partParameterValues: { [BENEFITS_PARAMETER_PATH]: { '0000-01-01': ['snap'] } },
+      })
+    );
+
+    // Then
+    const state = store.getState().metadata;
+    expect(state.variables.age.label).toBe('Age');
+    expect(state.v2PartParameterValues).toEqual({
+      [BENEFITS_PARAMETER_PATH]: { '0000-01-01': ['snap'] },
+    });
+    expect(state.v2VariablesLoadId).toBe(loadId);
+  });
+
+  test.each([
+    ['an earlier model catalog load', { loadId: 'an-earlier-load' }],
+    ['another catalog version', { policyengineVersion: '0.0.1' }],
+    ['another country', { countryId: 'uk' }],
+  ])('given variables asked for under %s then they are dropped', async (_case, mismatch) => {
+    // Given
+    mockFetchV2ModelCatalogMetadata.mockResolvedValue(v2Payload());
+    const store = testStore();
+    await store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+
+    // When
+    store.dispatch(
+      catalogVariablesLoaded({
+        countryId: 'us',
+        policyengineVersion: TEST_POLICYENGINE_VERSION,
+        loadId: store.getState().metadata.v2LoadId!,
+        variables: { stale: v1ShapedVariable({ ...AGE_VARIABLE, name: 'stale' }) },
+        partParameterValues: {},
+        ...mismatch,
+      })
+    );
+
+    // Then
+    const state = store.getState().metadata;
+    expect(state.variables).toEqual({});
+    expect(state.v2VariablesLoadId).toBeUndefined();
   });
 });

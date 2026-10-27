@@ -145,3 +145,32 @@ export function catalogVariablesEnvelope(
 ) {
   return { status: 'ok', message: null, result };
 }
+
+/** The route every variables test stubs. */
+export const VARIABLES_PATH = '/v2/model-catalog/variables';
+
+/** A reform that adds SSI to the benefits a household's total counts: a change that lists variables. */
+export const LIST_PROVISION = {
+  path: 'gov.household.household_benefits',
+  breadcrumb: 'Household → Benefits',
+  unit: null,
+  baselineValue: ['snap'],
+  value: ['snap', 'ssi'],
+};
+
+/** A variables route that fails once, then answers: for "try again" tests. */
+export function failOnceThenAnswerVariables(): () => Response {
+  let attempts = 0;
+  return () => {
+    attempts += 1;
+    return attempts === 1
+      ? new Response(JSON.stringify({ status: 'error', message: 'Unavailable' }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      : new Response(JSON.stringify(catalogVariablesEnvelope()), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+  };
+}

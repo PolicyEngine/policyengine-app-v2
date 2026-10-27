@@ -6,7 +6,10 @@ import FlagshipReportPage from '@/pages/flagship/Report.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { catalogParametersResult } from '@/tests/fixtures/api/publicApi/catalogParametersMocks';
-import { catalogVariablesEnvelope } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
+import {
+  catalogVariablesEnvelope,
+  VARIABLES_PATH,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import {
   jsonResponse,
   requestsTo,
@@ -99,7 +102,6 @@ function renderPage(userReportId: string) {
 }
 
 const PARAMETERS_PATH = '/v2/model-catalog/parameters';
-const VARIABLES_PATH = '/v2/model-catalog/variables';
 const COMPLETE_STATUS = {
   status: 'complete',
   isComplete: true,
