@@ -64,7 +64,10 @@ export const UK_LOCAL_AREAS_OUTPUT_NO_CODES = {
 export const WALES_REGION = 'country/wales';
 export const UK_WIDE_REGION = 'uk';
 
-/** The coded output with Gower's code taken away, as from a source with no code for it. */
+/**
+ * The coded output with Gower's code taken away, as from a source with no
+ * code for it: the layout cannot place Gower, so the hex map leaves it out.
+ */
 export const UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED = (() => {
   const output = UK_LOCAL_AREAS_OUTPUT as unknown as {
     constituency_impact: { by_constituency: Record<string, { code?: string }> };

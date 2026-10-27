@@ -2,12 +2,18 @@ import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import { HexagonalMap, zoomAbout } from '@/components/visualization/HexagonalMap';
 import {
+  MIN_MISSING_AREA_STRIPE_PIXELS,
+  MISSING_AREA_EDGE_COLOR,
+  MISSING_FAR_EAST,
+  MISSING_NORTH_EAST,
+  MISSING_UK_SHAPED_AREA,
   MOCK_HEX_MAP_DATA,
   MOCK_MIXED_VALUES,
   MOCK_NEGATIVE_VALUES,
   MOCK_POSITIVE_VALUES,
   MOCK_TILED_HEX_DATA,
   MOCK_UK_SHAPED_HEX_DATA,
+  NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/hexMapMocks';
 
 /** A hexagon polygon's vertices, in drawing order. */
@@ -535,5 +541,158 @@ describe('HexagonalMap fillWidth', () => {
     const { container } = render(<HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} />);
 
     expect(container.querySelector('svg')!.getAttribute('viewBox')).toBe('0 0 600 380');
+  });
+});
+
+describe('HexagonalMap missing areas', () => {
+  /** A missing area's hexagon, by its id. */
+  function missingHexagon(container: HTMLElement, id: string): Element | null {
+    return container.querySelector(`[data-missing-area-id="${id}"]`);
+  }
+
+  test('given a missing area then it is drawn in its place, hatched rather than a colour on the scale', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_NORTH_EAST]} />
+    );
+
+    // Then
+    const hexagon = missingHexagon(container, MISSING_NORTH_EAST.id)!;
+    const hatching = container.querySelector('pattern')!;
+    expect(hexagon).toBeInTheDocument();
+    expect(hexagon.getAttribute('fill')).toBe(`url(#${hatching.id})`);
+    expect(container.querySelectorAll('svg polygon')).toHaveLength(4);
+  });
+
+  test('given a missing area then it sits in the row above, beside the area west of it', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then: one column east of North, in North's row
+    const [west, east, north] = ['west', 'east', 'north'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const northEast = missingHexagon(container, MISSING_NORTH_EAST.id)!;
+    expect(centre(northEast)[1]).toBeCloseTo(centre(north)[1], 5);
+    expect(centre(northEast)[0] - centre(north)[0]).toBeCloseTo(
+      centre(east)[0] - centre(west)[0],
+      5
+    );
+  });
+
+  test('given a missing area hovered then its tooltip gives its name and why it has no value', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        missingAreaText={NOT_REPORTED_TEXT}
+      />
+    );
+
+    // When
+    await user.hover(missingHexagon(container, MISSING_NORTH_EAST.id)!);
+
+    // Then
+    expect(screen.getByText(`North East: ${NOT_REPORTED_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given no missing-area text then a missing area reads no data', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_NORTH_EAST]} />
+    );
+
+    // When
+    await user.hover(missingHexagon(container, MISSING_NORTH_EAST.id)!);
+
+    // Then
+    expect(screen.getByText('North East: No data')).toBeInTheDocument();
+  });
+
+  test('given a selectable map then a missing area is not selectable', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={onSelect}
+      />
+    );
+    const hexagon = missingHexagon(container, MISSING_NORTH_EAST.id)!;
+
+    // When
+    await user.click(hexagon);
+
+    // Then
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(hexagon).not.toHaveAttribute('data-area-id');
+  });
+
+  test('given a missing area far from the valued ones then the map fits it in its frame too', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_FAR_EAST]} />
+    );
+
+    // Then
+    const svg = container.querySelector('svg')!;
+    const [, , frameWidth, frameHeight] = svg.getAttribute('viewBox')!.split(' ').map(Number);
+    const hexagons = [...container.querySelectorAll('svg polygon')];
+    const allVertices = hexagons.flatMap(vertices);
+    expect(missingHexagon(container, MISSING_FAR_EAST.id)).toBeInTheDocument();
+    expect(Math.min(...allVertices.map(([vertexX]) => vertexX))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...allVertices.map(([vertexX]) => vertexX))).toBeLessThanOrEqual(frameWidth);
+    expect(Math.min(...allVertices.map(([, vertexY]) => vertexY))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...allVertices.map(([, vertexY]) => vertexY))).toBeLessThanOrEqual(frameHeight);
+  });
+
+  test('given a map as dense as the UK constituency map then the hatching’s stripes are at least 4 pixels apart', () => {
+    // When: hexagons about 4.7 pixels across their radius, whose stripes would otherwise blend into a grey on the scale
+    const { container } = render(
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} missingAreas={[MISSING_UK_SHAPED_AREA]} />
+    );
+
+    // Then
+    const hatching = container.querySelector('pattern')!;
+    expect(Number(hatching.getAttribute('width'))).toBeGreaterThanOrEqual(
+      MIN_MISSING_AREA_STRIPE_PIXELS
+    );
+  });
+
+  test('given a missing area then its edge is grey, unlike the valued hexagons’ edges', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then
+    const valuedEdge = container.querySelector('[data-area-id="west"]')!.getAttribute('stroke');
+    const missingEdge = missingHexagon(container, MISSING_NORTH_EAST.id)!.getAttribute('stroke');
+    expect(missingEdge).toBe(MISSING_AREA_EDGE_COLOR);
+    expect(missingEdge).not.toBe(valuedEdge);
+  });
+
+  test('given no missing areas then the map draws no hatching', () => {
+    // When
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} />);
+
+    // Then
+    expect(container.querySelector('pattern')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-missing-area-id]')).not.toBeInTheDocument();
   });
 });

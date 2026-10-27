@@ -18,6 +18,7 @@ import {
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import { EXPECTED_LOCAL_AUTHORITY_COUNT } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
 import {
   COMPLETE_RESPONSE,
   COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
@@ -156,17 +157,21 @@ describe('LocalAuthoritySubPage', () => {
       expect(
         await screen.findByText('Absolute household income change by local authority')
       ).toBeInTheDocument();
-      // The map's one hexagon is the computed area: hovering it names it.
+      // The map's one hexagon with a value is the computed area: hovering
+      // it names it. The UK's other 360 local authorities are drawn as withheld.
       await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
-      const hexagons = container.querySelectorAll('svg polygon');
+      const hexagons = container.querySelectorAll('svg polygon:not([data-missing-area-id])');
       expect(hexagons).toHaveLength(1);
+      expect(container.querySelectorAll('[data-missing-area-id]').length).toBe(
+        EXPECTED_LOCAL_AUTHORITY_COUNT - 1
+      );
       await user.hover(hexagons[0]);
       expect(
         screen.getByText(new RegExp(`^${BREAKDOWN_LOCAL_AUTHORITY_NAME}:`))
       ).toBeInTheDocument();
     });
 
-    test('given the areas computed for a UK-wide report then the charts say how many local authorities were not published', async () => {
+    test('given the areas computed for a UK-wide report then the charts say how many local authorities were not reported', async () => {
       // Given
       const user = userEvent.setup();
       mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
@@ -182,7 +187,7 @@ describe('LocalAuthoritySubPage', () => {
 
       // Then
       expect(
-        await screen.findByText(/^2 of 3 local authorities are not published\./)
+        await screen.findByText(/^2 of 3 local authorities are not reported\./)
       ).toBeInTheDocument();
     });
 
@@ -205,7 +210,7 @@ describe('LocalAuthoritySubPage', () => {
       // Then
       expect(
         await screen.findByText(
-          /^Local authorities whose estimates fail the survey data’s disclosure rules are not published\./
+          /^Local authorities whose estimates fail the survey data’s disclosure rules are not reported\./
         )
       ).toBeInTheDocument();
     });

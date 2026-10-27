@@ -127,6 +127,12 @@ export const UK_AREA_NOUNS: Record<UKAreaLevel, { one: string; many: string }> =
 };
 
 /**
+ * What an area disclosure control withheld reads on the maps, in its
+ * tooltip: the geographic map's boundary and the hex map's hexagon alike.
+ */
+export const UK_WITHHELD_AREA_TEXT = 'Not reported';
+
+/**
  * How many of a level's areas a disclosure-controlled breakdown left out,
  * out of how many there are; null when the app cannot count them.
  */
@@ -136,7 +142,7 @@ export type UKWithheldAreas = { withheld: number; total: number } | null;
 export type UKBreakdownWithheldAreas = Partial<Record<UKAreaLevel, UKWithheldAreas>>;
 
 /**
- * The areas of a level a breakdown did not publish, out of the level's areas
+ * The areas of a level a breakdown did not report, out of the level's areas
  * in the report's region; null when the app cannot count them.
  *
  * - A UK-wide report counts against the level's areas in the region list

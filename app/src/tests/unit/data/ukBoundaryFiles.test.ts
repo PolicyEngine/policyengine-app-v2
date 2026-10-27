@@ -5,7 +5,10 @@ import {
   UK_AREA_COUNTS_BY_NATION,
   ukNationFromCode,
 } from '@/components/visualization/choropleth/ukAreaBoundaries';
-import { UK_HEX_LAYOUTS } from '@/components/visualization/choropleth/ukHexLayout';
+import {
+  UK_HEX_AREA_NAMES,
+  UK_HEX_LAYOUTS,
+} from '@/components/visualization/choropleth/ukHexLayout';
 import {
   BOUNDARY_FILE_DIRECTORY,
   CONSTITUENCY_BOUNDARY_FILE,
@@ -92,6 +95,22 @@ describe.each(LEVELS)(
       expect(Object.keys(layout).sort()).toEqual([...boundaryCodes].sort());
       expect(Object.values(layout).every((position) => position.length === 2)).toBe(true);
       expect(new Set(positions).size).toBe(expectedCount);
+    });
+
+    test("given the hex map's area names then each of the file's codes has its boundary's name", () => {
+      // Given
+      const boundaryNames = Object.fromEntries(
+        readBoundaries(boundaryFile).map((feature) => [
+          feature.properties[codeProperty],
+          feature.properties[nameProperty],
+        ])
+      );
+
+      // When
+      const names = UK_HEX_AREA_NAMES[boundaryLevel];
+
+      // Then
+      expect(names).toEqual(boundaryNames);
     });
 
     test(`given .py 6.10.0's list then the file holds exactly its ${expectedCount} codes, once each`, () => {

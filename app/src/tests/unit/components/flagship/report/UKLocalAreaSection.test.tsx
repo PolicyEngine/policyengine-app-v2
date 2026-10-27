@@ -151,7 +151,7 @@ describe('UKLocalAreaSection', () => {
     expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
   });
 
-  test('given a UK-wide breakdown complete then the map says how many constituencies were not published', async () => {
+  test('given a UK-wide breakdown complete then the map says how many constituencies were not reported', async () => {
     // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
@@ -162,25 +162,25 @@ describe('UKLocalAreaSection', () => {
 
     // Then
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not published\./)
+      await screen.findByText(/^2 of 3 constituencies are not reported\./)
     ).toBeInTheDocument();
   });
 
-  test('given a UK-wide breakdown complete then the local authority map says how many local authorities were not published', async () => {
+  test('given a UK-wide breakdown complete then the local authority map says how many local authorities were not reported', async () => {
     // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
     renderSection();
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not published\./)
+      await screen.findByText(/^2 of 3 constituencies are not reported\./)
     ).toBeInTheDocument();
 
     // When
     await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
 
     // Then
-    expect(screen.getByText(/^2 of 3 local authorities are not published\./)).toBeInTheDocument();
+    expect(screen.getByText(/^2 of 3 local authorities are not reported\./)).toBeInTheDocument();
   });
 
   test('given a breakdown that publishes a local authority the region list does not name then that map has no count and the constituency map keeps its own', async () => {
@@ -190,7 +190,7 @@ describe('UKLocalAreaSection', () => {
     renderSection();
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not published\./)
+      await screen.findByText(/^2 of 3 constituencies are not reported\./)
     ).toBeInTheDocument();
 
     // When
@@ -200,7 +200,7 @@ describe('UKLocalAreaSection', () => {
     expect(
       screen.getByText(/^Local authorities whose estimates fail the survey data’s disclosure rules/)
     ).toBeInTheDocument();
-    expect(screen.queryByText(/local authorities are not published\./)).not.toBeInTheDocument();
+    expect(screen.queryByText(/local authorities are not reported\./)).not.toBeInTheDocument();
   });
 
   test('given saved area data then no disclosure note shows', async () => {
@@ -208,7 +208,7 @@ describe('UKLocalAreaSection', () => {
     renderSection(STORED_OUTPUT_WITH_AREAS);
 
     // Then
-    expect(screen.queryByText(/not published/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/not reported/)).not.toBeInTheDocument();
 
     // The geographic map has loaded its boundaries.
     expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
@@ -235,7 +235,7 @@ describe('UKLocalAreaSection', () => {
     );
     await user.click(screen.getByRole('tab', { name: 'Constituencies' }));
     expect(screen.getByRole('button', { name: STORED_CONSTITUENCY_DETAILS })).toBeInTheDocument();
-    expect(screen.queryByText(/constituencies are not published/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/constituencies are not reported/)).not.toBeInTheDocument();
   });
 
   test('given an older stored result with constituencies but no local authorities then it says there is no local authority data and offers no compute', async () => {

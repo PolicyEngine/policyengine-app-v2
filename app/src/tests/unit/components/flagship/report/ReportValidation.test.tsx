@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@test-utils';
+import { act, render, screen, userEvent, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportValidation from '@/components/flagship/report/ReportValidation';
 import type { ScorecardComparisonsState } from '@/components/flagship/ScorecardComparisons';
@@ -99,6 +99,9 @@ describe('ReportValidation', () => {
     await renderValidation();
 
     const estimates = card('External estimates');
+    await userEvent.click(
+      within(estimates).getByRole('button', { name: 'Show 1 related reform score' })
+    );
     expect(within(estimates).getByRole('table', { name: 'Related reforms' })).toBeInTheDocument();
     expect(within(estimates).getByRole('button', { name: 'CTC extension' })).toBeInTheDocument();
     expect(within(estimates).getByText('Joint Committee on Taxation')).toBeInTheDocument();
