@@ -9,7 +9,10 @@ import {
 } from '@tabler/icons-react';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { normalizeDistrictId } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
+import {
+  districtErrorSummary,
+  normalizeDistrictId,
+} from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
@@ -628,25 +631,15 @@ function CongressionalDistrictCard({
   );
 
   // Detect districts that are expected from metadata but missing from the saved report output.
-  const savedErrorSummary = useMemo(() => {
-    if (!savedDistricts) {
-      return { errorDistrictCount: 0, errorStateAbbrs: [] as string[] };
-    }
-
-    const savedSet = new Set(savedDistricts.map((d) => d.district));
-    const missingStates = new Set<string>();
-    let count = 0;
-    const expectedDistrictIds =
-      savedDistrictAvailability?.expectedDistrictIds ??
-      getExpectedDistrictIds(labelLookup, stateCode);
-    expectedDistrictIds.forEach((districtId) => {
-      if (!savedSet.has(districtId)) {
-        count++;
-        missingStates.add(districtId.split('-')[0]);
-      }
-    });
-    return { errorDistrictCount: count, errorStateAbbrs: Array.from(missingStates) };
-  }, [labelLookup, savedDistrictAvailability, savedDistricts, stateCode]);
+  const savedErrorSummary = useMemo(
+    () =>
+      districtErrorSummary(
+        savedDistricts,
+        savedDistrictAvailability?.expectedDistrictIds ??
+          getExpectedDistrictIds(labelLookup, stateCode)
+      ),
+    [labelLookup, savedDistrictAvailability, savedDistricts, stateCode]
+  );
 
   const visibleErrorCount =
     savedErrorSummary.errorDistrictCount + (isOutcomeMode ? payloadOutcomeData.missingCount : 0);
