@@ -164,6 +164,30 @@ describe('FlagshipReportPage load states', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  test('given the reform policy failed on the v1 routes then the report shows as before, with no message for it', () => {
+    // Given
+    mockCalcStatus.mockReturnValue({
+      status: 'complete',
+      isComplete: true,
+      isError: false,
+      result: createMockSocietyWideOutput(),
+    });
+    mockUseFlagshipReport.mockReturnValue(
+      reportData({
+        report: EXISTING_REPORT,
+        simulations: EXISTING_SIMULATIONS,
+        failedPolicyIds: [String(EXISTING_SIMULATIONS[1].policyId)],
+      })
+    );
+
+    // When
+    renderPage(EXISTING_REPORT_ID);
+
+    // Then
+    expect(screen.queryByText('Could not load the reform policy')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status', { name: 'Loading report' })).not.toBeInTheDocument();
+  });
+
   test('given a link that names no report then it says not found, with no retry', () => {
     mockUseFlagshipReport.mockReturnValue(
       reportData({ error: REPORT_NOT_FOUND_ERROR, notFound: true })

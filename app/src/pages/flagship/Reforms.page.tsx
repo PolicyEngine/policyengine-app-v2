@@ -58,6 +58,7 @@ import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { reformParameterNames } from '@/libs/flagship/v3ParameterNames';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
@@ -515,9 +516,10 @@ export default function ReformsPage() {
   );
   const viewedParameters = useEnsureV3Parameters(viewedNames);
   // On the v2 routes a detail's actions wait for those parameters, and a
-  // failed load says so, with a retry.
+  // failed load says so, with a retry. On v1 they come with the whole
+  // metadata, which the details never waited for or reported.
   const parametersWaiting = viewedParameters.waiting;
-  const parametersFailed = viewedParameters.status === 'error';
+  const parametersFailed = V3_API_ROUTES === 'v2' && viewedParameters.status === 'error';
 
   const openReform = (reform: Reform) => {
     // A failed delete or re-run belongs to the reform it was tried on.

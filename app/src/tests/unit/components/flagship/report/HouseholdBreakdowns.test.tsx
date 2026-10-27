@@ -1,12 +1,13 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, waitFor } from '@test-utils';
+import { act, render, renderHook, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import HouseholdBreakdowns, {
   toAppCalculationData,
   type HouseholdBreakdownSource,
   type HouseholdBreakdownView,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
+import { useFlagshipHouseholdPolicies } from '@/hooks/useFlagshipHousehold';
 import { useReportYear } from '@/hooks/useReportYear';
 import {
   BASELINE_POLICY_ID,
@@ -183,6 +184,8 @@ describe('HouseholdBreakdowns', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent("The report's policies could not be loaded");
+    // The request's own message, as before.
+    expect(alert).toHaveTextContent(`Failed to fetch policy ${REFORM_POLICY_ID}`);
     expect(enabledVariationCalls()).toEqual([]);
 
     await user.click(screen.getByRole('button', { name: 'Try again' }));
@@ -190,6 +193,42 @@ describe('HouseholdBreakdowns', () => {
     expect(
       await screen.findByText('Calculating the household across earnings')
     ).toBeInTheDocument();
+  });
+});
+
+describe('useFlagshipHouseholdPolicies on the v1 routes', () => {
+  test('given a policy in hand whose refetch fails then it reports the error, as before', async () => {
+    // Given
+    mockFetchPolicyById.mockImplementation(async (_countryId: string, policyId: string) => ({
+      id: policyId,
+      country_id: 'us',
+      api_version: 'v1',
+      policy_json: {},
+      policy_hash: 'hash',
+    }));
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { result } = renderHook(
+      () =>
+        useFlagshipHouseholdPolicies({
+          countryId: 'us',
+          policyIds: [REFORM_POLICY_ID],
+          enabled: true,
+        }),
+      {
+        wrapper: ({ children }: { children: React.ReactNode }) => (
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        ),
+      }
+    );
+    await waitFor(() => expect(result.current.policies).toHaveLength(1));
+
+    // When
+    mockFetchPolicyById.mockRejectedValue(new Error('Policy service down'));
+    await act(() => queryClient.refetchQueries());
+
+    // Then
+    await waitFor(() => expect(result.current.error?.message).toBe('Policy service down'));
+    expect(result.current.policies).toHaveLength(1);
   });
 });
 

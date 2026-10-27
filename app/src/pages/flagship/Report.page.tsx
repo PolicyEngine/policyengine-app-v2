@@ -53,6 +53,7 @@ import {
 } from '@/libs/flagship/reportBaseline';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta, reportMetaFromRecord } from '@/libs/flagship/runReport';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { isUKLocalLevelRegion } from '@/utils/geographyUtils';
@@ -570,7 +571,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
               <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
             </LeadError>
           )}
-          {!meta && reformPolicyFailed && (
+          {/* On the v1 routes the report shows without its changes, as before. */}
+          {!meta && reformPolicyFailed && V3_API_ROUTES === 'v2' && (
             <LeadError>
               <ErrorState
                 compact
