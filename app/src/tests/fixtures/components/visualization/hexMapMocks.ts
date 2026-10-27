@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { colors } from '@/designTokens';
 import type { HexMapDataPoint, HexMapMissingArea } from '@/types/visualization/HexMapDataPoint';
 
@@ -120,3 +121,42 @@ export const MIN_MISSING_AREA_STRIPE_PIXELS = 4;
 
 /** A missing area's edge, where a valued hexagon's is the background colour. */
 export const MISSING_AREA_EDGE_COLOR = colors.gray[400];
+
+/** A phone's width, in CSS pixels: what a v2 hex chart is drawn at on one. */
+export const PHONE_WIDTH_PIXELS = 375;
+
+/**
+ * Makes every SVG element measure `width` CSS pixels wide, as the hex map
+ * reads its rendered width, with a ResizeObserver that never reports (the
+ * map measures once on mount). Returns a function that undoes both.
+ */
+export function mockRenderedSvgWidth(width: number): () => void {
+  const originalResizeObserver = window.ResizeObserver;
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+  const widthSpy = vi
+    .spyOn(SVGElement.prototype, 'getBoundingClientRect')
+    .mockReturnValue({ width } as DOMRect);
+  return () => {
+    window.ResizeObserver = originalResizeObserver;
+    widthSpy.mockRestore();
+  };
+}
+
+/**
+ * How far apart a missing area's stripes sit on screen, in CSS pixels: the
+ * hatching pattern's spacing, in SVG units, times the screen pixels per
+ * unit. The SVG is `width` pixels wide and as tall as its viewBox, so the
+ * viewBox scales to fit the narrower of the two, and never past its height.
+ */
+export function stripeSpacingOnScreen(container: HTMLElement, width: number): number {
+  const pattern = container.querySelector('pattern')!;
+  const svg = pattern.ownerSVGElement!;
+  const [, , viewBoxWidth] = svg.getAttribute('viewBox')!.split(' ').map(Number);
+  const zoomLayer = svg.querySelector('[data-testid="hex-map-zoom-layer"]');
+  const zoom = Number(zoomLayer?.getAttribute('transform')?.match(/scale\(([^)]+)\)/)?.[1] ?? 1);
+  return Number(pattern.getAttribute('width')) * Math.min(width / viewBoxWidth, 1) * zoom;
+}

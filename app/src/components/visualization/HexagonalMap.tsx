@@ -305,16 +305,17 @@ const DEFAULT_MISSING_AREA_TEXT = 'No data';
  * A missing area's look: grey stripes on the map's background, which no
  * colour on the scale resembles, inside a grey edge where a valued
  * hexagon's edge is the background colour. The stripes repeat at half a
- * hexagon's radius, but never closer than 4 SVG units (4 pixels on a map
- * drawn at full width): closer, they blend into a flat grey that the
- * scale's grey arm holds, as on the UK constituency map.
+ * hexagon's radius, but never closer than 4 pixels on screen: closer, they
+ * blend into a flat grey that the scale's grey arm holds, as on the UK
+ * constituency map, or on a fixed-width map drawn narrower than its 600
+ * units, as on a phone.
  */
 const MISSING_AREA_GROUND_COLOR = colors.background.primary;
 const MISSING_AREA_STRIPE_COLOR = colors.gray[300];
 const MISSING_AREA_EDGE_COLOR = colors.gray[400];
 const MISSING_AREA_EDGE_WIDTH = 0.75;
 const MISSING_AREA_STRIPES_PER_RADIUS = 2;
-const MIN_MISSING_AREA_STRIPE_SPACING = 4;
+const MIN_MISSING_AREA_STRIPE_PIXELS = 4;
 
 /**
  * SVG polygon points for a hexagon centred at (cx, cy): flat-topped, or
@@ -507,8 +508,13 @@ export function HexagonalMap({
   const colorBarSpace = fullConfig.showColorBar ? COLOR_BAR_MARGIN + COLOR_BAR_WIDTH + 40 : 0;
   // With fillWidth, one viewBox unit is one CSS pixel, as the SVG's height is `height` pixels.
   const [svgElement, setSvgElement] = useState<SVGSVGElement | null>(null);
-  const measuredWidth = useElementWidth(svgElement, fillWidth);
-  const svgWidth = measuredWidth ?? FIXED_SVG_WIDTH; // Fixed width, responsive via CSS
+  // The rendered width sets a fillWidth map's width, and tells a map with
+  // missing areas how many screen pixels one SVG unit takes.
+  const renderedWidth = useElementWidth(svgElement, fillWidth || missingAreas.length > 0);
+  const svgWidth = (fillWidth ? renderedWidth : null) ?? FIXED_SVG_WIDTH; // Fixed width, responsive via CSS
+  // The SVG is `height` pixels tall, as its viewBox is, so the viewBox scales
+  // to fit the narrower of the two: never past one pixel per unit.
+  const screenPixelsPerUnit = renderedWidth ? Math.min(renderedWidth / svgWidth, 1) : 1;
 
   const dataWidth = dataBounds.xMax - dataBounds.xMin || 1;
   const dataHeight = dataBounds.yMax - dataBounds.yMin || 1;
@@ -522,7 +528,7 @@ export function HexagonalMap({
     ? scale * (fullConfig.coordinateScale ?? 1) * TILED_HEX_RADIUS
     : Math.min(hexSize * (scale / 20), scale * 0.45);
   const stripeSpacing = Math.max(
-    MIN_MISSING_AREA_STRIPE_SPACING,
+    MIN_MISSING_AREA_STRIPE_PIXELS / screenPixelsPerUnit,
     hexPixelSize / MISSING_AREA_STRIPES_PER_RADIUS
   );
 
