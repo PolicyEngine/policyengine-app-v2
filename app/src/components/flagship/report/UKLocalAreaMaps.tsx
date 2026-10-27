@@ -256,8 +256,6 @@ export default function UKLocalAreaMaps({
           id: name,
           label: name,
           value: area[field],
-          x: area.x,
-          y: area.y,
           ...(area.code && { code: area.code }),
           ...areaEstimateFields(area, field),
         };

@@ -8,8 +8,6 @@ export const MOCK_UK_REPORT_OUTPUT_WITH_LA: ReportOutputSocietyWideUK = {
   constituency_impact: {
     by_constituency: {
       'Westminster North': {
-        x: 0,
-        y: 0,
         average_household_income_change: 1234.56,
         relative_household_income_change: 0.025,
       },
@@ -55,20 +53,14 @@ export const MOCK_UK_REPORT_OUTPUT_WITH_LA: ReportOutputSocietyWideUK = {
   local_authority_impact: {
     by_local_authority: {
       Maidstone: {
-        x: 0,
-        y: 0,
         average_household_income_change: 1234.56,
         relative_household_income_change: 0.025,
       },
       Westminster: {
-        x: 1,
-        y: 0,
         average_household_income_change: -567.89,
         relative_household_income_change: -0.015,
       },
       Edinburgh: {
-        x: 0,
-        y: 1,
         average_household_income_change: 0,
         relative_household_income_change: 0,
       },
@@ -214,11 +206,12 @@ export const NORTH_YORKSHIRE_CODE = 'E06000065';
 export const DARLINGTON_CODE = 'E06000005';
 
 /**
- * Five local authorities at the positions the Public API gives them
- * (`local_authorities_2021.csv`). It puts the three created in 2023,
- * Cumberland, Westmorland and Furness, and North Yorkshire, all at (0, 0).
+ * Five local authorities, as a saved result holds them, with the x and y
+ * positions the Public API gives them (`local_authorities_2021.csv`), which
+ * the app does not read. It puts the three created in 2023, Cumberland,
+ * Westmorland and Furness, and North Yorkshire, all at (0, 0).
  */
-export const MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA: ReportOutputSocietyWideUK = {
+export const MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA = {
   ...MOCK_UK_REPORT_OUTPUT_WITH_LA,
   local_authority_impact: {
     by_local_authority: {
@@ -259,4 +252,4 @@ export const MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA: ReportOutputSocietyWideUK = 
       },
     },
   },
-};
+} as unknown as ReportOutputSocietyWideUK;

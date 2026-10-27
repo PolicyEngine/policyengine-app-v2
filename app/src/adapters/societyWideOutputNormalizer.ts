@@ -7,15 +7,15 @@ import type { UKAreaDisclosureTier, UKAreaImpact } from '@/types/metadata/UKArea
  * `constituency_impact` and `local_authority_impact` arrive as arrays of
  * these, one per area, rather than as `{ by_constituency: { name: {...} } }`.
  * Rows from a local-area breakdown also carry disclosure control's tier and
- * each change's 90% interval.
+ * each change's 90% interval. Rows may also carry `x` and `y`, hex-map
+ * positions that the app no longer reads: the hex maps place each area by
+ * its code, so the normalized area leaves them out.
  */
 interface UKAreaImpactRow {
   constituency_code?: string;
   constituency_name?: string;
   local_authority_code?: string;
   local_authority_name?: string;
-  x: number;
-  y: number;
   average_household_income_change: number;
   relative_household_income_change: number;
   population?: number;
@@ -57,8 +57,6 @@ function keyAreaRowsByName(
     }
     const code = row?.[codeField];
     const area: UKAreaImpact = {
-      x: row.x,
-      y: row.y,
       average_household_income_change: row.average_household_income_change,
       relative_household_income_change: row.relative_household_income_change,
       ...(code && { code }),

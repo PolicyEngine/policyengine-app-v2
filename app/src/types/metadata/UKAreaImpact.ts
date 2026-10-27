@@ -9,8 +9,6 @@ export type UKAreaDisclosureTier = 'reported' | 'approximate';
 export interface UKAreaImpact {
   average_household_income_change: number;
   relative_household_income_change: number;
-  x: number;
-  y: number;
   /** The ONS code (e.g. W07000081), when the API's list shape gave one. */
   code?: string;
   /** Present on disclosure-controlled results (local-area breakdowns). */

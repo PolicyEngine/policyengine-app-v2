@@ -183,6 +183,19 @@ describe('AbsoluteChangeByConstituency map type', () => {
   });
 });
 
+describe('AbsoluteChangeByConstituency saved results', () => {
+  test('given a saved result that still carries x and y then its geographic map draws its areas by name', async () => {
+    // When: an older keyed result, with no codes and each area's x and y
+    render(<AbsoluteChangeByConstituency output={UK_LOCAL_AREAS_OUTPUT_NO_CODES} />);
+
+    // Then
+    expect(await screen.findByTestId(`area-${GOWER_CODE}`)).toHaveAttribute('fill');
+    expect(
+      screen.getByText('Absolute household income change by constituency')
+    ).toBeInTheDocument();
+  });
+});
+
 describe('AbsoluteChangeByConstituency hex map placement', () => {
   /** The chart's hex map of `output`, with the hex grid chosen. */
   async function renderHexMap(output: SocietyWideReportOutput) {

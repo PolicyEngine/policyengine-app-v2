@@ -1,4 +1,4 @@
-import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
+import type { UKAreaChoroplethDataPoint } from '@/components/visualization/choropleth/types';
 
 /** A constituency and its `[q, r]` position in data/ukHexLayouts/constituencies_2024.json. */
 export const BARNSLEY_NORTH_CODE = 'E14001074';
@@ -8,31 +8,25 @@ export const BARNSLEY_NORTH_HEX = [57, -23];
 export const HARTLEPOOL_CODE = 'E06000001';
 export const HARTLEPOOL_HEX = [8, 18];
 
-/** Barnsley North's hex-map point, at the position its result gives it. */
-export const BARNSLEY_NORTH_POINT: HexMapDataPoint = {
+/** Barnsley North's result, as the maps' adapters give it. */
+export const BARNSLEY_NORTH_POINT: UKAreaChoroplethDataPoint = {
   id: 'Barnsley North',
   label: 'Barnsley North',
   value: 120,
-  x: BARNSLEY_NORTH_HEX[0],
-  y: BARNSLEY_NORTH_HEX[1],
   code: BARNSLEY_NORTH_CODE,
 };
 
-/** Hartlepool's hex-map point, at the position its result gives it. */
-export const HARTLEPOOL_POINT: HexMapDataPoint = {
+/** Hartlepool's result, as the maps' adapters give it. */
+export const HARTLEPOOL_POINT: UKAreaChoroplethDataPoint = {
   id: 'Hartlepool',
   label: 'Hartlepool',
   value: -60,
-  x: 8,
-  y: 19,
   code: HARTLEPOOL_CODE,
 };
 
-/** A point from an older saved result, which gives a position and no code. */
-export const UNCODED_POINT: HexMapDataPoint = {
+/** An area from an older saved result, which has no code. */
+export const UNCODED_POINT: UKAreaChoroplethDataPoint = {
   id: 'Westminster North',
   label: 'Westminster North',
   value: -40,
-  x: 3,
-  y: 4,
 };

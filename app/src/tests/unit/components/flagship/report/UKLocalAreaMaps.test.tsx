@@ -10,7 +10,6 @@ import {
   UK_LOCAL_AREAS_OUTPUT,
   UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
   UK_LOCAL_AREAS_OUTPUT_NO_CODES,
-  UK_LOCAL_AREAS_OUTPUT_WITHOUT_API_POSITIONS,
   UK_WIDE_REGION,
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
@@ -267,16 +266,13 @@ describe('UKLocalAreaMaps geographic map', () => {
   test('given areas with codes then the hex map places them from the app’s layout, tiled', async () => {
     // Given
     const user = userEvent.setup();
-    const { container } = render(
-      <UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_WITHOUT_API_POSITIONS} />,
-      'uk'
-    );
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
     await boundary(CLWYD_EAST_CODE);
 
     // When
     await showHexMap(user);
 
-    // Then: the API put all three at the origin, the layout apart
+    // Then: each at its own layout position
     const hexagons = ['Clwyd East', 'Monmouthshire', 'Gower'].map((name) =>
       hexagon(container, name)
     );
@@ -462,8 +458,6 @@ describe('UKLocalAreaMaps geographic map', () => {
             constituency_impact: {
               by_constituency: {
                 Gower: {
-                  x: 44,
-                  y: -37,
                   average_household_income_change: 120,
                   relative_household_income_change: 0.004,
                   average_household_income_change_lower: 40,
@@ -571,8 +565,6 @@ describe('UKLocalAreaMaps map controls and legend', () => {
 
 describe('areaNation', () => {
   const area = {
-    x: 0,
-    y: 0,
     average_household_income_change: 0,
     relative_household_income_change: 0,
   };
@@ -594,8 +586,6 @@ describe('areaNation', () => {
 describe('ukAreaDetailFigures', () => {
   test('given a change that rounds to zero then it reads zero with no minus', () => {
     const figures = ukAreaDetailFigures({
-      x: 0,
-      y: 0,
       average_household_income_change: -0.4,
       relative_household_income_change: -0,
     });

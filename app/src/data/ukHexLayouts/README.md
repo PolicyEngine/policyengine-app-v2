@@ -1,6 +1,6 @@
 # UK hex-map layouts
 
-Hex-grid positions for the UK local-area hex maps, one per area, keyed by ONS code. The v3 "Local areas" tab and the v2 constituency and local authority tabs place each area from these files by its ONS code, through `placeOnUKHexLayout`, instead of at the `x` and `y` that the Public API sends with each area. An area whose code these files lack, or that has no code, still falls back to its `x` and `y`.
+Hex-grid positions for the UK local-area hex maps, one per area, keyed by ONS code. The v3 "Local areas" tab and the v2 constituency and local authority tabs place each area from these files by its ONS code, through `placeOnUKHexLayout`. The app does not read the `x` and `y` that the Public API sends with each area. An area whose code these files lack, or that has no code, is left off the hex map, and a note under the map says how many are.
 
 | File | Areas | Boundaries | Source file |
 |---|---|---|---|

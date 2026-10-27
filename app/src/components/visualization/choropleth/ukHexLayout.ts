@@ -7,7 +7,7 @@
 import constituencies from '@/data/ukHexLayouts/constituencies_2024.json';
 import localAuthorities from '@/data/ukHexLayouts/local_authorities_2023.json';
 import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
-import type { UKBoundaryLevel } from './types';
+import type { UKAreaChoroplethDataPoint, UKBoundaryLevel } from './types';
 
 /** Each level's `[q, r]` HexJSON `odd-r` position, by ONS code. */
 export const UK_HEX_LAYOUTS: Record<UKBoundaryLevel, Record<string, number[]>> = {
@@ -33,15 +33,15 @@ export function ukHexPosition(
 }
 
 /**
- * A level's hex-map points, placed from the app's layout: each point whose
- * code the layout has takes that position. A point the layout has no
- * position for (no code, as in an older saved result, or a code the layout
- * lacks) is left out, as the map has nowhere to draw it. v2's and v3's UK
- * hex maps both place their areas with this, on the tiled grid.
+ * A level's areas as hex-map points, placed from the app's layout: each
+ * area whose code the layout has takes that position. An area the layout
+ * has no position for (no code, as in an older saved result, or a code the
+ * layout lacks) is left out, as the map has nowhere to draw it. v2's and
+ * v3's UK hex maps both place their areas with this, on the tiled grid.
  */
 export function placeOnUKHexLayout(
   level: UKBoundaryLevel,
-  points: HexMapDataPoint[]
+  points: UKAreaChoroplethDataPoint[]
 ): HexMapDataPoint[] {
   return points.flatMap((point) => {
     const position = ukHexPosition(level, point.code);
