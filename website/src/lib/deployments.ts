@@ -33,9 +33,12 @@ export type LockFormat = "uv" | "requirements";
 // Runtime reports. `api_v2` is the API's small model route (the full
 // `/metadata` is ~75 MB for the US and has no range support); it reports the
 // served .py only. `sim_gateway` reports .py, model and data build directly.
-export type ServedSourceKind = "api_v2" | "sim_gateway";
+// `household_versions` is the household API's channel manifest: the `current`
+// channel serves users, and `frontier` is the next release being rolled out.
+export type ServedSourceKind = "api_v2" | "sim_gateway" | "household_versions";
 
 export const API_ORIGIN = "https://api.policyengine.org";
+export const HOUSEHOLD_API_ORIGIN = "https://household.api.policyengine.org";
 export const SIM_GATEWAY_ORIGIN =
   "https://policyengine--policyengine-simulation-gateway-web-app.modal.run";
 
@@ -99,14 +102,7 @@ export const DEPLOYMENT_SURFACES: readonly DeploymentSurface[] = [
     lock: { path: "uv.lock", format: "uv" },
     // Its country metadata reports `dataset: None` and `data_version: None`.
     loads_dataset: false,
-  },
-  {
-    id: "api-v2-alpha",
-    label: "API v2 (alpha)",
-    serves: "policyengine-api-v2-alpha",
-    repository: "PolicyEngine/policyengine-api-v2-alpha",
-    branch: "main",
-    lock: { path: "uv.lock", format: "uv" },
+    served: { kind: "household_versions", origin: HOUSEHOLD_API_ORIGIN },
   },
 ];
 
@@ -279,6 +275,8 @@ export interface ServedReport {
   // Other .py versions the service also serves on request (the gateway keeps
   // older worker apps routable).
   other_py_versions: number;
+  // Added to the status explanation (e.g. another channel's version).
+  note: string;
   // The gateway's worker for each routable .py version, for this country.
   routes: Record<
     string,
@@ -339,6 +337,38 @@ export function parseApiV2Model(
     data_build_id: null,
     source_url: sourceUrl,
     other_py_versions: 0,
+    note: "",
+    routes: {},
+  };
+}
+
+// GET /versions on the household API: the country-model version of each
+// channel. The household API pins country models directly, not .py.
+export function parseHouseholdVersions(
+  json: unknown,
+  country: DeploymentCountry,
+  sourceUrl: string,
+): ServedReport {
+  const channels = record(json);
+  const channelVersion = (channel: string) =>
+    str(record(record(channels?.[channel])?.package_versions)?.[country]);
+  const current = channelVersion("current");
+  if (!current) {
+    throw new Error(`${sourceUrl} reported no current ${country} version`);
+  }
+  const frontier = channelVersion("frontier");
+  const modelPackage = countryModelPackage(country) ?? "the country model";
+  return {
+    kind: "household_versions",
+    py_version: null,
+    model_version: current,
+    data_build_id: null,
+    source_url: sourceUrl,
+    other_py_versions: 0,
+    note:
+      frontier && frontier !== current
+        ? ` Its frontier channel, which is not yet serving users, runs ${modelPackage} ${frontier}.`
+        : "",
     routes: {},
   };
 }
@@ -377,6 +407,7 @@ export function parseGatewayVersions(
     other_py_versions: Object.keys(pyRoutes).filter(
       (key) => key !== "latest" && key !== py,
     ).length,
+    note: "",
     routes,
   };
 }
@@ -478,13 +509,13 @@ export function compareServed(
     return {
       ...state,
       status: "differs",
-      detail: `Not deployed as declared: ${differences.join("; ")}.${others}`,
+      detail: `Not deployed as declared: ${differences.join("; ")}.${report.note}${others}`,
     };
   }
   return {
     ...state,
     status: "matches",
-    detail: `Serves what the lock declares.${workerNote}${others}`,
+    detail: `Serves what the lock declares.${workerNote}${report.note}${others}`,
   };
 }
 
@@ -715,9 +746,14 @@ export async function loadServedReport(
     const response = await fetchImpl(url, { next: { revalidate } });
     if (!response.ok) throw new Error(`${response.status} from ${url}`);
     const json = await response.json();
-    return surface.served.kind === "api_v2"
-      ? parseApiV2Model(json, url)
-      : parseGatewayVersions(json, country, url);
+    switch (surface.served.kind) {
+      case "api_v2":
+        return parseApiV2Model(json, url);
+      case "sim_gateway":
+        return parseGatewayVersions(json, country, url);
+      case "household_versions":
+        return parseHouseholdVersions(json, country, url);
+    }
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : String(error),

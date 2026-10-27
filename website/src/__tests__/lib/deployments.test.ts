@@ -7,6 +7,7 @@ import {
   loadDeployments,
   parseApiV2Model,
   parseGatewayVersions,
+  parseHouseholdVersions,
   parseBundleManifest,
   parseRequirementsLock,
   parseUvLock,
@@ -244,6 +245,12 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
         result: { policyengine_version: "6.9.0" },
       });
     }
+    if (url === "https://household.api.policyengine.org/versions") {
+      return Response.json({
+        current: { package_versions: { uk: "2.88.18", us: "2.42.4" } },
+        frontier: { package_versions: { uk: "2.88.18", us: "2.53.1" } },
+      });
+    }
     if (url.endsWith("/versions")) {
       return Response.json({
         policyengine: {
@@ -270,8 +277,6 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
       return new Response(
         '[[package]]\nname = "policyengine-us"\nversion = "2.53.1"\n',
       );
-    if (url.includes("policyengine-api-v2-alpha"))
-      return new Response("down", { status: 500 });
     return new Response(UV_LOCK);
   };
   const response = await loadDeployments(
@@ -294,7 +299,6 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
     "app-v3": "behind",
     "sim-api": "behind",
     "household-api": "no_dataset",
-    "api-v2-alpha": "unavailable",
   });
   const app = response.rows.find((row) => row.surface.id === "app-v3")!;
   expect(app.py_version).toBe("6.10.0");
@@ -310,9 +314,20 @@ test("loads every surface, resolves bundles once per .py version, and inherits t
     api: "no_worker",
     "app-v3": "no_worker",
     "sim-api": "matches",
-    "household-api": "not_reported",
-    "api-v2-alpha": "not_reported",
+    "household-api": "differs",
   });
+  const household = response.rows.find(
+    (row) => row.surface.id === "household-api",
+  )!;
+  expect(household.served).toMatchObject({
+    model_version: "2.42.4",
+    data_build_id: null,
+    data_basis: null,
+  });
+  expect(household.served.detail).toBe(
+    "Not deployed as declared: it serves model 2.42.4, but the lock declares 2.53.1. " +
+      "Its frontier channel, which is not yet serving users, runs policyengine-us 2.53.1.",
+  );
   expect(app.served.detail).toBe(
     "The simulation gateway has no worker for .py 6.9.0, so this service's economy simulations fail.",
   );
@@ -335,6 +350,7 @@ test("reads the served .py from the API's model route", () => {
     data_build_id: null,
     source_url: "u",
     other_py_versions: 0,
+    note: "",
     routes: {},
   });
   expect(() => parseApiV2Model({ result: {} }, "u")).toThrow();
@@ -359,6 +375,7 @@ test("reads the latest route and its bundle from the gateway", () => {
     data_build_id: "uk-b",
     source_url: "u",
     other_py_versions: 1,
+    note: "",
     routes: {
       "6.7.5": { model_version: null, data_build_id: null },
       "6.10.0": { model_version: "2.132.6", data_build_id: "uk-b" },
@@ -390,6 +407,7 @@ test("a served data build that differs from the declared one is not deployed", (
       data_build_id: null,
       source_url: "u",
       other_py_versions: 0,
+      note: "",
       routes: {},
     },
     bundles([
@@ -463,6 +481,7 @@ function apiReport(py: string) {
     data_build_id: null,
     source_url: "api",
     other_py_versions: 0,
+    note: "",
     routes: {},
   };
 }
@@ -475,6 +494,7 @@ function gatewayReport(routes: Record<string, string | null>) {
     data_build_id: "uk-old",
     source_url: "gateway",
     other_py_versions: 0,
+    note: "",
     routes: Object.fromEntries(
       Object.entries(routes).map(([py, build]) => [
         py,
@@ -551,4 +571,22 @@ test("without a readable gateway the API's data build comes from its .py bundle"
     data_build_id: "uk-old",
     data_basis: "served_py_bundle",
   });
+});
+
+test("reads the household API's current and frontier channels", () => {
+  const report = parseHouseholdVersions(
+    {
+      current: { package_versions: { uk: "2.88.18", us: "2.42.4" } },
+      frontier: { package_versions: { uk: "2.88.18", us: "2.53.1" } },
+    },
+    "uk",
+    "u",
+  );
+  expect(report).toMatchObject({
+    kind: "household_versions",
+    py_version: null,
+    model_version: "2.88.18",
+    note: "",
+  });
+  expect(() => parseHouseholdVersions({ frontier: {} }, "us", "u")).toThrow();
 });
