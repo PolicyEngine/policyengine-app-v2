@@ -409,3 +409,25 @@ export function economyWhere(
   return (region, request) =>
     respond[region] ? respond[region](request) : others(region, request);
 }
+
+/**
+ * A nationwide result whose districts the simulation API built inside the
+ * nationwide run: the state runs replace them, so they are never shown.
+ */
+export const NATIONWIDE_OUTPUT_WITH_DISTRICTS = createMockSocietyWideOutput({
+  congressional_district_impact: {
+    districts: [
+      {
+        district: 'AL-01',
+        average_household_income_change: 999,
+        relative_household_income_change: 0.09,
+      },
+    ],
+  },
+}) as SocietyWideReportOutput;
+
+/** A Utah report's own result, with its districts. */
+export const UTAH_REPORT_OUTPUT = stateResult(UTAH);
+
+/** A Utah report's result whose districts are null. */
+export const UTAH_REPORT_OUTPUT_WITHOUT_DISTRICTS = stateResult(UTAH, null);
