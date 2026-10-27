@@ -78,19 +78,57 @@ export function placeOnUKHexLayout(
   };
 }
 
+/** The areas of a report's region a result leaves out, by ONS code, and how many the region has. */
+export interface UKWithheldAreaCodes {
+  codes: string[];
+  total: number;
+}
+
+/**
+ * The ONS codes of a report's region's areas that a result leaves out, by
+ * the result's codes against the layout, and how many areas the region
+ * has; null when the result cannot be matched to the layout. The hex map's
+ * withheld areas and the note's count under it both follow this rule, so
+ * they always agree.
+ *
+ * The region's areas are the layout's: all of them for a UK-wide report
+ * (`uk`, or no region), and the nation's for a nation's report. The result
+ * cannot be matched when an area has no code (an older saved result) or a
+ * code outside the region's layout (such as a district abolished in April
+ * 2023, or an area of another nation), or when the region is neither the
+ * UK nor a nation.
+ */
+export function withheldUKAreaCodes(
+  level: UKBoundaryLevel,
+  codes: (string | null | undefined)[],
+  region?: string | null
+): UKWithheldAreaCodes | null {
+  const nation = ukNationFromRegion(region);
+  if (region && region.toLowerCase() !== 'uk' && !nation) {
+    return null;
+  }
+  const regionCodes = Object.keys(UK_HEX_LAYOUTS[level]).filter(
+    (code) => !nation || ukNationFromCode(code) === nation
+  );
+  const inRegion = new Set(regionCodes);
+  if (codes.some((code) => !code || !inRegion.has(code))) {
+    return null;
+  }
+  const reportedCodes = new Set(codes);
+  return {
+    codes: regionCodes.filter((code) => !reportedCodes.has(code)),
+    total: regionCodes.length,
+  };
+}
+
 /**
  * The areas of a report's region that a result leaves out, as hex-map
  * areas without a value: each at its layout position, named from the
  * boundary files, with its ONS code as its id. For a disclosure-controlled
  * breakdown these are the areas disclosure control withheld.
  *
- * The region's areas are the layout's: all of them for a UK-wide report
- * (`uk`, or no region), and the nation's for a nation's report, as
- * countWithheldUKAreas counts a nation's against UK_AREA_COUNTS_BY_NATION.
- * None are listed when the result cannot be matched to them: an area with
- * no code (an older saved result), a code outside the region's layout
- * (such as a district abolished in April 2023), or a region that is
- * neither the UK nor a nation. So a map that keeps its result's own
+ * They follow withheldUKAreaCodes, and none are listed when the result
+ * cannot be matched to the layout. So a map that keeps its result's own
  * positions, because placeOnUKHexLayout could not place every area, never
  * gets any: they are drawn only on the tiled grid.
  */
@@ -99,25 +137,17 @@ export function withheldUKHexAreas(
   points: Pick<HexMapDataPoint, 'code'>[],
   region?: string | null
 ): HexMapMissingArea[] {
-  const nation = ukNationFromRegion(region);
-  if (region && region.toLowerCase() !== 'uk' && !nation) {
-    return [];
-  }
-  const layout = UK_HEX_LAYOUTS[level];
-  const inRegion = (code: string) =>
-    Object.hasOwn(layout, code) && (!nation || ukNationFromCode(code) === nation);
-  if (points.some((point) => !point.code || !inRegion(point.code))) {
-    return [];
-  }
-  const reportedCodes = new Set(points.map((point) => point.code));
-  return Object.keys(layout)
-    .filter((code) => inRegion(code) && !reportedCodes.has(code))
-    .flatMap((code) => {
-      const position = ukHexPosition(level, code);
-      return position
-        ? [{ id: code, label: UK_HEX_AREA_NAMES[level][code] ?? code, ...position }]
-        : [];
-    });
+  const withheld = withheldUKAreaCodes(
+    level,
+    points.map((point) => point.code),
+    region
+  );
+  return (withheld?.codes ?? []).flatMap((code) => {
+    const position = ukHexPosition(level, code);
+    return position
+      ? [{ id: code, label: UK_HEX_AREA_NAMES[level][code] ?? code, ...position }]
+      : [];
+  });
 }
 
 /** A level's hex map: its result's areas, placed, and the areas drawn as withheld. */
