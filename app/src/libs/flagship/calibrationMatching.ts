@@ -124,6 +124,33 @@ export function calibrationValueKind(
   return target.measure === 'count' ? 'count' : 'number';
 }
 
+/** Targets a calibration group shows before the reader asks for all of them. */
+export const CALIBRATION_PREVIEW = 6;
+
+/**
+ * A group's targets in the order the table shows them: its headline totals
+ * first, the largest money target and the largest count target (a
+ * programme's spending and its caseload), then the rest in the order given
+ * (largest gap first). The first `limit` show at once; the rest wait for
+ * "Show all".
+ */
+export function calibrationPreviewTargets(
+  targets: CalibrationTargetRow[],
+  limit: number = CALIBRATION_PREVIEW
+): { ordered: CalibrationTargetRow[]; previewCount: number } {
+  const largest = (kind: CalibrationValueKind) =>
+    targets
+      .filter((target) => calibrationValueKind(target) === kind && target.target !== null)
+      .reduce<
+        CalibrationTargetRow | undefined
+      >((best, target) => (!best || Math.abs(target.target!) > Math.abs(best.target!) ? target : best), undefined);
+  const headline = [largest('money'), largest('count')].filter(
+    (target): target is CalibrationTargetRow => target !== undefined
+  );
+  const ordered = [...headline, ...targets.filter((target) => !headline.includes(target))];
+  return { ordered, previewCount: Math.min(limit, ordered.length) };
+}
+
 /**
  * A target's official or modelled value: compact for the table ("$3.2B",
  * "20.6K"), exact for its details ("$3,212,345.68", "20,601").
