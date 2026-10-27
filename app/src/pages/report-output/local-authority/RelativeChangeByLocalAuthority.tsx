@@ -98,8 +98,6 @@ export function RelativeChangeByLocalAuthority({
         <HexagonalMap
           data={hexPoints}
           config={{
-            tiled: true,
-            hexSize: 11,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,
               tickFormat: '.1%',

@@ -95,7 +95,6 @@ export function AbsoluteChangeByConstituency({
         <HexagonalMap
           data={hexPoints}
           config={{
-            tiled: true,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,
               tickFormat: '£,.0f',

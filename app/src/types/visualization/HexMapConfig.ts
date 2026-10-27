@@ -13,13 +13,14 @@ export interface ColorScaleConfig {
 }
 
 /**
- * Configuration for rendering a hexagonal map
+ * Configuration for rendering a hexagonal map. The map draws its points as
+ * a tiled odd-r grid of touching pointy-top hexagons, as the UK layouts
+ * (data/ukHexLayouts) expect, sized to fit its frame.
  *
  * @example
  * ```typescript
  * const config: HexMapConfig = {
  *   height: 600,
- *   hexSize: 12,
  *   colorScale: {
  *     colors: ['#616161', '#BDBDBD', '#F2F2F2', '#D8E6F3', '#2C6496'],
  *     tickFormat: '£,.0f',
@@ -32,28 +33,6 @@ export interface ColorScaleConfig {
 export interface HexMapConfig {
   /** Height of the plot in pixels */
   height?: number;
-
-  /**
-   * On the untiled grid, the size of each hexagon. On either grid, twice it
-   * is the margin around the map. A tiled hexagon's size follows the scale
-   * instead, so its neighbours touch.
-   */
-  hexSize?: number;
-
-  /**
-   * Scale factor for coordinates to control spacing between hexagons.
-   * Values < 1 bring hexagons closer together, values > 1 spread them apart.
-   * Default is 1 (no scaling).
-   */
-  coordinateScale?: number;
-
-  /**
-   * Opt-in: draw the positions as a tiled `odd-r` hex grid, with pointy-top
-   * hexagons that touch and rows √3/2 of a column apart, as HexJSON layouts
-   * expect. Off: flat-topped hexagons on a square grid, as the API's
-   * positions expect.
-   */
-  tiled?: boolean;
 
   /** Color scale configuration */
   colorScale?: ColorScaleConfig;

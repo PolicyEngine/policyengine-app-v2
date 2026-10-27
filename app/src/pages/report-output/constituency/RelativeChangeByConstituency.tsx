@@ -95,7 +95,6 @@ export function RelativeChangeByConstituency({
         <HexagonalMap
           data={hexPoints}
           config={{
-            tiled: true,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,
               tickFormat: '.1%',

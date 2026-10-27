@@ -402,7 +402,6 @@ export default function UKLocalAreaMaps({
                   ...mapConfig,
                   // The legend reads in the rankings' units: pounds or percentages.
                   formatColorBarTick: formatValue,
-                  tiled: true,
                 }}
                 exportRef={mapRef}
                 selectedId={selectedArea ? selectedName : null}
