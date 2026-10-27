@@ -169,7 +169,7 @@ export function stateResult(
   }) as SocietyWideReportOutput;
 }
 
-/** How a state's base report stands on API v1 when the view opens. */
+/** How a state's base report stands on the Public API when the view opens. */
 export interface StoredStateReport {
   status: ReportMetadata['status'];
   /** The result stored on it, when complete. */
@@ -180,7 +180,7 @@ export const stateReportComplete = (region: string): StoredStateReport => ({
   status: 'complete',
   output: stateResult(region),
 });
-export const STATE_REPORT_COMPLETE_WITHOUT_DISTRICTS = (region: string): StoredStateReport => ({
+export const stateReportCompleteWithoutDistricts = (region: string): StoredStateReport => ({
   status: 'complete',
   output: stateResult(region, null),
 });
@@ -232,6 +232,8 @@ export interface FakeStateApiOptions {
   economy?: (region: string, request: number) => StateEconomyResponse;
   /** Record requests that fail, by state. */
   failingRecords?: string[];
+  /** Holds every economy response until `releaseEconomy()`. */
+  holdEconomy?: boolean;
 }
 
 export interface FakeStateApi {
@@ -245,12 +247,14 @@ export interface FakeStateApi {
   reportRequests: () => RecordedRequest[];
   /** The base report writes (PATCH /us/report), in order. */
   reportWrites: () => RecordedRequest[];
-  /** The base report ID API v1 gives a state. */
+  /** The base report ID the Public API gives a state. */
   reportIdFor: (region: string) => number;
   /** The most requests in flight at once so far. */
   maxInFlight: () => number;
   /** Lets record requests fail, or succeed again, by state. */
   setFailingRecords: (regions: string[]) => void;
+  /** Sends the economy responses held so far, and holds no more. */
+  releaseEconomy: () => void;
 }
 
 function ok(result: unknown): Response {
@@ -258,7 +262,7 @@ function ok(result: unknown): Response {
 }
 
 /**
- * API v1 as the state district runs use it: simulations and base reports
+ * The Public API as the state district runs use it: simulations and base reports
  * created or reused per state, the economy endpoint per state, and base
  * report writes. Each request settles a few ticks after it is sent, so the
  * requests in flight can be counted.
@@ -270,6 +274,8 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
   let failingRecords = new Set(options.failingRecords ?? []);
   let inFlight = 0;
   let maxInFlight = 0;
+  let holdEconomy = options.holdEconomy ?? false;
+  const heldEconomy: Array<() => void> = [];
 
   const reportIdFor = (region: string) => 5000 + ALL_US_STATE_CODES.indexOf(region);
 
@@ -303,6 +309,9 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
       return ok({ id: body.id, status: body.status });
     }
     if (url.includes('/us/economy/')) {
+      if (holdEconomy) {
+        await new Promise<void>((release) => heldEconomy.push(release));
+      }
       const region = new URL(url).searchParams.get('region')!;
       const call = economyCalls.get(region) ?? 0;
       economyCalls.set(region, call + 1);
@@ -361,10 +370,42 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
     setFailingRecords: (regions) => {
       failingRecords = new Set(regions);
     },
+    releaseEconomy: () => {
+      holdEconomy = false;
+      heldEconomy.splice(0).forEach((release) => release());
+    },
   };
 }
 
 /** Every state's base report complete with its districts. */
 export function allStatesComplete(): Record<string, StoredStateReport> {
   return Object.fromEntries(ALL_US_STATE_CODES.map((code) => [code, stateReportComplete(code)]));
+}
+
+/** How often a state that is still computing is polled. */
+export const STATE_POLL_INTERVAL_MS = 5000;
+
+/** How long a state may compute before it fails with Retry. */
+export const STATE_TIME_LIMIT_MS = 30 * 60 * 1000;
+
+/** The message once a state computes past its time limit. */
+export const STATE_TIME_LIMIT_MESSAGE =
+  'This state is taking much longer than expected. It may still finish on the server: retry to check it again.';
+
+/** A typical state run, for the clock. */
+export const STATE_EXPECTED_MS = 190 * 1000;
+
+/** The economy request a state's run sends: its region and the year, and nothing else. */
+export function stateEconomyUrl(region: string, year = STATE_RUNS_YEAR): string {
+  const query = new URLSearchParams({ region, time_period: year });
+  return `${BASE_URL}/us/economy/${STATE_RUNS_REFORM_POLICY_ID}/over/${STATE_RUNS_BASELINE_POLICY_ID}?${query}`;
+}
+
+/** Every state but these ok at once; these answer as `respond` says. */
+export function economyWhere(
+  respond: Record<string, (request: number) => StateEconomyResponse>,
+  others: (region: string, request: number) => StateEconomyResponse = (region) => stateOk(region)
+): (region: string, request: number) => StateEconomyResponse {
+  return (region, request) =>
+    respond[region] ? respond[region](request) : others(region, request);
 }

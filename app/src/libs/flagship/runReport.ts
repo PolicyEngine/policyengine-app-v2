@@ -312,10 +312,11 @@ const sendAtOnce: ReportRecordsRunner = (request) => request();
 /**
  * Creates, or reuses, a report's two simulations (the baseline's and the
  * reform's, on the same population) and the base report that pairs them
- * for the year. API v1 reuses a simulation with the same population and
- * policy, and a base report with the same simulations, year and cache
- * version, so a report that already exists comes back as stored, with its
- * status and output. Each of the three requests goes through `run`.
+ * for the year. The Public API reuses a simulation with the same
+ * population and policy, and a base report with the same simulations,
+ * year and cache version, so a report that already exists comes back as
+ * stored, with its status and output. Each of the three requests goes
+ * through `run`.
  */
 export async function createReportRecords(
   countryId: CountryId,

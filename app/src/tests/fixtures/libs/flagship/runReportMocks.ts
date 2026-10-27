@@ -13,11 +13,11 @@ export const CALIFORNIA_RECORDS_REQUEST = {
   year: STATE_RECORDS_YEAR,
 };
 
-/** The simulations API v1 creates, or reuses, for them. */
+/** The simulations the Public API creates, or reuses, for them. */
 export const CALIFORNIA_BASELINE_SIMULATION_ID = '301';
 export const CALIFORNIA_REFORM_SIMULATION_ID = '302';
 
-/** A base report API v1 already holds for the same simulations and year, with its result. */
+/** A base report the Public API already holds for the same simulations and year, with its result. */
 export const STORED_CALIFORNIA_REPORT: ReportMetadata = {
   id: 9001,
   country_id: 'us',

@@ -31,7 +31,7 @@ export interface BreakdownComputePanelProps {
   onRetry?: () => void;
   /** 0–100 while computing. */
   progress?: number;
-  /** The line under the bar while computing, e.g. a queue position. */
+  /** The text under the bar while computing, e.g. a queue position. */
   detail?: string;
   /** While partial: what is in and what is not. */
   summary?: string;
