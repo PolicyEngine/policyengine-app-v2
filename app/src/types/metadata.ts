@@ -118,7 +118,8 @@ export interface MetadataState {
   v2MissingParameterNames?: string[];
   /**
    * Which load of the v2 model catalog the store holds: a new load empties
-   * the parameters loaded on demand, so their queries are keyed by it.
+   * the parameters loaded on demand and the variables loaded in the
+   * background, so their queries are keyed by it.
    */
   v2LoadId?: string;
   /**

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor } from '@test-utils';
 import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { v1ShapedVariable } from '@/api/publicApi/catalogVariables';

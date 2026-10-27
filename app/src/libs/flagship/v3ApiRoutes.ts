@@ -7,9 +7,11 @@ import type { MetadataRoutes } from '@/types/metadata';
  *   reforms as `/v2/user-policies` rows pointing at v1 policies
  *   (`POST /{country}/policy`, `legacy_policy_id`).
  * - 'v2': only the small `/v2/model-catalog` at start; parameters, the
- *   parameter tree and search load on demand from the v2 catalog routes;
- *   saved reforms are `/v2/user-policies` rows pointing at `/v2/policies`
- *   (`policy_id`).
+ *   parameter tree and search load on demand from the v2 catalog routes,
+ *   and every variable of the catalog version loads once in the background
+ *   (`/v2/model-catalog/variables`) for the household builder and
+ *   breakdown; saved reforms are `/v2/user-policies` rows pointing at
+ *   `/v2/policies` (`policy_id`).
  *
  * This constant is the only place v3 chooses. It is not a runtime flag or an
  * environment variable, so every build behaves the same. It stays 'v1' until

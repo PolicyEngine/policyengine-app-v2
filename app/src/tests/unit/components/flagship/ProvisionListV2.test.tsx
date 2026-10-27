@@ -2,7 +2,6 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import ProvisionList from '@/components/flagship/ProvisionList';
-import ReportChanges from '@/components/flagship/report/ReportChanges';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { catalogVariablesEnvelope } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
@@ -35,7 +34,7 @@ function renderWithQueries(ui: React.ReactNode) {
   return render(<QueryClientProvider client={testQueryClient()}>{ui}</QueryClientProvider>);
 }
 
-describe('Lists of variables in v3 changes, on the v2 routes', () => {
+describe('ProvisionList with v3 on the v2 routes', () => {
   beforeEach(async () => {
     answerVariables = () => jsonResponse(catalogVariablesEnvelope());
     stubPublicApiFetch({ [VARIABLES_PATH]: () => answerVariables() });
@@ -70,53 +69,25 @@ describe('Lists of variables in v3 changes, on the v2 routes', () => {
     ).not.toBeInTheDocument();
   });
 
-  test('given the variables still loading then a report change list waits for their names', () => {
+  test('given the variables fail then the provision list says so and try again asks again', async () => {
     // Given
-    answerVariables = () => new Promise<Response>(() => {});
+    const user = userEvent.setup();
+    let attempts = 0;
+    answerVariables = () => {
+      attempts += 1;
+      return attempts === 1
+        ? jsonResponse({ status: 'error', message: 'Unavailable' }, 503)
+        : jsonResponse(catalogVariablesEnvelope());
+    };
+    renderWithQueries(<ProvisionList provisions={[LIST_PROVISION]} />);
+    const [retry] = await screen.findAllByRole('button', { name: 'Try again' });
+    expect(screen.getAllByText('Could not load the variable names').length).toBeGreaterThan(0);
 
     // When
-    renderWithQueries(<ReportChanges provisions={[LIST_PROVISION]} />);
-
-    // Then
-    expect(
-      screen.getAllByRole('status', { name: 'Loading variable names' }).length
-    ).toBeGreaterThan(0);
-    expect(screen.queryByText(/ssi/)).not.toBeInTheDocument();
-  });
-
-  test('given the variables arrive then a report change list names them by label', async () => {
-    // When
-    renderWithQueries(<ReportChanges provisions={[LIST_PROVISION]} />);
+    await user.click(retry);
 
     // Then
     expect((await screen.findAllByText(/SSI/)).length).toBeGreaterThan(0);
+    expect(screen.queryByText('Could not load the variable names')).not.toBeInTheDocument();
   });
-
-  test.each([
-    ['provision list', () => <ProvisionList provisions={[LIST_PROVISION]} />],
-    ['report change list', () => <ReportChanges provisions={[LIST_PROVISION]} />],
-  ])(
-    'given the variables fail then the %s says so and try again asks again',
-    async (_view, renderView) => {
-      // Given
-      const user = userEvent.setup();
-      let attempts = 0;
-      answerVariables = () => {
-        attempts += 1;
-        return attempts === 1
-          ? jsonResponse({ status: 'error', message: 'Unavailable' }, 503)
-          : jsonResponse(catalogVariablesEnvelope());
-      };
-      renderWithQueries(renderView());
-      const [retry] = await screen.findAllByRole('button', { name: 'Try again' });
-      expect(screen.getAllByText('Could not load the variable names').length).toBeGreaterThan(0);
-
-      // When
-      await user.click(retry);
-
-      // Then
-      expect((await screen.findAllByText(/SSI/)).length).toBeGreaterThan(0);
-      expect(screen.queryByText('Could not load the variable names')).not.toBeInTheDocument();
-    }
-  );
 });

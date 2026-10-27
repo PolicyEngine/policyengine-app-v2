@@ -16,7 +16,9 @@ import type { MetadataApiPayload, MetadataRegionEntry } from '@/types/metadata';
  *
  * Parameters and variables are not part of it. v3 loads them on demand
  * (the parameters of what is open, the parameter tree one level at a time,
- * and a search file in the background), so they start empty here. v1's
+ * and a search file in the background) and loads every variable once in the
+ * background after a page renders (`useV3VariablesInBackground`), so they
+ * start empty here. v1's
  * variable modules, modelled policies and SPM settings are not published
  * by v2 and stay empty too.
  */
