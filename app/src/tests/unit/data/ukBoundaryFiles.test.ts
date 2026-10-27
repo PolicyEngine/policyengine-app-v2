@@ -143,6 +143,19 @@ describe.each(LEVELS)(
       expect(mismatches).toEqual([]);
     });
 
+    test("given .py 6.10.0's list then the hex map's area names equal its names, code by code", () => {
+      // Given: withheld hexagons are named from these files, every other area from the results
+      const referenceNames = Object.fromEntries(
+        readPyAreaList(referenceFile).map((area) => [area.code, area.name])
+      );
+
+      // When
+      const names = UK_HEX_AREA_NAMES[boundaryLevel];
+
+      // Then
+      expect(names).toEqual(referenceNames);
+    });
+
     test('given the file then it is simplified, under 2 MB', () => {
       // When
       const bytes = fs.statSync(path.join(BOUNDARY_FILE_DIRECTORY, boundaryFile)).size;
