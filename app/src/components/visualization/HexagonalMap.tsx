@@ -405,20 +405,27 @@ export function HexagonalMap({
     ? (positionedData.find((point) => point.id === selectedId) ?? null)
     : null;
 
-  // Calculate data bounds
+  // Calculate data bounds. A tiled hexagon's size is a share of the scale,
+  // so the bounds take in each hexagon's edges, not only its centre: the map
+  // of a few areas, whose hexagons are large, then still fits its frame.
   const dataBounds = useMemo(() => {
     if (positionedData.length === 0) {
       return { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
     }
     const xs = positionedData.map((p) => p.x);
     const ys = positionedData.map((p) => p.y);
+    // A pointy-top hexagon reaches its radius up and down, and √3/2 of it sideways.
+    const verticalReach = fullConfig.tiled
+      ? TILED_HEX_RADIUS * (fullConfig.coordinateScale ?? 1)
+      : 0;
+    const horizontalReach = (verticalReach * Math.sqrt(3)) / 2;
     return {
-      xMin: Math.min(...xs),
-      xMax: Math.max(...xs),
-      yMin: Math.min(...ys),
-      yMax: Math.max(...ys),
+      xMin: Math.min(...xs) - horizontalReach,
+      xMax: Math.max(...xs) + horizontalReach,
+      yMin: Math.min(...ys) - verticalReach,
+      yMax: Math.max(...ys) + verticalReach,
     };
-  }, [positionedData]);
+  }, [positionedData, fullConfig.tiled, fullConfig.coordinateScale]);
 
   // Calculate color range
   const colorValues = positionedData.map((p) => p.value);
