@@ -26,6 +26,7 @@ import {
   CARDIFF_EAST_CODE,
   CLWYD_EAST_CODE,
   GOWER_CODE,
+  HARTLEPOOL_CODE,
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
   MONMOUTHSHIRE_CODE,
@@ -447,6 +448,44 @@ describe('UKLocalAreaMaps geographic map', () => {
     const tooltip = screen.getByRole('tooltip');
     expect(within(tooltip).getByText('Cardiff East')).toBeInTheDocument();
     expect(within(tooltip).getByText(NOT_REPORTED_TEXT)).toBeInTheDocument();
+  });
+
+  test('given a saved level beside a breakdown level then its boundary without a result reads no data, not withheld', async () => {
+    // Given: constituencies saved, local authorities from the breakdown
+    render(
+      <UKLocalAreaMaps
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={{ local_authority: SOME_WITHHELD_LOCAL_AUTHORITIES }}
+      />,
+      'uk'
+    );
+
+    // When
+    fireEvent.mouseEnter(await boundary(CARDIFF_EAST_CODE));
+
+    // Then
+    expect(within(screen.getByRole('tooltip')).getByText('No data')).toBeInTheDocument();
+  });
+
+  test('given a breakdown level beside a saved one then its boundary without a result reads not reported', async () => {
+    // Given: constituencies saved, local authorities from the breakdown, UK-wide
+    const user = userEvent.setup();
+    render(
+      <UKLocalAreaMaps
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={UK_WIDE_REGION}
+        withheld={{ local_authority: SOME_WITHHELD_LOCAL_AUTHORITIES }}
+      />,
+      'uk'
+    );
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // When: Hartlepool has no result
+    fireEvent.mouseEnter(await boundary(HARTLEPOOL_CODE));
+
+    // Then
+    expect(within(screen.getByRole('tooltip')).getByText(NOT_REPORTED_TEXT)).toBeInTheDocument();
   });
 
   test('given a saved result without an area then its boundary reads no data, not withheld', async () => {
