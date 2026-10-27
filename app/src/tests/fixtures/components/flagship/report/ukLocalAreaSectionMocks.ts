@@ -86,6 +86,12 @@ export const BREAKDOWN_CONSTITUENCY_NAME = 'East Kilbride and Strathaven';
 /** A stored constituency, by name. */
 export const STORED_CONSTITUENCY_NAME = 'Westminster North';
 
+/**
+ * The stored constituency's row in the rankings. It has no ONS code, so the
+ * hex map leaves it out; its ranking shows the constituency map is there.
+ */
+export const STORED_CONSTITUENCY_DETAILS = `Show details for ${STORED_CONSTITUENCY_NAME}`;
+
 /** The local authority the breakdown fixture holds, by name. */
 export const BREAKDOWN_LOCAL_AUTHORITY_NAME = 'Hartlepool';
 

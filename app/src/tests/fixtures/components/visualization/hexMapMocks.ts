@@ -59,8 +59,9 @@ export const MOCK_MIXED_VALUES: HexMapDataPoint[] = [
 ];
 
 /**
- * The corners of the UK constituency layout in report 4693 (UK-wide): a
- * narrow, tall grid, x 43 to 72 and y -46 to 0.
+ * A narrow, tall grid, x 43 to 72 and y -46 to 0, with the corners of the
+ * UK constituency layout as the Public API's positions gave them in report
+ * 4693 (UK-wide): the shape of a UK-wide hex map.
  */
 export const MOCK_UK_SHAPED_HEX_DATA: HexMapDataPoint[] = [
   { id: 'orkney', label: 'Orkney and Shetland', value: 0, x: 51, y: 0 },

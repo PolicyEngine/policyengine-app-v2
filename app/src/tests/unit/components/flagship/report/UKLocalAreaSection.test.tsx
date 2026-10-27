@@ -9,7 +9,7 @@ import {
   BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
-  STORED_CONSTITUENCY_NAME,
+  STORED_CONSTITUENCY_DETAILS,
   STORED_OUTPUT_WITH_AREAS,
   UK_SECTION_PROPS,
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
@@ -55,12 +55,6 @@ function renderSection(output = NATIONAL_OUTPUT_WITHOUT_AREAS, props = UK_SECTIO
 }
 
 describe('UKLocalAreaSection', () => {
-  /**
-   * The stored constituency's row in the rankings. It has no ONS code, so the
-   * hex map leaves it out; its ranking shows the constituency map is there.
-   */
-  const STORED_CONSTITUENCY_DETAILS = `Show details for ${STORED_CONSTITUENCY_NAME}`;
-
   beforeEach(() => {
     vi.stubGlobal('fetch', mockUKBoundaryFetch());
     vi.clearAllMocks();
