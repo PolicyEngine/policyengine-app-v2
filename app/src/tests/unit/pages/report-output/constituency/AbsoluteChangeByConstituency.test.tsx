@@ -1,8 +1,10 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { AbsoluteChangeByConstituency } from '@/pages/report-output/constituency/AbsoluteChangeByConstituency';
 import {
   UK_LOCAL_AREAS_OUTPUT,
+  UK_LOCAL_AREAS_OUTPUT_NO_CODES,
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
@@ -19,6 +21,12 @@ import {
   MOCK_UK_REPORT_OUTPUT,
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
 } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
+import {
+  hexagonArrangement,
+  isPointyTopped,
+  v2Hexagons,
+  v3HexagonArrangement,
+} from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
 import { withNullAreaImpacts } from '@/tests/fixtures/pages/report-output/ukLocalAreaBreakdownPageMocks';
 
 beforeEach(() => {
@@ -170,5 +178,50 @@ describe('AbsoluteChangeByConstituency map type', () => {
 
     // Then
     expect(screen.getByRole('tooltip')).toHaveTextContent(`Cardiff East${NOT_PUBLISHED_TEXT}`);
+  });
+});
+
+describe('AbsoluteChangeByConstituency hex map placement', () => {
+  /** The chart's hex map of `output`, with the hex grid chosen. */
+  async function renderHexMap(output: SocietyWideReportOutput) {
+    const user = userEvent.setup();
+    const { container } = render(<AbsoluteChangeByConstituency output={output} />);
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
+    return container;
+  }
+
+  test('given constituencies with codes then the hex map puts each in the hex v3’s does', async () => {
+    // Given
+    const v3Arrangement = await v3HexagonArrangement(UK_LOCAL_AREAS_OUTPUT, 'constituency');
+
+    // When
+    const container = await renderHexMap(UK_LOCAL_AREAS_OUTPUT);
+
+    // Then
+    expect(hexagonArrangement(v2Hexagons(container))).toEqual(v3Arrangement);
+  });
+
+  test('given constituencies with codes then the hex map draws the tiled grid’s pointy-topped hexagons', async () => {
+    // When
+    const container = await renderHexMap(UK_LOCAL_AREAS_OUTPUT);
+
+    // Then
+    expect(v2Hexagons(container).every(isPointyTopped)).toBe(true);
+  });
+
+  test('given constituencies without codes then the hex map keeps their results’ positions, as v3’s does', async () => {
+    // Given
+    const v3Arrangement = await v3HexagonArrangement(
+      UK_LOCAL_AREAS_OUTPUT_NO_CODES,
+      'constituency'
+    );
+
+    // When
+    const container = await renderHexMap(UK_LOCAL_AREAS_OUTPUT_NO_CODES);
+
+    // Then: on the square grid of flat-topped hexagons those positions were made for
+    expect(hexagonArrangement(v2Hexagons(container))).toEqual(v3Arrangement);
+    expect(v2Hexagons(container).some(isPointyTopped)).toBe(false);
   });
 });

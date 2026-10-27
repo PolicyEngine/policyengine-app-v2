@@ -1,10 +1,17 @@
 import { describe, expect, test } from 'vitest';
-import { UK_HEX_LAYOUTS, ukHexPosition } from '@/components/visualization/choropleth/ukHexLayout';
+import {
+  placeOnUKHexLayout,
+  UK_HEX_LAYOUTS,
+  ukHexPosition,
+} from '@/components/visualization/choropleth/ukHexLayout';
 import {
   BARNSLEY_NORTH_CODE,
   BARNSLEY_NORTH_HEX,
+  BARNSLEY_NORTH_POINT,
   HARTLEPOOL_CODE,
   HARTLEPOOL_HEX,
+  HARTLEPOOL_POINT,
+  UNCODED_POINT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
 
 describe('ukHexPosition', () => {
@@ -63,5 +70,55 @@ describe('ukHexPosition', () => {
     // Then
     expect(Math.min(...scottishRows)).toBeGreaterThan(Math.min(...englishRows));
     expect(Math.max(...scottishRows)).toBeGreaterThan(Math.max(...englishRows));
+  });
+});
+
+describe('placeOnUKHexLayout', () => {
+  test('given points whose codes the layout has then each takes its layout position, tiled', () => {
+    // When
+    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT]);
+
+    // Then
+    expect(placement).toEqual({
+      points: [{ ...BARNSLEY_NORTH_POINT, x: BARNSLEY_NORTH_HEX[0], y: BARNSLEY_NORTH_HEX[1] + 1 }],
+      tiled: true,
+    });
+  });
+
+  test('given a local authority then it reads the local authority layout', () => {
+    // When
+    const placement = placeOnUKHexLayout('local_authority', [HARTLEPOOL_POINT]);
+
+    // Then
+    expect(placement.points[0]).toEqual({
+      ...HARTLEPOOL_POINT,
+      x: HARTLEPOOL_HEX[0],
+      y: HARTLEPOOL_HEX[1] + 1,
+    });
+  });
+
+  test('given a point without a code then it keeps its own position and the grid is not tiled', () => {
+    // When
+    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT]);
+
+    // Then
+    expect(placement.points[1]).toEqual(UNCODED_POINT);
+    expect(placement.tiled).toBe(false);
+  });
+
+  test('given a point without a layout position then the others still take theirs', () => {
+    // When
+    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT]);
+
+    // Then
+    expect(placement.points[0]).toMatchObject(ukHexPosition('constituency', BARNSLEY_NORTH_CODE)!);
+  });
+
+  test("given a code the level's layout lacks then the point keeps its own position", () => {
+    // When
+    const placement = placeOnUKHexLayout('constituency', [HARTLEPOOL_POINT]);
+
+    // Then
+    expect(placement).toEqual({ points: [HARTLEPOOL_POINT], tiled: false });
   });
 });
