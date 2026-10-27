@@ -16,29 +16,19 @@ import type { AppDispatch, RootState } from '@/store';
  * Whether every variable of the model is in the metadata store
  * (`state.metadata.variables`), for the v3 views that read them: the
  * household builder and its variable picker, the household breakdown,
- * provision and change lists that name variables, and calibration matches.
+ * provision and change lists that name variables, programme names and
+ * calibration matches.
  *
- * On the v1 routes the whole metadata holds every variable, so they are
- * ready once it is. On the v2 routes the store starts with none: all of
- * the catalog version's variables load once, in the background, after a
- * v3 page renders, and views that read them show their loading state until
- * they are in, with no time limit.
+ * On the v1 routes the whole metadata holds every variable, and the pages
+ * handle its loading as before, so for these views the variables are always
+ * 'ready'. On the v2 routes the store starts with none: all of the catalog
+ * version's variables load once per model catalog load, in the background,
+ * and views show their loading state while they are 'waiting' (with no time
+ * limit), or say they 'failed' and offer `retry`.
  */
 export interface V3VariablesStatus {
-  status: 'loading' | 'error' | 'ready';
-  /**
-   * Whether the variables are being loaded right now: only ever on the v2
-   * routes. On v1, 'loading' means the whole metadata is not in yet, which
-   * views that never waited for it before can ignore.
-   */
-  waiting: boolean;
-  /**
-   * Whether loading them failed: only ever on the v2 routes, where views
-   * then say so and offer `retry`. On v1 a failed whole metadata is the
-   * page's own concern, as before.
-   */
-  failed: boolean;
-  /** The failure's message, when the status is 'error'. */
+  state: 'ready' | 'waiting' | 'failed';
+  /** The failure's message, when the state is 'failed'. */
   message: string | null;
   retry: () => unknown;
 }
@@ -53,71 +43,94 @@ export function v2CatalogVariablesKey(
   policyengineVersion: string | null,
   loadId: string | null
 ) {
-  return ['v2-catalog-variables', countryId, policyengineVersion, loadId] as const;
+  return [V2_CATALOG_VARIABLES, countryId, policyengineVersion, loadId] as const;
 }
 
-/** A catalog version's variables never change, so they are fetched once per model catalog load. */
-const VARIABLES_QUERY_OPTIONS = { staleTime: Infinity, gcTime: Infinity } as const;
+const V2_CATALOG_VARIABLES = 'v2-catalog-variables';
 
-function useV1Variables(): V3VariablesStatus {
-  const metadata = useFlagshipMetadataStatus();
-  return {
-    status: metadata.status,
-    waiting: false,
-    failed: false,
-    message: metadata.message,
-    retry: metadata.retry,
-  };
+/**
+ * How long an unread variables query stays cached. The store keeps the
+ * variables for the current load; an earlier load's query is removed when a
+ * new load starts (see useV2VariablesInBackground), so this only bounds a
+ * query nothing reads any more.
+ */
+const VARIABLES_QUERY_GC_TIME = 5 * 60 * 1000;
+
+/** What a variables load is for: the page's country and the store's current model catalog load. */
+interface VariablesTarget {
+  countryId: string;
+  policyengineVersion: string | null;
+  loadId: string | null;
+  /** Not for a model catalog of another country than the page's (a country change in flight). */
+  enabled: boolean;
 }
 
-function useV2Variables(): V3VariablesStatus {
+function useV2VariablesTarget(): VariablesTarget {
   const countryId = useCurrentCountry();
-  const dispatch = useDispatch<AppDispatch>();
-  const metadata = useFlagshipMetadataStatus();
   const storeCountry = useSelector((state: RootState) => state.metadata.currentCountry);
   const policyengineVersion = useSelector(selectV2CatalogVersion);
   const loadId = useSelector(selectV2LoadId);
-  const loadedUnder = useSelector((state: RootState) => state.metadata.v2VariablesLoadId);
-  const inStore = loadId !== null && loadedUnder === loadId;
-  const query = useQuery({
-    queryKey: v2CatalogVariablesKey(countryId, policyengineVersion, loadId),
-    queryFn: () => fetchCatalogVariables(countryId, policyengineVersion!),
-    // Not for a model catalog of another country than the page's (a country change in flight).
+  return {
+    countryId,
+    policyengineVersion,
+    loadId,
     enabled: policyengineVersion !== null && loadId !== null && storeCountry === countryId,
-    ...VARIABLES_QUERY_OPTIONS,
-  });
+  };
+}
 
-  // The query holds the response; the store holds what views read. Several
-  // readers share one query, so whichever sees the response first fills the
-  // store, for the load it was asked under only.
-  useEffect(() => {
-    if (query.data && policyengineVersion !== null && loadId !== null && !inStore) {
-      dispatch(catalogVariablesLoaded({ countryId, policyengineVersion, loadId, ...query.data }));
-    }
-  }, [query.data, policyengineVersion, loadId, inStore, countryId, dispatch]);
+/**
+ * The one query both the readers and the background load use: it fetches
+ * the catalog version's variables and puts them in the store, under the
+ * load they were asked for (a response for an earlier load is dropped).
+ * A catalog version's variables never change, so it is never stale.
+ */
+function catalogVariablesQuery(dispatch: AppDispatch, target: VariablesTarget) {
+  const { countryId, policyengineVersion, loadId } = target;
+  return {
+    queryKey: v2CatalogVariablesKey(countryId, policyengineVersion, loadId),
+    queryFn: async () => {
+      const loaded = await fetchCatalogVariables(countryId, policyengineVersion!);
+      dispatch(
+        catalogVariablesLoaded({
+          countryId,
+          policyengineVersion: policyengineVersion!,
+          loadId: loadId!,
+          ...loaded,
+        })
+      );
+      return loaded;
+    },
+    staleTime: Infinity,
+    gcTime: VARIABLES_QUERY_GC_TIME,
+  };
+}
 
-  if (inStore) {
-    return { status: 'ready', waiting: false, failed: false, message: null, retry: query.refetch };
+function useV1Variables(): V3VariablesStatus {
+  const metadata = useFlagshipMetadataStatus();
+  return { state: 'ready', message: null, retry: metadata.retry };
+}
+
+function useV2Variables(): V3VariablesStatus {
+  const dispatch = useDispatch<AppDispatch>();
+  const metadata = useFlagshipMetadataStatus();
+  const target = useV2VariablesTarget();
+  const loadedUnder = useSelector((state: RootState) => state.metadata.v2VariablesLoadId);
+  const query = useQuery({ ...catalogVariablesQuery(dispatch, target), enabled: target.enabled });
+
+  if (target.loadId !== null && loadedUnder === target.loadId) {
+    return { state: 'ready', message: null, retry: query.refetch };
   }
   if (metadata.status === 'error') {
-    return {
-      status: 'error',
-      waiting: false,
-      failed: true,
-      message: metadata.message,
-      retry: metadata.retry,
-    };
+    return { state: 'failed', message: metadata.message, retry: metadata.retry };
   }
   if (query.isError) {
     return {
-      status: 'error',
-      waiting: false,
-      failed: true,
+      state: 'failed',
       message: query.error instanceof Error ? query.error.message : null,
       retry: query.refetch,
     };
   }
-  return { status: 'loading', waiting: true, failed: false, message: null, retry: query.refetch };
+  return { state: 'waiting', message: null, retry: query.refetch };
 }
 
 /**
@@ -130,37 +143,33 @@ export const useV3Variables: () => V3VariablesStatus =
 
 /**
  * Starts loading the catalog version's variables once a v3 page has
- * rendered, and puts them in the metadata store when they arrive, so they
- * are in by the time a household is built or broken down, also for views
- * that read `state.metadata.variables` without `useV3Variables`. Nothing
- * when the store's model catalog is for another country than the page's
- * (a country change whose catalog has not loaded yet), and nothing on the
+ * rendered, so they are in the store by the time a household is built or
+ * broken down, also for views that read `state.metadata.variables` without
+ * `useV3Variables`. An earlier model catalog load's query is removed first,
+ * so only the current load's variables stay cached. Nothing when the store's
+ * model catalog is for another country than the page's, and nothing on the
  * v1 routes, where the whole metadata holds the variables.
  */
 function useV2VariablesInBackground(): void {
-  const countryId = useCurrentCountry();
   const dispatch = useDispatch<AppDispatch>();
-  const storeCountry = useSelector((state: RootState) => state.metadata.currentCountry);
-  const policyengineVersion = useSelector(selectV2CatalogVersion);
-  const loadId = useSelector(selectV2LoadId);
+  const target = useV2VariablesTarget();
   const queryClient = useQueryClient();
+  const { countryId, policyengineVersion, loadId, enabled } = target;
   useEffect(() => {
-    if (policyengineVersion === null || loadId === null || storeCountry !== countryId) {
+    if (!enabled) {
       return;
     }
+    queryClient.removeQueries({
+      queryKey: [V2_CATALOG_VARIABLES],
+      predicate: (cached) => cached.queryKey[3] !== loadId,
+    });
+    // A failure stays in the query, where views waiting for the variables report it.
     queryClient
-      .fetchQuery({
-        queryKey: v2CatalogVariablesKey(countryId, policyengineVersion, loadId),
-        queryFn: () => fetchCatalogVariables(countryId, policyengineVersion),
-        ...VARIABLES_QUERY_OPTIONS,
-      })
-      .then(
-        (loaded) =>
-          dispatch(catalogVariablesLoaded({ countryId, policyengineVersion, loadId, ...loaded })),
-        // A failure stays in the query, where views waiting for the variables report it.
-        () => undefined
-      );
-  }, [countryId, storeCountry, policyengineVersion, loadId, queryClient, dispatch]);
+      .fetchQuery(
+        catalogVariablesQuery(dispatch, { countryId, policyengineVersion, loadId, enabled })
+      )
+      .catch(() => undefined);
+  }, [countryId, policyengineVersion, loadId, enabled, queryClient, dispatch]);
 }
 
 function noBackgroundLoad(): void {}

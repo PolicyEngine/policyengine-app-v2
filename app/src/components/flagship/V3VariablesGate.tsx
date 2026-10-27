@@ -2,7 +2,6 @@ import { ErrorState } from '@/components/flagship/states';
 import { Skeleton } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useV3Variables } from '@/hooks/useV3Variables';
-import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 
 interface V3VariablesGateProps {
   children: React.ReactNode;
@@ -45,25 +44,19 @@ export function VariableNamesFailed({ onRetry }: { onRetry: () => unknown }) {
 }
 
 /**
- * On the v2 routes, content that reads the model's variables (the household
- * builder and breakdown, programme names) waits behind a placeholder until
- * the catalog version's variables, loading in the background, are in, with
- * no time limit; a failure says so and asks again. On the v1 routes the
- * whole metadata holds the variables, so the content shows as before.
+ * Content that reads the model's variables (the household builder and
+ * breakdown, programme names), shown once `useV3Variables` says they are
+ * 'ready'. On the v2 routes it waits behind a placeholder while they load in
+ * the background, with no time limit, and a failure says so and asks again;
+ * on the v1 routes they are always ready, so the content shows as before.
  */
-function V2VariablesGate({ children, label, placeholder }: V3VariablesGateProps) {
+export default function V3VariablesGate({ children, label, placeholder }: V3VariablesGateProps) {
   const variables = useV3Variables();
-  if (variables.status === 'error') {
+  if (variables.state === 'failed') {
     return <ErrorState title="Could not load the model's variables" onRetry={variables.retry} />;
   }
-  if (variables.status !== 'ready') {
+  if (variables.state === 'waiting') {
     return <>{placeholder ?? <DefaultPlaceholder label={label} />}</>;
   }
   return <>{children}</>;
 }
-
-function V1VariablesGate({ children }: V3VariablesGateProps) {
-  return <>{children}</>;
-}
-
-export default V3_API_ROUTES === 'v2' ? V2VariablesGate : V1VariablesGate;

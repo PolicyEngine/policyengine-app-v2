@@ -22,11 +22,11 @@ describe('useV3Variables on the v1 routes (before the switch)', () => {
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper() });
 
     // Then
-    expect(result.current).toMatchObject({ status: 'ready', waiting: false });
+    expect(result.current.state).toBe('ready');
     expect(fetchStub).not.toHaveBeenCalled();
   });
 
-  test('given the whole metadata still loading then nothing waits on the v2 routes', () => {
+  test('given the whole metadata still loading then the variables views do not wait', () => {
     // Given
     stubPublicApiFetch();
 
@@ -34,7 +34,7 @@ describe('useV3Variables on the v1 routes (before the switch)', () => {
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper() });
 
     // Then
-    expect(result.current.waiting).toBe(false);
+    expect(result.current.state).toBe('ready');
   });
 
   test('given a page that rendered then nothing loads in the background', () => {
