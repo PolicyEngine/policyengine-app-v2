@@ -94,15 +94,11 @@ describe("Deployments developer tool", () => {
       await screen.findByText("1 service not deployed"),
     ).toBeInTheDocument();
     // The overview shows lock and served values where they drift.
-    const overviewApi = screen
-      .getByRole("link", { name: "PolicyEngine API" })
-      .closest("tr")!;
+    const overviewApi = screen.getByText("PolicyEngine API").closest("tr")!;
     expect(within(overviewApi).getByText("Not deployed")).toBeInTheDocument();
     expect(within(overviewApi).getByText("6.11.1")).toBeInTheDocument();
     expect(within(overviewApi).getByText("6.10.0")).toBeInTheDocument();
-    const overviewHousehold = screen
-      .getByRole("link", { name: "Household API" })
-      .closest("tr")!;
+    const overviewHousehold = screen.getByText("Household API").closest("tr")!;
     expect(
       within(overviewHousehold).getByText("Not reported"),
     ).toBeInTheDocument();
@@ -110,11 +106,11 @@ describe("Deployments developer tool", () => {
       within(overviewHousehold).getByText("No dataset"),
     ).toBeInTheDocument();
 
-    // The detail card names the source of the served data build.
-    const apiCard = document.getElementById("service-api")!;
-    expect(
-      within(apiCard).getByText(/\(via served \.py\)/),
-    ).toBeInTheDocument();
+    // The status explains itself on hover.
+    expect(within(overviewApi).getByText("Not deployed")).toHaveAttribute(
+      "title",
+      "Not deployed as declared: it serves .py 6.10.0, but the lock declares 6.11.1.",
+    );
     expect(global.fetch).toHaveBeenCalledWith("/api/deployments?country=us");
   });
 

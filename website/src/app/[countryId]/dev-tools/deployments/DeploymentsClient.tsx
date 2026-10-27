@@ -83,11 +83,24 @@ const sectionStyle = {
   paddingRight: "6.125%",
 };
 
-function Pill({ label, tone }: { label: string; tone: Tone }) {
+function Pill({
+  label,
+  tone,
+  title,
+}: {
+  label: string;
+  tone: Tone;
+  title?: string;
+}) {
   return (
     <span
       className="tw:inline-flex tw:items-center tw:rounded-full tw:px-2 tw:py-0.5 tw:text-xs tw:font-medium tw:whitespace-nowrap"
-      style={{ backgroundColor: TONES[tone].bg, color: TONES[tone].text }}
+      style={{
+        backgroundColor: TONES[tone].bg,
+        color: TONES[tone].text,
+        cursor: title ? "help" : undefined,
+      }}
+      title={title}
     >
       {label}
     </span>
@@ -169,150 +182,6 @@ function Facts({ items }: { items: [string, React.ReactNode][] }) {
         </div>
       ))}
     </dl>
-  );
-}
-
-function Side({
-  title,
-  pill,
-  facts,
-  detail,
-}: {
-  title: string;
-  pill: { label: string; tone: Tone };
-  facts: [string, React.ReactNode][] | null;
-  detail: React.ReactNode;
-}) {
-  return (
-    <div className="tw:min-w-0">
-      <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
-        <span
-          style={{
-            fontSize: typography.fontSize.xs,
-            fontWeight: typography.fontWeight.semibold,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            color: colors.text.secondary,
-          }}
-        >
-          {title}
-        </span>
-        <Pill {...pill} />
-      </div>
-      {facts && <Facts items={facts} />}
-      <div style={{ ...mutedText, marginTop: spacing.sm }}>{detail}</div>
-    </div>
-  );
-}
-
-function ServiceCard({
-  row,
-  country,
-  modelLabel,
-}: {
-  row: DeploymentRow;
-  country: DeploymentCountry;
-  modelLabel: string;
-}) {
-  const { surface, served } = row;
-  return (
-    <section
-      id={`service-${surface.id}`}
-      style={{
-        ...cardStyle,
-        padding: spacing.xl,
-        scrollMarginTop: spacing["4xl"],
-      }}
-    >
-      <div className="tw:flex tw:flex-wrap tw:items-baseline tw:justify-between tw:gap-x-4 tw:gap-y-1">
-        <Text
-          style={{
-            fontSize: typography.fontSize.lg,
-            fontWeight: typography.fontWeight.semibold,
-            color: colors.text.primary,
-          }}
-        >
-          {surface.label}
-        </Text>
-        <span style={mutedText}>
-          {surface.serves} ·{" "}
-          <ExternalLink href={`https://github.com/${surface.repository}`}>
-            {surface.repository.replace("PolicyEngine/", "")}
-          </ExternalLink>
-          {row.lock_url && (
-            <>
-              {" · "}
-              <ExternalLink href={row.lock_url}>lock</ExternalLink>
-            </>
-          )}
-        </span>
-      </div>
-
-      <div
-        className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-6"
-        style={{ marginTop: spacing.lg }}
-      >
-        <Side
-          title="Declared"
-          pill={DECLARED[row.status]}
-          facts={[
-            [".py", <PyVersion key="py" value={row.py_version} />],
-            [modelLabel, <Version key="model" value={row.model_version} />],
-            ["Core", <Version key="core" value={row.core_version} />],
-            [
-              "Data build",
-              <BuildId
-                key="data"
-                buildId={row.data_build_id}
-                country={country}
-              />,
-            ],
-          ]}
-          detail={row.detail}
-        />
-        <Side
-          title="Served"
-          pill={SERVED[served.status]}
-          facts={
-            served.py_version
-              ? [
-                  [".py", <Version key="py" value={served.py_version} />],
-                  [
-                    modelLabel,
-                    <Version key="model" value={served.model_version} />,
-                  ],
-                  [
-                    "Data build",
-                    <span key="data">
-                      <BuildId
-                        buildId={served.data_build_id}
-                        country={country}
-                      />
-                      {served.data_basis === "served_py_bundle" && (
-                        <span style={{ color: colors.text.secondary }}>
-                          {" "}
-                          (via served .py)
-                        </span>
-                      )}
-                    </span>,
-                  ],
-                ]
-              : null
-          }
-          detail={
-            <>
-              {served.detail}
-              {served.source_url && (
-                <>
-                  {" "}
-                  <ExternalLink href={served.source_url}>Source</ExternalLink>
-                </>
-              )}
-            </>
-          }
-        />
-      </div>
-    </section>
   );
 }
 
@@ -415,15 +284,14 @@ function Overview({
                 style={{ borderBottom: `1px solid ${colors.border.light}` }}
               >
                 <td className={cell}>
-                  <a
-                    href={`#service-${row.surface.id}`}
+                  <div
                     style={{
                       fontWeight: typography.fontWeight.semibold,
                       color: colors.text.primary,
                     }}
                   >
                     {row.surface.label}
-                  </a>
+                  </div>
                   <div
                     style={{
                       fontSize: typography.fontSize.xs,
@@ -431,13 +299,36 @@ function Overview({
                     }}
                   >
                     {row.surface.serves}
+                    <br />
+                    <ExternalLink
+                      href={`https://github.com/${row.surface.repository}`}
+                    >
+                      {row.surface.repository.replace("PolicyEngine/", "")}
+                    </ExternalLink>
+                    {row.lock_url && (
+                      <>
+                        {" · "}
+                        <ExternalLink href={row.lock_url}>lock</ExternalLink>
+                      </>
+                    )}
+                    {row.served.source_url && (
+                      <>
+                        {" · "}
+                        <ExternalLink href={row.served.source_url}>
+                          report
+                        </ExternalLink>
+                      </>
+                    )}
                   </div>
                 </td>
                 <td className={cell}>
-                  <Pill {...SERVED[row.served.status]} />
+                  <Pill
+                    {...SERVED[row.served.status]}
+                    title={row.served.detail}
+                  />
                 </td>
                 <td className={cell}>
-                  <Pill {...DECLARED[row.status]} />
+                  <Pill {...DECLARED[row.status]} title={row.detail} />
                 </td>
                 <td
                   className={cell}
@@ -646,34 +537,6 @@ export default function DeploymentsClient({
       </div>
 
       <Overview rows={data.rows} modelLabel={modelLabel} />
-
-      <Text
-        style={{
-          fontSize: typography.fontSize.lg,
-          fontWeight: typography.fontWeight.semibold,
-          color: colors.text.primary,
-          marginBottom: spacing.md,
-        }}
-      >
-        Details
-      </Text>
-      <div className="tw:flex tw:flex-col tw:gap-4">
-        {data.rows.map((row) => (
-          <ServiceCard
-            key={row.surface.id}
-            row={row}
-            country={country}
-            modelLabel={modelLabel}
-          />
-        ))}
-      </div>
-
-      <div style={{ ...mutedText, marginTop: spacing.lg }}>
-        Declared: the lock file on each repository&apos;s default branch, and
-        the data build that its .py certifies. Served: what the running service
-        reports. Checked {new Date(data.checked_at).toLocaleString("en-US")};
-        cached for 15 minutes.
-      </div>
     </div>
   );
 }
