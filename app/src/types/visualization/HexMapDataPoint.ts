@@ -25,10 +25,10 @@ export interface HexMapDataPoint {
   /** The value to visualize (determines color) */
   value: number;
 
-  /** X-coordinate on the hexagonal grid (0-based) */
+  /** X-coordinate on the hexagonal grid: a column, which can be negative */
   x: number;
 
-  /** Y-coordinate on the hexagonal grid (0-based) */
+  /** Y-coordinate on the hexagonal grid: a row, which can be negative */
   y: number;
 
   /** The area's code, e.g. a UK area's ONS code, when the data gives one. */
@@ -54,9 +54,9 @@ export interface HexMapMissingArea {
   /** Display label (e.g., constituency name) */
   label: string;
 
-  /** X-coordinate on the hexagonal grid (0-based) */
+  /** X-coordinate on the hexagonal grid: a column, which can be negative */
   x: number;
 
-  /** Y-coordinate on the hexagonal grid (0-based) */
+  /** Y-coordinate on the hexagonal grid: a row, which can be negative */
   y: number;
 }
