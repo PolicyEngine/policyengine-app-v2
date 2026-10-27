@@ -319,3 +319,22 @@ export function withUKBreakdowns(output: SocietyWideReportOutput): SocietyWideRe
     detailed_budget: UK_DETAILED_BUDGET,
   } as unknown as SocietyWideReportOutput;
 }
+
+/**
+ * Report 4738's budget (the UK's 2027 Universal Credit freeze): the total,
+ * £958.5m, includes £25.0m of Scottish Child Payment that the detailed
+ * budget has no row for, so its rows add up to only £933.5m.
+ */
+export const UC_FREEZE_TOTAL = 958.5e6;
+export const UC_FREEZE_DETAILED_BUDGET = {
+  universal_credit: { baseline: 82244.8e6, reform: 81311.3e6, difference: -933.5e6 },
+  child_benefit: { baseline: 14306.5e6, reform: 14306.5e6, difference: 0 },
+};
+
+/** A report's output with report 4738's UK budget and detailed budget. */
+export function withUCFreezeBudget(output: SocietyWideReportOutput): SocietyWideReportOutput {
+  return {
+    ...withBudget(output, { federal: 0, state: 0, benefits: -UC_FREEZE_TOTAL }),
+    detailed_budget: UC_FREEZE_DETAILED_BUDGET,
+  } as unknown as SocietyWideReportOutput;
+}

@@ -3,11 +3,15 @@ import { render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import BudgetaryImpactByProgramSubPage, {
   getChangedPrograms,
+  getOtherProgramsAmount,
 } from '@/components/flagship/report/charts/BudgetaryImpactByProgramSubPage';
 import DistributionalImpactIncomeAverageSubPage from '@/components/flagship/report/charts/DistributionalImpactIncomeAverageSubPage';
 import WinnersLosersIncomeDecileSubPage from '@/components/flagship/report/charts/WinnersLosersIncomeDecileSubPage';
 import {
   REPORT_4332_OUTPUT,
+  UC_FREEZE_TOTAL,
+  withBudget,
+  withUCFreezeBudget,
   withUKBreakdowns,
 } from '@/tests/fixtures/components/flagship/report/charts/reportChartMocks';
 
@@ -56,7 +60,62 @@ describe('getChangedPrograms', () => {
   });
 });
 
+describe('getOtherProgramsAmount', () => {
+  test('given programs that add up to the total then there is nothing else', () => {
+    expect(getOtherProgramsAmount(1.5e9, [{ value: 2e9 }, { value: -0.5e9 }])).toBe(0);
+  });
+
+  test('given a total that the programs fall short of then returns the difference', () => {
+    // Report 4738: £25.0m of Scottish Child Payment has no row of its own.
+    expect(getOtherProgramsAmount(UC_FREEZE_TOTAL, [{ value: 933.5e6 }])).toBeCloseTo(25e6);
+  });
+
+  test('given a difference within rounding then there is nothing else', () => {
+    expect(getOtherProgramsAmount(958.5e6, [{ value: 958.4e6 }])).toBe(0);
+  });
+
+  test('given a total that no listed program explains then returns all of it', () => {
+    expect(getOtherProgramsAmount(17e6, [])).toBe(17e6);
+  });
+});
+
 describe('BudgetaryImpactByProgramSubPage', () => {
+  test('given a total the programmes fall short of then an other programmes bar makes up the gap', () => {
+    // Given
+    const output = withUCFreezeBudget(REPORT_4332_OUTPUT);
+
+    // When
+    render(<BudgetaryImpactByProgramSubPage output={output} fillHeight />, 'uk');
+
+    // Then
+    expect(screen.getByText('Other programmes')).toBeInTheDocument();
+    expect(screen.getByText('£25.0m')).toBeInTheDocument();
+    expect(screen.getByText('£958.5m')).toBeInTheDocument();
+  });
+
+  test('given programmes that add up to the total then there is no other programmes bar', () => {
+    render(<BudgetaryImpactByProgramSubPage output={UK_OUTPUT} fillHeight />, 'uk');
+
+    expect(screen.queryByText('Other programmes')).not.toBeInTheDocument();
+  });
+
+  test('given a total with no listed programme changing then the whole total is other programmes', () => {
+    // Given: a PIP cut, which no listed programme covers.
+    const output = {
+      ...withBudget(UK_OUTPUT, { federal: 0, state: 0, benefits: -17e6 }),
+      detailed_budget: { universal_credit: { baseline: 1, reform: 1, difference: 0 } },
+    } as typeof UK_OUTPUT;
+
+    // When
+    render(<BudgetaryImpactByProgramSubPage output={output} fillHeight />, 'uk');
+
+    // Then
+    expect(screen.getByText('Other programmes')).toBeInTheDocument();
+    expect(
+      screen.queryByText('This reform has no impact on individual programmes.')
+    ).not.toBeInTheDocument();
+  });
+
   test('given no detailed budget then says it is not available', () => {
     render(<BudgetaryImpactByProgramSubPage output={REPORT_4332_OUTPUT} fillHeight />, 'uk');
 
@@ -67,7 +126,7 @@ describe('BudgetaryImpactByProgramSubPage', () => {
 
   test('given a budget where no program changes then says so', () => {
     const output = {
-      ...UK_OUTPUT,
+      ...withBudget(UK_OUTPUT, { federal: 0, state: 0 }),
       detailed_budget: { income_tax: { baseline: 1, reform: 1, difference: 0 } },
     } as typeof UK_OUTPUT;
 

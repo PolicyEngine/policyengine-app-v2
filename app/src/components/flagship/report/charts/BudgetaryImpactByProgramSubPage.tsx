@@ -23,7 +23,7 @@ import {
   getDetailedBudgetCsvRows,
 } from '@/pages/report-output/budgetary-impact/budgetChartUtils';
 import type { RootState } from '@/store';
-import { absoluteChangeMessage } from '@/utils/chartMessages';
+import { absoluteChangeMessage, wordWrap } from '@/utils/chartMessages';
 import { getClampedChartHeight } from '@/utils/chartUtils';
 import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
 
@@ -116,6 +116,29 @@ export function getChangedPrograms(
 }
 
 /**
+ * The smallest unlisted share of the total that gets its own bar: below it
+ * the gap is rounding, not a program.
+ */
+const OTHER_PROGRAMS_MIN_SHARE = 0.001;
+
+/**
+ * The part of the total budgetary impact that the listed programs don't
+ * add up to; 0 when they do. The total sums every tax and benefit in the
+ * model, but the detailed budget lists only some programs, so a change in
+ * any other one (such as Scottish Child Payment lost with Universal Credit)
+ * is in the total with no bar of its own.
+ */
+export function getOtherProgramsAmount(
+  budgetaryImpact: number,
+  programs: Array<{ value: number }>
+): number {
+  const listed = programs.reduce((sum, program) => sum + program.value, 0);
+  const other = budgetaryImpact - listed;
+  const threshold = Math.max(1, OTHER_PROGRAMS_MIN_SHARE * Math.abs(budgetaryImpact));
+  return Number.isFinite(other) && Math.abs(other) >= threshold ? other : 0;
+}
+
+/**
  * The UK report's budgetary impact by program, as v2 shows it: a
  * waterfall of each program's change and the total, drawn the flagship
  * way — the axis in the unit the change is in, and a label on every bar.
@@ -134,8 +157,10 @@ export default function BudgetaryImpactByProgramSubPage({
   const budgetaryImpact = output.budget.budgetary_impact;
   const programs = getChangedPrograms(output, metadata.variables ?? {});
   const programWord = countryId === 'uk' ? 'programme' : 'program';
+  const otherLabel = `Other ${programWord}s`;
+  const other = output.detailed_budget ? getOtherProgramsAmount(budgetaryImpact, programs) : 0;
 
-  if (programs.length === 0) {
+  if (programs.length === 0 && other === 0) {
     return (
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -149,6 +174,7 @@ export default function BudgetaryImpactByProgramSubPage({
 
   const items: WaterfallItem[] = [
     ...programs.map((program) => ({ name: program.label, value: program.value })),
+    ...(other !== 0 ? [{ name: otherLabel, value: other }] : []),
     { name: 'Total', value: budgetaryImpact, isTotal: true },
   ];
 
@@ -157,6 +183,20 @@ export default function BudgetaryImpactByProgramSubPage({
   const toAmount = (valueInUnit: number) => valueInUnit * unit.divisor;
 
   const hoverMessage = (name: string, amount: number) => {
+    if (name === otherLabel) {
+      const change = absoluteChangeMessage(
+        'This reform',
+        `the budgetary impact of ${programWord}s that this chart doesn't list separately`,
+        amount,
+        0,
+        (v) => formatBillions(v, countryId)
+      );
+      const why = wordWrap(
+        'The total includes every tax and benefit in the model, so their changes are in it without a bar of their own.',
+        50
+      );
+      return `${change}.\n${why}`;
+    }
     const object =
       name === 'Total' ? 'the budget deficit' : `the ${name} ${programWord}'s budgetary impact`;
     return absoluteChangeMessage(
