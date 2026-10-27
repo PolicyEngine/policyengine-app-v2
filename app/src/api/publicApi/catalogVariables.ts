@@ -104,7 +104,14 @@ export function v1ShapedVariable(variable: Schemas['MetadataVariable']): V1Shape
   return shaped;
 }
 
-/** All of a catalog version's variables, with the values their parameter-named parts read. */
+/** The catalog format whose variables carry the input flags, enum labels, modules and parts v3 reads. */
+const CATALOG_FORMAT_WITH_VARIABLE_FIELDS = 2;
+
+/**
+ * All of a catalog version's variables, with the values their
+ * parameter-named parts read. A version published before catalog format 2
+ * fails, rather than giving variables without what v3 reads.
+ */
 export async function fetchCatalogVariables(
   countryId: string,
   policyengineVersion: string,
@@ -120,6 +127,13 @@ export async function fetchCatalogVariables(
       },
     })
   );
+  if (result.catalog_format !== CATALOG_FORMAT_WITH_VARIABLE_FIELDS) {
+    // Without format 2's fields there are no input flags, enum labels or
+    // parameter-named parts, so v3's builder and breakdown cannot use them.
+    throw new Error(
+      `The catalog version ${result.policyengine_version} was published before catalog format 2, so it has no variable details v3 can use.`
+    );
+  }
   return {
     variables: Object.fromEntries(
       result.variables.map((variable) => [variable.name, v1ShapedVariable(variable)])

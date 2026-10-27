@@ -23,12 +23,13 @@ import type { AppDispatch, RootState } from '@/store';
  * handle its loading as before, so for these views the variables are always
  * 'ready'. On the v2 routes the store starts with none: all of the catalog
  * version's variables load once per model catalog load, in the background,
- * and views show their loading state while they are 'waiting' (with no time
- * limit), or say they 'failed' and offer `retry`.
+ * and views show their loading state while the status is 'loading' (with no
+ * time limit), or on 'error' say so and offer `retry`. The names match
+ * V3ParametersStatus and V3SearchCatalog.
  */
 export interface V3VariablesStatus {
-  state: 'ready' | 'waiting' | 'failed';
-  /** The failure's message, when the state is 'failed'. */
+  status: 'ready' | 'loading' | 'error';
+  /** The failure's message, when the status is 'error'. */
   message: string | null;
   retry: () => unknown;
 }
@@ -112,7 +113,7 @@ function catalogVariablesQuery(dispatch: AppDispatch, target: VariablesTarget) {
 
 function useV1Variables(): V3VariablesStatus {
   const metadata = useFlagshipMetadataStatus();
-  return { state: 'ready', message: null, retry: metadata.retry };
+  return { status: 'ready', message: null, retry: metadata.retry };
 }
 
 function useV2Variables(): V3VariablesStatus {
@@ -122,19 +123,19 @@ function useV2Variables(): V3VariablesStatus {
   const query = useQuery({ ...catalogVariablesQuery(dispatch, target), enabled: target.enabled });
 
   if (target.inStore) {
-    return { state: 'ready', message: null, retry: query.refetch };
+    return { status: 'ready', message: null, retry: query.refetch };
   }
   if (metadata.status === 'error') {
-    return { state: 'failed', message: metadata.message, retry: metadata.retry };
+    return { status: 'error', message: metadata.message, retry: metadata.retry };
   }
   if (query.isError) {
     return {
-      state: 'failed',
+      status: 'error',
       message: query.error instanceof Error ? query.error.message : null,
       retry: query.refetch,
     };
   }
-  return { state: 'waiting', message: null, retry: query.refetch };
+  return { status: 'loading', message: null, retry: query.refetch };
 }
 
 /**

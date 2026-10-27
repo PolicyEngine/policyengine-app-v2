@@ -174,9 +174,9 @@ export default function ReportChanges({
                 ? undefined
                 : formatCurrentLaw(provision.baselineValue, provision.unit),
             after: list ? (
-              variablesStatus.state === 'waiting' ? (
+              variablesStatus.status === 'loading' ? (
                 <VariableNamesLoading />
-              ) : variablesStatus.state === 'failed' ? (
+              ) : variablesStatus.status === 'error' ? (
                 <VariableNamesFailed onRetry={variablesStatus.retry} />
               ) : (
                 describeChange(provision.baselineValue, provision.value, String, variableLabel)

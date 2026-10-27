@@ -52,10 +52,16 @@ export function VariableNamesFailed({ onRetry }: { onRetry: () => unknown }) {
  */
 export default function V3VariablesGate({ children, label, placeholder }: V3VariablesGateProps) {
   const variables = useV3Variables();
-  if (variables.state === 'failed') {
-    return <ErrorState title="Could not load the model's variables" onRetry={variables.retry} />;
+  if (variables.status === 'error') {
+    return (
+      <ErrorState
+        title="Could not load the model's variables"
+        description={variables.message ?? undefined}
+        onRetry={variables.retry}
+      />
+    );
   }
-  if (variables.state === 'waiting') {
+  if (variables.status === 'loading') {
     return <>{placeholder ?? <DefaultPlaceholder label={label} />}</>;
   }
   return <>{children}</>;

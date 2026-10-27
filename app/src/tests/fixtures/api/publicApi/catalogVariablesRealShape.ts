@@ -307,3 +307,26 @@ export const REAL_SHAPE_PART_PARAMETER_VALUES: components['schemas']['MetadataDa
     ],
   },
 ];
+
+/**
+ * What `/v2/model-catalog/variables` answers for a catalog version published
+ * before catalog format 2: `catalog_format` null, and every format 2 field
+ * of each variable null.
+ */
+export const PRE_FORMAT_2_VARIABLES_RESULT: components['schemas']['MetadataCatalogVariablesResult'] =
+  {
+    policyengine_version: '6.7.5',
+    catalog_format: null,
+    variables: REAL_SHAPE_US_VARIABLES.map((variable) => ({
+      ...variable,
+      is_input_variable: null,
+      hidden_input: null,
+      module_name: null,
+      adds_parameter_path: null,
+      subtracts_parameter_path: null,
+      enum_values: null,
+      unit: null,
+      definition_period: null,
+    })),
+    part_parameter_values: {},
+  };

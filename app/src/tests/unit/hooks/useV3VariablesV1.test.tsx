@@ -22,7 +22,7 @@ describe('useV3Variables on the v1 routes (before the switch)', () => {
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper() });
 
     // Then
-    expect(result.current.state).toBe('ready');
+    expect(result.current.status).toBe('ready');
     expect(fetchStub).not.toHaveBeenCalled();
   });
 
@@ -34,7 +34,7 @@ describe('useV3Variables on the v1 routes (before the switch)', () => {
     const { result } = renderHook(() => useV3Variables(), { wrapper: v3Wrapper() });
 
     // Then
-    expect(result.current.state).toBe('ready');
+    expect(result.current.status).toBe('ready');
   });
 
   test('given a page that rendered then nothing loads in the background', () => {

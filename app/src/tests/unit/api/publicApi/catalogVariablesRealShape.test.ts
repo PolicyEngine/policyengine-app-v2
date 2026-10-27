@@ -1,7 +1,13 @@
-import { describe, expect, test } from 'vitest';
-import { v1ShapedVariable } from '@/api/publicApi/catalogVariables';
+import { describe, expect, test, vi } from 'vitest';
+import { fetchCatalogVariables, v1ShapedVariable } from '@/api/publicApi/catalogVariables';
+import { createPublicApiClient } from '@/api/publicApi/client';
 import { inputKind } from '@/components/household/VariablePickerDialog';
-import { REAL_SHAPE_US_VARIABLES } from '@/tests/fixtures/api/publicApi/catalogVariablesRealShape';
+import {
+  PRE_FORMAT_2_VARIABLES_RESULT,
+  REAL_SHAPE_US_VARIABLES,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesRealShape';
+import { jsonResponse } from '@/tests/fixtures/api/publicApi/publicApiFetchStub';
+import { TEST_API_BASE } from '@/tests/fixtures/api/v2UserMocks';
 import { getNormalizedVariableMetadata } from '@/utils/variableMetadata';
 
 function realVariable(name: string) {
@@ -57,5 +63,22 @@ describe('v1ShapedVariable on records as the catalog publishes them', () => {
     // Then
     expect(v1ShapedVariable(textVariable).defaultValue).toBeNull();
     expect(v1ShapedVariable(dateVariable).defaultValue).toBeNull();
+  });
+
+  test('given a catalog version published before catalog format 2 then loading its variables fails clearly', async () => {
+    // Given
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({ status: 'ok', message: null, result: PRE_FORMAT_2_VARIABLES_RESULT })
+    );
+    const client = createPublicApiClient({
+      baseUrl: TEST_API_BASE,
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    // When
+    const loading = fetchCatalogVariables('us', '6.7.5', client);
+
+    // Then
+    await expect(loading).rejects.toThrow(/published before catalog format 2/);
   });
 });

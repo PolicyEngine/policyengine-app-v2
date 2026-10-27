@@ -331,7 +331,7 @@ export function GeographyFitSection({
   const variablesStatus = useV3Variables();
   const name = geographyName(geography);
   const heading = <ValidationSubheading>{name} data fit</ValidationSubheading>;
-  if (variablesStatus.state === 'waiting') {
+  if (variablesStatus.status === 'loading') {
     return (
       <>
         {heading}
@@ -339,7 +339,7 @@ export function GeographyFitSection({
       </>
     );
   }
-  if (variablesStatus.state === 'failed') {
+  if (variablesStatus.status === 'error') {
     return (
       <>
         {heading}
@@ -455,10 +455,10 @@ export function CalibrationMatchSection({
   if (matches === undefined) {
     return card(<ValidationLoading label="Checking calibration targets" />);
   }
-  if (variablesStatus.state === 'waiting') {
+  if (variablesStatus.status === 'loading') {
     return card(<ValidationLoading label="Loading variable names" />);
   }
-  if (variablesStatus.state === 'failed') {
+  if (variablesStatus.status === 'error') {
     return card(<VariableNamesFailed onRetry={variablesStatus.retry} />);
   }
   const placeName = geographyName(matches.geography);
