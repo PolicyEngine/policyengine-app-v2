@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 // Import the API functions
 import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
+import type { V1ShapedVariable } from '@/api/publicApi/catalogVariables';
 import { fetchV2ModelCatalogMetadata } from '@/api/publicApi/modelCatalog';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { MetadataRoutes, MetadataState, V2CatalogReference } from '@/types/metadata';
@@ -146,7 +147,7 @@ const metadataSlice = createSlice({
         policyengineVersion: string;
         /** The model catalog load the variables were asked for under. */
         loadId: string;
-        variables: Record<string, any>;
+        variables: Record<string, V1ShapedVariable>;
         partParameterValues: Record<string, ValuesList>;
       }>
     ) {

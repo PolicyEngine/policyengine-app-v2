@@ -4,11 +4,10 @@ import {
   requireResult,
   type PublicApiClient,
 } from '@/api/publicApi/client';
-import { parameterValueFromApi } from '@/api/publicApi/jsonValues';
+import { v1DatedValues } from '@/api/publicApi/datedValues';
 import type { components } from '@/api/publicApi/schema';
 import { v1FallbackLabel } from '@/libs/flagship/v2ParameterSearch';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
-import type { ValuesList } from '@/types/subIngredients/valueInterval';
 
 /**
  * Parameters fetched by name from the Public API's
@@ -32,22 +31,6 @@ export interface LoadedCatalogParameters {
   missingNames: string[];
 }
 
-/** v1 dated a value in force since the earliest date 0000-01-01; Python's earliest is year 1. */
-const V2_EARLIEST_DATE = '0001-01-01';
-const V1_EARLIEST_DATE = '0000-01-01';
-
-function v1Values(parameterName: string, values: Schemas['MetadataDatedValue'][]): ValuesList {
-  return Object.fromEntries(
-    values.map((dated) => {
-      const date = dated.start_date.slice(0, 10);
-      return [
-        date === V2_EARLIEST_DATE ? V1_EARLIEST_DATE : date,
-        parameterValueFromApi(dated.value, parameterName),
-      ];
-    })
-  );
-}
-
 function addResult(
   loaded: LoadedCatalogParameters,
   result: Schemas['MetadataCatalogParametersResult']
@@ -66,7 +49,7 @@ function addResult(
       label: parameter.label ?? v1FallbackLabel(parameter.name),
       description: parameter.description,
       unit: parameter.unit,
-      values: v1Values(parameter.name, parameter.values),
+      values: v1DatedValues(parameter.name, parameter.values),
       economy: parameter.economy ?? true,
       household: parameter.household ?? true,
     };

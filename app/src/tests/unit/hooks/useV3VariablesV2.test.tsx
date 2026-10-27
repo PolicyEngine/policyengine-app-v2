@@ -3,11 +3,13 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { v1ShapedVariable } from '@/api/publicApi/catalogVariables';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { useV3Variables, useV3VariablesInBackground } from '@/hooks/useV3Variables';
 import { catalogVariablesLoaded, clearMetadata, selectV2LoadId } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
+  AGE_VARIABLE,
   BENEFITS_PARAMETER_PATH,
   catalogVariablesEnvelope,
 } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
@@ -30,6 +32,9 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
 }));
 
 const VARIABLES_PATH = '/v2/model-catalog/variables';
+
+/** Variables a dropped response would have brought. */
+const STALE_VARIABLES = { stale: v1ShapedVariable({ ...AGE_VARIABLE, name: 'stale' }) };
 
 describe('useV3Variables with v3 on the v2 routes', () => {
   let fetchStub: ReturnType<typeof stubPublicApiFetch>;
@@ -148,7 +153,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
         countryId: 'us',
         policyengineVersion: TEST_POLICYENGINE_VERSION,
         loadId: 'an-earlier-load',
-        variables: { stale: { name: 'stale' } },
+        variables: STALE_VARIABLES,
         partParameterValues: {},
       })
     );
@@ -180,7 +185,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
         countryId: 'us',
         policyengineVersion: '0.0.1',
         loadId: selectV2LoadId(store.getState())!,
-        variables: { stale: { name: 'stale' } },
+        variables: STALE_VARIABLES,
         partParameterValues: {},
       })
     );
@@ -198,7 +203,7 @@ describe('useV3Variables with v3 on the v2 routes', () => {
         countryId: 'uk',
         policyengineVersion: TEST_POLICYENGINE_VERSION,
         loadId: selectV2LoadId(store.getState())!,
-        variables: { stale: { name: 'stale' } },
+        variables: STALE_VARIABLES,
         partParameterValues: {},
       })
     );
