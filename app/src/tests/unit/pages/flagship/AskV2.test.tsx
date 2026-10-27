@@ -254,4 +254,60 @@ describe('AskPage with v3 on the v2 routes', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(requestsTo(fetchStub, SEARCH_FILE_PATH)).toHaveLength(2);
   });
+
+  test("given a new question while the chat's reform loads then the reform's draft step joins its own answer", async () => {
+    // Given: the first answer's reform waits for its parameters.
+    vi.stubEnv('NEXT_PUBLIC_US_ASK', 'on');
+    mockStreamAskChatTurn
+      .mockImplementationOnce(async (_request, handlers: AskChatHandlers) => {
+        handlers.onToolUse?.({
+          toolName: 'run_society_simulation',
+          toolId: 't1',
+          toolInput: { reform: { [STANDARD_DEDUCTION_SINGLE]: 20000 }, year: 2026 },
+        });
+        handlers.onDone?.({ content: 'First answer.', sessionId: 's1' });
+      })
+      .mockImplementationOnce(async (_request, handlers: AskChatHandlers) => {
+        handlers.onDone?.({ content: 'Second answer.', sessionId: 's1' });
+      });
+    let releaseParameters: () => void = () => {};
+    const held = new Promise<void>((resolve) => {
+      releaseParameters = resolve;
+    });
+    stubPublicApiFetch({
+      [SEARCH_FILE_PATH]: () => jsonResponse(US_SEARCH_FILE),
+      [PARAMETERS_PATH]: async (url) => {
+        await held;
+        return answerParameters(url);
+      },
+    });
+    await seedV2ModelCatalog();
+    const user = userEvent.setup();
+    await renderAskWithSearchFile();
+    await ask(user, 'Raise the standard deduction for single filers to $20,000');
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Loading current law for this reform'
+    );
+
+    // When
+    await ask(user, 'What else could I change?');
+    await screen.findByText('Second answer.');
+    releaseParameters();
+
+    // Then: the first turn's step is in, and nothing is left loading.
+    expect(await screen.findByRole('button', { name: /add to draft/i })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    const [firstAnswer, secondAnswer] = [
+      screen.getByText('First answer.'),
+      screen.getByText('Second answer.'),
+    ];
+    const step = screen.getByText('Reform validated by the model');
+    // In document order: first answer, its step, then the second answer.
+    expect(
+      firstAnswer.compareDocumentPosition(step) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      step.compareDocumentPosition(secondAnswer) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
 });
