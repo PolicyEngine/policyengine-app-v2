@@ -18,6 +18,7 @@ import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import { SegmentedControl, Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useV3Variables } from '@/hooks/useV3Variables';
 import {
   getBudgetCsvRows,
   getDetailedBudgetCsvRows,
@@ -74,6 +75,12 @@ const DECILE_MODE_OPTIONS = [
 export default function EconomicImpactCharts({ output }: { output: SocietyWideReportOutput }) {
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const variablesStatus = useV3Variables();
+  const programmeCsvReason = variablesStatus.waiting
+    ? 'Loading programme names'
+    : variablesStatus.failed
+      ? 'Could not load the programme names'
+      : undefined;
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');
   const [wealthDecileMode, setWealthDecileMode] = useState<DecileMode>('absolute');
   // The UK's results also break the budget down by program and rank households by wealth.
@@ -178,7 +185,9 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
             fullWidth
             downloadFilename="budgetary-impact-by-program.svg"
             csvFilename="budgetary-impact-by-program.csv"
-            csvData={getDetailedBudgetCsvRows(output, metadata)}
+            // Its rows name programmes by variable label: on v2 they wait for the variables.
+            csvData={programmeCsvReason ? undefined : getDetailedBudgetCsvRows(output, metadata)}
+            csvUnavailableReason={programmeCsvReason}
           >
             {/* Programme names are variable labels (v2 loads them in the background). */}
             <V3VariablesGate label="Loading programme names">
