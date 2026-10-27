@@ -51,14 +51,10 @@ const COUNTRY_LABELS: Record<DeploymentCountry, string> = {
   uk: "United Kingdom",
 };
 
-type ValueSize = "xs" | "base";
-
-const monoStyle = (size: ValueSize = "xs") => ({
+const mono = {
   fontFamily: typography.fontFamily.mono,
-  fontSize: typography.fontSize[size],
-});
-
-const mono = monoStyle();
+  fontSize: typography.fontSize.xs,
+};
 
 const mutedText = {
   fontSize: typography.fontSize.sm,
@@ -128,24 +124,18 @@ function bundleUrl(pyVersion: string): string {
   return `https://github.com/${PY_REPOSITORY}/blob/${pyVersion}/${PY_BUNDLE_MANIFEST_PATH}`;
 }
 
-function Version({ value, size }: { value: string | null; size?: ValueSize }) {
+function Version({ value }: { value: string | null }) {
   return value ? (
-    <span style={monoStyle(size)}>{value}</span>
+    <span style={mono}>{value}</span>
   ) : (
     <span style={{ color: colors.text.tertiary }}>—</span>
   );
 }
 
-function PyVersion({
-  value,
-  size,
-}: {
-  value: string | null;
-  size?: ValueSize;
-}) {
+function PyVersion({ value }: { value: string | null }) {
   return value ? (
     <ExternalLink href={bundleUrl(value)}>
-      <span style={monoStyle(size)}>{value}</span>
+      <span style={mono}>{value}</span>
     </ExternalLink>
   ) : (
     <Version value={null} />
@@ -155,16 +145,15 @@ function PyVersion({
 function BuildId({
   buildId,
   country,
-  size,
 }: {
   buildId: string | null;
   country: DeploymentCountry;
-  size?: ValueSize;
 }) {
   if (!buildId) return <Version value={null} />;
+  // The same short form as the overview table, so the two compare directly.
   const text = (
-    <span style={{ ...monoStyle(size), wordBreak: "break-all" }}>
-      {buildId}
+    <span style={mono} title={buildId}>
+      {shortBuildId(buildId)}
     </span>
   );
   return isMicrocosmBuild(buildId) ? (
@@ -184,7 +173,7 @@ const labelStyle = {
   color: colors.text.secondary,
 };
 
-// One labeled value in the latest-bundle summary, at a readable size.
+// One labeled value in the latest-bundle summary.
 function Stat({
   label,
   children,
@@ -507,8 +496,14 @@ export default function DeploymentsClient({
         }}
       >
         <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
-          <span style={labelStyle}>
-            Latest certified bundle · {COUNTRY_LABELS[country]}
+          <span
+            style={{
+              fontSize: typography.fontSize.xl,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.text.primary,
+            }}
+          >
+            Latest certified bundle: {COUNTRY_LABELS[country]}
           </span>
           {notDeployed > 0 && (
             <Pill
@@ -523,20 +518,13 @@ export default function DeploymentsClient({
             style={{ marginTop: spacing.md }}
           >
             <Stat label=".py">
-              <PyVersion value={data.latest.py_version} size="base" />
+              <PyVersion value={data.latest.py_version} />
             </Stat>
             <Stat label={modelLabel}>
-              <Version
-                value={data.latest.certified_model_version}
-                size="base"
-              />
+              <Version value={data.latest.certified_model_version} />
             </Stat>
             <Stat label="Data build">
-              <BuildId
-                buildId={data.latest.data_build_id}
-                country={country}
-                size="base"
-              />
+              <BuildId buildId={data.latest.data_build_id} country={country} />
             </Stat>
           </dl>
         ) : (
