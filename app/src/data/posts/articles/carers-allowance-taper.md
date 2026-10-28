@@ -8,18 +8,32 @@ Key figures for 2031-32:
 - Earnings for the limit are pay after income tax and National Insurance. For an employee with no pension contributions, the allowance runs out at gross pay of £366 a week.
 - A carer who does not claim Universal Credit and earns £240 a week gains £75 a week. At £300 a week, the gain is £38.
 - Universal Credit falls by £1 for each £1 of Carer's Allowance, and the allowance is taxable, so a carer on Universal Credit loses: about £8 a week at £240, once the tax on the allowance is deducted from earnings for Universal Credit, as we explain below.
-- The Treasury estimates a cost of £40 million in 2030-31 and £80 million in 2031-32. We estimate a net cost of £27.5 million and £55.0 million.
+- The Treasury estimates a cost of £40 million in 2030-31 and £80 million in 2031-32, including behavioural responses. Our static estimate of the net cost is £27.5 million and £55.0 million.
+
+## How Carer's Allowance works today
+
+Carer's Allowance is a weekly benefit for people who look after someone with a disability. The main rules are:
+
+- **Who qualifies.** The carer spends at least 35 hours a week caring for someone who gets a qualifying disability benefit, such as Attendance Allowance or the daily living part of Personal Independence Payment. The carer must be 16 or over and not in full-time education ([GOV.UK, Carer's Allowance eligibility](https://www.gov.uk/carers-allowance/eligibility)).
+- **How much.** The allowance is about £86 a week in 2026-27 ([GOV.UK](https://www.gov.uk/carers-allowance)). PolicyEngine UK projects about £98 a week in 2031-32.
+- **Tax.** Carer's Allowance is taxable: tax is due on it if the carer's income is above the Personal Allowance ([GOV.UK](https://www.gov.uk/carers-allowance)).
+- **Universal Credit.** Universal Credit is reduced by an amount equal to the Carer's Allowance ([GOV.UK, effect on other benefits](https://www.gov.uk/carers-allowance/effect-on-other-benefits); [Universal Credit Regulations 2013](https://www.legislation.gov.uk/uksi/2013/376/regulation/66), regulation 66(1)(b)(iii)). The carer element of Universal Credit is paid for the caring itself, whether or not the carer claims Carer's Allowance ([regulation 30](https://www.legislation.gov.uk/uksi/2013/376/regulation/30)).
+- **Overlapping benefits.** Carer's Allowance and the State Pension both provide an income in place of earnings, so a person entitled to both is paid only after the rules on overlapping benefits are applied, which stop the same need being met twice ([Explanatory Memorandum to SI 2025/352](https://www.legislation.gov.uk/uksi/2025/352/pdfs/uksiem_20250352_en_001.pdf), paragraph 5.1).
+- **The earnings test.** A carer whose earnings in the week before are above the Weekly Earnings Limit is treated as gainfully employed and gets no allowance for that week ([Social Security (Invalid Care Allowance) Regulations 1976](https://www.legislation.gov.uk/uksi/1976/409/regulation/8), regulation 8). Earnings for the limit are pay after income tax, National Insurance and expenses, with half of any pension contributions deducted ([GOV.UK](https://www.gov.uk/carers-allowance/eligibility); [Social Security Benefit (Computation of Earnings) Regulations 1996](https://www.legislation.gov.uk/uksi/1996/2745/regulation/10), regulation 10). The limit is £204 a week in 2026-27. Since April 2025, the government has set it at 16 times the hourly National Living Wage rounded up to the nearest pound, as when it raised the limit from £151 to £196 a week ([Explanatory Memorandum to SI 2025/352](https://www.legislation.gov.uk/uksi/2025/352/pdfs/uksiem_20250352_en_001.pdf), paragraphs 5.3 and 5.6).
+- **The cliff.** Today, a carer whose earnings for the limit are even 1p above the limit loses the whole allowance for that week. The Budget describes this as losing "their entire benefit for exceeding the limit by a single penny".
 
 ## What the taper does
 
-The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) lists the taper among its policy decisions (paragraph 6.13), and the Treasury's [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) (page 16) set out the rules. The taper has six parts:
+The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) lists the taper among its policy decisions (paragraph 6.13), and the Treasury's [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) (page 16) set out the rules. The taper changes only the earnings test:
 
-1. **The earnings limit.** Carer's Allowance is not paid for a week in which the carer's earnings are above the Weekly Earnings Limit. The costings set the limit at 16 times the National Living Wage. Since April 2025, the government has set the limit at 16 times the hourly National Living Wage rounded up to the nearest pound, as when it raised the limit from £151 to £196 a week in April 2025 ([Explanatory Memorandum to SI 2025/352](https://www.legislation.gov.uk/uksi/2025/352/pdfs/uksiem_20250352_en_001.pdf), paragraphs 5.3 and 5.6).
-2. **The taper.** Above the limit, the allowance is withdrawn at a rate of 100%: it falls by £1 for each £1 of earnings above the limit, instead of being lost in full.
-3. **Earnings.** The test counts net earnings: gross pay less income tax, National Insurance and half of any pension contributions ([Social Security Benefit (Computation of Earnings) Regulations 1996](https://www.legislation.gov.uk/uksi/1996/2745/regulation/10), regulation 10).
+1. **Above the limit.** Earnings above the limit reduce the allowance by £1 for each £1, a taper of 100%, instead of removing it. A carer whose earnings for the limit are above the limit by more than the weekly rate still gets nothing.
+2. **At or below the limit.** Nothing changes: a carer at or below the limit keeps the full allowance, with or without the taper.
+3. **The limit.** The costings set the limit at 16 times the National Living Wage, the rule above: £228 a week in 2030-31 and £234 in 2031-32 on the OBR's forecast.
 4. **Where.** The taper applies in England and Wales. In Scotland, Carer Support Payment has replaced Carer's Allowance, and Northern Ireland, where social security is devolved, is not included.
 5. **When.** The taper begins within the 2030-31 financial year, on a date still to be confirmed.
 6. **Who.** The government estimates that around 48,000 people benefit in 2030-31, including people who become newly entitled, of whom around 3,000 live in Wales ([Budget 2026 data sources](https://assets.publishing.service.gov.uk/media/6ae1e9a2460c1346f7be77ff/Budget_2026_-_Data_Sources.pdf), page 30).
+
+Nothing else about Carer's Allowance changes: the caring conditions, the rate, its tax treatment and its effect on Universal Credit and on overlapping benefits stay as they are.
 
 | Tax year | National Living Wage an hour (OBR forecast) | Weekly Earnings Limit | Carer's Allowance a week (projection) | No allowance at weekly earnings for the limit of |
 | -------- | ------------------------------------------: | --------------------: | ------------------------------------: | -----------------------------------------------: |
@@ -28,7 +42,7 @@ The [Budget 2026 document](https://www.gov.uk/government/publications/budget-202
 
 The National Living Wage for each year is the OBR's October 2026 forecast for that April ([Economic and fiscal outlook, October 2026](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), detailed forecast tables: economy, Table 1.13); the Treasury's costing also uses the OBR's projections. Carer's Allowance after 2026-27 is PolicyEngine UK's projection, uprated with inflation on the same forecast.
 
-The Treasury estimates that the taper costs £40 million in 2030-31 and £80 million in 2031-32, and nothing in earlier years ([Budget 2026, Table 6.1](https://assets.publishing.service.gov.uk/media/6ae187a2779378370fd80a9a/Table_6.1_and_6.2_Budget_2026_Policy_Decisions.xlsx), row 7). Negative values are costs to the Exchequer, and the 2030-31 figure covers part of a year.
+The Treasury estimates that the taper costs £40 million in 2030-31 and £80 million in 2031-32, and nothing in earlier years ([Budget 2026, Table 6.1](https://assets.publishing.service.gov.uk/media/6ae187a2779378370fd80a9a/Table_6.1_and_6.2_Budget_2026_Policy_Decisions.xlsx), row 7). Negative values are costs to the Exchequer, and the 2030-31 figure covers part of a year. The costing includes behavioural responses, which our own estimate below does not.
 
 | £ million               | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
 | ----------------------- | ------: | ------: | ------: | ------: | ------: | ------: |
@@ -39,51 +53,106 @@ The Treasury estimates that the taper costs £40 million in 2030-31 and £80 mil
 The examples follow two carers in the West Midlands in 2031-32. Each is 40, works as an employee with no pension contributions, and cares for 35 hours a week for a parent aged 72 who receives Attendance Allowance and lives in a separate household. Household net income is therefore the carer's own.
 
 - **Carer 1** owns their home outright, has no housing costs and does not claim Universal Credit.
-- **Carer 2** rents privately for £750 a month and claims Universal Credit. The award includes the carer element, £55 a week, and a housing element of £160 a week, below the rent because of the Local Housing Allowance.
+- **Carer 2** rents privately for £750 a month and claims Universal Credit. The maximum award, before income is taken into account, is about £330 a week: the standard allowance, the carer element (£55 a week) and a housing element of £160 a week, below the rent because of the Local Housing Allowance.
 
-Each table starts from gross pay and works out earnings for the limit. At or below the £234 limit, a carer gets the full allowance with or without the taper. Above it, the allowance is £0 without the taper and the full rate less the excess with it. Net income is gross pay less income tax and National Insurance, plus Carer's Allowance and Universal Credit, less the TV licence fee (£180 a year).
+Each carer has a table for the earnings test (Part A) and one for net income; carer 2 also has a table for Universal Credit. The tables keep pence. PolicyEngine UK calculates in fractions of a penny, so in some columns a total differs by 1p from the sum of the rounded rows above it.
 
 The examples assume that the current-law limit follows the government's rule, 16 × the National Living Wage rounded up to the next pound (£234 in 2031-32), not the £204 that PolicyEngine UK holds after 2026-27. So for carers earning between £204 and £234, the amounts with and without the taper differ from those on PolicyEngine's Autumn Budget dashboard, while the measure's cost and each household's change are the same either way.
 
 ### Carer 1: not on Universal Credit
 
-| Weekly amounts                      |      £200 |      £230 |        £240 |        £260 |        £280 |        £300 |        £330 |
-| ----------------------------------- | --------: | --------: | ----------: | ----------: | ----------: | ----------: | ----------: |
-| Gross pay                           |   £200.00 |   £230.00 |     £240.00 |     £260.00 |     £280.00 |     £300.00 |     £330.00 |
-| Income tax and NI on the pay alone  |     £0.00 |     £0.00 |       £0.00 |       £3.72 |       £9.32 |      £14.92 |      £23.32 |
-| Earnings for the limit              |   £200.00 |   £230.00 |     £240.00 |     £256.28 |     £270.68 |     £285.08 |     £306.68 |
-| Excess over the £234 limit          |     £0.00 |     £0.00 |       £6.00 |      £22.28 |      £36.68 |      £51.08 |      £72.68 |
-| Carer's Allowance without the taper |    £98.37 |    £98.37 |       £0.00 |       £0.00 |       £0.00 |       £0.00 |       £0.00 |
-| Carer's Allowance with the taper    |    £98.37 |    £98.37 |      £92.37 |      £76.09 |      £61.69 |      £47.29 |      £25.69 |
-| Income tax without the taper        |    £10.33 |    £16.33 |       £0.00 |       £2.65 |       £6.65 |      £10.65 |      £16.65 |
-| Income tax with the taper           |    £10.33 |    £16.33 |      £17.13 |      £17.87 |      £18.99 |      £20.11 |      £21.79 |
-| Net income without the taper        |   £284.58 |   £308.58 |     £236.54 |     £252.82 |     £267.22 |     £281.62 |     £303.22 |
-| Net income with the taper           |   £284.58 |   £308.58 |     £311.78 |     £313.70 |     £316.58 |     £319.46 |     £323.78 |
-| **Change in net income**            | **£0.00** | **£0.00** | **+£75.24** | **+£60.87** | **+£49.35** | **+£37.83** | **+£20.55** |
+| Part A: the earnings test, a week                                                  |    £200 |    £230 |    £240 |    £260 |    £280 |    £300 |    £330 |
+| ---------------------------------------------------------------------------------- | ------: | ------: | ------: | ------: | ------: | ------: | ------: |
+| Gross pay                                                                          | £200.00 | £230.00 | £240.00 | £260.00 | £280.00 | £300.00 | £330.00 |
+| − Income tax on the pay alone                                                      |   £0.00 |   £0.00 |   £0.00 |   £2.65 |   £6.65 |  £10.65 |  £16.65 |
+| − Employee National Insurance                                                      |   £0.00 |   £0.00 |   £0.00 |   £1.06 |   £2.66 |   £4.26 |   £6.66 |
+| = Earnings for the limit                                                           | £200.00 | £230.00 | £240.00 | £256.28 | £270.68 | £285.08 | £306.68 |
+| Weekly Earnings Limit                                                              | £234.00 | £234.00 | £234.00 | £234.00 | £234.00 | £234.00 | £234.00 |
+| Earnings above the limit (earnings − £234, or £0)                                  |   £0.00 |   £0.00 |   £6.00 |  £22.28 |  £36.68 |  £51.08 |  £72.68 |
+| Carer's Allowance today (£98.37 at or below the limit, £0 above it)                |  £98.37 |  £98.37 |   £0.00 |   £0.00 |   £0.00 |   £0.00 |   £0.00 |
+| Carer's Allowance with the taper (£98.37 − earnings above the limit, not below £0) |  £98.37 |  £98.37 |  £92.37 |  £76.09 |  £61.69 |  £47.29 |  £25.69 |
 
-At £240 a week, earnings for the limit are £240, £6 above the limit, so the taper pays the full rate less £6, about £92 a week. Carer's Allowance is taxable, and with it the carer's income is above the £12,830 Personal Allowance, so income tax rises by about £17 and net income by about £75. At £330 a week, income tax and National Insurance on the pay leave earnings for the limit of about £307, so the allowance is about £26 and net income rises by about £21. At £200 and £230, earnings are at or below the limit, and nothing changes.
+Part A is the test that decides the allowance. At £200 and £230 a week, earnings for the limit are below £234, so the carer gets the full allowance with or without the taper. At £240, the pay is below the £247 a week Personal Allowance and National Insurance threshold, so nothing is taken off and earnings for the limit are £240, £6 above the limit. Today that £6 costs the whole allowance; with the taper, it costs £6, leaving about £92 a week.
+
+| Part B: net income, a week         |      £200 |      £230 |        £240 |        £260 |        £280 |        £300 |        £330 |
+| ---------------------------------- | --------: | --------: | ----------: | ----------: | ----------: | ----------: | ----------: |
+| **Without the taper**              |           |           |             |             |             |             |             |
+| Gross pay                          |   £200.00 |   £230.00 |     £240.00 |     £260.00 |     £280.00 |     £300.00 |     £330.00 |
+| + Carer's Allowance                |    £98.37 |    £98.37 |       £0.00 |       £0.00 |       £0.00 |       £0.00 |       £0.00 |
+| = Pay plus allowance               |   £298.37 |   £328.37 |     £240.00 |     £260.00 |     £280.00 |     £300.00 |     £330.00 |
+| − Income tax on pay plus allowance |    £10.33 |    £16.33 |       £0.00 |       £2.65 |       £6.65 |      £10.65 |      £16.65 |
+| − Employee National Insurance      |     £0.00 |     £0.00 |       £0.00 |       £1.06 |       £2.66 |       £4.26 |       £6.66 |
+| − TV licence                       |     £3.46 |     £3.46 |       £3.46 |       £3.46 |       £3.46 |       £3.46 |       £3.46 |
+| = Net income                       |   £284.58 |   £308.58 |     £236.54 |     £252.82 |     £267.22 |     £281.62 |     £303.22 |
+| **With the taper**                 |           |           |             |             |             |             |             |
+| Gross pay                          |   £200.00 |   £230.00 |     £240.00 |     £260.00 |     £280.00 |     £300.00 |     £330.00 |
+| + Carer's Allowance                |    £98.37 |    £98.37 |      £92.37 |      £76.09 |      £61.69 |      £47.29 |      £25.69 |
+| = Pay plus allowance               |   £298.37 |   £328.37 |     £332.37 |     £336.09 |     £341.69 |     £347.29 |     £355.69 |
+| − Income tax on pay plus allowance |    £10.33 |    £16.33 |      £17.13 |      £17.87 |      £18.99 |      £20.11 |      £21.79 |
+| − Employee National Insurance      |     £0.00 |     £0.00 |       £0.00 |       £1.06 |       £2.66 |       £4.26 |       £6.66 |
+| − TV licence                       |     £3.46 |     £3.46 |       £3.46 |       £3.46 |       £3.46 |       £3.46 |       £3.46 |
+| = Net income                       |   £284.58 |   £308.58 |     £311.78 |     £313.70 |     £316.58 |     £319.46 |     £323.78 |
+| **Change in net income**           | **£0.00** | **£0.00** | **+£75.24** | **+£60.87** | **+£49.35** | **+£37.83** | **+£20.55** |
+
+Part B works out what the carer has to live on. The income tax in Part A is the tax on the pay alone, as the earnings test counts it: the tax that PAYE would take if the pay were the carer's only income. The income tax in Part B is the tax actually due on pay plus Carer's Allowance, which is taxable. The difference between them is the tax on the allowance. At £240 a week with the taper, pay plus allowance is about £332, above the Personal Allowance, so income tax of about £17 is due, though none is due on the pay alone. Net income rises by the extra allowance less that tax, about £75 a week.
 
 ### Carer 2: on Universal Credit
 
-| Weekly amounts                                              |      £200 |      £230 |       £240 |       £260 |       £280 |       £300 |       £330 |
-| ----------------------------------------------------------- | --------: | --------: | ---------: | ---------: | ---------: | ---------: | ---------: |
-| Gross pay                                                   |   £200.00 |   £230.00 |    £240.00 |    £260.00 |    £280.00 |    £300.00 |    £330.00 |
-| Income tax and NI on the pay alone                          |     £0.00 |     £0.00 |      £0.00 |      £3.72 |      £9.32 |     £14.92 |     £23.32 |
-| Earnings for the limit                                      |   £200.00 |   £230.00 |    £240.00 |    £256.28 |    £270.68 |    £285.08 |    £306.68 |
-| Excess over the £234 limit                                  |     £0.00 |     £0.00 |      £6.00 |     £22.28 |     £36.68 |     £51.08 |     £72.68 |
-| Carer's Allowance without the taper                         |    £98.37 |    £98.37 |      £0.00 |      £0.00 |      £0.00 |      £0.00 |      £0.00 |
-| Carer's Allowance with the taper                            |    £98.37 |    £98.37 |     £92.37 |     £76.09 |     £61.69 |     £47.29 |     £25.69 |
-| Income tax deducted from earnings for UC, without the taper |    £10.33 |    £16.33 |      £0.00 |      £2.65 |      £6.65 |     £10.65 |     £16.65 |
-| Income tax deducted from earnings for UC, with the taper    |    £10.33 |    £16.33 |     £17.13 |     £17.87 |     £18.99 |     £20.11 |     £21.79 |
-| Universal Credit without the taper                          |   £126.97 |   £113.77 |    £197.66 |    £188.70 |    £180.78 |    £172.86 |    £160.98 |
-| Universal Credit with the taper                             |   £126.97 |   £113.77 |    £114.71 |    £120.98 |    £125.88 |    £130.77 |    £138.12 |
-| Income tax without the taper                                |    £10.33 |    £16.33 |      £0.00 |      £2.65 |      £6.65 |     £10.65 |     £16.65 |
-| Income tax with the taper                                   |    £10.33 |    £16.33 |     £17.13 |     £17.87 |     £18.99 |     £20.11 |     £21.79 |
-| Net income without the taper                                |   £411.55 |   £422.35 |    £434.20 |    £441.53 |    £448.01 |    £454.49 |    £464.21 |
-| Net income with the taper                                   |   £411.55 |   £422.35 |    £426.49 |    £434.68 |    £442.45 |    £450.23 |    £461.89 |
-| **Change in net income**                                    | **£0.00** | **£0.00** | **−£7.71** | **−£6.85** | **−£5.55** | **−£4.26** | **−£2.31** |
+| Part A: the earnings test, a week                                                  |    £200 |    £230 |    £240 |    £260 |    £280 |    £300 |    £330 |
+| ---------------------------------------------------------------------------------- | ------: | ------: | ------: | ------: | ------: | ------: | ------: |
+| Gross pay                                                                          | £200.00 | £230.00 | £240.00 | £260.00 | £280.00 | £300.00 | £330.00 |
+| − Income tax on the pay alone                                                      |   £0.00 |   £0.00 |   £0.00 |   £2.65 |   £6.65 |  £10.65 |  £16.65 |
+| − Employee National Insurance                                                      |   £0.00 |   £0.00 |   £0.00 |   £1.06 |   £2.66 |   £4.26 |   £6.66 |
+| = Earnings for the limit                                                           | £200.00 | £230.00 | £240.00 | £256.28 | £270.68 | £285.08 | £306.68 |
+| Weekly Earnings Limit                                                              | £234.00 | £234.00 | £234.00 | £234.00 | £234.00 | £234.00 | £234.00 |
+| Earnings above the limit (earnings − £234, or £0)                                  |   £0.00 |   £0.00 |   £6.00 |  £22.28 |  £36.68 |  £51.08 |  £72.68 |
+| Carer's Allowance today (£98.37 at or below the limit, £0 above it)                |  £98.37 |  £98.37 |   £0.00 |   £0.00 |   £0.00 |   £0.00 |   £0.00 |
+| Carer's Allowance with the taper (£98.37 − earnings above the limit, not below £0) |  £98.37 |  £98.37 |  £92.37 |  £76.09 |  £61.69 |  £47.29 |  £25.69 |
 
-At £240 a week, carer 2 gets the same extra allowance as carer 1, about £92 a week, and Universal Credit counts all of it as unearned income. The allowance also adds about £17 of income tax. In these examples, that tax is deducted from carer 2's earnings for Universal Credit, as PAYE on the job (see below), so Universal Credit gives back 55% of it, about £9. Universal Credit falls by about £83 in all, from £198 to £115 a week, and net income falls by about £8.
+Carer 2's earnings test is the same as carer 1's: at £240 a week, the taper gives about £92 a week of allowance where today there is none.
+
+| Part B: Universal Credit, a week                                      |    £200 |    £230 |    £240 |    £260 |    £280 |    £300 |    £330 |
+| --------------------------------------------------------------------- | ------: | ------: | ------: | ------: | ------: | ------: | ------: |
+| **Without the taper**                                                 |         |         |         |         |         |         |         |
+| Maximum award                                                         | £329.66 | £329.66 | £329.66 | £329.66 | £329.66 | £329.66 | £329.66 |
+| Earned income, for the next row: gross pay − income tax (Part C) − NI | £189.67 | £213.67 | £240.00 | £256.28 | £270.68 | £285.08 | £306.68 |
+| − 55% of earned income                                                | £104.32 | £117.52 | £132.00 | £140.96 | £148.88 | £156.80 | £168.68 |
+| − Carer's Allowance (£1 for £1)                                       |  £98.37 |  £98.37 |   £0.00 |   £0.00 |   £0.00 |   £0.00 |   £0.00 |
+| = Universal Credit                                                    | £126.97 | £113.77 | £197.66 | £188.70 | £180.78 | £172.86 | £160.98 |
+| **With the taper**                                                    |         |         |         |         |         |         |         |
+| Maximum award                                                         | £329.66 | £329.66 | £329.66 | £329.66 | £329.66 | £329.66 | £329.66 |
+| Earned income, for the next row: gross pay − income tax (Part C) − NI | £189.67 | £213.67 | £222.87 | £241.07 | £258.35 | £275.63 | £301.55 |
+| − 55% of earned income                                                | £104.32 | £117.52 | £122.58 | £132.59 | £142.09 | £151.59 | £165.85 |
+| − Carer's Allowance (£1 for £1)                                       |  £98.37 |  £98.37 |  £92.37 |  £76.09 |  £61.69 |  £47.29 |  £25.69 |
+| = Universal Credit                                                    | £126.97 | £113.77 | £114.71 | £120.98 | £125.88 | £130.77 | £138.12 |
+
+Universal Credit starts from the maximum award and takes off 55% of earned income and all of the Carer's Allowance. At £240 a week without the taper, earned income is the full £240, because no tax or National Insurance is due, so Universal Credit is about £330 − £132 = £198. With the taper, the allowance adds about £17 of income tax. In these examples, that tax counts as tax deducted from pay, so earned income falls to about £223, 55% of it is about £123, and Universal Credit is about £330 − £123 − £92 = £115.
+
+This is our Universal Credit adjustment, explained below. PolicyEngine UK 2.151.0 on its own deducts only the tax on the pay alone from earned income, which is £0 at £240, so it would show Universal Credit about £9 lower with the taper.
+
+| Part C: net income, a week         |      £200 |      £230 |       £240 |       £260 |       £280 |       £300 |       £330 |
+| ---------------------------------- | --------: | --------: | ---------: | ---------: | ---------: | ---------: | ---------: |
+| **Without the taper**              |           |           |            |            |            |            |            |
+| Gross pay                          |   £200.00 |   £230.00 |    £240.00 |    £260.00 |    £280.00 |    £300.00 |    £330.00 |
+| + Carer's Allowance                |    £98.37 |    £98.37 |      £0.00 |      £0.00 |      £0.00 |      £0.00 |      £0.00 |
+| = Pay plus allowance               |   £298.37 |   £328.37 |    £240.00 |    £260.00 |    £280.00 |    £300.00 |    £330.00 |
+| − Income tax on pay plus allowance |    £10.33 |    £16.33 |      £0.00 |      £2.65 |      £6.65 |     £10.65 |     £16.65 |
+| − Employee National Insurance      |     £0.00 |     £0.00 |      £0.00 |      £1.06 |      £2.66 |      £4.26 |      £6.66 |
+| + Universal Credit (Part B)        |   £126.97 |   £113.77 |    £197.66 |    £188.70 |    £180.78 |    £172.86 |    £160.98 |
+| − TV licence                       |     £3.46 |     £3.46 |      £3.46 |      £3.46 |      £3.46 |      £3.46 |      £3.46 |
+| = Net income                       |   £411.55 |   £422.35 |    £434.20 |    £441.53 |    £448.01 |    £454.49 |    £464.21 |
+| **With the taper**                 |           |           |            |            |            |            |            |
+| Gross pay                          |   £200.00 |   £230.00 |    £240.00 |    £260.00 |    £280.00 |    £300.00 |    £330.00 |
+| + Carer's Allowance                |    £98.37 |    £98.37 |     £92.37 |     £76.09 |     £61.69 |     £47.29 |     £25.69 |
+| = Pay plus allowance               |   £298.37 |   £328.37 |    £332.37 |    £336.09 |    £341.69 |    £347.29 |    £355.69 |
+| − Income tax on pay plus allowance |    £10.33 |    £16.33 |     £17.13 |     £17.87 |     £18.99 |     £20.11 |     £21.79 |
+| − Employee National Insurance      |     £0.00 |     £0.00 |      £0.00 |      £1.06 |      £2.66 |      £4.26 |      £6.66 |
+| + Universal Credit (Part B)        |   £126.97 |   £113.77 |    £114.71 |    £120.98 |    £125.88 |    £130.77 |    £138.12 |
+| − TV licence                       |     £3.46 |     £3.46 |      £3.46 |      £3.46 |      £3.46 |      £3.46 |      £3.46 |
+| = Net income                       |   £411.55 |   £422.35 |    £426.49 |    £434.68 |    £442.45 |    £450.23 |    £461.89 |
+| **Change in net income**           | **£0.00** | **£0.00** | **−£7.71** | **−£6.85** | **−£5.55** | **−£4.26** | **−£2.31** |
+
+Carer 2's net income falls by about £8 a week at £240: the allowance adds about £92, Universal Credit falls by about £83, and income tax rises by about £17.
 
 ## Carer's Allowance by pay
 
@@ -490,7 +559,7 @@ Carer 2 keeps 36p of each extra £1 up to the limit and 45p from £234 to about 
 
 ## Population estimates
 
-We also ran the measure on PolicyEngine UK's microsimulation model, which uses survey data on UK households, projected to 2030-31 and 2031-32 on the OBR's October 2026 forecast. For consistency with the examples, we set the current-law limit to the government's rule on both sides (£228 in 2030-31 and £234 in 2031-32), and we apply the same Universal Credit adjustment for the PAYE on the allowance. The model applies half a year of the taper in 2030-31, as the start date is not yet set.
+We also ran the measure on PolicyEngine UK's microsimulation model, which uses survey data on UK households, projected to 2030-31 and 2031-32 on the OBR's October 2026 forecast. The estimate is static: carers do not change how much they work, and take-up of Carer's Allowance follows the assumptions in PolicyEngine's data. For consistency with the examples, we set the current-law limit to the government's rule on both sides (£228 in 2030-31 and £234 in 2031-32), and we apply the same Universal Credit adjustment for the PAYE on the allowance. The model applies half a year of the taper in 2030-31, as the start date is not yet set.
 
 | £ million                               |  2030-31 |  2031-32 |
 | --------------------------------------- | -------: | -------: |
@@ -504,7 +573,9 @@ Lower Universal Credit and higher income tax offset part of the cost of the high
 
 About 82,500 people have a higher Carer's Allowance in 2030-31, and about 82,900 in 2031-32, all in England. About half (51%) are in families on Universal Credit, for whom the higher allowance brings no gain. Our count of people with a higher allowance is larger than the Treasury's 48,000 people who benefit.
 
-Our net cost, £27.5 million in 2030-31 and £55.0 million in 2031-32, is 69% of the Treasury's £40 million and £80 million. Carer's Allowance less Universal Credit, £42.8 million and £86.6 million, is 7% to 8% above the Treasury's figures. The Treasury's figures lie between the two; we cannot tell which items its costing includes. Its costing does include a behavioural response, in which some carers increase their earnings or enter work, that lowers the cost. Our model has no such response.
+Our net cost, £27.5 million in 2030-31 and £55.0 million in 2031-32, is 69% of the Treasury's £40 million and £80 million. Carer's Allowance less Universal Credit, £42.8 million and £86.6 million, is 7% to 8% above the Treasury's figures. The Treasury's figures lie between the two; we cannot tell which items its costing includes.
+
+The comparison is between a static estimate and a post-behavioural one. The Treasury's costing, which was submitted to the OBR for certification, includes behavioural responses. Its note says that some carers would increase their earnings or enter work, which lowers Carer's Allowance and Universal Credit spending, and that it accounts for take-up of tapered awards by people newly eligible for them, which adds to the cost. (These are responses of the people affected; the note describes no feedback through the wider economy, which is what a "dynamic" costing usually means.) Our estimate has neither response, and its take-up follows the data's assumptions. These differences could explain some of the gap between our figures and the Treasury's, in either direction.
 
 These estimates have important limits:
 
