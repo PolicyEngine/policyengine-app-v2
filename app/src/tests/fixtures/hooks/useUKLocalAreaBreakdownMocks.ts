@@ -12,6 +12,11 @@ import {
   BREAKDOWN_YEAR,
   EXPECTED_BREAKDOWN,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import {
+  CARDIFF_EAST_CODE,
+  CARDIFF_WEST_CODE,
+  SWANSEA_CODE,
+} from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
 import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 
 export const BREAKDOWN_REFORM_POLICY_ID = '98746';
@@ -145,3 +150,24 @@ export const POLL_FAILURE = new Error('Local-area breakdown failed: 502 Bad Gate
 /** The message the hook gives once a run computes past its time limit. */
 export const TIME_LIMIT_MESSAGE =
   'The local-area breakdown is taking much longer than expected. It may still finish on the server: retry to check it again.';
+
+/**
+ * The withheld codes a UK-wide breakdown of NORMALIZED_BREAKDOWN's areas
+ * lists: Cardiff East and Cardiff West of the constituencies, and Swansea
+ * of the local authorities. The UK's other absent areas have no data.
+ */
+export const UK_LISTED_WITHHELD_CONSTITUENCY_CODES = [CARDIFF_EAST_CODE, CARDIFF_WEST_CODE];
+export const UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES = [SWANSEA_CODE];
+
+/** NORMALIZED_BREAKDOWN with each level's list of withheld codes. */
+export const BREAKDOWN_WITH_WITHHELD_LISTS: LocalAreaBreakdown = {
+  ...NORMALIZED_BREAKDOWN,
+  constituency_withheld_codes: UK_LISTED_WITHHELD_CONSTITUENCY_CODES,
+  local_authority_withheld_codes: UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES,
+};
+
+/** A completed UK-wide breakdown that lists each level's withheld codes. */
+export const COMPLETE_RESPONSE_WITH_WITHHELD_LISTS: LocalAreaBreakdownResponse = {
+  status: 'ok',
+  result: BREAKDOWN_WITH_WITHHELD_LISTS,
+};

@@ -49,10 +49,14 @@ export function RelativeChangeByConstituency({
   const mapData = useMemo(() => (areas ? transformConstituencyRelativeChange(areas) : []), [areas]);
   // The hex map places each constituency by its code in the app's layout, as v3's
   // does, and draws the ones a breakdown withheld as not reported.
+  // When the breakdown lists its withheld codes, only those are; the others
+  // it leaves out have no data.
   const disclosureControlled = withheld !== undefined;
+  const listedWithheldCodes = withheld?.listedCodes;
   const hexMap = useMemo(
-    () => placeUKHexMap('constituency', mapData, { disclosureControlled, region }),
-    [mapData, disclosureControlled, region]
+    () =>
+      placeUKHexMap('constituency', mapData, { disclosureControlled, region, listedWithheldCodes }),
+    [mapData, disclosureControlled, region, listedWithheldCodes]
   );
   const notes = <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />;
 
@@ -103,6 +107,7 @@ export function RelativeChangeByConstituency({
           data={hexMap.points}
           missingAreas={hexMap.withheldAreas}
           missingAreaText={UK_WITHHELD_AREA_TEXT}
+          noDataAreas={hexMap.noDataAreas}
           config={{
             tiled: hexMap.tiled,
             colorScale: {

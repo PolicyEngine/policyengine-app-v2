@@ -266,14 +266,22 @@ export default function UKLocalAreaMaps({
   );
 
   // A level the breakdown supplied is disclosure-controlled: the areas of
-  // the region it leaves out are the ones withheld. A saved level has none.
+  // the region it leaves out are the ones withheld, or, when the breakdown
+  // lists its withheld codes, the listed ones. A saved level has none.
   const levelWithheld = withheld?.[level] !== undefined;
+  const listedWithheldCodes = withheld?.[level]?.listedCodes;
   // The hex map places each area by its code in the app's layout, tiled,
-  // and draws the withheld ones as not reported. A result with any area the
-  // layout cannot place keeps all the API's positions, on their square grid.
+  // and draws the withheld ones as not reported and any others the result
+  // leaves out as having no data. A result with any area the layout cannot
+  // place keeps all the API's positions, on their square grid.
   const hexMap = useMemo(
-    () => placeUKHexMap(level, mapData, { disclosureControlled: levelWithheld, region }),
-    [level, mapData, levelWithheld, region]
+    () =>
+      placeUKHexMap(level, mapData, {
+        disclosureControlled: levelWithheld,
+        region,
+        listedWithheldCodes,
+      }),
+    [level, mapData, levelWithheld, region, listedWithheldCodes]
   );
 
   const decimals = useMemo(() => percentDecimals(mapData.map((point) => point.value)), [mapData]);
@@ -411,6 +419,7 @@ export default function UKLocalAreaMaps({
                 data={hexMap.points}
                 missingAreas={hexMap.withheldAreas}
                 missingAreaText={UK_WITHHELD_AREA_TEXT}
+                noDataAreas={hexMap.noDataAreas}
                 config={{
                   ...mapConfig,
                   // The legend reads in the rankings' units: pounds or percentages.

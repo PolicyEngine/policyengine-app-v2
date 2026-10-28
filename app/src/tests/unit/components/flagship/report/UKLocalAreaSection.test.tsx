@@ -24,14 +24,22 @@ import {
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import { EXPECTED_CONSTITUENCY_COUNT } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
 import {
   COMPLETE_RESPONSE,
   COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN,
   COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
+  COMPLETE_RESPONSE_WITH_WITHHELD_LISTS,
   FAILED_RESPONSE,
   QUEUED_RESPONSE,
+  UK_LISTED_WITHHELD_CONSTITUENCY_CODES,
+  UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES,
   WITHHELD_LOCAL_AUTHORITIES_WITH_ARDS_AND_NORTH_DOWN,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
+import {
+  hatchedAreaCodes,
+  noDataHexagons,
+} from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
 
 vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
@@ -217,6 +225,33 @@ describe('UKLocalAreaSection', () => {
     expect(
       screen.getByText(new RegExp(`^${hatched} of 361 local authorities are not reported\\.`))
     ).toBeInTheDocument();
+  });
+
+  test('given a breakdown that lists its withheld codes then each map’s note counts its list and the hex map hatches only those', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_WITHHELD_LISTS);
+    const { container } = renderSection();
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // When
+    expect(
+      await screen.findByText(/^2 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual(UK_LISTED_WITHHELD_CONSTITUENCY_CODES);
+    expect(noDataHexagons(container)).toHaveLength(
+      EXPECTED_CONSTITUENCY_COUNT - 1 - UK_LISTED_WITHHELD_CONSTITUENCY_CODES.length
+    );
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(screen.getByText(/^1 of 361 local authorities is not reported\./)).toBeInTheDocument();
+    expect(hatchedAreaCodes(container)).toEqual(UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES);
   });
 
   test('given saved area data then no disclosure note shows', async () => {

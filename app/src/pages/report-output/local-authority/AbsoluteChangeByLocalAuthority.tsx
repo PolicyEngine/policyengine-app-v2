@@ -52,10 +52,18 @@ export function AbsoluteChangeByLocalAuthority({
   );
   // The hex map places each local authority by its code in the app's layout, as v3's
   // does, and draws the ones a breakdown withheld as not reported.
+  // When the breakdown lists its withheld codes, only those are; the others
+  // it leaves out have no data.
   const disclosureControlled = withheld !== undefined;
+  const listedWithheldCodes = withheld?.listedCodes;
   const hexMap = useMemo(
-    () => placeUKHexMap('local_authority', mapData, { disclosureControlled, region }),
-    [mapData, disclosureControlled, region]
+    () =>
+      placeUKHexMap('local_authority', mapData, {
+        disclosureControlled,
+        region,
+        listedWithheldCodes,
+      }),
+    [mapData, disclosureControlled, region, listedWithheldCodes]
   );
   const notes = <UKAreaDisclosureNotes level="local_authority" areas={areas} withheld={withheld} />;
 
@@ -106,6 +114,7 @@ export function AbsoluteChangeByLocalAuthority({
           data={hexMap.points}
           missingAreas={hexMap.withheldAreas}
           missingAreaText={UK_WITHHELD_AREA_TEXT}
+          noDataAreas={hexMap.noDataAreas}
           config={{
             tiled: hexMap.tiled,
             hexSize: 11,

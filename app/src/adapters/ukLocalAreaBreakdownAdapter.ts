@@ -179,8 +179,18 @@ export function countWithheldUKAreas({
 }
 
 /**
- * Both levels' withheld areas for a breakdown of a report's region. A level
- * the API returned as null publishes no areas.
+ * A breakdown level's list of withheld codes, as the result gives it: its
+ * codes when it is a list, and null otherwise (null, absent, or anything
+ * else), which the count and the hex map read as giving no list.
+ */
+function listedWithheldCodesOf(codes: unknown): string[] | null {
+  return Array.isArray(codes) ? codes.filter((code) => typeof code === 'string') : null;
+}
+
+/**
+ * Both levels' withheld areas for a breakdown of a report's region, each
+ * from the level's list of withheld codes when the breakdown gives one. A
+ * level the API returned as null publishes no areas.
  */
 export function withheldUKAreasOf(
   breakdown: LocalAreaBreakdown,
@@ -193,11 +203,13 @@ export function withheldUKAreasOf(
       level: 'constituency',
       region,
       publishedCodes: Object.values(constituencies).map((area) => area.code),
+      listedWithheldCodes: listedWithheldCodesOf(breakdown.constituency_withheld_codes),
     }),
     local_authority: countWithheldUKAreas({
       level: 'local_authority',
       region,
       publishedCodes: Object.values(localAuthorities).map((area) => area.code),
+      listedWithheldCodes: listedWithheldCodesOf(breakdown.local_authority_withheld_codes),
     }),
   };
 }

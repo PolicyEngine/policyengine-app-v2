@@ -1,8 +1,13 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { AbsoluteChangeByConstituency } from '@/pages/report-output/constituency/AbsoluteChangeByConstituency';
-import { UK_WIDE_WITHHELD_CONSTITUENCIES } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
+import {
+  UK_WIDE_WITHHELD_CONSTITUENCIES,
+  WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES,
+  WALES_LISTED_WITHHELD_CONSTITUENCIES,
+} from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   UK_LOCAL_AREAS_OUTPUT,
   UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
@@ -21,11 +26,15 @@ import {
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import {
   CARDIFF_EAST_NAME,
+  CARDIFF_NORTH_CODE,
+  CARDIFF_NORTH_NAME,
+  LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
   WELSH_CONSTITUENCY_COUNT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
 import {
   MIN_MISSING_AREA_STRIPE_PIXELS,
   mockRenderedSvgWidth,
+  NO_DATA_TEXT,
   PHONE_WIDTH_PIXELS,
   stripeSpacingOnScreen,
 } from '@/tests/fixtures/components/visualization/hexMapMocks';
@@ -34,9 +43,13 @@ import {
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
 } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
 import {
+  hatchedAreaCodes,
   hexagonArrangement,
   hexagonVertices,
   isPointyTopped,
+  noDataHexagon,
+  noDataHexagons,
+  renderWithHexGrid,
   v2Hexagons,
   v3HexagonArrangement,
 } from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
@@ -355,5 +368,58 @@ describe('AbsoluteChangeByConstituency withheld hatching on a phone', () => {
     } finally {
       restoreWidth();
     }
+  });
+});
+
+describe('AbsoluteChangeByConstituency constituencies a breakdown lists as withheld', () => {
+  /** The chart of the Welsh fixture's 3 constituencies, with the hex grid chosen. */
+  function renderChart(withheld: UKWithheldAreas) {
+    return renderWithHexGrid(
+      <AbsoluteChangeByConstituency
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={withheld}
+      />
+    );
+  }
+
+  test('given a breakdown’s list then the hex map hatches only the listed constituencies', async () => {
+    // When
+    const { container } = await renderChart(WALES_LISTED_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES);
+  });
+
+  test('given a breakdown’s list then a constituency it leaves out but does not list reads no data', async () => {
+    // Given
+    const { container, user } = await renderChart(WALES_LISTED_WITHHELD_CONSTITUENCIES);
+
+    // When
+    await user.hover(noDataHexagon(container, CARDIFF_NORTH_CODE)!);
+
+    // Then
+    expect(noDataHexagons(container)).toHaveLength(
+      WELSH_CONSTITUENCY_COUNT - 3 - LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length
+    );
+    expect(screen.getByText(`${CARDIFF_NORTH_NAME}: ${NO_DATA_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given an empty list then the hex map hatches nothing and every absent constituency reads no data', async () => {
+    // When
+    const { container } = await renderChart(WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual([]);
+    expect(noDataHexagons(container)).toHaveLength(WELSH_CONSTITUENCY_COUNT - 3);
+  });
+
+  test('given no list then every absent constituency is hatched, as before, and none reads no data', async () => {
+    // When
+    const { container } = await renderChart(SOME_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toHaveLength(WELSH_CONSTITUENCY_COUNT - 3);
+    expect(noDataHexagons(container)).toHaveLength(0);
   });
 });

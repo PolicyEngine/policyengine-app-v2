@@ -24,6 +24,9 @@ import {
   BREAKDOWN_YEAR,
   EMPTY_BREAKDOWN_RESULT,
   EXPECTED_BREAKDOWN_WITH_BUNDLE,
+  LIST_SHAPE_BREAKDOWN_RESULT_WITH_WITHHELD_CODES,
+  LISTED_CONSTITUENCY_WITHHELD_CODES,
+  LISTED_LOCAL_AUTHORITY_WITHHELD_CODES,
   mockErrorResponseWithBody,
   NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
   NATIONAL_UK_RESULT_WITH_NULL_AREAS,
@@ -592,6 +595,32 @@ describe('societyWide API', () => {
       // Then
       expect(response.status).toBe('ok');
       expect(response.result).toEqual(EXPECTED_BREAKDOWN_WITH_BUNDLE);
+    });
+
+    test('given a completed breakdown that lists its withheld codes then returns the lists as they came', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse({
+          status: 'ok',
+          result: LIST_SHAPE_BREAKDOWN_RESULT_WITH_WITHHELD_CODES,
+        })
+      );
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      const breakdown = response.result as LocalAreaBreakdown;
+      expect(breakdown.constituency_withheld_codes).toEqual(LISTED_CONSTITUENCY_WITHHELD_CODES);
+      expect(breakdown.local_authority_withheld_codes).toEqual(
+        LISTED_LOCAL_AUTHORITY_WITHHELD_CODES
+      );
+      expect(Object.keys(breakdown.constituency_impact.by_constituency)).toHaveLength(1);
     });
 
     test('given a bundle without versions then the breakdown keeps its own versions', async () => {

@@ -9,6 +9,14 @@ import type { ReportOutputSocietyWideByLocalAuthority } from './ReportOutputSoci
  * Disclosure control leaves out the areas it withholds, so either level can
  * hold fewer areas than exist, or none. Keyed by area name, as
  * `normalizeSocietyWideOutput` returns the API's lists.
+ *
+ * From PolicyEngine/policyengine-sim-api#968 on, the result also lists each
+ * level's withheld areas: the ONS codes of the areas the run estimated but
+ * disclosure control did not publish, sorted. An empty list means none
+ * were withheld; null or absent means the result does not say, as in one
+ * computed before that change. An area missing from a level that is not
+ * on its list has no data, for example one with no households in the
+ * local-area dataset.
  */
 export interface LocalAreaBreakdown {
   kind: 'local_areas';
@@ -18,4 +26,6 @@ export interface LocalAreaBreakdown {
   data_version?: string | null;
   constituency_impact: { by_constituency: ReportOutputSocietyWideByConstituency };
   local_authority_impact: { by_local_authority: ReportOutputSocietyWideByLocalAuthority };
+  constituency_withheld_codes?: string[] | null;
+  local_authority_withheld_codes?: string[] | null;
 }
