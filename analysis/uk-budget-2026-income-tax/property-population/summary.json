@@ -112,22 +112,33 @@
       "survey_households": 3,
       "thin_cells": [],
       "thin_cells_in_tables": false,
-      "withheld_cells": []
+      "withheld_cells": [],
+      "covered_tables": [
+        "distributional_impact",
+        "winners_losers",
+        "age_impact",
+        "household_scatter_binned"
+      ],
+      "coverage_note": "The three-survey-household floor covers the decile and age tables; the binned scatter uses its separate ten-household minimum. The recorded absence of thin or withheld cells applies only to these covered tables, not to reach, poverty or inequality outputs. Reach, poverty and inequality figures are omitted from this summary pending separate disclosure clearance."
     },
     "data_limits": [],
     "model_limits": [],
     "reconciliation": {
       "responsiveness_status": "responsive",
       "summary_status": "pass"
-    }
+    },
+    "file_hashes_scope": "Hashes verified against all eight CSVs in the source artifact. Only budgetary_impact.csv, distributional_impact.csv and winners_losers.csv are retained in this folder; the other source hashes do not imply that those files or all their metrics are published here.",
+    "retained_aggregate_files": [
+      "budgetary_impact.csv",
+      "distributional_impact.csv",
+      "winners_losers.csv"
+    ]
   },
   "definitions": {
     "revenue": "Change in weighted government balance: reform gov_balance minus baseline gov_balance. Positive is a government gain. Includes tax and spending interactions; not income tax alone.",
     "decile_ranking": "Recomputed from the baseline for each reported year. Deciles of person-weighted equivalised HBAI household net income before housing costs; negative ranking income is reset to zero and equal-income households share a rank.",
     "decile_mean": "Weighted mean annual unequivalised household_net_income change among all households in the baseline decile, including unaffected households; household-weighted, not per person and not the mean among affected households.",
-    "relative_change": "Sum of weighted household income change divided by sum of weighted baseline household income within that year's baseline decile, times100; not the mean of individual percentage changes.",
-    "reach": "Share of people in households whose absolute change in household_net_income divided by max(baseline household_net_income,GBP1) exceeds0.0001 (0.01%). Numerator and denominator are weighted household size, restricted to baseline household_income_decile>=1. Changes in either direction count.",
-    "gini_change": "(Reformed Gini minus baseline Gini)/baseline Gini, a relative fraction, using equivalised household_net_income with person weights. This is not a percentage-point change in the Gini coefficient."
+    "relative_change": "Sum of weighted household income change divided by sum of weighted baseline household income within that year's baseline decile, times100; not the mean of individual percentage changes."
   },
   "annual_revenue": [
     {
@@ -223,9 +234,7 @@
         "7": 0.0,
         "8": 0.0,
         "9": 0.0
-      },
-      "people_living_in_affected_households_percent": 0.0,
-      "gini_relative_fraction_change": 0.0
+      }
     },
     "2027": {
       "average_household_change_gbp": {
@@ -252,9 +261,7 @@
         "7": -0.013220674146739093,
         "8": -0.022890621117303365,
         "9": -0.028773800606848924
-      },
-      "people_living_in_affected_households_percent": 5.943611604537077,
-      "gini_relative_fraction_change": -0.00012268724460114496
+      }
     },
     "2028": {
       "average_household_change_gbp": {
@@ -281,9 +288,7 @@
         "7": -0.014231064030165044,
         "8": -0.023066587924497953,
         "9": -0.028403468574895112
-      },
-      "people_living_in_affected_households_percent": 5.952076585287802,
-      "gini_relative_fraction_change": -0.00012210013169514702
+      }
     },
     "2029": {
       "average_household_change_gbp": {
@@ -310,9 +315,7 @@
         "7": -0.017949330941909994,
         "8": -0.02299527301085211,
         "9": -0.028798712554661515
-      },
-      "people_living_in_affected_households_percent": 6.037490519286693,
-      "gini_relative_fraction_change": -0.00012215392257318585
+      }
     },
     "2030": {
       "average_household_change_gbp": {
@@ -339,9 +342,7 @@
         "7": -0.019269608517530193,
         "8": -0.023458041818215283,
         "9": -0.028992003379557544
-      },
-      "people_living_in_affected_households_percent": 6.034841349783147,
-      "gini_relative_fraction_change": -0.00012083309893889608
+      }
     },
     "2031": {
       "average_household_change_gbp": {
@@ -368,9 +369,7 @@
         "7": -0.01972931434903989,
         "8": -0.02405452667513538,
         "9": -0.028820511996950758
-      },
-      "people_living_in_affected_households_percent": 5.9743860438605845,
-      "gini_relative_fraction_change": -0.00012092905458994419
+      }
     }
   },
   "official_comparability": {
@@ -380,14 +379,14 @@
     },
     "2027": {
       "not_comparable": {
-        "reason": "Self Assessment tax on 2027-28 property income is mostly paid from 31 January 2029, so the Treasury's costing (on a National Accounts basis) has \u00a335m in 2027-28 and about 1.5 years of liability in 2028-29 (\u00a3575m), while the model scores each tax year's liability. From 2029-30 the two agree within 1.5%. Table 6.1 row 61."
+        "reason": "Self Assessment tax on 2027-28 property income is mostly paid from 31 January 2029, so the Treasury's costing (on a National Accounts basis) has £35m in 2027-28 and about 1.5 years of liability in 2028-29 (£575m), while the model scores each tax year's liability. From 2029-30 the two agree within 1.5%. Table 6.1 row 61."
       },
       "post_behavioural": null,
       "static_costing": null
     },
     "2028": {
       "not_comparable": {
-        "reason": "Self Assessment tax on 2027-28 property income is mostly paid from 31 January 2029, so the Treasury's costing (on a National Accounts basis) has \u00a335m in 2027-28 and about 1.5 years of liability in 2028-29 (\u00a3575m), while the model scores each tax year's liability. From 2029-30 the two agree within 1.5%. Table 6.1 row 61."
+        "reason": "Self Assessment tax on 2027-28 property income is mostly paid from 31 January 2029, so the Treasury's costing (on a National Accounts basis) has £35m in 2027-28 and about 1.5 years of liability in 2028-29 (£575m), while the model scores each tax year's liability. From 2029-30 the two agree within 1.5%. Table 6.1 row 61."
       },
       "post_behavioural": null,
       "static_costing": null
@@ -419,5 +418,10 @@
     "Do not derive revenue shares from decile average household changes without weighted counts/totals.",
     "Treasury rows2027/2028 are retained from source for a labelled annual table, but the dashboard comparison deliberately suppresses them as not comparable.",
     "Static model, fixed incomes/no incorporation response; Treasury figures include behavioural assumptions and a different collection profile."
+  ],
+  "omitted_outputs_pending_disclosure_clearance": [
+    "People living in affected households percentage",
+    "Poverty changes",
+    "Inequality changes"
   ]
 }

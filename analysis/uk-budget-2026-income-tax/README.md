@@ -16,19 +16,19 @@ The generator uses hypothetical adults, without population microdata. It records
 
 The checked outputs include 23 household comparisons and 93 displayed points across the two income curves. The displayed lines use £100 intervals and the exact policy breakpoints. All four series are independently checked against the model at every £2 from £500 to £5,000, including a comparison of the plotted interpolation with the engine results; `curve-validation.json` records counts and maximum errors. The non-integer £1,333⅓ expense-choice breakpoint is also calculated with the model. To also verify the original dashboard parameter builder, pass `--dashboard-checkout /path/to/checkout` with that checkout at the recorded commit. This check is optional and performs no download.
 
-The `landlord_*` records in `households.json` and `households.csv` support the property article. They have no savings income, so the combined reform's savings rate changes do not affect their results. The dashboard preset's property-only component was checked separately. The `saver_*` and mixed `property_then_savings_order` records, savings curves, and savings-rate and Treasury row 62 metadata in `provenance.json` remain shared records for savings draft #1466; they are not property-only results.
+The `landlord_*` records in `households.json` and `households.csv` support the property article. They have no savings income, so the combined reform's savings rate changes do not affect their results. The example with a £30,000 salary, £6,000 of taxable property profit and no eligible finance costs was checked separately with the property-only reform. The `saver_*` and mixed `property_then_savings_order` records, savings curves, and savings-rate and Treasury row 62 metadata in `provenance.json` remain shared records for savings draft #1466; they are not property-only results.
 
 The savings draft (#1466) reproduces `savings-interest-chart.json`; the trading article (#1463) reproduces `trading-allowance-chart.json`. The property article's native bar chart uses the verified 2027 and 2031 decile means in `property-population/`. Reinsert each chart's contents only into its corresponding article when regenerating it.
 
 ## Current article scope
 
-The property draft now includes national revenue, decile averages and the precisely defined affected-population measure from the approved property-only snapshot in dashboard PR #290. `property-population/` retains the immutable source record, original receipt, four CSVs used by the post and the canonical verification summary. It is an approved branch snapshot, not independently verified as the production deployment. Recheck its identity and figures against the final released dashboard before merging, and have the new article head reviewed.
+The property draft now includes national revenue and decile averages from the approved property-only snapshot in dashboard PR #290. `property-population/` retains the immutable source record, original receipt, three aggregate CSVs and the verification summary. Reach, poverty and inequality figures are omitted pending separate disclosure clearance. It is an approved branch snapshot, not independently verified as the production deployment. Recheck its identity and figures against the final released dashboard before merging, and have the new article head reviewed.
 
 The savings and trading posts retain household calculations and Treasury costings only. No withdrawn combined national figures have been restored. The `population-preview/` files described below remain historical records; they are not the property-only source now used by the article.
 
 ## Dataset decision
 
-Retain the dashboard's adopted `policyengine` 6.11.1 bundle, with UK 2.151.0, core 3.33.3 and national data cut `a6299504`. The certificate, full dataset ID and checksum are recorded in `provenance.json`. The newer candidate in policyengine.py PR725 is awaiting certification/adoption. A future update must change the package and dataset provenance together and regenerate the analysis.
+Retain the dashboard's adopted `policyengine` 6.11.1 bundle, with UK 2.151.0, core 3.33.3 and national data cut `a6299504`. The certificate, full dataset ID and checksum are recorded in `provenance.json`. The newer candidate in [policyengine.py PR #725](https://github.com/PolicyEngine/policyengine.py/pull/725) is awaiting certification/adoption. A future update must change the package and dataset provenance together and regenerate the analysis.
 
 The household generators need no population microdata. This historical snapshot was retrieved without downloading population microdata. At 14:32 UTC the checked GitHub flat files still lacked these Budget-day measures. The dashboard maintainer subsequently shared a preview with provisional outputs generated at 14:34 UTC, fetched at 14:46 UTC. The analysis records retain its digest-addressed public aggregate outputs as an earlier review snapshot, with the exact manifest, receipts and eight CSVs retained in `population-preview/`. Older candidate charts and stale GitHub flat files must not be relabelled as the announced policy. The preview has no scored combined artifact; its five-measure chart must not be described as a jointly simulated full Budget package.
 
@@ -53,8 +53,6 @@ Treasury forecasts are labelled separately. Compare fiscal-year Treasury receipt
 - Have the policy interpretation and calculations reviewed before merging. Draft status and publication approval are tracked on each article’s PR.
 
 The three articles use the site's native tables, chart blocks and cover assets. Household curves use the shared numeric line renderer from [PR #1462](https://github.com/PolicyEngine/policyengine-app-v2/pull/1462); no duplicate chart implementation or country-model code is added.
-
-See `REVIEW_NOTES.md` for the historical draft-readiness checks, comparison with the reference Budget explainers and remaining publication work.
 
 ## Validation on 28 October 2026
 
