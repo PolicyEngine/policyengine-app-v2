@@ -80,7 +80,7 @@ In April 2020, earnings growth of 4.0% would have lifted the floor above a pensi
   "series": [
     { "key": "triple_lock", "name": "Triple Lock", "color": "primary", "step": true },
     { "key": "adjusted", "name": "Adjusted Triple Lock", "color": "secondary", "step": true },
-    { "key": "floor", "name": "Floor", "color": "tertiary", "step": true }
+    { "key": "floor", "name": "Floor", "color": "quinary", "step": true }
   ],
   "data": [
     { "year": 2016, "triple_lock": 100.0, "adjusted": 100.0, "floor": 100.0 },
@@ -167,15 +167,14 @@ With a lower State Pension, pensioners pay less income tax and receive more mean
   "steps": [
     { "key": "gross", "name": "Pension", "kind": "level", "legend": "Saving", "color": "primary" },
     { "key": "income_tax", "name": "Income tax", "kind": "change", "legend": "Tax and benefit offset", "color": "negative" },
-    { "key": "pension_credit", "name": "Pension Credit", "kind": "change", "legend": "Tax and benefit offset", "color": "negative" },
-    { "key": "other", "name": "HB and other", "kind": "change", "legend": "Tax and benefit offset", "color": "negative" },
+    { "key": "benefits", "name": "Benefits", "kind": "change", "legend": "Tax and benefit offset", "color": "negative" },
     { "key": "net", "name": "Net", "kind": "level", "legend": "Saving", "color": "primary" }
   ],
   "data": [
-    { "measure": "2039-40", "gross": 10.2926, "income_tax": -2.2292, "pension_credit": -0.5923, "other": -0.195, "net": 7.2761 }
+    { "measure": "2039-40", "gross": 10.2926, "income_tax": -2.2292, "benefits": -0.7873, "net": 7.2761 }
   ],
   "format": { "decimals": 1, "prefix": "£", "suffix": "bn" },
-  "source": "Source: PolicyEngine UK, pre-Budget release of PolicyEngine/uk-triple-lock. Pension: fall in State Pension spending. HB and other: Housing Benefit, council tax reduction, Winter Fuel Payment, Universal Credit and other taxes and spending. Labels rounded; steps computed from unrounded figures."
+  "source": "Source: PolicyEngine UK, pre-Budget release of PolicyEngine/uk-triple-lock. Pension: fall in State Pension spending. Benefits: Pension Credit (£0.6bn), and Housing Benefit, council tax reduction, Winter Fuel Payment, Universal Credit and other spending and taxes (£0.2bn). Labels rounded; steps computed from unrounded figures."
 }
 ```
 
