@@ -1,6 +1,6 @@
 # Property-only population results
 
-This folder supports the property article in PR #1460. It retains the approved property-only national results from dashboard PR #290 at immutable commit `637bb26c34264e0491ed182c363df751466458ed`.
+This folder supports the property article in PR #1460. It retains the approved property-only national results from dashboard PR #290 at immutable commit `637bb26c34264e0491ed182c363df751466458ed`. Dashboard PR #290 merged on 28 October 2026 as `57095fde8849a194661bbfcbbc35112d9f687d5e`, with the same approved artifact, so the links below point at dashboard `main`; `summary.json` keeps the immutable commit as its provenance record.
 
 These results identify an approved branch snapshot; the snapshot has not been independently verified as the production deployment.
 
@@ -28,10 +28,10 @@ The official comparison marks 2027–28 and 2028–29 as not comparable; its com
 
 ## Immutable sources
 
-- [Approved manifest](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/637bb26c34264e0491ed182c363df751466458ed/public/data/manifest.json).
-- [Property receipt and aggregate CSVs](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/tree/637bb26c34264e0491ed182c363df751466458ed/public/data/artifacts/property_income_rates_up/7bf77b35e33233e0).
-- [Official comparison flags](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/637bb26c34264e0491ed182c363df751466458ed/public/data/official_costings.json).
-- [Treasury row 61 source values](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/637bb26c34264e0491ed182c363df751466458ed/data_inputs/treasury/sources/AB2026-T6.1.csv).
-- [National calculator definitions](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/637bb26c34264e0491ed182c363df751466458ed/src/uk_budget_data/calculators.py).
+- [Approved manifest](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/main/public/data/manifest.json).
+- [Property receipt and aggregate CSVs](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/tree/main/public/data/artifacts/property_income_rates_up/7bf77b35e33233e0).
+- [Official comparison flags](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/main/public/data/official_costings.json).
+- [Treasury row 61 source values](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/main/data_inputs/treasury/sources/AB2026-T6.1.csv).
+- [National calculator definitions](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/main/src/uk_budget_data/calculators.py).
 
 The other five source CSVs are not copied; their hashes remain as source-verification records in the original receipt and verification summary. No reach, poverty or inequality figures from those files are republished here. This folder is the property article's sole national-results record; withdrawn combined outputs are not published here.
