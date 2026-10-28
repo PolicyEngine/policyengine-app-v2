@@ -1,0 +1,7 @@
+reform_id,reform_name,year,people_affected,gini_change,poverty_change_pp,poverty_change_pct
+property_income_rates_up,Property income tax rates up,2026,0.0,0.0,0.0,0.0
+property_income_rates_up,Property income tax rates up,2027,5.943611604537077,-0.00012268724460114496,0.0013589859,0.009870348
+property_income_rates_up,Property income tax rates up,2028,5.952076585287802,-0.00012210013169514702,0.00080776215,0.0059420434
+property_income_rates_up,Property income tax rates up,2029,6.037490519286693,-0.00012215392257318585,0.0013303757,0.009669558
+property_income_rates_up,Property income tax rates up,2030,6.034841349783147,-0.00012083309893889608,0.0019693375,0.014370949
+property_income_rates_up,Property income tax rates up,2031,5.9743860438605845,-0.00012092905458994419,0.0020561218,0.0150401555

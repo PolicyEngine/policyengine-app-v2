@@ -1,10 +1,11 @@
-The Autumn Budget 2026 increases the basic, higher and additional income tax rates on property income by a further two percentage points from **6 April 2027**, taking them to **24%, 44% and 49%** in England, Wales and Northern Ireland, as [Budget paragraph 6.246](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) sets out. The property rate increase does not apply to Scottish taxpayers. Because finance-cost relief follows the property basic rate, residential landlords' relief rises too.
+The Autumn Budget 2026 announces a further two-percentage-point increase in the basic, higher and additional income tax rates on property income from **6 April 2027**, taking them to **24%, 44% and 49%** in England, Wales and Northern Ireland, as [Budget paragraph 6.246](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) sets out. The government plans to legislate for the new rates in Finance Bill 2026–27. The property rate increase does not apply to Scottish taxpayers. Because finance-cost relief follows the property basic rate, residential landlords' relief rises too.
 
 Key figures for 2027–28:
 
 - A landlord in England with £10,000 of property profit and £4,000 of fully usable mortgage interest pays £120 more income tax.
 - A mortgage-free landlord in England with the same profit pays £200 more.
-- A Scottish landlord with £4,000 of fully usable finance costs pays £80 less, because the finance-cost reduction rises while Scottish property tax rates stay unchanged.
+- A landlord who lives in Scotland, with £4,000 of fully usable finance costs, pays £80 less income tax. The property income tax rate rise does not apply to Scottish taxpayers, but their finance-cost reduction still rises with the property basic rate.
+- PolicyEngine estimates £399 million of additional net government revenue and a £14 reduction in average household net income in 2027–28.
 - The Treasury forecasts £35 million of additional revenue in 2027–28, £575 million in 2028–29, and £435 million to £455 million a year from 2029–30 to 2031–32.
 
 Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. A [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance) covers the trading allowance increase. The Budget also raises savings income tax rates; we will cover that measure separately.
@@ -44,36 +45,155 @@ Consider two adults in England, each with £12,000 of rent, £2,000 of allowable
 
 Both pay £200 more before relief, while their finance-cost reduction rises by £4,000 × 2% = £80. Their net increase is £200 − £80 = £120. A mortgage-free landlord with the same profit pays £200 more. Both tax bands rise by two points, explaining the identical increases despite different starting liabilities.
 
-The property **rate** increase excludes Scottish taxpayers, whose rental income follows Scottish rules. Finance-cost relief is a separate calculation. The [Finance Act 2026 amendment](https://www.legislation.gov.uk/ukpga/2026/11/schedule/1/paragraph/40/enacted) ties it to the UK property basic rate without a Scottish exception. Applying that rule, a Scottish landlord able to use the full reduction on £4,000 of eligible finance costs receives £80 more relief, reducing their income tax by £80 if nothing else changes. A mortgage-free Scottish landlord has no change from this measure.
+The property **rate** increase excludes Scottish taxpayers, whose rental income is taxed under Scottish Income Tax rules. Finance-cost relief is a separate calculation. The [Finance Act 2026 amendment](https://www.legislation.gov.uk/ukpga/2026/11/schedule/1/paragraph/40/enacted) ties it to the UK property basic rate without a Scottish exception. Applying that rule, a Scottish taxpayer who lets property and can use the full reduction on £4,000 of eligible finance costs receives £80 more relief, reducing their income tax by £80 if nothing else changes. A mortgage-free Scottish taxpayer has no change from this measure.
 
-### The dashboard's household example
+### A smaller rental profit
 
-[Try the Budget dashboard's calculator](https://www.policyengine.org/uk/autumn-budget-2026?tab=household&policies=property_income_rates_up). Its example labelled “A middle earner who lets a flat” has £6,000 of property income and no mortgage interest. Selecting the property measure alone reduces household income by £120 in 2027–28: £6,000 × 2% = £120. The calculator grows a 2026–27 salary input into the selected year, while the worked examples above hold salary fixed at their stated 2027–28 amounts.
+A landlord with a £30,000 salary has already used the Personal Allowance against salary. If they also have £6,000 of taxable property profit after deductions and no eligible finance costs, they pay £120 more income tax in 2027–28: £6,000 × 2% = £120. This property-only calculation holds their income fixed and changes no other Budget measure.
 
-## Treasury costing
+## Population impacts
 
-The Treasury's [Table 6.1, row 61](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) forecasts the following additional Exchequer revenue. These are the Treasury's figures, on a National Accounts basis.
+We model the property measure alone on a representative sample of UK households. The [property-only microsimulation results](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/tree/637bb26c34264e0491ed182c363df751466458ed/public/data/artifacts/property_income_rates_up/7bf77b35e33233e0) use the certified Microcosm UK dataset and the OBR's October 2026 forecast. They are static estimates, with no behavioural response.
 
-| Exchequer revenue, £ million | 2026–27 | 2027–28 | 2028–29 | 2029–30 | 2030–31 | 2031–32 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Property income rates | 0 | 35 | 575 | 435 | 445 | 455 |
+### Budgetary impact
 
-**The dashboard marks 2027–28 and 2028–29 as not comparable with the official costing.** PolicyEngine scores each tax year's liabilities in that year. Self Assessment payments on account are normally based on the previous year's tax bill; the balancing payment for 2027–28 is due on 31 January 2029, alongside the first payment on account for 2028–29. [HMRC's payment guidance](https://www.gov.uk/understand-self-assessment-bill/payments-on-account) explains that schedule.
+PolicyEngine estimates that the measure raises £399 million of net government revenue in 2027–28, rising to £459 million in 2031–32. The Treasury's [Table 6.1, row 61](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) reports the official costing on a National Accounts basis.
+
+| Year | PolicyEngine net government revenue, £ million | Treasury revenue, £ million | Comparison |
+| --- | ---: | ---: | --- |
+| 2026–27 | 0 | 0 | No modelled policy effect |
+| 2027–28 | 399 | 35 | Not comparable |
+| 2028–29 | 412 | 575 | Not comparable |
+| 2029–30 | 429 | 435 | Later-year comparison |
+| 2030–31 | 446 | 445 | Later-year comparison |
+| 2031–32 | 459 | 455 | Later-year comparison |
+
+Positive values are additional revenue. PolicyEngine measures the change in government taxes less spending, including benefit interactions. In 2029–30, its £429 million estimate is £6 million below the Treasury's £435 million.
+
+**The first two years, 2027–28 and 2028–29, are not comparable without a collection-timing adjustment.** PolicyEngine scores each tax year's liabilities in that year. Self Assessment payments on account are normally based on the previous year's tax bill; the balancing payment for 2027–28 is due on 31 January 2029, alongside the first payment on account for 2028–29. [HMRC's payment guidance](https://www.gov.uk/understand-self-assessment-bill/payments-on-account) explains that schedule.
 
 The [ONS public-finance methodology, section 6.1.2](https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/methodologies/monthlystatisticsonthepublicsectorfinancesamethodologicalguide) records Self Assessment income tax using cash receipts, without shifting them back to the year the income arose. This can produce a small first-year receipts effect followed by a catch-up. Comparing those first two years with same-year model liabilities requires a collection-timing adjustment; it does not by itself establish a difference in the tax base.
 
-The Treasury costing also allows for some landlords incorporating. PolicyEngine's national estimates hold that choice fixed. This article reports household calculations and the Treasury costing; the dashboard carries PolicyEngine's national results and their comparability notes.
+The Treasury costing also allows for some landlords incorporating. PolicyEngine holds that choice fixed. Differences in data, behaviour and accounting remain relevant when comparing the later years, even where the rounded estimates are close.
+
+### Reach and distribution
+
+In 2027–28, 5.9% of people live in households whose net income changes by more than 0.01% in either direction under the model's affected-population measure. This includes increases and decreases in household income; it is not a count of people paying more property tax. The Scottish finance-cost example above illustrates one way income can rise.
+
+Across all households, average annual net income falls by £14 in 2027–28 and £15 in 2031–32. In 2027–28, the average reduction ranges from £1 in the lowest income decile to £58 in the highest; in 2031–32, those averages are £2 and £66.
+
+Income deciles rank people by their household's baseline equivalised net income before housing costs. The analysis calculates rankings separately for each year. The changes below are averages per household in each group, including households whose income does not change.
+
+| Income decile | Average household net income change, 2027–28 | Average household net income change, 2031–32 |
+| --- | ---: | ---: |
+| 1 (lowest income) | −£1 | −£2 |
+| 2 | −£5 | −£6 |
+| 3 | −£5 | −£6 |
+| 4 | −£5 | −£5 |
+| 5 | −£4 | −£7 |
+| 6 | −£7 | −£3 |
+| 7 | −£9 | −£14 |
+| 8 | −£17 | −£19 |
+| 9 | −£25 | −£27 |
+| 10 (highest income) | −£58 | −£66 |
+| All households | −£14 | −£15 |
+
+```chart
+{
+  "type": "bar",
+  "title": "Average change in household net income by income decile",
+  "subtitle": "Property income tax measure, all households",
+  "xKey": "decile",
+  "series": [
+    {
+      "key": "y2027",
+      "name": "2027–28",
+      "color": "negative"
+    },
+    {
+      "key": "y2031",
+      "name": "2031–32",
+      "color": "quinary"
+    }
+  ],
+  "data": [
+    {
+      "decile": "1st",
+      "y2027": -0.849537805191413,
+      "y2031": -2.0255155229193846
+    },
+    {
+      "decile": "2nd",
+      "y2027": -5.331535772669214,
+      "y2031": -5.635177868688589
+    },
+    {
+      "decile": "3rd",
+      "y2027": -5.137292004488854,
+      "y2031": -6.31798337071894
+    },
+    {
+      "decile": "4th",
+      "y2027": -5.459680740488306,
+      "y2031": -5.009629578700846
+    },
+    {
+      "decile": "5th",
+      "y2027": -4.476027967687162,
+      "y2031": -6.514231403074363
+    },
+    {
+      "decile": "6th",
+      "y2027": -6.548908036603635,
+      "y2031": -2.8345851636943533
+    },
+    {
+      "decile": "7th",
+      "y2027": -8.616921384043795,
+      "y2031": -13.776544201366882
+    },
+    {
+      "decile": "8th",
+      "y2027": -16.837105996038773,
+      "y2031": -19.013018309750667
+    },
+    {
+      "decile": "9th",
+      "y2027": -25.074336564023735,
+      "y2031": -26.922877825449845
+    },
+    {
+      "decile": "10th",
+      "y2027": -57.73388219873782,
+      "y2031": -65.56126504216287
+    }
+  ],
+  "yLabel": "Average annual change in net income",
+  "format": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "valueLabels": false,
+  "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the certified Microcosm UK dataset and the OBR's October 2026 forecast."
+}
+```
 
 ## Assumptions and limitations
 
 - The worked examples are hypothetical single adults aged 35. Their income is fixed at the stated 2027–28 amounts. They include no pension contributions, Gift Aid, student loans, property losses, carried-forward finance costs or other reliefs.
 - The household tables show tax attributable to property income. The mortgage examples assume the full finance-cost reduction can be used.
 - The Scottish mortgage example applies the existing Finance Act rule linking relief to the UK property basic rate. The Finance Bill will set the final implementation of the new rates.
-- The dashboard calculator grows a 2026–27 salary input into the selected year. Its income path differs from fixing the same nominal salary in 2027–28.
-- National comparisons need the same income-tax components and collection periods. Benefit changes in a government-balance estimate must also be separated. These household examples do not establish national affected-person counts or distributions.
+- National estimates hold households' behaviour fixed. They do not model landlords incorporating in response to the tax change.
+- The national affected-population percentage measures people living in households with an income change above the stated threshold. It does not give a taxpayer count or separate shares gaining and losing.
+- Population estimates include changes in means-tested benefits. The worked household examples show income tax; a change in benefits can offset part of a household's extra tax.
 
 ## Methodology
 
-The household calculations use the `policyengine` Python package (version 6.11.1), PolicyEngine UK (version 2.151.0) and PolicyEngine core (version 3.33.3). The shared generator changes savings and property rates together against the already scheduled 2027–28 rules. The landlord examples in this article have no savings income, so the savings rate change has no effect on them: their tax differences isolate the property changes, including finance-cost relief. The dashboard preset's property-only component was checked separately. Both household scenarios use the OBR’s October 2026 forecast update at dashboard commit `64042657`. Supplied 2027–28 income stays fixed; the forecast updates the model’s projected parameters. Independent arithmetic checks the tax calculations.
+The calculations use the `policyengine` Python package (version 6.11.1), PolicyEngine UK (version 2.151.0) and PolicyEngine core (version 3.33.3).
 
-The [shared analysis files](https://github.com/PolicyEngine/policyengine-app-v2/tree/main/analysis/uk-budget-2026-income-tax) record the household inputs, model versions, forecast settings and validation for the property, savings and trading explainers. Monetary amounts in tables are rounded to whole pounds; the calculation records retain precision. The household calculations use hypothetical people and do not require population microdata.
+The household generator changes savings and property rates together against the already scheduled 2027–28 rules. The landlord examples in this article have no savings income, so the savings rate change has no effect on them: their tax differences isolate the property changes, including finance-cost relief. The £6,000 property-only example was checked separately. The baseline and reform household calculations both use the OBR’s October 2026 forecast update. Supplied 2027–28 income stays fixed; the forecast updates the model’s projected parameters. Independent arithmetic checks the tax calculations.
+
+The population run uses the certified Microcosm UK 2024–25 dataset (`a6299504`) and the detailed October forecast at dashboard commit `4de166f0`, applied to baseline and reform alike. It changes the property measure alone and includes the finance-cost-relief increase. Household net income and government revenue include interactions with the other taxes and benefits in the model. The decile averages are household-weighted means of unequivalised household net income changes; the income ranking uses person-weighted equivalised HBAI income before housing costs. Monetary values are rounded only for presentation.
+
+The [shared analysis files](https://github.com/PolicyEngine/policyengine-app-v2/tree/main/analysis/uk-budget-2026-income-tax) record the household inputs, model versions, forecast settings and validation for the property, savings and trading explainers. The property population records retain the exact source outputs and provenance. Monetary amounts in tables are rounded to whole pounds; the calculation records retain precision. The hypothetical household calculations do not require population microdata.
