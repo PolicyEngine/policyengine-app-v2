@@ -975,7 +975,7 @@ The 2027-28 values come from the explainer. The government has not yet set the S
 
 ### Income taxed above 20%
 
-Because the full PTA equals 20% of the gap between the full new State Pension and the Personal Allowance, income taxed above 20% can still leave tax to pay. This Budget raises the basic rate on property income to 24% from April 2027 (22% before it). At 24%, a pensioner with £11,000 of State Pension and £2,036 of property income pays £18 with the PTA, down from £112. A Scottish taxpayer pays the 19% starter rate on income in the withdrawal range, so the effective marginal tax rate there is 52.3%, from about £13,047 of total income, where Scottish income tax first exceeds the PTA.
+Because the full PTA equals 20% of the gap between the full new State Pension and the Personal Allowance, rounded up to the pound, income taxed above 20% can still leave tax to pay. This Budget raises the basic rate on property income to 24% from April 2027 (22% before it). At 24%, a pensioner with £11,000 of State Pension and £2,036 of property income pays £18 with the PTA, down from £112. A Scottish taxpayer pays the 19% starter rate on income in the withdrawal range, so the effective marginal tax rate there is 52.3%, from about £13,047 of total income, where Scottish income tax first exceeds the PTA.
 
 ### Charts
 

@@ -509,7 +509,7 @@ The absolute poverty rate before housing costs does not change. This rate counts
 
 PolicyEngine UK's tax years run from 6 April to 5 April, so 2026-27 covers 1 January to 5 April 2027 and 2027-28 covers 6 April to 30 June 2027. The government's estimate uses fiscal years from 1 April to 31 March, so the first five days of April 2027 fall in a different year.
 
-Net income is PolicyEngine UK's household net income: income from all sources and benefits, less direct taxes, council tax, the TV licence and the modelled duties, including the VAT change on fuel. All three households in the net income table live in London, PolicyEngine UK's default region, and use 1,000 litres of fuel a year. The 2027-28 benefit amounts are PolicyEngine UK projections on the OBR's October 2026 forecast, the forecast that PolicyEngine's Autumn Budget 2026 dashboard uses.
+Net income is PolicyEngine UK's household net income: income from all sources and benefits, less direct taxes, council tax, the TV licence and the modelled duties; it also counts the VAT change on fuel. All three households in the net income table live in London, PolicyEngine UK's default region, and use 1,000 litres of fuel a year. The 2027-28 benefit amounts are PolicyEngine UK projections on the OBR's October 2026 forecast, the forecast that PolicyEngine's Autumn Budget 2026 dashboard uses.
 
 - **Single adult:** aged 40, with a £30,000 salary and no benefits.
 - **Couple with two children on Universal Credit:** both aged 35, with children aged 8 and 5. One earns £25,000. They rent privately for £9,600 a year, pay £1,800 in council tax and claim Universal Credit.
