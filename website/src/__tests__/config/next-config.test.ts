@@ -145,6 +145,32 @@ describe("nextConfig redirects", () => {
     ].map((rewrite) => rewrite.source);
     expect(sources).toContain("/:countryId/model");
   });
+
+  test("sends /uk/budgets/autumn-2026 to the Autumn Budget 2026 dashboard, which is proxied", async () => {
+    const redirects = await getRedirects();
+    expect(redirects).toContainEqual({
+      source: "/uk/budgets/autumn-2026",
+      destination: "/uk/autumn-budget-2026",
+      permanent: false,
+    });
+    expect(redirects).toContainEqual({
+      source: "/uk/budgets/autumn-2026/:path*",
+      destination: "/uk/autumn-budget-2026/:path*",
+      permanent: false,
+    });
+
+    const rewrites = await nextConfig.rewrites!();
+    if (Array.isArray(rewrites)) {
+      throw new Error("Expected rewrites to be grouped by phase.");
+    }
+    const sources = [
+      ...(rewrites.beforeFiles ?? []),
+      ...(rewrites.afterFiles ?? []),
+      ...(rewrites.fallback ?? []),
+    ].map((rewrite) => rewrite.source);
+    expect(sources).toContain("/uk/autumn-budget-2026");
+    expect(sources).toContain("/uk/autumn-budget-2026/:path*");
+  });
 });
 
 describe("OBBBA household explorer routes", () => {
