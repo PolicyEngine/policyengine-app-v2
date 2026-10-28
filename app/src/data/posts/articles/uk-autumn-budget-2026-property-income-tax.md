@@ -55,7 +55,7 @@ A landlord in England with a £30,000 salary has already used the Personal Allow
 
 ## Population impacts
 
-We model the property measure alone on a representative sample of UK households. The [property-only microsimulation results](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/tree/637bb26c34264e0491ed182c363df751466458ed/public/data/artifacts/property_income_rates_up/7bf77b35e33233e0) use the certified Microcosm UK dataset and the OBR's October 2026 forecast. They are static estimates, with no behavioural response.
+We model the property measure alone on a representative sample of UK households. The [property-only microsimulation results](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/tree/main/public/data/artifacts/property_income_rates_up/7bf77b35e33233e0) use the certified Microcosm UK dataset and the OBR's October 2026 forecast. They are static estimates, with no behavioural response.
 
 ### Budgetary impact
 
