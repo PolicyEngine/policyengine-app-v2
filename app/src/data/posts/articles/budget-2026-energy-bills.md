@@ -44,7 +44,7 @@ Consider a household that uses 2,500 kWh of electricity a year, [Ofgem's typical
 | Part of the year zero-rated   | 56.7% of the year's use | 91 of 366 days |
 | VAT removed                   | £24                     | £11            |
 
-The VAT saving changes no benefit. In the Autumn Budget 2026 dashboard's household calculator, the two example families on Universal Credit gain exactly the VAT removed.
+The VAT saving changes no benefit: in the Autumn Budget 2026 dashboard's household calculator, the two example families on Universal Credit gain exactly the VAT removed. Households that use more electricity save more. One of those families lives in an all-electric home and spends £1,800 a year on electricity, about twice as much as our household, so it saves £49 in 2026-27 and £21 in 2027-28.
 
 If the household lives in a band A to D home in England, it also receives the £100 payment in 2026-27, for a total gain of £136 across the two years. The same household in a band E to H home in England, or in Wales or Scotland, gains £36 from the VAT cut alone. In Northern Ireland, where the zero rate is expected to apply from April 2027, it gains £11. Table 3 shows each case.
 
