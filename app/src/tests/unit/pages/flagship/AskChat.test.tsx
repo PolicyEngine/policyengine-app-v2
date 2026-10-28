@@ -113,6 +113,49 @@ describe('AskPage UK chat mode', () => {
     expect(mockStreamAskChatTurn).toHaveBeenCalledTimes(1);
   });
 
+  test('given a validation passes then its card appears only after the result', async () => {
+    // Given
+    const user = userEvent.setup();
+    streamReplying((handlers) => {
+      handlers.onToolUse?.({
+        toolName: 'validate_reform',
+        toolId: 'v1',
+        toolInput: { reform: { [PERSONAL_ALLOWANCE_PATH]: 15000 } },
+      });
+      handlers.onToolResult?.({ toolName: 'validate_reform', toolId: 'v1', status: 'success' });
+      handlers.onDone?.({ content: 'Validated.', sessionId: 's1' });
+    });
+    renderAsk();
+
+    // When
+    await ask(user, 'Raise the personal allowance to £15,000');
+
+    // Then
+    expect(screen.getByRole('button', { name: /add to draft/i })).toBeInTheDocument();
+  });
+
+  test('given a validation fails then no add-to-draft card appears', async () => {
+    // Given
+    const user = userEvent.setup();
+    streamReplying((handlers) => {
+      handlers.onToolUse?.({
+        toolName: 'validate_reform',
+        toolId: 'v1',
+        toolInput: { reform: { [PERSONAL_ALLOWANCE_PATH]: 15000 } },
+      });
+      handlers.onToolResult?.({ toolName: 'validate_reform', toolId: 'v1', status: 'error' });
+      handlers.onDone?.({ content: 'That path is not valid.', sessionId: 's1' });
+    });
+    renderAsk();
+
+    // When
+    await ask(user, 'Raise the personal allowance to £15,000');
+
+    // Then
+    expect(screen.getByText('That path is not valid.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /add to draft/i })).not.toBeInTheDocument();
+  });
+
   test('given the model validates a reform then add to draft stores its provisions', async () => {
     // Given
     const user = userEvent.setup();
