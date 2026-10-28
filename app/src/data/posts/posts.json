@@ -1,5 +1,14 @@
 [
   {
+    "title": "Analysis of the Autumn Budget 2026 energy bill measures",
+    "description": "PolicyEngine estimates the £100 Household Energy Payment and the zero rate of VAT on domestic electricity cost £2.81 billion in 2026-27 and raise household net income by an average of £96.",
+    "date": "2026-10-29 12:00:00",
+    "tags": ["uk", "autumn-budget", "policy"],
+    "authors": ["david-trimmer"],
+    "filename": "budget-2026-energy-bills.md",
+    "image": "budget-2026-energy-bills/cover.webp"
+  },
+  {
     "title": "High value council tax surcharge: revenue by constituency",
     "description": "We estimate the surcharge raises \u00a3410 million in 2028-29 from owner-occupied main residences in England before behavioural responses, 39% of it from 10 constituencies.",
     "date": "2026-10-22 12:00:00",
