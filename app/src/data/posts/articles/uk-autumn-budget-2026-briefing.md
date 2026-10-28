@@ -4,7 +4,7 @@ Key results, from PolicyEngine's static microsimulation (provisional figures, wh
 
 - The seven measures cost £3.11 billion in 2026-27 and £0.61 billion in 2027-28. From 2028-29 they raise money: £0.21 billion in 2028-29, and between £0.17 billion and £0.30 billion a year to 2031-32.
 - In 2026-27 they raise household net income by £107 a year on average. Every income decile gains between £98 and £110, so the gain is 0.41% of net income in the lowest-income decile and 0.06% in the highest.
-- 98.6% of people live in households that gain in 2026-27. In 2029-30, after the energy measures end, 3.9% of people live in households that gain and 5.6% in households that lose.
+- About 99% of people live in households that gain in 2026-27. In 2029-30, after the energy measures end, about 4% of people live in households that gain and about 6% in households that lose.
 - The highest-income decile loses £50 a year on average in 2028-29, rising to £56 in 2031-32, as property income tax rates rise.
 - The package changes poverty by less than 0.05 percentage points in every year, on every poverty measure we publish.
 
