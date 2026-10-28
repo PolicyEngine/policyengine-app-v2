@@ -3,7 +3,7 @@ In the Autumn Budget on 28 October 2026, the Chancellor announced a Pension Tax 
 Key figures for 2027-28:
 
 - The full new State Pension is £13,036.40 a year, £466.40 above the £12,570 Personal Allowance.
-- The full PTA is £94, which covers the £93.28 of income tax that the full new State Pension would otherwise bring.
+- The full PTA is £94.
 - A pensioner with the standard Personal Allowance, no other tax charges and total income up to £13,036.40 pays no income tax.
 - The PTA falls by £1 for each £3 of income above £13,036.40 and reaches zero at £13,318.40.
 - In that withdrawal range, a taxpayer outside Scotland has an effective marginal tax rate of 53.3%, against 20% without the PTA.
@@ -14,7 +14,7 @@ Key figures for 2027-28:
 The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) lists the PTA among its tax measures, and HM Treasury's [Pension Tax Allowance explainer](https://www.gov.uk/government/publications/pension-tax-allowance-explainer/pension-tax-allowance-explainer) sets out the rules. The PTA has five parts:
 
 1. **Eligibility.** People over State Pension age, or who reach it during the tax year, qualify. A person does not need to receive the State Pension. The PTA belongs to each person and cannot be transferred to a partner.
-2. **Value.** The full PTA applies the 20% basic rate to the gap between the full new State Pension and the Personal Allowance: 20% of £466.40 is £93.28. The explainer gives the full PTA as £94, and its worked examples and the £13,319 end of the withdrawal range use £94. Scottish taxpayers receive the same PTA, which the explainer says is "calculated using the 20% basic rate rather than the Scottish starter rate".
+2. **Value.** The full PTA is 20% of the gap between the full new State Pension and the Personal Allowance, rounded up: £94 in 2027-28. Scottish taxpayers receive the same PTA, which the explainer says is "calculated using the 20% basic rate rather than the Scottish starter rate".
 3. **Tax reduction.** The PTA reduces the income tax bill after all allowances and reliefs. It does not change the Personal Allowance, and it cannot produce a refund. In this sense it works like a non-refundable tax credit, as the Married Couple's Allowance does.
 4. **Income test.** The test uses total income from all sources: pensions, earnings, self-employment, property, savings and dividends. ISA income does not count. A person with total income at or below the full new State Pension gets the full PTA.
 5. **Taper.** Above the full new State Pension, the PTA falls by £1 for each £3 of extra total income. In 2027-28 it reaches zero £282 above the full new State Pension.
