@@ -1,4 +1,4 @@
-In the Autumn Budget on 28 October 2026, the Chancellor announced a Pension Tax Allowance (PTA): an income tax reduction for people over State Pension age whose total income is between the £12,570 Personal Allowance and £13,319 in 2027-28. The PTA applies for three tax years, from 6 April 2027 to 5 April 2030. This post explains how the PTA works and shows its effect on example pensioners, using PolicyEngine UK household calculations.
+In the Autumn Budget on 28 October 2026, the Chancellor announced a Pension Tax Allowance (PTA): an income tax reduction for people over State Pension age whose total income is between the £12,570 Personal Allowance and £13,319 in 2027-28. The PTA applies for three tax years, from 6 April 2027 to 5 April 2030. This post explains how the PTA works and shows its effect on example pensioners and on the population, using PolicyEngine UK.
 
 Key figures for 2027-28:
 
@@ -15,11 +15,11 @@ The [Budget 2026 document](https://www.gov.uk/government/publications/budget-202
 
 1. **Eligibility.** People over State Pension age, or who reach it during the tax year, qualify. A person does not need to receive the State Pension. The PTA belongs to each person and cannot be transferred to a partner.
 2. **Value.** The full PTA is 20% of the gap between the full new State Pension and the Personal Allowance, rounded up to the pound. In 2027-28, 20% of £466.40 (£13,036.40 − £12,570) is £93.28, rounded up to £94. Scottish taxpayers receive the same PTA, which the explainer says is "calculated using the 20% basic rate rather than the Scottish starter rate".
-3. **Tax reduction.** The PTA reduces the income tax bill after all allowances and reliefs. It does not change the Personal Allowance, and it cannot produce a refund. It works as a non-refundable tax credit, like the Married Couple's Allowance. Because the full PTA is worth 20% of the gap, income taxed above 20% can still leave tax to pay: property income is taxed at 22% in 2027-28, so a pensioner with £11,000 of State Pension and £2,036 of property income pays £9 with the PTA, down from £103.
+3. **Tax reduction.** The PTA reduces the income tax bill after all allowances and reliefs. It does not change the Personal Allowance, and it cannot produce a refund. It works as a non-refundable tax credit, like the Married Couple's Allowance.
 4. **Income test.** The test uses total income from all sources: pensions, earnings, self-employment, property, savings and dividends. ISA income does not count. A person with total income at or below the full new State Pension gets the full PTA.
 5. **Taper.** Above the full new State Pension, the PTA falls by £1 for each £3 of extra total income. In 2027-28 it reaches zero £282 above the full new State Pension.
 
-The PTA rises with the full new State Pension in 2028-29 and 2029-30. HMRC applies it automatically, with no claim.
+The PTA rises with the full new State Pension in 2028-29 and 2029-30, and HMRC applies it automatically, with no claim. The values for those years are projections (see the appendix).
 
 | Tax year | Full new State Pension | Full PTA | PTA reaches zero at |
 | -------- | ---------------------- | -------- | ------------------- |
@@ -27,11 +27,9 @@ The PTA rises with the full new State Pension in 2028-29 and 2029-30. HMRC appli
 | 2028-29  | £13,478                | £182     | £14,025             |
 | 2029-30  | £13,816                | £250     | £14,567             |
 
-The 2027-28 values come from the explainer. The government has not yet set the State Pension for 2028-29 and 2029-30, so those rows apply the triple lock on the OBR's October 2026 forecast (3.4% in April 2028 and 2.5% in April 2029), round the weekly rate down to 5p and take 52 weeks. The explainer says the PTA is "uprated in line with" the full new State Pension. We read this as the same formula each year, 20% of the full new State Pension above the Personal Allowance, rounded up to the pound. Under this reading, a pensioner on the full new State Pension pays no income tax in each year, in line with the Budget's statement that such pensioners "will not be brought into paying tax because of State Pension uprating in this Parliament".
-
 ## Household impacts
 
-This section shows the PTA's effect on example pensioners, using PolicyEngine UK household calculations for 2027-28 unless stated.
+This section shows the PTA's effect on example pensioners in 2027-28, unless stated. The appendix defines each household.
 
 ### Worked examples
 
@@ -49,7 +47,7 @@ A pensioner whose only income is the full new State Pension owes £93 of income 
 
 ### Net income and other benefits
 
-Pension Credit, Housing Benefit and Council Tax Reduction all assess income after income tax. When the PTA lowers income tax, these benefits fall, so household net income rises by less than the PTA. The table shows nine households in the North West of England in 2027-28. Households 1 to 5 are single pensioners aged 70, except household 5, aged 76. Households 1 to 3 and the older partner in households 6 and 7 have the full new State Pension and no other income. Households 4 and 5 have £11,000 of State Pension and a private pension of £1,800 and £1,860, and no housing costs. In household 8, the older partner earns £13,036 and has deferred the State Pension. The couples are aged 70 and 60, and the younger partner has no income. Household 9 is the "pensioner on the full State Pension" example in the [household calculator](https://policyengine.org/uk/autumn-budget-2026?tab=household) of PolicyEngine's Autumn Budget dashboard: aged 68, with the full new State Pension and £150 of private pension, and the calculator's £2,629 Band D council tax. The calculator takes the full new State Pension as £13,036.97, the model's weekly rate without rounding, so it shows total income of £13,187; its other figures for this household round to the same pounds. Households 1 to 3 and 6 to 8 owe £1,800 a year of council tax, and the renters pay £7,800 a year in rent. Each column shows the change that the PTA makes, and a dash means no change; for the TV licence fee, a positive change is a new cost.
+Pension Credit, Housing Benefit and Council Tax Reduction all assess income after income tax. When the PTA lowers income tax, these benefits fall, so household net income rises by less than the PTA. The table shows nine households in the North West of England in 2027-28. Each column shows the change that the PTA makes; a dash means no change, and for the TV licence fee a positive change is a new cost. Household 9 is an example in the [household calculator](https://policyengine.org/uk/autumn-budget-2026?tab=household) of PolicyEngine's Autumn Budget dashboard.
 
 | Household                                                                                            | Total income | Income tax | Pension Credit | Housing Benefit | Council Tax Reduction | Universal Credit | TV licence fee | Net income |
 | ---------------------------------------------------------------------------------------------------- | ------------ | ---------- | -------------- | --------------- | --------------------- | ---------------- | -------------- | ---------- |
@@ -67,13 +65,13 @@ Figures may not sum because of rounding.
 
 Housing Benefit falls by 65p and Council Tax Reduction by 20p for each £1 of extra income after tax, so household 3 keeps 15p of each £1 of PTA. Pension Credit tops income after tax up to a minimum guarantee, so a claimant whose income stays below the guarantee, such as household 4, loses Pension Credit equal to the full PTA.
 
-A Pension Credit claimant aged 75 or over also gets a free TV licence. If the PTA lifts income after tax above the guarantee, Pension Credit ends and the £180 licence fee returns, so household 5 is £180 worse off. This happens from £12,860 to £12,932 of total income in 2027-28, the range where Pension Credit would continue without the PTA. It assumes that the household needs a TV licence. Leaving Pension Credit can also end other help that the model does not include, such as the £150 Warm Home Discount in England and Wales, so the loss can be larger.
+A Pension Credit claimant aged 75 or over also gets a free TV licence. If the PTA lifts income after tax above the guarantee, Pension Credit ends and the £180 licence fee returns, so household 5 is £180 worse off. This happens from £12,860 to £12,932 of total income in 2027-28, the range where Pension Credit would continue without the PTA.
 
-A couple in which one partner is under State Pension age claims Universal Credit, not Pension Credit or Housing Benefit. Universal Credit counts pension income before income tax (Universal Credit Regulations 2013, regulation 66), so the PTA does not change it. It counts earnings after income tax, so when the PTA cuts the tax on earnings, Universal Credit falls by 55p for each £1. In the married couple, the younger partner transfers the Marriage Allowance, which already removes the older partner's income tax, so the PTA gives nothing. An unmarried couple cannot use the Marriage Allowance. A single person over State Pension age cannot claim Universal Credit. The explainer also notes that "receipt of the Pension Tax Allowance may affect your entitlement" to means-tested benefits.
+A couple in which one partner is under State Pension age claims Universal Credit, not Pension Credit or Housing Benefit. Universal Credit counts pension income before income tax, so the PTA does not change it, but it counts earnings after income tax, so it falls by 55p for each £1 of PTA on earnings. In the married couple, the younger partner transfers the Marriage Allowance, which already removes the older partner's income tax, so the PTA gives nothing. An unmarried couple cannot use the Marriage Allowance.
 
 ### The PTA in each tax year
 
-The charts below follow a single pensioner aged 70 in England whose income is all pension income, such as the State Pension and a private pension. The results depend only on total income, not on its source.
+The charts below follow a single pensioner aged 70 in England whose income is all pension income. The results depend only on total income, not on its source.
 
 ```chart
 {
@@ -320,7 +318,7 @@ The charts below follow a single pensioner aged 70 in England whose income is al
 }
 ```
 
-The chart shows the PTA used, which is the PTA capped at the tax due. Up to the full new State Pension, the PTA used equals the tax due. Above it, the PTA falls by £1 for each £3 of extra income. Because the full new State Pension rises each year while the Personal Allowance stays at £12,570, the maximum PTA rises from £94 in 2027-28 to £250 in 2029-30, and the withdrawal range widens from £282 to £750.
+The chart shows the PTA used, which is the PTA capped at the tax due. Because the full new State Pension rises each year while the Personal Allowance stays at £12,570, the maximum PTA rises from £94 in 2027-28 to £250 in 2029-30, and the withdrawal range widens from £282 to £750.
 
 ### Income tax by total income
 
@@ -458,7 +456,7 @@ Without the PTA, income tax starts at the £12,570 Personal Allowance. With the 
 
 ### Net income
 
-This chart shows household net income for a pensioner who claims Pension Credit when eligible. Household net income counts pension income and every tax and benefit that applies: here, Pension Credit, income tax, the £200 Winter Fuel Payment and the £180 TV licence fee. A single person over State Pension age cannot claim Universal Credit. The pensioner has no housing costs, so Housing Benefit and Council Tax Reduction do not apply.
+This chart shows household net income for a pensioner who claims Pension Credit when eligible, with no housing costs.
 
 ```chart
 {
@@ -596,11 +594,11 @@ This chart shows household net income for a pensioner who claims Pension Credit 
 }
 ```
 
-We estimate the 2027-28 Pension Credit minimum guarantee at £247 a week, or £12,860 a year (see the assumptions below). Up to that income, Pension Credit holds net income at £12,880 with or without the PTA. Above it, the PTA raises net income by up to £94, at £13,038, and the gain falls to zero at £13,319. For a claimant aged 75 or over, the loss of the free TV licence makes the change negative from £12,860 to £12,932.
+Up to the estimated Pension Credit minimum guarantee of £12,860 a year, Pension Credit holds net income at £12,880 with or without the PTA. Above it, the PTA raises net income by up to £94, at £13,038, and the gain falls to zero at £13,319. For a claimant aged 75 or over, the loss of the free TV licence makes the change negative from £12,860 to £12,932.
 
 ### Marginal tax rates
 
-The effective marginal tax rate is the share of an extra £1 of income that the pensioner does not keep, after income tax and any loss of benefits. It is 1 minus the change in household net income, as in PolicyEngine's `marginal_tax_rate`, here for a £1 rise in private pension.
+The effective marginal tax rate is the share of an extra £1 of income that the pensioner does not keep, after income tax and any loss of benefits.
 
 ```chart
 {
@@ -733,15 +731,13 @@ The effective marginal tax rate is the share of an extra £1 of income that the 
 }
 ```
 
-Without the PTA, the rate is 100% up to £12,932, because Pension Credit falls by £1 for each £1 of income, and 20% above that. With the PTA, the rate is 100% up to the minimum guarantee of £12,860, 0% from there to £13,038, 53.3% from £13,038 to £13,319, and 20% above that. The 53.3% is the 20% basic rate plus 33.3% from the taper: a pensioner in that range keeps 47p of each extra £1 of total income, against 80p without the PTA. A Scottish taxpayer pays the 19% starter rate on this income, so the rate in the withdrawal range is 52.3%.
+Without the PTA, the rate is 100% up to £12,932, because Pension Credit falls by £1 for each £1 of income, and 20% above that. With the PTA, the rate is 100% up to the minimum guarantee of £12,860, 0% from there to £13,038, 53.3% from £13,038 to £13,319, and 20% above that. The 53.3% is the 20% basic rate plus 33.3% from the taper: a pensioner in that range keeps 47p of each extra £1 of total income, against 80p without the PTA.
 
 ## Population impacts
 
-We ran the PTA on PolicyEngine UK's representative sample of UK households, Microcosm UK, set up as PolicyEngine's Autumn Budget 2026 dashboard sets up its runs: the certified dataset that `policyengine` 6.11.1 pins, PolicyEngine UK 2.151.0, and the OBR's October 2026 forecast. The results are static, with no behavioural response.
+We ran the PTA on PolicyEngine UK's representative sample of UK households, set up as PolicyEngine's Autumn Budget 2026 dashboard sets up its runs (see the appendix).
 
 ### Budgetary impact
-
-The Treasury estimates that the PTA reduces receipts by £45 million in 2027-28, £90 million in 2028-29 and £150 million in 2029-30. The same costing shows a gain of £50 million in 2030-31 and a cost of £15 million in 2031-32, after the PTA ends (Budget 2026, Table 6.1, row 52). The explainer states that about 500,000 pensioners will pay less income tax in 2027-28 because of the PTA, and that about 290,000 of them will pay none. By the end of this Parliament, about 1 million pensioners will receive the PTA.
 
 | Tax year | Income tax: PolicyEngine | Income tax: HM Treasury (Table 6.1) | Total cost: PolicyEngine |
 | -------- | ------------------------ | ----------------------------------- | ------------------------ |
@@ -754,15 +750,13 @@ The Treasury estimates that the PTA reduces receipts by £45 million in 2027-28,
 
 _Both estimates are static: neither includes a behavioural response._
 
-The Treasury's costing is on a National Accounts basis and does not explain its figures for 2030-31 and 2031-32, after the PTA ends. PolicyEngine counts each tax year's liabilities, so it shows nothing then. The two also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK. For context, the OBR's detailed policy table also records the PTA as income tax receipts only, at −£44 million, −£83 million and −£144 million in 2027-28 to 2029-30, then +£49 million and −£15 million (Economic and fiscal outlook, October 2026, detailed forecast table 1.1). The OBR's figures cover income tax only; their equality with PolicyEngine's total cost in 2028-29 and 2029-30, which includes benefit effects, is a coincidence of rounding to the million.
-
-In 2027-28, the total cost is £30 million: the £42 million income tax cut less £12 million (29%) of lower spending on Pension Credit (£8 million), Housing Benefit (£4 million) and Council Tax Reduction (under £1 million). From 2028-29, lost free TV licences also reduce the total cost, by under £1 million a year.
+In 2027-28, the total cost is £30 million: the £42 million income tax cut less £12 million (29%) of lower spending on Pension Credit (£8 million), Housing Benefit (£4 million) and Council Tax Reduction (under £1 million). From 2028-29, lost free TV licences also reduce the total cost, by under £1 million a year. The Treasury's and the OBR's figures cover income tax only; the appendix compares them with PolicyEngine's.
 
 ### Who gains
 
 In 2027-28, 668,000 people pay less income tax, in 528,000 households; the households gain an average of £56 a year each. The number of people rises to 1.06 million in 2028-29 and 1.36 million in 2029-30, as the PTA grows with the State Pension. The households that gain number 860,000 in 2028-29 and 1.07 million in 2029-30, and gain an average of £96 and £134 a year each. For context, HM Treasury's explainer estimates that about 500,000 pensioners pay less income tax in 2027-28, and about 1 million by the end of this Parliament.
 
-No household loses in 2027-28. About 2,700 households lose in 2028-29 and 2,800 in 2029-30; each of them loses a free TV licence, as household 5 does. On PolicyEngine UK's own Pension Credit guarantee, a claimant aged 75 or over can lose only with total income from £12,760 to £12,807 in 2027-28, and the sample has no household in that band.
+No household loses in 2027-28. About 2,700 households lose in 2028-29 and 2,800 in 2029-30; each of them loses a free TV licence, as household 5 does.
 
 ### Distributional impact
 
@@ -960,25 +954,53 @@ In 2027-28, the average gain is about £1 to £2 a year in each of the bottom se
 
 ### Poverty and inequality
 
-The absolute poverty rate before housing costs falls by 0.01 percentage points in 2027-28 and by 0.02 percentage points in 2029-30. Absolute poverty uses the official HBAI measure: household income below 60% of the 2024-25 median, held constant in real terms. The Gini index of household net income falls by less than 0.0001.
+The absolute poverty rate before housing costs falls by 0.01 percentage points in 2027-28 and by 0.02 percentage points in 2029-30. The Gini index of household net income falls by less than 0.0001.
 
-## Assumptions and limitations
+The Budget also adjusts the triple lock from April 2030: the State Pension then rises by the highest of 2.5%, inflation, or the increase that keeps its value relative to earnings at the April 2029 level. This post does not cover that change.
 
-- The worked examples and charts are household calculations for example pensioners. The population results are a static microsimulation; the Treasury's costing and counts come from its own model and data.
-- DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings, and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. We apply 3.9% to the 2026-27 rate of £238 a week, which gives £247. PolicyEngine UK's own projection on the October 2026 forecast is £245, uprated by lagged CPI; the household calculator in PolicyEngine's Autumn Budget dashboard uses that guarantee, so its figures for a Pension Credit claimant differ from those here, by up to the full PTA for claimants near the guarantee.
-- The 2028-29 and 2029-30 State Pension values follow the OBR's October 2026 forecast. The explainer bases the threshold on the State Pension received in the tax year; we use 52 weeks. The published rates, and the number of payments in a tax year, may differ.
-- The explainer does not state how HMRC rounds the PTA in later years. We round up to the pound, as for 2027-28.
+## Appendix
+
+### Projections for 2028-29 and 2029-30
+
+The 2027-28 values come from the explainer. The government has not yet set the State Pension for 2028-29 and 2029-30, so those rows apply the triple lock on the OBR's October 2026 forecast (3.4% in April 2028 and 2.5% in April 2029), round the weekly rate down to 5p and take 52 weeks. The explainer says the PTA is "uprated in line with" the full new State Pension. We read this as the same formula each year, 20% of the full new State Pension above the Personal Allowance, rounded up to the pound. Under this reading, a pensioner on the full new State Pension pays no income tax in each year, in line with the Budget's statement that such pensioners "will not be brought into paying tax because of State Pension uprating in this Parliament".
+
+### Household definitions
+
+- Households 1 to 5 are single pensioners aged 70, except household 5, aged 76. Households 1 to 3 have the full new State Pension and no other income. Households 4 and 5 have £11,000 of State Pension and a private pension of £1,800 and £1,860, and no housing costs.
+- Households 6 to 8 are couples aged 70 and 60, and the younger partner has no income. In households 6 and 7, the older partner has the full new State Pension; in household 8, the older partner earns £13,036 and has deferred the State Pension.
+- Household 9 is the calculator's "pensioner on the full State Pension": aged 68, with the full new State Pension and £150 of private pension, and the calculator's £2,629 Band D council tax. The calculator takes the full new State Pension as £13,036.97, the model's weekly rate without rounding, so it shows total income of £13,187; its other figures for this household round to the same pounds.
+- Households 1 to 3 and 6 to 8 owe £1,800 a year of council tax, and the renters pay £7,800 a year in rent. All households are in the North West of England.
+- For household 5, the loss assumes that the household needs a TV licence. Leaving Pension Credit can also end other help that the model does not include, such as the £150 Warm Home Discount in England and Wales, so the loss can be larger.
+- Universal Credit counts pension income before income tax (Universal Credit Regulations 2013, regulation 66). A single person over State Pension age cannot claim Universal Credit. The explainer notes that "receipt of the Pension Tax Allowance may affect your entitlement" to means-tested benefits.
+
+### Income taxed above 20%
+
+Because the full PTA is worth 20% of the gap between the full new State Pension and the Personal Allowance, income taxed above 20% can still leave tax to pay. Property income is taxed at 22% in 2027-28, so a pensioner with £11,000 of State Pension and £2,036 of property income pays £9 with the PTA, down from £103. A Scottish taxpayer pays the 19% starter rate on income in the withdrawal range, so the effective marginal tax rate there is 52.3%.
+
+### Charts
+
+The net income and marginal rate charts follow a pensioner with no housing costs who claims Pension Credit when eligible. Household net income counts pension income, Pension Credit, income tax, the £200 Winter Fuel Payment and the £180 TV licence fee. The effective marginal tax rate is 1 minus the change in household net income, as in PolicyEngine's `marginal_tax_rate`, here for a £1 rise in private pension.
+
+### Population run
+
+The population results use PolicyEngine UK's representative sample of UK households, Microcosm UK: the certified dataset that `policyengine` 6.11.1 pins, with PolicyEngine UK 2.151.0 and the OBR's October 2026 forecast. They are static, with no behavioural response, and use PolicyEngine UK's take-up assumptions and its own Pension Credit guarantee (£245 a week in 2027-28), as the dashboard does. On that guarantee, a Pension Credit claimant aged 75 or over can lose only with total income from £12,760 to £12,807 in 2027-28, and the sample has no household in that band. Absolute poverty uses the official HBAI measure: household income below 60% of the 2024-25 median, held constant in real terms.
+
+### Comparison with the Treasury and the OBR
+
+The Treasury's costing (Budget 2026, Table 6.1, row 52) is on a National Accounts basis and does not explain its figures for 2030-31 and 2031-32, after the PTA ends. PolicyEngine counts each tax year's liabilities, so it shows nothing then. The two also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK. The OBR's detailed policy table also records the PTA as income tax receipts only, at −£44 million, −£83 million and −£144 million in 2027-28 to 2029-30, then +£49 million and −£15 million (Economic and fiscal outlook, October 2026, detailed forecast table 1.1). Their equality with PolicyEngine's total cost in 2028-29 and 2029-30, which includes benefit effects, is a coincidence of rounding to the million. The explainer states that about 290,000 of the 500,000 pensioners who pay less income tax in 2027-28 will pay none.
+
+### Assumptions and limitations
+
+- DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings, and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. For the household examples, we apply 3.9% to the 2026-27 rate of £238 a week, which gives £247. PolicyEngine UK's own projection on the October 2026 forecast is £245, uprated by lagged CPI; the household calculator in PolicyEngine's Autumn Budget dashboard uses that guarantee, so its figures for a Pension Credit claimant differ from those here, by up to the full PTA for claimants near the guarantee.
+- The explainer bases the threshold on the State Pension received in the tax year; we use 52 weeks. The published rates, and the number of payments in a tax year, may differ. The explainer does not state how HMRC rounds the PTA in later years; we round up to the pound, as for 2027-28.
 - We apply the PTA to the final income tax liability; the Finance Bill 2026-27 will set the legal order of steps. People who transfer part of their Personal Allowance through the Marriage Allowance can still owe tax with the PTA.
 - PolicyEngine UK treats a person as over State Pension age if they reach it by 6 October. The PTA also covers people who reach State Pension age later in the tax year. Every example pensioner reached State Pension age before the tax year, so this does not affect them.
 - We measure total income as the sum of income from each source. HMRC's total income may deduct some reliefs first.
 - In the worked examples, the explainer's part-time worker also has property income; we model the full amount as salary. For the pensioner with £13,400 of income, the explainer's £166 treats all of it as taxable at 20%; we model it as a private pension. If part of it were savings interest, the starting rate for savings would reduce the tax.
-- The population results use PolicyEngine UK's take-up assumptions and its own Pension Credit guarantee (£245 a week in 2027-28), as the dashboard does, not the £247 estimate in the household examples.
 - The benefit results assume that each pensioner claims the benefits they are entitled to, and they use PolicyEngine UK's council tax, rent and TV licence values for 2027-28.
 - The calculations include no other Budget 2026 measure. The Budget raises the tax rates on property and savings income from April 2027, which would leave more tax to pay on such income with the PTA.
 - PolicyEngine UK takes a person's earnings as the lowest slice of their income when it works out the income tax that Universal Credit deducts, and it takes tax reductions off that tax first. We apply the PTA in the same way. The couples' examples do not include local Council Tax Reduction schemes for working-age households.
 
-The Budget also adjusts the triple lock from April 2030: the State Pension then rises by the highest of 2.5%, inflation, or the increase that keeps its value relative to earnings at the April 2029 level. This post does not cover that change.
-
-## Methodology
+### Methodology
 
 We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). Every calculation, with and without the PTA, uses the OBR's October 2026 Economic and Fiscal Outlook forecast, as PolicyEngine's Autumn Budget 2026 dashboard does; PolicyEngine UK 2.151.0 ships the March 2026 forecast. PolicyEngine UK does not yet include the PTA, so we added it as a structural reform that reduces the `income_tax` variable and the income tax that Universal Credit deducts from earnings. The rules and values match the PTA modifier in the draft update to PolicyEngine's Autumn Budget 2026 dashboard. Income tax, the PTA and net income are piecewise linear in total income, so the charts plot their breakpoints and a point every £100. These values agree with PolicyEngine UK to the penny at every £2 of total income, and the effective marginal tax rates agree to within 0.04 percentage points.
