@@ -142,5 +142,7 @@ describe("MarkdownFormatter table scroll container", () => {
       ),
       { numRuns: 25 },
     );
-  });
+    // 25 renders take well under a second normally, but a cold, loaded
+    // runner can pass Vitest's 5s default.
+  }, 30_000);
 });
