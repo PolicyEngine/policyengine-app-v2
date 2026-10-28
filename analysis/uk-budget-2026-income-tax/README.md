@@ -24,29 +24,19 @@ The savings draft (#1466) reproduces `savings-interest-chart.json`; the trading 
 
 The property draft now includes national revenue and decile averages from the approved property-only snapshot in dashboard PR #290. `property-population/` retains the immutable source record, original receipt, three aggregate CSVs and the verification summary. Reach, poverty and inequality figures are omitted pending separate disclosure clearance. It is an approved branch snapshot, not independently verified as the production deployment. Recheck its identity and figures against the final released dashboard before merging, and have the new article head reviewed.
 
-The savings and trading posts retain household calculations and Treasury costings only. No withdrawn combined national figures have been restored. The `population-preview/` files described below remain historical records; they are not the property-only source now used by the article.
+The savings and trading posts retain household calculations and Treasury costings only. Withdrawn combined national outputs are not published in this directory.
 
 ## Dataset decision
 
 Retain the dashboard's adopted `policyengine` 6.11.1 bundle, with UK 2.151.0, core 3.33.3 and national data cut `a6299504`. The certificate, full dataset ID and checksum are recorded in `provenance.json`. The newer candidate in [policyengine.py PR #725](https://github.com/PolicyEngine/policyengine.py/pull/725) is awaiting certification/adoption. A future update must change the package and dataset provenance together and regenerate the analysis.
 
-The household generators need no population microdata. This historical snapshot was retrieved without downloading population microdata. At 14:32 UTC the checked GitHub flat files still lacked these Budget-day measures. The dashboard maintainer subsequently shared a preview with provisional outputs generated at 14:34 UTC, fetched at 14:46 UTC. The analysis records retain its digest-addressed public aggregate outputs as an earlier review snapshot, with the exact manifest, receipts and eight CSVs retained in `population-preview/`. Older candidate charts and stale GitHub flat files must not be relabelled as the announced policy. The preview has no scored combined artifact; its five-measure chart must not be described as a jointly simulated full Budget package.
+The household generators need no population microdata. The property national results reuse the approved single-measure dashboard artifact recorded in `property-population/`; they were not generated locally. Both baseline and reform use the same October 2026 OBR forecast. Series not updated by the overlay retain the model's March forecast path; the underlying calibration remains pre-Budget.
 
-The provisional national outputs use the exact dataset above with the dashboard's October 2026 OBR forecast wrapper on both baseline and reform. Each provision is scored separately. The source commit is `0d9dccb2`; its reform definitions and October forecast input file match household reference commit `b50787aa` byte for byte. Series not updated by the overlay retain the model's March forecast path; the underlying calibration remains pre-Budget.
-
-Verify the snapshot without downloading microdata or any other files:
-
-```sh
-python3 analysis/uk-budget-2026-income-tax/verify_population_preview.py
-```
-
-The verifier checks the eight CSV hashes, certified execution identity, dataset checksum, provisional status, disclosure floor and complete decile grids. It writes `population-preview/summary.json`. Both measures are `provisional` and their reconciliation is `awaiting_source`; passing the disclosure floor does not mean final review approval. The snapshots are public aggregates only.
-
-Treasury forecasts are labelled separately. Compare fiscal-year Treasury receipts with the model's annual government-balance effects, documenting behavioural, timing and coverage differences. Do not attribute a particular discrepancy to one of those factors before reconciliation. No separate winner/loser shares or absolute affected-person counts are exported. The field `people_affected` is a percentage, using an absolute household-income-change threshold of more than 0.01%, not millions of people or a taxpayer count.
+Treasury forecasts are labelled separately. Compare fiscal-year Treasury receipts with the model's annual government-balance effects, documenting behavioural, timing and coverage differences. Do not attribute a particular discrepancy to one of those factors before reconciliation. No separate winner/loser shares or absolute affected-person counts are provided. Reach, poverty and inequality figures require separate disclosure clearance before publication.
 
 ## Checks before publication
 
-- Recheck the property draft's `property-population/` artifact identity, figures and comparison flags against the final released dashboard. The new population section needs review at its new head. Restore national scope in the other posts only from their own reconciled sources. Add absolute affected-person counts and separate winner/loser shares only when the producer exports those quantities; do not infer them from average changes or the affected percentage.
+- Recheck the property draft's `property-population/` artifact identity, figures and comparison flags against the final released dashboard. The new population section needs review at its new head. Restore national scope in the other posts only from their own reconciled sources. Add affected-person counts or shares only when the producer exports them and they have disclosure clearance; do not infer them from average changes.
 - Confirm the treatment of Scottish landlords' finance-cost relief against the final Budget implementation. The pinned model links that relief to the UK property basic rate even for Scotland.
 - Check trading allowance coverage: gross receipts and actual expenses are needed to model the deduction choice; the pinned model does not apply the allowance to its separate miscellaneous-income input.
 - Verify the final public dashboard link and add links to these explainers within the dashboard. The source checkout's README supplies the current Vercel dashboard URL.
@@ -58,7 +48,7 @@ The three articles use the site's native tables, chart blocks and cover assets. 
 
 `make format`, `make lint`, `make typecheck` and `make test` passed. The tests ran on Node 26.12.1: 6,042 app tests and 508 website tests passed, with 10 app tests skipped by the existing suite. After inserting the final chart data, the chart-parser and post-metadata checks passed again (18 tests). All 23 household comparisons and 20 curve points passed independent arithmetic checks.
 
-The earlier addition of provisional national sections passed snapshot verification and article/chart checks; those sections have since been removed pending the final run. Browser access to the local preview was declined, so visual preview remains outstanding. The SVG cover XML and native chart specs were validated, but this does not confirm page layout at desktop or mobile widths.
+Browser access to the local preview was declined, so visual preview remains outstanding. Cover assets and native chart specs were validated, but this does not confirm page layout at desktop or mobile widths.
 
 
 ## Additional trading and calculator examples
@@ -75,7 +65,7 @@ The exact forecast input is retained as `obr_october_2026.json`; `forecast.py` v
 
 The Pension Tax Allowance analysis uses £100 chart sampling plus the true breakpoints and verifies the results on a denser model grid. These drafts follow that method: numeric income axes, explicit £ formats, named threshold markers and independent validation at every £2. Reader-facing tables use whole pounds under the [rounding review](https://github.com/PolicyEngine/policyengine-app-v2/pull/1460#issuecomment-6473972686); raw analysis retains precision.
 
-The household forecast pin and population forecast pins are recorded separately. Applying the household overlay does not regenerate or validate the historical combined national snapshot. The property article now uses a separate approved property-only source with execution-bound provenance in `property-population/`; the historical combined preview remains superseded.
+The household forecast pin and property population forecast pin are recorded separately. Applying the household overlay does not regenerate or validate national results. The property article uses an approved property-only source with execution-bound provenance in `property-population/`.
 
 The October-forecast rerun passed all 23 household comparisons and all 5 trading extension pairs. All policy deltas remain unchanged. Some absolute levels change: the three Scottish cases’ income-tax levels fall by £2.93 on both sides, and the parent’s total benefits/net income rise by about £20.10 on both sides. These do not change the article’s reported tax or household gains. The 93 displayed chart points passed 18,008 model-liability comparisons and 9,004 interpolation comparisons over 2,251 income points per series. The largest interpolation difference is £0.0033, below the £0.01 tolerance.
 
