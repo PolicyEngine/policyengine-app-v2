@@ -1,5 +1,14 @@
 [
   {
+    "title": "The fuel duty cut extension in the Autumn Budget 2026",
+    "description": "The Budget keeps fuel duty at 52.95p a litre to 30 June 2027. We show how the duty and VAT on each litre change, and what this means for households by the fuel they use.",
+    "date": "2026-10-28 19:00:00",
+    "tags": ["uk", "policy", "tax"],
+    "authors": ["pavel-makarchuk"],
+    "filename": "fuel-duty-cut-extension.md",
+    "image": "fuel-duty-cut-extension/cover-illustration.webp"
+  },
+  {
     "title": "The Carer's Allowance earnings taper in the Autumn Budget 2026",
     "description": "From some point in 2030-31, the Carer's Allowance taper lets carers in England and Wales whose net earnings are above the Weekly Earnings Limit keep part of the allowance, instead of losing all of it. We show how the limit (a projected \u00a3234 a week in 2031-32) and its \u00a31-for-\u00a31 taper work, and how they pass through to income tax and Universal Credit.",
     "date": "2026-10-28 18:30:00",
@@ -25,6 +34,15 @@
     "authors": ["pavel-makarchuk"],
     "filename": "pension-tax-allowance.md",
     "image": "pension-tax-allowance/cover-illustration.webp"
+  },
+  {
+    "title": "The adjusted Triple Lock: what changes in 2030 and what it saves",
+    "description": "From April 2030 the State Pension rises by the higher of inflation and 2.5%, or by more where needed to hold its April 2029 value relative to earnings. Our pre-Budget, provisional estimate: it saves \u00a311.1 billion in 2039-40 on average across 50,000 paths of prices and earnings, or \u00a37.9 billion once tax and benefits respond.",
+    "date": "2026-10-28 17:00:00",
+    "tags": ["uk", "policy", "autumn-budget"],
+    "authors": ["max-ghenis"],
+    "filename": "uk-triple-lock-budget-2026.md",
+    "image": "uk-triple-lock-budget-2026/cover-illustration.webp"
   },
   {
     "title": "High value council tax surcharge: revenue by constituency",
