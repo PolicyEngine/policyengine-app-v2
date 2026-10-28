@@ -108,6 +108,8 @@ Max's 16:18:54 UTC webinar update asks authors to introduce each measure for 30�
 
 ## Remaining review comments addressed on 28 October
 
+Historical review record: the combined article's Treasury total and mixed £120 property / £30 savings paragraph described below were superseded by the 28 October 2026 split. Property-only PR #1460 no longer contains those combined figures; savings is a separate draft in #1466. The older combined records remain here for reproducibility, and current publication status is tracked on each PR.
+
 The savings/property article removes the withdrawn combined national snapshot, its model fiscal row, decile table and affected share. Its key figures and national table now contain Treasury costings only, separated into property and savings with the combined official total. The archived data and earlier review records remain here for reproducibility; they are not current article results. This follows the cut-or-match-final-run rule Max applied in trading commits8751cf29 andc78cdd60, without substituting unverified replacement figures.
 
 The mixed-income paragraph now confirms the dashboard's landlord-45k preset and the £120 property plus£30 savings split. It retains the salary-uprating explanation. Canonical dashboard links use www.policyengine.org/uk/autumn-budget-2026, and publication wording holds before and after the production switch. The model's hypothetical households and chart values are unchanged.

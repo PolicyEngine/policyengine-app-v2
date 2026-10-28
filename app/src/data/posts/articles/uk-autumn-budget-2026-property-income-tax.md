@@ -1,11 +1,11 @@
-The Autumn Budget 2026 increases the basic, higher and additional income tax rates on property income by a further two percentage points from **6 April 2027**, taking them to **24%, 44% and 49%** in England, Wales and Northern Ireland. The property rate increase does not apply to Scottish taxpayers. The [Budget announcement, paragraph 6.246](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) also increases the rate of residential landlords' finance-cost relief.
+The Autumn Budget 2026 increases the basic, higher and additional income tax rates on property income by a further two percentage points from **6 April 2027**, taking them to **24%, 44% and 49%** in England, Wales and Northern Ireland, as [Budget paragraph 6.246](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) sets out. The property rate increase does not apply to Scottish taxpayers. Because finance-cost relief follows the property basic rate, residential landlords' relief rises too.
 
 Key figures for 2027–28:
 
 - A landlord in England with £10,000 of property profit and £4,000 of fully usable mortgage interest pays £120 more income tax.
 - A mortgage-free landlord in England with the same profit pays £200 more.
 - A Scottish landlord with £4,000 of fully usable finance costs pays £80 less, because the finance-cost reduction rises while Scottish property tax rates stay unchanged.
-- The Treasury forecasts £35 million of additional revenue in 2027–28 and £575 million in 2028–29.
+- The Treasury forecasts £35 million of additional revenue in 2027–28, £575 million in 2028–29, and £435 million to £455 million a year from 2029–30 to 2031–32.
 
 Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. A [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance) covers the trading allowance increase. The Budget also raises savings income tax rates; we will cover that measure separately.
 
@@ -29,7 +29,7 @@ The examples below isolate the announced property measure in 2027–28. They hol
 
 For individual residential landlords, mortgage interest normally produces a tax reduction rather than a deduction from rental profits. The reduction is limited by finance costs, property profits, adjusted total income and the tax liability. [HMRC's explanation of residential finance-cost relief](https://www.gov.uk/guidance/changes-to-tax-relief-for-residential-landlords-how-its-worked-out-including-case-studies) describes these limits.
 
-From April 2027 the relief follows the property basic rate, as the [Treasury policy costings, pages 74 and 75](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74 "Treasury policy costings #page 74-75") confirm. This Budget therefore raises it from the already scheduled 22% to 24%. That offsets part of the tax increase for landlords with eligible finance costs. The dashboard calculator has no finance-cost input, so the mortgage examples below illustrate an effect its preset cannot show.
+From April 2027 the relief follows the property basic rate, as the [Treasury policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) confirm. This Budget therefore raises it from the already scheduled 22% to 24%. That offsets part of the tax increase for landlords with eligible finance costs. The dashboard calculator has no finance-cost input, so the mortgage examples below illustrate an effect its preset cannot show.
 
 Consider two adults in England, each with £12,000 of rent, £2,000 of allowable non-finance expenses and £4,000 of qualifying mortgage interest. Deducting actual non-finance expenses leaves £10,000 of property profit. Both can use the full finance-cost reduction.
 
@@ -74,6 +74,6 @@ The Treasury costing also allows for some landlords incorporating. PolicyEngine'
 
 ## Methodology
 
-The household calculations use the `policyengine` Python package (version 6.11.1), PolicyEngine UK (version 2.151.0) and PolicyEngine core (version 3.33.3). The comparisons isolate the announced property changes, including finance-cost relief, against the already scheduled 2027–28 rules. Both household scenarios use the OBR’s October 2026 forecast update at dashboard commit `64042657`. Supplied 2027–28 income stays fixed; the forecast updates the model’s projected parameters. Independent arithmetic checks the tax calculations.
+The household calculations use the `policyengine` Python package (version 6.11.1), PolicyEngine UK (version 2.151.0) and PolicyEngine core (version 3.33.3). The shared generator changes savings and property rates together against the already scheduled 2027–28 rules. The landlord examples in this article have no savings income, so the savings rate change has no effect on them: their tax differences isolate the property changes, including finance-cost relief. The dashboard preset's property-only component was checked separately. Both household scenarios use the OBR’s October 2026 forecast update at dashboard commit `64042657`. Supplied 2027–28 income stays fixed; the forecast updates the model’s projected parameters. Independent arithmetic checks the tax calculations.
 
 The [shared analysis files](https://github.com/PolicyEngine/policyengine-app-v2/tree/main/analysis/uk-budget-2026-income-tax) record the household inputs, model versions, forecast settings and validation for the property, savings and trading explainers. Monetary amounts in tables are rounded to whole pounds; the calculation records retain precision. The household calculations use hypothetical people and do not require population microdata.
