@@ -143,11 +143,11 @@ Property income fills that remaining £5,270, with £730 entering the higher ban
 
 | Income tax component, 2027–28 | Before | After |
 | --- | ---: | ---: |
-| Salary: £32,430 at 20% | £6,486.00 | £6,486.00 |
-| Property: £5,270 at 22% / 24% | £1,159.40 | £1,264.80 |
-| Property: £730 at 42% / 44% | £306.60 | £321.20 |
-| Savings: £1,500 at 42% / 44% | £630.00 | £660.00 |
-| Total income tax | £8,582.00 | £8,732.00 |
+| Salary: £32,430 at 20% | £6,486 | £6,486 |
+| Property: £5,270 at 22% / 24% | £1,159 | £1,265 |
+| Property: £730 at 42% / 44% | £307 | £321 |
+| Savings: £1,500 at 42% / 44% | £630 | £660 |
+| Total income tax | £8,582 | £8,732 |
 
 The extra tax is £120 on property plus £30 on savings, or **£150 a year**. The calculation shows why the order of income sources matters even when each rate rises by the same two percentage points.
 

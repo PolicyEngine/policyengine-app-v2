@@ -69,3 +69,10 @@ The articles remain drafts. Publication approval is separate from readiness for 
 - Per that follow-up, only the mutually reproduced£180 UC example is retained in the article. The£1,500 diagnostic pair remains in the raw analysis record, with both input sets distinguished, rather than presented as an explained cross-run comparison.
 - The trading lead example is named Alex and remains first: age35, salary30k, receipts4k, costs500, tax reduction400. UC and full-time self-employment are additional examples.
 - A fresh complete pass covered all five Max conversation comments on1460 and the follow-up on1463, including edits through15:45:19UTC. Both PRs had no inline review threads or submitted reviews in that pass.
+
+
+## Rounding correction at 16:01 UTC
+
+Max's latest comments on PR1460 (6473972686) and PR1463 (6473966614) supersede the earlier permission to retain pence in worked tables. Reader-facing tables now use whole pounds throughout; pence are permitted only in prose spelling out a formula. Exact model outputs and hashed source files retain their original precision. The rounded band-crossing components still sum to£8,582/£8,732, and the rounded sole-trader totals remain£1,672/£1,152, a£520 change.
+
+The dashboard now defines property and savings as separate measures. The article can continue to analyse them together, but a new measure definition is not a substitute for published execution-bound component outputs. The old first-estimate snapshot remains identified by its original measure IDs until replacement data are verified.
