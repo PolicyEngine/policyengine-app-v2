@@ -734,7 +734,7 @@ Without the PTA, the rate is 100% up to £12,932, because Pension Credit falls b
 
 ## Population impacts
 
-We ran the PTA on PolicyEngine UK's representative sample of UK households, Microcosm UK, set up as PolicyEngine's Autumn Budget 2026 dashboard sets up its runs: the certified dataset that `policyengine` 6.11.1 pins, PolicyEngine UK 2.151.0, and the OBR's October 2026 forecast. The results are static, with no behavioural response, and provisional: the dashboard has not yet published its own run for this measure, and its figures may differ.
+We ran the PTA on PolicyEngine UK's representative sample of UK households, Microcosm UK, set up as PolicyEngine's Autumn Budget 2026 dashboard sets up its runs: the certified dataset that `policyengine` 6.11.1 pins, PolicyEngine UK 2.151.0, and the OBR's October 2026 forecast. The results are static, with no behavioural response.
 
 ### Budgetary impact
 
@@ -851,7 +851,8 @@ Gains are largest in the lower half of the income distribution and close to zero
     "prefix": "£",
     "decimals": 0
   },
-  "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast; provisional."
+  "valueLabels": false,
+  "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast."
 }
 ```
 
@@ -945,7 +946,8 @@ Gains are largest in the lower half of the income distribution and close to zero
     "suffix": "%",
     "decimals": 2
   },
-  "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast; provisional."
+  "valueLabels": false,
+  "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast."
 }
 ```
 
