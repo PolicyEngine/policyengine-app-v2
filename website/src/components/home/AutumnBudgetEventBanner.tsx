@@ -57,8 +57,11 @@ export default function AutumnBudgetEventBanner({
           gap: spacing.md,
         }}
       >
+        {/* The aria-labels name the Budget for screen readers' link lists,
+            and start with the visible text so voice control still matches. */}
         <a
           href={DASHBOARD_URL}
+          aria-label="See the analysis of Autumn Budget 2026"
           style={{
             ...pill,
             background: colors.primary[600],
@@ -71,6 +74,7 @@ export default function AutumnBudgetEventBanner({
           href={RECORDING_URL}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Watch the recording of our Autumn Budget 2026 webinar (opens in a new tab)"
           style={{
             ...pill,
             background: colors.white,
