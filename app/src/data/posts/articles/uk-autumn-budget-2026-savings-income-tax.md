@@ -5,7 +5,7 @@ Key figures for 2027–28:
 - A basic-rate saver with £2,000 of annual interest outside ISAs pays £20 more a year.
 - A higher-rate saver with the same interest pays £30 more, because their Personal Savings Allowance is lower.
 - A basic-rate saver with £500 of interest pays no extra tax in the example below.
-- The Treasury forecasts £125 million of additional revenue in 2027–28 and £590 million in 2031–32.
+- The government's costing, certified by the OBR, has £63 million of extra income tax in 2027–28, rising to £510 million in 2031–32. Its total in the Budget's Table 6.1, which adds the costing's “Onshore CT” line, is £125 million in 2027–28 and £590 million in 2031–32.
 
 Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for the Budget measures we model. Population estimates for the savings measure remain under review and are not included in this article. Separate explainers cover the [property income tax increase](/uk/research/uk-autumn-budget-2026-property-income-tax) and the [trading allowance increase](/uk/research/uk-autumn-budget-2026-trading-allowance).
 
@@ -323,19 +323,21 @@ Consider an adult in England with £45,000 of salary, £6,000 of property profit
 
 The individual qualifies for a £500 Personal Savings Allowance. The remaining £1,500 of interest faces the higher savings rate: £1,500 × 42% = £630 before, against £1,500 × 44% = £660 after. The savings measure alone therefore increases their tax by **£30 a year**. This example holds property tax rates unchanged to isolate savings.
 
-## Treasury costing
+## The government's costing
 
-The Treasury's [Table 6.1, row 62](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) forecasts the following additional Exchequer revenue. These are the Treasury's figures, on a National Accounts basis.
+The government's costing, certified by the OBR, is in the OBR's [detailed policy table](https://obr.uk/download/october-2026-economic-and-fiscal-outlook-detailed-forecast-tables-zip-file/) (Table 1.1, measure 62). It has two lines, labelled “Income tax” and “Onshore CT”. The Budget's [Table 6.1, row 62](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) gives their total, rounded to the nearest £5 million and on a National Accounts basis; we show it for context.
 
-| Exchequer revenue, £ million | 2026–27 | 2027–28 | 2028–29 | 2029–30 | 2030–31 | 2031–32 |
+| Additional revenue, £ million | 2026–27 | 2027–28 | 2028–29 | 2029–30 | 2030–31 | 2031–32 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Savings income rates | 15 | 125 | 555 | 520 | 555 | 590 |
+| OBR income tax line | 0 | 63 | 483 | 443 | 475 | 510 |
+| OBR “Onshore CT” line | 13 | 63 | 74 | 78 | 80 | 81 |
+| Table 6.1 total | 15 | 125 | 555 | 520 | 555 | 590 |
 
-The [Treasury policy costings, page 75](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=75) allow for savers moving funds into tax-advantaged products such as ISAs. PolicyEngine's national estimates hold those choices fixed.
+The [Budget policy costings, page 75](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=75) allow for savers moving funds into tax-advantaged products such as ISAs; the OBR puts that response at around £0.2 billion a year ([Economic and fiscal outlook, paragraph 3.17](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/)). PolicyEngine's national estimates hold those choices fixed.
 
 Collection timing affects comparisons. PolicyEngine scores each tax year's liabilities in that year. Self Assessment payments on account are normally based on the previous year's tax bill; the balancing payment for 2027–28 is due on 31 January 2029, alongside the first payment on account for 2028–29. [HMRC's payment guidance](https://www.gov.uk/understand-self-assessment-bill/payments-on-account) explains that schedule. The [ONS public-finance methodology, section 6.1.2](https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/methodologies/monthlystatisticsonthepublicsectorfinancesamethodologicalguide) records Self Assessment income tax using cash receipts, without shifting them back to the year the income arose.
 
-The dashboard comparison marks 2027–28 and 2028–29 as not comparable on this timing basis. Its 2026–27 comparison is also not comparable: the costing notes do not explain the Treasury's £15 million figure before the new rates take effect, while the model has no rate change in that year. Timing alone does not reconcile the later savings revenue gap. The national savings estimates and the underlying data remain under review; this article reports no PolicyEngine national revenue, affected-person count or distribution.
+The dashboard comparison marks 2027–28 and 2028–29 as not comparable on this timing basis. Its 2026–27 comparison is also not comparable: the £15 million in Table 6.1 for that year is all on the costing's “Onshore CT” line, and the costing's income tax line, like the model, has nothing before the new rates take effect. Timing alone does not reconcile the later savings revenue gap. The national savings estimates and the underlying data remain under review; this article reports no PolicyEngine national revenue, affected-person count or distribution.
 
 ## Assumptions and limitations
 
