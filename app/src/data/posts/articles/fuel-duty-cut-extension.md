@@ -6,7 +6,8 @@ Key figures:
 - On 1 July 2027, the rate rises to 60.59p. From that date, it follows the same path as before the Budget.
 - With the VAT on the duty, a litre costs 3.6p less in January and February 2027, 6.0p less in March 2027 and 9.2p less from April to June 2027.
 - A household that uses 1,000 litres of fuel a year pays £33.71 less in total: £12.17 in 2026-27 and £21.54 in 2027-28.
-- HM Treasury estimates that the measure reduces receipts by £575 million in 2026-27 and £780 million in 2027-28, with no effect in later years (Budget 2026, Table 6.1, row 3).
+- HM Treasury estimates that the measure reduces receipts by £575 million in 2026-27 and £780 million in 2027-28, with no effect in later years (Budget 2026, Table 6.1, row 3). PolicyEngine's provisional estimate for household fuel is £301 million and £521 million.
+- In 2027-28, household net income rises by £17.77 a year on average, from £12.07 in the lowest income decile to £23.90 in the ninth.
 
 ## What the Budget changes
 
@@ -318,9 +319,185 @@ The measure does not interact with other programmes in PolicyEngine UK, for thre
 
 Outside the model, fuel bought for business use is a cost for the self-employed and for employers. A lower duty raises the profits of self-employed drivers by the amount they save, which can raise their income tax and lower their Universal Credit. This post covers household fuel only.
 
+## Population results
+
+PolicyEngine's Autumn Budget 2026 dashboard runs the same measure on its representative sample of UK households, with PolicyEngine UK 2.151.0 on the OBR October 2026 forecast. The results below are provisional: they come from a preview run of 28 October 2026 that the dashboard team has not yet reconciled with the Treasury figures, and they may change in the final release.
+
+| Tax year        | PolicyEngine: static, household fuel | HM Treasury: Table 6.1, with behavioural response |
+| --------------- | ------------------------------------ | ------------------------------------------------- |
+| 2026-27         | −£301 million                        | −£575 million                                     |
+| 2027-28         | −£521 million                        | −£780 million                                     |
+| 2028-29 onwards | £0                                   | £0                                                |
+
+PolicyEngine's figures are 52% of the Treasury's in 2026-27 and 67% in 2027-28. Part of the difference is scope: the PolicyEngine sample covers fuel that households buy, while the Treasury's base also covers vans, lorries and business use of cars. The figures also differ in timing, because PolicyEngine's tax years start on 6 April and the Treasury's fiscal years on 1 April, and in behaviour, because the Treasury includes a demand response. PolicyEngine's figures include the VAT on the lower pump price, about a sixth of the total; the costing does not say whether the Treasury's figure does. The dashboard team is reviewing the rest of the gap.
+
+Household net income rises by an average of £10.33 in 2026-27 and £17.77 in 2027-28, across all households. 61% of people in 2026-27 and 73% in 2027-28 live in a household whose net income rises by more than 0.01%. The others live in households that buy no petrol or diesel, or very little.
+
+In cash terms, the average gain in 2027-28 rises from £12.07 in the lowest income decile to £23.90 in the ninth, because higher-income households buy more fuel. As a share of income, it falls from 0.047% in the lowest decile to 0.014% in the highest. Deciles rank households by equivalised household net income before housing costs.
+
+```chart
+{
+  "type": "bar",
+  "title": "Average gain by income decile",
+  "subtitle": "Change in household net income, £ a year, by tax year",
+  "xKey": "decile",
+  "series": [
+    {
+      "key": "y2026",
+      "name": "2026-27",
+      "color": "tertiary"
+    },
+    {
+      "key": "y2027",
+      "name": "2027-28",
+      "color": "primary"
+    }
+  ],
+  "data": [
+    {
+      "decile": "1st",
+      "y2026": 6.93,
+      "y2027": 12.07
+    },
+    {
+      "decile": "2nd",
+      "y2026": 7.49,
+      "y2027": 12.77
+    },
+    {
+      "decile": "3rd",
+      "y2026": 8.09,
+      "y2027": 13.91
+    },
+    {
+      "decile": "4th",
+      "y2026": 9.08,
+      "y2027": 15.43
+    },
+    {
+      "decile": "5th",
+      "y2026": 9.56,
+      "y2027": 16.76
+    },
+    {
+      "decile": "6th",
+      "y2026": 11.12,
+      "y2027": 18.89
+    },
+    {
+      "decile": "7th",
+      "y2026": 11.3,
+      "y2027": 19.55
+    },
+    {
+      "decile": "8th",
+      "y2026": 12.9,
+      "y2027": 22.3
+    },
+    {
+      "decile": "9th",
+      "y2026": 13.86,
+      "y2027": 23.9
+    },
+    {
+      "decile": "10th",
+      "y2026": 13.35,
+      "y2027": 22.95
+    }
+  ],
+  "yLabel": "Average gain",
+  "format": {
+    "prefix": "£",
+    "decimals": 2
+  },
+  "source": "Source: PolicyEngine Autumn Budget 2026 dashboard, provisional run of 28 October 2026 (PolicyEngine UK 2.151.0, OBR October 2026 forecast)."
+}
+```
+
+```chart
+{
+  "type": "bar",
+  "title": "Gain as a share of income by income decile",
+  "subtitle": "Change in household net income, % of baseline income, by tax year",
+  "xKey": "decile",
+  "series": [
+    {
+      "key": "y2026",
+      "name": "2026-27",
+      "color": "tertiary"
+    },
+    {
+      "key": "y2027",
+      "name": "2027-28",
+      "color": "primary"
+    }
+  ],
+  "data": [
+    {
+      "decile": "1st",
+      "y2026": 0.0271,
+      "y2027": 0.0466
+    },
+    {
+      "decile": "2nd",
+      "y2026": 0.0189,
+      "y2027": 0.032
+    },
+    {
+      "decile": "3rd",
+      "y2026": 0.0184,
+      "y2027": 0.0312
+    },
+    {
+      "decile": "4th",
+      "y2026": 0.0192,
+      "y2027": 0.0319
+    },
+    {
+      "decile": "5th",
+      "y2026": 0.018,
+      "y2027": 0.0309
+    },
+    {
+      "decile": "6th",
+      "y2026": 0.0192,
+      "y2027": 0.032
+    },
+    {
+      "decile": "7th",
+      "y2026": 0.0178,
+      "y2027": 0.03
+    },
+    {
+      "decile": "8th",
+      "y2026": 0.0178,
+      "y2027": 0.0303
+    },
+    {
+      "decile": "9th",
+      "y2026": 0.0162,
+      "y2027": 0.0274
+    },
+    {
+      "decile": "10th",
+      "y2026": 0.0086,
+      "y2027": 0.0145
+    }
+  ],
+  "yLabel": "% of income",
+  "format": {
+    "decimals": 3,
+    "suffix": "%"
+  },
+  "source": "Source: PolicyEngine Autumn Budget 2026 dashboard, provisional run of 28 October 2026 (PolicyEngine UK 2.151.0, OBR October 2026 forecast)."
+}
+```
+
+The poverty rate does not change. Official poverty measures, and PolicyEngine's, use household income after direct taxes, which does not deduct taxes on spending such as fuel duty and VAT. The Gini index of household net income falls by 0.0001 in 2026-27 and 0.0002 in 2027-28.
+
 ## Assumptions and limitations
 
-- The analysis covers example households in a household calculation. It is not a microsimulation, and it makes no population-wide estimates of its own; the costs above come from HM Treasury.
+- The household examples are household calculations. The population results come from the dashboard's provisional microsimulation, which is static and covers household fuel only.
 - The examples hold the litres that each household buys fixed. HM Treasury's costing includes a response in which people buy more fuel when prices are lower; we do not model it.
 - We assume that retailers pass the full duty change, and the VAT on it, into pump prices. Pump prices also depend on oil prices and retail margins, which we hold fixed.
 - The pre-Budget rate from 1 April 2027, 60.59p, is our assumption, as set out above. After 1 July 2027, the rate path is the same with and without the Budget measure, so later RPI forecasts do not change the results.
