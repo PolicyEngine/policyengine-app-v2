@@ -1,0 +1,423 @@
+{
+  "schema": "property-blog/verified-dashboard-snapshot/v1",
+  "source": {
+    "repository": "PolicyEngine/uk-autumn-budget-dashboard-2026",
+    "snapshot_commit": "637bb26c34264e0491ed182c363df751466458ed",
+    "snapshot_status": "Approved single-measure artifact in dashboard PR290; not independently verified as a production deployment",
+    "manifest_revision": 14,
+    "manifest_sha256": "b26a5bd5542157bd23317befd9f6814f33ca610d53e644de18c06db3de1a3ea3",
+    "manifest_updated_at": "2026-10-28T18:29:07.541727+00:00",
+    "manifest_url": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/637bb26c34264e0491ed182c363df751466458ed/public/data/manifest.json",
+    "artifact_path": "artifacts/property_income_rates_up/7bf77b35e33233e0",
+    "artifact_sha256": "7bf77b35e33233e0f8174f4be78c7bd6e4eca46f95f1f72b100a68f19280dcfd",
+    "receipt_sha256": "777e8839f0f7c541229eb281de5fd497819c34c07ebad865456bbb639d4806e6",
+    "outputs_sha256": "6748d5ee971f1b8428186ca778b4bd01ee1320c4e9f7cc67f34b5fc398330d47",
+    "execution_identity_sha256": "3db871d8c1fcebfefdfd938e39512408196621a4f5d7374ad3abd5b586dc0d03",
+    "receipt_url": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/637bb26c34264e0491ed182c363df751466458ed/public/data/artifacts/property_income_rates_up/7bf77b35e33233e0/receipt.json",
+    "approval": {
+      "artifact_sha256": "7bf77b35e33233e0f8174f4be78c7bd6e4eca46f95f1f72b100a68f19280dcfd",
+      "at": "2026-10-28T18:29:07.541217+00:00",
+      "by": "vahid-ahmadi",
+      "outputs_sha256": "6748d5ee971f1b8428186ca778b4bd01ee1320c4e9f7cc67f34b5fc398330d47"
+    },
+    "generation_commit": "4de166f05eebbc7e501fcf39206cdc82fd199213",
+    "generated_at": "2026-10-28T17:10:45.376537+00:00",
+    "basis": {
+      "calibration": {
+        "source": "the certified dataset pinned by the installed policyengine bundle: Microcosm UK from policyengine 6.10.1, policyengine-uk-data before it",
+        "status": "pre_budget",
+        "vintage": "as pinned by the installed bundle"
+      },
+      "forecast": {
+        "source": "OBR EFO October 2026",
+        "status": "updated",
+        "vintage": "OBR Economic and fiscal outlook, October 2026 (Annex A, Tables A.1 and A.3), applied over policyengine-uk's March 2026 growth rates by src/uk_budget_data/forecast/obr_october_2026.json"
+      },
+      "notes": "The forecast is rebased on the Budget's OBR forecast: every simulation, baseline and reform alike, is built on the October 2026 growth rates in src/uk_budget_data/forecast/obr_october_2026.json (CPI, RPI, average earnings, house prices; the September 2027 CPI gap). Series that file does not list keep the March 2026 path the installed policyengine-uk ships; the receipt records the exact model version."
+    },
+    "versions": {
+      "wrapper": {
+        "name": "policyengine",
+        "version": "6.11.1"
+      },
+      "model": {
+        "name": "policyengine-uk",
+        "version": "2.151.0"
+      },
+      "core": {
+        "name": "policyengine-core",
+        "version": "3.33.3"
+      }
+    },
+    "data": {
+      "build_id": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+      "build_model_version": "2.151.0",
+      "data_package": "microcosm-data",
+      "dataset": "microcosm_uk_2024_25",
+      "dataset_revision": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+      "dataset_sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
+      "dataset_uri": "hf://policyengine/populace-uk-private/microcosm_uk_2024_25.h5@microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+      "release_manifest_revision": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+      "release_version": "0.1.0"
+    },
+    "fiscal_year": {
+      "convention": "uk_fiscal_year",
+      "parameter_annualisation": "policyengine-uk/fiscal-year-parameters",
+      "period_start": "04-06",
+      "year_label": "start_year"
+    }
+  },
+  "verification": {
+    "canonical_document_problems": [],
+    "canonical_dashboard_problems": [],
+    "artifact_digest_matches_manifest": true,
+    "approval_binds_artifact_and_outputs": true,
+    "entry_and_receipt_digests_match": true,
+    "file_hashes": {
+      "age_impact.csv": {
+        "sha256": "58739a9b47fcb4e76983119c87131e88362375275fbd4fe7d8933f8772c0b02a",
+        "verified": true
+      },
+      "budgetary_impact.csv": {
+        "sha256": "5c2abf677accb05d3616c2038823aa1a8f22897ce6dd19700a8e0444eb6ba4ec",
+        "verified": true
+      },
+      "distributional_impact.csv": {
+        "sha256": "ea4e02c19d075a12cf4922fbca80e65cc7fbc0eaf40d6526619f6e18024318b3",
+        "verified": true
+      },
+      "household_scatter_binned.csv": {
+        "sha256": "287909c485122279e4502489da0962d2452fcd10fda1950cfb857facc4b0751c",
+        "verified": true
+      },
+      "income_curve.csv": {
+        "sha256": "5d8083b7dfc7782b856fac38f6632258f12c6840ed4c119d72bec7319a740916",
+        "verified": true
+      },
+      "metrics.csv": {
+        "sha256": "a2b3d8532a12002ea330342a548ba9ef6ef2480ebd693e8716c25ad4262579ee",
+        "verified": true
+      },
+      "poverty_inequality.csv": {
+        "sha256": "e58160aff8fa5d3d3285889c60e1deebc7ed38f2b9ea7121ad76f3f8681e2fde",
+        "verified": true
+      },
+      "winners_losers.csv": {
+        "sha256": "25a9145c0873baf8fee612a1340414090b82ff1421839d22f8c23e5272941841",
+        "verified": true
+      }
+    },
+    "disclosure": {
+      "checked": true,
+      "survey_households": 3,
+      "thin_cells": [],
+      "thin_cells_in_tables": false,
+      "withheld_cells": []
+    },
+    "data_limits": [],
+    "model_limits": [],
+    "reconciliation": {
+      "responsiveness_status": "responsive",
+      "summary_status": "pass"
+    }
+  },
+  "definitions": {
+    "revenue": "Change in weighted government balance: reform gov_balance minus baseline gov_balance. Positive is a government gain. Includes tax and spending interactions; not income tax alone.",
+    "decile_ranking": "Recomputed from the baseline for each reported year. Deciles of person-weighted equivalised HBAI household net income before housing costs; negative ranking income is reset to zero and equal-income households share a rank.",
+    "decile_mean": "Weighted mean annual unequivalised household_net_income change among all households in the baseline decile, including unaffected households; household-weighted, not per person and not the mean among affected households.",
+    "relative_change": "Sum of weighted household income change divided by sum of weighted baseline household income within that year's baseline decile, times100; not the mean of individual percentage changes.",
+    "reach": "Share of people in households whose absolute change in household_net_income divided by max(baseline household_net_income,GBP1) exceeds0.0001 (0.01%). Numerator and denominator are weighted household size, restricted to baseline household_income_decile>=1. Changes in either direction count.",
+    "gini_change": "(Reformed Gini minus baseline Gini)/baseline Gini, a relative fraction, using equivalised household_net_income with person weights. This is not a percentage-point change in the Gini coefficient."
+  },
+  "annual_revenue": [
+    {
+      "year": 2026,
+      "fiscal_year": "2026-27",
+      "net_government_revenue_bn": 0.0,
+      "net_government_revenue_million": 0.0,
+      "rounded_net_government_revenue_million": 0,
+      "treasury_post_behavioural_revenue_bn": 0.0,
+      "treasury_post_behavioural_revenue_million": 0.0,
+      "dashboard_marks_comparable": true,
+      "relative_difference_pct_if_comparable": null
+    },
+    {
+      "year": 2027,
+      "fiscal_year": "2027-28",
+      "net_government_revenue_bn": 0.39904530993807763,
+      "net_government_revenue_million": 399.04530993807765,
+      "rounded_net_government_revenue_million": 399,
+      "treasury_post_behavioural_revenue_bn": 0.035,
+      "treasury_post_behavioural_revenue_million": 35.0,
+      "dashboard_marks_comparable": false,
+      "relative_difference_pct_if_comparable": null
+    },
+    {
+      "year": 2028,
+      "fiscal_year": "2028-29",
+      "net_government_revenue_bn": 0.41197579165650017,
+      "net_government_revenue_million": 411.9757916565002,
+      "rounded_net_government_revenue_million": 412,
+      "treasury_post_behavioural_revenue_bn": 0.575,
+      "treasury_post_behavioural_revenue_million": 575.0,
+      "dashboard_marks_comparable": false,
+      "relative_difference_pct_if_comparable": null
+    },
+    {
+      "year": 2029,
+      "fiscal_year": "2029-30",
+      "net_government_revenue_bn": 0.4294018583620151,
+      "net_government_revenue_million": 429.4018583620151,
+      "rounded_net_government_revenue_million": 429,
+      "treasury_post_behavioural_revenue_bn": 0.435,
+      "treasury_post_behavioural_revenue_million": 435.0,
+      "dashboard_marks_comparable": true,
+      "relative_difference_pct_if_comparable": -1.286929112180435
+    },
+    {
+      "year": 2030,
+      "fiscal_year": "2030-31",
+      "net_government_revenue_bn": 0.4455556472126524,
+      "net_government_revenue_million": 445.5556472126524,
+      "rounded_net_government_revenue_million": 446,
+      "treasury_post_behavioural_revenue_bn": 0.445,
+      "treasury_post_behavioural_revenue_million": 445.0,
+      "dashboard_marks_comparable": true,
+      "relative_difference_pct_if_comparable": 0.1248645421690675
+    },
+    {
+      "year": 2031,
+      "fiscal_year": "2031-32",
+      "net_government_revenue_bn": 0.4594904420641682,
+      "net_government_revenue_million": 459.49044206416823,
+      "rounded_net_government_revenue_million": 459,
+      "treasury_post_behavioural_revenue_bn": 0.455,
+      "treasury_post_behavioural_revenue_million": 455.0,
+      "dashboard_marks_comparable": true,
+      "relative_difference_pct_if_comparable": 0.9869103437732285
+    }
+  ],
+  "distribution_by_year": {
+    "2026": {
+      "average_household_change_gbp": {
+        "1": 0.0,
+        "10": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0,
+        "7": 0.0,
+        "8": 0.0,
+        "9": 0.0,
+        "all": 0.0
+      },
+      "relative_household_income_change_pct": {
+        "10": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0,
+        "7": 0.0,
+        "8": 0.0,
+        "9": 0.0
+      },
+      "people_living_in_affected_households_percent": 0.0,
+      "gini_relative_fraction_change": 0.0
+    },
+    "2027": {
+      "average_household_change_gbp": {
+        "1": -0.849537805191413,
+        "10": -57.73388219873782,
+        "2": -5.331535772669214,
+        "3": -5.137292004488854,
+        "4": -5.459680740488306,
+        "5": -4.476027967687162,
+        "6": -6.548908036603635,
+        "7": -8.616921384043795,
+        "8": -16.837105996038773,
+        "9": -25.074336564023735,
+        "all": -13.620114207766957
+      },
+      "relative_household_income_change_pct": {
+        "10": -0.03642741783840644,
+        "1": -0.003280773264211483,
+        "2": -0.013350311964002826,
+        "3": -0.011525877414268887,
+        "4": -0.011279160134081867,
+        "5": -0.008254816852157155,
+        "6": -0.011073457809747176,
+        "7": -0.013220674146739093,
+        "8": -0.022890621117303365,
+        "9": -0.028773800606848924
+      },
+      "people_living_in_affected_households_percent": 5.943611604537077,
+      "gini_relative_fraction_change": -0.00012268724460114496
+    },
+    "2028": {
+      "average_household_change_gbp": {
+        "1": -1.0282712839047559,
+        "10": -59.549155329481145,
+        "2": -5.715677861175117,
+        "3": -5.584747370215322,
+        "4": -5.2512098656084465,
+        "5": -4.798992223420793,
+        "6": -6.028070282235387,
+        "7": -9.481668059696128,
+        "8": -17.197736512628875,
+        "9": -25.12637604042441,
+        "all": -14.00541887387593
+      },
+      "relative_household_income_change_pct": {
+        "10": -0.03682928346233305,
+        "1": -0.00396262869494753,
+        "2": -0.014058514806218834,
+        "3": -0.012221464774932082,
+        "4": -0.01059609327640011,
+        "5": -0.008768780707967789,
+        "6": -0.009981645101563434,
+        "7": -0.014231064030165044,
+        "8": -0.023066587924497953,
+        "9": -0.028403468574895112
+      },
+      "people_living_in_affected_households_percent": 5.952076585287802,
+      "gini_relative_fraction_change": -0.00012210013169514702
+    },
+    "2029": {
+      "average_household_change_gbp": {
+        "1": -1.2188237707516856,
+        "10": -61.77850851299002,
+        "2": -5.906583275815774,
+        "3": -5.601067991807482,
+        "4": -4.7320101656624844,
+        "5": -6.2140821405456865,
+        "6": -3.9427657667675993,
+        "7": -12.100268466500745,
+        "8": -17.448636393663204,
+        "9": -25.887010061766002,
+        "all": -14.533926712827615
+      },
+      "relative_household_income_change_pct": {
+        "10": -0.037463291687989404,
+        "1": -0.00462627376162737,
+        "2": -0.014419047872334282,
+        "3": -0.012040446785788873,
+        "4": -0.009427296076210491,
+        "5": -0.011131388435235272,
+        "6": -0.006430151305216017,
+        "7": -0.017949330941909994,
+        "8": -0.02299527301085211,
+        "9": -0.028798712554661515
+      },
+      "people_living_in_affected_households_percent": 6.037490519286693,
+      "gini_relative_fraction_change": -0.00012215392257318585
+    },
+    "2030": {
+      "average_household_change_gbp": {
+        "1": -1.6599752643717125,
+        "10": -63.76110972653078,
+        "2": -5.839922483061514,
+        "3": -6.16570323447446,
+        "4": -4.815746712350739,
+        "5": -6.406727790315784,
+        "6": -3.079084257142678,
+        "7": -13.212370865292934,
+        "8": -18.136158769994683,
+        "9": -26.507196831273163,
+        "all": -15.013106871297852
+      },
+      "relative_household_income_change_pct": {
+        "10": -0.03773594112904485,
+        "1": -0.006202837895635574,
+        "2": -0.014112826863091262,
+        "3": -0.013047267766294033,
+        "4": -0.009417348651021297,
+        "5": -0.011329984886564396,
+        "6": -0.004905744274060609,
+        "7": -0.019269608517530193,
+        "8": -0.023458041818215283,
+        "9": -0.028992003379557544
+      },
+      "people_living_in_affected_households_percent": 6.034841349783147,
+      "gini_relative_fraction_change": -0.00012083309893889608
+    },
+    "2031": {
+      "average_household_change_gbp": {
+        "1": -2.0255155229193846,
+        "10": -65.56126504216287,
+        "2": -5.635177868688589,
+        "3": -6.31798337071894,
+        "4": -5.009629578700846,
+        "5": -6.514231403074363,
+        "6": -2.8345851636943533,
+        "7": -13.776544201366882,
+        "8": -19.013018309750667,
+        "9": -26.922877825449845,
+        "all": -15.416369573636034
+      },
+      "relative_household_income_change_pct": {
+        "10": -0.03787213684431531,
+        "1": -0.007485439939025164,
+        "2": -0.013468208570510315,
+        "3": -0.013115738483115622,
+        "4": -0.00963653500158797,
+        "5": -0.011316030290009606,
+        "6": -0.004412148335646833,
+        "7": -0.01972931434903989,
+        "8": -0.02405452667513538,
+        "9": -0.028820511996950758
+      },
+      "people_living_in_affected_households_percent": 5.9743860438605845,
+      "gini_relative_fraction_change": -0.00012092905458994419
+    }
+  },
+  "official_comparability": {
+    "2026": {
+      "post_behavioural": 0.0,
+      "static_costing": null
+    },
+    "2027": {
+      "not_comparable": {
+        "reason": "Self Assessment tax on 2027-28 property income is mostly paid from 31 January 2029, so the Treasury's costing (on a National Accounts basis) has \u00a335m in 2027-28 and about 1.5 years of liability in 2028-29 (\u00a3575m), while the model scores each tax year's liability. From 2029-30 the two agree within 1.5%. Table 6.1 row 61."
+      },
+      "post_behavioural": null,
+      "static_costing": null
+    },
+    "2028": {
+      "not_comparable": {
+        "reason": "Self Assessment tax on 2027-28 property income is mostly paid from 31 January 2029, so the Treasury's costing (on a National Accounts basis) has \u00a335m in 2027-28 and about 1.5 years of liability in 2028-29 (\u00a3575m), while the model scores each tax year's liability. From 2029-30 the two agree within 1.5%. Table 6.1 row 61."
+      },
+      "post_behavioural": null,
+      "static_costing": null
+    },
+    "2029": {
+      "post_behavioural": 0.435,
+      "static_costing": null
+    },
+    "2030": {
+      "post_behavioural": 0.445,
+      "static_costing": null
+    },
+    "2031": {
+      "post_behavioural": 0.455,
+      "static_costing": null
+    }
+  },
+  "unavailable_exports": [
+    "Absolute affected-person count",
+    "Winner and loser shares, either nationally or by decile",
+    "Average change conditional on being affected",
+    "Income-source decomposition of the bottom decile",
+    "Household counts and income-tax/revenue totals by decile for revenue-concentration shares"
+  ],
+  "important_limits": [
+    "The approved artifact was generated at4de166f0. Its approval in the later snapshot does not prove a new post-freeze simulation or a production deployment.",
+    "Recheck the property artifact identity against the final released manifest before merging the blog. A changed artifact requires re-extracting and reviewing figures.",
+    "Do not infer loser counts or extra-taxpayer shares from the affected-household metric.",
+    "Do not derive revenue shares from decile average household changes without weighted counts/totals.",
+    "Treasury rows2027/2028 are retained from source for a labelled annual table, but the dashboard comparison deliberately suppresses them as not comparable.",
+    "Static model, fixed incomes/no incorporation response; Treasury figures include behavioural assumptions and a different collection profile."
+  ]
+}
