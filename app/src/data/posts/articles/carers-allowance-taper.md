@@ -735,7 +735,7 @@ Without the taper, carer 1's rate is 0% up to about £148 a week, where pay plus
 
 Carer 2's rate is 55% up to about £148, from Universal Credit's 55% taper alone, 64% from there to the limit, once income tax starts, and 55% from £234 to about £247, with or without the taper. From £247 to £366, it is 61.1% with the taper, against 67.6% without, because the loss from the tax on the allowance shrinks as the allowance falls.
 
-The table and chart leave out the £1 step at the limit itself. Without the taper, a carer whose net earnings rise from £234 to £235 a week loses the whole allowance, so for that one step carer 1 loses more than the £1 gained: net income falls by about £80. Carer 2's net income rises by about £8 at that step, because Universal Credit replaces most of the lost allowance and the tax on the allowance goes. For that single £1 at the limit, the effective marginal tax rate is over 8,000% for carer 1 and negative for carer 2, whose net income rises; the figure depends on the size of the step, which is why the chart leaves that point out. With the taper, the step is like any other in the taper range.
+The table and chart leave out the £1 step at the limit itself. Without the taper, a carer whose net earnings rise from £234 to £235 a week loses the whole allowance, so for that one step carer 1 loses more than the £1 gained: net income falls by about £80. Carer 2's net income rises by about £8 at that step, because Universal Credit replaces most of the lost allowance and the tax on the allowance goes. With the taper, the step is like any other in the taper range.
 
 ## Population estimates
 
