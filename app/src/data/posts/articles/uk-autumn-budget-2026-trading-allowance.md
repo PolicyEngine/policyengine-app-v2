@@ -7,7 +7,7 @@ Key figures:
 - A Universal Credit claimant in the example below keeps £180 of a £400 tax reduction, after UC falls by £220.
 - The Treasury's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) records no receipts effect in 2027–28 and forecasts a £225 million cost in 2028–29.
 
-Our [Budget dashboard](https://www.policyengine.org/uk/autumn-budget-2026) places it alongside the other announced tax and benefit changes. We cover the savings and property income tax increases in a [separate explainer](/uk/research/uk-autumn-budget-2026-savings-property-income-tax).
+Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. We cover the savings and property income tax increases in a [separate explainer](/uk/research/uk-autumn-budget-2026-savings-property-income-tax).
 
 ## How the allowance works
 
@@ -19,7 +19,7 @@ The allowance cannot create a tax loss. [HMRC's full-relief rules](https://www.g
 
 There is one allowance per individual across their eligible trades and miscellaneous income, rather than a separate allowance for each activity. The allocation between sources follows [section 783AK of the Income Tax (Trading and Other Income) Act 2005](https://www.legislation.gov.uk/ukpga/2005/5/section/783AK). The separate property income allowance does not increase under this measure.
 
-The allowance is unavailable for partnership income and certain connected-party receipts, including income from an individual's employer or a company they control. [HMRC's exclusions](https://www.gov.uk/hmrc-internal-manuals/business-income-manual/bim86030) describe those restrictions.
+The allowance does not cover a trade carried on in partnership. Nobody can use it in a tax year in which their trading or miscellaneous income includes a payment from their employer or their spouse's or civil partner's employer, from a partnership in which they or someone connected to them is a partner, or from a company that they or someone connected to them owns or controls. [HMRC's exclusions](https://www.gov.uk/hmrc-internal-manuals/business-income-manual/bim86030) describe those restrictions.
 
 ## Household impacts
 
