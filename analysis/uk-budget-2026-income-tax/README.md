@@ -53,3 +53,12 @@ See `REVIEW_NOTES.md` for the independent draft-readiness check, the comparison 
 `make format`, `make lint`, `make typecheck` and `make test` passed. The tests ran on Node 26.12.1: 6,042 app tests and 508 website tests passed, with 10 app tests skipped by the existing suite. After inserting the final chart data, the chart-parser and post-metadata checks passed again (18 tests). All 23 household comparisons and 20 curve points passed independent arithmetic checks.
 
 After adding the provisional national sections, snapshot verification and the article/chart checks passed again. Browser access to the local preview was declined, so visual preview remains outstanding. The SVG cover XML and native chart specs were validated, but this does not confirm page layout at desktop or mobile widths.
+
+
+## Additional trading and calculator examples
+
+```sh
+analysis/uk-budget-2026-income-tax/.venv/bin/python analysis/uk-budget-2026-income-tax/generate_trading_extensions.py
+```
+
+This checks five additional synthetic pairs requested in Max's review, including UC, Class4 and missing-receipts fallbacks. `trading_extensions.json` records complete inputs, raw outputs and arithmetic checks. `dashboard_salary_comparison.json` records the calculator's March-index salary comparison. Household examples use no population data. Shared analysis is kept in the savings/property base PR so the trading article can be reviewed in a separate stacked PR.

@@ -1,0 +1,966 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-10-28T15:19:07.459647+00:00",
+    "model_year": 2027,
+    "tax_year": "2027–28",
+    "versions": {
+      "policyengine": "6.11.1",
+      "policyengine-uk": "2.151.0",
+      "policyengine-core": "3.33.3"
+    },
+    "python": "3.13.14",
+    "review_url": "https://github.com/PolicyEngine/policyengine-app-v2/pull/1460#issuecomment-6472758764",
+    "review_comment_timestamp_utc": "2026-10-28T15:11:33Z",
+    "baseline_parameters": {
+      "trading_allowance": 1000.0,
+      "uc_taper": 0.55,
+      "uc_work_allowance_monthly_with_housing": 441.94429445251563,
+      "uc_work_allowance_monthly_without_housing": 734.8488268414194
+    },
+    "reform": {
+      "gov.hmrc.income_tax.allowances.trading_allowance": 3000
+    },
+    "scope": "Five synthetic case pairs; no population data, behavioural responses or national estimates. Annual model calculations; actual UC assessment periods and timing of tax payments can differ.",
+    "assumptions": "Lone parent age35 with child age4, employment as main job, £18,000 annual wages, side business with zero expenses, London/Central London private rent £12,000/year, UC and Child Benefit take-up true. Sole trader age35, full-time35hours/week, £20,000 receipts and £500 costs, no other income, owns home outright, no UC claim. Both: council tax input zero; no childcare costs, capital, disability, pensions, losses or other income. Omitted inputs otherwise retain pinned model defaults. No UC award, floor amount, work allowance, or earnings intermediate is forced.",
+    "oracle_tolerance_gbp": 0.02,
+    "independent_arithmetic": "Basic-rate income tax20% above Personal Allowance£12,570; known-receipt taxable profit=max(0,receipts-max(expenses,allowance)); Class4 NI6% above£12,570; active UC award falls55% of extra UC net earnings above its unchanged work allowance. Missing-receipt outputs separately test the pinned fallback, not the legal receipt-based calculation."
+  },
+  "cases": [
+    {
+      "id": "lone_parent_4000_receipts",
+      "type": "lone_parent",
+      "inputs": {
+        "people": [
+          {
+            "age": 35,
+            "employment_status": "PT_EMPLOYED",
+            "hours_worked": 1040,
+            "employment_income": 18000,
+            "self_employment_income": 4000,
+            "uc_is_in_gainful_self_employment": false,
+            "self_employment_gross_receipts": 4000
+          },
+          {
+            "age": 4,
+            "employment_status": "CHILD"
+          }
+        ],
+        "benunit": {
+          "would_claim_uc": true,
+          "would_claim_child_benefit": true
+        },
+        "household": {
+          "region": "LONDON",
+          "brma": "CENTRAL_LONDON",
+          "tenure_type": "RENT_PRIVATELY",
+          "rent": 12000,
+          "council_tax": 0
+        }
+      },
+      "gross_receipts_supplied": true,
+      "actual_expenses": 0,
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 3000,
+          "income_tax": 1686
+        },
+        "reform": {
+          "taxable_self_employment_income": 1000,
+          "income_tax": 1286
+        },
+        "change": {
+          "income_tax": -400,
+          "national_insurance": 0,
+          "universal_credit": -220,
+          "household_net_income": 180
+        }
+      },
+      "review_claim": {
+        "income_tax": -400,
+        "universal_credit": -220,
+        "household_net_income": 180
+      },
+      "baseline": {
+        "person": [
+          {
+            "employment_income": 18000.0,
+            "self_employment_income": 4000.0,
+            "self_employment_gross_receipts": 4000.0,
+            "income_tax": 1686.0,
+            "national_insurance": 434.4031066894531,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 3000.0,
+            "trading_allowance_deduction": 1000.0,
+            "uc_income_tax_on_earnings": 1686.0,
+            "uc_income_tax_on_trade": 600.0,
+            "uc_national_insurance_on_earnings": 434.4031066894531,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 19879.59765625,
+            "uc_individual_earned_income": 19879.59765625,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          },
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 0.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 0.0,
+            "national_insurance": 0.0,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 0.0,
+            "trading_allowance_deduction": 0.0,
+            "uc_income_tax_on_earnings": 0.0,
+            "uc_income_tax_on_trade": 0.0,
+            "uc_national_insurance_on_earnings": 0.0,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 0.0,
+            "uc_individual_earned_income": 0.0,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 13076.5009765625,
+          "universal_credit_pre_benefit_cap": 13076.5009765625,
+          "claims_universal_credit": 1.0,
+          "uc_maximum_amount": 21093.447265625,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 3774.9287109375,
+          "uc_housing_costs_element": 12000.0,
+          "uc_work_allowance": 5303.33154296875,
+          "uc_earned_income_before_work_allowance": 19879.59765625,
+          "uc_earned_income": 14576.265625,
+          "uc_income_reduction": 8016.9462890625,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 1455.8287353515625
+        },
+        "household": {
+          "household_net_income": 36801.48828125,
+          "hbai_household_net_income": 34411.92578125,
+          "household_benefits": 17101.892578125,
+          "household_tax": 2300.403076171875,
+          "household_market_income": 22000.0,
+          "household_gross_income": 39101.890625,
+          "rent": 12000.0,
+          "council_tax": 0.0
+        }
+      },
+      "reform": {
+        "person": [
+          {
+            "employment_income": 18000.0,
+            "self_employment_income": 4000.0,
+            "self_employment_gross_receipts": 4000.0,
+            "income_tax": 1286.0,
+            "national_insurance": 434.4031066894531,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 1000.0,
+            "trading_allowance_deduction": 3000.0,
+            "uc_income_tax_on_earnings": 1286.0,
+            "uc_income_tax_on_trade": 200.0,
+            "uc_national_insurance_on_earnings": 434.4031066894531,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 20279.59765625,
+            "uc_individual_earned_income": 20279.59765625,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          },
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 0.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 0.0,
+            "national_insurance": 0.0,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 0.0,
+            "trading_allowance_deduction": 0.0,
+            "uc_income_tax_on_earnings": 0.0,
+            "uc_income_tax_on_trade": 0.0,
+            "uc_national_insurance_on_earnings": 0.0,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 0.0,
+            "uc_individual_earned_income": 0.0,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 12856.5009765625,
+          "universal_credit_pre_benefit_cap": 12856.5009765625,
+          "claims_universal_credit": 1.0,
+          "uc_maximum_amount": 21093.447265625,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 3774.9287109375,
+          "uc_housing_costs_element": 12000.0,
+          "uc_work_allowance": 5303.33154296875,
+          "uc_earned_income_before_work_allowance": 20279.59765625,
+          "uc_earned_income": 14976.265625,
+          "uc_income_reduction": 8236.9462890625,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 1455.8287353515625
+        },
+        "household": {
+          "household_net_income": 36981.48828125,
+          "hbai_household_net_income": 34591.92578125,
+          "household_benefits": 16881.892578125,
+          "household_tax": 1900.403076171875,
+          "household_market_income": 22000.0,
+          "household_gross_income": 38881.890625,
+          "rent": 12000.0,
+          "council_tax": 0.0
+        }
+      },
+      "change": {
+        "income_tax": -400.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "universal_credit": -220.0,
+        "household_benefits": -220.0,
+        "household_net_income": 180.0,
+        "hbai_household_net_income": 180.0
+      },
+      "uc_trace": {
+        "baseline_annual_uc_earnings_before_work_allowance": 19879.59765625,
+        "reform_annual_uc_earnings_before_work_allowance": 20279.59765625,
+        "annual_work_allowance": 5303.33154296875,
+        "baseline_earnings_above_work_allowance": 14576.265625,
+        "reform_earnings_above_work_allowance": 14976.265625,
+        "explanation": "Employment earnings already exceed the work allowance. The entire increase in UC net earnings is tapered at 55%; no work-allowance boundary is crossed."
+      },
+      "review_comparison": {
+        "claim": {
+          "income_tax": -400,
+          "universal_credit": -220,
+          "household_net_income": 180
+        },
+        "matches": true
+      }
+    },
+    {
+      "id": "lone_parent_1500_receipts",
+      "type": "lone_parent",
+      "inputs": {
+        "people": [
+          {
+            "age": 35,
+            "employment_status": "PT_EMPLOYED",
+            "hours_worked": 1040,
+            "employment_income": 18000,
+            "self_employment_income": 1500,
+            "uc_is_in_gainful_self_employment": false,
+            "self_employment_gross_receipts": 1500
+          },
+          {
+            "age": 4,
+            "employment_status": "CHILD"
+          }
+        ],
+        "benunit": {
+          "would_claim_uc": true,
+          "would_claim_child_benefit": true
+        },
+        "household": {
+          "region": "LONDON",
+          "brma": "CENTRAL_LONDON",
+          "tenure_type": "RENT_PRIVATELY",
+          "rent": 12000,
+          "council_tax": 0
+        }
+      },
+      "gross_receipts_supplied": true,
+      "actual_expenses": 0,
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 500,
+          "income_tax": 1186
+        },
+        "reform": {
+          "taxable_self_employment_income": 0,
+          "income_tax": 1086
+        },
+        "change": {
+          "income_tax": -100,
+          "national_insurance": 0,
+          "universal_credit": -55,
+          "household_net_income": 45
+        }
+      },
+      "review_claim": {
+        "income_tax": -100,
+        "universal_credit": -21,
+        "household_net_income": 79
+      },
+      "baseline": {
+        "person": [
+          {
+            "employment_income": 18000.0,
+            "self_employment_income": 1500.0,
+            "self_employment_gross_receipts": 1500.0,
+            "income_tax": 1186.0,
+            "national_insurance": 434.4031066894531,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 500.0,
+            "trading_allowance_deduction": 1000.0,
+            "uc_income_tax_on_earnings": 1186.0,
+            "uc_income_tax_on_trade": 100.0,
+            "uc_national_insurance_on_earnings": 434.4031066894531,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 17879.59765625,
+            "uc_individual_earned_income": 17879.59765625,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          },
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 0.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 0.0,
+            "national_insurance": 0.0,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 0.0,
+            "trading_allowance_deduction": 0.0,
+            "uc_income_tax_on_earnings": 0.0,
+            "uc_income_tax_on_trade": 0.0,
+            "uc_national_insurance_on_earnings": 0.0,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 0.0,
+            "uc_individual_earned_income": 0.0,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 14176.5009765625,
+          "universal_credit_pre_benefit_cap": 14176.5009765625,
+          "claims_universal_credit": 1.0,
+          "uc_maximum_amount": 21093.447265625,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 3774.9287109375,
+          "uc_housing_costs_element": 12000.0,
+          "uc_work_allowance": 5303.33154296875,
+          "uc_earned_income_before_work_allowance": 17879.59765625,
+          "uc_earned_income": 12576.265625,
+          "uc_income_reduction": 6916.9462890625,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 1455.8287353515625
+        },
+        "household": {
+          "household_net_income": 35901.48828125,
+          "hbai_household_net_income": 33511.92578125,
+          "household_benefits": 18201.892578125,
+          "household_tax": 1800.403076171875,
+          "household_market_income": 19500.0,
+          "household_gross_income": 37701.890625,
+          "rent": 12000.0,
+          "council_tax": 0.0
+        }
+      },
+      "reform": {
+        "person": [
+          {
+            "employment_income": 18000.0,
+            "self_employment_income": 1500.0,
+            "self_employment_gross_receipts": 1500.0,
+            "income_tax": 1086.0,
+            "national_insurance": 434.4031066894531,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 0.0,
+            "trading_allowance_deduction": 1500.0,
+            "uc_income_tax_on_earnings": 1086.0,
+            "uc_income_tax_on_trade": 0.0,
+            "uc_national_insurance_on_earnings": 434.4031066894531,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 17979.59765625,
+            "uc_individual_earned_income": 17979.59765625,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          },
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 0.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 0.0,
+            "national_insurance": 0.0,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 0.0,
+            "trading_allowance_deduction": 0.0,
+            "uc_income_tax_on_earnings": 0.0,
+            "uc_income_tax_on_trade": 0.0,
+            "uc_national_insurance_on_earnings": 0.0,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 0.0,
+            "uc_individual_earned_income": 0.0,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 14121.5009765625,
+          "universal_credit_pre_benefit_cap": 14121.5009765625,
+          "claims_universal_credit": 1.0,
+          "uc_maximum_amount": 21093.447265625,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 3774.9287109375,
+          "uc_housing_costs_element": 12000.0,
+          "uc_work_allowance": 5303.33154296875,
+          "uc_earned_income_before_work_allowance": 17979.59765625,
+          "uc_earned_income": 12676.265625,
+          "uc_income_reduction": 6971.9462890625,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 1455.8287353515625
+        },
+        "household": {
+          "household_net_income": 35946.48828125,
+          "hbai_household_net_income": 33556.92578125,
+          "household_benefits": 18146.892578125,
+          "household_tax": 1700.403076171875,
+          "household_market_income": 19500.0,
+          "household_gross_income": 37646.890625,
+          "rent": 12000.0,
+          "council_tax": 0.0
+        }
+      },
+      "change": {
+        "income_tax": -100.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "universal_credit": -55.0,
+        "household_benefits": -55.0,
+        "household_net_income": 45.0,
+        "hbai_household_net_income": 45.0
+      },
+      "uc_trace": {
+        "baseline_annual_uc_earnings_before_work_allowance": 17879.59765625,
+        "reform_annual_uc_earnings_before_work_allowance": 17979.59765625,
+        "annual_work_allowance": 5303.33154296875,
+        "baseline_earnings_above_work_allowance": 12576.265625,
+        "reform_earnings_above_work_allowance": 12676.265625,
+        "explanation": "Employment earnings already exceed the work allowance. The entire increase in UC net earnings is tapered at 55%; no work-allowance boundary is crossed."
+      },
+      "review_comparison": {
+        "claim": {
+          "income_tax": -100,
+          "universal_credit": -21,
+          "household_net_income": 79
+        },
+        "matches": false
+      }
+    },
+    {
+      "id": "lone_parent_1500_profit_receipts_omitted",
+      "type": "lone_parent",
+      "inputs": {
+        "people": [
+          {
+            "age": 35,
+            "employment_status": "PT_EMPLOYED",
+            "hours_worked": 1040,
+            "employment_income": 18000,
+            "self_employment_income": 1500,
+            "uc_is_in_gainful_self_employment": false
+          },
+          {
+            "age": 4,
+            "employment_status": "CHILD"
+          }
+        ],
+        "benunit": {
+          "would_claim_uc": true,
+          "would_claim_child_benefit": true
+        },
+        "household": {
+          "region": "LONDON",
+          "brma": "CENTRAL_LONDON",
+          "tenure_type": "RENT_PRIVATELY",
+          "rent": 12000,
+          "council_tax": 0
+        }
+      },
+      "gross_receipts_supplied": false,
+      "actual_expenses": 0,
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 1500,
+          "income_tax": 1386
+        },
+        "reform": {
+          "taxable_self_employment_income": 0,
+          "income_tax": 1086
+        },
+        "change": {
+          "income_tax": -300,
+          "national_insurance": 0,
+          "universal_credit": -165,
+          "household_net_income": 135
+        }
+      },
+      "limitation": "Omitting receipts activates the pinned model's fallback. This £300 tax reduction exceeds the legally calculated £100 with receipts supplied; the resulting net gain is £135 instead of £45.",
+      "baseline": {
+        "person": [
+          {
+            "employment_income": 18000.0,
+            "self_employment_income": 1500.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 1386.0,
+            "national_insurance": 434.4031066894531,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 1500.0,
+            "trading_allowance_deduction": 0.0,
+            "uc_income_tax_on_earnings": 1386.0,
+            "uc_income_tax_on_trade": 300.0,
+            "uc_national_insurance_on_earnings": 434.4031066894531,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 17679.59765625,
+            "uc_individual_earned_income": 17679.59765625,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          },
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 0.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 0.0,
+            "national_insurance": 0.0,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 0.0,
+            "trading_allowance_deduction": 0.0,
+            "uc_income_tax_on_earnings": 0.0,
+            "uc_income_tax_on_trade": 0.0,
+            "uc_national_insurance_on_earnings": 0.0,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 0.0,
+            "uc_individual_earned_income": 0.0,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 14286.5009765625,
+          "universal_credit_pre_benefit_cap": 14286.5009765625,
+          "claims_universal_credit": 1.0,
+          "uc_maximum_amount": 21093.447265625,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 3774.9287109375,
+          "uc_housing_costs_element": 12000.0,
+          "uc_work_allowance": 5303.33154296875,
+          "uc_earned_income_before_work_allowance": 17679.59765625,
+          "uc_earned_income": 12376.265625,
+          "uc_income_reduction": 6806.9462890625,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 1455.8287353515625
+        },
+        "household": {
+          "household_net_income": 35811.48828125,
+          "hbai_household_net_income": 33421.92578125,
+          "household_benefits": 18311.892578125,
+          "household_tax": 2000.403076171875,
+          "household_market_income": 19500.0,
+          "household_gross_income": 37811.890625,
+          "rent": 12000.0,
+          "council_tax": 0.0
+        }
+      },
+      "reform": {
+        "person": [
+          {
+            "employment_income": 18000.0,
+            "self_employment_income": 1500.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 1086.0,
+            "national_insurance": 434.4031066894531,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 0.0,
+            "trading_allowance_deduction": 1500.0,
+            "uc_income_tax_on_earnings": 1086.0,
+            "uc_income_tax_on_trade": 0.0,
+            "uc_national_insurance_on_earnings": 434.4031066894531,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 17979.59765625,
+            "uc_individual_earned_income": 17979.59765625,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          },
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 0.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 0.0,
+            "national_insurance": 0.0,
+            "ni_class_4": 0.0,
+            "taxable_self_employment_income": 0.0,
+            "trading_allowance_deduction": 0.0,
+            "uc_income_tax_on_earnings": 0.0,
+            "uc_income_tax_on_trade": 0.0,
+            "uc_national_insurance_on_earnings": 0.0,
+            "uc_national_insurance_on_trade": 0.0,
+            "uc_individual_earned_income_before_mif": 0.0,
+            "uc_individual_earned_income": 0.0,
+            "uc_is_in_gainful_self_employment": 0.0,
+            "uc_mif_applies": 0.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 14121.5009765625,
+          "universal_credit_pre_benefit_cap": 14121.5009765625,
+          "claims_universal_credit": 1.0,
+          "uc_maximum_amount": 21093.447265625,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 3774.9287109375,
+          "uc_housing_costs_element": 12000.0,
+          "uc_work_allowance": 5303.33154296875,
+          "uc_earned_income_before_work_allowance": 17979.59765625,
+          "uc_earned_income": 12676.265625,
+          "uc_income_reduction": 6971.9462890625,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 1455.8287353515625
+        },
+        "household": {
+          "household_net_income": 35946.48828125,
+          "hbai_household_net_income": 33556.92578125,
+          "household_benefits": 18146.892578125,
+          "household_tax": 1700.403076171875,
+          "household_market_income": 19500.0,
+          "household_gross_income": 37646.890625,
+          "rent": 12000.0,
+          "council_tax": 0.0
+        }
+      },
+      "change": {
+        "income_tax": -300.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "universal_credit": -165.0,
+        "household_benefits": -165.0,
+        "household_net_income": 135.0,
+        "hbai_household_net_income": 135.0
+      },
+      "uc_trace": {
+        "baseline_annual_uc_earnings_before_work_allowance": 17679.59765625,
+        "reform_annual_uc_earnings_before_work_allowance": 17979.59765625,
+        "annual_work_allowance": 5303.33154296875,
+        "baseline_earnings_above_work_allowance": 12376.265625,
+        "reform_earnings_above_work_allowance": 12676.265625,
+        "explanation": "Employment earnings already exceed the work allowance. The entire increase in UC net earnings is tapered at 55%; no work-allowance boundary is crossed."
+      },
+      "review_comparison": null
+    },
+    {
+      "id": "sole_trader_20000_receipts_500_expenses",
+      "type": "sole_trader",
+      "inputs": {
+        "people": [
+          {
+            "age": 35,
+            "employment_status": "FT_SELF_EMPLOYED",
+            "hours_worked": 1820,
+            "employment_income": 0,
+            "self_employment_income": 19500,
+            "uc_is_in_gainful_self_employment": true,
+            "self_employment_gross_receipts": 20000
+          }
+        ],
+        "benunit": {
+          "would_claim_uc": false,
+          "would_claim_child_benefit": false
+        },
+        "household": {
+          "region": "LONDON",
+          "brma": "CENTRAL_LONDON",
+          "tenure_type": "OWNED_OUTRIGHT",
+          "rent": 0,
+          "council_tax": 0
+        }
+      },
+      "gross_receipts_supplied": true,
+      "actual_expenses": 500,
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 19000,
+          "income_tax": 1286,
+          "ni_class_4": 385.8
+        },
+        "reform": {
+          "taxable_self_employment_income": 17000,
+          "income_tax": 886,
+          "ni_class_4": 265.8
+        },
+        "change": {
+          "income_tax": -400,
+          "national_insurance": -120,
+          "universal_credit": 0,
+          "household_net_income": 520
+        }
+      },
+      "review_claim": {
+        "income_tax": -400,
+        "ni_class_4": -120,
+        "household_net_income": 520
+      },
+      "baseline": {
+        "person": [
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 19500.0,
+            "self_employment_gross_receipts": 20000.0,
+            "income_tax": 1286.0,
+            "national_insurance": 385.79998779296875,
+            "ni_class_4": 385.79998779296875,
+            "taxable_self_employment_income": 19000.0,
+            "trading_allowance_deduction": 500.0,
+            "uc_income_tax_on_earnings": 1286.0,
+            "uc_income_tax_on_trade": 1286.0,
+            "uc_national_insurance_on_earnings": 385.79998779296875,
+            "uc_national_insurance_on_trade": 385.79998779296875,
+            "uc_individual_earned_income_before_mif": 17828.19921875,
+            "uc_individual_earned_income": 20386.02734375,
+            "uc_is_in_gainful_self_employment": 1.0,
+            "uc_mif_applies": 1.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 0.0,
+          "universal_credit_pre_benefit_cap": 0.0,
+          "claims_universal_credit": 0.0,
+          "uc_maximum_amount": 5318.5185546875,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 0.0,
+          "uc_housing_costs_element": 0.0,
+          "uc_work_allowance": 0.0,
+          "uc_earned_income_before_work_allowance": 20386.02734375,
+          "uc_earned_income": 20386.02734375,
+          "uc_income_reduction": 5318.5185546875,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 0.0
+        },
+        "household": {
+          "household_net_income": 17648.19921875,
+          "hbai_household_net_income": 17828.19921875,
+          "household_benefits": 0.0,
+          "household_tax": 1851.800048828125,
+          "household_market_income": 19500.0,
+          "household_gross_income": 19500.0,
+          "rent": 0.0,
+          "council_tax": 0.0
+        }
+      },
+      "reform": {
+        "person": [
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 19500.0,
+            "self_employment_gross_receipts": 20000.0,
+            "income_tax": 886.0,
+            "national_insurance": 265.79998779296875,
+            "ni_class_4": 265.79998779296875,
+            "taxable_self_employment_income": 17000.0,
+            "trading_allowance_deduction": 2500.0,
+            "uc_income_tax_on_earnings": 886.0,
+            "uc_income_tax_on_trade": 886.0,
+            "uc_national_insurance_on_earnings": 265.79998779296875,
+            "uc_national_insurance_on_trade": 265.79998779296875,
+            "uc_individual_earned_income_before_mif": 18348.19921875,
+            "uc_individual_earned_income": 20386.02734375,
+            "uc_is_in_gainful_self_employment": 1.0,
+            "uc_mif_applies": 1.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 0.0,
+          "universal_credit_pre_benefit_cap": 0.0,
+          "claims_universal_credit": 0.0,
+          "uc_maximum_amount": 5318.5185546875,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 0.0,
+          "uc_housing_costs_element": 0.0,
+          "uc_work_allowance": 0.0,
+          "uc_earned_income_before_work_allowance": 20386.02734375,
+          "uc_earned_income": 20386.02734375,
+          "uc_income_reduction": 5318.5185546875,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 0.0
+        },
+        "household": {
+          "household_net_income": 18168.19921875,
+          "hbai_household_net_income": 18348.19921875,
+          "household_benefits": 0.0,
+          "household_tax": 1331.800048828125,
+          "household_market_income": 19500.0,
+          "household_gross_income": 19500.0,
+          "rent": 0.0,
+          "council_tax": 0.0
+        }
+      },
+      "change": {
+        "income_tax": -400.0,
+        "national_insurance": -120.0,
+        "ni_class_4": -120.0,
+        "universal_credit": 0.0,
+        "household_benefits": 0.0,
+        "household_net_income": 520.0,
+        "hbai_household_net_income": 520.0
+      },
+      "uc_trace": null,
+      "review_comparison": {
+        "claim": {
+          "income_tax": -400,
+          "ni_class_4": -120,
+          "household_net_income": 520
+        },
+        "matches": true
+      }
+    },
+    {
+      "id": "sole_trader_19500_profit_receipts_omitted",
+      "type": "sole_trader",
+      "inputs": {
+        "people": [
+          {
+            "age": 35,
+            "employment_status": "FT_SELF_EMPLOYED",
+            "hours_worked": 1820,
+            "employment_income": 0,
+            "self_employment_income": 19500,
+            "uc_is_in_gainful_self_employment": true
+          }
+        ],
+        "benunit": {
+          "would_claim_uc": false,
+          "would_claim_child_benefit": false
+        },
+        "household": {
+          "region": "LONDON",
+          "brma": "CENTRAL_LONDON",
+          "tenure_type": "OWNED_OUTRIGHT",
+          "rent": 0,
+          "council_tax": 0
+        }
+      },
+      "gross_receipts_supplied": false,
+      "actual_expenses": 500,
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 19500,
+          "income_tax": 1386,
+          "ni_class_4": 415.8
+        },
+        "reform": {
+          "taxable_self_employment_income": 19500,
+          "income_tax": 1386,
+          "ni_class_4": 415.8
+        },
+        "change": {
+          "income_tax": 0,
+          "national_insurance": 0,
+          "universal_credit": 0,
+          "household_net_income": 0
+        }
+      },
+      "limitation": "With receipts omitted, profit exceeds both allowance amounts, so the pinned fallback applies no relief on either side. It misses the £520 gain calculated when £20,000 receipts and £500 expenses are represented.",
+      "baseline": {
+        "person": [
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 19500.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 1386.0,
+            "national_insurance": 415.79998779296875,
+            "ni_class_4": 415.79998779296875,
+            "taxable_self_employment_income": 19500.0,
+            "trading_allowance_deduction": 0.0,
+            "uc_income_tax_on_earnings": 1386.0,
+            "uc_income_tax_on_trade": 1386.0,
+            "uc_national_insurance_on_earnings": 415.79998779296875,
+            "uc_national_insurance_on_trade": 415.79998779296875,
+            "uc_individual_earned_income_before_mif": 17698.19921875,
+            "uc_individual_earned_income": 20386.02734375,
+            "uc_is_in_gainful_self_employment": 1.0,
+            "uc_mif_applies": 1.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 0.0,
+          "universal_credit_pre_benefit_cap": 0.0,
+          "claims_universal_credit": 0.0,
+          "uc_maximum_amount": 5318.5185546875,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 0.0,
+          "uc_housing_costs_element": 0.0,
+          "uc_work_allowance": 0.0,
+          "uc_earned_income_before_work_allowance": 20386.02734375,
+          "uc_earned_income": 20386.02734375,
+          "uc_income_reduction": 5318.5185546875,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 0.0
+        },
+        "household": {
+          "household_net_income": 17518.19921875,
+          "hbai_household_net_income": 17698.19921875,
+          "household_benefits": 0.0,
+          "household_tax": 1981.800048828125,
+          "household_market_income": 19500.0,
+          "household_gross_income": 19500.0,
+          "rent": 0.0,
+          "council_tax": 0.0
+        }
+      },
+      "reform": {
+        "person": [
+          {
+            "employment_income": 0.0,
+            "self_employment_income": 19500.0,
+            "self_employment_gross_receipts": 0.0,
+            "income_tax": 1386.0,
+            "national_insurance": 415.79998779296875,
+            "ni_class_4": 415.79998779296875,
+            "taxable_self_employment_income": 19500.0,
+            "trading_allowance_deduction": 0.0,
+            "uc_income_tax_on_earnings": 1386.0,
+            "uc_income_tax_on_trade": 1386.0,
+            "uc_national_insurance_on_earnings": 415.79998779296875,
+            "uc_national_insurance_on_trade": 415.79998779296875,
+            "uc_individual_earned_income_before_mif": 17698.19921875,
+            "uc_individual_earned_income": 20386.02734375,
+            "uc_is_in_gainful_self_employment": 1.0,
+            "uc_mif_applies": 1.0
+          }
+        ],
+        "benunit": {
+          "universal_credit": 0.0,
+          "universal_credit_pre_benefit_cap": 0.0,
+          "claims_universal_credit": 0.0,
+          "uc_maximum_amount": 5318.5185546875,
+          "uc_standard_allowance": 5318.5185546875,
+          "uc_child_element": 0.0,
+          "uc_housing_costs_element": 0.0,
+          "uc_work_allowance": 0.0,
+          "uc_earned_income_before_work_allowance": 20386.02734375,
+          "uc_earned_income": 20386.02734375,
+          "uc_income_reduction": 5318.5185546875,
+          "uc_benefit_cap_reduction": 0.0,
+          "child_benefit": 0.0
+        },
+        "household": {
+          "household_net_income": 17518.19921875,
+          "hbai_household_net_income": 17698.19921875,
+          "household_benefits": 0.0,
+          "household_tax": 1981.800048828125,
+          "household_market_income": 19500.0,
+          "household_gross_income": 19500.0,
+          "rent": 0.0,
+          "council_tax": 0.0
+        }
+      },
+      "change": {
+        "income_tax": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "universal_credit": 0.0,
+        "household_benefits": 0.0,
+        "household_net_income": 0.0,
+        "hbai_household_net_income": 0.0
+      },
+      "uc_trace": null,
+      "review_comparison": null
+    }
+  ]
+}

@@ -92,5 +92,14 @@
       175,
       180
     ]
+  },
+  "review_follow_up": {
+    "trading_comment": "https://github.com/PolicyEngine/policyengine-app-v2/pull/1460#issuecomment-6472758764",
+    "savings_property_comment": "https://github.com/PolicyEngine/policyengine-app-v2/pull/1460#issuecomment-6472939282",
+    "dashboard_households_pr": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/pull/292",
+    "additional_household_pairs": 5,
+    "raw_population_accessed": false,
+    "additional_internal_population_numbers_adopted": false,
+    "final_regeneration_note": "Detailed October forecast tables and council tax are expected; retain the recorded first-estimate snapshot until replacement outputs bind the exact dataset and forecast."
   }
 }

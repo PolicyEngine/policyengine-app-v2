@@ -32,3 +32,29 @@ The source preview remains revision 5, with both entries `provisional` and recon
 ## Related team work
 
 Pavel's [Pension Tax Allowance draft, #1457](https://github.com/PolicyEngine/policyengine-app-v2/pull/1457), and [fuel-duty draft, #1459](https://github.com/PolicyEngine/policyengine-app-v2/pull/1459), informed the calculation-first presentation, explicit assumptions and separation of Treasury costings from model results. They were read as comparative examples, not formally approved by this review. Their shared line-chart work is not required by these posts' existing native bar charts.
+
+
+## Follow-up to Max's reviews
+
+Max's trading review is [comment6472758764](https://github.com/PolicyEngine/policyengine-app-v2/pull/1460#issuecomment-6472758764); savings/property is [comment6472939282](https://github.com/PolicyEngine/policyengine-app-v2/pull/1460#issuecomment-6472939282), with calculator alignment in [comment6473177137](https://github.com/PolicyEngine/policyengine-app-v2/pull/1460#issuecomment-6473177137).
+
+Addressed in the next draft revision:
+
+- Whole-pound prose/summary tables; pence retained in worked calculations and exact source records.
+- National headlines; England explicitly named for the mortgaged landlord; government reach figures explained with their different denominators.
+- Clearer source citations and reader-facing methods; build-status fields, identifiers and review history retained here and in provenance rather than the article text.
+- The UC parent and full-time sole trader are reproduced by `generate_trading_extensions.py`: five pairs passed. The £4,000-receipts parent gains £180 after £220 of UC withdrawal; the sole trader gains £520 including £120 Class4.
+- For the specified £18,000-wage parent at £1,500 receipts, the gain is £45 (tax−£100, UC−£55). Max's £79 case needs exact inputs to resolve; it was not copied into the article.
+- Missing-receipts examples demonstrate £300 instead of £100 of tax relief for the small trader, and £0 instead of £520 of tax/NI savings for the sole trader.
+- The calculator salary comparison is recorded in `dashboard_salary_comparison.json`: the pinned March earnings index grows a £45,000 2026 salary to about £46,080 in2027; taxes round to£9,014/£9,164, change£150. The article's fixed2027salary remains£45,000, taxes£8,582/£8,732. No finance-cost calculator input exists.
+- Companion household-preset work is dashboard [PR292](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/pull/292). At checked head65ea750a, the £45k/£6k/£2k recommendation had not yet replaced its older preset. No unsupported preset deep link is used.
+
+Still needed before publication:
+
+- Final population regeneration, with a component CSV/receipt binding the exact dataset bytes and updated forecast. Max's earlier ad32af7f run reproduces the saved first estimates but does not supply those component artifacts. His later correction on dashboard#290 calls for detailed October forecast tables and council tax in the final regeneration. The dataset pin has not changed automatically.
+- Weighted tax/benefit totals and household counts by decile. Person-weighted deciles with household-weighted cash means do not justify dividing one mean by the sum of means to claim a48% revenue share.
+- A bottom-decile income-source breakdown explaining its higher average loss; no cause has been inferred.
+- Max's internal260,000-person income-tax count and£71m miscellaneous-income sensitivity need scripts/aggregate receipts, output definitions and unique source-household support. The latter also needs a single shared trading/miscellaneous allowance and explicit eligibility/expense assumptions; it is not treated as a proven upper bound. These numbers are not added as reproduced results.
+- Replace preview artifact links when verified public artifacts exist; complete visual preview and editorial review.
+
+The articles remain drafts. Publication approval is separate from readiness for agent review. The trading article will have its own stacked PR, reusing this shared analysis foundation.
