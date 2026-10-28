@@ -8,7 +8,7 @@ Key figures:
 - PolicyEngine estimates £399 million of additional net government revenue and a £14 reduction in average household net income in 2027–28.
 - The government's costing, certified by the OBR, has £394 million to £412 million a year of extra income tax from 2029–30 to 2031–32, £539 million in 2028–29 and none in 2027–28. Its total in the Budget's Table 6.1, which adds the costing's other lines, is £35 million in 2027–28, £575 million in 2028–29 and £435 million to £455 million a year from 2029–30.
 
-The 2027–28 and 2028–29 figures use different collection-timing bases and are not directly comparable. From 2029–30, PolicyEngine's estimate is 9% to 11% above the costing's income tax line; see the [budgetary impact section](#budgetary-impact).
+The 2027–28 and 2028–29 figures use different collection-timing bases and are not directly comparable. From 2029–30, PolicyEngine's estimate exceeds the costing's income tax line by 9% to 11%; see the [budgetary impact section](#budgetary-impact).
 
 Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. A [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance) covers the trading allowance increase. The Budget also raises savings income tax rates; we will cover that measure separately.
 
@@ -70,7 +70,7 @@ PolicyEngine estimates that the measure raises £399 million of net government r
 | 2030–31 | 446 | 403 | 10% higher | 445 |
 | 2031–32 | 459 | 412 | 11% higher | 455 |
 
-Positive values are additional revenue. PolicyEngine measures the change in government taxes less spending, including benefit interactions. In 2029–30, its £429 million estimate is £35 million, or about 9%, above the OBR's £394 million income tax line. Percentages use unrounded figures.
+Positive values are additional revenue. PolicyEngine measures the change in government taxes less spending, including benefit interactions. In 2029–30, its £429 million estimate exceeds the OBR's £394 million income tax line by £35 million, or about 9%. Percentages use unrounded figures.
 
 **The first two years, 2027–28 and 2028–29, are not comparable without a collection-timing adjustment.** PolicyEngine scores each tax year's liabilities in that year. Self Assessment payments on account are normally based on the previous year's tax bill; the balancing payment for 2027–28 is due on 31 January 2029, alongside the first payment on account for 2028–29. [HMRC's payment guidance](https://www.gov.uk/understand-self-assessment-bill/payments-on-account) explains that schedule.
 
