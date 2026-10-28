@@ -7,7 +7,7 @@ Key figures:
 - A Universal Credit claimant in the example below keeps £180 of a £400 tax reduction, after UC falls by £220.
 - The Treasury's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) records no receipts effect in 2027–28 and forecasts a £225 million cost in 2028–29.
 
-Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. We cover the savings and property income tax increases in a [separate explainer](/uk/research/uk-autumn-budget-2026-savings-property-income-tax).
+Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. We cover the property income tax increase in a [separate explainer](/uk/research/uk-autumn-budget-2026-property-income-tax).
 
 ## How the allowance works
 
