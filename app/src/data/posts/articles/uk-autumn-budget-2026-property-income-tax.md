@@ -185,7 +185,7 @@ Income deciles rank people by their household's baseline equivalised net income 
 - The household tables show tax attributable to property income. The mortgage examples assume the full finance-cost reduction can be used.
 - The Scottish mortgage example applies the existing Finance Act rule linking relief to the UK property basic rate. The Finance Bill will set the final implementation of the new rates.
 - National estimates hold households' behaviour fixed. They do not model landlords incorporating in response to the tax change.
-- We do not report poverty, inequality or people-affected figures while their disclosure checks remain unverified.
+- This post does not report poverty, inequality or people-affected estimates.
 - Population estimates include changes in means-tested benefits. The worked household examples show income tax; a change in benefits can offset part of a household's extra tax.
 
 ## Methodology

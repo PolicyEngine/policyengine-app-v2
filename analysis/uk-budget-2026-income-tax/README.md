@@ -22,7 +22,7 @@ The savings draft (#1466) reproduces `savings-interest-chart.json`; the trading 
 
 ## Current article scope
 
-The property draft now includes national revenue and decile averages from the approved property-only snapshot in dashboard PR #290. `property-population/` retains the immutable source record, original receipt, three aggregate CSVs and the verification summary. Reach, poverty and inequality figures are omitted pending separate disclosure clearance. It is an approved branch snapshot, not independently verified as the production deployment. Recheck its identity and figures against the final released dashboard before merging, and have the new article head reviewed.
+The property draft now includes national revenue and decile averages from the approved property-only snapshot in dashboard PR #290. `property-population/` retains the immutable source record, original receipt, three aggregate CSVs and the verification summary. Reach, poverty and inequality figures are omitted pending separate disclosure clearance. It is an approved branch snapshot, not independently verified as the production deployment. Recheck its identity and figures against the final released dashboard before merging.
 
 The savings and trading posts retain household calculations and Treasury costings only. Withdrawn combined national outputs are not published in this directory.
 
@@ -36,7 +36,7 @@ Treasury forecasts are labelled separately. Compare fiscal-year Treasury receipt
 
 ## Checks before publication
 
-- Recheck the property draft's `property-population/` artifact identity, figures and comparison flags against the final released dashboard. The new population section needs review at its new head. Restore national scope in the other posts only from their own reconciled sources. Add affected-person counts or shares only when the producer exports them and they have disclosure clearance; do not infer them from average changes.
+- Recheck the property draft's `property-population/` artifact identity, figures and comparison flags against the final released dashboard. Restore national scope in the other posts only from their own reconciled sources. Add affected-person counts or shares only when the producer exports them and they have disclosure clearance; do not infer them from average changes.
 - Confirm the treatment of Scottish landlords' finance-cost relief against the final Budget implementation. The pinned model links that relief to the UK property basic rate even for Scotland.
 - Check trading allowance coverage: gross receipts and actual expenses are needed to model the deduction choice; the pinned model does not apply the allowance to its separate miscellaneous-income input.
 - Verify the final public dashboard link and add links to these explainers within the dashboard. The source checkout's README supplies the current Vercel dashboard URL.
@@ -48,7 +48,7 @@ The three articles use the site's native tables, chart blocks and cover assets. 
 
 `make format`, `make lint`, `make typecheck` and `make test` passed. The tests ran on Node 26.12.1: 6,042 app tests and 508 website tests passed, with 10 app tests skipped by the existing suite. After inserting the final chart data, the chart-parser and post-metadata checks passed again (18 tests). All 23 household comparisons and 20 curve points passed independent arithmetic checks.
 
-Browser access to the local preview was declined, so visual preview remains outstanding. Cover assets and native chart specs were validated, but this does not confirm page layout at desktop or mobile widths.
+Cover assets and native chart specifications have been validated. The rendered page layout has not been checked at desktop or mobile widths.
 
 
 ## Additional trading and calculator examples
