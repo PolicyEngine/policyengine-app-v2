@@ -501,7 +501,7 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
 }
 ```
 
-The absolute poverty rate before housing costs does not change. This rate counts people whose household's equivalised income before housing costs, after direct taxes but before taxes on spending such as fuel duty and VAT, is below 60% of the 2024-25 median, held constant in real terms. The Gini index of equivalised household net income falls by 0.01% in 2026-27 and 0.02% in 2027-28.
+The absolute poverty rate before housing costs does not change. This rate counts people whose household's equivalised income before housing costs, after direct taxes but before taxes on spending such as fuel duty and VAT, falls below 60% of the 2024-25 median, held constant in real terms. The Gini index of equivalised household net income falls by 0.01% in 2026-27 and 0.02% in 2027-28.
 
 ## Appendix
 
@@ -515,7 +515,7 @@ Net income is PolicyEngine UK's household net income: income from all sources an
 - **Couple with two children on Universal Credit:** both aged 35, with children aged 8 and 5. One earns £25,000. They rent privately for £9,600 a year, pay £1,800 in council tax and claim Universal Credit.
 - **Pensioner on Housing Benefit and Council Tax Reduction:** aged 72, on the full new State Pension (£13,036 in 2027-28). They rent from the council for £7,800 a year and pay £1,600 in council tax. Their income exceeds the Pension Credit guarantee, so they get no Pension Credit. Their net income includes the £200 Winter Fuel Payment.
 
-The model's pump prices are fixed and below October 2026 prices, when diesel exceeded £2 a litre, so the same spending buys fewer litres today.
+The model uses fixed pump prices below those of October 2026, when diesel exceeded £2 a litre, so the same spending buys fewer litres today.
 
 ### Projections, prices and coverage
 
@@ -529,7 +529,7 @@ PolicyEngine's Autumn Budget 2026 dashboard runs the same measure on its represe
 
 ### Comparison with the Treasury and the OBR
 
-PolicyEngine's total cost is the fall in fuel duty plus the fall in VAT on the lower pump price; no benefit changes, so it equals the rise in household net income, and negative figures are costs. VAT is 17% of the total. The government's estimate appears in the OBR's policy table as fuel duty receipts only, −£574 million and −£782 million, with no VAT line (Economic and fiscal outlook, October 2026, detailed forecast tables, policy, Table 1.1). The OBR used it but could not certify it: small changes were made to the policy after the OBR's certification deadline, and the OBR will finalise the certification at its next forecast (Economic and fiscal outlook, October 2026, chapter 3, footnote 1). The two estimates also differ in coverage and timing. PolicyEngine covers the petrol and diesel that households buy, which carry £13.4 billion of fuel duty in 2026-27 in PolicyEngine's data; the OBR expects £24 billion of fuel duty receipts in that year. The Treasury's base is every litre of taxable fuel made available for use in the UK, which includes fuel that businesses buy, and its costing allows for people buying more fuel when pump prices fall (policy costings, page 13). PolicyEngine gives the change in liability in each tax year, from 6 April; the government's estimate gives the change in receipts in each fiscal year, from 1 April.
+PolicyEngine's total cost is the fall in fuel duty plus the fall in VAT on the lower pump price; no benefit changes, so it equals the rise in household net income, and negative figures are costs. VAT is 17% of the total. The government's estimate appears in the OBR's policy table as fuel duty receipts only, −£574 million and −£782 million, with no VAT line (Economic and fiscal outlook, October 2026, detailed forecast tables, policy, Table 1.1). The OBR used it but could not certify it: the policy changed slightly after the OBR's certification deadline, and the OBR will finalise the certification at its next forecast (Economic and fiscal outlook, October 2026, chapter 3, footnote 1). The two estimates also differ in coverage and timing. PolicyEngine covers the petrol and diesel that households buy, which carry £13.4 billion of fuel duty in 2026-27 in PolicyEngine's data; the OBR expects £24 billion of fuel duty receipts in that year. The Treasury's base is every litre of taxable fuel made available for use in the UK, which includes fuel that businesses buy, and its costing allows for people buying more fuel when pump prices fall (policy costings, page 13). PolicyEngine gives the change in liability in each tax year, from 6 April; the government's estimate gives the change in receipts in each fiscal year, from 1 April.
 
 ### Assumptions and limitations
 
