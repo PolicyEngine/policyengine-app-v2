@@ -11,6 +11,25 @@ import {
 const fmt = (v: number) => `$${v}`;
 
 describe('computeWaterfallData', () => {
+  it('given a standalone item then anchors it to 0 and leaves the running total alone', () => {
+    const items: WaterfallItem[] = [
+      { name: 'A', value: 10 },
+      { name: 'Total', value: 0, isTotal: true },
+      { name: 'Apart', value: -4, isStandalone: true },
+    ];
+
+    const result = computeWaterfallData(items, fmt);
+
+    expect(result[1]).toMatchObject({ value: 10, isTotal: true });
+    expect(result[2]).toMatchObject({
+      base: -4,
+      value: -4,
+      range: [-4, 0],
+      isTotal: false,
+      isStandalone: true,
+    });
+  });
+
   it('stacks all-positive values upward from 0', () => {
     const items: WaterfallItem[] = [
       { name: 'A', value: 10 },
@@ -302,6 +321,19 @@ describe('getWaterfallDomain', () => {
 });
 
 describe('computeWaterfallConnectors', () => {
+  it('given a standalone bar then no connector joins it', () => {
+    const data = computeWaterfallData(
+      [
+        { name: 'A', value: 10 },
+        { name: 'Total', value: 0, isTotal: true },
+        { name: 'Apart', value: -4, isStandalone: true },
+      ],
+      fmt
+    );
+
+    expect(computeWaterfallConnectors(data)).toEqual([{ y: 10, fromIndex: 0, toIndex: 1 }]);
+  });
+
   it('connects all-positive bars at running totals', () => {
     const data = computeWaterfallData(
       [

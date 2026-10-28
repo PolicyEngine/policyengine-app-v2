@@ -8,9 +8,11 @@ import BudgetaryImpactByProgramSubPage, {
 import DistributionalImpactIncomeAverageSubPage from '@/components/flagship/report/charts/DistributionalImpactIncomeAverageSubPage';
 import WinnersLosersIncomeDecileSubPage from '@/components/flagship/report/charts/WinnersLosersIncomeDecileSubPage';
 import {
+  EMPLOYER_NI_TOTAL,
   REPORT_4332_OUTPUT,
   UC_FREEZE_TOTAL,
   withBudget,
+  withEmployerNIBudget,
   withFlaggedUCFreezeBudget,
   withUCFreezeBudget,
   withUKBreakdowns,
@@ -91,6 +93,78 @@ describe('getChangedPrograms with is_tax flags', () => {
   });
 });
 
+describe('getChangedPrograms with the tax credits row', () => {
+  test('given tax credits with their own rows then the combined row is dropped', () => {
+    // Given: tax_credits is Working Tax Credit and Child Tax Credit together.
+    const output = {
+      ...withBudget(UK_OUTPUT, { federal: 0, state: 0, benefits: -300e6 }),
+      detailed_budget: {
+        working_tax_credit: { baseline: 1e9, reform: 0.9e9, difference: -100e6 },
+        child_tax_credit: { baseline: 2e9, reform: 1.8e9, difference: -200e6 },
+        tax_credits: { baseline: 3e9, reform: 2.7e9, difference: -300e6 },
+      },
+    } as typeof UK_OUTPUT;
+
+    // When
+    const programs = getChangedPrograms(output, {});
+
+    // Then: the two rows add up to the total with nothing counted twice.
+    expect(programs.map((program) => program.key)).toEqual([
+      'working_tax_credit',
+      'child_tax_credit',
+    ]);
+    expect(getOtherProgramsAmount(300e6, programs)).toBe(0);
+  });
+
+  test('given only the tax credits entitlement row then it does not count towards the total', () => {
+    // Given: tax_credits is entitlement before take-up; the total counts the
+    // claimed Working Tax Credit and Child Tax Credit, which have no rows here.
+    const output = {
+      ...withBudget(UK_OUTPUT, { federal: 0, state: 0, benefits: -250e6 }),
+      detailed_budget: { tax_credits: { baseline: 3e9, reform: 2.7e9, difference: -300e6 } },
+    } as typeof UK_OUTPUT;
+
+    // When
+    const programs = getChangedPrograms(output, {});
+
+    // Then: the claimed amounts are the other programmes.
+    expect(programs).toEqual([{ key: 'tax_credits', label: 'tax_credits', value: 300e6 }]);
+    expect(getOtherProgramsAmount(250e6, programs)).toBe(250e6);
+  });
+});
+
+describe('getChangedPrograms with the VAT row', () => {
+  test('given a VAT change and no vat_change row then VAT counts towards the total', () => {
+    // Given: the total counts VAT through vat_change, which changes by as much as VAT.
+    const output = {
+      ...withBudget(UK_OUTPUT, { federal: 2e9, state: 0 }),
+      detailed_budget: { vat: { baseline: 170e9, reform: 172e9, difference: 2e9 } },
+    } as typeof UK_OUTPUT;
+
+    // When
+    const programs = getChangedPrograms(output, {});
+
+    // Then
+    expect(programs.map((program) => program.key)).toEqual(['vat']);
+    expect(getOtherProgramsAmount(2e9, programs)).toBe(0);
+  });
+
+  test('given both VAT rows then the vat row is dropped', () => {
+    const output = {
+      ...withBudget(UK_OUTPUT, { federal: 2e9, state: 0 }),
+      detailed_budget: {
+        vat: { baseline: 170e9, reform: 172e9, difference: 2e9, is_tax: true },
+        vat_change: { baseline: 0, reform: 2e9, difference: 2e9, is_tax: true },
+      },
+    } as typeof UK_OUTPUT;
+
+    const programs = getChangedPrograms(output, {});
+
+    expect(programs.map((program) => program.key)).toEqual(['vat_change']);
+    expect(getOtherProgramsAmount(2e9, programs)).toBe(0);
+  });
+});
+
 describe('getOtherProgramsAmount', () => {
   test('given programs that add up to the total then there is nothing else', () => {
     expect(getOtherProgramsAmount(1.5e9, [{ value: 2e9 }, { value: -0.5e9 }])).toBe(0);
@@ -107,6 +181,17 @@ describe('getOtherProgramsAmount', () => {
 
   test('given a total that no listed program explains then returns all of it', () => {
     expect(getOtherProgramsAmount(17e6, [])).toBe(17e6);
+  });
+
+  test('given a row the total leaves out then it does not count towards the total', () => {
+    // Given: the employer NI threshold rise, whose £15.5bn of employer NI the total leaves out.
+    const programs = getChangedPrograms(withEmployerNIBudget(REPORT_4332_OUTPUT), {});
+
+    // When
+    const other = getOtherProgramsAmount(EMPLOYER_NI_TOTAL, programs);
+
+    // Then: the other rows add up to the total, so there is nothing else.
+    expect(other).toBe(0);
   });
 });
 
@@ -135,6 +220,24 @@ describe('BudgetaryImpactByProgramSubPage', () => {
 
     expect(screen.queryByText('Other programmes')).not.toBeInTheDocument();
     expect(screen.getByText('£25.0m')).toBeInTheDocument();
+  });
+
+  test('given a row the total leaves out then no other programmes bar offsets it', () => {
+    // Given
+    const output = withEmployerNIBudget(REPORT_4332_OUTPUT);
+
+    // When
+    const { container } = render(
+      <BudgetaryImpactByProgramSubPage output={output} fillHeight />,
+      'uk'
+    );
+
+    // Then: the bars before the total add up to it, and employer NI stands after it.
+    expect(screen.queryByText('Other programmes')).not.toBeInTheDocument();
+    expect(screen.getByText('£5.3bn')).toBeInTheDocument();
+    // The axis label wraps over two lines.
+    expect(container).toHaveTextContent(/Total.*Employer NI \(not\s*in total\)/);
+    expect(screen.getByText('−£15.5bn')).toBeInTheDocument();
   });
 
   test('given programmes that add up to the total then there is no other programmes bar', () => {
