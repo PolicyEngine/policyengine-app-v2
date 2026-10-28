@@ -1,42 +1,42 @@
-The [Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#box-5atriple-lock-adjustment175) on 28 October 2026 set out how the government will change the State Pension triple lock. The triple lock continues through April 2029. From April 2030, "the State Pension rises each year by the highest of 2.5%, inflation, or the amount required to maintain its value relative to earnings as reached in April 2029." The government estimates that this adjusted triple lock reduces State Pension spending by £15 billion a year by the late 2030s and £50 billion a year by the late 2040s, and says the savings will help build a National Care Service in England that provides older people with personal care free at the point of use.
+The [Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#box-5atriple-lock-adjustment175) on 28 October 2026 set out how the government will change the State Pension Triple Lock. The Triple Lock continues through April 2029. From April 2030, "the State Pension rises each year by the highest of 2.5%, inflation, or the amount required to maintain its value relative to earnings as reached in April 2029." The government estimates that its adjusted Triple Lock reduces State Pension spending by £15 billion a year by the late 2030s and £50 billion a year by the late 2040s, and says the savings will help build a National Care Service in England that provides older people with personal care free at the point of use.
 
-Prime Minister Andy Burnham announced the change at Labour's conference on 29 September. Our [triple lock dashboard](https://www.policyengine.org/uk/triple-lock) simulates 50,000 paths of prices and earnings and runs a weighted sample of them through PolicyEngine UK under both rules. Until its next release, the dashboard calls the policy by its earlier name, the Burnham plan. Every PolicyEngine figure below comes from the dashboard's pre-Budget release, which uses the OBR's March 2026 forecast. The figures are provisional, and we are rebuilding them on the Budget's inputs.
+Prime Minister Andy Burnham announced the change at Labour's conference on 29 September. Our [Triple Lock dashboard](https://www.policyengine.org/uk/triple-lock) simulates 50,000 paths of prices and earnings and runs a weighted sample of them through PolicyEngine UK under both rules. Until its next release, the dashboard calls the policy by its earlier name, the Burnham plan. Every PolicyEngine figure below comes from the dashboard's pre-Budget release, which uses the March 2026 forecast of the Office for Budget Responsibility (OBR). The figures are provisional, and we are rebuilding them on the Budget's inputs.
 
 Key findings for 2039-40, before the Budget, in cash terms for the UK:
 
-- The adjusted triple lock saves £11.1 billion on average across the paths, or £7.9 billion once income tax and benefits respond. In Great Britain, the area the government's figure covers, the gross saving is £10.8 billion.
+- The adjusted Triple Lock saves £11.1 billion on average across the paths, or £7.9 billion once income tax and benefits respond. In Great Britain, the area the government's figure covers, the gross saving is £10.8 billion.
 - The saving comes from the years when inflation or 2.5% beats earnings growth. On the OBR's central path, where earnings growth sets every rise after April 2031, it is £0.9 billion. The middle 80% of paths save between £3.9 billion and £18.9 billion.
-- The full new State Pension is £931 a year lower on average than under the triple lock.
+- The full new State Pension is £931 a year lower on average than under the Triple Lock.
 - 27% of UK households lose more than £1 a year, mostly pensioner households.
 
 [Explore the dashboard](https://www.policyengine.org/uk/triple-lock) | [Read the code](https://github.com/PolicyEngine/uk-triple-lock)
 
 ## What changes in April 2030
 
-Each April, the triple lock raises the basic and new State Pension by the highest of three figures from the year before: September's CPI inflation, earnings growth over May to July, and 2.5%. The Budget and DWP's [Triple Lock reform factsheet](https://www.gov.uk/government/publications/state-pension-uprating-analysis-2026/triple-lock-reform-factsheet) of 6 October set out the adjusted triple lock. It keeps inflation and 2.5% as minimum rises and replaces earnings growth with a floor on the pension's level: the pension's value relative to earnings as reached in April 2029 becomes a minimum, and each year's rise must keep the pension at or above it.
+Each April, the Triple Lock raises the basic and new State Pension by the highest of three figures from the year before: September's CPI inflation, earnings growth over May to July, and 2.5%. The Budget and DWP's [Triple Lock reform factsheet](https://www.gov.uk/government/publications/state-pension-uprating-analysis-2026/triple-lock-reform-factsheet) of 6 October set out the government's adjusted Triple Lock. It keeps inflation and 2.5% as minimum rises and replaces earnings growth with a floor on the pension's level: the pension's value relative to earnings as reached in April 2029 becomes a minimum, and each year's rise must keep the pension at or above it.
 
-DWP's factsheet measures inflation by the consumer price index, and neither document names the month or the measure of earnings. We use the ones the triple lock uses now, September CPI and May to July growth in average weekly earnings, and we read "its value relative to earnings as reached in April 2029" as the pension's 2029-30 level.
+DWP's factsheet measures inflation by the consumer price index, and neither document names the month or the measure of earnings. We use the ones the Triple Lock uses now, September CPI and May to July growth in average weekly earnings, and we read "its value relative to earnings as reached in April 2029" as the pension's 2029-30 level.
 
-While the pension sits at its April 2029 ratio to earnings, the two rules pay the same rise every year. They part after a year in which inflation or 2.5% beats earnings growth. That rise lifts the pension above its ratio to earnings under both rules, and the triple lock keeps the lift for good. When earnings growth next leads, the adjusted triple lock pays the higher of inflation and 2.5% while the pension stays above its floor, and in the year earnings catch up, just enough to bring the pension back to it.
+While the pension sits at its April 2029 ratio to earnings, the two rules pay the same rise every year. They part after a year in which inflation or 2.5% beats earnings growth. That rise lifts the pension above its ratio to earnings under both rules, and the Triple Lock keeps the lift for good. When earnings growth next leads, the adjusted Triple Lock pays the higher of inflation and 2.5% while the pension stays above its floor, and in the year earnings catch up, just enough to bring the pension back to it.
 
-On the OBR's central path, earnings growth runs below 2.5% in the inputs to the rises of April 2028 to April 2031, so both rules raise the pension by 2.5% in each of those years. The rises of April 2028 and 2029 come before the switch and set the 2029-30 level that the adjusted triple lock protects. The rises of April 2030 and 2031 lift the pension above it. In April 2032, earnings growth of 2.7% sets the triple lock's rise, while the adjusted triple lock pays 2.5%. In April 2033, the triple lock pays 3.0% and the adjusted triple lock pays 2.8%, the rise that takes the pension back to its earnings path. From then on the two rise together, and in 2039-40 the adjusted triple lock pays a full new State Pension of £18,639 a year against the triple lock's £18,712, £73 lower.
+On the OBR's central path, earnings growth runs below 2.5% in the inputs to the rises of April 2028 to April 2031, so both rules raise the pension by 2.5% in each of those years. The rises of April 2028 and 2029 come before the switch and set the 2029-30 level that the adjusted Triple Lock protects. The rises of April 2030 and 2031 lift the pension above it. In April 2032, earnings growth of 2.7% sets the Triple Lock's rise, while the adjusted Triple Lock pays 2.5%. In April 2033, the Triple Lock pays 3.0% and the adjusted Triple Lock pays 2.8%, the rise that takes the pension back to its earnings path. From then on the two rise together, and in 2039-40 the adjusted Triple Lock pays a full new State Pension of £18,639 a year against the Triple Lock's £18,712, £73 lower.
 
 ## The ratchet
 
-The Budget says the change "removes the 'ratchet' effect, whereby the State Pension rises ever higher relative to earnings." Replaying the triple lock on the latest ONS figures for the 16 rises from April 2011 to April 2026, September CPI set the rise six times, earnings growth six times and the 2.5% floor four times. Over those 16 rises the pension grew 88%, against 66% for earnings and 60% for prices, leaving it 13% higher than an earnings link alone would have.
+The Budget says the change "removes the 'ratchet' effect, whereby the State Pension rises ever higher relative to earnings." Replaying the Triple Lock on the latest ONS figures for the 16 rises from April 2011 to April 2026, September CPI set the rise six times, earnings growth six times and the 2.5% floor four times. Over those 16 rises the pension grew 88%, against 66% for earnings and 60% for prices, leaving it 13% higher than an earnings link alone would have.
 
-The same replay shows what the adjusted triple lock would have changed. Had it started in April 2012, the full new State Pension would be £11,758 a year in 2026-27, 6.3% below the £12,548 paid. Full PolicyEngine UK runs put the saving from that lower pension at £7.3 billion in 2026-27, or £5.2 billion net of tax and benefits. In April 2022, when Parliament suspended the earnings link, both rules use CPI.
+The same replay shows what the adjusted Triple Lock would have changed. Had it started in April 2012, the full new State Pension would be £11,758 a year in 2026-27, 6.3% below the £12,548 paid. Full PolicyEngine UK runs put the saving from that lower pension at £7.3 billion in 2026-27, or £5.2 billion net of tax and benefits. In April 2022, when Parliament suspended the earnings link, both rules use CPI.
 
 ## What it saves
 
-Averaged across 50,000 simulated paths of prices and earnings, the adjusted triple lock saves £3.2 billion in 2034-35 and £11.1 billion in 2039-40, or £2.3 billion and £7.9 billion net of tax and benefits. It first pays less in 2031-32.
+Averaged across 50,000 simulated paths of prices and earnings, the adjusted Triple Lock saves £3.2 billion in 2034-35 and £11.1 billion in 2039-40, or £2.3 billion and £7.9 billion net of tax and benefits. It first pays less in 2031-32.
 
-The Budget notes that under the triple lock, spending "depends on which of prices, earnings or 2.5% is highest in each year, and on how those differences compound over time." The saving depends on the same things, so we average over many paths. A monthly model of CPI and earnings, fitted to 2000 to 2026 without the furlough months, simulates 50,000 paths whose average calendar-year CPI and earnings growth match the OBR's central path in every year: its March 2026 forecast to 2030 and its long-term projections after. We run 160 of those paths through PolicyEngine UK under both rules and weight them to stand for all 50,000.
+The Budget notes that under the Triple Lock, spending "depends on which of prices, earnings or 2.5% is highest in each year, and on how those differences compound over time." The saving depends on the same things, so we average over many paths. A monthly model of CPI and earnings, fitted to 2000 to 2026 without the furlough months, simulates 50,000 paths whose average calendar-year CPI and earnings growth match the OBR's central path in every year: its March 2026 forecast to 2030 and its long-term projections after. We run 160 of those paths through PolicyEngine UK under both rules and weight them to stand for all 50,000.
 
 ```chart
 {
   "type": "bar",
-  "title": "Saving from the adjusted triple lock against the triple lock, 2031-32 to 2039-40",
+  "title": "Saving from the adjusted Triple Lock against the Triple Lock, 2031-32 to 2039-40",
   "subtitle": "Average across 50,000 paths of prices and earnings, UK, £ billion in cash terms. Pre-Budget and provisional.",
   "xKey": "year",
   "series": [
@@ -60,9 +60,9 @@ The Budget notes that under the triple lock, spending "depends on which of price
 }
 ```
 
-On the OBR's central path, earnings growth leads every year after April 2031, so the rules differ only through the catch-up described above, and the saving in 2039-40 is £0.9 billion. Simulated paths swap the lead more often. Each year that inflation or 2.5% beats earnings growth lifts the triple lock's pension for good, while the adjusted triple lock waits for earnings to catch up. Because the saving comes from those years, the saving on the average path is far below the average saving: £0.9 billion against £11.1 billion.
+On the OBR's central path, earnings growth leads every year after April 2031, so the rules differ only through the catch-up described above, and the saving in 2039-40 is £0.9 billion. Simulated paths swap the lead more often. Each year that inflation or 2.5% beats earnings growth lifts the Triple Lock's pension for good, while the adjusted Triple Lock waits for earnings to catch up. Because the saving comes from those years, the saving on the average path is far below the average saving: £0.9 billion against £11.1 billion.
 
-The OBR's long-term projections assume the triple lock raises the pension 0.6 points a year faster than earnings. On our paths, the triple lock beats May to July earnings growth by 0.55 points a year in the rises of April 2034 to April 2039, while the adjusted triple lock rises 0.08 points a year more slowly than earnings. Applying the OBR's assumption to the triple lock on the central path gives a saving of £10.3 billion in 2039-40. Shifting earnings growth half a point up or down from 2031 moves the average to £11.0 billion or £10.4 billion.
+The OBR's long-term projections assume the Triple Lock raises the pension 0.6 points a year faster than earnings. On our paths, the Triple Lock beats May to July earnings growth by 0.55 points a year in the rises of April 2034 to April 2039, while the adjusted Triple Lock rises 0.08 points a year more slowly than earnings. Applying the OBR's assumption to the Triple Lock on the central path gives a saving of £10.3 billion in 2039-40. Shifting earnings growth half a point up or down from 2031 moves the average to £11.0 billion or £10.4 billion.
 
 ```chart
 {
@@ -76,7 +76,7 @@ The OBR's long-term projections assume the triple lock raises the pension 0.6 po
   ],
   "data": [
     { "scenario": "OBR central forecast", "gross": 0.9, "net": 0.6 },
-    { "scenario": "OBR long-term triple lock assumption", "gross": 10.3, "net": 7.3 },
+    { "scenario": "OBR long-term Triple Lock assumption", "gross": 10.3, "net": 7.3 },
     { "scenario": "Average across paths", "gross": 11.1, "net": 7.9 },
     { "scenario": "Earnings 0.5 points lower from 2031", "gross": 10.4, "net": 7.4 },
     { "scenario": "Earnings 0.5 points higher from 2031", "gross": 11.0, "net": 7.7 }
@@ -112,29 +112,31 @@ With a lower State Pension, pensioners pay less income tax and receive more mean
 }
 ```
 
-In the model, Housing Benefit and council tax reduction respond only for households already claiming them, so nobody the adjusted triple lock makes newly eligible starts claiming. That understates those offsets and so overstates the net saving.
+In the model, Housing Benefit and council tax reduction respond only for households already claiming them, so nobody the adjusted Triple Lock makes newly eligible starts claiming. That understates those offsets and so overstates the net saving.
 
-## Against the government's £15 billion
+## Against the official estimates
 
-The government's figure comes from the Department for Work and Pensions' [State Pension uprating analysis](https://www.gov.uk/government/publications/state-pension-uprating-analysis-2026/state-pension-uprating), which costs the adjusted triple lock at £15 billion in 2039-40 and £50 billion in 2049-50, in cash terms. It covers direct spending in Great Britain and excludes effects on tax and debt interest, so the closest of our figures is the gross saving in Great Britain: £10.8 billion in 2039-40.
+The government's figure comes from the Department for Work and Pensions' [State Pension uprating analysis](https://www.gov.uk/government/publications/state-pension-uprating-analysis-2026/state-pension-uprating), which costs the adjusted Triple Lock at £15 billion in 2039-40 and £50 billion in 2049-50, in cash terms. It covers direct spending in Great Britain and excludes effects on tax and debt interest, so the closest of our figures is the gross saving in Great Britain: £10.8 billion in 2039-40.
 
 The two estimates differ in method, and DWP's published assumptions do not allow a like-for-like comparison ([HL3774](https://questions-statements.parliament.uk/written-questions/detail/2026-10-05/hl3774)):
 
 - DWP projects the population and each person's pension with Pensim3, its dynamic microsimulation model. We reweight today's Family Resources Survey households to the ONS population projection by age and sex, holding each person's age fixed.
-- Our survey counts less State Pension in payment than DWP does: £125.9 billion in Great Britain in 2026-27, against DWP's £148.3 billion, both excluding payments abroad. The adjusted triple lock lowers every basic and new State Pension by the same proportion, so the saving scales with that part of the bill. DWP publishes the basic and new State Pension only with payments abroad included, so we cannot match that part exactly.
+- Our survey counts less State Pension in payment than DWP does: £125.9 billion in Great Britain in 2026-27, against DWP's £148.3 billion, both excluding payments abroad. The adjusted Triple Lock lowers every basic and new State Pension by the same proportion, so the saving scales with that part of the bill. DWP publishes the basic and new State Pension only with payments abroad included, so we cannot match that part exactly.
 - DWP's figure rests on one path of uprating, which it does not state. Ours is an average across simulated paths; on the OBR's central path alone, our UK saving is £0.9 billion.
 
 Our projections end in 2039-40, so we have no figure to set against the £50 billion.
 
+The OBR's October 2026 [Economic and fiscal outlook](https://www.gov.uk/government/publications/october-2026-economic-and-fiscal-outlook) builds the adjusted Triple Lock into its forecast from 2030-31, but finds that it "does not currently affect state pension costs over the forecast period", because 2.5% applies under both rules in 2030-31 and 2031-32 (paragraph 3.50). Our central path, on the OBR's March forecast, also raises the pension by 2.5% under both rules in April 2030 and April 2031. The OBR gives no figure for 2039-40. It replays both rules on prices and earnings since 1990, finding State Pension payments 1.4% lower each year on average than under the Triple Lock, and estimates provisionally that if the next 50 years resembled the last 35, the change would leave debt in 2075-76 around 25% of GDP lower than keeping the Triple Lock (paragraphs 3.51 and 3.52). That replay holds the pension to its 1990 value relative to earnings, so its percentages do not compare directly with our replay from 2012.
+
 ## Who has less income
 
-In 2039-40, 27% of UK households lose more than £1 a year under the adjusted triple lock, mostly pensioner households, and the share is about 27% across the middle 80% of paths. The size of the loss varies. On the dashboard's typical path, selected near the median of the simulated pension gap, the adjusted triple lock saves £10.3 billion in 2039-40 and the full new State Pension is £867 a year lower. Pensioner couples have £1,122 a year less on average, 1.5% of their income, and single pensioners £418 less, 1.1%. As a share of income, households in the second and third income deciles lose most.
+In 2039-40, 27% of UK households lose more than £1 a year under the adjusted Triple Lock, mostly pensioner households, and the share is about 27% across the middle 80% of paths. The size of the loss varies. On the dashboard's typical path, selected near the median of the simulated pension gap, the adjusted Triple Lock saves £10.3 billion in 2039-40 and the full new State Pension is £867 a year lower. Pensioner couples have £1,122 a year less on average, 1.5% of their income, and single pensioners £418 less, 1.1%. As a share of income, households in the second and third income deciles lose most.
 
 ```chart
 {
   "type": "bar",
   "title": "Change in household income by income decile, 2039-40",
-  "subtitle": "Adjusted triple lock against the triple lock, on the typical path (selected near the median pension gap). Percent of household net income.",
+  "subtitle": "Adjusted Triple Lock against the Triple Lock, on the typical path (selected near the median pension gap). Percent of household net income.",
   "xKey": "decile",
   "series": [{ "key": "change", "name": "Change in household income", "color": "primary" }],
   "data": [
@@ -189,7 +191,7 @@ We are rebuilding the analysis on the Budget's inputs, with a newer release of P
 
 ### The rules
 
-Both rules follow the triple lock until April 2029: each April the basic and new State Pension rise by the highest of September CPI, May to July growth in average weekly earnings (total pay) and 2.5%, with each input taken to 0.1 point. From April 2030 the adjusted triple lock raises the pension by the higher of September CPI and 2.5%, or by more where needed to keep it at its 2029-30 level grown by earnings since; that top-up is rounded up to 0.1 point. Only the basic and new State Pension differ between the rules. Under both, the additional State Pension rises with September CPI and the Pension Credit guarantee with May to July earnings.
+Both rules follow the Triple Lock until April 2029: each April the basic and new State Pension rise by the highest of September CPI, May to July growth in average weekly earnings (total pay) and 2.5%, with each input taken to 0.1 point. From April 2030 the adjusted Triple Lock raises the pension by the higher of September CPI and 2.5%, or by more where needed to keep it at its 2029-30 level grown by earnings since; that top-up is rounded up to 0.1 point. Only the basic and new State Pension differ between the rules. Under both, the additional State Pension rises with September CPI and the Pension Credit guarantee with May to July earnings.
 
 ### Prices and earnings
 
@@ -207,7 +209,7 @@ The survey households are reweighted each year after 2025 so that each age and s
 
 - Housing Benefit and council tax reduction respond only for households already claiming them, which overstates the net saving.
 - In the survey runs, rents and council tax stay at their 2030 levels after 2030, and dividend, property, savings and self-employment income do not follow the path.
-- Nobody changes how much they work, save or claim in response to the adjusted triple lock.
+- Nobody changes how much they work, save or claim in response to the adjusted Triple Lock.
 - Costs are for the UK in cash terms; comparisons with DWP use our figures for Great Britain.
 - Household weights sit 0.44% below their calibrated levels in every year ([policyengine-uk-data#538](https://github.com/PolicyEngine/policyengine-uk-data/issues/538)).
 
