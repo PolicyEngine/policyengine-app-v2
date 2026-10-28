@@ -732,9 +732,220 @@ The effective marginal tax rate is the share of an extra £1 of income that the 
 
 Without the PTA, the rate is 100% up to £12,932, because Pension Credit falls by £1 for each £1 of income, and 20% above that. With the PTA, the rate is 100% up to the minimum guarantee of £12,860, 0% from there to £13,038, 53.3% from £13,038 to £13,319, and 20% above that. The 53.3% is the 20% basic rate plus 33.3% from the taper: a pensioner in that range keeps 47p of each extra £1 of total income, against 80p without the PTA. A Scottish taxpayer pays the 19% starter rate on this income, so the rate in the withdrawal range is 52.3%.
 
+## Population results
+
+We ran the PTA on PolicyEngine UK's representative sample of UK households, Microcosm UK, set up as PolicyEngine's Autumn Budget 2026 dashboard sets up its runs: the certified dataset that `policyengine` 6.11.1 pins, PolicyEngine UK 2.151.0, and the OBR's October 2026 forecast. The results are static, with no behavioural response, and provisional: the dashboard has not yet published its own run for this measure, and its figures may differ.
+
+| Tax year | Income tax: PolicyEngine | Income tax: HM Treasury (Table 6.1) | Household net income: PolicyEngine |
+| -------- | ------------------------ | ----------------------------------- | ---------------------------------- |
+| 2026-27  | £0                       | £0                                  | £0                                 |
+| 2027-28  | −£42 million             | −£45 million                        | +£30 million                       |
+| 2028-29  | −£113 million            | −£90 million                        | +£83 million                       |
+| 2029-30  | −£193 million            | −£150 million                       | +£144 million                      |
+| 2030-31  | £0                       | +£50 million                        | £0                                 |
+| 2031-32  | £0                       | −£15 million                        | £0                                 |
+
+PolicyEngine's estimate is within £3 million of the Treasury's in 2027-28 and higher in the next two years. The two differ in method: the Treasury counts receipts in fiscal years, and its +£50 million and −£15 million fall after the PTA ends on 5 April 2030, while PolicyEngine counts tax liabilities in each tax year, so it shows nothing after 2029-30. They also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK.
+
+Household net income rises by less than income tax falls. In 2027-28, £12 million of the £42 million tax cut, 29%, goes back through lower Pension Credit, Housing Benefit and Council Tax Reduction, and through lost free TV licences.
+
+About 528,000 households, with 1.0 million people, gain in 2027-28, an average of £56 a year each. This is close to the explainer's estimate of 500,000 pensioners. The number rises to 860,000 households in 2028-29 and 1.07 million in 2029-30, as the PTA grows with the State Pension, with average gains of £96 and £134. In 2027-28, no household loses. In 2028-29 and 2029-30, about 3,000 households lose. Household 5 above shows one way this can happen: a claimant aged 75 or over who leaves Pension Credit and loses the free TV licence.
+
+Gains are largest in the lower half of the income distribution and close to zero in the top three deciles. Deciles rank households by equivalised household net income.
+
+```chart
+{
+  "type": "bar",
+  "title": "Average change in household net income by income decile",
+  "subtitle": "Change from the Pension Tax Allowance, all households",
+  "xKey": "decile",
+  "series": [
+    {
+      "key": "y2027",
+      "name": "2027-28",
+      "color": "primary"
+    },
+    {
+      "key": "y2028",
+      "name": "2028-29",
+      "color": "secondary"
+    },
+    {
+      "key": "y2029",
+      "name": "2029-30",
+      "color": "tertiary"
+    }
+  ],
+  "data": [
+    {
+      "decile": "1st",
+      "y2027": 1.04,
+      "y2028": 3.44,
+      "y2029": 6.44
+    },
+    {
+      "decile": "2nd",
+      "y2027": 1.54,
+      "y2028": 4.35,
+      "y2029": 7.6
+    },
+    {
+      "decile": "3rd",
+      "y2027": 1.77,
+      "y2028": 5.65,
+      "y2029": 10.45
+    },
+    {
+      "decile": "4th",
+      "y2027": 1.47,
+      "y2028": 3.99,
+      "y2029": 6.65
+    },
+    {
+      "decile": "5th",
+      "y2027": 1.45,
+      "y2028": 3.74,
+      "y2029": 5.95
+    },
+    {
+      "decile": "6th",
+      "y2027": 0.91,
+      "y2028": 2.35,
+      "y2029": 3.94
+    },
+    {
+      "decile": "7th",
+      "y2027": 1.39,
+      "y2028": 2.95,
+      "y2029": 4.53
+    },
+    {
+      "decile": "8th",
+      "y2027": 0.3,
+      "y2028": 0.61,
+      "y2029": 1.18
+    },
+    {
+      "decile": "9th",
+      "y2027": 0.13,
+      "y2028": 0.56,
+      "y2029": 0.95
+    },
+    {
+      "decile": "10th",
+      "y2027": 0.11,
+      "y2028": 0.37,
+      "y2029": 0.71
+    }
+  ],
+  "yLabel": "Average change in net income",
+  "format": {
+    "prefix": "£",
+    "decimals": 0
+  },
+  "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast; provisional."
+}
+```
+
+```chart
+{
+  "type": "bar",
+  "title": "Change in household net income by income decile, as a share of income",
+  "subtitle": "Change from the Pension Tax Allowance, all households",
+  "xKey": "decile",
+  "series": [
+    {
+      "key": "y2027",
+      "name": "2027-28",
+      "color": "primary"
+    },
+    {
+      "key": "y2028",
+      "name": "2028-29",
+      "color": "secondary"
+    },
+    {
+      "key": "y2029",
+      "name": "2029-30",
+      "color": "tertiary"
+    }
+  ],
+  "data": [
+    {
+      "decile": "1st",
+      "y2027": 0.004,
+      "y2028": 0.0132,
+      "y2029": 0.0245
+    },
+    {
+      "decile": "2nd",
+      "y2027": 0.0039,
+      "y2028": 0.0107,
+      "y2029": 0.0186
+    },
+    {
+      "decile": "3rd",
+      "y2027": 0.004,
+      "y2028": 0.0124,
+      "y2029": 0.0225
+    },
+    {
+      "decile": "4th",
+      "y2027": 0.003,
+      "y2028": 0.008,
+      "y2029": 0.0132
+    },
+    {
+      "decile": "5th",
+      "y2027": 0.0027,
+      "y2028": 0.0068,
+      "y2029": 0.0107
+    },
+    {
+      "decile": "6th",
+      "y2027": 0.0015,
+      "y2028": 0.0039,
+      "y2029": 0.0064
+    },
+    {
+      "decile": "7th",
+      "y2027": 0.0021,
+      "y2028": 0.0044,
+      "y2029": 0.0067
+    },
+    {
+      "decile": "8th",
+      "y2027": 0.0004,
+      "y2028": 0.0008,
+      "y2029": 0.0016
+    },
+    {
+      "decile": "9th",
+      "y2027": 0.0002,
+      "y2028": 0.0006,
+      "y2029": 0.0011
+    },
+    {
+      "decile": "10th",
+      "y2027": 0.0001,
+      "y2028": 0.0002,
+      "y2029": 0.0004
+    }
+  ],
+  "yLabel": "Change in net income",
+  "format": {
+    "suffix": "%",
+    "decimals": 3
+  },
+  "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast; provisional."
+}
+```
+
+The poverty rate before housing costs falls by 0.01 percentage points in 2027-28 and by 0.02 percentage points in 2029-30. The Gini index of household net income falls by less than 0.0001.
+
 ## Assumptions and limitations
 
-- The analysis covers single pensioners in household calculations. It is not a microsimulation, and it makes no population-wide estimates of its own; the costs and counts above come from HM Treasury.
+- The worked examples and charts are household calculations for example pensioners. The population results are a static microsimulation; the Treasury's costing and counts come from its own model and data.
 - DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings, and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. We apply 3.9% to the 2026-27 rate of £238 a week, which gives £247. PolicyEngine UK's own projection on the October 2026 forecast is £245, uprated by lagged CPI; the household calculator in PolicyEngine's Autumn Budget dashboard uses that lower guarantee, so its figures for a Pension Credit claimant differ slightly.
 - The 2028-29 and 2029-30 State Pension values follow the OBR's October 2026 forecast. The explainer bases the threshold on the State Pension received in the tax year; we use 52 weeks. The published rates, and the number of payments in a tax year, may differ.
 - The explainer does not state how HMRC rounds the PTA in later years. We round up to the pound, as for 2027-28.
@@ -742,6 +953,7 @@ Without the PTA, the rate is 100% up to £12,932, because Pension Credit falls b
 - PolicyEngine UK treats a person as over State Pension age if they reach it by 6 October. The PTA also covers people who reach State Pension age later in the tax year. The example pensioners are all aged 70, so this does not affect the results.
 - We measure total income as the sum of income from each source. HMRC's total income may deduct some reliefs first.
 - In the worked examples, the explainer's part-time worker also has a small amount of property income; we model the full amount as salary. For the pensioner with £13,400 of income, the explainer's £166 treats all of it as taxable at 20%; we model it as a private pension. If part of it were savings interest, the starting rate for savings would reduce the tax.
+- The population results use PolicyEngine UK's take-up assumptions and its own Pension Credit guarantee (£245 a week in 2027-28), as the dashboard does, not the £247 estimate in the household examples.
 - The benefit results assume that each pensioner claims the benefits they are entitled to, and they use PolicyEngine UK's council tax, rent and TV licence values for 2027-28.
 - The calculations include no other Budget 2026 measure. The Budget raises the tax rates on property and savings income from April 2027, which would leave more tax to pay on such income with the PTA.
 - PolicyEngine UK takes a person's earnings as the lowest slice of their income when it works out the income tax that Universal Credit deducts, and it takes tax reductions off that tax first. We apply the PTA in the same way. The couples' examples do not include local Council Tax Reduction schemes for working-age households.
