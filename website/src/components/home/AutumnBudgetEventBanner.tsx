@@ -3,8 +3,8 @@ import { colors, spacing, typography } from "@/designTokens";
 // The Budget dashboard, served on this site through its app zone route
 // (src/data/appZoneRoutes.ts).
 const DASHBOARD_URL = "/uk/budgets/autumn-2026";
-const EVENT_URL =
-  "https://us06web.zoom.us/meeting/register/2DLUeZAbRwKkKEK-2JrFrQ";
+// The recording of our Budget-day webinar on 28 October.
+const RECORDING_URL = "https://www.youtube.com/watch?v=ZutKULXLhU0";
 
 const pill = {
   borderRadius: 999,
@@ -47,8 +47,7 @@ export default function AutumnBudgetEventBanner({
     >
       <span>
         <strong style={{ fontWeight: 700 }}>Autumn Budget 2026:</strong> explore
-        our analysis, and join our same-day first look online, Wednesday 28
-        October, 4:30pm
+        our analysis, and watch our same-day first look
       </span>
       <span
         style={{
@@ -69,7 +68,7 @@ export default function AutumnBudgetEventBanner({
           See the analysis &rarr;
         </a>
         <a
-          href={EVENT_URL}
+          href={RECORDING_URL}
           target="_blank"
           rel="noopener noreferrer"
           style={{
@@ -79,7 +78,7 @@ export default function AutumnBudgetEventBanner({
             border: `1px solid ${colors.primary[600]}`,
           }}
         >
-          Register free &rarr;
+          Watch the recording &rarr;
         </a>
       </span>
     </div>
