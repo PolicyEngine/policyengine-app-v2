@@ -22,8 +22,13 @@
  *   "data": [{ "group": "All people", "census": 0.07 }, ...],
  *   "yLabel": "...",
  *   "format": { "decimals": 2, "suffix": " pp", "signed": true },
+ *   "valueLabels": false,
  *   "source": "..."
  * }
+ *
+ * "valueLabels" (default true) prints each bar's value above it. Set it to
+ * false when several series make the labels overlap; the tooltip still
+ * gives each value.
  */
 
 import { type ReactNode, useId } from "react";
@@ -88,6 +93,7 @@ export interface BlogBarChartSpec {
   data: BlogChartRow[];
   yLabel?: string;
   format?: BlogChartFormat;
+  valueLabels?: boolean;
   source?: string;
   height?: number;
 }
@@ -100,6 +106,9 @@ export type BlogChartSpec =
 
 function parseBarSpec(s: Record<string, unknown>): BlogBarChartSpec | null {
   if (s.type !== "bar" || typeof s.xKey !== "string") return null;
+  if (s.valueLabels !== undefined && typeof s.valueLabels !== "boolean") {
+    return null;
+  }
   if (!Array.isArray(s.series) || s.series.length === 0) return null;
   if (!Array.isArray(s.data) || s.data.length === 0) return null;
   if (
@@ -244,10 +253,12 @@ function BarBody({ spec }: { spec: BlogBarChartSpec }) {
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
           >
-            <LabelList
-              dataKey={s.key}
-              content={(props) => <ValueLabel {...props} format={format} />}
-            />
+            {spec.valueLabels !== false && (
+              <LabelList
+                dataKey={s.key}
+                content={(props) => <ValueLabel {...props} format={format} />}
+              />
+            )}
           </Bar>
         ))}
       </BarChart>
