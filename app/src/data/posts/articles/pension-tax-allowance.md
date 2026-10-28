@@ -739,18 +739,18 @@ We ran the PTA on PolicyEngine UK's representative sample of UK households, set 
 
 ### Budgetary impact
 
-| Tax year | Income tax: PolicyEngine | Income tax: HM Treasury (Table 6.1) | Total cost: PolicyEngine |
-| -------- | ------------------------ | ----------------------------------- | ------------------------ |
-| 2026-27  | £0                       | £0                                  | £0                       |
-| 2027-28  | −⁠£42 million            | −⁠£45 million                       | −⁠£30 million            |
-| 2028-29  | −⁠£112 million           | −⁠£90 million                       | −⁠£83 million            |
-| 2029-30  | −⁠£193 million           | −⁠£150 million                      | −⁠£144 million           |
-| 2030-31  | £0                       | +⁠£50 million                       | £0                       |
-| 2031-32  | £0                       | −⁠£15 million                       | £0                       |
+| Tax year | Income tax: PolicyEngine | HM Treasury (Table 6.1) | Total cost: PolicyEngine |
+| -------- | ------------------------ | ----------------------- | ------------------------ |
+| 2026-27  | £0                       | £0                      | £0                       |
+| 2027-28  | −⁠£42 million            | −⁠£45 million           | −⁠£30 million            |
+| 2028-29  | −⁠£112 million           | −⁠£90 million           | −⁠£83 million            |
+| 2029-30  | −⁠£193 million           | −⁠£150 million          | −⁠£144 million           |
+| 2030-31  | £0                       | +⁠£50 million           | £0                       |
+| 2031-32  | £0                       | −⁠£15 million           | £0                       |
 
 _Both estimates are static: neither includes a behavioural response._
 
-In 2027-28, the total cost is £30 million: the £42 million income tax cut less £12 million (29%) of lower spending on Pension Credit (£8 million), Housing Benefit (£4 million) and Council Tax Reduction (under £1 million). From 2028-29, lost free TV licences also reduce the total cost, by under £1 million a year. The Treasury's and the OBR's figures cover income tax only; the appendix compares them with PolicyEngine's.
+In 2027-28, the total cost is £30 million: the £42 million income tax cut less £12 million (29%) of lower spending on Pension Credit (£8 million), Housing Benefit (£4 million) and Council Tax Reduction (under £1 million). From 2028-29, lost free TV licences also reduce the total cost, by under £1 million a year. The Treasury's and the OBR's figures count no benefit savings; the appendix compares them with PolicyEngine's.
 
 ### Who gains
 
@@ -987,11 +987,11 @@ The population results use PolicyEngine UK's representative sample of UK househo
 
 ### Comparison with the Treasury and the OBR
 
-The Treasury's costing (Budget 2026, Table 6.1, row 52) is on a National Accounts basis and does not explain its figures for 2030-31 and 2031-32, after the PTA ends. PolicyEngine counts each tax year's liabilities, so it shows nothing then. The two also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK. The OBR's detailed policy table also records the PTA as income tax receipts only, at −£44 million, −£83 million and −£144 million in 2027-28 to 2029-30, then +£49 million and −£15 million (Economic and fiscal outlook, October 2026, detailed forecast table 1.1). Their equality with PolicyEngine's total cost in 2028-29 and 2029-30, which includes benefit effects, is a coincidence of rounding to the million. The explainer states that about 290,000 of the 500,000 pensioners who pay less income tax in 2027-28 will pay none.
+The Treasury's costing (Budget 2026, Table 6.1, row 52) is on a National Accounts basis and does not explain its figures for 2030-31 and 2031-32, after the PTA ends. PolicyEngine counts each tax year's liabilities, so it shows nothing then. The two also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK. The OBR's detailed policy table records the PTA's income tax at −£44 million, −£83 million and −£144 million in 2027-28 to 2029-30, then +£49 million and −£15 million, and no benefit spending. Small Scottish and departmental spending lines take its total to −£47 million, −£88 million and −£152 million (Economic and fiscal outlook, October 2026, detailed forecast table 1.1). That the OBR's income tax equals PolicyEngine's total cost in 2028-29 and 2029-30, which includes benefit effects, is a coincidence of rounding to the million. The explainer states that about 290,000 of the 500,000 pensioners who pay less income tax in 2027-28 will pay none.
 
 ### Assumptions and limitations
 
-- DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings (Social Security Administration Act 1992, section 150A), and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. For the household examples, we apply 3.9% to the 2026-27 rate of £238 a week, which gives £247. PolicyEngine UK's own projection on the October 2026 forecast is £245, uprated by lagged CPI; the household calculator in PolicyEngine's Autumn Budget dashboard uses that guarantee, so its figures for a Pension Credit claimant differ from those here, by up to the full PTA for claimants near the guarantee.
+- DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings (Social Security Administration Act 1992, section 150A), and the April 2027 State Pension rise of 3.9%, to the explainer's £250.70 a week, is growth in total average weekly earnings in May to July 2026 ([ONS](https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/employmentandemployeetypes/bulletins/averageweeklyearningsingreatbritain/september2026)), which is above September 2026 CPI inflation of 3.5% ([ONS](https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/consumerpriceinflation/september2026)). For the household examples, we apply 3.9% to the 2026-27 rate of £238 a week, which gives £247. PolicyEngine UK's own projection on the October 2026 forecast is £245, uprated by lagged CPI; the household calculator in PolicyEngine's Autumn Budget dashboard uses that guarantee, so its figures for a Pension Credit claimant differ from those here, by up to the full PTA for claimants near the guarantee.
 - The explainer bases the threshold on the State Pension received in the tax year; we use 52 weeks. The published rates, and the number of payments in a tax year, may differ. The explainer does not state how HMRC rounds the PTA in later years; we round up to the pound, as for 2027-28.
 - We apply the PTA to the final income tax liability; the Finance Bill 2026-27 will set the legal order of steps. People who transfer part of their Personal Allowance through the Marriage Allowance can still owe tax with the PTA.
 - PolicyEngine UK treats a person as over State Pension age if they reach it by 6 October. The PTA also covers people who reach State Pension age later in the tax year. Every example pensioner reached State Pension age before the tax year, so this does not affect them.
