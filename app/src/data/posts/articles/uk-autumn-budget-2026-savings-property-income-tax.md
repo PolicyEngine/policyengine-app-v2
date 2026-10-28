@@ -1,3 +1,5 @@
+> Draft review note: the national figures below use the earlier recorded forecast snapshot and await replacement by the regenerated savings and property results. The household calculations remain as stated.
+
 The Autumn Budget 2026 increases the basic, higher and additional income tax rates on savings and property income by a further two percentage points from **6 April 2027**, taking them to **24%, 44% and 49%**. Savings rates apply across the UK. The property rates apply in England, Wales and Northern Ireland. Dividend rates remain unchanged. These are the changes announced in the [Budget 2026, paragraphs 6.246 and 6.247](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142 "Budget 2026 #page 142,45").
 
 PolicyEngine estimates that the measure raises **£664 million in 2027–28**, compared with the Treasury's **£160 million** for that year. These are preliminary static estimates; the Treasury costing includes behavioural responses.

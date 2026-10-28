@@ -54,6 +54,19 @@
         "people_affected is a percentage of people in households whose absolute net-income percentage change exceeds 0.01%; it is not a headcount.",
         "Trading gross receipts are missing; the receipt warns this may overstate cost."
       ]
+    },
+    "live_source_check": {
+      "checked_at_utc": "2026-10-28T16:04:05Z",
+      "manifest_revision": 15,
+      "manifest_updated_at": "2026-10-28T16:01:00.454209Z",
+      "property_income_rates_up": "not_yet_published",
+      "savings_income_rates_up": "not_yet_published",
+      "unearned_income_rates_up": "withdrawn_due_to_measure_split",
+      "new_trading_artifact": "71f8a26e4f547021",
+      "new_trading_status": "provisional_reconciliation_failed",
+      "new_trading_dataset_matches_pin": true,
+      "replacement_adopted": false,
+      "forecast_note": "New trading batch has October detailed forecasts but still March council tax; it is not the final forecast batch."
     }
   },
   "treasury_costings": {
