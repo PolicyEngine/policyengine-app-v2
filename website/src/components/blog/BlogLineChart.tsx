@@ -214,13 +214,16 @@ export function LineBody({ spec }: { spec: BlogLineSpec }) {
           tick={AXIS_STYLE}
           axisLine={false}
           tickLine={false}
+          // Drop the x tick labels below the lowest y tick label, which
+          // sits on the axis line at the plot's corner.
+          tickMargin={10}
           tickFormatter={xTick}
           label={
             spec.xLabel
               ? {
                   value: spec.xLabel,
                   position: "insideBottom",
-                  offset: -4,
+                  offset: -14,
                   style: AXIS_STYLE,
                 }
               : undefined
@@ -270,7 +273,15 @@ export function LineBody({ spec }: { spec: BlogLineSpec }) {
             String(name),
           ]}
         />
-        <Legend {...LEGEND_STYLE} iconType="plainline" />
+        <Legend
+          {...LEGEND_STYLE}
+          // Clear the x axis title, which sits below the tick labels.
+          wrapperStyle={{
+            ...LEGEND_STYLE.wrapperStyle,
+            paddingTop: spec.xLabel ? 28 : LEGEND_STYLE.wrapperStyle.paddingTop,
+          }}
+          iconType="plainline"
+        />
         {spec.series.map((s, i) => (
           <Line
             key={s.key}
