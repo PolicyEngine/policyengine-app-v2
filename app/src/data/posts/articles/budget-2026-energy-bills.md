@@ -17,59 +17,74 @@ Table 1 summarises the two measures as the Budget describes them.
 
 **Table 1: The Budget's energy bill measures**
 
-|                  | Household Energy Payment                               | Zero rate of VAT on domestic electricity                  |
-| ---------------- | ------------------------------------------------------ | --------------------------------------------------------- |
-| Change           | £100 payment, delivered through the council tax system | VAT on domestic electricity falls from 5% to 0%           |
-| Who              | Households in council tax bands A to D                 | Households with an electricity bill                       |
-| Where            | England                                                | Great Britain from 1 October 2026; the UK from April 2027 |
-| When             | From January 2027, once                                | 1 October 2026 to 1 July 2027                             |
-| HM Treasury cost | £2,625 million in 2026-27                              | £755 million in 2026-27 and £305 million in 2027-28       |
+|                  | Household Energy Payment                               | Zero rate of VAT on domestic electricity                            |
+| ---------------- | ------------------------------------------------------ | ------------------------------------------------------------------- |
+| Change           | £100 payment, delivered through the council tax system | VAT on domestic electricity falls from 5% to 0%                     |
+| Who              | Households in council tax bands A to D                 | Households with an electricity bill                                 |
+| Where            | England                                                | Great Britain from 1 October 2026; expected UK-wide from April 2027 |
+| When             | From January 2027, once                                | 1 October 2026 to 1 July 2027                                       |
+| HM Treasury cost | £2,625 million in 2026-27                              | £755 million in 2026-27 and £305 million in 2027-28                 |
 
 Sources: [Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) (paragraphs 3.5 and 6.24 for the payment) and [Table 6.1](https://assets.publishing.service.gov.uk/media/6ae187a2779378370fd80a9a/Table_6.1_and_6.2_Budget_2026_Policy_Decisions.xlsx), rows 1 and 2.
 
 The devolved governments receive their share of the payment's funding through the Barnett formula, which the Budget says will enable them to provide similar support ([paragraph 3.5](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html)). The Budget also gives local authorities in England £100 million to provide further targeted support, including to some households above band D ([paragraph 3.6](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html)). This post does not model either.
 
-The Government zero-rated domestic electricity from 1 October 2026 to 31 March 2027 before the Budget ([SI 2026/987](https://www.legislation.gov.uk/uksi/2026/987/made)), but the Treasury scores the whole period from 1 October 2026 to 1 July 2027 as a Budget measure. We follow the Treasury and compare both measures against a baseline with 5% VAT on domestic electricity throughout.
+The Government zero-rated domestic electricity from 1 October 2026 to 31 March 2027 before the Budget ([SI 2026/987](https://www.legislation.gov.uk/uksi/2026/987/made)), but the Treasury scores the whole period from 1 October 2026 to 1 July 2027 as a Budget measure. We follow the Treasury and compare both measures against a baseline with 5% VAT on domestic electricity throughout. In 2026-27 the zero rate does not cover Northern Ireland; instead, the Government is funding the Northern Ireland Executive "to provide comparable support with household electricity bills" ([paragraph 3.4](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html)). This post does not model that support.
 
 ## Household impacts
 
-Consider a household that uses 2,500 kWh of electricity a year, [Ofgem's typical consumption](https://www.ofgem.gov.uk/information-consumers/energy-advice-households/energy-price-cap). At the prices in our [energy bills dashboard](https://www.policyengine.org/uk/energy-autumn-budget), its electricity bill comes to £906.00 in 2026-27 and £951.55 in 2027-28 with 5% VAT.[^1] Our model removes the VAT from the October to March share of the year's electricity use (56.7%, from [DESNZ Energy Trends](https://www.gov.uk/government/statistics/energy-trends-section-5-electricity)) in 2026-27 and from 91 of the 366 days of 2027-28. The zero rate therefore raises this household's net income by £24.46 in 2026-27 (£906.00 × 5% × 56.7% ÷ 1.05) and £11.27 in 2027-28 (£951.55 × 5% × 24.9% ÷ 1.05).[^2]
+Consider a household that uses 2,500 kWh of electricity a year, [Ofgem's typical consumption](https://www.ofgem.gov.uk/sites/default/files/2026-05/Review%20of%20typical%20domestic%20consumption%20values%20decision.pdf) from 1 July 2026. At the prices in our [energy bills dashboard](https://www.policyengine.org/uk/energy-autumn-budget), its electricity bill comes to £906 in 2026-27 and £952 in 2027-28 with 5% VAT.[^1] Our model removes the VAT from the October to March share of the year's electricity use (56.7%, from [DESNZ Energy Trends](https://www.gov.uk/government/statistics/energy-trends-section-5-electricity)) in 2026-27 and from 91 of the 366 days of 2027-28. Table 2 shows each step: the zero rate raises this household's net income by £24 in 2026-27 and £11 in 2027-28.[^2]
 
-If the household lives in a band A to D home in England, it also receives the £100 payment in 2026-27, for a total gain of £136 across the two years. The same household in a band E to H home in England, or in Wales or Scotland, gains £36 from the VAT cut alone. In Northern Ireland, where the zero rate applies only from April 2027, it gains £11. Table 2 shows each case.
+**Table 2: How the zero rate changes the electricity bill of a household using 2,500 kWh a year**
 
-**Table 2: Change in net income for a household using 2,500 kWh of electricity a year**
+| Step                          | 2026-27                 | 2027-28        |
+| ----------------------------- | ----------------------- | -------------- |
+| Electricity bill with 5% VAT  | £906                    | £952           |
+| VAT in the bill (5/105 of it) | £43                     | £45            |
+| Part of the year zero-rated   | 56.7% of the year's use | 91 of 366 days |
+| VAT removed                   | £24                     | £11            |
 
-| Location and council tax band | Payment, 2026-27 | VAT cut, 2026-27 | VAT cut, 2027-28 | Total   |
-| ----------------------------- | ---------------- | ---------------- | ---------------- | ------- |
-| England, band A, B, C or D    | £100.00          | £24.46           | £11.27           | £135.73 |
-| England, band E, F, G or H    | £0.00            | £24.46           | £11.27           | £35.73  |
-| Wales, band C                 | £0.00            | £24.46           | £11.27           | £35.73  |
-| Scotland, band C              | £0.00            | £24.46           | £11.27           | £35.73  |
-| Northern Ireland              | £0.00            | £0.00            | £11.27           | £11.27  |
+The VAT saving changes no benefit. In the Autumn Budget 2026 dashboard's household calculator, the two example families on Universal Credit gain exactly the VAT removed.
+
+If the household lives in a band A to D home in England, it also receives the £100 payment in 2026-27, for a total gain of £136 across the two years. The same household in a band E to H home in England, or in Wales or Scotland, gains £36 from the VAT cut alone. In Northern Ireland, where the zero rate is expected to apply from April 2027, it gains £11. Table 3 shows each case.
+
+**Table 3: Change in net income for a household using 2,500 kWh of electricity a year**
+
+| Location and council tax band | Payment, 2026-27 | VAT cut, 2026-27 | VAT cut, 2027-28 | Total |
+| ----------------------------- | ---------------- | ---------------- | ---------------- | ----- |
+| England, band A, B, C or D    | £100             | £24              | £11              | £136  |
+| England, band E, F, G or H    | £0               | £24              | £11              | £36   |
+| Wales, band C                 | £0               | £24              | £11              | £36   |
+| Scotland, band C              | £0               | £24              | £11              | £36   |
+| Northern Ireland              | £0               | £0               | £11              | £11   |
+
+Figures are rounded to the nearest pound, and totals are rounded separately, so £100 + £24 + £11 shows as £136.
 
 The payment does not change benefit entitlements in our model. A lone parent with one child aged 4, earning £14,000 and renting a band B home in England at £975 a month, receives £14,585 of Universal Credit in 2026-27 with or without the payment, so their net income rises by the full £100.
 
 [^1]: The prices are Ofgem's [price cap](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges) for April to December 2026, [Cornwall Insight's forecast](https://www.cornwall-insight.com/press-releases/16-price-cap-rise-forecast-in-january/) for January to March 2027, the average of supplier forecasts compiled by [MoneySavingExpert](https://www.moneysavingexpert.com/utilities/energy-price-cap-prediction/) for April to September 2027, and [OVO's forecast](https://www.ovoenergy.com/price-cap) for October to December 2027, held through March 2028. The bill uses Ofgem's seasonal profile, with 57% of a year's electricity used from October to March; the VAT calculation uses DESNZ's 56.7%, as PolicyEngine's Autumn Budget 2026 dashboard does. See the methodology of our [energy bills dashboard](https://www.policyengine.org/uk/energy-autumn-budget).
 
-[^2]: At the April 2027 prices in our energy bills dashboard, 5% VAT on a year's typical electricity bill comes to £48.54, in line with the Budget's estimate that the cut takes "around £50 off the annual Ofgem price cap in April 2027".
+[^2]: At the April 2027 prices in our energy bills dashboard, 5% VAT on a year's typical electricity bill comes to £49, in line with the Budget's estimate that the cut takes "around £50 off the annual Ofgem price cap in April 2027".
 
 ## Economic impacts
 
 ### Budgetary impact
 
-We estimate the two measures cost £2.81 billion in 2026-27, against £3.38 billion in the Treasury's Table 6.1. The VAT cut costs a further £0.39 billion in 2027-28. Table 3 compares the estimates.
+We estimate the two measures cost £2.81 billion in 2026-27, against £3.38 billion in the Treasury's Table 6.1. The VAT cut costs a further £0.39 billion in 2027-28. Table 4 compares the estimates.
 
-**Table 3: Cost of the energy bill measures (£ billion)**
+**Table 4: Cost of the energy bill measures (£ million)**
 
 | Measure                                  | PolicyEngine, 2026-27 | HM Treasury, 2026-27 | PolicyEngine, 2027-28 | HM Treasury, 2027-28 |
 | ---------------------------------------- | --------------------- | -------------------- | --------------------- | -------------------- |
-| Household Energy Payment                 | 1.97                  | 2.63                 | 0.00                  | 0.00                 |
-| Zero rate of VAT on domestic electricity | 0.84                  | 0.76                 | 0.39                  | 0.31                 |
-| **Total**                                | **2.81**              | **3.38**             | **0.39**              | **0.31**             |
+| Household Energy Payment                 | 1,969                 | 2,625                | 0                     | 0                    |
+| Zero rate of VAT on domestic electricity | 840                   | 755                  | 394                   | 305                  |
+| **Total**                                | **2,808**             | **3,380**            | **394**               | **305**              |
+
+Figures may not sum because of rounding.
 
 Our estimate for the payment covers the £100 payments in England only: £1.97 billion ÷ £100 = 19.7 million households, in line with the Government's [estimate](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) of up to 20 million (paragraph 3.5).[^3] The Treasury's £2,625 million also covers the £100 million for local authorities in England (paragraph 6.24), and Box 3.A says it "includes funding provided to devolved governments to support households across the UK". The Budget does not split the figure. Applying the Barnett formula's population proportions and needs-based factors in HM Treasury's [Statement of Funding Policy](https://assets.publishing.service.gov.uk/media/684859e3d0ca5d7801e4e6f6/Statement_of_Funding_Policy.pdf) (Annex A), and assuming full comparability, we estimate the devolved share at about £425 million. That leaves about £2.10 billion for the payment in England, of which our £1.97 billion is 94%. The payment is departmental spending, so the Treasury's policy costings document has no note for it, and a fixed £100 payment involves no behavioural response in either estimate.
 
-For the VAT cut, our estimate is 11% above the Treasury's in 2026-27 and 29% above it in 2027-28. The Treasury's [costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) estimates its tax base from ONS consumer expenditure data, covers charities, residential care and some business supplies as well as households, and includes a shift in consumption from gas to electricity. Our model covers household electricity spending only, with no change in consumption, so each of these differences raises the Treasury's estimate relative to ours. Part of the 2027-28 difference comes from our spreading the cut over 91 of 366 days rather than over April to June's share of a year's electricity use: for the household in Table 2, a quarter-by-quarter calculation gives a saving of £10.79 rather than £11.27. We have not identified what accounts for the rest of the difference.
+For the VAT cut, our estimate is 11% above the Treasury's in 2026-27 and 29% above it in 2027-28. The Treasury's [costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) estimates its tax base from ONS consumer expenditure data, covers charities, residential care and some business supplies as well as households, and includes a shift in consumption from gas to electricity. Our model covers household electricity spending only, with no change in consumption, so each of these differences raises the Treasury's estimate relative to ours. Part of the 2027-28 difference comes from how the dashboard's measure spreads the cut: it applies the 2026-27 zero rate to the October to March share of a year's electricity use, but spreads the 2027-28 extension over 91 of 366 days rather than over April to June's smaller share of use. For the household in Table 2, a quarter-by-quarter calculation gives a 2027-28 saving about 4% smaller; applied to the population, that would put the 2027-28 cost at about £377 million rather than £394 million. We have not identified what accounts for the rest of the difference.
 
 Our July [analysis of the original six-month zero rate](https://www.policyengine.org/uk/electricity-vat-cut) estimated a cost of £769 million for October 2026 to March 2027, with 57.5% of a year's electricity spending falling in those months. That analysis used PolicyEngine UK version 2.89.2 and the Enhanced Family Resources Survey; this post uses version 2.151.0 and Microcosm UK, which give £0.84 billion for the same months.
 
@@ -77,9 +92,9 @@ Our July [analysis of the original six-month zero rate](https://www.policyengine
 
 ### Who receives the payment
 
-Table 4 compares the payment's reach in our model with the Government's estimates.
+Table 5 compares the payment's reach in our model with the Government's estimates.
 
-**Table 4: Reach of the Household Energy Payment in England, 2026-27**
+**Table 5: Reach of the Household Energy Payment in England, 2026-27**
 
 |                                                                                   | PolicyEngine         | Budget 2026                  |
 | --------------------------------------------------------------------------------- | -------------------- | ---------------------------- |
@@ -124,11 +139,11 @@ Figure 1 shows the average change in household net income by income decile in 20
 }
 ```
 
-The payment raises average household net income by £67 across the UK, and by between £68 and £73 in each of the bottom eight income deciles. The average falls to £62 in the ninth decile and £47 in the top decile: across all UK households, 47% of those in the top decile live in band A to D homes in England and receive the payment, against 68% to 73% in each of the bottom eight deciles. Table 4 gives the shares within England. Households in Wales, Scotland and Northern Ireland receive no payment in our model, which lowers the average in every decile.
+The payment raises average household net income by £67 across the UK, and by between £68 and £73 in each of the bottom eight income deciles. The average falls to £62 in the ninth decile and £47 in the top decile: across all UK households, 47% of those in the top decile live in band A to D homes in England and receive the payment, against 68% to 73% in each of the bottom eight deciles. Table 5 gives the shares within England. Households in Wales, Scotland and Northern Ireland receive no payment in our model, which lowers the average in every decile.
 
-The VAT cut raises average household net income by £29 in 2026-27, from £26 in the bottom decile to £37 in the top decile. In 2027-28 it raises average household net income by £13, from £12 in the bottom decile to £17 in the top decile. The saving is proportional to electricity spending, so in 2027-28, when the cut applies across the UK, the top decile's 40% larger saving reflects 40% higher average electricity spending than in the bottom decile. As a share of net income, the saving falls from 0.10% in the second decile to 0.04% in the top decile in 2026-27, so the VAT cut lowers the Gini index.
+The VAT cut raises average household net income by £29 in 2026-27, from £26 in the bottom decile to £37 in the top decile. In 2027-28 it raises average household net income by £13, from £12 in the bottom decile to £17 in the top decile. The saving is proportional to electricity spending, so in 2027-28, when we model the cut across the UK, the top decile's 40% larger saving reflects 40% higher average electricity spending than in the bottom decile. As a share of net income, the saving falls from 0.10% in the second decile to 0.04% in the top decile in 2026-27, so the VAT cut lowers the Gini index.
 
-Together, the two measures raise average household net income by £96 in 2026-27: between £97 and £100 in each of the bottom eight deciles, £93 in the ninth and £84 in the top decile. The payment raises the net income of 66.6% of people in the UK in 2026-27, and the VAT cut that of 93.8%.
+Together, the two measures raise average household net income by £96 in 2026-27: between £97 and £100 in each of the bottom eight deciles, £93 in the ninth and £84 in the top decile. The payment raises the net income of 66.6% of people in the UK in 2026-27, and the VAT cut that of 93.8%. The Budget expects the VAT cut to support "around 29 million households across the UK"; in our model, 28.4 million households in Great Britain gain from it in 2026-27 and 29.3 million across the UK in 2027-28 ([Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html), chapter 3).
 
 ### Poverty and inequality
 
@@ -146,4 +161,4 @@ We invite you to explore our [additional analyses](https://www.policyengine.org/
 
 ## Appendix: Methodology
 
-The population results come from PolicyEngine's [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026), which uses the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0) and the Microcosm UK 2024-25 dataset. PolicyEngine UK does not include either measure, so the dashboard adds both as structural reforms. The payment adds £100 to the `ebr_council_tax_rebate` variable for households in England in bands A to D in 2026-27. The VAT cut reduces the `vat` variable by the VAT on each household's electricity spending in the zero-rated period. The reach figures in Table 4 come from the same run of the payment for 2026-27. The household examples apply the same reforms in PolicyEngine UK household calculations. Their electricity prices come from PolicyEngine's [energy bills dashboard](https://www.policyengine.org/uk/energy-autumn-budget) ([replication code](https://github.com/PolicyEngine/uk-energy-autumn-budget)), which models household energy bills at Ofgem's price cap and forecasters' expected prices for 2026-27 and 2027-28.
+The population results come from PolicyEngine's [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026), which uses the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0) and the Microcosm UK 2024-25 dataset. PolicyEngine UK does not include either measure, so the dashboard adds both as structural reforms. The payment adds £100 to the `ebr_council_tax_rebate` variable for households in England in bands A to D in 2026-27. The VAT cut reduces the `vat` variable by the VAT on each household's electricity spending in the zero-rated period. The reach figures in Table 5 come from the same run of the payment for 2026-27. The household examples apply the same reforms in PolicyEngine UK household calculations. Their electricity prices come from PolicyEngine's [energy bills dashboard](https://www.policyengine.org/uk/energy-autumn-budget) ([replication code](https://github.com/PolicyEngine/uk-energy-autumn-budget)), which models household energy bills at Ofgem's price cap and forecasters' expected prices for 2026-27 and 2027-28.
