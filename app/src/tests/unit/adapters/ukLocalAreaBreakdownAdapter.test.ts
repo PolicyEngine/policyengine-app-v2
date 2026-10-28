@@ -7,7 +7,7 @@ import {
   servesLocalAreaBreakdowns,
   withheldUKAreasOf,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
-import { withheldUKHexAreas } from '@/components/visualization/choropleth/ukHexLayout';
+import { placeUKHexMap } from '@/components/visualization/choropleth/ukHexLayout';
 import {
   ARDS_AND_NORTH_DOWN_CODE,
   BREAKDOWN_CONSTITUENCY_CODES,
@@ -35,6 +35,7 @@ import {
 import {
   BARNSLEY_NORTH_CODE,
   LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+  pointsWithCodes,
 } from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
 import {
   BREAKDOWN_WITH_WITHHELD_LISTS,
@@ -179,13 +180,14 @@ describe('countWithheldUKAreas', () => {
     'given %s then the count is the number of areas the hex map draws as withheld',
     (_, level, region, publishedCodes) => {
       // Given
-      const points = publishedCodes.map((code) => ({ code }));
+      const points = pointsWithCodes(publishedCodes);
 
       // When
       const result = countWithheldUKAreas({ level, region, publishedCodes: [...publishedCodes] });
 
       // Then
-      expect(result?.withheld).toBe(withheldUKHexAreas(level, points, region).length);
+      const hexMap = placeUKHexMap(level, points, { disclosureControlled: true, region });
+      expect(result?.withheld).toBe(hexMap.withheldAreas.length);
     }
   );
 });
@@ -249,7 +251,7 @@ describe('countWithheldUKAreas with a breakdown’s list of withheld codes', () 
 
   test('given a list then the count is the number of areas the hex map draws as withheld', () => {
     // Given
-    const points = PUBLISHED_WELSH_CONSTITUENCY_CODES.map((code) => ({ code }));
+    const points = pointsWithCodes(PUBLISHED_WELSH_CONSTITUENCY_CODES);
     const listedWithheldCodes = [BARNSLEY_NORTH_CODE, ...LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES];
 
     // When
@@ -261,9 +263,12 @@ describe('countWithheldUKAreas with a breakdown’s list of withheld codes', () 
     });
 
     // Then
-    expect(result?.withheld).toBe(
-      withheldUKHexAreas('constituency', points, 'country/wales', listedWithheldCodes).length
-    );
+    const hexMap = placeUKHexMap('constituency', points, {
+      disclosureControlled: true,
+      region: 'country/wales',
+      listedWithheldCodes,
+    });
+    expect(result?.withheld).toBe(hexMap.withheldAreas.length);
   });
 });
 

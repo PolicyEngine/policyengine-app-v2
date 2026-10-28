@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
+import type { UKBoundaryLevel } from '@/components/visualization/choropleth/types';
 import {
   placeOnUKHexLayout,
   placeUKHexMap,
   UK_HEX_LAYOUTS,
   ukHexPosition,
   withheldUKAreaCodes,
-  withheldUKHexAreas,
 } from '@/components/visualization/choropleth/ukHexLayout';
 import {
   ALLERDALE_CODE,
@@ -25,6 +25,7 @@ import {
   HARTLEPOOL_NAME,
   HARTLEPOOL_POINT,
   LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+  pointsWithCodes,
   UK_WIDE_REGION,
   UNCODED_POINT,
   WALES_REGION,
@@ -35,6 +36,7 @@ import {
   EXPECTED_CONSTITUENCY_COUNT,
   EXPECTED_LOCAL_AUTHORITY_COUNT,
 } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
+import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 
 describe('ukHexPosition', () => {
   test('given a constituency code then it gives the layout column and the row moved up by one', () => {
@@ -161,10 +163,19 @@ describe('placeOnUKHexLayout', () => {
   });
 });
 
-describe('withheldUKHexAreas', () => {
+describe('placeUKHexMap withheld areas', () => {
+  /** The areas a disclosure-controlled level's hex map draws as withheld. */
+  function withheldAreasOnHexMap(
+    level: UKBoundaryLevel,
+    points: HexMapDataPoint[],
+    region?: string | null
+  ) {
+    return placeUKHexMap(level, points, { disclosureControlled: true, region }).withheldAreas;
+  }
+
   test("given a Wales report with three constituencies then it lists Wales's other constituencies", () => {
     // When
-    const areas = withheldUKHexAreas('constituency', WELSH_CONSTITUENCY_POINTS, WALES_REGION);
+    const areas = withheldAreasOnHexMap('constituency', WELSH_CONSTITUENCY_POINTS, WALES_REGION);
 
     // Then
     const reportedCodes = WELSH_CONSTITUENCY_POINTS.map((point) => point.code);
@@ -175,7 +186,7 @@ describe('withheldUKHexAreas', () => {
 
   test('given a withheld constituency then it is at its layout position, named from the boundary file', () => {
     // When
-    const areas = withheldUKHexAreas('constituency', WELSH_CONSTITUENCY_POINTS, WALES_REGION);
+    const areas = withheldAreasOnHexMap('constituency', WELSH_CONSTITUENCY_POINTS, WALES_REGION);
 
     // Then
     expect(areas.find((area) => area.id === CARDIFF_EAST_CODE)).toEqual({
@@ -190,7 +201,7 @@ describe('withheldUKHexAreas', () => {
     ['no region', undefined],
   ])('given %s then it lists every constituency the result leaves out', (_, region) => {
     // When
-    const areas = withheldUKHexAreas('constituency', [BARNSLEY_NORTH_POINT], region);
+    const areas = withheldAreasOnHexMap('constituency', [BARNSLEY_NORTH_POINT], region);
 
     // Then
     expect(areas).toHaveLength(EXPECTED_CONSTITUENCY_COUNT - 1);
@@ -199,7 +210,7 @@ describe('withheldUKHexAreas', () => {
 
   test('given local authorities then it reads the local authority layout and names', () => {
     // When
-    const areas = withheldUKHexAreas('local_authority', [DARLINGTON_POINT], UK_WIDE_REGION);
+    const areas = withheldAreasOnHexMap('local_authority', [DARLINGTON_POINT], UK_WIDE_REGION);
 
     // Then
     expect(areas).toHaveLength(EXPECTED_LOCAL_AUTHORITY_COUNT - 1);
@@ -213,12 +224,12 @@ describe('withheldUKHexAreas', () => {
 
   test("given every one of a nation's areas reported then it lists none", () => {
     // Given
-    const everyWelshConstituency = Object.keys(UK_HEX_LAYOUTS.constituency)
-      .filter((code) => code.startsWith('W'))
-      .map((code) => ({ id: code, label: code, value: 1, code }));
+    const everyWelshConstituency = pointsWithCodes(
+      Object.keys(UK_HEX_LAYOUTS.constituency).filter((code) => code.startsWith('W'))
+    );
 
     // When
-    const areas = withheldUKHexAreas('constituency', everyWelshConstituency, WALES_REGION);
+    const areas = withheldAreasOnHexMap('constituency', everyWelshConstituency, WALES_REGION);
 
     // Then
     expect(areas).toEqual([]);
@@ -233,7 +244,7 @@ describe('withheldUKHexAreas', () => {
     'given %s then the result cannot be matched to the layout, and it lists none',
     (_, points, region) => {
       // When
-      const areas = withheldUKHexAreas('constituency', points, region);
+      const areas = withheldAreasOnHexMap('constituency', points, region);
 
       // Then
       expect(areas).toEqual([]);
@@ -242,7 +253,7 @@ describe('withheldUKHexAreas', () => {
 
   test('given a local authority on a pre-2023 code then it lists none', () => {
     // When
-    const areas = withheldUKHexAreas(
+    const areas = withheldAreasOnHexMap(
       'local_authority',
       [DARLINGTON_POINT, ALLERDALE_POINT],
       UK_WIDE_REGION

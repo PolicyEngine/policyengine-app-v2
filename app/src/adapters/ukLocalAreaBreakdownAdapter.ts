@@ -124,14 +124,27 @@ export const UK_AREA_NOUNS: Record<UKAreaLevel, { one: string; many: string }> =
 /**
  * What an area disclosure control withheld reads on the maps, in its
  * tooltip: the geographic map's boundary and the hex map's hexagon alike.
+ * When the breakdown lists its withheld codes, only the listed areas read
+ * it, and the level's other areas without a result read "No data".
  */
 export const UK_WITHHELD_AREA_TEXT = 'Not reported';
 
 /**
  * How many of a level's areas a disclosure-controlled breakdown withheld,
  * out of how many there are, and the breakdown's own list of withheld
- * codes when it gives one, which the hex map draws from; null when the app
+ * codes when it gives one, which the maps draw from; null when the app
  * cannot count them.
+ *
+ * The note under the maps reads `withheld`, and the maps read
+ * `listedCodes`. They agree because countWithheldUKAreas and the hex map's
+ * placeUKHexMap both pass the level's published codes, the report's region
+ * and the same list to withheldUKAreaCodes, so they count and hatch the
+ * same areas, and the geographic map reads "Not reported" on those areas'
+ * boundaries alone. The count is null exactly when withheldUKAreaCodes
+ * cannot match the result to the layout, and the hex map then draws no
+ * withheld or no-data areas either, so a null count needs no list; the
+ * geographic map then reads "Not reported" on every boundary without a
+ * result, as for a breakdown without a list.
  */
 export type UKWithheldAreas = {
   withheld: number;

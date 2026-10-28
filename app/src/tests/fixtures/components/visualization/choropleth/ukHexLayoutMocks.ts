@@ -122,3 +122,11 @@ export const NEWPORT_NAME = 'Newport';
 
 /** The Welsh local authorities a Wales breakdown lists as withheld: Swansea alone. */
 export const LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES = [SWANSEA_CODE];
+
+/**
+ * Hex-map points for a result's ONS codes, one each, at a made-up position
+ * that the layout replaces when it places them all.
+ */
+export function pointsWithCodes(codes: readonly string[]): HexMapDataPoint[] {
+  return codes.map((code) => ({ id: code, label: code, value: 0, x: 0, y: 0, code }));
+}

@@ -162,33 +162,6 @@ function layoutHexAreas(level: UKBoundaryLevel, codes: string[]): HexMapMissingA
   }));
 }
 
-/**
- * The areas of a report's region that a result leaves out and that are
- * withheld, as hex-map areas without a value: each at its layout position,
- * named from the boundary files, with its ONS code as its id. For a
- * disclosure-controlled breakdown these are the areas disclosure control
- * withheld: the ones its list names, or, without a list, every one.
- *
- * They follow withheldUKAreaCodes, and none are listed when the result
- * cannot be matched to the layout. So a map that keeps its result's own
- * positions, because placeOnUKHexLayout could not place every area, never
- * gets any: they are drawn only on the tiled grid.
- */
-export function withheldUKHexAreas(
-  level: UKBoundaryLevel,
-  points: Pick<HexMapDataPoint, 'code'>[],
-  region?: string | null,
-  listedWithheldCodes?: readonly string[] | null
-): HexMapMissingArea[] {
-  const missing = withheldUKAreaCodes(
-    level,
-    points.map((point) => point.code),
-    region,
-    listedWithheldCodes
-  );
-  return layoutHexAreas(level, missing?.codes ?? []);
-}
-
 /** A level's hex map: its result's areas, placed, and the region's areas it leaves out. */
 export interface UKHexMap extends UKHexMapPlacement {
   /**
@@ -210,8 +183,13 @@ export interface UKHexMap extends UKHexMapPlacement {
  * and, for a level from a disclosure-controlled breakdown, the region's
  * areas the result leaves out (withheldUKAreaCodes): withheld, or with no
  * data when the breakdown's list of withheld codes does not name them.
- * They are listed only when the map is tiled: a result that keeps its own
- * positions cannot be matched to the layout. A saved level has none.
+ * Each is at its layout position, named from the boundary files, with its
+ * ONS code as its id.
+ *
+ * They are listed only when the map is tiled, and none when the result
+ * cannot be matched to the layout. So a map that keeps its result's own
+ * positions, because placeOnUKHexLayout could not place every area, never
+ * gets any. A saved level has none.
  */
 export function placeUKHexMap(
   level: UKBoundaryLevel,
