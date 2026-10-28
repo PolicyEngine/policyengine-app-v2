@@ -9,6 +9,15 @@
     "image": "carers-allowance-taper/cover.webp"
   },
   {
+    "title": "Autumn Budget 2026: higher tax on property income",
+    "description": "Worked examples of the additional two percentage point property income tax increase from April 2027, including landlords' mortgage-interest relief and the treatment of Scotland.",
+    "date": "2026-10-28 14:00:00",
+    "tags": ["uk", "policy", "tax", "autumn-budget"],
+    "authors": ["ziming-hua"],
+    "filename": "uk-autumn-budget-2026-property-income-tax.md",
+    "image": "uk-autumn-budget-2026-property-income-tax/cover.webp"
+  },
+  {
     "title": "The fuel duty cut extension in the Autumn Budget 2026",
     "description": "The Budget keeps fuel duty at 52.95p a litre to 30 June 2027. We show how the duty and VAT on each litre change, and what this means for households by the fuel they use.",
     "date": "2026-10-28 19:00:00",
@@ -36,8 +45,8 @@
     "image": "pension-tax-allowance/cover-illustration.webp"
   },
   {
-    "title": "The adjusted Triple Lock: what changes in 2030 and what it saves",
-    "description": "From April 2030 the State Pension rises by the higher of inflation and 2.5%, or by more where needed to hold its April 2029 value relative to earnings. Our pre-Budget, provisional estimate: it saves \u00a311.1 billion in 2039-40 on average across 50,000 paths of prices and earnings, or \u00a37.9 billion once tax and benefits respond.",
+    "title": "The adjusted Triple Lock in the Autumn Budget 2026",
+    "description": "From April 2030, the State Pension rises by the higher of inflation and 2.5%, or by more where needed to hold its April 2029 value relative to earnings. We explain how the Triple Lock works and what the adjusted rule saves: on our pre-Budget estimates, \u00a30.9 billion in 2039-40 on the OBR's March 2026 central path and \u00a310.3 billion if the Triple Lock outpaces earnings as the OBR assumes.",
     "date": "2026-10-28 17:00:00",
     "tags": ["uk", "policy", "autumn-budget"],
     "authors": ["max-ghenis"],

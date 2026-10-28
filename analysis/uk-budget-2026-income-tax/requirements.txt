@@ -1,0 +1,3 @@
+policyengine[uk]==6.11.1
+policyengine-uk==2.151.0
+policyengine-core==3.33.3
