@@ -17,7 +17,7 @@
     ]
   },
   "population": {
-    "status": "provisional_dashboard_aggregate_outputs_available_awaiting_reconciliation",
+    "status": "archived_dashboard_outputs_not_in_current_articles",
     "dataset": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
     "sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
     "certificate": "https://github.com/PolicyEngine/policyengine.py/pull/720",
@@ -69,7 +69,9 @@
       "property_artifact": "3537bd303ac226cf",
       "savings_artifact": "af6aaaee33f616ee",
       "source_check_note": "Manifest17 status reported by the parent task during the PTA alignment; manifest_updated_at is the publisher timestamp, not a local fetch timestamp."
-    }
+    },
+    "article_national_results_published": false,
+    "article_scope_note": "Both current articles omit earlier model national estimates, decile tables and affected shares. Retained population-preview files are historical public aggregates for reproducibility, not current publication figures. National estimates are linked through the dashboard pending final execution-bound results."
   },
   "treasury_costings": {
     "source": "https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html",
@@ -115,7 +117,8 @@
     "additional_household_pairs": 5,
     "raw_population_accessed": false,
     "additional_internal_population_numbers_adopted": false,
-    "final_regeneration_note": "Detailed October forecast tables and council tax are expected; retain the recorded first-estimate snapshot until replacement outputs bind the exact dataset and forecast."
+    "final_regeneration_note": "Detailed October forecast tables and council tax are expected; retain the recorded first-estimate snapshot until replacement outputs bind the exact dataset and forecast.",
+    "remaining_comments_resolution": "Withdrawn combined national results removed from savings/property, following the same cut-or-match-final-run approach Max applied to trading. Confirmed dashboard household matching, updated canonical links, added primary-source collection-timing explanation and retained separate Treasury costings. Trading whole-year exclusions and pre-switch dashboard wording corrected."
   },
   "household_forecast": {
     "dashboard_commit": "640426575270224db9b04d6c94d30e264a347be2",
