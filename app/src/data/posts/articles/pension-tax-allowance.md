@@ -4,10 +4,10 @@ Key figures for 2027-28:
 
 - The full new State Pension is £13,036.40 a year, £466.40 above the £12,570 Personal Allowance.
 - The full PTA is £94.
-- A pensioner with the standard Personal Allowance, no other tax charges and total income up to £13,036.40 pays no income tax.
+- A pensioner with the standard Personal Allowance, income taxed at the 20% basic rate and total income up to £13,036.40 pays no income tax.
 - The PTA falls by £1 for each £3 of income above £13,036.40 and reaches zero at £13,318.40.
 - In that withdrawal range, a taxpayer outside Scotland has an effective marginal tax rate of 53.3%, against 20% without the PTA.
-- For a pensioner who claims means-tested benefits, those benefits fall as income tax falls, so net income rises by less than the PTA.
+- For a pensioner who claims means-tested benefits, those benefits fall as income tax falls, so net income rises by less than the PTA. A Pension Credit claimant aged 75 or over can lose up to £180, because leaving Pension Credit ends the free TV licence.
 
 ## What the PTA does
 
@@ -15,7 +15,7 @@ The [Budget 2026 document](https://www.gov.uk/government/publications/budget-202
 
 1. **Eligibility.** People over State Pension age, or who reach it during the tax year, qualify. A person does not need to receive the State Pension. The PTA belongs to each person and cannot be transferred to a partner.
 2. **Value.** The full PTA is 20% of the gap between the full new State Pension and the Personal Allowance, rounded up: £94 in 2027-28. Scottish taxpayers receive the same PTA, which the explainer says is "calculated using the 20% basic rate rather than the Scottish starter rate".
-3. **Tax reduction.** The PTA reduces the income tax bill after all allowances and reliefs. It does not change the Personal Allowance, and it cannot produce a refund. In this sense it works like a non-refundable tax credit, as the Married Couple's Allowance does.
+3. **Tax reduction.** The PTA reduces the income tax bill after all allowances and reliefs. It does not change the Personal Allowance, and it cannot produce a refund. In this sense it works like a non-refundable tax credit, as the Married Couple's Allowance does. Because the full PTA is worth 20% of the gap, income taxed above 20% can still leave tax to pay: property income is taxed at 22% in 2027-28, so a pensioner with £11,000 of State Pension and £2,036.40 of property income pays £8.61 with the PTA, down from £102.61.
 4. **Income test.** The test uses total income from all sources: pensions, earnings, self-employment, property, savings and dividends. ISA income does not count. A person with total income at or below the full new State Pension gets the full PTA.
 5. **Taper.** Above the full new State Pension, the PTA falls by £1 for each £3 of extra total income. In 2027-28 it reaches zero £282 above the full new State Pension.
 
@@ -49,19 +49,20 @@ A pensioner whose only income is the full new State Pension owes £93.28 of inco
 
 ### Net income and other benefits
 
-Pension Credit, Housing Benefit and Council Tax Reduction all assess income after income tax. When the PTA lowers income tax, these benefits fall, so household net income rises by less than the PTA. The table shows seven households in the North West of England in 2027-28: four single pensioners aged 70 and three couples aged 70 and 60. Each owes £1,800 a year of council tax, except the Pension Credit claimant, who has no housing costs in this example; the renters pay £7,800 a year in rent. Each column shows the change that the PTA makes.
+Pension Credit, Housing Benefit and Council Tax Reduction all assess income after income tax. When the PTA lowers income tax, these benefits fall, so household net income rises by less than the PTA. The table shows eight households in the North West of England in 2027-28: five single pensioners and three couples aged 70 and 60. The single pensioners are aged 70, except one aged 76. Each owes £1,800 a year of council tax, except the two Pension Credit claimants, who have no housing costs in these examples; the renters pay £7,800 a year in rent. Each column shows the change that the PTA makes; for the TV licence fee, a positive change is a new cost.
 
-| Household                                                                                                        | Total income | Income tax | Pension Credit | Housing Benefit | Council Tax Reduction | Universal Credit | Household net income |
-| ---------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | -------------- | --------------- | --------------------- | ---------------- | -------------------- |
-| Full new State Pension, owns home, claims no means-tested benefits                                               | £13,036.40   | −£93.28    | £0.00          | £0.00           | £0.00                 | £0.00            | +£93.28              |
-| Full new State Pension, owns home, claims Council Tax Reduction                                                  | £13,036.40   | −£93.28    | £0.00          | £0.00           | −£18.66               | £0.00            | +£74.62              |
-| Full new State Pension, rents, claims Housing Benefit and Council Tax Reduction                                  | £13,036.40   | −£93.28    | £0.00          | −£60.63         | −£18.66               | £0.00            | +£13.99              |
-| £11,000 State Pension and £1,800 private pension, claims Pension Credit                                          | £12,800.00   | −£46.00    | −£46.00        | £0.00           | £0.00                 | £0.00            | £0.00                |
-| Married couple, older partner on the full new State Pension, rents, claims Universal Credit                      | £13,036.40   | £0.00      | £0.00          | £0.00           | £0.00                 | £0.00            | £0.00                |
-| Unmarried couple, older partner on the full new State Pension, rents, claims Universal Credit                    | £13,036.40   | −£93.28    | £0.00          | £0.00           | £0.00                 | £0.00            | +£93.28              |
-| Unmarried couple, older partner earns £13,036.40 with the State Pension deferred, rents, claims Universal Credit | £13,036.40   | −£93.28    | £0.00          | £0.00           | £0.00                 | −£51.30          | +£41.97              |
+| Household                                                                                                        | Total income | Income tax | Pension Credit | Housing Benefit | Council Tax Reduction | Universal Credit | TV licence fee | Household net income |
+| ---------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | -------------- | --------------- | --------------------- | ---------------- | -------------- | -------------------- |
+| Full new State Pension, owns home, claims no means-tested benefits                                               | £13,036.40   | −£93.28    | £0.00          | £0.00           | £0.00                 | £0.00            | £0.00          | +£93.28              |
+| Full new State Pension, owns home, claims Council Tax Reduction                                                  | £13,036.40   | −£93.28    | £0.00          | £0.00           | −£18.66               | £0.00            | £0.00          | +£74.62              |
+| Full new State Pension, rents, claims Housing Benefit and Council Tax Reduction                                  | £13,036.40   | −£93.28    | £0.00          | −£60.63         | −£18.66               | £0.00            | £0.00          | +£13.99              |
+| £11,000 State Pension and £1,800 private pension, claims Pension Credit                                          | £12,800.00   | −£46.00    | −£46.00        | £0.00           | £0.00                 | £0.00            | £0.00          | £0.00                |
+| Aged 76, £11,000 State Pension and £1,860 private pension, claims Pension Credit                                 | £12,860.00   | −£58.00    | −£57.60        | £0.00           | £0.00                 | £0.00            | +£180.00       | −£179.60             |
+| Married couple, older partner on the full new State Pension, rents, claims Universal Credit                      | £13,036.40   | £0.00      | £0.00          | £0.00           | £0.00                 | £0.00            | £0.00          | £0.00                |
+| Unmarried couple, older partner on the full new State Pension, rents, claims Universal Credit                    | £13,036.40   | −£93.28    | £0.00          | £0.00           | £0.00                 | £0.00            | £0.00          | +£93.28              |
+| Unmarried couple, older partner earns £13,036.40 with the State Pension deferred, rents, claims Universal Credit | £13,036.40   | −£93.28    | £0.00          | £0.00           | £0.00                 | −£51.30          | £0.00          | +£41.97              |
 
-Housing Benefit falls by 65p and Council Tax Reduction by 20p for each £1 of extra income after tax, so the renter keeps 15p of each £1 of PTA. Pension Credit tops income after tax up to a minimum guarantee, so a claimant whose income stays below the guarantee loses Pension Credit equal to the full PTA.
+Housing Benefit falls by 65p and Council Tax Reduction by 20p for each £1 of extra income after tax, so the renter keeps 15p of each £1 of PTA. Pension Credit tops income after tax up to a minimum guarantee, so a claimant whose income stays below the guarantee loses Pension Credit equal to the full PTA. A Pension Credit claimant aged 75 or over also gets a free TV licence. If the PTA lifts income after tax above the guarantee, Pension Credit ends and the £180 licence fee returns, so the aged-76 claimant is £179.60 worse off. This applies from £12,859.60 to £12,931.99 of total income in 2027-28, the range where Pension Credit would continue without the PTA.
 
 A couple in which one partner is under State Pension age claims Universal Credit, not Pension Credit or Housing Benefit. Universal Credit counts pension income before income tax (Universal Credit Regulations 2013, regulation 66), so the PTA does not change it. It counts earnings after income tax, so when the PTA cuts the tax on earnings, Universal Credit falls by 55p for each £1. In the married couple, the younger partner transfers the Marriage Allowance, which already removes the older partner's income tax, so the PTA gives nothing. An unmarried couple cannot use the Marriage Allowance. A single person over State Pension age cannot claim Universal Credit. The explainer also notes that "receipt of the Pension Tax Allowance may affect your entitlement" to means-tested benefits.
 
@@ -590,7 +591,7 @@ This chart shows household net income for a pensioner who claims Pension Credit 
 }
 ```
 
-We estimate the 2027-28 Pension Credit minimum guarantee at £247.30 a week, or £12,859.60 a year (see the assumptions below). Up to that income, Pension Credit holds net income at £12,879.60 with or without the PTA. Above it, the PTA raises net income by up to £93.55, at £13,037.75, and the gain falls to zero at £13,318.40.
+We estimate the 2027-28 Pension Credit minimum guarantee at £247.30 a week, or £12,859.60 a year (see the assumptions below). Up to that income, Pension Credit holds net income at £12,879.60 with or without the PTA. Above it, the PTA raises net income by up to £93.55, at £13,037.75, and the gain falls to zero at £13,318.40. For a claimant aged 75 or over, the loss of the free TV licence makes the change negative from £12,859.60 to £12,931.99.
 
 ## Marginal tax rates
 
@@ -732,14 +733,15 @@ Without the PTA, the rate is 100% up to £12,931.99, because Pension Credit fall
 ## Assumptions and limitations
 
 - The analysis covers single pensioners in household calculations. It is not a microsimulation, and it makes no population-wide estimates of its own; the costs and counts above come from HM Treasury.
-- DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings, and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. We apply 3.9% to the 2026-27 rate of £238.00 a week, which gives £247.30. PolicyEngine UK's own projection is £243.47.
+- DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings, and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. We apply 3.9% to the 2026-27 rate of £238.00 a week, which gives £247.30. PolicyEngine UK's own projection on the October 2026 forecast is £245.38, uprated by lagged CPI; the household calculator in PolicyEngine's Autumn Budget dashboard uses that lower guarantee, so its figures for a Pension Credit claimant differ slightly.
 - The 2028-29 and 2029-30 State Pension values follow the OBR's October 2026 forecast. The explainer bases the threshold on the State Pension received in the tax year; we use 52 weeks. The published rates, and the number of payments in a tax year, may differ.
 - The explainer does not state how HMRC rounds the PTA in later years. We round up to the pound, as for 2027-28.
-- We apply the PTA to the final income tax liability. For people with tax charges, such as the High Income Child Benefit Charge, the legislation in the Finance Bill 2026-27 may set a different order. People who transfer part of their Personal Allowance through the Marriage Allowance can still owe tax with the PTA.
+- We apply the PTA to the final income tax liability; the Finance Bill 2026-27 will set the legal order of steps. People who transfer part of their Personal Allowance through the Marriage Allowance can still owe tax with the PTA.
 - PolicyEngine UK treats a person as over State Pension age if they reach it by 6 October. The PTA also covers people who reach State Pension age later in the tax year. The example pensioners are all aged 70, so this does not affect the results.
 - We measure total income as the sum of income from each source. HMRC's total income may deduct some reliefs first.
 - In the worked examples, the explainer's part-time worker also has a small amount of property income; we model the full amount as salary. For the pensioner with £13,400 of income, the explainer's £166 treats all of it as taxable at 20%; we model it as a private pension. If part of it were savings interest, the starting rate for savings would reduce the tax.
 - The benefit results assume that each pensioner claims the benefits they are entitled to, and they use PolicyEngine UK's council tax, rent and TV licence values for 2027-28.
+- The calculations include no other Budget 2026 measure. The Budget raises the tax rates on property and savings income from April 2027, which would leave more tax to pay on such income with the PTA.
 - PolicyEngine UK takes a person's earnings as the lowest slice of their income when it works out the income tax that Universal Credit deducts, and it takes tax reductions off that tax first. We apply the PTA in the same way. The couples' examples do not include local Council Tax Reduction schemes for working-age households.
 
 The Budget also adjusts the triple lock from April 2030: the State Pension then rises by the highest of 2.5%, inflation, or the increase that keeps its value relative to earnings at the April 2029 level. This post does not cover that change.
