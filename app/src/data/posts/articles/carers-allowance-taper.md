@@ -450,13 +450,22 @@ This is our adjustment. PolicyEngine UK 2.151.0 does not yet count the PAYE on t
 
 Even with the adjustment, carer 2 is better off without the allowance: without the taper, when pay rises from £234 to £235 and the allowance stops, net income rises by about £8.
 
-## The share of each extra £1 kept
+## Marginal tax rates
+
+The effective marginal tax rate is the share of an extra £1 of gross pay that the carer loses to income tax, employee National Insurance, the change in Carer's Allowance and the withdrawal of Universal Credit. It is 100% minus the share kept: a 72% rate means the carer keeps 28p of each extra £1.
+
+| Gross weekly pay | Not on UC, without the taper | Not on UC, with the taper | On UC, without the taper | On UC, with the taper |
+| ---------------- | ---------------------------: | ------------------------: | -----------------------: | --------------------: |
+| £150 to £234     |                        20.0% |                     20.0% |                    64.0% |                 64.0% |
+| £234 to £247     |                         0.0% |                    100.0% |                    55.0% |                 55.0% |
+| £247 to £366     |                        28.0% |                     85.6% |                    67.6% |                 61.1% |
+| Above £366       |                        28.0% |                     28.0% |                    67.6% |                 67.6% |
 
 ```chart
 {
   "type": "line",
-  "title": "Share of each extra £1 of pay kept, 2031-32",
-  "subtitle": "Rise in weekly household net income for each extra £1 of gross weekly pay",
+  "title": "Effective marginal tax rate for a carer, 2031-32",
+  "subtitle": "Share of each extra £1 of gross pay lost to income tax, National Insurance, lower Carer's Allowance and lower Universal Credit",
   "xKey": "pay",
   "xLabel": "Gross weekly pay",
   "series": [
@@ -488,38 +497,38 @@ Even with the adjustment, carer 2 is better off without the allowance: without t
   "data": [
     {
       "pay": 150,
-      "notOnUcWithout": 80.0,
-      "notOnUcWith": 80.0,
-      "onUcWithout": 36.0,
-      "onUcWith": 36.0
+      "notOnUcWithout": 20.0,
+      "notOnUcWith": 20.0,
+      "onUcWithout": 64.0,
+      "onUcWith": 64.0
     },
     {
       "pay": 234,
-      "notOnUcWithout": 100.0,
-      "notOnUcWith": 0.0,
-      "onUcWithout": 45.0,
-      "onUcWith": 45.0
+      "notOnUcWithout": 0.0,
+      "notOnUcWith": 100.0,
+      "onUcWithout": 55.0,
+      "onUcWith": 55.0
     },
     {
       "pay": 247,
-      "notOnUcWithout": 72.0,
-      "notOnUcWith": 14.4,
-      "onUcWithout": 32.4,
-      "onUcWith": 38.9
+      "notOnUcWithout": 28.0,
+      "notOnUcWith": 85.6,
+      "onUcWithout": 67.6,
+      "onUcWith": 61.1
     },
     {
       "pay": 366,
-      "notOnUcWithout": 72.0,
-      "notOnUcWith": 72.0,
-      "onUcWithout": 32.4,
-      "onUcWith": 32.4
+      "notOnUcWithout": 28.0,
+      "notOnUcWith": 28.0,
+      "onUcWithout": 67.6,
+      "onUcWith": 67.6
     },
     {
       "pay": 400,
-      "notOnUcWithout": 72.0,
-      "notOnUcWith": 72.0,
-      "onUcWithout": 32.4,
-      "onUcWith": 32.4
+      "notOnUcWithout": 28.0,
+      "notOnUcWith": 28.0,
+      "onUcWithout": 67.6,
+      "onUcWith": 67.6
     }
   ],
   "markers": [
@@ -536,7 +545,7 @@ Even with the adjustment, carer 2 is better off without the allowance: without t
       "label": "Allowance runs out"
     }
   ],
-  "yLabel": "Share of each extra £1 kept",
+  "yLabel": "Effective marginal tax rate",
   "format": {
     "suffix": "%",
     "decimals": 1
@@ -550,11 +559,11 @@ Even with the adjustment, carer 2 is better off without the allowance: without t
 }
 ```
 
-Without the taper, carer 1 keeps 80p of each extra £1 of pay up to the limit: the allowance uses part of the Personal Allowance, so pay above about £148 a week is taxed at 20%. Above the limit, with no allowance, carer 1 keeps all of each extra £1 up to about £247 and 72p above it. With the taper, carer 1 keeps nothing of each extra £1 from £234 to about £247, because the allowance falls by the same £1. From £247 to £366, carer 1 keeps 14.4p: income tax and National Insurance on the pay take 28p, the allowance falls by 72p, and the income tax on the allowance falls by 14.4p. This is an effective marginal tax rate of 85.6%, against 28% without the taper.
+Without the taper, carer 1's rate is 20% up to the limit: the allowance uses part of the Personal Allowance, so pay above about £148 a week is taxed at 20%. Above the limit, with no allowance, the rate is 0% up to about £247 and 28% above it, from 20% income tax and 8% National Insurance. With the taper, carer 1's rate is 100% from £234 to about £247, because the allowance falls by the same £1 that pay rises. From £247 to £366 it is 85.6%: income tax and National Insurance on the pay take 28p of each extra £1, the allowance falls by 72p, and the income tax on the allowance falls by 14.4p.
 
-The chart leaves out the £1 step at the limit itself. Without the taper, carer 1's net income falls by about £80 when pay rises from £234 to £235; with the taper, it does not change.
+Carer 2's rate is 64% up to the limit and 55% from £234 to about £247, with or without the taper. From £247 to £366, it is 61.1% with the taper, against 67.6% without, because the loss from the tax on the allowance shrinks as the allowance falls.
 
-Carer 2 keeps 36p of each extra £1 up to the limit and 45p from £234 to about £247, with or without the taper. From £247 to £366, carer 2 keeps 38.9p with the taper, against 32.4p without, because the loss from the tax on the allowance shrinks as the allowance falls.
+The table and chart leave out the £1 step at the limit itself. Without the taper, a carer whose net earnings rise from £234 to £235 a week loses the whole allowance, so for that one step carer 1 loses more than the £1 gained: net income falls by about £80. Carer 2's net income rises by about £8 at that step, because Universal Credit replaces most of the lost allowance and the tax on the allowance goes. With the taper, the step is like any other in the taper range.
 
 ## Population estimates
 
