@@ -33,6 +33,7 @@ The same main rate applies to petrol and diesel across the UK. Retailers in [Rur
 {
   "type": "bar",
   "title": "Main fuel duty rate before and after the Budget",
+  "valueLabels": false,
   "subtitle": "Pence per litre of petrol or diesel, before VAT",
   "xKey": "period",
   "series": [
@@ -93,16 +94,16 @@ The examples are households that use 500, 1,000 and 2,000 litres of petrol or di
 | 1,000 litres    | £28             | £6        | £12                  | £22                  | £34         |
 | 2,000 litres    | £56             | £11       | £24                  | £43                  | £67         |
 
-Totals may not add because of rounding.
+The same saving by litres bought a week:
 
-The same saving by litres bought a week, with the duty and VAT saved each week in each period:
+| Litres a week | A year             | Saved, January and February 2027 | Saved, March 2027 | Saved, April to June 2027 | Total, 1 January to 30 June 2027 | 2026-27 | 2027-28 |
+| ------------- | ------------------ | -------------------------------- | ----------------- | ------------------------- | -------------------------------- | ------- | ------- |
+| 10 litres     | about 520 litres   | £3                               | £3                | £12                       | £18                              | £6      | £11     |
+| 20 litres     | about 1,040 litres | £6                               | £5                | £24                       | £35                              | £13     | £23     |
+| 40 litres     | about 2,080 litres | £12                              | £11               | £48                       | £70                              | £25     | £45     |
+| 60 litres     | about 3,120 litres | £18                              | £16               | £72                       | £106                             | £38     | £68     |
 
-| Litres a week | A year             | Saved a week, January and February 2027 | Saved a week, March 2027 | Saved a week, April to June 2027 | Total, 1 January to 30 June 2027 | 2026-27 | 2027-28 |
-| ------------- | ------------------ | --------------------------------------- | ------------------------ | -------------------------------- | -------------------------------- | ------- | ------- |
-| 10 litres     | about 520 litres   | 36p                                     | 60p                      | 92p                              | £18                              | £6      | £11     |
-| 20 litres     | about 1,040 litres | 72p                                     | £1.20                    | £1.83                            | £35                              | £13     | £23     |
-| 40 litres     | about 2,080 litres | £1.44                                   | £2.40                    | £3.67                            | £70                              | £25     | £45     |
-| 60 litres     | about 3,120 litres | £2.16                                   | £3.60                    | £5.50                            | £106                             | £38     | £68     |
+_Figures may not sum because of rounding._
 
 The household calculator on PolicyEngine's [Autumn Budget 2026 dashboard](https://policyengine.org/uk/autumn-budget-2026) includes a driver with a long commute, who spends £2,600 a year on petrol and diesel. At PolicyEngine UK's pump prices, 150.8p a litre for petrol and 170.6p for diesel, that buys about 1,620 litres a year. The measure saves this driver £20 in 2026-27 and £35 in 2027-28. The model's pump prices are fixed and below October 2026 prices, when diesel was above £2 a litre, so the same spending buys fewer litres today; the examples in this post are set in litres for that reason.
 
@@ -320,6 +321,8 @@ The measure lowers a tax on spending, so it does not change any income that taxe
 | Couple with two children, one earner on £25,000, renting privately       | Universal Credit £16,441, Child Benefit £2,419       | £38,046                        | £38,067                     | £22    |
 | Single pensioner on the full new State Pension, renting from the council | Housing Benefit £7,616, Council Tax Reduction £1,544 | £19,917                        | £19,939                     | £22    |
 
+_Figures may not sum because of rounding._
+
 The table shows the fuel duty measure on its own. It leaves out the Budget's other measures: under the Pension Tax Allowance, for example, the pensioner would pay no income tax in 2027-28, instead of £93.
 
 In each household, net income rises by the £22 saving on duty and VAT, and no benefit, income tax or National Insurance amount changes. In 2026-27, each household gains £12 in the same way.
@@ -356,6 +359,7 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
 {
   "type": "bar",
   "title": "Average gain by income decile",
+  "valueLabels": false,
   "subtitle": "Change in household net income, £ a year, by tax year",
   "xKey": "decile",
   "series": [
@@ -435,6 +439,7 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
 {
   "type": "bar",
   "title": "Gain as a share of income by income decile",
+  "valueLabels": false,
   "subtitle": "Change in household net income, % of baseline income, by tax year",
   "xKey": "decile",
   "series": [
@@ -510,7 +515,7 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
 }
 ```
 
-The poverty rate does not change. Official poverty measures, and PolicyEngine's, use household income after direct taxes, which does not deduct taxes on spending such as fuel duty and VAT. The Gini index of household net income falls by 0.0001 in 2026-27 and 0.0002 in 2027-28.
+The absolute poverty rate before housing costs does not change. This is the Households Below Average Income (HBAI) measure: a person is in absolute poverty if their household's equivalised income before housing costs is below 60% of the 2024-25 median, held constant in real terms. HBAI income deducts direct taxes but not taxes on spending such as fuel duty and VAT, so the measure does not include the saving. The Gini index of household net income falls by 0.0001 in 2026-27 and 0.0002 in 2027-28.
 
 ## Assumptions and limitations
 
