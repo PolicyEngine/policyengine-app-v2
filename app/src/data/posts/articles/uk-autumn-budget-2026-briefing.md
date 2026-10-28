@@ -15,15 +15,15 @@ _[Use PolicyEngine's Autumn Budget 2026 dashboard](https://www.policyengine.org/
 
 **Table 1: The seven measures we model**
 
-| Measure                   | What changes                                                                                                         | When                                |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| Household Energy Payment  | A one-off £100 for households in council tax bands A to D in England                                                 | Paid from January 2027              |
-| Zero VAT on electricity   | The 0% rate on household electricity, in force in Great Britain since 1 October 2026, is extended by three months    | To 1 July 2027                      |
-| Fuel duty                 | The 5p cut is extended, and the April 2027 RPI rise moves to 1 July 2027 | To 1 July 2027                      |
-| Pension Tax Allowance     | An income tax reduction for people above State Pension age, or reaching it during the tax year, whose total income is at most the full new State Pension, tapered above it | 6 April 2027 to 5 April 2030        |
-| Property income tax       | Rates on property income rise 2 points, to 24%, 44% and 49% in England, Wales and Northern Ireland                   | From 6 April 2027                   |
-| Trading allowance         | Rises from £1,000 to £3,000                                                                                          | From 6 April 2027                   |
-| Carer's Allowance taper   | Above the weekly earnings limit, the allowance is withdrawn £1 for each £1 earned instead of all at once, in England and Wales | During 2030-31                      |
+| Measure                  | What changes                                                                                                                                                               | When                         |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Household Energy Payment | A one-off £100 for households in council tax bands A to D in England                                                                                                       | Paid from January 2027       |
+| Zero VAT on electricity  | The 0% rate on household electricity, in force in Great Britain since 1 October 2026, is extended by three months                                                          | To 1 July 2027               |
+| Fuel duty                | The 5p cut is extended, and the April 2027 RPI rise moves to 1 July 2027                                                                                                   | To 1 July 2027               |
+| Pension Tax Allowance    | An income tax reduction for people above State Pension age, or reaching it during the tax year, whose total income is at most the full new State Pension, tapered above it | 6 April 2027 to 5 April 2030 |
+| Property income tax      | Rates on property income rise 2 points, to 24%, 44% and 49% in England, Wales and Northern Ireland                                                                         | From 6 April 2027            |
+| Trading allowance        | Rises from £1,000 to £3,000                                                                                                                                                | From 6 April 2027            |
+| Carer's Allowance taper  | Above the weekly earnings limit, the allowance is withdrawn £1 for each £1 earned instead of all at once, in England and Wales                                             | During 2030-31               |
 
 Sources: [Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) and the [policy costings](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026).
 
@@ -37,19 +37,19 @@ The Budget makes other changes that reach households, which our dashboard does n
 
 **Table 2: Other household measures we don't model, official costings (£ million)**
 
-| Measure (Table 6.1 row)              | What changes                                                                                           | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------ | ------: | ------: | ------: | ------: | ------: | ------: |
-| Student loans (83)                   | Interest on Plan 2 and Plan 3 loans capped at 6% from 1 September 2026 to 31 August 2027                | −230    | −170    | −10     | −10     | −5      | −15     |
-| Universal Credit (8)                 | The £2,500 surplus earnings threshold kept for a year from 1 April 2027                                 | 0       | −140    | 0       | 0       | 0       | 0       |
-| Mileage rates (5)                    | 55p a mile for the first 10,000 business miles from April 2026; 35p above that from April 2027         | −30     | −200    | −220    | −225    | −235    | −245    |
-| Bus fares (4)                        | Single fares capped at £2 in England outside London for 2027, funded by reprioritising DESNZ budgets, which the costing includes | −50     | −180    | +65     | +170    | 0       | 0       |
-| Cash ISAs (11)                       | The cash ISA limit stays at £20,000                                                                     | 0       | −5      | −20     | −35     | −50     | −70     |
-| Lifetime ISA (39)                    | Withdrawal charge cut from 25% to 20% for first-time buyers of homes above the £450,000 price cap      | −15     | −20     | −20     | −25     | −25     | −25     |
-| Founders' Relief (26)                | A new Capital Gains Tax relief for qualifying founders, from April 2027                                 | 0       | −260    | −180    | −260    | −285    | −300    |
-| Business Asset Disposal Relief (60)  | Lifetime limit cut from £1 million to £500,000 from April 2027                                          | +5      | +60     | +180    | +255    | +280    | +305    |
-| Distributions (49)                   | Fewer ways for shareholders to take profits out of a company as capital gains where dividend tax fits better, from April 2028 | 0       | 0       | +55     | +800    | +775    | +785    |
-| Private hire VAT (59)                | Larger operators pay VAT on the full fare from 2 January 2028                                           | 0       | +95     | +385    | +395    | +410    | +425    |
-| Company car tax (86)                 | Benefit-in-kind rates for 2030-31 set 1 point above 2029-30, up to 40%                                            | 0       | 0       | 0       | 0       | +310    | +345    |
+| Measure (Table 6.1 row)             | What changes                                                                                                                     | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------: | ------: | ------: | ------: | ------: | ------: |
+| Student loans (83)                  | Interest on Plan 2 and Plan 3 loans capped at 6% from 1 September 2026 to 31 August 2027                                         |    −230 |    −170 |     −10 |     −10 |      −5 |     −15 |
+| Universal Credit (8)                | The £2,500 surplus earnings threshold kept for a year from 1 April 2027                                                          |       0 |    −140 |       0 |       0 |       0 |       0 |
+| Mileage rates (5)                   | 55p a mile for the first 10,000 business miles from April 2026; 35p above that from April 2027                                   |     −30 |    −200 |    −220 |    −225 |    −235 |    −245 |
+| Bus fares (4)                       | Single fares capped at £2 in England outside London for 2027, funded by reprioritising DESNZ budgets, which the costing includes |     −50 |    −180 |     +65 |    +170 |       0 |       0 |
+| Cash ISAs (11)                      | The cash ISA limit stays at £20,000                                                                                              |       0 |      −5 |     −20 |     −35 |     −50 |     −70 |
+| Lifetime ISA (39)                   | Withdrawal charge cut from 25% to 20% for first-time buyers of homes above the £450,000 price cap                                |     −15 |     −20 |     −20 |     −25 |     −25 |     −25 |
+| Founders' Relief (26)               | A new Capital Gains Tax relief for qualifying founders, from April 2027                                                          |       0 |    −260 |    −180 |    −260 |    −285 |    −300 |
+| Business Asset Disposal Relief (60) | Lifetime limit cut from £1 million to £500,000 from April 2027                                                                   |      +5 |     +60 |    +180 |    +255 |    +280 |    +305 |
+| Distributions (49)                  | Fewer ways for shareholders to take profits out of a company as capital gains where dividend tax fits better, from April 2028    |       0 |       0 |     +55 |    +800 |    +775 |    +785 |
+| Private hire VAT (59)               | Larger operators pay VAT on the full fare from 2 January 2028                                                                    |       0 |     +95 |    +385 |    +395 |    +410 |    +425 |
+| Company car tax (86)                | Benefit-in-kind rates for 2030-31 set 1 point above 2029-30, up to 40%                                                           |       0 |       0 |       0 |       0 |    +310 |    +345 |
 
 Source: HM Treasury, [Table 6.1](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) of Budget 2026. A negative number is a cost to the public finances.
 
@@ -63,12 +63,13 @@ The package costs £3.11 billion in 2026-27, almost all of it the energy payment
 
 **Table 3: Budgetary impact of the seven measures (£ million)**
 
-|                                       | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
-| ------------------------------------- | ------: | ------: | ------: | ------: | ------: | ------: |
-| PolicyEngine, the package             | −3,110  | −615    | +210    | +166    | +301    | +281    |
-| Official, the same seven measures     | −3,955  | −1,095  | +260    | +120    | +280    | +180    |
+|                                    | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
+| ---------------------------------- | ------: | ------: | ------: | ------: | ------: | ------: |
+| PolicyEngine, the package          |  −3,110 |    −615 |    +210 |    +166 |    +301 |    +281 |
+| Official, the same seven measures  |  −3,935 |  −1,122 |    +235 |     +85 |    +248 |    +150 |
+| Table 6.1 total, the same measures |  −3,955 |  −1,095 |    +260 |    +120 |    +280 |    +180 |
 
-Official: the sum of rows 1, 2, 3, 7, 15, 52 and 61 of the Budget's [Table 6.1](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026). A negative number is a cost to the public finances. The package differs from the sum of the seven measures run one at a time by less than £1 million in every year. We explain the differences from the official costings [below](#how-our-estimates-compare-with-the-official-costings).
+Official: the sum of the seven measures' official lines in Table 6, from the OBR's detailed forecast table 1.1. Table 6.1 total, for context: the sum of rows 1, 2, 3, 7, 15, 52 and 61 of the Budget's [Table 6.1](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026). A negative number is a cost to the public finances. The package differs from the sum of the seven measures run one at a time by less than £1 million in every year. We explain the differences from the official costings [below](#how-our-estimates-compare-with-the-official-costings).
 
 ### Household net income by income decile
 
@@ -107,17 +108,17 @@ In 2026-27 the package raises net income in every decile, and by more as a share
 
 | Income decile | 2026-27 | 2027-28 | 2029-30 |
 | ------------- | ------: | ------: | ------: |
-| 1 (lowest)    | +104    | +24     | +6      |
-| 2             | +107    | +23     | +6      |
-| 3             | +107    | +22     | +6      |
-| 4             | +109    | +23     | +2      |
-| 5             | +108    | +27     | +1      |
-| 6             | +108    | +29     | +4      |
-| 7             | +109    | +30     | −3      |
-| 8             | +110    | +27     | −6      |
-| 9             | +107    | +17     | −21     |
-| 10 (highest)  | +98     | −12     | −51     |
-| All           | +107    | +21     | −6      |
+| 1 (lowest)    |    +104 |     +24 |      +6 |
+| 2             |    +107 |     +23 |      +6 |
+| 3             |    +107 |     +22 |      +6 |
+| 4             |    +109 |     +23 |      +2 |
+| 5             |    +108 |     +27 |      +1 |
+| 6             |    +108 |     +29 |      +4 |
+| 7             |    +109 |     +30 |      −3 |
+| 8             |    +110 |     +27 |      −6 |
+| 9             |    +107 |     +17 |     −21 |
+| 10 (highest)  |     +98 |     −12 |     −51 |
+| All           |    +107 |     +21 |      −6 |
 
 Households are ranked into deciles by their income under the Households Below Average Income definition, adjusted for household size and before housing costs, with each decile holding about a tenth of people. The chart and Table 4 cover only the seven measures in Table 1, and none of the Budget's other measures.
 
@@ -127,11 +128,11 @@ The Treasury's [analysis](https://www.gov.uk/government/publications/supporting-
 
 **Table 5: Share of people by the change in their household's net income**
 
-|                         | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
-| ----------------------- | ------: | ------: | ------: | ------: | ------: | ------: |
-| Gain                    | 98.6%   | 90.0%   | 3.4%    | 3.9%    | 1.2%    | 1.2%    |
-| Lose                    | 0.0%    | 4.7%    | 5.6%    | 5.6%    | 5.8%    | 5.7%    |
-| No change               | 1.4%    | 5.3%    | 91.1%   | 90.5%   | 93.0%   | 93.0%   |
+|           | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
+| --------- | ------: | ------: | ------: | ------: | ------: | ------: |
+| Gain      |   98.6% |   90.0% |    3.4% |    3.9% |    1.2% |    1.2% |
+| Lose      |    0.0% |    4.7% |    5.6% |    5.6% |    5.8% |    5.7% |
+| No change |    1.4% |    5.3% |   91.1% |   90.5% |   93.0% |   93.0% |
 
 A household gains or loses when its net income changes by more than 0.01%.
 
@@ -159,38 +160,47 @@ The Gini index of income inequality falls by 0.17% in 2026-27 and by 0.05% in 20
 
 ## How our estimates compare with the official costings
 
+We compare each measure with the government's costing, certified by the OBR, using the line in the OBR's [detailed forecast table 1.1](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/) that matches what we model. Fuel duty is the exception: its official figure is the government's estimate, which the OBR used but could not certify. The Budget's Table 6.1 rounds each measure's total to the nearest £5 million and includes the measure's other lines, so we give it for context only.
+
 Our estimates differ from the official costings for four main reasons: when tax is counted (we score each tax year's liability; the official costings are on a National Accounts basis, in which tax paid through Self Assessment can fall in a later year), coverage (we use household survey data, so effects outside households, and on incomes the survey records thinly, are estimated less fully in ours), behaviour (ours are static; most official costings include responses) and scope (the parts of a policy each models).
 
 **Table 6: PolicyEngine and official costings by measure (£ million)**
 
-| Measure                   |              | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
-| ------------------------- | ------------ | ------: | ------: | ------: | ------: | ------: | ------: |
-| Household Energy Payment  | PolicyEngine | −1,969  | 0       | 0       | 0       | 0       | 0       |
-|                           | Official     | −2,625  | 0       | 0       | 0       | 0       | 0       |
-| Zero VAT on electricity   | PolicyEngine | −840    | −353    | 0       | 0       | 0       | 0       |
-|                           | Official     | −755    | −305    | 0       | 0       | 0       | 0       |
-| Fuel duty                 | PolicyEngine | −301    | −521    | 0       | 0       | 0       | 0       |
-|                           | Official     | −575    | −780    | 0       | 0       | 0       | 0       |
-| Pension Tax Allowance     | PolicyEngine | 0       | −30     | −83     | −144    | 0       | 0       |
-|                           | Official     | 0       | −45     | −90     | −150    | +50     | −15     |
-| Property income tax       | PolicyEngine | 0       | +399    | +412    | +429    | +446    | +459    |
-|                           | Official     | 0       | +35     | +575    | +435    | +445    | +455    |
-| Trading allowance         | PolicyEngine | 0       | −110    | −118    | −119    | −120    | −130    |
-|                           | Official     | 0       | 0       | −225    | −165    | −175    | −180    |
-| Carer's Allowance taper   | PolicyEngine | 0       | 0       | 0       | 0       | −24     | −48     |
-|                           | Official     | 0       | 0       | 0       | 0       | −40     | −80     |
+| Measure                  |                               | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
+| ------------------------ | ----------------------------- | ------: | ------: | ------: | ------: | ------: | ------: |
+| Household Energy Payment | PolicyEngine                  |  −1,969 |       0 |       0 |       0 |       0 |       0 |
+|                          | Official: PSCE in RDEL        |  −2,627 |       0 |       0 |       0 |       0 |       0 |
+|                          | Table 6.1 total               |  −2,625 |       0 |       0 |       0 |       0 |       0 |
+| Zero VAT on electricity  | PolicyEngine                  |    −840 |    −353 |       0 |       0 |       0 |       0 |
+|                          | Official: VAT                 |    −734 |    −296 |       0 |       0 |       0 |       0 |
+|                          | Table 6.1 total               |    −755 |    −305 |       0 |       0 |       0 |       0 |
+| Fuel duty                | PolicyEngine                  |    −301 |    −521 |       0 |       0 |       0 |       0 |
+|                          | Official: Fuel Duty           |    −574 |    −782 |       0 |       0 |       0 |       0 |
+|                          | Table 6.1 total               |    −575 |    −780 |       0 |       0 |       0 |       0 |
+| Pension Tax Allowance    | PolicyEngine                  |       0 |     −30 |     −83 |    −144 |       0 |       0 |
+|                          | Official: Income tax          |       0 |     −44 |     −83 |    −144 |     +49 |     −15 |
+|                          | Table 6.1 total               |       0 |     −45 |     −90 |    −150 |     +50 |     −15 |
+| Property income tax      | PolicyEngine                  |       0 |    +399 |    +412 |    +429 |    +446 |    +459 |
+|                          | Official: Income tax          |       0 |       0 |    +539 |    +394 |    +403 |    +412 |
+|                          | Table 6.1 total               |       0 |     +35 |    +575 |    +435 |    +445 |    +455 |
+| Trading allowance        | PolicyEngine                  |       0 |    −110 |    −118 |    −119 |    −120 |    −130 |
+|                          | Official: Income tax and NICs |       0 |       0 |    −221 |    −165 |    −171 |    −178 |
+|                          | Table 6.1 total               |       0 |       0 |    −225 |    −165 |    −175 |    −180 |
+| Carer's Allowance taper  | PolicyEngine                  |       0 |       0 |       0 |       0 |     −24 |     −48 |
+|                          | Official: Welfare inside cap  |       0 |       0 |       0 |       0 |     −33 |     −69 |
+|                          | Table 6.1 total               |       0 |       0 |       0 |       0 |     −40 |     −80 |
 
-Official: HM Treasury, [Table 6.1](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026), rows 1, 2, 3, 52, 61, 15 and 7.
+Official: the OBR's [detailed forecast table 1.1](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), measures 1, 2, 3, 52, 61, 15 and 7, the line or lines that match what we model, named as the table names them. Table 6.1 total: HM Treasury, [Table 6.1](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026), rows 1, 2, 3, 52, 61, 15 and 7. Its totals also include the OBR table's other lines for each measure that aren't zero: Other AME (current) for zero VAT; PSCE in RDEL, Scottish BGA (current) and Scottish self-financed expenditure for the Pension Tax Allowance and the trading allowance; Onshore CT, Scottish BGA (current) and Scottish self-financed expenditure for property income tax; and Scottish BGA (current) for the Carer's Allowance taper.
 
-Why each differs, from the [dashboard's notes](https://www.policyengine.org/uk/budgets/autumn-2026?tab=dashboard&sub=finances) on its comparison with the official costings. The notes also draw on further runs of our model and on the Budget documents, so some of their figures aren't in Table 3:
+Why each differs. The reasons come from the [dashboard's notes](https://www.policyengine.org/uk/budgets/autumn-2026?tab=dashboard&sub=finances) on its comparison with the official costings, from the OBR's October 2026 Economic and fiscal outlook and from the Budget documents. The notes compare our figures with Table 6.1's totals and also draw on further runs of our model, so some of their figures aren't in Table 6 or in our published results:
 
-- **Household Energy Payment (scope).** Ours is 25% below the official £2,625 million because the official figure also covers two things we don't model: the devolved governments' share of the funding (about £425 million, our estimate using the Barnett formula) and £100 million for councils in England to target the households hit hardest. Without them, about £2,100 million remains for the £100 payments in England, and ours is 94% of that; the Budget doesn't itemise the remaining £130 million or so.
-- **Zero VAT on electricity (coverage).** Ours is £85 million (11%) higher in 2026-27 and £48 million (16%) higher in 2027-28. The official costing also covers charities, residential care and some businesses, and counts households switching from gas to electricity; both make the official figure larger, so neither explains the gap. The two start from different spending: ours from the Department for Energy Security and Net Zero's domestic electricity volumes at average prices paid, grown with CPI, and the official costing from ONS consumer spending, which is 10% to 12% lower. At that level our cost would be within about 4% of the official figure in both years.
-- **Fuel duty (coverage).** Ours is £274 million lower in 2026-27 and £259 million lower in 2027-28. Most of the gap is coverage: we count only the petrol and diesel households buy, about £13 billion of the £24 billion of fuel duty the OBR forecasts for 2026-27, while the official costing covers all taxable fuel, including fuel businesses buy. Scaled up to the OBR's fuel duty receipts, our fuel duty cost would be about £450 million in 2026-27 and £760 million in 2027-28. VAT and behaviour narrow the gap: ours includes £50 million and £87 million of VAT on the lower pump price, which the official fuel duty figure leaves out, and the official costing's demand response makes its cost smaller. The rest of the 2026-27 gap fits the official costing if it assumes the full 5p returns on 1 January 2027 (about £555 million on 45 billion litres), where the law brings it back as 3p then and 2p more from 1 March (about £410 million).
-- **Pension Tax Allowance (scope).** Our income tax cost is £42 million, £112 million and £193 million in 2027-28, 2028-29 and 2029-30: in line with the official costing in 2027-28, and 25% and 29% higher in the next two years. We estimate that about 670,000 people gain in 2027-28, against the Treasury's 500,000. After Pension Credit, Housing Benefit and Council Tax Reduction take back part of it, our net cost is £15 million (34%) below the official costing in 2027-28, £7 million (8%) below in 2028-29 and £6 million (4%) below in 2029-30. For 2028-29 and 2029-30 we set the allowance at £182 and £250 a year, from the October 2026 forecast of the State Pension. The official costing also has figures for 2030-31 and 2031-32. The Treasury's policy costing note gives no reason for these figures after the allowance ends; ours are zero.
-- **Property income tax (timing and behaviour).** The official costing puts tax paid through Self Assessment in a later year than the one it's owed for: the OBR adds £0.0 billion (rounded) of Self Assessment receipts from the savings and property rate rises in 2027-28 and £1.0 billion in 2028-29, so the official figures for those two years aren't comparable with our tax-year figures. From 2029-30 ours is within 1.5% of the official costing every year. The official costing takes off about £0.1 billion a year for landlords incorporating and lower compliance, which ours leaves out, so against the official costing before that behaviour, ours is about £0.1 billion a year lower.
-- **Trading allowance (behaviour and coverage).** From 2028-29 ours is £46 million to £107 million a year below the official costing (28% to 47%), with the largest gap in 2028-29. The official costing includes people switching from deducting their actual expenses to the larger allowance, which we don't model. Without gross receipts in the survey data, we give traders with profits above £3,000 nothing from the change and give miscellaneous income no allowance at all, while for some profits between £1,000 and £3,000 we overstate the gain, because we leave them unrelieved under the current £1,000 allowance. In 2027-28 the official costing has no cost and ours has £110 million. The dashboard gives the reason in its description of the comparison: the official costings are on a National Accounts basis, in which tax paid through Self Assessment can fall in a later year, so a change such as the trading allowance can appear about a year later in them than in ours.
-- **Carer's Allowance taper.** Ours is about 60% of the official costing in both years: £24 million against £40 million in 2030-31, and £48 million against £80 million in 2031-32. Ours is net of the income tax on the higher allowance (£15 million and £32 million); before that tax, ours is £39 million and £79 million. We are still working through the reasons for the gap.
+- **Household Energy Payment (scope).** Ours is 25% below the official £2,627 million because the official figure also covers two things we don't model: the devolved governments' share of the funding (about £425 million, our estimate using the Barnett formula) and £100 million for councils in England to target the households hit hardest. Without them, about £2,100 million remains for the £100 payments in England, and ours is 94% of that; the Budget doesn't itemise the remaining £130 million or so.
+- **Zero VAT on electricity (coverage).** Ours is £106 million (14%) above the OBR's VAT line in 2026-27 and £58 million (19%) above it in 2027-28. The official costing also covers charities, residential care and some businesses, and counts households switching from gas to electricity; both make the official figure larger, so neither explains the gap. The two start from different spending: ours from the Department for Energy Security and Net Zero's domestic electricity volumes at average prices paid, grown with CPI, and the official costing from ONS consumer spending, which is 10% to 12% lower.
+- **Fuel duty (coverage).** The official figure is the government's estimate, which the OBR used but could not certify. Ours is £272 million lower in 2026-27 and £261 million lower in 2027-28. Most of the gap is coverage: we count only the petrol and diesel households buy, about £13 billion of the £24 billion of fuel duty the OBR forecasts for 2026-27, while the official costing covers all taxable fuel, including fuel businesses buy. Scaled up to the OBR's fuel duty receipts, our fuel duty cost would be about £450 million in 2026-27 and £760 million in 2027-28. VAT and behaviour narrow the gap: ours includes £50 million and £87 million of VAT on the lower pump price, which the official fuel duty figure leaves out, and the official costing's demand response makes its cost smaller. The rest of the 2026-27 gap fits the official costing if it assumes the full 5p returns on 1 January 2027 (about £555 million on 45 billion litres), where the law brings it back as 3p then and 2p more from 1 March (about £410 million).
+- **Pension Tax Allowance (scope).** Our income tax cost is £42 million, £112 million and £193 million in 2027-28, 2028-29 and 2029-30. The OBR's is £44 million, £83 million and £144 million (detailed forecast table 1.1), so ours is 6% lower in 2027-28 and 35% and 34% higher in the next two years. We estimate that about 670,000 people gain in 2027-28, against the Treasury's 500,000. Table 6 shows our net cost, after Pension Credit, Housing Benefit and Council Tax Reduction take back part of the income tax cut; the measure's Welfare inside cap line in the OBR's table is zero. For 2028-29 and 2029-30 we set the allowance at £182 and £250 a year, from the October 2026 forecast of the State Pension. The official costing also has figures for 2030-31 and 2031-32. The Treasury's policy costing note gives no reason for these figures after the allowance ends; ours are zero.
+- **Property income tax (timing and behaviour).** The official costing puts tax paid through Self Assessment in a later year than the one it's owed for: the OBR adds £0.0 billion (rounded) of Self Assessment receipts from the savings and property rate rises in 2027-28 and £1.0 billion in 2028-29 (Economic and fiscal outlook, Table 4.4), so the official figures for those two years aren't comparable with our tax-year figures. From 2029-30 ours is 9% to 11% above the OBR's income tax line. The official costing includes small behavioural responses, more tax-motivated incorporation and higher non-compliance, that reduce the yield by £0.1 billion a year (Economic and fiscal outlook, paragraph 3.17); ours leaves them out.
+- **Trading allowance (behaviour and coverage).** From 2028-29 ours is £47 million to £103 million a year below the OBR's income tax and NICs lines (27% to 47%), with the largest gap in 2028-29. The official costing includes people switching from deducting their actual expenses to the larger allowance, which we don't model. Without gross receipts in the survey data, we give traders with profits above £3,000 nothing from the change and give miscellaneous income no allowance at all, while for some profits between £1,000 and £3,000 we overstate the gain, because we leave them unrelieved under the current £1,000 allowance. In 2027-28 the OBR's lines have no cost and ours has £110 million. The dashboard gives the reason in its description of the comparison: the official costings are on a National Accounts basis, in which tax paid through Self Assessment can fall in a later year, so a change such as the trading allowance can appear about a year later in them than in ours.
+- **Carer's Allowance taper.** The official figure, the OBR's £38 million and £79 million before the Treasury rounds them, includes £5 million and £10 million of extra block grant for Scotland, where Carer's Allowance is devolved, and has no line for income tax. Its Carer's Allowance and Universal Credit spending is £33 million and £69 million (OBR, Economic and fiscal outlook, October 2026, detailed forecast table 1.1, measure 7). Ours, £24 million and £48 million, is net of the income tax on the higher allowance (£15 million and £32 million); before that tax, ours is £39 million and £79 million, about a sixth more than the OBR's spending.
 
 ## Savings income
 
@@ -198,9 +208,12 @@ From 6 April 2027 the income tax rates on savings income rise 2 points, on top o
 
 **Table 7: Official costing of the savings income rate rise (£ million)**
 
-|                              | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
-| ---------------------------- | ------: | ------: | ------: | ------: | ------: | ------: |
-| Official (Table 6.1, row 62) | +15     | +125    | +555    | +520    | +555    | +590    |
+|                          | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 | 2031-32 |
+| ------------------------ | ------: | ------: | ------: | ------: | ------: | ------: |
+| Official: Income tax     |       0 |     +63 |    +483 |    +443 |    +475 |    +510 |
+| Table 6.1 total (row 62) |     +15 |    +125 |    +555 |    +520 |    +555 |    +590 |
+
+Official: the OBR's [detailed forecast table 1.1](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), measure 62, the line that matches what we model. Table 6.1's total also includes the OBR table's Onshore CT line for the measure.
 
 The official costing includes some savers moving their savings into ISAs and other tax-advantaged products. Our estimate is held back from this release while we update the savings income in our data, and follows with that update.
 
@@ -214,6 +227,6 @@ Our estimates come from PolicyEngine's [Autumn Budget 2026 dashboard](https://ww
 - **The package.** The combined results are one simulation of the seven measures together, each modelled exactly as in its own run.
 - **Small samples.** The dashboard withholds any result that rests on fewer than three survey households. For the package in 2030-31 and 2031-32, it withholds the results for two income deciles and the average change across all households, the same cells it withholds for the Carer's Allowance taper on its own.
 
-Every PolicyEngine figure in this briefing comes from the dashboard's published results (manifest revision 17), each read from files that match the checksums in their receipt, except the further figures quoted from the dashboard's notes on the comparison with the official costings. Every official figure comes from the Budget documents linked above.
+Every PolicyEngine figure in this briefing comes from the dashboard's published results (manifest revision 17), each read from files that match the checksums in their receipt; the exceptions are the further figures quoted from the dashboard's notes on the comparison with the official costings, which come from further runs of our model. Every official figure comes from the OBR's October 2026 Economic and fiscal outlook or the Budget documents linked above.
 
 _PolicyEngine's UK Budget analysis is funded by the [Nuffield Foundation](https://www.nuffieldfoundation.org/). The views expressed are ours and not necessarily the Foundation's._
