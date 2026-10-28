@@ -27,6 +27,17 @@ interface HexagonalMapProps {
   /** What a missing area's tooltip reads after its name. Defaults to "No data". */
   missingAreaText?: string;
 
+  /**
+   * Opt-in: areas the map places but has no value for and no reason to
+   * give, e.g. a UK breakdown's areas that it neither published nor lists
+   * as withheld. Each is drawn on the same grid as the valued areas, in a
+   * plain neutral fill (the map's background, which the colour scale never
+   * produces) inside the missing areas' grey edge, so it reads as neither
+   * hatched nor valued, with a tooltip of its name and "No data". They take
+   * no part in the colour range, and cannot be selected.
+   */
+  noDataAreas?: HexMapMissingArea[];
+
   /** Configuration for the map */
   config?: Partial<HexMapConfig>;
 
@@ -298,8 +309,8 @@ const TILED_HEX_RADIUS = 0.55;
 /** A map with no missing areas: one array, so memos keep their values. */
 const NO_MISSING_AREAS: HexMapMissingArea[] = [];
 
-/** What a missing area reads, unless the caller says why it has no value. */
-const DEFAULT_MISSING_AREA_TEXT = 'No data';
+/** What a missing area reads, unless the caller says why it has no value, and what a no-data area reads. */
+const NO_DATA_TEXT = 'No data';
 
 /**
  * A missing area's look: grey stripes on the map's background, which no
@@ -316,6 +327,13 @@ const MISSING_AREA_EDGE_COLOR = colors.gray[400];
 const MISSING_AREA_EDGE_WIDTH = 0.75;
 const MISSING_AREA_STRIPES_PER_RADIUS = 2;
 const MIN_MISSING_AREA_STRIPE_PIXELS = 4;
+
+/**
+ * A no-data area's look: the map's background, plain, inside the missing
+ * areas' grey edge. The colour scale's lightest colour, at zero, is the
+ * tertiary background, so no value is drawn in this fill.
+ */
+const NO_DATA_AREA_COLOR = colors.background.primary;
 
 /**
  * SVG polygon points for a hexagon centred at (cx, cy): flat-topped, or
@@ -394,7 +412,8 @@ function useElementWidth(element: Element | null, enabled: boolean): number | nu
 export function HexagonalMap({
   data,
   missingAreas = NO_MISSING_AREAS,
-  missingAreaText = DEFAULT_MISSING_AREA_TEXT,
+  missingAreaText = NO_DATA_TEXT,
+  noDataAreas = NO_MISSING_AREAS,
   config = {},
   exportRef,
   selectedId,
@@ -443,6 +462,10 @@ export function HexagonalMap({
     () => positionOnGrid(missingAreas, coordinateScale, rowSpacing),
     [missingAreas, coordinateScale, rowSpacing]
   );
+  const positionedNoDataAreas = useMemo(
+    () => positionOnGrid(noDataAreas, coordinateScale, rowSpacing),
+    [noDataAreas, coordinateScale, rowSpacing]
+  );
 
   // The selected hexagon draws last, so no neighbour covers its outline.
   const drawOrder = useMemo(() => {
@@ -464,7 +487,7 @@ export function HexagonalMap({
   // hexagon's edges, not only its centre: the map of a few areas, whose
   // hexagons are large, then still fits its frame.
   const dataBounds = useMemo(() => {
-    const placed = [...positionedData, ...positionedMissingAreas];
+    const placed = [...positionedData, ...positionedMissingAreas, ...positionedNoDataAreas];
     if (placed.length === 0) {
       return { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
     }
@@ -481,7 +504,13 @@ export function HexagonalMap({
       yMin: Math.min(...ys) - verticalReach,
       yMax: Math.max(...ys) + verticalReach,
     };
-  }, [positionedData, positionedMissingAreas, fullConfig.tiled, fullConfig.coordinateScale]);
+  }, [
+    positionedData,
+    positionedMissingAreas,
+    positionedNoDataAreas,
+    fullConfig.tiled,
+    fullConfig.coordinateScale,
+  ]);
 
   // Calculate color range: from the areas with values alone
   const colorValues = positionedData.map((p) => p.value);
@@ -606,6 +635,21 @@ export function HexagonalMap({
           vectorEffect={outlineEffect}
           data-missing-area-id={area.id}
           onMouseEnter={(event) => showTooltip(event, `${area.label}: ${missingAreaText}`)}
+          onMouseLeave={() => setTooltip(null)}
+        />
+      ))}
+
+      {/* Areas without a value or a reason: plain, outside the colour scale, and not selectable. */}
+      {positionedNoDataAreas.map((area) => (
+        <polygon
+          key={`no-data-${area.id}`}
+          points={hexPoints(toSvgX(area.x), toSvgY(area.y), hexPixelSize, tiled)}
+          fill={NO_DATA_AREA_COLOR}
+          stroke={MISSING_AREA_EDGE_COLOR}
+          strokeWidth={MISSING_AREA_EDGE_WIDTH}
+          vectorEffect={outlineEffect}
+          data-no-data-area-id={area.id}
+          onMouseEnter={(event) => showTooltip(event, `${area.label}: ${NO_DATA_TEXT}`)}
           onMouseLeave={() => setTooltip(null)}
         />
       ))}
