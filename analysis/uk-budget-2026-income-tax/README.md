@@ -1,6 +1,6 @@
 # Autumn Budget 2026 income tax explainers
 
-This shared directory supports three standalone posts: the property income rate increase, the savings income rate increase and the trading allowance increase. Property and savings were split at the author’s request on 28 October 2026; savings remains a separate draft pending its dashboard data release. The articles compare the newly announced measures with the already legislated 2027–28 baseline, one measure at a time.
+This shared directory supports three standalone posts: the property income rate increase, the savings income rate increase and the trading allowance increase. Property and savings were split at the author’s request on 28 October 2026; savings remains a separate draft pending its dashboard data release. The articles compare the newly announced measures with the already legislated 2027–28 baseline. The shared `SAVINGS_PROPERTY` reform in `generate_households.py` changes savings and property rates together; it is not a separate property-only reform.
 
 ## Reproduce the household calculations
 
@@ -16,7 +16,9 @@ The generator uses hypothetical adults, without population microdata. It records
 
 The checked outputs include 23 household comparisons and 93 displayed points across the two income curves. The displayed lines use £100 intervals and the exact policy breakpoints. All four series are independently checked against the model at every £2 from £500 to £5,000, including a comparison of the plotted interpolation with the engine results; `curve-validation.json` records counts and maximum errors. The non-integer £1,333⅓ expense-choice breakpoint is also calculated with the model. To also verify the original dashboard parameter builder, pass `--dashboard-checkout /path/to/checkout` with that checkout at the recorded commit. This check is optional and performs no download.
 
-The article chart blocks reproduce `savings-interest-chart.json` and `trading-allowance-chart.json`. Reinsert their contents when regenerating them.
+The `landlord_*` records in `households.json` and `households.csv` support the property article. They have no savings income, so the combined reform's savings rate changes do not affect their results. The dashboard preset's property-only component was checked separately. The `saver_*` and mixed `property_then_savings_order` records, savings curves, and savings-rate and Treasury row 62 metadata in `provenance.json` remain shared records for savings draft #1466; they are not property-only results.
+
+The savings draft (#1466) reproduces `savings-interest-chart.json`; the trading article (#1463) reproduces `trading-allowance-chart.json`. The property article has no line-chart block. Reinsert each chart's contents only into its corresponding article when regenerating it.
 
 ## Current article scope
 
