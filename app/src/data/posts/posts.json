@@ -30,7 +30,7 @@
     "title": "The fuel duty cut extension in the Autumn Budget 2026",
     "description": "The Budget keeps fuel duty at 52.95p a litre to 30 June 2027. We show how the duty and VAT on each litre change, and what this means for households by the fuel they use.",
     "date": "2026-10-28 19:00:00",
-    "tags": ["uk", "policy", "tax"],
+    "tags": ["uk", "policy", "tax", "autumn-budget"],
     "authors": ["pavel-makarchuk"],
     "filename": "fuel-duty-cut-extension.md",
     "image": "fuel-duty-cut-extension/cover-illustration.webp"
@@ -48,7 +48,7 @@
     "title": "The Pension Tax Allowance in the Autumn Budget 2026",
     "description": "From April 2027, the Pension Tax Allowance removes income tax for most pensioners with total income up to the full new State Pension. We show how the \u00a394 allowance and its \u00a31-in-\u00a33 taper work, and how they pass through to Pension Credit, Housing Benefit and Council Tax Reduction.",
     "date": "2026-10-28 18:00:00",
-    "tags": ["uk", "policy", "tax"],
+    "tags": ["uk", "policy", "tax", "autumn-budget"],
     "authors": ["pavel-makarchuk"],
     "filename": "pension-tax-allowance.md",
     "image": "pension-tax-allowance/cover-illustration.webp"
