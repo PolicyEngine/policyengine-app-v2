@@ -2,7 +2,7 @@ The Autumn Budget 2026 increases the basic, higher and additional income tax rat
 
 In the examples below, a basic-rate saver with £2,000 of annual interest pays £20 more a year. A landlord with £10,000 of property profit and £4,000 of mortgage interest pays £120 more.
 
-This post examines this provision on its own. The [UK Autumn Budget 2026 dashboard preview](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026) places it alongside the other announced measures. We cover the trading allowance increase in a [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance).
+This post examines this provision on its own. The [UK Autumn Budget 2026 dashboard](https://policyengine.org/uk/budgets/autumn-2026) places it alongside the other announced measures. We cover the trading allowance increase in a [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance).
 
 ## What changes in April 2027?
 
@@ -132,6 +132,22 @@ Consider two adults in England, each with £12,000 of rent, £2,000 of allowable
 Both pay £200 more before relief, while their finance-cost reduction rises by £4,000 × 2% = £80. Their net increase is £200 − £80 = £120. A mortgage-free landlord with the same profit pays £200 more. Both tax bands rise by two points, explaining the identical increases despite different starting liabilities.
 
 The property **rate** increase excludes Scottish taxpayers, whose rental income follows Scottish rules. Finance-cost relief is a separate calculation. The [Finance Act 2026 amendment](https://www.legislation.gov.uk/ukpga/2026/11/schedule/1/paragraph/40/enacted) ties it to the UK property basic rate without a Scottish exception. Applying that rule, a Scottish landlord able to use the full reduction on £4,000 of eligible finance costs receives £80 more relief, reducing their income tax by £80 if nothing else changes. A mortgage-free Scottish landlord has no change from this measure. The savings increase still applies across the UK.
+
+## When property income pushes savings into a higher band
+
+Consider an adult in England with £45,000 of salary, £6,000 of property profit after allowable expenses, £2,000 of interest and no mortgage interest. The £12,570 Personal Allowance leaves £32,430 of taxable salary. That uses £32,430 of the £37,700 basic-rate band, leaving £5,270.
+
+Property income fills that remaining £5,270, with £730 entering the higher band. The individual qualifies for a £500 Personal Savings Allowance; the remaining £1,500 of interest falls in the higher savings band.
+
+| Income tax component, 2027–28 | Before | After |
+| --- | ---: | ---: |
+| Salary: £32,430 at 20% | £6,486.00 | £6,486.00 |
+| Property: £5,270 at 22% / 24% | £1,159.40 | £1,264.80 |
+| Property: £730 at 42% / 44% | £306.60 | £321.20 |
+| Savings: £1,500 at 42% / 44% | £630.00 | £660.00 |
+| Total income tax | £8,582.00 | £8,732.00 |
+
+The extra tax is £120 on property plus £30 on savings, or **£150 a year**. The calculation shows why the order of income sources matters even when each rate rises by the same two percentage points.
 
 ## Preliminary national estimates
 

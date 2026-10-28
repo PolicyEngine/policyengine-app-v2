@@ -1,6 +1,6 @@
 The [Autumn Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) announces an increase in the trading allowance from £1,000 to £3,000 from 6 April 2027. The allowance covers eligible trading and miscellaneous income. For an employee paying 20% income tax on their side income, the extra £2,000 deduction can reduce annual income tax by £400. The reduction depends on receipts, expenses and how much tax the individual would otherwise pay.
 
-This post examines that measure on its own. Our [Budget dashboard](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026) places it alongside the other announced tax and benefit changes. We cover the savings and property income tax increases in a [separate explainer](/uk/research/uk-autumn-budget-2026-savings-property-income-tax).
+This post examines that measure on its own. Our [Budget dashboard](https://policyengine.org/uk/budgets/autumn-2026) places it alongside the other announced tax and benefit changes. We cover the savings and property income tax increases in a [separate explainer](/uk/research/uk-autumn-budget-2026-savings-property-income-tax).
 
 ## How the allowance works
 
@@ -158,7 +158,7 @@ The Treasury column reproduces Table 6.1, row 15. The PolicyEngine column report
 | 2030–31 | 175 | 123 |
 | 2031–32 | 180 | 131 |
 
-The effective date remains 6 April 2027 even though the Treasury records no receipts effect in 2027–28. Tax-year liabilities and the government's fiscal-year receipts forecasts are different quantities. The comparison also needs to allow for model coverage, including missing gross receipts. Reconciliation has not yet attributed the gap between the estimates.
+The effective date remains 6 April 2027 even though the Treasury records no receipts effect in 2027–28. Tax-year liabilities and the government's fiscal-year receipts forecasts are different quantities. The [Treasury policy costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=23) also allows for taxpayers switching from actual expenses to the larger allowance, a behavioural response. The static model holds circumstances fixed and also faces the gross-receipts coverage limit. Reconciliation has not yet attributed the gap between the estimates.
 
 ## Methodology and coverage
 

@@ -46,6 +46,8 @@ Treasury forecasts are labelled separately. Compare fiscal-year Treasury receipt
 
 The two articles use the site's native chart blocks and cover assets. No runtime application or country-model code is changed.
 
+See `REVIEW_NOTES.md` for the independent draft-readiness check, the comparison with Pavel's posts and the remaining publication work.
+
 ## Validation on 28 October 2026
 
 `make format`, `make lint`, `make typecheck` and `make test` passed. The tests ran on Node 26.12.1: 6,042 app tests and 508 website tests passed, with 10 app tests skipped by the existing suite. After inserting the final chart data, the chart-parser and post-metadata checks passed again (18 tests). All 23 household comparisons and 20 curve points passed independent arithmetic checks.
