@@ -4,7 +4,7 @@
   "reference_style": "PolicyEngine Autumn Budget 2026 energy and Pension Tax Allowance covers; deep teal, mint, white, restrained dimensional illustration.",
   "assets": [
     {
-      "path": "app/public/assets/posts/uk-autumn-budget-2026-savings-property-income-tax/cover.webp",
+      "path": "app/public/assets/posts/uk-autumn-budget-2026-property-income-tax/cover.webp",
       "prompt": "Use case: stylized-concept.\nAsset type: original editorial cover illustration for PolicyEngine's UK Autumn Budget 2026 article on savings and property income tax.\nCreate a polished wide 16:9 landscape illustration, intended final size 1600x900. Match a coherent nonprofit policy research illustration series: deep dark teal background, soft subtle teal vignette, pale mint and turquoise objects, clean vector-like shapes rendered as a raster image, restrained dimensional depth, gentle shadows, crisp edges, professional calm neutral tone.\nScene: a simplified British terraced house and a savings coin stack arranged together beside a large white income-tax statement with a teal header and a few muted grey abstract lines. One mint coin bears a clear British pound symbol (£). House, savings and statement should read as one coherent still life about taxing rental income and savings interest.\nComposition: main objects within the central 65 percent of the canvas, clear at thumbnail size, generous breathing room on every edge, balanced wide layout, a subtle floor line. Avoid tiny details.\nText: only a single £ symbol on the coin; no words, no tax rates, no numbers, no labels, no title, no logos, no watermark.\nConstraints: original illustration, no people, no flags, no political symbolism, no arrows or data charts, no claims about gains or losses. The image should look like a refined flat editorial illustration with subtle depth, not a photograph or a glossy toy render.",
       "width": 1672,
       "height": 941,
@@ -12,7 +12,8 @@
       "encoding_quality": 85,
       "pixels_resized": false,
       "bytes": 59420,
-      "sha256": "fcaa9776fa6ebfab449034a0423a166f413a9b4a4d5041747ed4610b20e111b6"
+      "sha256": "fcaa9776fa6ebfab449034a0423a166f413a9b4a4d5041747ed4610b20e111b6",
+      "reuse_note": "Originally generated for the combined savings/property draft; retained unchanged for the property article when the articles were split."
     },
     {
       "path": "app/public/assets/posts/uk-autumn-budget-2026-trading-allowance/cover.webp",

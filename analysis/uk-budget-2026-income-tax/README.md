@@ -1,6 +1,6 @@
 # Autumn Budget 2026 income tax explainers
 
-This directory supports two standalone posts: the combined savings/property rate increase and the trading allowance increase. The articles compare the newly announced measures with the already legislated 2027–28 baseline, one measure at a time.
+This shared directory supports three standalone posts: the property income rate increase, the savings income rate increase and the trading allowance increase. Property and savings were split at the author’s request on 28 October 2026; savings remains a separate draft pending its dashboard data release. The articles compare the newly announced measures with the already legislated 2027–28 baseline, one measure at a time.
 
 ## Reproduce the household calculations
 
@@ -20,13 +20,13 @@ The article chart blocks reproduce `savings-interest-chart.json` and `trading-al
 
 ## Current article scope
 
-Both posts now publish household calculations and Treasury costings only. Model national estimates, decile tables and affected shares from earlier preview batches have been removed from the articles. The dashboard is the linked source for national results. The saved population files below are historical records and must not be treated as the current publication run.
+All three posts publish household calculations and Treasury costings only. Model national estimates, decile tables and affected shares from earlier preview batches have been removed from the articles. The dashboard is the linked source for national results. The saved population files below are historical records and must not be treated as the current publication run.
 
 ## Dataset decision
 
 Retain the dashboard's adopted `policyengine` 6.11.1 bundle, with UK 2.151.0, core 3.33.3 and national data cut `a6299504`. The certificate, full dataset ID and checksum are recorded in `provenance.json`. The newer candidate in policyengine.py PR725 is awaiting certification/adoption. A future update must change the package and dataset provenance together and regenerate the analysis.
 
-No population microdata were downloaded locally. At 14:32 UTC the checked GitHub flat files still lacked these Budget-day measures. Vahid subsequently shared a preview with provisional outputs generated at 14:34 UTC, fetched at 14:46 UTC. The drafts retain its digest-addressed public aggregate outputs as an earlier review snapshot, with the exact manifest, receipts and eight CSVs retained in `population-preview/`. Older candidate charts and stale GitHub flat files must not be relabelled as the announced policy. The preview has no scored combined artifact; its five-measure chart must not be described as a jointly simulated full Budget package.
+The household generators need no population microdata. This historical snapshot was retrieved without downloading population microdata. At 14:32 UTC the checked GitHub flat files still lacked these Budget-day measures. Vahid subsequently shared a preview with provisional outputs generated at 14:34 UTC, fetched at 14:46 UTC. The drafts retain its digest-addressed public aggregate outputs as an earlier review snapshot, with the exact manifest, receipts and eight CSVs retained in `population-preview/`. Older candidate charts and stale GitHub flat files must not be relabelled as the announced policy. The preview has no scored combined artifact; its five-measure chart must not be described as a jointly simulated full Budget package.
 
 The provisional national outputs use the exact dataset above with the dashboard's October 2026 OBR forecast wrapper on both baseline and reform. Each provision is scored separately. The source commit is `0d9dccb2`; its reform definitions and October forecast input file match household reference commit `b50787aa` byte for byte. Series not updated by the overlay retain the model's March forecast path; the underlying calibration remains pre-Budget.
 
@@ -46,9 +46,9 @@ Treasury forecasts are labelled separately. Compare fiscal-year Treasury receipt
 - Confirm the treatment of Scottish landlords' finance-cost relief against the final Budget implementation. The pinned model links that relief to the UK property basic rate even for Scotland.
 - Check trading allowance coverage: gross receipts and actual expenses are needed to model the deduction choice; the pinned model does not apply the allowance to its separate miscellaneous-income input.
 - Verify the final public dashboard link and add links to these explainers within the dashboard. The source checkout's README supplies the current Vercel dashboard URL.
-- Have the policy interpretation and calculations reviewed before merging. This branch is a draft and is not publication approval.
+- Have the policy interpretation and calculations reviewed before merging. Draft status and publication approval are tracked on each article’s PR.
 
-The two articles use the site's native chart blocks and cover assets. Household curves use Pavel's shared numeric line renderer from PR1462; no duplicate chart implementation or country-model code is added.
+The three articles use the site's native tables, chart blocks and cover assets. Household curves use Pavel's shared numeric line renderer from PR1462; no duplicate chart implementation or country-model code is added.
 
 See `REVIEW_NOTES.md` for the independent draft-readiness check, the comparison with Pavel's posts and the remaining publication work.
 
@@ -65,7 +65,7 @@ The earlier addition of provisional national sections passed snapshot verificati
 analysis/uk-budget-2026-income-tax/.venv/bin/python analysis/uk-budget-2026-income-tax/generate_trading_extensions.py
 ```
 
-This checks five additional synthetic pairs requested in Max's review, including UC, Class4 and missing-receipts fallbacks, on the same pinned October forecast as the main generator. `trading_extensions.json` records complete inputs, raw outputs and arithmetic checks. `dashboard_salary_comparison.json` records the calculator's March-index salary comparison. Household examples use no population data. Shared analysis is kept in the savings/property base PR so the trading article can be reviewed in a separate stacked PR.
+This checks five additional synthetic pairs requested in Max's review, including UC, Class4 and missing-receipts fallbacks, on the same pinned October forecast as the main generator. `trading_extensions.json` records complete inputs, raw outputs and arithmetic checks. `dashboard_salary_comparison.json` records the calculator's March-index salary comparison. Household examples use no population data. Shared analysis is kept in the property base PR #1460 so the trading article can be reviewed in a separate stacked PR. The savings article is a separate draft PR based on main; its shared-analysis link resolves after #1460 lands.
 
 ## Alignment with Pavel’s PTA post
 
@@ -79,4 +79,4 @@ The October-forecast rerun passed all23 household comparisons and all5 trading e
 
 ## Editorial cover images
 
-Both posts use original teal editorial illustrations generated with the built-in image tool. `cover-prompts.json` records the complete prompts, output paths, encoding settings, dimensions and checksums. The WebP files retain the generated 1672 × 941 pixel dimensions and are selected by each post's `image` metadata, supplying the article hero, research card and social preview. Original text-based SVG assets remain available in Git for reference. Article text, charts and calculations are unchanged by the cover update.
+The posts use original teal editorial illustrations generated with the built-in image tool. Property and savings reuse the original combined-draft cover unchanged under their own asset paths. `cover-prompts.json` records the complete prompts, output paths, encoding settings, dimensions and checksums. The WebP files retain the generated 1672 × 941 pixel dimensions and are selected by each post's `image` metadata, supplying the article hero, research card and social preview. The unused combined-draft SVG cover was removed when the article was split. Article text, charts and calculations are unchanged by the cover update.

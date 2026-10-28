@@ -1,19 +1,12 @@
 [
   {
-    "title": "Autumn Budget 2026: higher tax on savings and property income",
-    "description": "Worked examples of the additional two percentage point increase from April 2027, including savings allowances and landlords' mortgage-interest relief.",
+    "title": "Autumn Budget 2026: higher tax on property income",
+    "description": "Worked examples of the additional two percentage point property income tax increase from April 2027, including landlords' mortgage-interest relief and the treatment of Scotland.",
     "date": "2026-10-28 14:00:00",
-    "tags": [
-      "uk",
-      "policy",
-      "tax",
-      "autumn-budget"
-    ],
-    "authors": [
-      "ziming-hua"
-    ],
-    "filename": "uk-autumn-budget-2026-savings-property-income-tax.md",
-    "image": "uk-autumn-budget-2026-savings-property-income-tax/cover.webp"
+    "tags": ["uk", "policy", "tax", "autumn-budget"],
+    "authors": ["ziming-hua"],
+    "filename": "uk-autumn-budget-2026-property-income-tax.md",
+    "image": "uk-autumn-budget-2026-property-income-tax/cover.webp"
   },
   {
     "title": "The fuel duty cut extension in the Autumn Budget 2026",
