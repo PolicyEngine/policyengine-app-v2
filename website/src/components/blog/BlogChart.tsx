@@ -9,8 +9,8 @@
  * Posts carry data, not styling. Styles are inline token variables because
  * the website's Tailwind build uses a prefix that ui-kit's utility classes lack.
  *
- * Types: "bar" (below), "waterfall" (BlogWaterfallChart.tsx) and "stateMap"
- * (BlogStateMap.tsx). Every type takes an optional "title", "subtitle" and
+ * Types: "bar" (below), "line" (BlogLineChart.tsx), "waterfall"
+ * (BlogWaterfallChart.tsx) and "stateMap" (BlogStateMap.tsx). Every type takes an optional "title", "subtitle" and
  * "source"; an invalid spec renders nothing.
  *
  * Spec (type "bar"):
@@ -58,6 +58,7 @@ import {
   niceTicks,
   validSharedFields,
 } from "./blogChartUtils";
+import { type BlogLineSpec, LineBody, parseLineSpec } from "./BlogLineChart";
 import {
   type BlogStateMapSpec,
   StateMapBody,
@@ -93,6 +94,7 @@ export interface BlogBarChartSpec {
 
 export type BlogChartSpec =
   | BlogBarChartSpec
+  | BlogLineSpec
   | BlogWaterfallSpec
   | BlogStateMapSpec;
 
@@ -134,6 +136,8 @@ export function parseBlogChartSpec(raw: string): BlogChartSpec | null {
   switch (spec.type) {
     case "bar":
       return parseBarSpec(spec);
+    case "line":
+      return parseLineSpec(spec);
     case "waterfall":
       return parseWaterfallSpec(spec);
     case "stateMap":
@@ -325,6 +329,7 @@ export function BlogChart({ data }: { data: string | string[] }) {
   return (
     <ChartFigure spec={spec}>
       {spec.type === "bar" && <BarBody spec={spec} />}
+      {spec.type === "line" && <LineBody spec={spec} />}
       {spec.type === "waterfall" && <WaterfallBody spec={spec} />}
       {spec.type === "stateMap" && <StateMapBody spec={spec} />}
     </ChartFigure>
