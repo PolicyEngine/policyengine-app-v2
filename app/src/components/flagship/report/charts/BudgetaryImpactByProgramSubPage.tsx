@@ -73,24 +73,28 @@ const BENEFIT_PROGRAMS = new Set([
 ]);
 
 /**
- * Rows the total budgetary impact doesn't include: the total is the change
- * in the taxes households pay less the change in their benefits, and
- * employers pay employer National Insurance. Their changes are shown but
- * not added up against the total.
+ * Rows the total budgetary impact doesn't include, with why, to follow
+ * "Not in the total:" in a bar's hover text. The total is
+ * the change in the taxes households pay less the change in the benefits
+ * they get. Their changes are shown but not added up against the total.
  */
-const OUTSIDE_TOTAL_PROGRAMS = new Set(['ni_employer']);
+const OUTSIDE_TOTAL_REASONS: Record<string, string> = {
+  ni_employer: 'employers pay it, so the total of household taxes and benefits leaves it out.',
+  tax_credits:
+    'it is what families are entitled to; the total counts the Working Tax Credit and Child Tax Credit they claim.',
+};
 
 /** Short names for the rows outside the total, for a narrow axis. */
 const OUTSIDE_TOTAL_SHORT_NAMES: Record<string, string> = {
   ni_employer: 'Employer NI',
+  tax_credits: 'Tax credits',
 };
 
 /**
- * Rows that repeat others, with the rows they repeat: `tax_credits` is
- * Working Tax Credit and Child Tax Credit together, and `vat` changes by
- * as much as `vat_change`, the VAT above current law's that the total
- * counts. Each is dropped where a row it repeats is listed, and is an
- * ordinary row otherwise.
+ * Rows dropped where rows that cover the same money are listed:
+ * `tax_credits` is the entitlement behind Working Tax Credit and Child Tax
+ * Credit, and `vat` changes by as much as `vat_change`, the VAT above
+ * current law's that the total counts.
  */
 const REPEATED_ROWS: Record<string, string[]> = {
   tax_credits: ['working_tax_credit', 'child_tax_credit'],
@@ -126,7 +130,7 @@ function benefitsAreSpending(
   for (const [key, values] of Object.entries(detailedBudget)) {
     if (
       typeof values?.difference !== 'number' ||
-      OUTSIDE_TOTAL_PROGRAMS.has(key) ||
+      key in OUTSIDE_TOTAL_REASONS ||
       isRepeatedRow(key, detailedBudget)
     ) {
       continue;
@@ -168,7 +172,7 @@ export function getChangedPrograms(
 
 /** Whether a row's change is left out of the total budgetary impact. */
 export function isOutsideTotal(key: string | undefined): boolean {
-  return key !== undefined && OUTSIDE_TOTAL_PROGRAMS.has(key);
+  return key !== undefined && key in OUTSIDE_TOTAL_REASONS;
 }
 
 /**
@@ -281,13 +285,11 @@ export default function BudgetaryImpactByProgramSubPage({
       0,
       (v) => formatBillions(v, countryId)
     );
-    if (!outsideTotal.has(name)) {
+    const outside = outsideTotal.get(name);
+    if (!outside) {
       return change;
     }
-    const why = wordWrap(
-      "The total counts the taxes households pay and the benefits they get, so this change isn't in it.",
-      50
-    );
+    const why = wordWrap(`Not in the total: ${OUTSIDE_TOTAL_REASONS[outside.key]}`, 50);
     return `${change}.\n${why}`;
   };
 

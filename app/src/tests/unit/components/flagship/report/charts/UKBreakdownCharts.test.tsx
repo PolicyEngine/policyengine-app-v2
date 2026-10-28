@@ -116,16 +116,20 @@ describe('getChangedPrograms with the tax credits row', () => {
     expect(getOtherProgramsAmount(300e6, programs)).toBe(0);
   });
 
-  test('given only the combined tax credits row then it counts towards the total', () => {
+  test('given only the tax credits entitlement row then it does not count towards the total', () => {
+    // Given: tax_credits is entitlement before take-up; the total counts the
+    // claimed Working Tax Credit and Child Tax Credit, which have no rows here.
     const output = {
-      ...withBudget(UK_OUTPUT, { federal: 0, state: 0, benefits: -300e6 }),
+      ...withBudget(UK_OUTPUT, { federal: 0, state: 0, benefits: -250e6 }),
       detailed_budget: { tax_credits: { baseline: 3e9, reform: 2.7e9, difference: -300e6 } },
     } as typeof UK_OUTPUT;
 
+    // When
     const programs = getChangedPrograms(output, {});
 
+    // Then: the claimed amounts are the other programmes.
     expect(programs).toEqual([{ key: 'tax_credits', label: 'tax_credits', value: 300e6 }]);
-    expect(getOtherProgramsAmount(300e6, programs)).toBe(0);
+    expect(getOtherProgramsAmount(250e6, programs)).toBe(250e6);
   });
 });
 
