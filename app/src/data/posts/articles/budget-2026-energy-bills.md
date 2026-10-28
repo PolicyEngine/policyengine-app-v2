@@ -15,17 +15,17 @@ _[Use PolicyEngine's Autumn Budget 2026 dashboard](https://www.policyengine.org/
 
 **Table 1: The Budget's energy bill measures**
 
-|                                          | Household Energy Payment                               | VAT cut on household electricity                                     |
-| ---------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------- |
-| Change                                   | £100 payment, delivered through the council tax system | VAT falls from 5% to 0%                                              |
-| Eligibility                              | Households in council tax bands A to D                 | Households with an electricity bill                                  |
-| Geography                                | England                                                | Great Britain from 1 October 2026; expected UK-wide from April 2027  |
-| Timing                                   | One-time payment from January 2027                     | 1 October 2026 to 1 July 2027                                        |
-| Government costing, certified by the OBR | £2,627 million in 2026-27                              | VAT receipts of £734 million in 2026-27 and £296 million in 2027-28  |
+|                                          | Household Energy Payment                               | VAT cut on household electricity                                         |
+| ---------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Change                                   | £100 payment, delivered through the council tax system | VAT falls from 5% to 0%                                                  |
+| Eligibility                              | Households in council tax bands A to D                 | Households with an electricity bill                                      |
+| Geography                                | England                                                | Great Britain from 1 October 2026; expected UK-wide from April 2027      |
+| Timing                                   | One-time payment from January 2027                     | 1 October 2026 to 1 July 2027                                            |
+| Government costing, certified by the OBR | £2,627 million in 2026-27                              | Lost VAT receipts of £734 million in 2026-27 and £296 million in 2027-28 |
 
-Sources: [Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html), paragraphs 3.4 to 3.6 and 6.24, and the OBR's [Economic and fiscal outlook, October 2026](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), detailed forecast table 1.1, measures 1 and 2. For the VAT cut, the OBR's table also lists Other AME (current) of £21 million in 2026-27 and £8 million in 2027-28. [Table 6.1](https://assets.publishing.service.gov.uk/media/6ae187a2779378370fd80a9a/Table_6.1_and_6.2_Budget_2026_Policy_Decisions.xlsx) of the Budget, rows 1 and 2, rounds the totals to £2,625 million, £755 million and £305 million.
+Sources: [Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html), paragraphs 3.4 to 3.6 and 6.24, and the OBR's [Economic and fiscal outlook, October 2026](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), detailed forecast table 1.1 (the OBR's policy table), measures 1 and 2. For the VAT cut, the policy table also lists Other AME (current) of £21 million in 2026-27 and £8 million in 2027-28. [Table 6.1](https://assets.publishing.service.gov.uk/media/6ae187a2779378370fd80a9a/Table_6.1_and_6.2_Budget_2026_Policy_Decisions.xlsx) of the Budget, rows 1 and 2, rounds the totals to £2,625 million, £755 million and £305 million.
 
-Prior to the Budget, the Government had reduced VAT on household electricity to 0% from 1 October 2026 to 31 March 2027 ([SI 2026/987](https://www.legislation.gov.uk/uksi/2026/987/made)). Consistent with the Treasury's costing, we treat the entire period from 1 October 2026 to 1 July 2027 as a Budget measure and compare both measures against a baseline in which VAT on household electricity remains at 5%.
+Prior to the Budget, the Government had reduced VAT on household electricity to 0% from 1 October 2026 to 31 March 2027 ([SI 2026/987](https://www.legislation.gov.uk/uksi/2026/987/made)). Consistent with the Government's costing, we treat the entire period from 1 October 2026 to 1 July 2027 as a Budget measure and compare both measures against a baseline in which VAT on household electricity remains at 5%.
 
 This analysis does not model three related funding allocations: the devolved governments' share of the payment's funding, which the Budget states will enable them to provide similar support; £100 million for local authorities in England "to provide further targeted support to households acutely impacted by rising energy bills", including some households above band D; and funding for the Northern Ireland Executive to provide "comparable support with household electricity bills" in 2026-27, before the VAT cut is expected to extend to Northern Ireland in April 2027.
 
@@ -55,7 +55,7 @@ Neither measure reduces benefit entitlements in our model. For example, a lone p
 
 ### Budgetary impact
 
-According to PolicyEngine's static modelling, the two measures cost £2.81 billion in 2026-27. The government's costing, certified by the OBR, gives £3.36 billion for the payment and the VAT cut's VAT receipts, or £2.84 billion without our estimate of the devolved governments' share and the £100 million for councils in England. With the VAT cut's Other AME (current) line, the OBR's total comes to £3.38 billion, as in Table 6.1. The VAT cut costs a further £0.35 billion in 2027-28. Table 3 compares the estimates.
+According to PolicyEngine's static modelling, the two measures cost £2.81 billion in 2026-27. The Government's costing, certified by the OBR, gives £3.36 billion for the payment and the VAT receipts the cut forgoes, or £2.84 billion without our estimate of the devolved governments' share and the £100 million for councils in England. With the VAT cut's Other AME (current) line, the two measures come to £3.38 billion in the OBR's policy table, as in Table 6.1. The VAT cut costs a further £0.35 billion in 2027-28. Table 3 compares the estimates.
 
 **Table 3: Cost of the energy bill measures (£ million)**
 
@@ -67,14 +67,14 @@ According to PolicyEngine's static modelling, the two measures cost £2.81 billi
 | Household Energy Payment: devolved governments' share                  | Not modelled          | 425[^3]                     | Not modelled          | 0                           |
 | Household Energy Payment: £100 million for councils in England         | Not modelled          | 100                         | Not modelled          | 0                           |
 | VAT cut on household electricity: Other AME (current)                  | Not modelled          | 21                          | Not modelled          | 8                           |
-| **Total, OBR policy table**                                            |                       | **3,382**                   |                       | **304**                     |
+| **Total, both measures in the OBR's policy table**                     |                       | **3,382**                   |                       | **304**                     |
 | Total, Table 6.1                                                       |                       | 3,380                       |                       | 305                         |
 
-Figures may not sum because of rounding. The government's costing comes from the OBR's detailed forecast table 1.1, and Table 6.1 of the Budget rounds each measure to the nearest £5 million. Marked figures are our Barnett split of the government's £2,627 million costing; neither the OBR nor the Budget divides it. Our Barnett calculation gives £2,202 million to England, including the £100 million for councils, and £425 million to the devolved governments.[^3]
+Figures may not sum because of rounding. The Government's costing comes from the OBR's policy table, and Table 6.1 of the Budget rounds each measure to the nearest £5 million. Marked figures are our Barnett split of the Government's £2,627 million costing; neither the OBR nor the Budget divides it. Our Barnett calculation gives £2,202 million to England, including the £100 million for councils, and £425 million to the devolved governments.[^3]
 
-Our estimate for the payment covers only the £100 payments in England: £1.97 billion ÷ £100 = 19.7 million households, consistent with the Government's estimate of up to 20 million.[^4] The government's costing of £2,627 million, certified by the OBR, also funds the £100 million for local authorities and the devolved governments' share, which we estimate at £425 million with the Barnett formula.[^3] That leaves £2.10 billion for the payment in England, and our estimate comes to 94% of it. At £100 to up to 20 million households, the payments themselves come to up to £2.0 billion; neither the OBR nor the Budget itemises the remaining £0.1 billion.
+Our estimate for the payment covers only the £100 payments in England: £1.97 billion ÷ £100 = 19.7 million households, consistent with the Government's estimate of up to 20 million.[^4] The £2,627 million in the Government's costing, certified by the OBR, also funds the £100 million for local authorities and the devolved governments' share, which we estimate at £425 million with the Barnett formula.[^3] That leaves £2.10 billion for the payment in England, and our estimate comes to 94% of it. At £100 to up to 20 million households, the payments themselves come to up to £2.0 billion; neither the OBR nor the Budget itemises the remaining £0.1 billion.
 
-Our estimate for the VAT cut exceeds the government's costing of its VAT receipts, certified by the OBR, by 14% in 2026-27 and 19% in 2027-28. That [costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) also includes electricity supplied to charities and some businesses, and it assumes that some households shift consumption from gas to electricity. Both factors would raise the official estimate relative to ours, so they do not account for the difference.[^5]
+Our estimate for the VAT cut exceeds the VAT receipts lost in the Government's costing, certified by the OBR, by 14% in 2026-27 and 19% in 2027-28. The Government's [costing note](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf), which gives the measure's total, also includes electricity supplied to charities and some businesses, and it assumes that some households shift consumption from gas to electricity. Both factors would raise the Government's costing relative to ours, so they do not account for the difference.[^5]
 
 ### Who receives the payment
 
@@ -153,7 +153,7 @@ The population results come from PolicyEngine's [Autumn Budget 2026 dashboard](h
 
 [^4]: We assume that every eligible household in England receives the payment, as the Government plans to pay it through the council tax system. Council tax bands come from the survey data underlying Microcosm UK.
 
-[^5]: Our July analysis of the original six-month cut estimated a cost of £769 million for October 2026 to March 2027, using an earlier version of PolicyEngine UK and the Enhanced Family Resources Survey. The government's costing, certified by the OBR, puts the VAT receipts lost in 2026-27 at £734 million, and Table 6.1 puts the measure at £755 million that year.
+[^5]: Our July analysis of the original six-month cut estimated a cost of £769 million for October 2026 to March 2027, using an earlier version of PolicyEngine UK and the Enhanced Family Resources Survey. The Government's costing, certified by the OBR, puts the VAT receipts lost in 2026-27 at £734 million, and Table 6.1 puts the measure at £755 million that year.
 
 [^6]: We compare each household's spending on household energy with its net income after housing costs. Households with zero or negative income after housing costs and any energy spending are counted as fuel-stressed.
 
