@@ -1,0 +1,54 @@
+{
+  "scope": "Synthetic salary-uprating comparison; no population data",
+  "versions": {
+    "policyengine": "6.11.1",
+    "policyengine-uk": "2.151.0",
+    "policyengine-core": "3.33.3"
+  },
+  "year": 2027,
+  "salary_input_year": 2026,
+  "salary_growth_basis": "Pinned UK March OBR average earnings index, Jan1 to Jan1, matching calculator earnings_growth",
+  "growth_factor": 1.0240009985556604,
+  "inputs": {
+    "age": 35,
+    "employment_income": 46080.04493500472,
+    "property_income": 6000,
+    "savings_interest_income": 2000
+  },
+  "baseline": {
+    "income_tax": 9014.02,
+    "savings_income_tax": 630.0,
+    "savings_allowance": 500.0,
+    "savings_starter_rate_income": 0.0,
+    "basic_rate_savings_income": 0.0,
+    "higher_rate_savings_income": 1500.0,
+    "add_rate_savings_income": 0.0,
+    "property_income_tax": 1682.01,
+    "property_finance_cost_relief": 0.0,
+    "taxable_property_income": 6000.0,
+    "trading_allowance_deduction": 0.0,
+    "taxable_self_employment_income": 0.0,
+    "national_insurance": 2680.81,
+    "ni_class_4": 0.0,
+    "household_benefits": 0.0
+  },
+  "reform": {
+    "income_tax": 9164.02,
+    "savings_income_tax": 660.0,
+    "savings_allowance": 500.0,
+    "savings_starter_rate_income": 0.0,
+    "basic_rate_savings_income": 0.0,
+    "higher_rate_savings_income": 1500.0,
+    "add_rate_savings_income": 0.0,
+    "property_income_tax": 1802.01,
+    "property_finance_cost_relief": 0.0,
+    "taxable_property_income": 6000.0,
+    "trading_allowance_deduction": 0.0,
+    "taxable_self_employment_income": 0.0,
+    "national_insurance": 2680.81,
+    "ni_class_4": 0.0,
+    "household_benefits": 0.0
+  },
+  "income_tax_change": 150.0,
+  "reference": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/pull/292#issuecomment-6473170340"
+}
