@@ -743,8 +743,8 @@ We ran the PTA on PolicyEngine UK's representative sample of UK households, set 
 | -------- | ------------------------ | ----------------------------------- | ------------------------ |
 | 2026-27  | £0                       | £0                                  | £0                       |
 | 2027-28  | −⁠£42 million            | −⁠£45 million                       | −⁠£30 million            |
-| 2028-29  | −⁠£113 million           | −⁠£90 million                       | −⁠£83 million            |
-| 2029-30  | −⁠£193 million           | −⁠£150 million                      | −⁠£144 million           |
+| 2028-29  | −⁠£113 million           | −⁠£90 million                       | −⁠£82 million            |
+| 2029-30  | −⁠£193 million           | −⁠£150 million                      | −⁠£143 million           |
 | 2030-31  | £0                       | +⁠£50 million                       | £0                       |
 | 2031-32  | £0                       | −⁠£15 million                       | £0                       |
 
@@ -754,9 +754,9 @@ In 2027-28, the total cost is £30 million: the £42 million income tax cut less
 
 ### Who gains
 
-In 2027-28, 668,000 people pay less income tax, in 528,000 households; the households gain an average of £56 a year each. The number of people rises to 1.06 million in 2028-29 and 1.36 million in 2029-30, as the PTA grows with the State Pension. The households that gain number 860,000 in 2028-29 and 1.07 million in 2029-30, and gain an average of £96 and £134 a year each. For context, HM Treasury's explainer estimates that about 500,000 pensioners pay less income tax in 2027-28, and about 1 million by the end of this Parliament.
+In 2027-28, 668,000 people pay less income tax, and 529,000 households gain, by an average of £56 a year each. The number of people rises to 1.06 million in 2028-29 and 1.36 million in 2029-30, as the PTA grows with the State Pension. The households that gain number 855,000 in 2028-29 and 1.07 million in 2029-30, and gain an average of £97 and £135 a year each. For context, HM Treasury's explainer estimates that about 500,000 pensioners pay less income tax in 2027-28, and about 1 million by the end of this Parliament.
 
-No household loses in 2027-28. About 2,700 households lose in 2028-29 and 2,800 in 2029-30; each of them loses a free TV licence, as household 5 does.
+No household loses in 2027-28. About 7,400 households lose in 2028-29 and 6,600 in 2029-30. Each of them leaves Pension Credit, which also gives the maximum Housing Benefit and Council Tax Reduction and, for claimants aged 75 or over, a free TV licence, so leaving it can cost more than the PTA gives. In 2029-30, about 3,200 of these households lose a free TV licence, 3,400 receive less Housing Benefit and 3,200 less Council Tax Reduction.
 
 ### Distributional impact
 
@@ -788,39 +788,39 @@ In 2027-28, the average gain is about £1 to £2 a year in each of the bottom se
   "data": [
     {
       "decile": "1st",
-      "y2027": 1.04,
-      "y2028": 3.44,
-      "y2029": 6.44
+      "y2027": 1.03,
+      "y2028": 3.32,
+      "y2029": 6.31
     },
     {
       "decile": "2nd",
       "y2027": 1.54,
-      "y2028": 4.35,
-      "y2029": 7.6
+      "y2028": 4.34,
+      "y2029": 7.61
     },
     {
       "decile": "3rd",
       "y2027": 1.77,
-      "y2028": 5.65,
-      "y2029": 10.45
+      "y2028": 5.62,
+      "y2029": 10.48
     },
     {
       "decile": "4th",
-      "y2027": 1.47,
-      "y2028": 3.99,
-      "y2029": 6.65
+      "y2027": 1.43,
+      "y2028": 3.98,
+      "y2029": 6.58
     },
     {
       "decile": "5th",
       "y2027": 1.45,
-      "y2028": 3.74,
-      "y2029": 5.95
+      "y2028": 3.75,
+      "y2029": 5.96
     },
     {
       "decile": "6th",
       "y2027": 0.91,
-      "y2028": 2.35,
-      "y2029": 3.94
+      "y2028": 2.34,
+      "y2029": 3.96
     },
     {
       "decile": "7th",
@@ -884,26 +884,26 @@ In 2027-28, the average gain is about £1 to £2 a year in each of the bottom se
     {
       "decile": "1st",
       "y2027": 0.004,
-      "y2028": 0.0132,
-      "y2029": 0.0245
+      "y2028": 0.0128,
+      "y2029": 0.024
     },
     {
       "decile": "2nd",
-      "y2027": 0.0039,
+      "y2027": 0.0038,
       "y2028": 0.0107,
       "y2029": 0.0186
     },
     {
       "decile": "3rd",
       "y2027": 0.004,
-      "y2028": 0.0124,
+      "y2028": 0.0123,
       "y2029": 0.0225
     },
     {
       "decile": "4th",
       "y2027": 0.003,
       "y2028": 0.008,
-      "y2029": 0.0132
+      "y2029": 0.0131
     },
     {
       "decile": "5th",
@@ -915,12 +915,12 @@ In 2027-28, the average gain is about £1 to £2 a year in each of the bottom se
       "decile": "6th",
       "y2027": 0.0015,
       "y2028": 0.0039,
-      "y2029": 0.0064
+      "y2029": 0.0065
     },
     {
       "decile": "7th",
       "y2027": 0.0021,
-      "y2028": 0.0044,
+      "y2028": 0.0045,
       "y2029": 0.0067
     },
     {
@@ -983,15 +983,15 @@ The net income and marginal rate charts follow a pensioner with no housing costs
 
 ### Population run
 
-The population results use PolicyEngine UK's representative sample of UK households, Microcosm UK: the certified dataset that `policyengine` 6.11.1 pins, with PolicyEngine UK 2.151.0 and the OBR's October 2026 forecast. They are static, with no behavioural response, and use PolicyEngine UK's take-up assumptions and its own Pension Credit guarantee (£245 a week in 2027-28), as the dashboard does. On that guarantee, a Pension Credit claimant aged 75 or over can lose only with total income from £12,760 to £12,807 in 2027-28, and the sample has no household in that band. Absolute poverty uses the official HBAI measure: household income below 60% of the 2024-25 median, held constant in real terms.
+The population results use PolicyEngine UK's representative sample of UK households, Microcosm UK: the certified dataset that `policyengine` 6.11.1 pins, with PolicyEngine UK 2.151.0 and the OBR's October 2026 forecast. They are static, with no behavioural response, and use PolicyEngine UK's take-up assumptions and the earnings-uprated Pension Credit guarantee described in the assumptions. In 2027-28, a claimant aged 75 or over can lose only with total income from £12,860 to £12,932, and the sample has no losing household. In the model, about 600 losing households in 2028-29 and 1,000 in 2029-30 also lose the Winter Fuel Payment when they leave Pension Credit; the model tests the £35,000 winter fuel payment charge on household income, while the charge applies to each person's own income, so these losses may not occur in law. Absolute poverty uses the official HBAI measure: household income below 60% of the 2024-25 median, held constant in real terms.
 
 ### Comparison with the Treasury and the OBR
 
-The Treasury's costing (Budget 2026, Table 6.1, row 52) is on a National Accounts basis and does not explain its figures for 2030-31 and 2031-32, after the PTA ends. PolicyEngine counts each tax year's liabilities, so it shows nothing then. The two also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK. The OBR's detailed policy table also records the PTA as income tax receipts only, at −£44 million, −£83 million and −£144 million in 2027-28 to 2029-30, then +£49 million and −£15 million (Economic and fiscal outlook, October 2026, detailed forecast table 1.1). Their equality with PolicyEngine's total cost in 2028-29 and 2029-30, which includes benefit effects, is a coincidence of rounding to the million. The explainer states that about 290,000 of the 500,000 pensioners who pay less income tax in 2027-28 will pay none.
+The Treasury's costing (Budget 2026, Table 6.1, row 52) is on a National Accounts basis and does not explain its figures for 2030-31 and 2031-32, after the PTA ends. PolicyEngine counts each tax year's liabilities, so it shows nothing then. The two also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK. The OBR's detailed policy table also records the PTA as income tax receipts only, at −£44 million, −£83 million and −£144 million in 2027-28 to 2029-30, then +£49 million and −£15 million (Economic and fiscal outlook, October 2026, detailed forecast table 1.1). The explainer states that about 290,000 of the 500,000 pensioners who pay less income tax in 2027-28 will pay none.
 
 ### Assumptions and limitations
 
-- DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings, and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. For the household examples, we apply 3.9% to the 2026-27 rate of £238 a week, which gives £247. PolicyEngine UK's own projection on the October 2026 forecast is £245, uprated by lagged CPI; the household calculator in PolicyEngine's Autumn Budget dashboard uses that guarantee, so its figures for a Pension Credit claimant differ from those here, by up to the full PTA for claimants near the guarantee.
+- DWP has not yet published the Pension Credit rates for 2027-28 onwards. The minimum guarantee rises with earnings (Social Security Administration Act 1992, section 150A), and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. Every calculation here, household and population, uprates the 2026-27 rate of £238 a week by the May to July earnings growth on the OBR's forecast (3.9%, 3.0% and 2.2%), rounded to the nearest 5p: £247, £255 and £260 a week in 2027-28 to 2029-30. PolicyEngine UK projects the guarantee with lagged CPI inflation instead (£245 a week in 2027-28), and the household calculator in PolicyEngine's Autumn Budget dashboard uses that projection, so its figures for a Pension Credit claimant differ from those here, by up to the full PTA for claimants near the guarantee.
 - The explainer bases the threshold on the State Pension received in the tax year; we use 52 weeks. The published rates, and the number of payments in a tax year, may differ. The explainer does not state how HMRC rounds the PTA in later years; we round up to the pound, as for 2027-28.
 - We apply the PTA to the final income tax liability; the Finance Bill 2026-27 will set the legal order of steps. People who transfer part of their Personal Allowance through the Marriage Allowance can still owe tax with the PTA.
 - PolicyEngine UK treats a person as over State Pension age if they reach it by 6 October. The PTA also covers people who reach State Pension age later in the tax year. Every example pensioner reached State Pension age before the tax year, so this does not affect them.
