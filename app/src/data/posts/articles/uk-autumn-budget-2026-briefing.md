@@ -21,7 +21,7 @@ _[Use PolicyEngine's Autumn Budget 2026 dashboard](https://www.policyengine.org/
 | Household Energy Payment  | A one-off £100 for households in council tax bands A to D in England                                                 | Paid from January 2027              |
 | Zero VAT on electricity   | The 0% rate on household electricity, in force in Great Britain since 1 October 2026, is extended by three months    | To 1 July 2027                      |
 | Fuel duty                 | The 5p cut is extended, and the April 2027 RPI rise moves to 1 July 2027 | To 1 July 2027                      |
-| Pension Tax Allowance     | An income tax reduction for people over State Pension age whose total income is at most the full new State Pension, tapered above it | 6 April 2027 to 5 April 2030        |
+| Pension Tax Allowance     | An income tax reduction for people above State Pension age, or reaching it during the tax year, whose total income is at most the full new State Pension, tapered above it | 6 April 2027 to 5 April 2030        |
 | Property income tax       | Rates on property income rise 2 points, to 24%, 44% and 49% in England, Wales and Northern Ireland                   | From 6 April 2027                   |
 | Trading allowance         | Rises from £1,000 to £3,000                                                                                          | From 6 April 2027                   |
 | Carer's Allowance taper   | Above the weekly earnings limit, the allowance is withdrawn £1 for each £1 earned instead of all at once, in England and Wales | During 2030-31                      |
@@ -152,7 +152,7 @@ The Gini index of income inequality falls by 0.17% in 2026-27 and by 0.05% in 20
 
 **Fuel duty.** The 5p cut now runs to 1 July 2027, and the RPI rise planned for April 2027 moves to the same day. We estimate it costs £301 million in 2026-27 and £521 million in 2027-28, including the VAT on the lower pump price. In 2027-28 it raises net income by £18 per household on average. See [our fuel duty analysis](https://www.policyengine.org/uk/research/fuel-duty-cut-extension).
 
-**Pension Tax Allowance.** From 6 April 2027 to 5 April 2030, pensioners whose total income is no more than the full new State Pension pay no income tax; in 2027-28 the allowance is worth up to £94, and above that income it falls by £1 for every £3. We estimate a net cost of £30 million in 2027-28, £83 million in 2028-29 and £144 million in 2029-30, after lower spending on Pension Credit, Housing Benefit and Council Tax Reduction. About 3% of people live in households that gain in 2029-30. See [our Pension Tax Allowance analysis](https://www.policyengine.org/uk/research/pension-tax-allowance).
+**Pension Tax Allowance.** From 6 April 2027 to 5 April 2030, people above State Pension age, or reaching it during the tax year, whose total income is no more than the full new State Pension pay no income tax; in 2027-28 the allowance is worth up to £94, and above that income it falls by £1 for every £3. We estimate a net cost of £30 million in 2027-28, £83 million in 2028-29 and £144 million in 2029-30, after lower spending on Pension Credit, Housing Benefit and Council Tax Reduction. About 3% of people live in households that gain in 2029-30. See [our Pension Tax Allowance analysis](https://www.policyengine.org/uk/research/pension-tax-allowance).
 
 **Property income tax.** From 6 April 2027 the rates on property income rise 2 points, to 24%, 44% and 49% in England, Wales and Northern Ireland. We estimate it raises £399 million in 2027-28, rising to £459 million in 2031-32. In 2029-30, about 6% of people live in households that lose, and the highest-income decile loses £62 a year on average. See the [dashboard](https://www.policyengine.org/uk/budgets/autumn-2026).
 
@@ -217,6 +217,6 @@ Our estimates come from PolicyEngine's [Autumn Budget 2026 dashboard](https://ww
 - **The package.** The combined results are one simulation of the seven measures together, each modelled exactly as in its own run.
 - **Small samples.** The dashboard withholds any result that rests on fewer than three survey households. For the package in 2030-31 and 2031-32, it withholds the results for two income deciles and the average change across all households, the same cells it withholds for the Carer's Allowance taper on its own.
 
-Every PolicyEngine figure in this briefing comes from the dashboard's published results (manifest revision 43), which are provisional, each read from files that match the checksums in their receipt. Every official figure comes from the Budget documents linked above.
+Every PolicyEngine figure in this briefing comes from the dashboard's published results (manifest revision 44), which are provisional, each read from files that match the checksums in their receipt. Every official figure comes from the Budget documents linked above.
 
 _PolicyEngine's UK Budget analysis is funded by the [Nuffield Foundation](https://www.nuffieldfoundation.org/). The views expressed are ours and not necessarily the Foundation's._
