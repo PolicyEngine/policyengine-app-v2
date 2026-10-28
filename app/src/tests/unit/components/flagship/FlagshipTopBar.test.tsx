@@ -1,22 +1,64 @@
-import { renderWithCountry, screen, userEvent } from '@test-utils';
+import { renderWithCountry, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
+import { countryIds } from '@/libs/countries';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
+import {
+  clickIsCancelled,
+  linkRows,
+  menuRows,
+  openMoreMenu,
+  openPhoneMenu,
+  OTHER_LINK_ROWS,
+  WEBSITE_URL,
+} from '@/tests/fixtures/components/flagship/topBarFixtures';
+import { getToolsMenuEntries, type ToolsMenuEntry } from '@/utils/toolsMenu';
 
 const mockNavigate = vi.fn();
+let mockPathname = '/us/build';
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useLocation: () => ({ pathname: '/us/build', search: '' }),
-    useParams: () => ({ countryId: 'us' }),
+    useLocation: () => ({ pathname: mockPathname, search: '' }),
+    useParams: () => ({ countryId: mockPathname.split('/')[1] }),
   };
 });
 
-function renderTopBar() {
-  return renderWithCountry(<FlagshipTopBar />, 'us', '/us/build');
+/** Each country's tools, as the headers' Tools menu lists them, so these tests follow apps.json. */
+const COUNTRIES_WITH_TOOLS = countryIds
+  .map((countryId): [string, ToolsMenuEntry[]] => [countryId, getToolsMenuEntries(countryId)])
+  .filter(([, tools]) => tools.length > 0);
+const COUNTRIES_WITHOUT_TOOLS = countryIds.filter(
+  (countryId) => getToolsMenuEntries(countryId).length === 0
+);
+
+/** Every click a link should let through, on every tool row in both menus: one case each. */
+const CLICKS: [string, MouseEventInit][] = [
+  ['plain', {}],
+  ['Shift', { shiftKey: true }],
+  ['Cmd', { metaKey: true }],
+  ['Ctrl', { ctrlKey: true }],
+];
+const MENUS = [
+  ['more', openMoreMenu],
+  ['phone', openPhoneMenu],
+] as const;
+const TOOL_ROW_CLICKS = COUNTRIES_WITH_TOOLS.flatMap(([countryId, tools]) =>
+  MENUS.flatMap(([menu, openToolsMenu]) =>
+    tools.flatMap((tool) =>
+      CLICKS.map(
+        ([click, init]) => [countryId, click, tool.label, menu, init, openToolsMenu] as const
+      )
+    )
+  )
+);
+
+function renderTopBar(countryId = 'us') {
+  mockPathname = `/${countryId}/build`;
+  return renderWithCountry(<FlagshipTopBar />, countryId, mockPathname);
 }
 
 describe('FlagshipTopBar', () => {
@@ -128,5 +170,155 @@ describe('FlagshipTopBar', () => {
 
     // Then
     expect(mockNavigate).toHaveBeenCalledWith('/us/reforms');
+  });
+
+  describe('tools menu', () => {
+    test('given the US then CliffWatch links its page on the website', async () => {
+      // Given
+      renderTopBar('us');
+
+      // When
+      await openMoreMenu();
+
+      // Then
+      expect(screen.getByRole('menuitem', { name: 'CliffWatch' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/us/cliffwatch`
+      );
+    });
+
+    // The UK calculator uses this bar once NEXT_PUBLIC_FLAGSHIP_SHELL_UK is "true".
+    test('given the UK then UK CliffWatch links its page on the website', async () => {
+      // Given
+      renderTopBar('uk');
+
+      // When
+      await openMoreMenu();
+
+      // Then
+      expect(screen.getByRole('menuitem', { name: 'UK CliffWatch' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/uk/uk-cliff-watch`
+      );
+    });
+
+    test.each(COUNTRIES_WITH_TOOLS)(
+      'given %s then the more menu lists its tools after Research, in the Tools menu order, as their own group',
+      async (countryId, tools) => {
+        // Given
+        renderTopBar(countryId);
+
+        // When
+        const menu = await openMoreMenu();
+
+        // Then
+        expect(linkRows(menu)).toEqual([
+          { tag: 'A', label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` },
+          '—',
+          // The bar is the main app, so the tools start at the first tool.
+          ...tools.map((tool) => ({
+            tag: 'A',
+            label: tool.label,
+            href: `${WEBSITE_URL}/${countryId}/${tool.slug}`,
+          })),
+          '—',
+          ...OTHER_LINK_ROWS.map((label) => expect.objectContaining({ label })),
+        ]);
+      }
+    );
+
+    test.each(COUNTRIES_WITHOUT_TOOLS)(
+      'given %s, which has no tools, then the menus are one plain list with no tool rows',
+      async (countryId) => {
+        // Given
+        const { unmount } = renderTopBar(countryId);
+
+        // When
+        const moreMenu = await openMoreMenu();
+
+        // Then
+        expect(menuRows(moreMenu)).toEqual(['Research', ...OTHER_LINK_ROWS]);
+
+        // And a phone's menu likewise
+        unmount();
+        renderTopBar(countryId);
+        const phoneMenu = await openPhoneMenu();
+        expect(menuRows(phoneMenu)).toEqual([
+          'Build',
+          'Reforms',
+          '—',
+          'Research',
+          ...OTHER_LINK_ROWS,
+        ]);
+      }
+    );
+
+    test.each(countryIds)(
+      "given %s then a phone's menu offers the sections, then the same website links as the more menu, in order",
+      async (countryId) => {
+        // Given
+        const { unmount } = renderTopBar(countryId);
+        const moreRows = linkRows(await openMoreMenu());
+        unmount();
+
+        // When
+        renderTopBar(countryId);
+        const phoneMenu = await openPhoneMenu();
+
+        // Then
+        expect(menuRows(phoneMenu).slice(0, 3)).toEqual(['Build', 'Reforms', '—']);
+        expect(linkRows(phoneMenu, 3)).toEqual(moreRows);
+      }
+    );
+
+    test.each(countryIds)(
+      "given %s then every row of a phone's menu is a finger's height",
+      async (countryId) => {
+        // Given
+        renderTopBar(countryId);
+
+        // When
+        await openPhoneMenu();
+
+        // Then
+        for (const row of screen.getAllByRole('menuitem')) {
+          expect(row).toHaveClass('tw:min-h-10');
+        }
+      }
+    );
+
+    test.each(countryIds)(
+      'given %s then the more menu keeps its compact rows, each with a pointer',
+      async (countryId) => {
+        // Given
+        renderTopBar(countryId);
+
+        // When
+        await openMoreMenu();
+
+        // Then
+        for (const row of screen.getAllByRole('menuitem')) {
+          expect(row).not.toHaveClass('tw:min-h-10');
+          expect(row).toHaveStyle({ cursor: 'pointer' });
+        }
+      }
+    );
+
+    test.each(TOOL_ROW_CLICKS)(
+      'given %s then a %s click on %s in the %s menu is left to the browser, and closes the menu',
+      async (countryId, _click, label, _menu, init, openToolsMenu) => {
+        // Given
+        renderTopBar(countryId);
+        const row = within(await openToolsMenu()).getByRole('menuitem', { name: label });
+        expect(row).not.toHaveAttribute('target');
+
+        // When
+        const cancelled = clickIsCancelled(row, init);
+
+        // Then
+        expect(cancelled).toBe(false);
+        await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+      }
+    );
   });
 });
