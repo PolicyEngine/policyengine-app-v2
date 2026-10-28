@@ -754,7 +754,7 @@ The rows are rounded, so they may not sum to the net cost.
 
 Lower Universal Credit and higher income tax offset part of the cost of the higher allowance. Setting the current-law limit to the government's rule in both runs, as in the worked examples, gives the same figures throughout this section.
 
-About 82,000 people have a higher Carer's Allowance in 2030-31, and about 83,000 in 2031-32, all in England. About half (51%) are in families on Universal Credit, for whom the higher allowance brings no gain: almost all of them lose a little, because Universal Credit falls by the whole of the extra allowance and income tax is due on it.
+About 82,000 people have a higher Carer's Allowance in 2030-31, and about 83,000 in 2031-32, all in England. About half (51%) are in families on Universal Credit, and almost all of them lose a little, because Universal Credit falls by the whole of the extra allowance and income tax is due on it.
 
 We find more carers whose allowance rises than the government estimates will benefit, about 82,000 against its 48,000 in 2030-31, and we model no change in hours worked. Our extra Carer's Allowance, £160 million in 2031-32, is before any offset: Universal Credit takes back about half of it and income tax about a fifth, leaving a net cost of £24 million in 2030-31 and £48 million in 2031-32, about 60% of the Treasury's £40 million and £80 million. The Treasury's figures also count the Universal Credit interaction, but it does not publish its gross cost.
 
