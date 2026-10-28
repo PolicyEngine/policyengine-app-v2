@@ -1,4 +1,4 @@
-In the Autumn Budget on 28 October 2026, the Chancellor announced that carers who earn more than the Carer's Allowance earnings limit will no longer lose the whole allowance. From a date within 2030-31, the allowance will instead fall by £1 for each £1 of weekly earnings above the limit, in England and Wales. This post explains the rules and shows their effect on two example carers in 2031-32, the first full year of the taper, using PolicyEngine UK household calculations. It ends with PolicyEngine's estimate of the cost.
+In the Autumn Budget on 28 October 2026, the Chancellor announced a taper for Carer's Allowance: carers who earn more than the Weekly Earnings Limit will no longer lose the whole allowance, which will instead fall by £1 for each £1 of weekly earnings above the limit. The taper applies in England and Wales from a date within 2030-31. This post explains how the taper works and shows its effect on example carers in 2031-32, the first full year of the taper, using PolicyEngine UK household calculations. It ends with PolicyEngine's estimate of the cost.
 
 Key figures for 2031-32:
 
@@ -10,9 +10,9 @@ Key figures for 2031-32:
 - Universal Credit falls by £1 for each £1 of Carer's Allowance, and the allowance is taxable, so a carer on Universal Credit loses: about £8 a week at £240, once the tax on the allowance is deducted from earnings for Universal Credit, as we explain below.
 - The Treasury estimates a cost of £40 million in 2030-31 and £80 million in 2031-32. We estimate a net cost of £27.5 million and £55.0 million.
 
-## What the Budget announced
+## What the taper does
 
-The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) (paragraph 6.13) and the Treasury's [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) (page 16) describe the measure:
+The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) lists the taper among its policy decisions (paragraph 6.13), and the Treasury's [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) (page 16) set out the rules. The taper has six parts:
 
 1. **The earnings limit.** Carer's Allowance is not paid for a week in which the carer's earnings are above the Weekly Earnings Limit. The costings set the limit at 16 times the National Living Wage. Since April 2025, the government has set the limit at 16 times the hourly National Living Wage rounded up to the nearest pound, as when it raised the limit from £151 to £196 a week in April 2025 ([Explanatory Memorandum to SI 2025/352](https://www.legislation.gov.uk/uksi/2025/352/pdfs/uksiem_20250352_en_001.pdf), paragraphs 5.3 and 5.6).
 2. **The taper.** Above the limit, the allowance is withdrawn at a rate of 100%: it falls by £1 for each £1 of earnings above the limit, instead of being lost in full.
