@@ -945,7 +945,7 @@ In 2027-28, the average gain is about £1 to £2 a year in each of the bottom se
   "yLabel": "Change in net income",
   "format": {
     "suffix": "%",
-    "decimals": 2
+    "decimals": 4
   },
   "valueLabels": false,
   "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast."
