@@ -756,7 +756,7 @@ In 2027-28, the total cost is £30 million: the £42 million income tax cut less
 
 In 2027-28, 668,000 people pay less income tax, in 528,000 households; the households gain an average of £56 a year each. The number of people rises to 1.06 million in 2028-29 and 1.36 million in 2029-30, as the PTA grows with the State Pension. The households that gain number 857,000 in 2028-29 and 1.09 million in 2029-30, and gain an average of £97 and £132 a year each. For context, HM Treasury's explainer estimates that about 500,000 pensioners pay less income tax in 2027-28, and about 1 million by the end of this Parliament.
 
-Few households lose: about 1,400 in 2027-28, 5,400 in 2028-29 and 7,200 in 2029-30, from 2, 8 and 9 households in the sample. From 2028-29, some of them lose a free TV licence, as household 5 does.
+Very few households lose: fewer than 10,000 in each year, too few in the survey sample to estimate the number precisely. From 2028-29, some of them lose a free TV licence, as household 5 does.
 
 ### Distributional impact
 
