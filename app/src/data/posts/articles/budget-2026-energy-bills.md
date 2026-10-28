@@ -55,21 +55,21 @@ Neither measure reduces benefit entitlements in our model. For example, a lone p
 
 ### Budgetary impact
 
-According to PolicyEngine's static modelling, the two measures cost £2.81 billion in 2026-27, compared with £3.38 billion in the Treasury's Table 6.1. The VAT cut costs a further £0.39 billion in 2027-28. Table 3 compares the estimates.
+According to PolicyEngine's static modelling, the two measures cost £2.81 billion in 2026-27, compared with £3.38 billion in the Treasury's Table 6.1. The VAT cut costs a further £0.35 billion in 2027-28. Table 3 compares the estimates.
 
 **Table 3: Cost of the energy bill measures (£ million)**
 
 | Measure                          | PolicyEngine, 2026-27 | HM Treasury, 2026-27 | PolicyEngine, 2027-28 | HM Treasury, 2027-28 |
 | -------------------------------- | --------------------- | -------------------- | --------------------- | -------------------- |
 | Household Energy Payment         | 1,969                 | 2,625                | 0                     | 0                    |
-| VAT cut on household electricity | 840                   | 755                  | 394                   | 305                  |
-| **Total**                        | **2,808**             | **3,380**            | **394**               | **305**              |
+| VAT cut on household electricity | 840                   | 755                  | 353                   | 305                  |
+| **Total**                        | **2,808**             | **3,380**            | **353**               | **305**              |
 
 Figures may not sum because of rounding.
 
 Our estimate for the payment covers only the £100 payments in England: £1.97 billion ÷ £100 = 19.7 million households, consistent with the Government's estimate of up to 20 million.[^3] The Treasury's £2,625 million also includes the £100 million for local authorities and funding for the devolved governments. Excluding the £100 million and our estimate of the devolved share, approximately £425 million, leaves approximately £2.10 billion for payments in England; our estimate is 94% of that amount.[^4]
 
-Our estimate for the VAT cut is 11% higher than the Treasury's in 2026-27 and 29% higher in 2027-28. The Treasury's [costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) also includes electricity supplied to charities and some businesses, and it assumes that some households shift consumption from gas to electricity. Both factors would raise the Treasury's estimate relative to ours, so they do not account for the difference.[^5]
+Our estimate for the VAT cut is 11% higher than the Treasury's in 2026-27 and 16% higher in 2027-28. The Treasury's [costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) also includes electricity supplied to charities and some businesses, and it assumes that some households shift consumption from gas to electricity. Both factors would raise the Treasury's estimate relative to ours, so they do not account for the difference.[^5]
 
 ### Who receives the payment
 
@@ -100,7 +100,7 @@ Figure 1 shows the average change in household net income by income decile in 20
   ],
   "data": [
     { "decile": "1", "payment": 72, "vat": 26 },
-    { "decile": "2", "payment": 73, "vat": 26 },
+    { "decile": "2", "payment": 74, "vat": 26 },
     { "decile": "3", "payment": 72, "vat": 26 },
     { "decile": "4", "payment": 73, "vat": 27 },
     { "decile": "5", "payment": 70, "vat": 28 },
@@ -116,9 +116,9 @@ Figure 1 shows the average change in household net income by income decile in 20
 }
 ```
 
-The payment increases net income by an average of £67 per UK household, and by between £68 and £73 in each of the bottom eight income deciles. The average falls to £47 in the top decile, as fewer higher-income households live in band A to D properties in England. Households in Wales, Scotland and Northern Ireland do not receive the payment, which lowers the average in every decile.
+The payment increases net income by an average of £67 per UK household, and by between £68 and £74 in each of the bottom eight income deciles. The average falls to £47 in the top decile, as fewer higher-income households live in band A to D properties in England. Households in Wales, Scotland and Northern Ireland do not receive the payment, which lowers the average in every decile.
 
-The VAT cut increases net income by an average of £29 per household in 2026-27, ranging from £26 in the bottom decile to £37 in the top decile, as higher-income households consume more electricity. As a share of net income, however, the gain declines from 0.10% in the second decile to 0.04% in the top decile. We project that 28.4 million households in Great Britain gain from the VAT cut in 2026-27, close to the Budget's estimate of "around 29 million households across the UK".
+The VAT cut increases net income by an average of £29 per household in 2026-27, ranging from £26 in the bottom decile to £37 in the top decile, as higher-income households consume more electricity. As a share of net income, however, the gain declines from 0.10% in the bottom decile to 0.02% in the top decile. We project that 28.4 million households in Great Britain gain from the VAT cut in 2026-27, close to the Budget's estimate of "around 29 million households across the UK".
 
 Combined, the two measures increase net income by an average of £96 per household in 2026-27.
 
@@ -130,7 +130,7 @@ The payment lowers the Gini index of income inequality by 0.12% in 2026-27, and 
 
 ## Conclusion
 
-The £100 Household Energy Payment and the extended VAT cut on household electricity together cost £2.81 billion in 2026-27, and the VAT cut costs a further £0.39 billion in 2027-28. In 2026-27, the two measures increase household net income by an average of £96, and the payment reaches 19.7 million households in England. Neither measure changes poverty rates as measured in our model.
+The £100 Household Energy Payment and the extended VAT cut on household electricity together cost £2.81 billion in 2026-27, and the VAT cut costs a further £0.35 billion in 2027-28. In 2026-27, the two measures increase household net income by an average of £96, and the payment reaches 19.7 million households in England. Neither measure changes poverty rates as measured in our model.
 
 As policymakers evaluate reforms such as these, analytical tools like PolicyEngine offer critical insights into the impacts on diverse household compositions and the broader economy.
 
