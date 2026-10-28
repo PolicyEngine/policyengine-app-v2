@@ -13,7 +13,7 @@ Key figures:
 
 Fuel duty on petrol and diesel has been 52.95p a litre since the 5p cut of March 2022. Before the Budget, the cut was due to end in two steps: the rate was to rise to 55.95p on 1 January 2027 ([SI 2026/164](https://www.legislation.gov.uk/uksi/2026/164), as amended by [SI 2026/555](https://www.legislation.gov.uk/uksi/2026/555/made)), and to return to 57.95p on 1 March 2027, the rate in [section 6 of the Hydrocarbon Oil Duties Act 1979](https://www.legislation.gov.uk/ukpga/1979/5/section/6). Government policy since Budget 2025 was to uprate the rate by RPI from April 2027.
 
-The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) keeps the 5p cut for six more months, to 1 July 2027, and moves the planned RPI increase to the same date. HM Treasury's [policy costings](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) set out what follows: on 1 July 2027, the rates rise by 5p a litre and by RPI, and from 1 April 2028 they rise by RPI each year. The Office for Budget Responsibility (OBR) puts the main rate after the July 2027 rise at 60.59p ([Economic and fiscal outlook](https://obr.uk/download/economic-and-fiscal-outlook-october-2026/), October 2026, paragraph 3.19).
+The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) keeps the 5p cut for six more months, to 1 July 2027, and moves the planned RPI increase to the same date. HM Treasury's [policy costings](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) set out what follows: on 1 July 2027, the rates rise by 5p a litre and by RPI, and from 1 April 2028 they rise by RPI each year. The Office for Budget Responsibility (OBR) puts the main rate after the July 2027 rise at 60.59p ([Economic and fiscal outlook](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), October 2026, paragraph 3.19).
 
 No source gives the pre-Budget rate from 1 April 2027, because the government had not set it. We assume that the RPI increase that the Budget moves to July was due in April at the same size, so the rate before the Budget is 60.59p from 1 April 2027. PolicyEngine's Autumn Budget 2026 dashboard uses the same assumption. With PolicyEngine UK's own projection for April 2027, 59.75p, the April to June saving is 6.80p a litre instead of 7.64p, and the 2027-28 saving for 1,000 litres is £19 instead of £22.
 
@@ -510,17 +510,17 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
 }
 ```
 
-The absolute poverty rate before housing costs does not change. This is the Households Below Average Income (HBAI) measure: a person is in absolute poverty if their household's equivalised income before housing costs is below 60% of the 2024-25 median, held constant in real terms. HBAI income deducts direct taxes but not taxes on spending such as fuel duty and VAT, so the measure does not include the saving. The Gini index of household net income falls by 0.0001 in 2026-27 and 0.0002 in 2027-28.
+The absolute poverty rate before housing costs does not change. This is the Households Below Average Income (HBAI) measure: a person is in absolute poverty if their household's equivalised income before housing costs is below 60% of the 2024-25 median, held constant in real terms. HBAI income deducts direct taxes but not taxes on spending such as fuel duty and VAT, so the measure does not include the saving. The Gini index of equivalised household net income falls by 0.0001 in 2026-27 and 0.0002 in 2027-28.
 
 ## Assumptions and limitations
 
-- The household examples are household calculations. The population results come from a microsimulation of the dashboard's measure, which is static and covers household fuel only.
+- The worked examples and the net income table come from household calculations for hypothetical households. The population results come from a microsimulation of the dashboard's measure, which is static and covers household fuel only.
 - The examples hold the litres that each household buys fixed. HM Treasury's costing includes a response in which people buy more fuel when prices are lower; we do not model it.
 - We assume that retailers pass the full duty change, and the VAT on it, into pump prices. Pump prices also depend on oil prices and retail margins, which we hold fixed.
 - The pre-Budget rate from 1 April 2027, 60.59p, is our assumption, as set out above. After 1 July 2027, the rate path is the same with and without the Budget measure, so later RPI forecasts do not change the results.
 - The examples cover cars that run on petrol or diesel. The Budget also extends the 3.7p cut to red diesel to 1 July 2027 (Table 6.1, row 18) and keeps the HGV road tax holiday to 1 July 2027. This post does not cover those measures, or the increase in tax-free mileage rates.
 
-The Budget estimates that the government's fuel duty decisions in this Parliament save the average car driver £230, compared with the previous government's plans. That figure covers all fuel duty decisions since 2024, measured against the previous government's plans. The figures in this post cover the Budget 2026 measure only.
+The Budget estimates that the government's fuel duty decisions in this Parliament save the average car driver £230, compared with the previous government's plans. That figure covers all fuel duty decisions since 2024; the figures in this post cover the Budget 2026 measure only.
 
 ## Methodology
 
