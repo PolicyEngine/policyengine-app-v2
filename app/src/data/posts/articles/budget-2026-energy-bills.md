@@ -55,21 +55,24 @@ Neither measure reduces benefit entitlements in our model. For example, a lone p
 
 ### Budgetary impact
 
-According to PolicyEngine's static modelling, the two measures cost £2.81 billion in 2026-27, compared with £3.38 billion in the Treasury's Table 6.1. The VAT cut costs a further £0.35 billion in 2027-28. Table 3 compares the estimates.
+According to PolicyEngine's static modelling, the two measures cost £2.81 billion in 2026-27. The Treasury's Table 6.1 puts them at £3.38 billion, of which we estimate that £2.86 billion pays for the parts we model: the £100 payments in England and the VAT cut. The VAT cut costs a further £0.35 billion in 2027-28. Table 3 compares the estimates.
 
 **Table 3: Cost of the energy bill measures (£ million)**
 
-| Measure                          | PolicyEngine, 2026-27 | HM Treasury, 2026-27 | PolicyEngine, 2027-28 | HM Treasury, 2027-28 |
-| -------------------------------- | --------------------- | -------------------- | --------------------- | -------------------- |
-| Household Energy Payment         | 1,969                 | 2,625                | 0                     | 0                    |
-| VAT cut on household electricity | 840                   | 755                  | 353                   | 305                  |
-| **Total**                        | **2,808**             | **3,380**            | **353**               | **305**              |
+| Measure                                                        | PolicyEngine, 2026-27 | HM Treasury, 2026-27 | PolicyEngine, 2027-28 | HM Treasury, 2027-28 |
+| -------------------------------------------------------------- | --------------------- | -------------------- | --------------------- | -------------------- |
+| Household Energy Payment: £100 payments in England             | 1,969                 | 2,100                | 0                     | 0                    |
+| VAT cut on household electricity                               | 840                   | 755                  | 353                   | 305                  |
+| **Total, measures we model**                                   | **2,808**             | **2,855**            | **353**               | **305**              |
+| Household Energy Payment: devolved governments' share          | Not modelled          | 425                  | Not modelled          | 0                    |
+| Household Energy Payment: £100 million for councils in England | Not modelled          | 100                  | Not modelled          | 0                    |
+| **Total, Table 6.1**                                           |                       | **3,380**            |                       | **305**              |
 
-Figures may not sum because of rounding.
+Figures may not sum because of rounding. The Budget publishes only the payment's total of £2,625 million; we split it with the Barnett formula.[^4]
 
-Our estimate for the payment covers only the £100 payments in England: £1.97 billion ÷ £100 = 19.7 million households, consistent with the Government's estimate of up to 20 million.[^3] The Treasury's £2,625 million also includes the £100 million for local authorities and funding for the devolved governments. Excluding the £100 million and our estimate of the devolved share, approximately £425 million, leaves approximately £2.10 billion for payments in England; our estimate is 94% of that amount.[^4]
+Our estimate for the payment covers only the £100 payments in England: £1.97 billion ÷ £100 = 19.7 million households, consistent with the Government's estimate of up to 20 million.[^3] The Treasury's £2,625 million also funds the £100 million for local authorities and the devolved governments' share, which we estimate at £425 million with the Barnett formula.[^4] That leaves £2.10 billion for the payments in England, and our estimate comes to 94% of it. The Budget documents do not explain the remaining difference of £130 million.
 
-Our estimate for the VAT cut is 11% higher than the Treasury's in 2026-27 and 16% higher in 2027-28. The Treasury's [costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) also includes electricity supplied to charities and some businesses, and it assumes that some households shift consumption from gas to electricity. Both factors would raise the Treasury's estimate relative to ours, so they do not account for the difference.[^5]
+Our estimate for the VAT cut exceeds the Treasury's by 11% in 2026-27 and 16% in 2027-28. The Treasury's [costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf) also includes electricity supplied to charities and some businesses, and it assumes that some households shift consumption from gas to electricity. Both factors would raise the Treasury's estimate relative to ours, so they do not account for the difference.[^5]
 
 ### Who receives the payment
 
@@ -146,7 +149,7 @@ The population results come from PolicyEngine's [Autumn Budget 2026 dashboard](h
 
 [^3]: We assume that every eligible household in England receives the payment, as the Government plans to pay it through the council tax system. Council tax bands come from the survey data underlying Microcosm UK.
 
-[^4]: The Budget does not divide the £2,625 million between these components. We estimate the devolved share using the Barnett formula's population proportions and needs-based factors in Annex A of HM Treasury's [Statement of Funding Policy](https://assets.publishing.service.gov.uk/media/684859e3d0ca5d7801e4e6f6/Statement_of_Funding_Policy.pdf), assuming that the entire payment is subject to the formula. Neither estimate includes a behavioural response, as the payment is a fixed £100.
+[^4]: The Budget does not divide the £2,625 million. We split it with the Barnett formula as Annex A of HM Treasury's [Statement of Funding Policy](https://assets.publishing.service.gov.uk/media/684859e3d0ca5d7801e4e6f6/Statement_of_Funding_Policy.pdf) (June 2025) sets it out: for each £1 of spending in England, each devolved government receives £1 × the programme's comparability factor × its population proportion × any adjustment factor. We assume a comparability factor of 100%, which Annex B gives the Ministry of Housing, Communities and Local Government's local government programmes, as councils pay the £100 through council tax; the Budget does not name the department. Each £1 in England then gives Scotland 9.52p (its population proportion of 9.52%), Wales 5.76p (5.49% × 1.05, its needs-based factor) and Northern Ireland 4.03p (3.33% × 1.24, its needs-based factor, × 0.975, its VAT abatement): 19.31p in total. Dividing £2,625 million by 1.1931 gives £2,200 million of spending in England, including the £100 million for councils, and leaves £425 million for the devolved governments: £209 million for Scotland, £127 million for Wales and £89 million for Northern Ireland. If the £100 million carries no Barnett share, the devolved share falls to £409 million and our estimate comes to 93% of the payments in England. Neither estimate includes a behavioural response, as the payment is a fixed £100.
 
 [^5]: Our July analysis of the original six-month cut estimated a cost of £769 million for October 2026 to March 2027, using an earlier version of PolicyEngine UK and the Enhanced Family Resources Survey. This is close to the Treasury's estimate of £755 million.
 
