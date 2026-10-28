@@ -47,7 +47,7 @@ The Budget and DWP's [Triple Lock reform factsheet](https://www.gov.uk/governmen
 
 ### Both rules over the last ten years
 
-To see the two rules at work, we replay today's rules on the latest ONS figures for April 2017 to April 2026, as if the adjusted Triple Lock had started in April 2017 and protected the pension's April 2016 value relative to earnings.
+To see the two rules at work, we replay today's rules on ONS figures, as published in September 2026, for April 2017 to April 2026, as if the adjusted Triple Lock had started in April 2017 and protected the pension's April 2016 value relative to earnings.
 
 | April | Inflation | Earnings growth | Triple Lock | Adjusted Triple Lock |
 | ----- | --------- | --------------- | ----------- | -------------------- |
@@ -56,13 +56,13 @@ To see the two rules at work, we replay today's rules on the latest ONS figures 
 | 2019  | 2.4%      | 2.7%            | 2.7%        | 2.5%                 |
 | 2020  | 1.7%      | 4.0%            | 4.0%        | 3.4%                 |
 | 2021  | 0.5%      | −0.9%           | 2.5%        | 2.5%                 |
-| 2022  | 3.1%      | 3.1%\*          | 3.1%        | 3.1%                 |
+| 2022  | 3.1%      | 8.4%\*          | 3.1%        | 3.1%                 |
 | 2023  | 10.1%     | 5.5%            | 10.1%       | 10.1%                |
 | 2024  | 6.7%      | 8.5%            | 8.5%        | 6.7%                 |
 | 2025  | 1.7%      | 4.4%            | 4.4%        | 2.5%                 |
 | 2026  | 3.8%      | 4.9%            | 4.9%        | 3.8%                 |
 
-\*Parliament suspended the earnings link for April 2022, so the replay uses inflation in its place under both rules. Some rises differ from those paid, because ONS has revised its earnings figures since: April 2025's rise, for example, was 4.1%, and April 2026's 4.8%.
+\*Parliament suspended the earnings link for April 2022, so the replay uses inflation in place of earnings growth that year, for both rules and for the floor. Some rises differ from those paid, because ONS has revised its earnings figures since the rises were set: on these figures April 2025's rise is 4.4% and April 2026's 4.9%, while the rises paid were 4.1% and 4.8%. The figures are in the [replay's input file](https://github.com/PolicyEngine/uk-triple-lock/blob/8838fd4/data/triple_lock_actual_inputs.csv).
 
 In April 2018 and April 2023, inflation was higher than earnings growth, and in April 2021 earnings fell while the pension rose 2.5%. Both rules paid the same in those years, and each lifted the pension relative to earnings.
 
@@ -99,7 +99,7 @@ In April 2020, earnings growth of 4.0% would have lifted the floor above a pensi
   "yLabel": "Index",
   "format": { "decimals": 0 },
   "xFormat": { "decimals": 0 },
-  "source": "Source: PolicyEngine replay of today's rules on September CPI and May to July average weekly earnings, latest ONS figures (PolicyEngine/uk-triple-lock, pre-Budget release). April 2022 uses inflation for earnings under both rules."
+  "source": "Source: PolicyEngine replay of today's rules on September CPI and May to July average weekly earnings, ONS figures as published in September 2026 (PolicyEngine/uk-triple-lock, pre-Budget release). April 2022 uses inflation for earnings under both rules."
 }
 ```
 
@@ -245,7 +245,7 @@ Both rules follow the Triple Lock until April 2029: each April, the basic and ne
 
 The central path takes the OBR's [March 2026 Economic and fiscal outlook](https://obr.uk/efo/economic-and-fiscal-outlook-march-2026/) to 2030 and its [long-term economic determinants](https://obr.uk/docs/dlm_uploads/Long-term-economic-determinants-March-2026-EFO.xlsx) after, which the OBR describes as a projection rather than a forecast. In the long-term assumption scenario, the Triple Lock follows the "Triple lock" row of those determinants: 2.5% for the rises of April 2028 to April 2031, as on the central path, then average earnings growth plus 0.6 percentage points from April 2034, phased in over the two rises before. The adjusted Triple Lock follows the central path in both scenarios.
 
-The replay of April 2017 to April 2026 uses September CPI and May to July earnings growth as last published by ONS, with April 2022's earnings figure replaced by CPI under both rules. Each person's actual flat-rate pension is scaled by the ratio of the two rules' pension levels, and full runs of PolicyEngine UK on the 2024-25 survey cover 2024-25 to 2026-27.
+The replay of April 2017 to April 2026 uses September CPI and May to July earnings growth as published by ONS in September 2026, with April 2022's earnings figure replaced by CPI under both rules. Each person's actual flat-rate pension is scaled by the ratio of the two rules' pension levels, and full runs of PolicyEngine UK on the 2024-25 survey cover 2024-25 to 2026-27.
 
 The withdrawn average came from a monthly statistical model of CPI and average weekly earnings (a vector autoregression), fitted to 2000 to 2026 without the furlough months, with shocks resampled from its past errors, and shifted so that the average across its 50,000 paths matched the OBR's central path. The test registered on 6 October scored it on the OBR's forecasts from March 2016 to March 2022 and set limits on coverage and bias. It failed the limit on how often earnings growth falls below 2.5%, with a bias of 0.27 against a limit of 0.25 ([results](https://github.com/PolicyEngine/uk-triple-lock/pull/45)).
 
