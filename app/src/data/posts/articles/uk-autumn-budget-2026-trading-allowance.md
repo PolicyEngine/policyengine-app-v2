@@ -13,7 +13,7 @@ Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget
 
 The allowance is an alternative to deducting actual business expenses. Gross receipts are the money received before expenses; profit is what remains after those expenses. A person with £4,000 of receipts and £500 of allowable expenses has £3,500 of profit before considering the allowance.
 
-Under [HMRC's trading allowance guidance](https://www.gov.uk/guidance/tax-free-allowances-on-property-and-trading-income), an eligible person can choose the allowance or actual expenses. They cannot deduct both against the same receipts. If receipts are within the allowance, full relief can make the taxable amount zero.
+Under [HMRC's trading allowance guidance](https://www.gov.uk/guidance/tax-free-allowances-on-property-and-trading-income), an eligible person can choose the allowance or actual expenses. They cannot deduct both against the same receipts. If receipts do not exceed the allowance, full relief can make the taxable amount zero.
 
 The allowance cannot create a tax loss. [HMRC's full-relief rules](https://www.gov.uk/hmrc-internal-manuals/business-income-manual/bim86011) treat the profits and losses of relevant trades as nil. A loss-making trader can elect out and use ordinary loss rules, as [HMRC's trading-loss example](https://www.gov.uk/hmrc-internal-manuals/business-income-manual/bim86076) illustrates.
 
@@ -355,7 +355,7 @@ Both taxable profits exceed the £12,570 lower limit, so the extra £2,000 deduc
 
 The trading allowance itself does not reduce the profit counted for Universal Credit. However, paying less income tax can increase the earnings UC takes into account, reducing the award.
 
-Our example is a 35-year-old lone parent with a four-year-old child, living in Central London and paying £12,000 annual private rent. They earn £18,000 from employment for 20 hours a week and claim UC and Child Benefit. They have no assets, childcare costs, disability, pension contributions or other income. The side business has zero expenses and is not their main employment: it is assumed not to meet UC's gainful self-employment definition, so the minimum income floor does not apply.
+Our example is a 35-year-old lone parent with a four-year-old child, living in Central London and paying £12,000 annual private rent. They earn £18,000 from employment for 20 hours a week and claim UC and Child Benefit. They have no assets, childcare costs, disability, pension contributions or other income. The side business has zero expenses and is not their main employment: we assume it does not meet UC's gainful self-employment definition, so the minimum income floor does not apply.
 
 | Annual side-business receipts | Income tax reduction | UC reduction | Household net-income gain |
 | --- | ---: | ---: | ---: |
@@ -367,7 +367,7 @@ These are annual model results. Actual UC uses monthly assessment periods and de
 
 ## The government's costing
 
-The government's costing, certified by the OBR, is set out line by line as measure 15 in Table 1.1 of the OBR's [detailed forecast tables](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), "Breakdown of policy decisions since March 2026". Its “Income tax” and “NICs” (National Insurance contributions) lines cover the taxes in this post's examples, and income tax is about 93% of their sum in each year from 2028–29. The table shows that sum, with the cost to the Exchequer as a positive value.
+The government's costing, certified by the OBR, appears line by line as measure 15 in Table 1.1 of the OBR's [detailed forecast tables](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), "Breakdown of policy decisions since March 2026". Its “Income tax” and “NICs” (National Insurance contributions) lines cover the taxes in this post's examples, and income tax is about 93% of their sum in each year from 2028–29. The table shows that sum, with the cost to the Exchequer as a positive value.
 
 For context, the last column gives the measure's rounded total from the Budget's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026). That total also includes the “PSCE in RDEL”, “Scottish BGA (current)” and “Scottish self-financed expenditure” lines, which together add about £2 million a year from 2027–28. The Budget's policy costings show the same rounded figures.
 
