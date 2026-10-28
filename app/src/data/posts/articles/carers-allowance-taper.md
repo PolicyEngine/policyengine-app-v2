@@ -7,7 +7,7 @@ Key figures for 2031-32:
 - Under current rules, a carer whose net earnings are above the limit by any amount loses the whole allowance. With the taper, the allowance falls by £1 for each £1 above the limit. It falls to nothing once a carer's net earnings (pay after income tax and National Insurance, as the test counts them) exceed the £234 limit by the full weekly rate of about £98: at £333 a week or more, which is about £366 a week of gross pay for an employee with no pension contributions.
 - A carer who does not claim Universal Credit and earns £240 a week gains £75 a week. At £300 a week, the gain is £38.
 - Universal Credit counts Carer's Allowance in full, so it falls by £1 for each £1 of allowance, and the allowance is taxable, so a carer on Universal Credit who pays tax on it loses. At £240 a week of pay, the loss is about £8 a week for an employee whose tax code takes account of the allowance, because Universal Credit then gives back 55% of the tax, as we explain below.
-- The Treasury estimates a cost of £40 million in 2030-31 and £80 million in 2031-32, including behavioural responses. Our static estimate of the net cost is £27.5 million and £55.0 million.
+- The Treasury estimates a cost of £40 million in 2030-31 and £80 million in 2031-32, including behavioural responses. Our static estimate of the net cost, the figure on PolicyEngine's Autumn Budget dashboard, is £24 million and £48 million.
 
 ## How Carer's Allowance works today
 
@@ -558,42 +558,43 @@ Carer 2 keeps 36p of each extra £1 up to the limit and 45p from £234 to about 
 
 ## Population estimates
 
-We also ran the measure on PolicyEngine UK's microsimulation model, which uses survey data on UK households, projected to 2030-31 and 2031-32 on the OBR's October 2026 forecast. The estimate is static: carers do not change how much they work, and take-up of Carer's Allowance follows the assumptions in PolicyEngine's data. For consistency with the examples, we set the current-law limit to the government's rule on both sides (£228 in 2030-31 and £234 in 2031-32), and we apply the same Universal Credit adjustment for the PAYE on the allowance. The model applies half a year of the taper in 2030-31, because the taper starts at some point in that year.
+We also ran the measure on PolicyEngine UK's microsimulation model, which uses survey data on UK households, projected to 2030-31 and 2031-32 on the OBR's October 2026 forecast. The estimate is static: carers do not change how much they work, and take-up of Carer's Allowance follows the assumptions in PolicyEngine's data. This is the run behind the figures for this measure on PolicyEngine's Autumn Budget dashboard, split here into its parts. The model applies half a year of the taper in 2030-31, because the taper starts at some point in that year. Like the dashboard, and unlike the worked examples, the run keeps PolicyEngine UK's current-law limit of £204 and does not count the PAYE on the allowance against Universal Credit earnings.
 
-| £ million, cost to the Exchequer        |  2030-31 |  2031-32 |
-| --------------------------------------- | -------: | -------: |
-| Higher Carer's Allowance                |     77.8 |    158.8 |
-| Lower Universal Credit                  |    −35.0 |    −72.2 |
-| Higher income tax                       |    −15.3 |    −31.6 |
-| **Net cost**                            | **27.5** | **55.0** |
-| Carer's Allowance less Universal Credit |     42.8 |     86.6 |
+| £ million, cost to the Exchequer |  2030-31 |  2031-32 |
+| -------------------------------- | -------: | -------: |
+| Higher Carer's Allowance         |     78.5 |    160.1 |
+| Lower Universal Credit           |    −39.2 |    −80.6 |
+| Higher income tax                |    −15.4 |    −31.8 |
+| **Net cost**                     | **23.8** | **47.6** |
 
-Lower Universal Credit and higher income tax offset part of the cost of the higher allowance. The current-law limit setting does not change the cost.
+The rows are rounded, so they may not sum to the net cost.
+
+Lower Universal Credit and higher income tax offset part of the cost of the higher allowance. Setting the current-law limit to the government's rule in both runs, as in the worked examples, gives the same figures throughout this section.
 
 About 82,500 people have a higher Carer's Allowance in 2030-31, and about 82,900 in 2031-32, all in England. About half (51%) are in families on Universal Credit, for whom the higher allowance brings no gain. Our count of people with a higher allowance is larger than the Treasury's 48,000 people who benefit.
 
-Our net cost, £27.5 million in 2030-31 and £55.0 million in 2031-32, is 69% of the Treasury's £40 million and £80 million. Carer's Allowance less Universal Credit, £42.8 million and £86.6 million, is 7% to 8% above the Treasury's figures. The Treasury's figures lie between the two; we cannot tell which items its costing includes.
+Our net cost, £24 million in 2030-31 and £48 million in 2031-32, is about 60% of the Treasury's £40 million and £80 million.
 
 The comparison is between a static estimate and a post-behavioural one. The Treasury's costing, which was submitted to the OBR for certification, includes behavioural responses. Its note says that some carers would increase their earnings or enter work, which lowers Carer's Allowance and Universal Credit spending, and that it accounts for take-up of tapered awards by people newly eligible for them, which adds to the cost. (These are responses of the people affected; the note describes no feedback through the wider economy, which is what a "dynamic" costing usually means.) Our estimate has neither response, and its take-up follows the data's assumptions. These differences could explain some of the gap between our figures and the Treasury's, in either direction.
 
 These estimates have important limits:
 
 - The survey sample has no carers in Wales whom the taper affects, so we estimate none there, against the Treasury's 3,000.
-- The estimate rests on fewer than 50 survey households, so it is imprecise, and we do not show a breakdown by income decile.
+- The estimate rests on 109 households in the model's data, so it is imprecise, and we do not show a breakdown by income decile.
 
 ## Assumptions and limitations
 
 - The worked examples are household calculations for single carers. The carer and the parent live in separate households, so the parent's income does not count.
 - Weekly amounts are annual amounts divided by 52, so pay is the same each week. The earnings test is weekly, so a carer whose pay varies can be above the limit in some weeks and below it in others.
 - PolicyEngine UK works out net earnings for the test as pay less National Insurance and the income tax that PAYE would take on the pay alone with a standard tax code. It does not model the deduction for the cost of care while the carer is at work, which can be up to half of net earnings, so it can overstate earnings for carers who pay for care.
-- PolicyEngine UK holds the current-law earnings limit at £204 after 2026-27. In the worked examples and the population estimates, we set it to the government's rule with and without the taper: £228 in 2030-31 and £234 in 2031-32, the same limit the taper uses. This does not change the measure's cost or any household's change, because the taper changes nothing for carers at or below the limit.
-- The worked examples and the population estimates both count the PAYE on Carer's Allowance against Universal Credit earned income for employees, which PolicyEngine UK 2.151.0 and the dashboard do not yet do. Self-employed carers are outside the scope of this adjustment and of this post.
+- PolicyEngine UK holds the current-law earnings limit at £204 after 2026-27. In the worked examples, we set it to the government's rule with and without the taper: £228 in 2030-31 and £234 in 2031-32, the same limit the taper uses. The population estimates keep £204, as the dashboard does. The choice does not change the measure's cost or any household's change, because the taper changes nothing for carers at or below the limit; the population run gives the same figures either way.
+- The worked examples count the PAYE on Carer's Allowance against Universal Credit earned income for employees, which PolicyEngine UK 2.151.0 and the dashboard do not yet do. The population estimates, like the dashboard, do not. Self-employed carers are outside the scope of this adjustment and of this post.
 - Carer's Allowance, Universal Credit and the National Living Wage for 2030-31 and 2031-32 are projections. PolicyEngine UK does not round its projected Carer's Allowance to the penny.
 - The examples assume that each carer claims Carer's Allowance and, for carer 2, Universal Credit. The population estimates use the take-up assumptions in PolicyEngine's data.
 - Scotland's Carer Support Payment is not affected. In Northern Ireland, Carer's Allowance keeps the current rule.
 
 ## Methodology
 
-We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). PolicyEngine UK does not yet include the taper, so we applied the `carers_allowance_earnings_taper` modifier from the draft update to PolicyEngine's Autumn Budget 2026 dashboard: branch `carers-taper-limit-rule`, built on pull request #290 of `PolicyEngine/uk-autumn-budget-dashboard-2026` at `ad32af7f`, at commit `004c5281`. The next commit, `38163ede`, changes only the modifier's documentation. The branch differs from #290 in the limit: #290 moves the April 2027 limit (16 hours at that year's National Living Wage) on with average earnings and does not round it, while the branch uses the OBR's National Living Wage forecast for each April and rounds up to the next pound, which gives £228 in 2030-31 and £234 in 2031-32.
+We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). PolicyEngine UK does not yet include the taper, so we applied the `carers_allowance_earnings_taper` modifier from PolicyEngine's Autumn Budget 2026 dashboard (pull request #290 of `PolicyEngine/uk-autumn-budget-dashboard-2026`). It uses the OBR's National Living Wage forecast for each April and rounds the limit up to the next pound, which gives £228 in 2030-31 and £234 in 2031-32. The population estimates are the dashboard's run at commit `beae5998`. We calculated the worked examples with the modifier at commit `004c5281`, whose code differs from `beae5998` only in documentation and formatting.
 
-Both sides of every calculation use the OBR's October 2026 forecast, as the dashboard does, with PolicyEngine UK's current-law earnings limit set to the government's rule. Both sides also use our Universal Credit adjustment: for a person with employment income, the income tax that Universal Credit deducts from earnings is worked out with Carer's Allowance counted as part of the earnings, so it includes the tax on the allowance. We calculated each household for gross pay from £150 to £400 a week in £1 steps. The charts plot whole-pound points where the schedules change slope and a point every £20. PolicyEngine UK reduces all employees' pay by 0.16% in 2031-32, to reflect employers passing on the cost of the salary sacrifice cap, so we set pay 0.16% higher to give whole-pound gross pay.
+Both sides of every calculation use the OBR's October 2026 forecast, as the dashboard does. In the worked examples, both sides also set PolicyEngine UK's current-law earnings limit to the government's rule and use our Universal Credit adjustment: for a person with employment income, the income tax that Universal Credit deducts from earnings is worked out with Carer's Allowance counted as part of the earnings, so it includes the tax on the allowance. We calculated each household for gross pay from £150 to £400 a week in £1 steps. The charts plot whole-pound points where the schedules change slope and a point every £20. PolicyEngine UK reduces all employees' pay by 0.16% in 2031-32, to reflect employers passing on the cost of the salary sacrifice cap, so we set pay 0.16% higher to give whole-pound gross pay.
