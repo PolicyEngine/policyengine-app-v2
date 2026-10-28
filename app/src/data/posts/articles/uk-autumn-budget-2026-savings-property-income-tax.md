@@ -1,3 +1,5 @@
+> Draft review note: the national figures below use the earlier recorded forecast snapshot and await replacement by the regenerated savings and property results. The household calculations remain as stated.
+
 The Autumn Budget 2026 increases the basic, higher and additional income tax rates on savings and property income by a further two percentage points from **6 April 2027**, taking them to **24%, 44% and 49%**. Savings rates apply across the UK. The property rates apply in England, Wales and Northern Ireland. Dividend rates remain unchanged. These are the changes announced in the [Budget 2026, paragraphs 6.246 and 6.247](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142 "Budget 2026 #page 142,45").
 
 PolicyEngine estimates that the measure raises **£664 million in 2027–28**, compared with the Treasury's **£160 million** for that year. These are preliminary static estimates; the Treasury costing includes behavioural responses.
@@ -143,11 +145,11 @@ Property income fills that remaining £5,270, with £730 entering the higher ban
 
 | Income tax component, 2027–28 | Before | After |
 | --- | ---: | ---: |
-| Salary: £32,430 at 20% | £6,486.00 | £6,486.00 |
-| Property: £5,270 at 22% / 24% | £1,159.40 | £1,264.80 |
-| Property: £730 at 42% / 44% | £306.60 | £321.20 |
-| Savings: £1,500 at 42% / 44% | £630.00 | £660.00 |
-| Total income tax | £8,582.00 | £8,732.00 |
+| Salary: £32,430 at 20% | £6,486 | £6,486 |
+| Property: £5,270 at 22% / 24% | £1,159 | £1,265 |
+| Property: £730 at 42% / 44% | £307 | £321 |
+| Savings: £1,500 at 42% / 44% | £630 | £660 |
+| Total income tax | £8,582 | £8,732 |
 
 The extra tax is £120 on property plus £30 on savings, or **£150 a year**. The calculation shows why the order of income sources matters even when each rate rises by the same two percentage points.
 
