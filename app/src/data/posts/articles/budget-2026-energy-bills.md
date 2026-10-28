@@ -33,7 +33,7 @@ This analysis does not model three related funding allocations: the devolved gov
 
 Consider a household that consumes 2,500 kWh of electricity per year, [Ofgem's typical consumption value](https://www.ofgem.gov.uk/sites/default/files/2026-05/Review%20of%20typical%20domestic%20consumption%20values%20decision.pdf). At the prices in our energy bills dashboard, its annual electricity bill is £906 in 2026-27 and £952 in 2027-28, including £43 and £45 of VAT, respectively. Because the zero rate applies for only part of each year, we remove VAT from the share of annual electricity consumption that falls within those months: 56.7% in 2026-27 (October to March) and 22.3% in 2027-28 (April to June).[^1] The VAT cut therefore increases this household's net income by £24 in 2026-27 and £10 in 2027-28.[^2]
 
-If the household lives in a band A to D property in England, it also receives the £100 payment, for a total increase in net income of £135 across the two years. The same household gains £35 in a band E to H property in England or in Wales or Scotland, and £10 in Northern Ireland. Table 2 presents each case.
+If the household lives in a band A to D property in England, it also receives the £100 payment, for a total increase in net income of £135 across the two years. From these two measures, the same household gains £35 in a band E to H property in England or in Wales or Scotland, and £10 in Northern Ireland. Table 2 presents each case.
 
 **Table 2: Change in net income for a household consuming 2,500 kWh of electricity per year**
 
@@ -45,7 +45,7 @@ If the household lives in a band A to D property in England, it also receives th
 | Scotland, band C              | £0               | £24              | £10              | £35   |
 | Northern Ireland              | £0               | £0               | £10              | £10   |
 
-We round figures to the nearest pound; totals may therefore differ from the sum of the columns.
+We round figures to the nearest pound; totals may therefore differ from the sum of the columns. The Welsh Government [has said](https://www.gov.wales/written-statement-welsh-government-response-uk-autumn-budget-2026) it will make a £100 cost-of-living payment to all households in council tax bands A to D, which would give the band C household in Wales a further £100. The Scottish Government [has said](https://www.gov.scot/news/uk-budget-delivers-real-cut-to-scotlands-funding/) it will ensure that households in Scotland benefit from a one-off £100 payment, without saying which households. We model neither.
 
 Households with higher electricity consumption receive larger savings. For example, a couple with two children renting an all-electric home in the North West of England, with annual electricity spending of £1,800, would save £49 in 2026-27 and £19 in 2027-28.
 
@@ -121,7 +121,7 @@ Figure 1 shows the average change in household net income by income decile in 20
 }
 ```
 
-The payment increases net income by an average of £67 per UK household, and by between £68 and £73 in each of the bottom eight income deciles. The average falls to £47 in the top decile, as fewer higher-income households live in band A to D properties in England. Households in Wales, Scotland and Northern Ireland do not receive the payment, which lowers the average in every decile.
+The payment increases net income by an average of £67 per UK household, and by between £68 and £73 in each of the bottom eight income deciles. The average falls to £47 in the top decile, as fewer higher-income households live in band A to D properties in England. The payment covers only England, which lowers the UK average in every decile; our estimates also leave out the Welsh Government's £100 payment and any payment the Scottish Government makes.
 
 The VAT cut increases net income by an average of £29 per household in 2026-27, ranging from £26 in the bottom decile to £37 in the top decile, as higher-income households consume more electricity. As a share of net income, however, the gain declines from 0.10% in the bottom decile to 0.02% in the top decile. We project that 28.4 million households in Great Britain gain from the VAT cut in 2026-27, close to the Budget's estimate of "around 29 million households across the UK".
 
