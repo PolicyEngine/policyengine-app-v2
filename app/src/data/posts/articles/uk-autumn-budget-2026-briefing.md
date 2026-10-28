@@ -99,6 +99,7 @@ In 2026-27 the package raises net income in every decile, and by more as a share
   ],
   "yLabel": "Change in net income (%)",
   "format": { "decimals": 2, "suffix": "%" },
+  "valueLabels": false,
   "source": "PolicyEngine UK microsimulation, Autumn Budget 2026 dashboard"
 }
 ```
