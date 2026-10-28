@@ -133,8 +133,8 @@ Consider instead a 35-year-old sole trader in England working 35 hours a week, w
 | --- | ---: | ---: | ---: |
 | Taxable trading profit | £19,000 | £17,000 | £2,000 |
 | Income tax | £1,286 | £886 | £400 |
-| Class 4 National Insurance | £385.80 | £265.80 | £120 |
-| Combined tax and Class 4 | £1,671.80 | £1,151.80 | £520 |
+| Class 4 National Insurance | £386 | £266 | £120 |
+| Combined tax and Class 4 | £1,672 | £1,152 | £520 |
 
 Both taxable profits exceed the £12,570 lower limit, so the extra £2,000 deduction saves 6% in Class 4 contributions as well as 20% income tax. With benefits unchanged, annual household net income rises by £520.
 
