@@ -513,9 +513,9 @@ Net income is PolicyEngine UK's household net income: income from all sources an
 
 - **Single adult:** aged 40, with a £30,000 salary and no benefits.
 - **Couple with two children on Universal Credit:** both aged 35, with children aged 8 and 5. One earns £25,000. They rent privately for £9,600 a year, pay £1,800 in council tax and claim Universal Credit.
-- **Pensioner on Housing Benefit and Council Tax Reduction:** aged 72, on the full new State Pension (£13,036 in 2027-28). They rent from the council for £7,800 a year and pay £1,600 in council tax. Their income is above the Pension Credit guarantee, so they get no Pension Credit. Their net income includes the £200 Winter Fuel Payment.
+- **Pensioner on Housing Benefit and Council Tax Reduction:** aged 72, on the full new State Pension (£13,036 in 2027-28). They rent from the council for £7,800 a year and pay £1,600 in council tax. Their income exceeds the Pension Credit guarantee, so they get no Pension Credit. Their net income includes the £200 Winter Fuel Payment.
 
-The model's pump prices are fixed and below October 2026 prices, when diesel was above £2 a litre, so the same spending buys fewer litres today.
+The model's pump prices are fixed and below October 2026 prices, when diesel exceeded £2 a litre, so the same spending buys fewer litres today.
 
 ### Projections, prices and coverage
 
