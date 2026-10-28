@@ -43,93 +43,9 @@ The explainer gives five example pensioners for 2027-28. PolicyEngine UK reprodu
 
 Steph's tax of £93.28 is below the £94 PTA, so the PTA removes her full tax bill. Jonathan's income is £150 above the full new State Pension, so his PTA is £94 − £150 ÷ 3 = £44. Nadia's income is above £13,318.40, so she gets no PTA.
 
-## Income tax by total income
+## The PTA in each tax year
 
 The charts below follow a single pensioner aged 70 with a partial new State Pension of £11,000 and a private pension. Total income changes with the private pension.
-
-```chart
-{
-  "type": "line",
-  "title": "Income tax for a single pensioner, 2027-28",
-  "subtitle": "Income tax by total income, with and without the Pension Tax Allowance",
-  "xKey": "income",
-  "xLabel": "Total income",
-  "series": [
-    {
-      "key": "without",
-      "name": "Without the PTA",
-      "color": "quinary"
-    },
-    {
-      "key": "with",
-      "name": "With the PTA",
-      "color": "primary"
-    }
-  ],
-  "data": [
-    {
-      "income": 12500,
-      "without": 0.0,
-      "with": 0.0
-    },
-    {
-      "income": 12570,
-      "without": 0.0,
-      "with": 0.0
-    },
-    {
-      "income": 13036.4,
-      "without": 93.28,
-      "with": 0.0
-    },
-    {
-      "income": 13037.75,
-      "without": 93.55,
-      "with": 0.0
-    },
-    {
-      "income": 13318.4,
-      "without": 149.68,
-      "with": 149.68
-    },
-    {
-      "income": 13500,
-      "without": 186.0,
-      "with": 186.0
-    }
-  ],
-  "markers": [
-    {
-      "x": 12570,
-      "label": "Personal Allowance"
-    },
-    {
-      "x": 13036.4,
-      "label": "Full new State Pension"
-    },
-    {
-      "x": 13318.4,
-      "label": "PTA withdrawn"
-    }
-  ],
-  "yLabel": "Income tax",
-  "format": {
-    "prefix": "£",
-    "decimals": 0,
-    "separator": true
-  },
-  "xFormat": {
-    "prefix": "£",
-    "decimals": 0,
-    "separator": true
-  },
-  "source": "Source: PolicyEngine UK household calculation; HM Treasury, Pension Tax Allowance explainer (28 October 2026)."
-}
-```
-
-Without the PTA, income tax starts at the £12,570 Personal Allowance. With the PTA, income tax starts at £13,037.75, just above the full new State Pension, and reaches the level without the PTA at £13,318.40. Above £13,318.40, the PTA has no effect.
-
-## The PTA in each tax year
 
 ```chart
 {
@@ -246,6 +162,90 @@ Without the PTA, income tax starts at the £12,570 Personal Allowance. With the 
 
 The PTA equals the tax due up to the full new State Pension, then falls by £1 for each £3 of extra income. Because the full new State Pension rises each year while the Personal Allowance stays at £12,570, the maximum PTA rises from £94 in 2027-28 to £226 in 2029-30, and the withdrawal range widens from £282 to £678.
 
+## Income tax by total income
+
+```chart
+{
+  "type": "line",
+  "title": "Income tax for a single pensioner, 2027-28",
+  "subtitle": "Income tax by total income, with and without the Pension Tax Allowance",
+  "xKey": "income",
+  "xLabel": "Total income",
+  "series": [
+    {
+      "key": "without",
+      "name": "Without the PTA",
+      "color": "quinary"
+    },
+    {
+      "key": "with",
+      "name": "With the PTA",
+      "color": "primary"
+    }
+  ],
+  "data": [
+    {
+      "income": 12500,
+      "without": 0.0,
+      "with": 0.0
+    },
+    {
+      "income": 12570,
+      "without": 0.0,
+      "with": 0.0
+    },
+    {
+      "income": 13036.4,
+      "without": 93.28,
+      "with": 0.0
+    },
+    {
+      "income": 13037.75,
+      "without": 93.55,
+      "with": 0.0
+    },
+    {
+      "income": 13318.4,
+      "without": 149.68,
+      "with": 149.68
+    },
+    {
+      "income": 13500,
+      "without": 186.0,
+      "with": 186.0
+    }
+  ],
+  "markers": [
+    {
+      "x": 12570,
+      "label": "Personal Allowance"
+    },
+    {
+      "x": 13036.4,
+      "label": "Full new State Pension"
+    },
+    {
+      "x": 13318.4,
+      "label": "PTA withdrawn"
+    }
+  ],
+  "yLabel": "Income tax",
+  "format": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "xFormat": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "source": "Source: PolicyEngine UK household calculation; HM Treasury, Pension Tax Allowance explainer (28 October 2026)."
+}
+```
+
+Without the PTA, income tax starts at the £12,570 Personal Allowance. With the PTA, income tax starts at £13,037.75, just above the full new State Pension, and reaches the level without the PTA at £13,318.40. Above £13,318.40, the PTA has no effect.
+
 ## Marginal tax rates
 
 ```chart
@@ -330,7 +330,94 @@ The PTA changes the marginal income tax rate in two income ranges. Between £12,
 
 Pension Credit tops up income to a minimum guarantee, and it counts income after income tax. For a Pension Credit claimant, a lower income tax bill therefore reduces Pension Credit by the same amount, and household net income does not change.
 
-In PolicyEngine UK, the single-person minimum guarantee is £12,661 a year in 2027-28. A single claimant with total income between £12,570 and about £12,680 receives the PTA but no net income gain. The projected minimum guarantee rises faster than the Personal Allowance, so this range extends to about £13,000 in 2028-29 and £13,320 in 2029-30. People who do not claim Pension Credit keep the full PTA.
+In PolicyEngine UK, the single-person minimum guarantee is £12,660.62 a year in 2027-28. A single claimant with total income from £12,570 to £12,660.62 receives the PTA but no net income gain. From £12,660.62 to £12,683.27, the claimant's gain rises by £1 for each £1 of income. Above £12,683.27, a claimant and a non-claimant gain the same amount, up to £93.55 at £13,037.75.
+
+```chart
+{
+  "type": "line",
+  "title": "Change in net income for a single pensioner, 2027-28",
+  "subtitle": "Change in household net income from the Pension Tax Allowance",
+  "xKey": "income",
+  "xLabel": "Total income",
+  "series": [
+    {
+      "key": "no_pc",
+      "name": "Does not claim Pension Credit",
+      "color": "primary"
+    },
+    {
+      "key": "claims_pc",
+      "name": "Claims Pension Credit",
+      "color": "secondary"
+    }
+  ],
+  "data": [
+    {
+      "income": 12400,
+      "no_pc": 0.0,
+      "claims_pc": 0.0
+    },
+    {
+      "income": 12570,
+      "no_pc": 0.0,
+      "claims_pc": 0.0
+    },
+    {
+      "income": 12660.62,
+      "no_pc": 18.12,
+      "claims_pc": 0.0
+    },
+    {
+      "income": 12683.27,
+      "no_pc": 22.65,
+      "claims_pc": 22.65
+    },
+    {
+      "income": 13037.75,
+      "no_pc": 93.55,
+      "claims_pc": 93.55
+    },
+    {
+      "income": 13318.4,
+      "no_pc": 0.0,
+      "claims_pc": 0.0
+    },
+    {
+      "income": 13500,
+      "no_pc": 0.0,
+      "claims_pc": 0.0
+    }
+  ],
+  "markers": [
+    {
+      "x": 12570,
+      "label": "Personal Allowance"
+    },
+    {
+      "x": 13036.4,
+      "label": "Full new State Pension"
+    },
+    {
+      "x": 13318.4,
+      "label": "PTA withdrawn"
+    }
+  ],
+  "yLabel": "Change in net income",
+  "format": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "xFormat": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "source": "Source: PolicyEngine UK household calculation; HM Treasury, Pension Tax Allowance explainer (28 October 2026). Pension Credit minimum guarantee of £12,660.62 a year from PolicyEngine UK."
+}
+```
+
+The projected minimum guarantee rises faster than the Personal Allowance, so the range where Pension Credit offsets the PTA extends to about £13,000 in 2028-29 and £13,320 in 2029-30.
 
 ## Assumptions and limitations
 
