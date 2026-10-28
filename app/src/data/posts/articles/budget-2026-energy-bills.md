@@ -61,14 +61,14 @@ According to PolicyEngine's static modelling, the two measures cost £2.81 billi
 
 | Measure                                                                | PolicyEngine, 2026-27 | HM Treasury, 2026-27 | PolicyEngine, 2027-28 | HM Treasury, 2027-28 |
 | ---------------------------------------------------------------------- | --------------------- | -------------------- | --------------------- | -------------------- |
-| Household Energy Payment: England, excluding the £100 million          | 1,969                 | 2,100                | 0                     | 0                    |
+| Household Energy Payment: England, excluding the £100 million          | 1,969                 | 2,100[^4]            | 0                     | 0                    |
 | VAT cut on household electricity                                       | 840                   | 755                  | 353                   | 305                  |
-| **Total, excluding the devolved share and the £100 million**           | **2,808**             | **2,855**            | **353**               | **305**              |
-| Household Energy Payment: devolved governments' share                  | Not modelled          | 425                  | Not modelled          | 0                    |
+| **Total, excluding the devolved share and the £100 million**           | **2,808**             | **2,855**[^4]        | **353**               | **305**              |
+| Household Energy Payment: devolved governments' share                  | Not modelled          | 425[^4]              | Not modelled          | 0                    |
 | Household Energy Payment: £100 million for councils in England         | Not modelled          | 100                  | Not modelled          | 0                    |
 | **Total, Table 6.1**                                                   |                       | **3,380**            |                       | **305**              |
 
-Figures may not sum because of rounding. The Budget publishes only the payment's total of £2,625 million. Our Barnett calculation gives £2,200 million to England, including the £100 million for councils, and £425 million to the devolved governments.[^4]
+Figures may not sum because of rounding. Marked figures are our Barnett split of the Treasury's £2,625 million; the Budget publishes only the total. Our Barnett calculation gives £2,200 million to England, including the £100 million for councils, and £425 million to the devolved governments.[^4]
 
 Our estimate for the payment covers only the £100 payments in England: £1.97 billion ÷ £100 = 19.7 million households, consistent with the Government's estimate of up to 20 million.[^3] The Treasury's £2,625 million also funds the £100 million for local authorities and the devolved governments' share, which we estimate at £425 million with the Barnett formula.[^4] That leaves £2.10 billion for the payment in England, and our estimate comes to 94% of it. At £100 to up to 20 million households, the payments themselves come to up to £2.0 billion; the Budget does not itemise the remaining £0.1 billion.
 
