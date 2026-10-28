@@ -1,6 +1,6 @@
 The Autumn Budget 2026 announces a further two-percentage-point increase in the basic, higher and additional income tax rates on property income from **6 April 2027**, taking them to **24%, 44% and 49%** in England, Wales and Northern Ireland, as [Budget paragraph 6.246](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) sets out. The government plans to legislate for the new rates in Finance Bill 2026–27. The property rate increase does not apply to Scottish taxpayers. Because finance-cost relief follows the property basic rate, residential landlords' relief rises too.
 
-Key figures for 2027–28:
+Key figures:
 
 - A landlord in England with £10,000 of property profit and £4,000 of fully usable mortgage interest pays £120 more income tax.
 - A mortgage-free landlord in England with the same profit pays £200 more.
