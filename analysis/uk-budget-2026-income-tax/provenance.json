@@ -17,7 +17,7 @@
     ]
   },
   "population": {
-    "status": "archived_dashboard_outputs_not_in_current_articles",
+    "status": "approved_property_branch_snapshot_used_in_property_draft",
     "dataset": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
     "sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
     "certificate": "https://github.com/PolicyEngine/policyengine.py/pull/720",
@@ -27,51 +27,13 @@
     "replacement_policy": "Retain this adopted bundle until a later explicitly recorded update; do not silently use the candidate in policyengine.py PR725.",
     "national_results_generated_locally": false,
     "national_results_reused_from_dashboard": true,
-    "dashboard_snapshot": {
-      "manifest_revision": 5,
-      "manifest_updated_at": "2026-10-28T14:35:54.732859Z",
-      "fetched_at": "2026-10-28T14:46:46Z",
-      "base_url": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/",
-      "source_commit": "0d9dccb23e4b4181dad49c0004fc9c65348d408b",
-      "reform_and_forecast_files_match_household_reference": true,
-      "measures": {
-        "unearned_income_rates_up": {
-          "artifact": "artifacts/unearned_income_rates_up/8bd7d211ae66c19d",
-          "generated_at": "2026-10-28T14:34:26.864876Z"
-        },
-        "trading_allowance_raise": {
-          "artifact": "artifacts/trading_allowance_raise/230c4665427e0bb1",
-          "generated_at": "2026-10-28T14:34:31.676559Z"
-        }
-      },
-      "manifest_status": "provisional",
-      "reconciliation_status": "awaiting_source",
-      "combined_artifact_available": false,
-      "disclosure_floor_survey_households": 3,
-      "thin_decile_cells_recorded": false,
-      "limitations": [
-        "No absolute affected-person counts or separate winner/loser shares are exported.",
-        "people_affected is a percentage of people in households whose absolute net-income percentage change exceeds 0.01%; it is not a headcount.",
-        "Trading gross receipts are missing; the receipt warns this may overstate cost."
-      ]
-    },
-    "live_source_check": {
-      "manifest_revision": 17,
-      "manifest_updated_at": "2026-10-28T16:09:01.451619Z",
-      "property_income_rates_up": "provisional_reconciliation_failed",
-      "savings_income_rates_up": "provisional_reconciliation_failed",
-      "unearned_income_rates_up": "withdrawn_due_to_measure_split",
-      "new_trading_artifact": "71f8a26e4f547021",
-      "new_trading_status": "provisional_reconciliation_failed",
-      "new_trading_dataset_matches_pin": true,
-      "replacement_adopted": false,
-      "forecast_note": "Replacement artifacts remain unapproved. The household forecast pin is independent of these national artifacts.",
-      "property_artifact": "3537bd303ac226cf",
-      "savings_artifact": "af6aaaee33f616ee",
-      "source_check_note": "Manifest17 status reported by the parent task during the PTA alignment; manifest_updated_at is the publisher timestamp, not a local fetch timestamp."
-    },
     "article_national_results_published": false,
-    "article_scope_note": "Both current articles omit earlier model national estimates, decile tables and affected shares. Retained population-preview files are historical public aggregates for reproducibility, not current publication figures. National estimates are linked through the dashboard pending final execution-bound results."
+    "article_scope_note": "The property draft includes national revenue and decile averages from the approved property-only dashboard artifact recorded in property-population/. Savings and trading retain household calculations and Treasury costings only. Withdrawn combined outputs are not published. Reach, poverty and inequality figures are omitted pending separate disclosure clearance.",
+    "national_results_record": "property-population/summary.json",
+    "retained_national_measures": [
+      "property_income_rates_up"
+    ],
+    "national_results_scope": "Approved property-only national revenue and decile outputs; reach, poverty and inequality outputs are omitted pending separate disclosure clearance."
   },
   "treasury_costings": {
     "source": "https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html",
@@ -117,8 +79,8 @@
     "additional_household_pairs": 5,
     "raw_population_accessed": false,
     "additional_internal_population_numbers_adopted": false,
-    "final_regeneration_note": "Detailed October forecast tables and council tax are expected; retain the recorded first-estimate snapshot until replacement outputs bind the exact dataset and forecast.",
-    "remaining_comments_resolution": "Withdrawn combined national results removed from savings/property, following the same cut-or-match-final-run approach Max applied to trading. Confirmed dashboard household matching, updated canonical links, added primary-source collection-timing explanation and retained separate Treasury costings. Trading whole-year exclusions and pre-switch dashboard wording corrected."
+    "final_regeneration_note": "Compare the approved property artifact recorded in property-population/ with the final released dashboard before publication; update and review the article if its execution-bound results change.",
+    "remaining_comments_resolution": "The property draft uses approved property-only national revenue and decile results alongside verified household examples and separate Treasury costings. Savings and trading retain household calculations and Treasury costings only. Withdrawn combined outputs and uncleared reach, poverty and inequality figures are not published."
   },
   "household_forecast": {
     "dashboard_commit": "640426575270224db9b04d6c94d30e264a347be2",
