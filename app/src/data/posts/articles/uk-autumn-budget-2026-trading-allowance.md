@@ -5,7 +5,7 @@ Key figures:
 - An employee paying 20% income tax on eligible side income can save £400 a year from the extra £2,000 deduction.
 - A sole trader with £20,000 of receipts and £500 of expenses gains £520 through lower income tax and Class 4 National Insurance.
 - A Universal Credit claimant in the example below keeps £180 of a £400 tax reduction, after UC falls by £220.
-- The Treasury's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) records no receipts effect in 2027–28 and forecasts a £225 million cost in 2028–29.
+- The government's costing, certified by the OBR, puts the cost in income tax and National Insurance at nothing in 2027–28 and £221 million in 2028–29. The Budget's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) rounds the measure's total to £225 million in 2028–29.
 
 Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. We cover the property income tax increase in a [separate explainer](/uk/research/uk-autumn-budget-2026-property-income-tax).
 
@@ -365,24 +365,26 @@ Earnings already exceed the work allowance. Every £1 of tax saved increases cou
 
 These are annual model results. Actual UC uses monthly assessment periods and deducts relevant self-employment income tax and National Insurance when paid, under [regulation 57(2)](https://www.legislation.gov.uk/uksi/2013/376/regulation/57). Uneven receipts or a large tax payment in one month can produce a different pattern of awards and a different annual gain.
 
-## Treasury costing
+## The government's costing
 
-The table reproduces the Treasury's Table 6.1, row 15, with the cost to the Exchequer shown as a positive value.
+The government's costing, certified by the OBR, is set out line by line as measure 15 in Table 1.1 of the OBR's [detailed forecast tables](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), "Breakdown of policy decisions since March 2026". Its Income tax and NICs lines cover the taxes in this post's examples, and income tax is about 93% of their sum in each year. The table shows that sum, with the cost to the Exchequer as a positive value.
 
-| Year | Treasury receipts cost (£ million) |
-| --- | ---: |
-| 2026–27 | 0 |
-| 2027–28 | 0 |
-| 2028–29 | 225 |
-| 2029–30 | 165 |
-| 2030–31 | 175 |
-| 2031–32 | 180 |
+For context, the last column gives the measure's rounded total from the Budget's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026). That total also includes the PSCE in RDEL, Scottish BGA (current) and Scottish self-financed expenditure lines, which together add about £2 million a year from 2027–28.
 
-The effective date remains 6 April 2027 even though the Treasury records no receipts effect in 2027–28. Tax-year liabilities and fiscal-year receipts forecasts differ. For context, an outstanding Self Assessment balancing payment for 2027–28 would normally be due on 31 January 2029. Some taxpayers also make advance instalments, as [HMRC's payments-on-account guidance](https://www.gov.uk/understand-self-assessment-bill/payments-on-account) explains.
+| Year | Income tax and NICs (£ million) | Table 6.1 total (£ million) |
+| --- | ---: | ---: |
+| 2026–27 | 0 | 0 |
+| 2027–28 | 0 | 0 |
+| 2028–29 | 221 | 225 |
+| 2029–30 | 165 | 165 |
+| 2030–31 | 171 | 175 |
+| 2031–32 | 178 | 180 |
 
-The [Treasury policy costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=23) allows for taxpayers switching from actual expenses to the larger allowance, a behavioural response. It does not give an affected-person count.
+The effective date remains 6 April 2027 even though the costing has no income tax or NICs effect in 2027–28. Tax-year liabilities and fiscal-year receipts forecasts differ. For context, an outstanding Self Assessment balancing payment for 2027–28 would normally be due on 31 January 2029. Some taxpayers also make advance instalments, as [HMRC's payments-on-account guidance](https://www.gov.uk/understand-self-assessment-bill/payments-on-account) explains.
 
-PolicyEngine's static estimates count each tax year's liability in that year, so a PolicyEngine figure for 2027–28 is not comparable with the Treasury's receipts in 2027–28.
+The Budget's [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=23) say the costing allows for taxpayers switching from actual expenses to the larger allowance, a behavioural response. They do not give an affected-person count.
+
+PolicyEngine's static estimates count each tax year's liability in that year, so a PolicyEngine figure for 2027–28 is not comparable with the government's costing for 2027–28.
 
 ## Assumptions and limitations
 
