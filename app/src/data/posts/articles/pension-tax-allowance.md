@@ -742,20 +742,20 @@ We ran the PTA on PolicyEngine UK's representative sample of UK households, Micr
 
 The Treasury estimates that the PTA reduces receipts by £45 million in 2027-28, £90 million in 2028-29 and £150 million in 2029-30. The same costing shows a gain of £50 million in 2030-31 and a cost of £15 million in 2031-32, after the PTA ends (Budget 2026, Table 6.1, row 52). The explainer states that about 500,000 pensioners will pay less income tax in 2027-28 because of the PTA, and that about 290,000 of them will pay none. By the end of this Parliament, about 1 million pensioners will receive the PTA.
 
-| Tax year | Income tax: PolicyEngine | Income tax: HM Treasury (Table 6.1) | Household net income: PolicyEngine |
-| -------- | ------------------------ | ----------------------------------- | ---------------------------------- |
-| 2026-27  | £0                       | £0                                  | £0                                 |
-| 2027-28  | −⁠£42 million            | −⁠£45 million                       | +⁠£30 million                      |
-| 2028-29  | −⁠£113 million           | −⁠£90 million                       | +⁠£83 million                      |
-| 2029-30  | −⁠£193 million           | −⁠£150 million                      | +⁠£144 million                     |
-| 2030-31  | £0                       | +⁠£50 million                       | £0                                 |
-| 2031-32  | £0                       | −⁠£15 million                       | £0                                 |
+| Tax year | Income tax: PolicyEngine | Income tax: HM Treasury (Table 6.1) | Total cost: PolicyEngine |
+| -------- | ------------------------ | ----------------------------------- | ------------------------ |
+| 2026-27  | £0                       | £0                                  | £0                       |
+| 2027-28  | −⁠£42 million            | −⁠£45 million                       | −⁠£30 million            |
+| 2028-29  | −⁠£113 million           | −⁠£90 million                       | −⁠£83 million            |
+| 2029-30  | −⁠£193 million           | −⁠£150 million                      | −⁠£144 million           |
+| 2030-31  | £0                       | +⁠£50 million                       | £0                       |
+| 2031-32  | £0                       | −⁠£15 million                       | £0                       |
 
-_Both estimates are static. PolicyEngine includes no behavioural response, and the Treasury's costing assumes none, because people have little scope to manage their income to keep the allowance. PolicyEngine gives the change in income tax liability in each tax year, from 6 April; the Treasury gives the change in receipts in each fiscal year, from 1 April. Sources: PolicyEngine UK microsimulation; HM Treasury, Budget 2026, Table 6.1 and policy costings._
+_Total cost is the income tax cut less what comes back through lower Pension Credit, Housing Benefit and Council Tax Reduction and through lost free TV licences; it equals the rise in household net income. Negative figures are costs. Both estimates are static. PolicyEngine includes no behavioural response, and the Treasury's costing assumes none, because people have little scope to manage their income to keep the allowance. PolicyEngine gives the change in income tax liability in each tax year, from 6 April; the Treasury gives the change in receipts in each fiscal year, from 1 April. Sources: PolicyEngine UK microsimulation; HM Treasury, Budget 2026, Table 6.1 and policy costings._
 
 PolicyEngine's estimate is within £3 million of the Treasury's in 2027-28 and higher in the next two years. The two differ in method: the Treasury counts receipts in fiscal years, and its +£50 million and −£15 million fall after the PTA ends on 5 April 2030, while PolicyEngine counts tax liabilities in each tax year, so it shows nothing after 2029-30. They also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK.
 
-Household net income rises by less than income tax falls. In 2027-28, £12 million of the £42 million tax cut, 29%, goes back through lower Pension Credit, Housing Benefit and Council Tax Reduction, and through lost free TV licences.
+The total cost is smaller than the income tax cut. In 2027-28, £12 million of the £42 million tax cut, 29%, comes back through lower Pension Credit, Housing Benefit and Council Tax Reduction, and through lost free TV licences, so households gain £30 million.
 
 ### Who gains
 
