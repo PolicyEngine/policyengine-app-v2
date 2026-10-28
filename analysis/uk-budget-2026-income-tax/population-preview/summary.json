@@ -1,0 +1,1189 @@
+{
+  "status": "Provisional preview; reconciliation awaiting_source; not final approval",
+  "manifest_url": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/manifest.json",
+  "manifest_updated_at": "2026-10-28T14:35:54.732859+00:00",
+  "manifest_sha256": "93148ae1fc473dbb5301ca4ac283891ddf43e6ee377fdc2df0607f0a6b0b1b7a",
+  "units": {
+    "budget_change_gbp_bn": "Annual government balance change, GBP billion; positive revenue, negative cost",
+    "mean_household_change_gbp": "Weighted mean annual net income change, GBP per household; includes unaffected households",
+    "income_change_pct": "Decile total income change / decile total baseline income * 100",
+    "people_affected_pct": "Percentage of people in valid-decile households with abs(change / max(baseline income, GBP 1)) > 0.0001"
+  },
+  "limitations": [
+    "No affected headcounts, household shares, winner/loser shares or survey support counts exported",
+    "Static estimates; Treasury post-behavioural fiscal-year forecasts require separate reconciliation",
+    "Trading allowance lacks gross receipts and may overstate cost"
+  ],
+  "measures": {
+    "unearned_income_rates_up": {
+      "source_commit": "0d9dccb23e4b4181dad49c0004fc9c65348d408b",
+      "generated_at": "2026-10-28T14:34:26.864876+00:00",
+      "description": "From 6 April 2027 the income tax rates on savings income rise to 24%, 44% and 49% at the basic, higher and additional rates across the UK, and those on property income to the same rates in England, Wales and Northern Ireland: 2 percentage points above current law, which already includes Budget 2025's rises. Finance cost relief for landlords follows the property basic rate, so rises to 24%. Dividend rates are unchanged. Incomes are held fixed, with no behavioural response.",
+      "execution": {
+        "baseline": {
+          "binding": "content",
+          "kind": "current_law",
+          "name": "unearned_income_rates_up baseline"
+        },
+        "certificate": {
+          "bundle_version": "6.11.1",
+          "certificate_sha256": "f2e6fc9faafab32b50c1c76067fb070ae9686b6f375e44417776de16e9c3521f",
+          "certificate_source": "packaged",
+          "certified_by": "policyengine.py bundle certification",
+          "certified_dataset_sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
+          "certified_for_core_version": "3.33.3",
+          "certified_for_model_version": "2.151.0",
+          "compatibility_basis": "built_with_model_package",
+          "country_id": "uk",
+          "tro_composition_fingerprint": "ec8e6c4194b5e1ec0acd64c8718d0eecb6b41648b53f0b453c425b516e5a4489"
+        },
+        "certification_status": "certified",
+        "core": {
+          "name": "policyengine-core",
+          "version": "3.33.3"
+        },
+        "country_id": "uk",
+        "data": {
+          "build_id": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+          "build_model_version": "2.151.0",
+          "data_package": "microcosm-data",
+          "dataset": "microcosm_uk_2024_25",
+          "dataset_revision": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+          "dataset_sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
+          "dataset_uri": "hf://policyengine/populace-uk-private/microcosm_uk_2024_25.h5@microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+          "release_manifest_revision": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+          "release_version": "0.1.0"
+        },
+        "fiscal_year": {
+          "convention": "uk_fiscal_year",
+          "parameter_annualisation": "policyengine-uk/fiscal-year-parameters",
+          "period_start": "04-06",
+          "year_label": "start_year"
+        },
+        "model": {
+          "name": "policyengine-uk",
+          "version": "2.151.0"
+        },
+        "outputs_sha256": "1315fa74166dfa15139fe4693bf7df5654244db1b39b8159a0a64e5c64bfe508",
+        "receipt_type": "policyengine.execution_receipt",
+        "reform": {
+          "binding": "content",
+          "kind": "reform",
+          "name": "unearned_income_rates_up",
+          "reform_sha256": "e6238a8a012d3dba63b67c75f812ef5cf7931ee8ca17c35720a94ef520979638",
+          "representation": "policyengine-uk.scenario/v1"
+        },
+        "runtime": {
+          "platform": "linux",
+          "python_version": "3.13.3"
+        },
+        "schema_version": 1,
+        "supported_years": [
+          2024,
+          2025,
+          2026,
+          2027,
+          2028,
+          2029,
+          2030,
+          2031,
+          2032
+        ],
+        "wrapper": {
+          "name": "policyengine",
+          "version": "6.11.1"
+        },
+        "years": [
+          2026,
+          2027,
+          2028,
+          2029,
+          2030,
+          2031
+        ]
+      },
+      "disclosure_floor": {
+        "checked": true,
+        "survey_households": 3,
+        "thin_cells": [],
+        "thin_cells_in_tables": false
+      },
+      "sources": {
+        "budgetary_impact": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/unearned_income_rates_up/8bd7d211ae66c19d/budgetary_impact.csv",
+        "distributional_impact": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/unearned_income_rates_up/8bd7d211ae66c19d/distributional_impact.csv",
+        "winners_losers": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/unearned_income_rates_up/8bd7d211ae66c19d/winners_losers.csv",
+        "metrics": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/unearned_income_rates_up/8bd7d211ae66c19d/metrics.csv"
+      },
+      "receipt_url": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/unearned_income_rates_up/8bd7d211ae66c19d/receipt.json",
+      "years": {
+        "2026": {
+          "budget_change_gbp_bn": 0.0,
+          "mean_household_change_gbp": 0.0,
+          "people_affected_pct": 0.0,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            }
+          ]
+        },
+        "2027": {
+          "budget_change_gbp_bn": 0.6642382271213031,
+          "mean_household_change_gbp": -22.671638846816318,
+          "people_affected_pct": 10.673344206596365,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": -12.898118729678712,
+              "income_change_pct": -0.04985863048727435
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": -5.694578425096933,
+              "income_change_pct": -0.014274726231957425
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": -6.657553598437464,
+              "income_change_pct": -0.01493700611440189
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": -7.308607835285808,
+              "income_change_pct": -0.015130665063043254
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": -5.999313832829491,
+              "income_change_pct": -0.011040999093289379
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": -9.133481007058295,
+              "income_change_pct": -0.015457392166954702
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": -10.940919104608044,
+              "income_change_pct": -0.01679145061801241
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": -21.5078233997643,
+              "income_change_pct": -0.02924222878277037
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": -37.036157377175726,
+              "income_change_pct": -0.0424816465100822
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": -107.13162680777542,
+              "income_change_pct": -0.06764978971604362
+            }
+          ]
+        },
+        "2028": {
+          "budget_change_gbp_bn": 0.6957731772288318,
+          "mean_household_change_gbp": -23.653364852788222,
+          "people_affected_pct": 11.008162293996863,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": -13.41973138237426,
+              "income_change_pct": -0.051797994354371796
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": -6.338215310184361,
+              "income_change_pct": -0.01562814402382634
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": -6.89447245599531,
+              "income_change_pct": -0.01507923160657066
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": -7.530700661654769,
+              "income_change_pct": -0.015199990369575169
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": -6.8788149502975875,
+              "income_change_pct": -0.012557869706653325
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": -8.728224096645702,
+              "income_change_pct": -0.014460880161614037
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": -11.809515330751909,
+              "income_change_pct": -0.017821793400241998
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": -22.785654721608235,
+              "income_change_pct": -0.030450986910411898
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": -37.58069636855771,
+              "income_change_pct": -0.04241102691117292
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": -111.85151093127375,
+              "income_change_pct": -0.0691861186482591
+            }
+          ]
+        },
+        "2029": {
+          "budget_change_gbp_bn": 0.7276593169820835,
+          "mean_household_change_gbp": -24.629016272903616,
+          "people_affected_pct": 11.211334671637678,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": -13.976437998407777,
+              "income_change_pct": -0.05322985172426894
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": -6.498855289587565,
+              "income_change_pct": -0.015861030033688512
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": -7.341434113128795,
+              "income_change_pct": -0.015820633619852753
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": -8.370488863576746,
+              "income_change_pct": -0.016640010814691405
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": -6.616069295483351,
+              "income_change_pct": -0.01186750640488552
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": -9.026024721135434,
+              "income_change_pct": -0.014739892298832517
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": -12.984868754512368,
+              "income_change_pct": -0.019256034827620797
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": -23.63377334118966,
+              "income_change_pct": -0.031114843422502994
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": -38.78140865712871,
+              "income_change_pct": -0.04317103405831868
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": -116.09418043491492,
+              "income_change_pct": -0.07041327236762773
+            }
+          ]
+        },
+        "2030": {
+          "budget_change_gbp_bn": 0.7623675377687243,
+          "mean_household_change_gbp": -25.68817666790038,
+          "people_affected_pct": 11.515220448098733,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": -14.981320954576939,
+              "income_change_pct": -0.05610692023915448
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": -6.531174968146814,
+              "income_change_pct": -0.015838490300712545
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": -8.030036431729007,
+              "income_change_pct": -0.016970819222280532
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": -7.324763422872621,
+              "income_change_pct": -0.01437706071070637
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": -8.224558743431283,
+              "income_change_pct": -0.014513169605216732
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": -6.414100973437806,
+              "income_change_pct": -0.010245777552623752
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": -16.555145381069313,
+              "income_change_pct": -0.024164401723622005
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": -24.719282953845298,
+              "income_change_pct": -0.03191810416734249
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": -39.874223193190204,
+              "income_change_pct": -0.04373162273763173
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": -121.49216941209389,
+              "income_change_pct": -0.07181165560065904
+            }
+          ]
+        },
+        "2031": {
+          "budget_change_gbp_bn": 0.7933736065368444,
+          "mean_household_change_gbp": -26.618450973449693,
+          "people_affected_pct": 11.677047270799843,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": -15.740449373492428,
+              "income_change_pct": -0.05832341572449926
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": -6.122323367954729,
+              "income_change_pct": -0.014635606422439709
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": -8.55083626627086,
+              "income_change_pct": -0.017848939980989183
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": -7.717876836466778,
+              "income_change_pct": -0.014809745978892685
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": -8.480571400003587,
+              "income_change_pct": -0.014729454378751861
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": -6.449886317389771,
+              "income_change_pct": -0.010139823686994792
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": -18.032240662651855,
+              "income_change_pct": -0.025662723350375474
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": -25.156749151956337,
+              "income_change_pct": -0.03178995628746156
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": -41.97465710374913,
+              "income_change_pct": -0.04569066183442702
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": -124.94128651158324,
+              "income_change_pct": -0.07173645374140333
+            }
+          ]
+        }
+      }
+    },
+    "trading_allowance_raise": {
+      "source_commit": "0d9dccb23e4b4181dad49c0004fc9c65348d408b",
+      "generated_at": "2026-10-28T14:34:31.676559+00:00",
+      "description": "From 6 April 2027 the trading allowance, which relieves trading receipts in place of actual expenses, rises from \u00a31,000 to \u00a33,000, for income tax and Class 4 National Insurance. Without gross receipts in the data, a profit within the allowance is treated as fully relieved, so the cost may be overstated.",
+      "execution": {
+        "baseline": {
+          "binding": "content",
+          "kind": "current_law",
+          "name": "trading_allowance_raise baseline"
+        },
+        "certificate": {
+          "bundle_version": "6.11.1",
+          "certificate_sha256": "f2e6fc9faafab32b50c1c76067fb070ae9686b6f375e44417776de16e9c3521f",
+          "certificate_source": "packaged",
+          "certified_by": "policyengine.py bundle certification",
+          "certified_dataset_sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
+          "certified_for_core_version": "3.33.3",
+          "certified_for_model_version": "2.151.0",
+          "compatibility_basis": "built_with_model_package",
+          "country_id": "uk",
+          "tro_composition_fingerprint": "ec8e6c4194b5e1ec0acd64c8718d0eecb6b41648b53f0b453c425b516e5a4489"
+        },
+        "certification_status": "certified",
+        "core": {
+          "name": "policyengine-core",
+          "version": "3.33.3"
+        },
+        "country_id": "uk",
+        "data": {
+          "build_id": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+          "build_model_version": "2.151.0",
+          "data_package": "microcosm-data",
+          "dataset": "microcosm_uk_2024_25",
+          "dataset_revision": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+          "dataset_sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
+          "dataset_uri": "hf://policyengine/populace-uk-private/microcosm_uk_2024_25.h5@microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+          "release_manifest_revision": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+          "release_version": "0.1.0"
+        },
+        "fiscal_year": {
+          "convention": "uk_fiscal_year",
+          "parameter_annualisation": "policyengine-uk/fiscal-year-parameters",
+          "period_start": "04-06",
+          "year_label": "start_year"
+        },
+        "model": {
+          "name": "policyengine-uk",
+          "version": "2.151.0"
+        },
+        "outputs_sha256": "c98e404df6c02459d8d1c10e8de5417ac538fd7876f2048f7bfcd0c48598d7bc",
+        "receipt_type": "policyengine.execution_receipt",
+        "reform": {
+          "binding": "content",
+          "kind": "reform",
+          "name": "trading_allowance_raise",
+          "reform_sha256": "cdcc8b19d5234afe31ae857db16a8f2d6a18578a1d7da1c890b3c5f21832c268",
+          "representation": "policyengine-uk.scenario/v1"
+        },
+        "runtime": {
+          "platform": "linux",
+          "python_version": "3.13.3"
+        },
+        "schema_version": 1,
+        "supported_years": [
+          2024,
+          2025,
+          2026,
+          2027,
+          2028,
+          2029,
+          2030,
+          2031,
+          2032
+        ],
+        "wrapper": {
+          "name": "policyengine",
+          "version": "6.11.1"
+        },
+        "years": [
+          2026,
+          2027,
+          2028,
+          2029,
+          2030,
+          2031
+        ]
+      },
+      "disclosure_floor": {
+        "checked": true,
+        "survey_households": 3,
+        "thin_cells": [
+          {
+            "groups": [
+              "0",
+              "1",
+              "10",
+              "11",
+              "14",
+              "15",
+              "16",
+              "17",
+              "19",
+              "20",
+              "21",
+              "22",
+              "23",
+              "25",
+              "26",
+              "27",
+              "29",
+              "30",
+              "31",
+              "32",
+              "34",
+              "35",
+              "36",
+              "38",
+              "40",
+              "41",
+              "44",
+              "45",
+              "48",
+              "5",
+              "50",
+              "53",
+              "55",
+              "59",
+              "61",
+              "62",
+              "65",
+              "7",
+              "70",
+              "71",
+              "72",
+              "76",
+              "78",
+              "79",
+              "8",
+              "80",
+              "82",
+              "86",
+              "87",
+              "88",
+              "89"
+            ],
+            "table": "age_impact",
+            "year": 2027
+          },
+          {
+            "groups": [
+              "0",
+              "1",
+              "10",
+              "11",
+              "14",
+              "15",
+              "16",
+              "17",
+              "19",
+              "20",
+              "21",
+              "22",
+              "23",
+              "25",
+              "26",
+              "27",
+              "29",
+              "30",
+              "31",
+              "32",
+              "34",
+              "35",
+              "36",
+              "38",
+              "40",
+              "41",
+              "44",
+              "45",
+              "48",
+              "5",
+              "50",
+              "53",
+              "55",
+              "59",
+              "61",
+              "62",
+              "65",
+              "7",
+              "70",
+              "71",
+              "72",
+              "76",
+              "78",
+              "79",
+              "8",
+              "80",
+              "82",
+              "86",
+              "87",
+              "88",
+              "89"
+            ],
+            "table": "age_impact",
+            "year": 2028
+          },
+          {
+            "groups": [
+              "0",
+              "1",
+              "10",
+              "11",
+              "15",
+              "16",
+              "17",
+              "18",
+              "20",
+              "21",
+              "22",
+              "23",
+              "24",
+              "25",
+              "26",
+              "27",
+              "29",
+              "30",
+              "31",
+              "32",
+              "34",
+              "35",
+              "36",
+              "38",
+              "40",
+              "41",
+              "44",
+              "48",
+              "49",
+              "5",
+              "52",
+              "53",
+              "54",
+              "55",
+              "59",
+              "61",
+              "62",
+              "64",
+              "65",
+              "7",
+              "70",
+              "71",
+              "72",
+              "78",
+              "79",
+              "8",
+              "80",
+              "82",
+              "86",
+              "87",
+              "88",
+              "89"
+            ],
+            "table": "age_impact",
+            "year": 2029
+          },
+          {
+            "groups": [
+              "0",
+              "1",
+              "10",
+              "11",
+              "15",
+              "16",
+              "17",
+              "18",
+              "21",
+              "22",
+              "24",
+              "25",
+              "26",
+              "27",
+              "29",
+              "30",
+              "31",
+              "32",
+              "34",
+              "35",
+              "36",
+              "38",
+              "40",
+              "41",
+              "44",
+              "48",
+              "49",
+              "5",
+              "52",
+              "53",
+              "55",
+              "59",
+              "62",
+              "64",
+              "65",
+              "7",
+              "70",
+              "71",
+              "72",
+              "78",
+              "79",
+              "8",
+              "80",
+              "82",
+              "86",
+              "87",
+              "88",
+              "89"
+            ],
+            "table": "age_impact",
+            "year": 2030
+          },
+          {
+            "groups": [
+              "0",
+              "1",
+              "10",
+              "11",
+              "15",
+              "16",
+              "17",
+              "18",
+              "21",
+              "22",
+              "24",
+              "25",
+              "26",
+              "27",
+              "29",
+              "30",
+              "31",
+              "32",
+              "34",
+              "35",
+              "36",
+              "38",
+              "40",
+              "41",
+              "44",
+              "48",
+              "49",
+              "5",
+              "52",
+              "53",
+              "55",
+              "59",
+              "62",
+              "65",
+              "7",
+              "70",
+              "71",
+              "72",
+              "78",
+              "79",
+              "8",
+              "80",
+              "82",
+              "86",
+              "87",
+              "88",
+              "89"
+            ],
+            "table": "age_impact",
+            "year": 2031
+          }
+        ],
+        "thin_cells_in_tables": false
+      },
+      "sources": {
+        "budgetary_impact": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/budgetary_impact.csv",
+        "distributional_impact": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/distributional_impact.csv",
+        "winners_losers": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/winners_losers.csv",
+        "metrics": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/metrics.csv"
+      },
+      "receipt_url": "https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/receipt.json",
+      "years": {
+        "2026": {
+          "budget_change_gbp_bn": 0.0,
+          "mean_household_change_gbp": 0.0,
+          "people_affected_pct": 0.0,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": 0.0,
+              "income_change_pct": 0.0
+            }
+          ]
+        },
+        "2027": {
+          "budget_change_gbp_bn": -0.11211049920380475,
+          "mean_household_change_gbp": 3.8265768397370326,
+          "people_affected_pct": 0.927300325538701,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": 0.8282869579049835,
+              "income_change_pct": 0.003201804405520605
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": 3.3868711859576655,
+              "income_change_pct": 0.00848994523446706
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": 1.0358538798379522,
+              "income_change_pct": 0.002324060258470595
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": 0.4511768558204679,
+              "income_change_pct": 0.0009340501013965675
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": 2.110421363657789,
+              "income_change_pct": 0.0038839709026547995
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": 3.4306001100428425,
+              "income_change_pct": 0.005805905900275085
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": 5.727796398009129,
+              "income_change_pct": 0.00879067009340119
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": 8.569167211108919,
+              "income_change_pct": 0.011650716272284782
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": 6.179334830941979,
+              "income_change_pct": 0.007087892928041495
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": 7.026181987372866,
+              "income_change_pct": 0.004436782564734936
+            }
+          ]
+        },
+        "2028": {
+          "budget_change_gbp_bn": -0.11978275834096004,
+          "mean_household_change_gbp": 4.072934905418043,
+          "people_affected_pct": 0.9286182837759142,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": 0.872907442741444,
+              "income_change_pct": 0.0033692816571870075
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": 3.6466648968587405,
+              "income_change_pct": 0.008991585395208439
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": 1.050515189648108,
+              "income_change_pct": 0.0022976321904294946
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": 0.40590253193385906,
+              "income_change_pct": 0.0008192749723536514
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": 2.1686078274995624,
+              "income_change_pct": 0.00395898054233744
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": 3.4802353211278247,
+              "income_change_pct": 0.0057660373239485025
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": 6.274458616898333,
+              "income_change_pct": 0.009468814090748174
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": 9.526185755176916,
+              "income_change_pct": 0.01273089412093796
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": 4.193623637417247,
+              "income_change_pct": 0.004732639416725624
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": 9.397571571174439,
+              "income_change_pct": 0.005812898693235177
+            }
+          ]
+        },
+        "2029": {
+          "budget_change_gbp_bn": -0.11258787723929066,
+          "mean_household_change_gbp": 3.811119143153684,
+          "people_affected_pct": 0.8154265353796385,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": 0.5034638546034419,
+              "income_change_pct": 0.0019174632572421628
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": 2.691709987994653,
+              "income_change_pct": 0.006569355841784248
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": 1.1172971606173472,
+              "income_change_pct": 0.002407751503349727
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": 0.42974337440005095,
+              "income_change_pct": 0.000854303077646435
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": 1.422505664856513,
+              "income_change_pct": 0.0025516049386295437
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": 3.10132878485467,
+              "income_change_pct": 0.005064605259166233
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": 5.432430546650813,
+              "income_change_pct": 0.008056074634453826
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": 10.003191487338368,
+              "income_change_pct": 0.01316961673282176
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": 4.052024387895121,
+              "income_change_pct": 0.00451066861447806
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": 9.649605980998823,
+              "income_change_pct": 0.005852664893579923
+            }
+          ]
+        },
+        "2030": {
+          "budget_change_gbp_bn": -0.12346843268843957,
+          "mean_household_change_gbp": 4.160227660123491,
+          "people_affected_pct": 0.8380164892515954,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": 0.5767920953669808,
+              "income_change_pct": 0.0021601585192287773
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": 2.775295760757472,
+              "income_change_pct": 0.0067302583689375995
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": 1.1945629291412128,
+              "income_change_pct": 0.002524610154941521
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": 0.4557512078379667,
+              "income_change_pct": 0.0008945494080537144
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": 1.4676819568528197,
+              "income_change_pct": 0.0025898917900408487
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": 3.776272166780537,
+              "income_change_pct": 0.006032153961907541
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": 5.069190471410754,
+              "income_change_pct": 0.007399147041305793
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": 11.055837353722,
+              "income_change_pct": 0.01427555034554112
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": 5.443441193244057,
+              "income_change_pct": 0.005970035215584783
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": 10.152307691098917,
+              "income_change_pct": 0.0060008313868543375
+            }
+          ]
+        },
+        "2031": {
+          "budget_change_gbp_bn": -0.1310177297120496,
+          "mean_household_change_gbp": 4.395753554915857,
+          "people_affected_pct": 0.812193590620492,
+          "deciles": [
+            {
+              "decile": 1,
+              "mean_household_change_gbp": 0.5941561456709603,
+              "income_change_pct": 0.0022015391725468156
+            },
+            {
+              "decile": 2,
+              "mean_household_change_gbp": 2.9888686555262742,
+              "income_change_pct": 0.007144984454694446
+            },
+            {
+              "decile": 3,
+              "mean_household_change_gbp": 1.6211406745780168,
+              "income_change_pct": 0.003383954703403833
+            },
+            {
+              "decile": 4,
+              "mean_household_change_gbp": 0.4760062856654819,
+              "income_change_pct": 0.000913403041332967
+            },
+            {
+              "decile": 5,
+              "mean_household_change_gbp": 1.547667019974265,
+              "income_change_pct": 0.0026880607082914415
+            },
+            {
+              "decile": 6,
+              "mean_household_change_gbp": 3.862405668151834,
+              "income_change_pct": 0.006072062445056921
+            },
+            {
+              "decile": 7,
+              "mean_household_change_gbp": 5.309079871383469,
+              "income_change_pct": 0.007555658253083922
+            },
+            {
+              "decile": 8,
+              "mean_household_change_gbp": 12.260235155552552,
+              "income_change_pct": 0.015492953295148063
+            },
+            {
+              "decile": 9,
+              "mean_household_change_gbp": 6.069320375527061,
+              "income_change_pct": 0.006606635622003341
+            },
+            {
+              "decile": 10,
+              "mean_household_change_gbp": 9.690703552604862,
+              "income_change_pct": 0.005564027124521743
+            }
+          ]
+        }
+      }
+    }
+  }
+}

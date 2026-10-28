@@ -1,6 +1,6 @@
 The [Autumn Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) announces an increase in the trading allowance from £1,000 to £3,000 from 6 April 2027. The allowance covers eligible trading and miscellaneous income. For an employee paying 20% income tax on their side income, the extra £2,000 deduction can reduce annual income tax by £400. The reduction depends on receipts, expenses and how much tax the individual would otherwise pay.
 
-This post examines that measure on its own. Our [Budget dashboard](https://uk-autumn-budget-2026.vercel.app/uk/autumn-budget-2026) places it alongside the other announced tax and benefit changes. We cover the savings and property income tax increases in a [separate explainer](/uk/research/uk-autumn-budget-2026-savings-property-income-tax).
+This post examines that measure on its own. Our [Budget dashboard](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026) places it alongside the other announced tax and benefit changes. We cover the savings and property income tax increases in a [separate explainer](/uk/research/uk-autumn-budget-2026-savings-property-income-tax).
 
 ## How the allowance works
 
@@ -123,20 +123,42 @@ Universal Credit uses separate self-employment income rules. The allowance itsel
 
 The allowance is unavailable for partnership income and certain connected-party receipts, including income from an individual's employer or a company they control. [HMRC's exclusions](https://www.gov.uk/hmrc-internal-manuals/business-income-manual/bim86030) describe those restrictions.
 
+## Preliminary national estimates
+
+The dashboard's [provisional cost output](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/budgetary_impact.csv), generated on 28 October at 14:34 UTC, estimates a **£112 million cost in 2027–28** and **£131 million in 2031–32**. These are static annual government-balance effects. The receipt warns that missing gross receipts in the population data can overstate the cost, and the results are awaiting reconciliation with Treasury costings.
+
+The [average cash changes](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/winners_losers.csv) show a **£3.83 annual household income gain across all households** in 2027–28, including unaffected households. The highest average gain is in decile 8, at £8.57. These population averages include people with no eligible trading income; the worked examples above describe particular eligible individuals. Deciles are ranked by baseline equivalised household net income, which accounts for household size.
+
+| Income decile | Average annual household income change |
+| --- | ---: |
+| 1 (lowest income) | +£0.83 |
+| 2 | +£3.39 |
+| 3 | +£1.04 |
+| 4 | +£0.45 |
+| 5 | +£2.11 |
+| 6 | +£3.43 |
+| 7 | +£5.73 |
+| 8 | +£8.57 |
+| 9 | +£6.18 |
+| 10 (highest income) | +£7.03 |
+| All households | +£3.83 |
+
+The dashboard's [affected-population metric](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/metrics.csv) is **0.93% of people living in households whose net income changes by more than 0.01%** in 2027–28. It is not a count of eligible traders. The current exports do not provide separate shares gaining and losing or an absolute affected-person count.
+
 ## Treasury costing
 
-Table 6.1, row 15, gives the following official forecast. These are reductions in Exchequer receipts, expressed below as positive costs; they are not PolicyEngine microsimulation estimates.
+The Treasury column reproduces Table 6.1, row 15. The PolicyEngine column reports the provisional static estimates. Both columns express costs to the Exchequer as positive values.
 
-| Fiscal year | Treasury cost (£ million) |
-| --- | --- |
-| 2026–27 | 0 |
-| 2027–28 | 0 |
-| 2028–29 | 225 |
-| 2029–30 | 165 |
-| 2030–31 | 175 |
-| 2031–32 | 180 |
+| Year | Treasury cost (£ million) | PolicyEngine provisional static cost (£ million) |
+| --- | ---: | ---: |
+| 2026–27 | 0 | 0 |
+| 2027–28 | 0 | 112 |
+| 2028–29 | 225 | 120 |
+| 2029–30 | 165 | 113 |
+| 2030–31 | 175 | 123 |
+| 2031–32 | 180 | 131 |
 
-The effective date remains 6 April 2027 even though the Treasury records no receipts effect in 2027–28. A household's tax-year liability and the government's forecast of receipts by fiscal year are different quantities.
+The effective date remains 6 April 2027 even though the Treasury records no receipts effect in 2027–28. Tax-year liabilities and the government's fiscal-year receipts forecasts are different quantities. The comparison also needs to allow for model coverage, including missing gross receipts. Reconciliation has not yet attributed the gap between the estimates.
 
 ## Methodology and coverage
 
@@ -146,4 +168,8 @@ The household calculations use `policyengine.py` 6.11.1 with PolicyEngine UK 2.1
 
 In the population data, gross receipts are unavailable. The pinned model's [deduction calculation](https://github.com/PolicyEngine/policyengine-uk/blob/2.151.0/policyengine_uk/variables/gov/hmrc/income_tax/allowances/trading_allowance_deduction.py) uses an approximation that can overstate or understate the reform's effect for individual records. It also does not apply this allowance to its separate miscellaneous-income input, although eligible miscellaneous income is within the announced policy. These coverage limits matter when interpreting national results.
 
-This draft reports hypothetical examples and Treasury forecasts. PolicyEngine national cost, affected-person and decile estimates are pending the population run, pinned to the dashboard's certified national dataset `a6299504`.
+The national figures reuse the dashboard's [recorded execution receipt](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/receipt.json), generated at source commit `0d9dccb2`. They use certified national dataset `microcosm-uk-2024-25-national-20261025T091414Z-a6299504` and the October 2026 OBR forecast overlay on both baseline and reform. Growth series not updated by the overlay retain the model's March forecast path; the dataset retains its pre-Budget calibration. Household examples use fixed nominal incomes.
+
+The receipt records a passed disclosure floor of at least three survey households per published cell; no thin decile cells are recorded. The affected-population calculation uses the absolute percentage income change, floors baseline household income at £1, and includes only households with a valid decile. Its percentage does not establish how many people gain or lose.
+
+**Draft status:** the population results are provisional and marked `awaiting_source` for reconciliation in the preview manifest. Final reconciliation, absolute affected-person counts and separate winner/loser shares remain outstanding.

@@ -2,7 +2,7 @@ The Autumn Budget 2026 increases the basic, higher and additional income tax rat
 
 In the examples below, a basic-rate saver with £2,000 of annual interest pays £20 more a year. A landlord with £10,000 of property profit and £4,000 of mortgage interest pays £120 more.
 
-This post examines this provision on its own. The [UK Autumn Budget 2026 dashboard](https://uk-autumn-budget-2026.vercel.app/uk/autumn-budget-2026) shows how it combines with the other announced measures. We cover the trading allowance increase in a [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance).
+This post examines this provision on its own. The [UK Autumn Budget 2026 dashboard preview](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026) places it alongside the other announced measures. We cover the trading allowance increase in a [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance).
 
 ## What changes in April 2027?
 
@@ -133,6 +133,28 @@ Both pay £200 more before relief, while their finance-cost reduction rises by �
 
 The property **rate** increase excludes Scottish taxpayers, whose rental income follows Scottish rules. Finance-cost relief is a separate calculation. The [Finance Act 2026 amendment](https://www.legislation.gov.uk/ukpga/2026/11/schedule/1/paragraph/40/enacted) ties it to the UK property basic rate without a Scottish exception. Applying that rule, a Scottish landlord able to use the full reduction on £4,000 of eligible finance costs receives £80 more relief, reducing their income tax by £80 if nothing else changes. A mortgage-free Scottish landlord has no change from this measure. The savings increase still applies across the UK.
 
+## Preliminary national estimates
+
+The dashboard's [provisional revenue output](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/unearned_income_rates_up/8bd7d211ae66c19d/budgetary_impact.csv), generated on 28 October at 14:34 UTC, estimates that the measure raises **£664 million in 2027–28**, increasing to **£793 million in 2031–32**. These are static annual government-balance effects: savings, rental income and other household circumstances are held fixed. The results are awaiting reconciliation with Treasury costings.
+
+The [average cash changes](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/unearned_income_rates_up/8bd7d211ae66c19d/winners_losers.csv) show an annual household income reduction of **£22.67 across all households** in 2027–28, including unaffected households. The largest average cash loss is in the highest income decile, at £107.13. Deciles are ranked by baseline equivalised household net income, which accounts for household size.
+
+| Income decile | Average annual household income change |
+| --- | ---: |
+| 1 (lowest income) | −£12.90 |
+| 2 | −£5.69 |
+| 3 | −£6.66 |
+| 4 | −£7.31 |
+| 5 | −£6.00 |
+| 6 | −£9.13 |
+| 7 | −£10.94 |
+| 8 | −£21.51 |
+| 9 | −£37.04 |
+| 10 (highest income) | −£107.13 |
+| All households | −£22.67 |
+
+The dashboard's [affected-population metric](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/unearned_income_rates_up/8bd7d211ae66c19d/metrics.csv) is **10.67% of people living in households whose net income changes by more than 0.01%** in 2027–28. It is not a taxpayer count or a headcount. The current exports do not provide separate shares gaining and losing, so an average loss within a decile should not be read as a loss for every household in it.
+
 ## The Treasury forecasts revenue of £1.13 billion in 2028–29
 
 The Treasury costs the savings and property changes separately. Their sum reaches £1,130 million in 2028–29 and £1,045 million in 2031–32.
@@ -141,9 +163,10 @@ The Treasury costs the savings and property changes separately. Their sum reache
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Property income rates | 0 | 35 | 575 | 435 | 445 | 455 |
 | Savings income rates | 15 | 125 | 555 | 520 | 555 | 590 |
-| Combined | 15 | 160 | 1,130 | 955 | 1,000 | 1,045 |
+| Treasury combined | 15 | 160 | 1,130 | 955 | 1,000 | 1,045 |
+| PolicyEngine, provisional static | 0 | 664 | 696 | 728 | 762 | 793 |
 
-These government receipts forecasts differ from annual household liabilities. The [Treasury policy costings, #page 74-75](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) allow for some landlords incorporating and savers moving funds into tax-advantaged products such as ISAs. A static calculation holds those choices fixed.
+These government receipts forecasts differ from annual household liabilities. The [Treasury policy costings, #page 74-75](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) allow for some landlords incorporating and savers moving funds into tax-advantaged products such as ISAs. The PolicyEngine run holds those choices fixed. Tax-year liabilities and fiscal-year receipts forecasts also differ in timing. Reconciliation has not yet established how much of the gap between these estimates comes from behaviour, collection timing or model coverage.
 
 ## Methodology
 
@@ -151,4 +174,8 @@ The examples isolate the newly announced 2027–28 changes, including finance-co
 
 The examples use `policyengine.py` 6.11.1 with PolicyEngine UK 2.151.0 and core 3.33.3, matching the pre-Budget policy baseline and parameter changes in the dashboard's [`unearned_income_rates_up` measure](https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/b50787aa75ef5aed36b822c973afa6b569464d55/src/uk_budget_data/reforms.py). The calculations check tax changes against independent arithmetic.
 
-This draft reports hypothetical examples and Treasury forecasts. PolicyEngine national revenue, affected-person and decile estimates are pending the population run. That run is pinned to the dashboard's certified national dataset `a6299504`; population forecast inputs and model-coverage limits must accompany its results.
+The national figures reuse the dashboard's [recorded execution receipt](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/unearned_income_rates_up/8bd7d211ae66c19d/receipt.json), generated at source commit `0d9dccb2`. They use certified national dataset `microcosm-uk-2024-25-national-20261025T091414Z-a6299504` and the October 2026 OBR forecast overlay on both baseline and reform. Growth series not updated by the overlay retain the model's March forecast path; the dataset retains its pre-Budget calibration. Household examples use fixed nominal incomes.
+
+The receipt records a passed disclosure floor of at least three survey households per published cell; no thin decile cells are recorded. The affected-population calculation uses the absolute percentage income change, floors baseline household income at £1, and includes only households with a valid decile. Its percentage does not establish how many people gain or lose.
+
+**Draft status:** the population results are provisional and marked `awaiting_source` for reconciliation in the preview manifest. Final reconciliation, absolute affected-person counts and separate winner/loser shares remain outstanding.
