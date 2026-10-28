@@ -93,6 +93,42 @@ describe('getChangedPrograms with is_tax flags', () => {
   });
 });
 
+describe('getChangedPrograms with the tax credits row', () => {
+  test('given tax credits with their own rows then the combined row is dropped', () => {
+    // Given: tax_credits is Working Tax Credit and Child Tax Credit together.
+    const output = {
+      ...withBudget(UK_OUTPUT, { federal: 0, state: 0, benefits: -300e6 }),
+      detailed_budget: {
+        working_tax_credit: { baseline: 1e9, reform: 0.9e9, difference: -100e6 },
+        child_tax_credit: { baseline: 2e9, reform: 1.8e9, difference: -200e6 },
+        tax_credits: { baseline: 3e9, reform: 2.7e9, difference: -300e6 },
+      },
+    } as typeof UK_OUTPUT;
+
+    // When
+    const programs = getChangedPrograms(output, {});
+
+    // Then: the two rows add up to the total with nothing counted twice.
+    expect(programs.map((program) => program.key)).toEqual([
+      'working_tax_credit',
+      'child_tax_credit',
+    ]);
+    expect(getOtherProgramsAmount(300e6, programs)).toBe(0);
+  });
+
+  test('given only the combined tax credits row then it counts towards the total', () => {
+    const output = {
+      ...withBudget(UK_OUTPUT, { federal: 0, state: 0, benefits: -300e6 }),
+      detailed_budget: { tax_credits: { baseline: 3e9, reform: 2.7e9, difference: -300e6 } },
+    } as typeof UK_OUTPUT;
+
+    const programs = getChangedPrograms(output, {});
+
+    expect(programs).toEqual([{ key: 'tax_credits', label: 'tax_credits', value: 300e6 }]);
+    expect(getOtherProgramsAmount(300e6, programs)).toBe(0);
+  });
+});
+
 describe('getOtherProgramsAmount', () => {
   test('given programs that add up to the total then there is nothing else', () => {
     expect(getOtherProgramsAmount(1.5e9, [{ value: 2e9 }, { value: -0.5e9 }])).toBe(0);

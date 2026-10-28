@@ -75,18 +75,28 @@ const BENEFIT_PROGRAMS = new Set([
 /**
  * Rows the total budgetary impact doesn't include: the total is the change
  * in the taxes households pay less the change in their benefits, so it
- * leaves out employer National Insurance and VAT, and `tax_credits` repeats
- * the Working Tax Credit and Child Tax Credit rows. Their changes are shown
+ * leaves out employer National Insurance and VAT. Their changes are shown
  * but not added up against the total.
  */
-const OUTSIDE_TOTAL_PROGRAMS = new Set(['ni_employer', 'vat', 'tax_credits']);
+const OUTSIDE_TOTAL_PROGRAMS = new Set(['ni_employer', 'vat']);
 
 /** Short names for the rows outside the total, for a narrow axis. */
 const OUTSIDE_TOTAL_SHORT_NAMES: Record<string, string> = {
   ni_employer: 'Employer NI',
   vat: 'VAT',
-  tax_credits: 'Tax credits',
 };
+
+/**
+ * Whether a row repeats others: `tax_credits` is Working Tax Credit and
+ * Child Tax Credit together, which the total counts through their own rows,
+ * so it is dropped where either of them is listed.
+ */
+function isRepeatedRow(key: string, detailedBudget: Record<string, unknown>): boolean {
+  return (
+    key === 'tax_credits' &&
+    ('working_tax_credit' in detailedBudget || 'child_tax_credit' in detailedBudget)
+  );
+}
 
 /**
  * Whether a row is a benefit: its own `is_tax` flag when the output has
@@ -110,7 +120,11 @@ function benefitsAreSpending(
   let taxes = 0;
   let benefits = 0;
   for (const [key, values] of Object.entries(detailedBudget)) {
-    if (typeof values?.difference !== 'number' || OUTSIDE_TOTAL_PROGRAMS.has(key)) {
+    if (
+      typeof values?.difference !== 'number' ||
+      OUTSIDE_TOTAL_PROGRAMS.has(key) ||
+      isRepeatedRow(key, detailedBudget)
+    ) {
       continue;
     }
     if (isBenefit(key, values)) {
@@ -135,7 +149,12 @@ export function getChangedPrograms(
   const detailedBudget = (output.detailed_budget ?? {}) as Record<string, ProgramBudgetItem>;
   const negateBenefits = benefitsAreSpending(detailedBudget, output.budget?.budgetary_impact);
   return Object.entries(detailedBudget)
-    .filter(([, values]) => typeof values?.difference === 'number' && values.difference !== 0)
+    .filter(
+      ([key, values]) =>
+        typeof values?.difference === 'number' &&
+        values.difference !== 0 &&
+        !isRepeatedRow(key, detailedBudget)
+    )
     .map(([key, values]) => ({
       key,
       label: variableLabels[key]?.label || key,
