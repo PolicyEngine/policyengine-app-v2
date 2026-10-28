@@ -6,9 +6,9 @@ Key figures for 2027–28:
 - A mortgage-free landlord in England with the same profit pays £200 more.
 - A landlord who lives in Scotland, with £4,000 of fully usable finance costs, pays £80 less income tax. The property income tax rate rise does not apply to Scottish taxpayers, but their finance-cost reduction still rises with the property basic rate.
 - PolicyEngine estimates £399 million of additional net government revenue and a £14 reduction in average household net income in 2027–28.
-- The Treasury forecasts £35 million of additional revenue in 2027–28, £575 million in 2028–29, and £435 million to £455 million a year from 2029–30 to 2031–32.
+- The government's costing, certified by the OBR, has £394 million to £412 million a year of extra income tax from 2029–30 to 2031–32, £539 million in 2028–29 and none in 2027–28. Its total in the Budget's Table 6.1, which adds the costing's other lines, is £35 million in 2027–28, £575 million in 2028–29 and £435 million to £455 million a year from 2029–30.
 
-The 2027–28 and 2028–29 figures use different collection-timing bases and are not directly comparable; see the [budgetary impact section](#budgetary-impact).
+The 2027–28 and 2028–29 figures use different collection-timing bases and are not directly comparable. From 2029–30, PolicyEngine's estimate is 9% to 11% above the costing's income tax line; see the [budgetary impact section](#budgetary-impact).
 
 Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. A [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance) covers the trading allowance increase. The Budget also raises savings income tax rates; we will cover that measure separately.
 
@@ -59,24 +59,24 @@ We model the property measure alone on a representative sample of UK households.
 
 ### Budgetary impact
 
-PolicyEngine estimates that the measure raises £399 million of net government revenue in 2027–28, rising to £459 million in 2031–32. The Treasury's [Table 6.1, row 61](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) reports the official costing on a National Accounts basis.
+PolicyEngine estimates that the measure raises £399 million of net government revenue in 2027–28, rising to £459 million in 2031–32. We compare it with the income tax line of the government's costing, certified by the OBR, in the OBR's [detailed policy table](https://obr.uk/download/october-2026-economic-and-fiscal-outlook-detailed-forecast-tables-zip-file/) (Table 1.1, measure 61). That line is the part of the costing we model. The costing's other lines are labelled “Onshore CT”, “Scottish BGA (current)” and “Scottish self-financed expenditure”. The Budget's [Table 6.1, row 61](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) gives the total of all the lines, rounded to the nearest £5 million and on a National Accounts basis; we show it for context.
 
-| Year | PolicyEngine net government revenue, £ million | Treasury revenue, £ million | Comparison |
-| --- | ---: | ---: | --- |
-| 2026–27 | 0 | 0 | Before implementation |
-| 2027–28 | 399 | 35 | Not comparable |
-| 2028–29 | 412 | 575 | Not comparable |
-| 2029–30 | 429 | 435 | Later-year comparison |
-| 2030–31 | 446 | 445 | Later-year comparison |
-| 2031–32 | 459 | 455 | Later-year comparison |
+| Year | PolicyEngine net government revenue, £ million | OBR income tax line, £ million | PolicyEngine against the OBR line | Table 6.1 total, £ million |
+| --- | ---: | ---: | --- | ---: |
+| 2026–27 | 0 | 0 | Before implementation | 0 |
+| 2027–28 | 399 | 0 | Not comparable | 35 |
+| 2028–29 | 412 | 539 | Not comparable | 575 |
+| 2029–30 | 429 | 394 | 9% higher | 435 |
+| 2030–31 | 446 | 403 | 10% higher | 445 |
+| 2031–32 | 459 | 412 | 11% higher | 455 |
 
-Positive values are additional revenue. PolicyEngine measures the change in government taxes less spending, including benefit interactions. In 2029–30, its £429 million estimate is £6 million below the Treasury's £435 million.
+Positive values are additional revenue. PolicyEngine measures the change in government taxes less spending, including benefit interactions. In 2029–30, its £429 million estimate is £35 million, or about 9%, above the OBR's £394 million income tax line. Percentages use unrounded figures.
 
 **The first two years, 2027–28 and 2028–29, are not comparable without a collection-timing adjustment.** PolicyEngine scores each tax year's liabilities in that year. Self Assessment payments on account are normally based on the previous year's tax bill; the balancing payment for 2027–28 is due on 31 January 2029, alongside the first payment on account for 2028–29. [HMRC's payment guidance](https://www.gov.uk/understand-self-assessment-bill/payments-on-account) explains that schedule.
 
 The [ONS public-finance methodology, section 6.1.2](https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/methodologies/monthlystatisticsonthepublicsectorfinancesamethodologicalguide) records Self Assessment income tax using cash receipts, without shifting them back to the year the income arose. This can produce a small first-year receipts effect followed by a catch-up. Comparing those first two years with same-year model liabilities requires a collection-timing adjustment; it does not by itself establish a difference in the tax base.
 
-The Treasury costing also allows for some landlords incorporating. PolicyEngine holds that choice fixed. Differences in data, behaviour and accounting remain relevant when comparing the later years, even where the rounded estimates are close.
+The government's costing also allows for some landlords incorporating, as the [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) set out. PolicyEngine holds that choice fixed. We have not yet explained the later-year gap; differences in data, behaviour and accounting could each contribute.
 
 ### Distribution
 
