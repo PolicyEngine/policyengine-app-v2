@@ -24,10 +24,10 @@ The PTA rises with the full new State Pension in 2028-29 and 2029-30. HMRC appli
 | Tax year | Full new State Pension | Full PTA | PTA reaches zero at |
 | -------- | ---------------------- | -------- | ------------------- |
 | 2027-28  | £13,036.40             | £94      | £13,318.40          |
-| 2028-29  | £13,361.40             | £159     | £13,838.40          |
-| 2029-30  | £13,696.80             | £226     | £14,374.80          |
+| 2028-29  | £13,478.40             | £182     | £14,024.40          |
+| 2029-30  | £13,816.40             | £250     | £14,566.40          |
 
-The 2027-28 values come from the explainer. The government has not yet set the State Pension for 2028-29 and 2029-30, so those rows use PolicyEngine UK's triple lock projections of the weekly rate, rounded down to 5p, for 52 weeks. The explainer says the PTA is "uprated in line with" the full new State Pension. We read this as the same formula each year, 20% of the full new State Pension above the Personal Allowance, rounded up to the pound. This reading keeps income tax at zero for a pensioner on the full new State Pension, which the Budget states as the aim.
+The 2027-28 values come from the explainer. The government has not yet set the State Pension for 2028-29 and 2029-30, so those rows apply the triple lock on the OBR's October 2026 forecast (3.4% in April 2028 and 2.5% in April 2029), round the weekly rate down to 5p and take 52 weeks. The explainer says the PTA is "uprated in line with" the full new State Pension. We read this as the same formula each year, 20% of the full new State Pension above the Personal Allowance, rounded up to the pound. This reading keeps income tax at zero for a pensioner on the full new State Pension, which the Budget states as the aim.
 
 The Treasury estimates that the PTA reduces receipts by £45 million in 2027-28, £90 million in 2028-29 and £150 million in 2029-30. The same costing shows a gain of £50 million in 2030-31 and a cost of £15 million in 2031-32, after the PTA ends (Budget 2026, Table 6.1, row 52). The costing assumes no behavioural response. The explainer states that about 500,000 pensioners will pay less income tax in 2027-28 because of the PTA, and that about 290,000 of them will pay none. By the end of this Parliament, about 1 million pensioners will receive the PTA.
 
@@ -179,109 +179,121 @@ The charts below follow a single pensioner aged 70 in England whose income is al
       "y2029": 149.68
     },
     {
-      "income": 13361.4,
-      "y2027": 0.0,
-      "y2028": 158.28,
-      "y2029": 158.28
-    },
-    {
-      "income": 13362.75,
-      "y2027": 0.0,
-      "y2028": 158.55,
-      "y2029": 158.55
-    },
-    {
       "income": 13400.0,
       "y2027": 0.0,
-      "y2028": 146.13,
+      "y2028": 166.0,
       "y2029": 166.0
+    },
+    {
+      "income": 13478.4,
+      "y2027": 0.0,
+      "y2028": 181.68,
+      "y2029": 181.68
+    },
+    {
+      "income": 13479.0,
+      "y2027": 0.0,
+      "y2028": 181.8,
+      "y2029": 181.8
     },
     {
       "income": 13500.0,
       "y2027": 0.0,
-      "y2028": 112.8,
+      "y2028": 174.8,
       "y2029": 186.0
     },
     {
       "income": 13600.0,
       "y2027": 0.0,
-      "y2028": 79.47,
+      "y2028": 141.47,
       "y2029": 206.0
-    },
-    {
-      "income": 13696.8,
-      "y2027": 0.0,
-      "y2028": 47.2,
-      "y2029": 225.36
-    },
-    {
-      "income": 13698.0,
-      "y2027": 0.0,
-      "y2028": 46.8,
-      "y2029": 225.6
     },
     {
       "income": 13700.0,
       "y2027": 0.0,
-      "y2028": 46.13,
-      "y2029": 224.93
+      "y2028": 108.13,
+      "y2029": 226.0
     },
     {
       "income": 13800.0,
       "y2027": 0.0,
-      "y2028": 12.8,
-      "y2029": 191.6
+      "y2028": 74.8,
+      "y2029": 246.0
     },
     {
-      "income": 13838.4,
+      "income": 13816.4,
       "y2027": 0.0,
-      "y2028": 0.0,
-      "y2029": 178.8
+      "y2028": 69.33,
+      "y2029": 249.28
+    },
+    {
+      "income": 13817.75,
+      "y2027": 0.0,
+      "y2028": 68.88,
+      "y2029": 249.55
     },
     {
       "income": 13900.0,
       "y2027": 0.0,
-      "y2028": 0.0,
-      "y2029": 158.27
+      "y2028": 41.47,
+      "y2029": 222.13
     },
     {
       "income": 14000.0,
       "y2027": 0.0,
+      "y2028": 8.13,
+      "y2029": 188.8
+    },
+    {
+      "income": 14024.4,
+      "y2027": 0.0,
       "y2028": 0.0,
-      "y2029": 124.93
+      "y2029": 180.67
     },
     {
       "income": 14100.0,
       "y2027": 0.0,
       "y2028": 0.0,
-      "y2029": 91.6
+      "y2029": 155.47
     },
     {
       "income": 14200.0,
       "y2027": 0.0,
       "y2028": 0.0,
-      "y2029": 58.27
+      "y2029": 122.13
     },
     {
       "income": 14300.0,
       "y2027": 0.0,
       "y2028": 0.0,
-      "y2029": 24.93
-    },
-    {
-      "income": 14374.8,
-      "y2027": 0.0,
-      "y2028": 0.0,
-      "y2029": 0.0
+      "y2029": 88.8
     },
     {
       "income": 14400.0,
       "y2027": 0.0,
       "y2028": 0.0,
-      "y2029": 0.0
+      "y2029": 55.47
     },
     {
       "income": 14500.0,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 22.13
+    },
+    {
+      "income": 14566.4,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 0.0
+    },
+    {
+      "income": 14600.0,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 0.0
+    },
+    {
+      "income": 14700.0,
       "y2027": 0.0,
       "y2028": 0.0,
       "y2029": 0.0
@@ -298,11 +310,11 @@ The charts below follow a single pensioner aged 70 in England whose income is al
     "decimals": 0,
     "separator": true
   },
-  "source": "Source: PolicyEngine UK household calculation; HM Treasury, Pension Tax Allowance explainer (28 October 2026). 2028-29 and 2029-30 use PolicyEngine UK's State Pension projections."
+  "source": "Source: PolicyEngine UK household calculation; HM Treasury, Pension Tax Allowance explainer (28 October 2026). 2028-29 and 2029-30 use the State Pension on the OBR's October 2026 forecast."
 }
 ```
 
-The chart shows the PTA used, which is the PTA capped at the tax due. Up to the full new State Pension, the PTA used equals the tax due. Above it, the PTA falls by £1 for each £3 of extra income. Because the full new State Pension rises each year while the Personal Allowance stays at £12,570, the maximum PTA rises from £94 in 2027-28 to £226 in 2029-30, and the withdrawal range widens from £282 to £678.
+The chart shows the PTA used, which is the PTA capped at the tax due. Up to the full new State Pension, the PTA used equals the tax due. Above it, the PTA falls by £1 for each £3 of extra income. Because the full new State Pension rises each year while the Personal Allowance stays at £12,570, the maximum PTA rises from £94 in 2027-28 to £250 in 2029-30, and the withdrawal range widens from £282 to £750.
 
 ## Income tax by total income
 
@@ -721,7 +733,7 @@ Without the PTA, the rate is 100% up to £12,931.99, because Pension Credit fall
 
 - The analysis covers single pensioners in household calculations. It is not a microsimulation, and it makes no population-wide estimates of its own; the costs and counts above come from HM Treasury.
 - DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings, and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. We apply 3.9% to the 2026-27 rate of £238.00 a week, which gives £247.30. PolicyEngine UK's own projection is £243.47.
-- The 2028-29 and 2029-30 State Pension values are PolicyEngine UK projections. The explainer bases the threshold on the State Pension received in the tax year; we use 52 weeks. The published rates, and the number of payments in a tax year, may differ.
+- The 2028-29 and 2029-30 State Pension values follow the OBR's October 2026 forecast. The explainer bases the threshold on the State Pension received in the tax year; we use 52 weeks. The published rates, and the number of payments in a tax year, may differ.
 - The explainer does not state how HMRC rounds the PTA in later years. We round up to the pound, as for 2027-28.
 - We apply the PTA to the final income tax liability. For people with tax charges, such as the High Income Child Benefit Charge, the legislation in the Finance Bill 2026-27 may set a different order. People who transfer part of their Personal Allowance through the Marriage Allowance can still owe tax with the PTA.
 - PolicyEngine UK treats a person as over State Pension age if they reach it by 6 October. The PTA also covers people who reach State Pension age later in the tax year. The example pensioners are all aged 70, so this does not affect the results.
@@ -734,4 +746,4 @@ The Budget also adjusts the triple lock from April 2030: the State Pension then 
 
 ## Methodology
 
-We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). PolicyEngine UK does not yet include the PTA, so we added it as a structural reform that reduces the `income_tax` variable. The rules and values match the PTA modifier in the draft update to PolicyEngine's Autumn Budget 2026 dashboard. Income tax, the PTA and net income are piecewise linear in total income, so the charts plot their breakpoints and a point every £100. These values agree with PolicyEngine UK to within £0.01 at every £2 of total income, and the effective marginal tax rates agree to within 0.04 percentage points.
+We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). Every calculation, with and without the PTA, uses the OBR's October 2026 Economic and Fiscal Outlook forecast, as PolicyEngine's Autumn Budget 2026 dashboard does; PolicyEngine UK 2.151.0 ships the March 2026 forecast. PolicyEngine UK does not yet include the PTA, so we added it as a structural reform that reduces the `income_tax` variable. The rules and values match the PTA modifier in the draft update to PolicyEngine's Autumn Budget 2026 dashboard. Income tax, the PTA and net income are piecewise linear in total income, so the charts plot their breakpoints and a point every £100. These values agree with PolicyEngine UK to within £0.01 at every £2 of total income, and the effective marginal tax rates agree to within 0.04 percentage points.
