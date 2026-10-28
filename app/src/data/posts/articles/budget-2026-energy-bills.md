@@ -100,7 +100,7 @@ Figure 1 shows the average change in household net income by income decile in 20
   ],
   "data": [
     { "decile": "1", "payment": 72, "vat": 26 },
-    { "decile": "2", "payment": 74, "vat": 26 },
+    { "decile": "2", "payment": 73, "vat": 26 },
     { "decile": "3", "payment": 72, "vat": 26 },
     { "decile": "4", "payment": 73, "vat": 27 },
     { "decile": "5", "payment": 70, "vat": 28 },
@@ -116,7 +116,7 @@ Figure 1 shows the average change in household net income by income decile in 20
 }
 ```
 
-The payment increases net income by an average of £67 per UK household, and by between £68 and £74 in each of the bottom eight income deciles. The average falls to £47 in the top decile, as fewer higher-income households live in band A to D properties in England. Households in Wales, Scotland and Northern Ireland do not receive the payment, which lowers the average in every decile.
+The payment increases net income by an average of £67 per UK household, and by between £68 and £73 in each of the bottom eight income deciles. The average falls to £47 in the top decile, as fewer higher-income households live in band A to D properties in England. Households in Wales, Scotland and Northern Ireland do not receive the payment, which lowers the average in every decile.
 
 The VAT cut increases net income by an average of £29 per household in 2026-27, ranging from £26 in the bottom decile to £37 in the top decile, as higher-income households consume more electricity. As a share of net income, however, the gain declines from 0.10% in the bottom decile to 0.02% in the top decile. We project that 28.4 million households in Great Britain gain from the VAT cut in 2026-27, close to the Budget's estimate of "around 29 million households across the UK".
 
@@ -140,7 +140,7 @@ We invite you to explore our [additional analyses](https://www.policyengine.org/
 
 The population results come from PolicyEngine's [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026), which uses the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0) and Microcosm UK 2024-25 data. The dashboard implements both measures as reforms to PolicyEngine UK: the payment adds £100 for households in England in bands A to D in 2026-27, and the VAT cut removes the VAT on each household's electricity spending for the months in which it applies. The household examples apply the same reforms in PolicyEngine UK household calculations, using electricity prices from our [energy bills dashboard](https://www.policyengine.org/uk/energy-autumn-budget) ([replication code](https://github.com/PolicyEngine/uk-energy-autumn-budget)).
 
-[^1]: The prices are Ofgem's [price cap](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges) for April to December 2026, [Cornwall Insight's forecast](https://www.cornwall-insight.com/press-releases/16-price-cap-rise-forecast-in-january/) for January to March 2027, and supplier forecasts from [MoneySavingExpert](https://www.moneysavingexpert.com/utilities/energy-price-cap-prediction/) and [OVO](https://www.ovoenergy.com/price-cap) for 2027-28. The shares of annual consumption come from [DESNZ Energy Trends](https://www.gov.uk/government/statistics/energy-trends-section-5-electricity).
+[^1]: The prices are Ofgem's [price cap](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges) for April to December 2026, [Cornwall Insight's forecast](https://www.cornwall-insight.com/press-releases/16-price-cap-rise-forecast-in-january/) for January to March 2027, and supplier forecasts from [MoneySavingExpert](https://www.moneysavingexpert.com/utilities/energy-price-cap-prediction/) and [OVO](https://www.ovoenergy.com/price-cap) for 2027-28. The shares of annual consumption come from [DESNZ Energy Trends](https://www.gov.uk/government/statistics/electricity-section-5-energy-trends).
 
 [^2]: At the April 2027 prices in our energy bills dashboard, 5% VAT on a year's typical electricity bill amounts to £49, consistent with the Budget's estimate that the cut reduces the annual Ofgem price cap by "around £50" in April 2027.
 
