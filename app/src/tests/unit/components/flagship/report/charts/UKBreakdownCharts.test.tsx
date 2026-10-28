@@ -129,6 +129,38 @@ describe('getChangedPrograms with the tax credits row', () => {
   });
 });
 
+describe('getChangedPrograms with the VAT row', () => {
+  test('given a VAT change and no vat_change row then VAT counts towards the total', () => {
+    // Given: the total counts VAT through vat_change, which changes by as much as VAT.
+    const output = {
+      ...withBudget(UK_OUTPUT, { federal: 2e9, state: 0 }),
+      detailed_budget: { vat: { baseline: 170e9, reform: 172e9, difference: 2e9 } },
+    } as typeof UK_OUTPUT;
+
+    // When
+    const programs = getChangedPrograms(output, {});
+
+    // Then
+    expect(programs.map((program) => program.key)).toEqual(['vat']);
+    expect(getOtherProgramsAmount(2e9, programs)).toBe(0);
+  });
+
+  test('given both VAT rows then the vat row is dropped', () => {
+    const output = {
+      ...withBudget(UK_OUTPUT, { federal: 2e9, state: 0 }),
+      detailed_budget: {
+        vat: { baseline: 170e9, reform: 172e9, difference: 2e9, is_tax: true },
+        vat_change: { baseline: 0, reform: 2e9, difference: 2e9, is_tax: true },
+      },
+    } as typeof UK_OUTPUT;
+
+    const programs = getChangedPrograms(output, {});
+
+    expect(programs.map((program) => program.key)).toEqual(['vat_change']);
+    expect(getOtherProgramsAmount(2e9, programs)).toBe(0);
+  });
+});
+
 describe('getOtherProgramsAmount', () => {
   test('given programs that add up to the total then there is nothing else', () => {
     expect(getOtherProgramsAmount(1.5e9, [{ value: 2e9 }, { value: -0.5e9 }])).toBe(0);

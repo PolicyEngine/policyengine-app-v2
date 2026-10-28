@@ -74,28 +74,32 @@ const BENEFIT_PROGRAMS = new Set([
 
 /**
  * Rows the total budgetary impact doesn't include: the total is the change
- * in the taxes households pay less the change in their benefits, so it
- * leaves out employer National Insurance and VAT. Their changes are shown
- * but not added up against the total.
+ * in the taxes households pay less the change in their benefits, and
+ * employers pay employer National Insurance. Their changes are shown but
+ * not added up against the total.
  */
-const OUTSIDE_TOTAL_PROGRAMS = new Set(['ni_employer', 'vat']);
+const OUTSIDE_TOTAL_PROGRAMS = new Set(['ni_employer']);
 
 /** Short names for the rows outside the total, for a narrow axis. */
 const OUTSIDE_TOTAL_SHORT_NAMES: Record<string, string> = {
   ni_employer: 'Employer NI',
-  vat: 'VAT',
 };
 
 /**
- * Whether a row repeats others: `tax_credits` is Working Tax Credit and
- * Child Tax Credit together, which the total counts through their own rows,
- * so it is dropped where either of them is listed.
+ * Rows that repeat others, with the rows they repeat: `tax_credits` is
+ * Working Tax Credit and Child Tax Credit together, and `vat` changes by
+ * as much as `vat_change`, the VAT above current law's that the total
+ * counts. Each is dropped where a row it repeats is listed, and is an
+ * ordinary row otherwise.
  */
+const REPEATED_ROWS: Record<string, string[]> = {
+  tax_credits: ['working_tax_credit', 'child_tax_credit'],
+  vat: ['vat_change'],
+};
+
+/** Whether a row repeats others the detailed budget lists. */
 function isRepeatedRow(key: string, detailedBudget: Record<string, unknown>): boolean {
-  return (
-    key === 'tax_credits' &&
-    ('working_tax_credit' in detailedBudget || 'child_tax_credit' in detailedBudget)
-  );
+  return (REPEATED_ROWS[key] ?? []).some((repeated) => repeated in detailedBudget);
 }
 
 /**
