@@ -1,6 +1,6 @@
 The [Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#box-5atriple-lock-adjustment175) on 28 October 2026 set out how the government will change the State Pension triple lock. The triple lock continues through April 2029. From April 2030, "the State Pension rises each year by the highest of 2.5%, inflation, or the amount required to maintain its value relative to earnings as reached in April 2029." The government estimates that this adjusted triple lock reduces State Pension spending by £15 billion a year by the late 2030s and £50 billion a year by the late 2040s, and says the savings will help build a National Care Service in England that provides older people with personal care free at the point of use.
 
-Prime Minister Andy Burnham announced the change at Labour's conference on 29 September. Our [triple lock dashboard](https://www.policyengine.org/uk/triple-lock), which calls the policy the Burnham plan, runs both rules through PolicyEngine UK on 50,000 simulated paths of prices and earnings. Every PolicyEngine figure below comes from the dashboard's pre-Budget release, which uses the OBR's March 2026 forecast. The figures are provisional, and we are rebuilding them on the Budget's inputs.
+Prime Minister Andy Burnham announced the change at Labour's conference on 29 September. Our [triple lock dashboard](https://www.policyengine.org/uk/triple-lock), which calls the policy the Burnham plan, simulates 50,000 paths of prices and earnings and runs a weighted sample of them through PolicyEngine UK under both rules. Every PolicyEngine figure below comes from the dashboard's pre-Budget release, which uses the OBR's March 2026 forecast. The figures are provisional, and we are rebuilding them on the Budget's inputs.
 
 Key findings for 2039-40, before the Budget, in cash terms for the UK:
 
@@ -29,7 +29,7 @@ The same replay shows what the adjusted triple lock would have changed. Had it s
 
 ## What it saves
 
-The Budget notes that under the triple lock, spending "depends on which of prices, earnings or 2.5% is highest in each year, and on how those differences compound over time." So does the saving. A monthly model of CPI and earnings, fitted to 2000 to 2026 without the furlough months, simulates 50,000 paths whose average matches the OBR's March 2026 forecast in every year. We run 160 of those paths through PolicyEngine UK under both rules and weight them to stand for all 50,000.
+The Budget notes that under the triple lock, spending "depends on which of prices, earnings or 2.5% is highest in each year, and on how those differences compound over time." So does the saving. A monthly model of CPI and earnings, fitted to 2000 to 2026 without the furlough months, simulates 50,000 paths whose average matches the OBR's central path in every year: its March 2026 forecast to 2030 and its long-term projections after. We run 160 of those paths through PolicyEngine UK under both rules and weight them to stand for all 50,000.
 
 The adjusted triple lock first pays less in 2031-32. Averaged across the paths, it saves £3.2 billion in 2034-35 and £11.1 billion in 2039-40, or £2.3 billion and £7.9 billion net of tax and benefits.
 
@@ -122,7 +122,7 @@ The two estimates differ in method, and DWP's published assumptions do not allow
 
 - DWP projects the population and each person's pension with Pensim3, its dynamic microsimulation model. We reweight today's Family Resources Survey households to the ONS population projection by age and sex, holding each person's age fixed.
 - Our survey counts less State Pension in payment than DWP: £125.9 billion in Great Britain in 2026-27, against DWP's £148.3 billion. The adjusted triple lock lowers every flat-rate pension by the same proportion, so a smaller bill gives a smaller saving in pounds.
-- We average over simulated paths of prices and earnings. DWP's published assumptions establish neither a single path nor a distribution we can set beside that average.
+- Our figure is an average across simulated paths of prices and earnings. On the OBR's central path alone, our UK saving is £0.9 billion.
 
 Our projections end in 2039-40, so we have no figure to set against the £50 billion.
 
@@ -170,19 +170,19 @@ The dashboard also runs four hypothetical single pensioners through PolicyEngine
 
 The pensioner with a private pension keeps 80% of the loss, since only income tax falls. The homeowner on the State Pension alone keeps half: the lower pension brings them under the Pension Credit guarantee, and receiving guarantee credit brings full council tax reduction with it. For the council tenant, guarantee credit also brings full Housing Benefit, and the extra Housing Benefit, council tax reduction and Pension Credit, together with £173 less income tax, outweigh the £867. The 90-year-old on the old basic State Pension already receives guarantee credit, which rises by the full £664; their savings credit, which pays more the further their income sits above a threshold, falls by £141.
 
-On the high-saving path at the 90th percentile, the full new State Pension is £1,552 a year lower, and the same pattern holds at larger scale: the pensioner with a private pension has £1,241 less, and the council tenant £1,390 more.
+On the high-saving path at the 90th percentile, the full new State Pension is £1,552 a year lower. The pensioner with a private pension has £1,241 less, and the council tenant £1,390 more.
 
 ## How uncertain the saving is
 
 The middle 80% of simulated paths save between £3.9 billion and £18.9 billion in 2039-40, or £2.7 billion to £13.4 billion net. On 0.79% of paths the two rules pay the same every year and save nothing. That spread comes from one model of prices and earnings and describes variation within it; it is not a forecast probability. Tested on six past OBR forecasts, the model's range contained the outcome in 4 of 6 final years and 80% of annual checks.
 
-Weighting the same runs to match how much the gap between earnings growth and inflation varied in past periods, and how often the lead switched, gives estimates between £7.1 billion and £12.4 billion. Those weightings were more biased in our tests on past forecasts, so we report them as sensitivities. With 160 full runs, the average carries a Monte Carlo error of about ±£0.1 billion.
+Weighting the same runs to match how much the gap between earnings growth and inflation varied in past periods, and how often the lead switched, gives estimates between £8.3 billion and £12.4 billion, or £5.9 billion to £8.8 billion net, counting the weightings that rest on at least 100 effective runs. Those weightings were more biased in our tests on past forecasts, so we report them as sensitivities. With 160 full runs, the average carries a Monte Carlo error of about ±£0.1 billion.
 
 ## These figures predate the Budget
 
 The figures above come from the dashboard's pre-Budget release. It uses the OBR's March 2026 forecast, with August 2026 CPI standing in for September's in the April 2027 rise, and runs on policyengine.py 6.2.6 with the Enhanced Family Resources Survey 2024-25. The average is provisional and model-conditional: the model of prices and earnings passed its test on past OBR forecasts in a dry run on pre-Budget data, and the binding test uses the Budget's forecasts.
 
-We are rebuilding the analysis on the Budget's inputs, with a newer release of PolicyEngine UK and Microcosm UK as its primary data, so the figures will move. If the model of prices and earnings fails the binding test, the rebuild reports only fixed scenarios, with no average across paths: the OBR central path, the OBR's long-term assumption, a replay of the last ten years and the shifted earnings paths.
+We are rebuilding the analysis on the Budget's inputs, with a newer release of PolicyEngine UK and Microcosm UK as its primary data, so the figures will move. If the model of prices and earnings fails the binding test, the rebuild reports only fixed scenarios, with no average across paths: the OBR central path, the OBR's long-term assumptions, a replay of the last ten years and the shifted earnings paths.
 
 <details>
 <summary style="font-size: clamp(1.75rem, calc((100vw - 768px) * 1000), 2rem); font-weight: 600; line-height: 1.3; margin: 28px 0 20px; padding-bottom: 6px; border-bottom: 1px solid var(--border-light, #e2e8f0); cursor: pointer;">Methodology and limitations</summary>
