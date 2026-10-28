@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-10-28T15:19:07.459647+00:00",
+    "generated_at_utc": "2026-10-28T16:15:44.057920+00:00",
     "model_year": 2027,
     "tax_year": "2027–28",
     "versions": {
@@ -23,6 +23,16 @@
     "scope": "Five synthetic case pairs; no population data, behavioural responses or national estimates. Annual model calculations; actual UC assessment periods and timing of tax payments can differ.",
     "assumptions": "Lone parent age35 with child age4, employment as main job, £18,000 annual wages, side business with zero expenses, London/Central London private rent £12,000/year, UC and Child Benefit take-up true. Sole trader age35, full-time35hours/week, £20,000 receipts and £500 costs, no other income, owns home outright, no UC claim. Both: council tax input zero; no childcare costs, capital, disability, pensions, losses or other income. Omitted inputs otherwise retain pinned model defaults. No UC award, floor amount, work allowance, or earnings intermediate is forced.",
     "oracle_tolerance_gbp": 0.02,
+    "forecast": {
+      "dashboard_commit": "640426575270224db9b04d6c94d30e264a347be2",
+      "source": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/640426575270224db9b04d6c94d30e264a347be2/src/uk_budget_data/forecast/obr_october_2026.json",
+      "forecast_file_git_blob": "b504a48fffb93714ff358d869cad712b6daea20e",
+      "forecast_module_git_blob": "b2ca186b6fd514f334ced11934d38b256e6d2127",
+      "forecast_file_sha256": "dc039d30660d17f30a45e49538dbd22953e02bd4f6b63eda2eaebcf8252baf54",
+      "baseline_and_reform": true,
+      "nominal_household_inputs": "Held fixed in 2027; the forecast updates model parameters, not the supplied income amounts.",
+      "remaining_series": "March paths remain for cpih, non-labour income, private rent, mortgage interest, per-capita series, council tax and fuel volumes/prices, as recorded by this forecast vintage."
+    },
     "independent_arithmetic": "Basic-rate income tax20% above Personal Allowance£12,570; known-receipt taxable profit=max(0,receipts-max(expenses,allowance)); Class4 NI6% above£12,570; active UC award falls55% of extra UC net earnings above its unchanged work allowance. Missing-receipt outputs separately test the pinned fallback, not the legal receipt-based calculation."
   },
   "cases": [
@@ -135,12 +145,12 @@
           "child_benefit": 1455.8287353515625
         },
         "household": {
-          "household_net_income": 36801.48828125,
+          "household_net_income": 36821.58984375,
           "hbai_household_net_income": 34411.92578125,
-          "household_benefits": 17101.892578125,
+          "household_benefits": 17121.994140625,
           "household_tax": 2300.403076171875,
           "household_market_income": 22000.0,
-          "household_gross_income": 39101.890625,
+          "household_gross_income": 39121.9921875,
           "rent": 12000.0,
           "council_tax": 0.0
         }
@@ -200,12 +210,12 @@
           "child_benefit": 1455.8287353515625
         },
         "household": {
-          "household_net_income": 36981.48828125,
+          "household_net_income": 37001.58984375,
           "hbai_household_net_income": 34591.92578125,
-          "household_benefits": 16881.892578125,
+          "household_benefits": 16901.994140625,
           "household_tax": 1900.403076171875,
           "household_market_income": 22000.0,
-          "household_gross_income": 38881.890625,
+          "household_gross_income": 38901.9921875,
           "rent": 12000.0,
           "council_tax": 0.0
         }
@@ -345,12 +355,12 @@
           "child_benefit": 1455.8287353515625
         },
         "household": {
-          "household_net_income": 35901.48828125,
+          "household_net_income": 35921.58984375,
           "hbai_household_net_income": 33511.92578125,
-          "household_benefits": 18201.892578125,
+          "household_benefits": 18221.994140625,
           "household_tax": 1800.403076171875,
           "household_market_income": 19500.0,
-          "household_gross_income": 37701.890625,
+          "household_gross_income": 37721.9921875,
           "rent": 12000.0,
           "council_tax": 0.0
         }
@@ -410,12 +420,12 @@
           "child_benefit": 1455.8287353515625
         },
         "household": {
-          "household_net_income": 35946.48828125,
+          "household_net_income": 35966.58984375,
           "hbai_household_net_income": 33556.92578125,
-          "household_benefits": 18146.892578125,
+          "household_benefits": 18166.994140625,
           "household_tax": 1700.403076171875,
           "household_market_income": 19500.0,
-          "household_gross_income": 37646.890625,
+          "household_gross_income": 37666.9921875,
           "rent": 12000.0,
           "council_tax": 0.0
         }
@@ -550,12 +560,12 @@
           "child_benefit": 1455.8287353515625
         },
         "household": {
-          "household_net_income": 35811.48828125,
+          "household_net_income": 35831.58984375,
           "hbai_household_net_income": 33421.92578125,
-          "household_benefits": 18311.892578125,
+          "household_benefits": 18331.994140625,
           "household_tax": 2000.403076171875,
           "household_market_income": 19500.0,
-          "household_gross_income": 37811.890625,
+          "household_gross_income": 37831.9921875,
           "rent": 12000.0,
           "council_tax": 0.0
         }
@@ -615,12 +625,12 @@
           "child_benefit": 1455.8287353515625
         },
         "household": {
-          "household_net_income": 35946.48828125,
+          "household_net_income": 35966.58984375,
           "hbai_household_net_income": 33556.92578125,
-          "household_benefits": 18146.892578125,
+          "household_benefits": 18166.994140625,
           "household_tax": 1700.403076171875,
           "household_market_income": 19500.0,
-          "household_gross_income": 37646.890625,
+          "household_gross_income": 37666.9921875,
           "rent": 12000.0,
           "council_tax": 0.0
         }

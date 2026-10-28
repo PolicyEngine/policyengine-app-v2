@@ -31,7 +31,7 @@ The source preview remains revision 5, with both entries `provisional` and recon
 
 ## Related team work
 
-Pavel's [Pension Tax Allowance draft, #1457](https://github.com/PolicyEngine/policyengine-app-v2/pull/1457), and [fuel-duty draft, #1459](https://github.com/PolicyEngine/policyengine-app-v2/pull/1459), informed the calculation-first presentation, explicit assumptions and separation of Treasury costings from model results. They were read as comparative examples, not formally approved by this review. Their shared line-chart work is not required by these posts' existing native bar charts.
+Pavel's [Pension Tax Allowance draft, #1457](https://github.com/PolicyEngine/policyengine-app-v2/pull/1457), and [fuel-duty draft, #1459](https://github.com/PolicyEngine/policyengine-app-v2/pull/1459), informed the calculation-first presentation, explicit assumptions and separation of Treasury costings from model results. They were read as comparative examples, not formally approved by this review. The earlier drafts used native bar charts. The current alignment reuses their shared numeric line renderer from PR1462 for the household curves.
 
 
 ## Follow-up to Max's reviews
@@ -83,3 +83,24 @@ The dashboard now defines property and savings as separate measures. The article
 Preview manifest revision15 (updated16:01:00Z) has no property_income_rates_up or savings_income_rates_up artifacts yet. The old combined result is withdrawn because the measure was split; its archived snapshot remains in the analysis records. A newer trading artifact71f8a26e4f547021 is provisional and failed reconciliation. It uses the same certifieda6299504 dataset and detailed October forecasts, but its source still excludes the council-tax update. Neither it nor Max's rounded internal component figures has replaced the saved first-estimate data.
 
 The drafts now explicitly flag the older national snapshot as awaiting replacement. These national sections must not be treated as current approved dashboard outputs or published until replacement execution-bound results are reconciled. Household calculations and their input/output records are unchanged.
+
+## Alignment with Pavel’s current PTA draft
+
+The user requested the same methodology and styling as Pavel’s PTA PR1457. The reference was read at head `d282ef870176c81feb87175d02584121bdc50197`, whose chart dependency is PR1462. The main article structure follows rules, household examples and curves, population impacts, assumptions and limitations, then methodology. The shared numeric line renderer is reused rather than copied.
+
+Both synthetic generators now apply the exact October forecast used by that PTA revision (dashboard commit `640426575270224db9b04d6c94d30e264a347be2`) to the baseline and the isolated reform. Previously the synthetic examples held incomes fixed but retained the model’s March parameter forecast. These are distinct choices: the inputs still stay fixed, while projected model parameters now use the common October overlay. The forecast’s original JSON is saved and hash-checked, and the complete eight-path parameter mapping was compared with the original source’s `with_forecast(None)` for exact equality. The archived national results are not regenerated or relabelled by this household change.
+
+Charts now show numeric axes, £ formatting and named allowance thresholds using Pavel’s PR1462 renderer. Display points include every £100 plus exact breakpoints, including the 75%-expense choice at £1,333⅓ of trading receipts. Both tax scenarios are independently checked against arithmetic at every £2, and linear interpolation of the displayed data is compared with the model changes to a one-penny tolerance. Counts and measured maximum errors are saved in `curve-validation.json`. Max’s latest instruction to use whole pounds in all reader-facing tables remains in force.
+
+Manifest revision17, updated16:09:01.451619UTC, publishes separate property (`3537bd303ac226cf`) and savings (`af6aaaee33f616ee`) artifacts, but both are provisional and fail reconciliation, as does the newer trading artifact. No replacement is adopted. Max’s16:10 webinar guidance is to use available dashboard figures and say other figures are “still being checked”; the saved older estimates are not cleared for spoken or published headline results by that message.
+
+The rerun completed at16:18:33UTC with all23 main household comparisons and all5 trading extension pairs passing. Every policy delta is unchanged. The Scottish income-tax levels change by−£2.93 in baseline and reform, while the UC parent’s total benefits and net income change by about+£20.10 in both; these level changes are retained in raw outputs. UC levels and the£180 and£520 article examples are unchanged. The generated curves contain46 savings points and47 trading points. At2,251 income points per series,18,008 liability comparisons and9,004 chart-interpolation comparisons pass; the maximum interpolation error is£0.0033, below the one-penny tolerance. Both generated line specs are ready to insert into the separate articles. Python compilation and diff-whitespace checks also passed. No population outputs or source artifacts were changed.
+
+
+### PTA presentation alignment validation
+
+Both posts now use the shared line-chart renderer from app-v2 PR1462, the same dependency as Pavel's PTA PR1457. The savings/property PR is stacked on `pavel/blog-line-chart`; the trading PR remains stacked on the savings/property branch. The posts share rules, household impacts, population impacts, assumptions and limitations, and methodology sections. All reader tables use whole pounds.
+
+The line renderer, bar renderer, article-chart parser and post metadata checks passed (51 tests); website ESLint and TypeScript checks passed. No CI monitoring was performed. The 23 household cases, five extension pairs and dense curve checks passed on the pinned October forecast. Browser approval declined the public dashboard preview origin, so its rendered policy tab and the final visual layout were not verified in this pass. No alternative access to that blocked origin was attempted.
+
+Max's 16:18:54 UTC webinar update asks authors to introduce each measure for 30–60 seconds: say what it does and who it reaches, leaving costings to the dashboard. Q&A should use displayed dashboard figures and describe missing figures as still being checked. The archived national figures in these draft articles are not webinar-approved estimates.

@@ -56,17 +56,19 @@
       ]
     },
     "live_source_check": {
-      "checked_at_utc": "2026-10-28T16:04:05Z",
-      "manifest_revision": 15,
-      "manifest_updated_at": "2026-10-28T16:01:00.454209Z",
-      "property_income_rates_up": "not_yet_published",
-      "savings_income_rates_up": "not_yet_published",
+      "manifest_revision": 17,
+      "manifest_updated_at": "2026-10-28T16:09:01.451619Z",
+      "property_income_rates_up": "provisional_reconciliation_failed",
+      "savings_income_rates_up": "provisional_reconciliation_failed",
       "unearned_income_rates_up": "withdrawn_due_to_measure_split",
       "new_trading_artifact": "71f8a26e4f547021",
       "new_trading_status": "provisional_reconciliation_failed",
       "new_trading_dataset_matches_pin": true,
       "replacement_adopted": false,
-      "forecast_note": "New trading batch has October detailed forecasts but still March council tax; it is not the final forecast batch."
+      "forecast_note": "Replacement artifacts remain unapproved. The household forecast pin is independent of these national artifacts.",
+      "property_artifact": "3537bd303ac226cf",
+      "savings_artifact": "af6aaaee33f616ee",
+      "source_check_note": "Manifest17 status reported by the parent task during the PTA alignment; manifest_updated_at is the publisher timestamp, not a local fetch timestamp."
     }
   },
   "treasury_costings": {
@@ -114,5 +116,57 @@
     "raw_population_accessed": false,
     "additional_internal_population_numbers_adopted": false,
     "final_regeneration_note": "Detailed October forecast tables and council tax are expected; retain the recorded first-estimate snapshot until replacement outputs bind the exact dataset and forecast."
+  },
+  "household_forecast": {
+    "dashboard_commit": "640426575270224db9b04d6c94d30e264a347be2",
+    "forecast_file_git_blob": "b504a48fffb93714ff358d869cad712b6daea20e",
+    "forecast_module_git_blob": "b2ca186b6fd514f334ced11934d38b256e6d2127",
+    "both_baseline_and_reform": true,
+    "fixed_nominal_inputs": true,
+    "reference_pr": "https://github.com/PolicyEngine/policyengine-app-v2/pull/1457",
+    "reference_pr_head": "d282ef870176c81feb87175d02584121bdc50197",
+    "equivalence": "Exact eight-path equality with source with_forecast(None).parameter_changes was checked; synthetic households have no population data load.",
+    "national_outputs_regenerated": false,
+    "national_forecast_still_recorded_separately": true,
+    "forecast_file_sha256": "dc039d30660d17f30a45e49538dbd22953e02bd4f6b63eda2eaebcf8252baf54"
+  },
+  "chart_methodology": {
+    "renderer_dependency": "https://github.com/PolicyEngine/policyengine-app-v2/pull/1462",
+    "type": "numeric line",
+    "chart_interval_gbp": 100,
+    "validation_interval_gbp": 2,
+    "validation_record": "curve-validation.json",
+    "tolerance_gbp": 0.01,
+    "breakpoints": "All allowance and expense-choice breakpoints within the plotted £500–£5,000 range.",
+    "validation_results": {
+      "range_gbp": [
+        500,
+        5000
+      ],
+      "validation_interval_gbp": 2,
+      "points_per_series": 2251,
+      "series": 4,
+      "liability_checks": 18008,
+      "interpolation_checks": 9004,
+      "chart_interval_gbp": 100,
+      "savings_breakpoints_gbp": [
+        500,
+        1000
+      ],
+      "trading_breakpoints_gbp": [
+        1000,
+        1333.3333333333333,
+        3000,
+        4000
+      ],
+      "chart_rows": {
+        "savings": 46,
+        "trading": 47
+      },
+      "maximum_model_error_gbp": 2.2737367544323206e-13,
+      "maximum_chart_interpolation_error_gbp": 0.0033000000000242835,
+      "tolerance_gbp": 0.01,
+      "method": "All four series checked against pe.uk at every £2; both scenarios compared with independent tax arithmetic; plotted linear interpolation compared with the engine tax changes. The non-integer expense-choice breakpoint is additionally calculated with pe.uk."
+    }
   }
 }

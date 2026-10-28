@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-10-28T14:37:16.549617+00:00",
+    "generated_at_utc": "2026-10-28T16:18:33.153156+00:00",
     "tax_year": "2027–28",
     "model_year": 2027,
     "versions": {
@@ -32,12 +32,22 @@
         "gov.hmrc.income_tax.rates.property.additional": 0.49,
         "gov.hmrc.income_tax.allowances.trading_allowance": 3000
       },
-      "dashboard_builder_verified": true,
-      "comparison": "Relevant parameter declarations and savings/property builder match the independent flat reform dictionaries; no combined-package modifiers run."
+      "dashboard_builder_verified": false,
+      "comparison": "Independent reform dictionaries and baseline parameters verified. Optional dashboard-builder comparison not requested; immutable source reference recorded above."
     },
     "scope": "Synthetic single adults age 35; no microdata, no behavioural responses or national estimates. Income and expenses held fixed; tax liabilities, not full household net-income changes.",
     "assumptions": "No children, pensions, Gift Aid, student loans, capital gains, other tax reliefs, property losses or carried-forward finance costs. Savings are outside ISAs. Trading receipts and profit are both supplied; no connected-party receipts or partnership income. All example benefit totals are checked to be zero.",
     "oracle_tolerance_gbp": 0.02,
+    "forecast": {
+      "dashboard_commit": "640426575270224db9b04d6c94d30e264a347be2",
+      "source": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/640426575270224db9b04d6c94d30e264a347be2/src/uk_budget_data/forecast/obr_october_2026.json",
+      "forecast_file_git_blob": "b504a48fffb93714ff358d869cad712b6daea20e",
+      "forecast_module_git_blob": "b2ca186b6fd514f334ced11934d38b256e6d2127",
+      "forecast_file_sha256": "dc039d30660d17f30a45e49538dbd22953e02bd4f6b63eda2eaebcf8252baf54",
+      "baseline_and_reform": true,
+      "nominal_household_inputs": "Held fixed in 2027; the forecast updates model parameters, not the supplied income amounts.",
+      "remaining_series": "March paths remain for cpih, non-labour income, private rent, mortgage interest, per-capita series, council tax and fuel volumes/prices, as recorded by this forecast vintage."
+    },
     "warning_filters": "Known household divide/invalid RuntimeWarnings and single-household model decile .values warnings only; no population weights are accessed by this generator."
   },
   "reforms": {
@@ -519,7 +529,7 @@
       },
       "detail": null,
       "baseline": {
-        "income_tax": 13807.87,
+        "income_tax": 13804.94,
         "savings_income_tax": 630.0,
         "savings_allowance": 500.0,
         "savings_starter_rate_income": 0.0,
@@ -536,7 +546,7 @@
         "household_benefits": 0.0
       },
       "reform": {
-        "income_tax": 13837.87,
+        "income_tax": 13834.94,
         "savings_income_tax": 660.0,
         "savings_allowance": 500.0,
         "savings_starter_rate_income": 0.0,
@@ -1124,7 +1134,7 @@
       },
       "detail": "Scottish property rates do not change; the UK-wide finance-cost credit rate does.",
       "baseline": {
-        "income_tax": 17377.87,
+        "income_tax": 17374.94,
         "savings_income_tax": 0.0,
         "savings_allowance": 500.0,
         "savings_starter_rate_income": 0.0,
@@ -1141,7 +1151,7 @@
         "household_benefits": 0.0
       },
       "reform": {
-        "income_tax": 17377.87,
+        "income_tax": 17374.94,
         "savings_income_tax": 0.0,
         "savings_allowance": 500.0,
         "savings_starter_rate_income": 0.0,
@@ -1193,7 +1203,7 @@
       },
       "detail": "Scottish property rates do not change; the UK-wide finance-cost credit rate does.",
       "baseline": {
-        "income_tax": 16497.87,
+        "income_tax": 16494.94,
         "savings_income_tax": 0.0,
         "savings_allowance": 500.0,
         "savings_starter_rate_income": 0.0,
@@ -1210,7 +1220,7 @@
         "household_benefits": 0.0
       },
       "reform": {
-        "income_tax": 16417.87,
+        "income_tax": 16414.94,
         "savings_income_tax": 0.0,
         "savings_allowance": 500.0,
         "savings_starter_rate_income": 0.0,
@@ -1819,6 +1829,42 @@
       "higher_tax_increase": 0.0
     },
     {
+      "interest": 600,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 42.0,
+      "higher_reform_tax": 44.0,
+      "higher_tax_increase": 2.0
+    },
+    {
+      "interest": 700,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 84.0,
+      "higher_reform_tax": 88.0,
+      "higher_tax_increase": 4.0
+    },
+    {
+      "interest": 800,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 126.0,
+      "higher_reform_tax": 132.0,
+      "higher_tax_increase": 6.0
+    },
+    {
+      "interest": 900,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 168.0,
+      "higher_reform_tax": 176.0,
+      "higher_tax_increase": 8.0
+    },
+    {
       "interest": 1000,
       "basic_baseline_tax": 0.0,
       "basic_reform_tax": 0.0,
@@ -1826,6 +1872,42 @@
       "higher_baseline_tax": 210.0,
       "higher_reform_tax": 220.0,
       "higher_tax_increase": 10.0
+    },
+    {
+      "interest": 1100,
+      "basic_baseline_tax": 22.0,
+      "basic_reform_tax": 24.0,
+      "basic_tax_increase": 2.0,
+      "higher_baseline_tax": 252.0,
+      "higher_reform_tax": 264.0,
+      "higher_tax_increase": 12.0
+    },
+    {
+      "interest": 1200,
+      "basic_baseline_tax": 44.0,
+      "basic_reform_tax": 48.0,
+      "basic_tax_increase": 4.0,
+      "higher_baseline_tax": 294.0,
+      "higher_reform_tax": 308.0,
+      "higher_tax_increase": 14.0
+    },
+    {
+      "interest": 1300,
+      "basic_baseline_tax": 66.0,
+      "basic_reform_tax": 72.0,
+      "basic_tax_increase": 6.0,
+      "higher_baseline_tax": 336.0,
+      "higher_reform_tax": 352.0,
+      "higher_tax_increase": 16.0
+    },
+    {
+      "interest": 1400,
+      "basic_baseline_tax": 88.0,
+      "basic_reform_tax": 96.0,
+      "basic_tax_increase": 8.0,
+      "higher_baseline_tax": 378.0,
+      "higher_reform_tax": 396.0,
+      "higher_tax_increase": 18.0
     },
     {
       "interest": 1500,
@@ -1837,6 +1919,42 @@
       "higher_tax_increase": 20.0
     },
     {
+      "interest": 1600,
+      "basic_baseline_tax": 132.0,
+      "basic_reform_tax": 144.0,
+      "basic_tax_increase": 12.0,
+      "higher_baseline_tax": 462.0,
+      "higher_reform_tax": 484.0,
+      "higher_tax_increase": 22.0
+    },
+    {
+      "interest": 1700,
+      "basic_baseline_tax": 154.0,
+      "basic_reform_tax": 168.0,
+      "basic_tax_increase": 14.0,
+      "higher_baseline_tax": 504.0,
+      "higher_reform_tax": 528.0,
+      "higher_tax_increase": 24.0
+    },
+    {
+      "interest": 1800,
+      "basic_baseline_tax": 176.0,
+      "basic_reform_tax": 192.0,
+      "basic_tax_increase": 16.0,
+      "higher_baseline_tax": 546.0,
+      "higher_reform_tax": 572.0,
+      "higher_tax_increase": 26.0
+    },
+    {
+      "interest": 1900,
+      "basic_baseline_tax": 198.0,
+      "basic_reform_tax": 216.0,
+      "basic_tax_increase": 18.0,
+      "higher_baseline_tax": 588.0,
+      "higher_reform_tax": 616.0,
+      "higher_tax_increase": 28.0
+    },
+    {
       "interest": 2000,
       "basic_baseline_tax": 220.0,
       "basic_reform_tax": 240.0,
@@ -1844,6 +1962,42 @@
       "higher_baseline_tax": 630.0,
       "higher_reform_tax": 660.0,
       "higher_tax_increase": 30.0
+    },
+    {
+      "interest": 2100,
+      "basic_baseline_tax": 242.0,
+      "basic_reform_tax": 264.0,
+      "basic_tax_increase": 22.0,
+      "higher_baseline_tax": 672.0,
+      "higher_reform_tax": 704.0,
+      "higher_tax_increase": 32.0
+    },
+    {
+      "interest": 2200,
+      "basic_baseline_tax": 264.0,
+      "basic_reform_tax": 288.0,
+      "basic_tax_increase": 24.0,
+      "higher_baseline_tax": 714.0,
+      "higher_reform_tax": 748.0,
+      "higher_tax_increase": 34.0
+    },
+    {
+      "interest": 2300,
+      "basic_baseline_tax": 286.0,
+      "basic_reform_tax": 312.0,
+      "basic_tax_increase": 26.0,
+      "higher_baseline_tax": 756.0,
+      "higher_reform_tax": 792.0,
+      "higher_tax_increase": 36.0
+    },
+    {
+      "interest": 2400,
+      "basic_baseline_tax": 308.0,
+      "basic_reform_tax": 336.0,
+      "basic_tax_increase": 28.0,
+      "higher_baseline_tax": 798.0,
+      "higher_reform_tax": 836.0,
+      "higher_tax_increase": 38.0
     },
     {
       "interest": 2500,
@@ -1855,6 +2009,42 @@
       "higher_tax_increase": 40.0
     },
     {
+      "interest": 2600,
+      "basic_baseline_tax": 352.0,
+      "basic_reform_tax": 384.0,
+      "basic_tax_increase": 32.0,
+      "higher_baseline_tax": 882.0,
+      "higher_reform_tax": 924.0,
+      "higher_tax_increase": 42.0
+    },
+    {
+      "interest": 2700,
+      "basic_baseline_tax": 374.0,
+      "basic_reform_tax": 408.0,
+      "basic_tax_increase": 34.0,
+      "higher_baseline_tax": 924.0,
+      "higher_reform_tax": 968.0,
+      "higher_tax_increase": 44.0
+    },
+    {
+      "interest": 2800,
+      "basic_baseline_tax": 396.0,
+      "basic_reform_tax": 432.0,
+      "basic_tax_increase": 36.0,
+      "higher_baseline_tax": 966.0,
+      "higher_reform_tax": 1012.0,
+      "higher_tax_increase": 46.0
+    },
+    {
+      "interest": 2900,
+      "basic_baseline_tax": 418.0,
+      "basic_reform_tax": 456.0,
+      "basic_tax_increase": 38.0,
+      "higher_baseline_tax": 1008.0,
+      "higher_reform_tax": 1056.0,
+      "higher_tax_increase": 48.0
+    },
+    {
       "interest": 3000,
       "basic_baseline_tax": 440.0,
       "basic_reform_tax": 480.0,
@@ -1862,6 +2052,42 @@
       "higher_baseline_tax": 1050.0,
       "higher_reform_tax": 1100.0,
       "higher_tax_increase": 50.0
+    },
+    {
+      "interest": 3100,
+      "basic_baseline_tax": 462.0,
+      "basic_reform_tax": 504.0,
+      "basic_tax_increase": 42.0,
+      "higher_baseline_tax": 1092.0,
+      "higher_reform_tax": 1144.0,
+      "higher_tax_increase": 52.0
+    },
+    {
+      "interest": 3200,
+      "basic_baseline_tax": 484.0,
+      "basic_reform_tax": 528.0,
+      "basic_tax_increase": 44.0,
+      "higher_baseline_tax": 1134.0,
+      "higher_reform_tax": 1188.0,
+      "higher_tax_increase": 54.0
+    },
+    {
+      "interest": 3300,
+      "basic_baseline_tax": 506.0,
+      "basic_reform_tax": 552.0,
+      "basic_tax_increase": 46.0,
+      "higher_baseline_tax": 1176.0,
+      "higher_reform_tax": 1232.0,
+      "higher_tax_increase": 56.0
+    },
+    {
+      "interest": 3400,
+      "basic_baseline_tax": 528.0,
+      "basic_reform_tax": 576.0,
+      "basic_tax_increase": 48.0,
+      "higher_baseline_tax": 1218.0,
+      "higher_reform_tax": 1276.0,
+      "higher_tax_increase": 58.0
     },
     {
       "interest": 3500,
@@ -1873,6 +2099,42 @@
       "higher_tax_increase": 60.0
     },
     {
+      "interest": 3600,
+      "basic_baseline_tax": 572.0,
+      "basic_reform_tax": 624.0,
+      "basic_tax_increase": 52.0,
+      "higher_baseline_tax": 1302.0,
+      "higher_reform_tax": 1364.0,
+      "higher_tax_increase": 62.0
+    },
+    {
+      "interest": 3700,
+      "basic_baseline_tax": 594.0,
+      "basic_reform_tax": 648.0,
+      "basic_tax_increase": 54.0,
+      "higher_baseline_tax": 1344.0,
+      "higher_reform_tax": 1408.0,
+      "higher_tax_increase": 64.0
+    },
+    {
+      "interest": 3800,
+      "basic_baseline_tax": 616.0,
+      "basic_reform_tax": 672.0,
+      "basic_tax_increase": 56.0,
+      "higher_baseline_tax": 1386.0,
+      "higher_reform_tax": 1452.0,
+      "higher_tax_increase": 66.0
+    },
+    {
+      "interest": 3900,
+      "basic_baseline_tax": 638.0,
+      "basic_reform_tax": 696.0,
+      "basic_tax_increase": 58.0,
+      "higher_baseline_tax": 1428.0,
+      "higher_reform_tax": 1496.0,
+      "higher_tax_increase": 68.0
+    },
+    {
       "interest": 4000,
       "basic_baseline_tax": 660.0,
       "basic_reform_tax": 720.0,
@@ -1882,6 +2144,42 @@
       "higher_tax_increase": 70.0
     },
     {
+      "interest": 4100,
+      "basic_baseline_tax": 682.0,
+      "basic_reform_tax": 744.0,
+      "basic_tax_increase": 62.0,
+      "higher_baseline_tax": 1512.0,
+      "higher_reform_tax": 1584.0,
+      "higher_tax_increase": 72.0
+    },
+    {
+      "interest": 4200,
+      "basic_baseline_tax": 704.0,
+      "basic_reform_tax": 768.0,
+      "basic_tax_increase": 64.0,
+      "higher_baseline_tax": 1554.0,
+      "higher_reform_tax": 1628.0,
+      "higher_tax_increase": 74.0
+    },
+    {
+      "interest": 4300,
+      "basic_baseline_tax": 726.0,
+      "basic_reform_tax": 792.0,
+      "basic_tax_increase": 66.0,
+      "higher_baseline_tax": 1596.0,
+      "higher_reform_tax": 1672.0,
+      "higher_tax_increase": 76.0
+    },
+    {
+      "interest": 4400,
+      "basic_baseline_tax": 748.0,
+      "basic_reform_tax": 816.0,
+      "basic_tax_increase": 68.0,
+      "higher_baseline_tax": 1638.0,
+      "higher_reform_tax": 1716.0,
+      "higher_tax_increase": 78.0
+    },
+    {
       "interest": 4500,
       "basic_baseline_tax": 770.0,
       "basic_reform_tax": 840.0,
@@ -1889,6 +2187,42 @@
       "higher_baseline_tax": 1680.0,
       "higher_reform_tax": 1760.0,
       "higher_tax_increase": 80.0
+    },
+    {
+      "interest": 4600,
+      "basic_baseline_tax": 792.0,
+      "basic_reform_tax": 864.0,
+      "basic_tax_increase": 72.0,
+      "higher_baseline_tax": 1722.0,
+      "higher_reform_tax": 1804.0,
+      "higher_tax_increase": 82.0
+    },
+    {
+      "interest": 4700,
+      "basic_baseline_tax": 814.0,
+      "basic_reform_tax": 888.0,
+      "basic_tax_increase": 74.0,
+      "higher_baseline_tax": 1764.0,
+      "higher_reform_tax": 1848.0,
+      "higher_tax_increase": 84.0
+    },
+    {
+      "interest": 4800,
+      "basic_baseline_tax": 836.0,
+      "basic_reform_tax": 912.0,
+      "basic_tax_increase": 76.0,
+      "higher_baseline_tax": 1806.0,
+      "higher_reform_tax": 1892.0,
+      "higher_tax_increase": 86.0
+    },
+    {
+      "interest": 4900,
+      "basic_baseline_tax": 858.0,
+      "basic_reform_tax": 936.0,
+      "basic_tax_increase": 78.0,
+      "higher_baseline_tax": 1848.0,
+      "higher_reform_tax": 1936.0,
+      "higher_tax_increase": 88.0
     },
     {
       "interest": 5000,
@@ -1913,6 +2247,50 @@
       "expenses_75_percent_tax_reduction": 0.0
     },
     {
+      "receipts": 600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 450.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 525.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 600.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 675.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
       "receipts": 1000,
       "no_expenses_actual_expenses": 0,
       "no_expenses_baseline_taxable_profit": 0,
@@ -1922,6 +2300,61 @@
       "expenses_75_percent_baseline_taxable_profit": 0,
       "expenses_75_percent_reform_taxable_profit": 0,
       "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 1100,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 100,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 20.0,
+      "expenses_75_percent_actual_expenses": 825.0,
+      "expenses_75_percent_baseline_taxable_profit": 100,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 20.0
+    },
+    {
+      "receipts": 1200,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 200,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 40.0,
+      "expenses_75_percent_actual_expenses": 900.0,
+      "expenses_75_percent_baseline_taxable_profit": 200,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 40.0
+    },
+    {
+      "receipts": 1300,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 300,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 60.0,
+      "expenses_75_percent_actual_expenses": 975.0,
+      "expenses_75_percent_baseline_taxable_profit": 300,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 60.0
+    },
+    {
+      "receipts": 1333.3333333333333,
+      "no_expenses_actual_expenses": 0.0,
+      "no_expenses_baseline_taxable_profit": 333.33333333333326,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 66.67,
+      "expenses_75_percent_actual_expenses": 1000.0,
+      "expenses_75_percent_baseline_taxable_profit": 333.33333333333326,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 66.67
+    },
+    {
+      "receipts": 1400,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 400,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 80.0,
+      "expenses_75_percent_actual_expenses": 1050.0,
+      "expenses_75_percent_baseline_taxable_profit": 350.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 70.0
     },
     {
       "receipts": 1500,
@@ -1935,6 +2368,50 @@
       "expenses_75_percent_tax_reduction": 75.0
     },
     {
+      "receipts": 1600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 600,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 120.0,
+      "expenses_75_percent_actual_expenses": 1200.0,
+      "expenses_75_percent_baseline_taxable_profit": 400.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 80.0
+    },
+    {
+      "receipts": 1700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 700,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 140.0,
+      "expenses_75_percent_actual_expenses": 1275.0,
+      "expenses_75_percent_baseline_taxable_profit": 425.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 85.0
+    },
+    {
+      "receipts": 1800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 800,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 160.0,
+      "expenses_75_percent_actual_expenses": 1350.0,
+      "expenses_75_percent_baseline_taxable_profit": 450.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 90.0
+    },
+    {
+      "receipts": 1900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 900,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 180.0,
+      "expenses_75_percent_actual_expenses": 1425.0,
+      "expenses_75_percent_baseline_taxable_profit": 475.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 95.0
+    },
+    {
       "receipts": 2000,
       "no_expenses_actual_expenses": 0,
       "no_expenses_baseline_taxable_profit": 1000,
@@ -1944,6 +2421,50 @@
       "expenses_75_percent_baseline_taxable_profit": 500.0,
       "expenses_75_percent_reform_taxable_profit": 0,
       "expenses_75_percent_tax_reduction": 100.0
+    },
+    {
+      "receipts": 2100,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1100,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 220.0,
+      "expenses_75_percent_actual_expenses": 1575.0,
+      "expenses_75_percent_baseline_taxable_profit": 525.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 105.0
+    },
+    {
+      "receipts": 2200,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1200,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 240.0,
+      "expenses_75_percent_actual_expenses": 1650.0,
+      "expenses_75_percent_baseline_taxable_profit": 550.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 110.0
+    },
+    {
+      "receipts": 2300,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1300,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 260.0,
+      "expenses_75_percent_actual_expenses": 1725.0,
+      "expenses_75_percent_baseline_taxable_profit": 575.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 115.0
+    },
+    {
+      "receipts": 2400,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1400,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 280.0,
+      "expenses_75_percent_actual_expenses": 1800.0,
+      "expenses_75_percent_baseline_taxable_profit": 600.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 120.0
     },
     {
       "receipts": 2500,
@@ -1957,6 +2478,50 @@
       "expenses_75_percent_tax_reduction": 125.0
     },
     {
+      "receipts": 2600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1600,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 320.0,
+      "expenses_75_percent_actual_expenses": 1950.0,
+      "expenses_75_percent_baseline_taxable_profit": 650.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 130.0
+    },
+    {
+      "receipts": 2700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1700,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 340.0,
+      "expenses_75_percent_actual_expenses": 2025.0,
+      "expenses_75_percent_baseline_taxable_profit": 675.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 135.0
+    },
+    {
+      "receipts": 2800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1800,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 360.0,
+      "expenses_75_percent_actual_expenses": 2100.0,
+      "expenses_75_percent_baseline_taxable_profit": 700.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 140.0
+    },
+    {
+      "receipts": 2900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1900,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 380.0,
+      "expenses_75_percent_actual_expenses": 2175.0,
+      "expenses_75_percent_baseline_taxable_profit": 725.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 145.0
+    },
+    {
       "receipts": 3000,
       "no_expenses_actual_expenses": 0,
       "no_expenses_baseline_taxable_profit": 2000,
@@ -1966,6 +2531,50 @@
       "expenses_75_percent_baseline_taxable_profit": 750.0,
       "expenses_75_percent_reform_taxable_profit": 0,
       "expenses_75_percent_tax_reduction": 150.0
+    },
+    {
+      "receipts": 3100,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2100,
+      "no_expenses_reform_taxable_profit": 100,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2325.0,
+      "expenses_75_percent_baseline_taxable_profit": 775.0,
+      "expenses_75_percent_reform_taxable_profit": 100,
+      "expenses_75_percent_tax_reduction": 135.0
+    },
+    {
+      "receipts": 3200,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2200,
+      "no_expenses_reform_taxable_profit": 200,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2400.0,
+      "expenses_75_percent_baseline_taxable_profit": 800.0,
+      "expenses_75_percent_reform_taxable_profit": 200,
+      "expenses_75_percent_tax_reduction": 120.0
+    },
+    {
+      "receipts": 3300,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2300,
+      "no_expenses_reform_taxable_profit": 300,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2475.0,
+      "expenses_75_percent_baseline_taxable_profit": 825.0,
+      "expenses_75_percent_reform_taxable_profit": 300,
+      "expenses_75_percent_tax_reduction": 105.0
+    },
+    {
+      "receipts": 3400,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2400,
+      "no_expenses_reform_taxable_profit": 400,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2550.0,
+      "expenses_75_percent_baseline_taxable_profit": 850.0,
+      "expenses_75_percent_reform_taxable_profit": 400,
+      "expenses_75_percent_tax_reduction": 90.0
     },
     {
       "receipts": 3500,
@@ -1979,6 +2588,50 @@
       "expenses_75_percent_tax_reduction": 75.0
     },
     {
+      "receipts": 3600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2600,
+      "no_expenses_reform_taxable_profit": 600,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2700.0,
+      "expenses_75_percent_baseline_taxable_profit": 900.0,
+      "expenses_75_percent_reform_taxable_profit": 600,
+      "expenses_75_percent_tax_reduction": 60.0
+    },
+    {
+      "receipts": 3700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2700,
+      "no_expenses_reform_taxable_profit": 700,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2775.0,
+      "expenses_75_percent_baseline_taxable_profit": 925.0,
+      "expenses_75_percent_reform_taxable_profit": 700,
+      "expenses_75_percent_tax_reduction": 45.0
+    },
+    {
+      "receipts": 3800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2800,
+      "no_expenses_reform_taxable_profit": 800,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2850.0,
+      "expenses_75_percent_baseline_taxable_profit": 950.0,
+      "expenses_75_percent_reform_taxable_profit": 800,
+      "expenses_75_percent_tax_reduction": 30.0
+    },
+    {
+      "receipts": 3900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2900,
+      "no_expenses_reform_taxable_profit": 900,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2925.0,
+      "expenses_75_percent_baseline_taxable_profit": 975.0,
+      "expenses_75_percent_reform_taxable_profit": 900,
+      "expenses_75_percent_tax_reduction": 15.0
+    },
+    {
       "receipts": 4000,
       "no_expenses_actual_expenses": 0,
       "no_expenses_baseline_taxable_profit": 3000,
@@ -1987,6 +2640,50 @@
       "expenses_75_percent_actual_expenses": 3000.0,
       "expenses_75_percent_baseline_taxable_profit": 1000.0,
       "expenses_75_percent_reform_taxable_profit": 1000.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4100,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3100,
+      "no_expenses_reform_taxable_profit": 1100,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3075.0,
+      "expenses_75_percent_baseline_taxable_profit": 1025.0,
+      "expenses_75_percent_reform_taxable_profit": 1025.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4200,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3200,
+      "no_expenses_reform_taxable_profit": 1200,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3150.0,
+      "expenses_75_percent_baseline_taxable_profit": 1050.0,
+      "expenses_75_percent_reform_taxable_profit": 1050.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4300,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3300,
+      "no_expenses_reform_taxable_profit": 1300,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3225.0,
+      "expenses_75_percent_baseline_taxable_profit": 1075.0,
+      "expenses_75_percent_reform_taxable_profit": 1075.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4400,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3400,
+      "no_expenses_reform_taxable_profit": 1400,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3300.0,
+      "expenses_75_percent_baseline_taxable_profit": 1100.0,
+      "expenses_75_percent_reform_taxable_profit": 1100.0,
       "expenses_75_percent_tax_reduction": 0.0
     },
     {
@@ -2001,6 +2698,50 @@
       "expenses_75_percent_tax_reduction": 0.0
     },
     {
+      "receipts": 4600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3600,
+      "no_expenses_reform_taxable_profit": 1600,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3450.0,
+      "expenses_75_percent_baseline_taxable_profit": 1150.0,
+      "expenses_75_percent_reform_taxable_profit": 1150.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3700,
+      "no_expenses_reform_taxable_profit": 1700,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3525.0,
+      "expenses_75_percent_baseline_taxable_profit": 1175.0,
+      "expenses_75_percent_reform_taxable_profit": 1175.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3800,
+      "no_expenses_reform_taxable_profit": 1800,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3600.0,
+      "expenses_75_percent_baseline_taxable_profit": 1200.0,
+      "expenses_75_percent_reform_taxable_profit": 1200.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3900,
+      "no_expenses_reform_taxable_profit": 1900,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3675.0,
+      "expenses_75_percent_baseline_taxable_profit": 1225.0,
+      "expenses_75_percent_reform_taxable_profit": 1225.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
       "receipts": 5000,
       "no_expenses_actual_expenses": 0,
       "no_expenses_baseline_taxable_profit": 4000,
@@ -2011,5 +2752,35 @@
       "expenses_75_percent_reform_taxable_profit": 1250.0,
       "expenses_75_percent_tax_reduction": 0.0
     }
-  ]
+  ],
+  "curve_validation": {
+    "range_gbp": [
+      500,
+      5000
+    ],
+    "validation_interval_gbp": 2,
+    "points_per_series": 2251,
+    "series": 4,
+    "liability_checks": 18008,
+    "interpolation_checks": 9004,
+    "chart_interval_gbp": 100,
+    "savings_breakpoints_gbp": [
+      500,
+      1000
+    ],
+    "trading_breakpoints_gbp": [
+      1000,
+      1333.3333333333333,
+      3000,
+      4000
+    ],
+    "chart_rows": {
+      "savings": 46,
+      "trading": 47
+    },
+    "maximum_model_error_gbp": 2.2737367544323206e-13,
+    "maximum_chart_interpolation_error_gbp": 0.0033000000000242835,
+    "tolerance_gbp": 0.01,
+    "method": "All four series checked against pe.uk at every £2; both scenarios compared with independent tax arithmetic; plotted linear interpolation compared with the engine tax changes. The non-integer expense-choice breakpoint is additionally calculated with pe.uk."
+  }
 }
