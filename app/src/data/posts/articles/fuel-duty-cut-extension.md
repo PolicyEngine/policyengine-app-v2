@@ -6,7 +6,7 @@ Key figures:
 - On 1 July 2027, the rate rises to 60.59p. From that date, it follows the same path as before the Budget.
 - With the VAT on the duty, a litre costs 3.6p less in January and February 2027, 6.0p less in March 2027 and 9.2p less from April to June 2027.
 - A household that uses 1,000 litres of fuel a year, about 19 litres a week, pays £34 less in total: £12 in 2026-27 and £22 in 2027-28.
-- HM Treasury estimates that the measure reduces receipts by £575 million in 2026-27 and £780 million in 2027-28, with no effect in later years ([Budget 2026, Table 6.1](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026), row 3). PolicyEngine's provisional estimate for household fuel is £301 million and £521 million.
+- HM Treasury estimates that the measure reduces receipts by £575 million in 2026-27 and £780 million in 2027-28, with no effect in later years ([Budget 2026, Table 6.1](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026), row 3). PolicyEngine's estimate for household fuel is £301 million and £521 million.
 - In 2027-28, household net income rises by £18 a year on average, from £12 in the lowest income decile to £24 in the ninth.
 
 ## What the Budget changes
@@ -332,7 +332,7 @@ Outside the model, fuel bought for business use is a cost for the self-employed 
 
 ## Population results
 
-PolicyEngine's Autumn Budget 2026 dashboard runs the same measure on its representative sample of UK households, with PolicyEngine UK 2.151.0 on the OBR October 2026 forecast. The results below are provisional, from a run of 28 October 2026.
+PolicyEngine's Autumn Budget 2026 dashboard runs the same measure on its representative sample of UK households, with PolicyEngine UK 2.151.0 on the OBR October 2026 forecast. The results below come from its run of 28 October 2026.
 
 | Tax year        | PolicyEngine: static, household fuel | HM Treasury: Table 6.1, with behavioural response |
 | --------------- | ------------------------------------ | ------------------------------------------------- |
@@ -423,7 +423,7 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
     "prefix": "£",
     "decimals": 0
   },
-  "source": "Source: PolicyEngine Autumn Budget 2026 dashboard, provisional run of 28 October 2026 (PolicyEngine UK 2.151.0, OBR October 2026 forecast)."
+  "source": "Source: PolicyEngine Autumn Budget 2026 dashboard, run of 28 October 2026 (PolicyEngine UK 2.151.0, OBR October 2026 forecast)."
 }
 ```
 
@@ -502,7 +502,7 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
     "decimals": 3,
     "suffix": "%"
   },
-  "source": "Source: PolicyEngine Autumn Budget 2026 dashboard, provisional run of 28 October 2026 (PolicyEngine UK 2.151.0, OBR October 2026 forecast)."
+  "source": "Source: PolicyEngine Autumn Budget 2026 dashboard, run of 28 October 2026 (PolicyEngine UK 2.151.0, OBR October 2026 forecast)."
 }
 ```
 
@@ -510,7 +510,7 @@ The poverty rate does not change. Official poverty measures, and PolicyEngine's,
 
 ## Assumptions and limitations
 
-- The household examples are household calculations. The population results come from the dashboard's provisional microsimulation, which is static and covers household fuel only.
+- The household examples are household calculations. The population results come from the dashboard's microsimulation, which is static and covers household fuel only.
 - The examples hold the litres that each household buys fixed. HM Treasury's costing includes a response in which people buy more fuel when prices are lower; we do not model it.
 - We assume that retailers pass the full duty change, and the VAT on it, into pump prices. Pump prices also depend on oil prices and retail margins, which we hold fixed.
 - The pre-Budget rate from 1 April 2027, 60.59p, is our assumption, as set out above. After 1 July 2027, the rate path is the same with and without the Budget measure, so later RPI forecasts do not change the results.
