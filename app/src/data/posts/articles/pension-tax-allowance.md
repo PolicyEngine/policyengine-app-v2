@@ -33,15 +33,15 @@ The Treasury estimates that the PTA reduces receipts by £45 million in 2027-28,
 
 The explainer gives five example pensioners for 2027-28. PolicyEngine UK reproduces each result.
 
-| Person   | Income                                          | Total income | Income tax without the PTA | PTA used | Income tax with the PTA |
-| -------- | ----------------------------------------------- | ------------ | -------------------------- | -------- | ----------------------- |
-| Tom      | Basic and additional State Pension              | £10,300.00   | £0.00                      | £0.00    | £0.00                   |
-| Anne     | Partial new State Pension and a private pension | £12,970.00   | £80.00                     | £80.00   | £0.00                   |
-| Steph    | Full new State Pension only                     | £13,036.40   | £93.28                     | £93.28   | £0.00                   |
-| Jonathan | Part-time salary, State Pension deferred        | £13,186.40   | £123.28                    | £44.00   | £79.28                  |
-| Nadia    | Private pension                                 | £13,400.00   | £166.00                    | £0.00    | £166.00                 |
+| Income                                          | Total income | Income tax without the PTA | PTA used | Income tax with the PTA |
+| ----------------------------------------------- | ------------ | -------------------------- | -------- | ----------------------- |
+| Basic and additional State Pension              | £10,300.00   | £0.00                      | £0.00    | £0.00                   |
+| Partial new State Pension and a private pension | £12,970.00   | £80.00                     | £80.00   | £0.00                   |
+| Full new State Pension only                     | £13,036.40   | £93.28                     | £93.28   | £0.00                   |
+| Part-time salary, State Pension deferred        | £13,186.40   | £123.28                    | £44.00   | £79.28                  |
+| Private pension                                 | £13,400.00   | £166.00                    | £0.00    | £166.00                 |
 
-Steph's tax of £93.28 is below the £94 PTA, so the PTA removes her full tax bill. Jonathan's income is £150 above the full new State Pension, so his PTA is £94 − £150 ÷ 3 = £44. Nadia's income is above £13,318.40, so she gets no PTA.
+A pensioner whose only income is the full new State Pension owes £93.28 of income tax without the PTA. This is below the £94 PTA, so the PTA removes the full tax bill. The pensioner with a part-time salary has income £150 above the full new State Pension, so the PTA is £94 − £150 ÷ 3 = £44. The pensioner with £13,400 of private pension has income above £13,318.40 and gets no PTA.
 
 ## The PTA in each tax year
 
@@ -426,7 +426,7 @@ The projected minimum guarantee rises faster than the Personal Allowance, so the
 - The explainer does not state how HMRC rounds the PTA in later years. We round up to the pound, as for 2027-28.
 - We apply the PTA to the final income tax liability. The PTA reduces the tax bill after other allowances; for people with tax charges, such as the High Income Child Benefit Charge, the order of steps may differ from the legislation, which the Finance Bill 2026-27 will set out.
 - The Pension Credit results assume that the person claims Pension Credit when eligible.
-- For Nadia, the explainer's £166 treats all her income as taxable at 20%. We model her income as a private pension. If part of it were savings interest, the starting rate for savings would reduce her tax.
+- For the pensioner with £13,400 of income, the explainer's £166 treats all of it as taxable at 20%. We model the income as a private pension. If part of it were savings interest, the starting rate for savings would reduce the tax.
 
 The Budget also adjusts the triple lock from April 2030: the State Pension then rises by the highest of 2.5%, inflation, or the increase that keeps its value relative to earnings at the April 2029 level. This post does not cover that change.
 
