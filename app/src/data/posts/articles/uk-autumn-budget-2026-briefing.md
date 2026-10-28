@@ -182,7 +182,7 @@ Our estimates differ from the official costings for four main reasons: when tax 
 
 Official: HM Treasury, [Table 6.1](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026), rows 1, 2, 3, 52, 61, 15 and 7.
 
-Why each differs:
+Why each differs, in the dashboard's own notes, written on Budget day from our runs of each measure and the Budget documents (figures in them that are not in Table 6 come from those runs):
 
 - **Household Energy Payment (scope).** Ours is 25% below the official £2,625 million because the official figure also covers two things we don't model: the devolved governments' share of the funding (about £425 million, our estimate using the Barnett formula) and £100 million for councils in England to target the households hit hardest. Without them, about £2,100 million remains for the £100 payments in England, and ours is 94% of that; the Budget doesn't itemise the remaining £130 million or so.
 - **Zero VAT on electricity (coverage).** Ours is £85 million (11%) higher in 2026-27 and £48 million (16%) higher in 2027-28. The official costing also covers charities, residential care and some businesses, and counts households switching from gas to electricity; both make the official figure larger, so neither explains the gap. The two start from different spending: ours is household spending from survey data, calibrated to meter records and grown with CPI, while the official costing uses ONS consumer spending grown with the OBR's forecast for electricity spending, and names the size of this base as its main uncertainty.
