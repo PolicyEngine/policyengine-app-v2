@@ -743,7 +743,7 @@ We ran the PTA on PolicyEngine UK's representative sample of UK households, set 
 | -------- | ------------------------ | ----------------------------------- | ------------------------ |
 | 2026-27  | £0                       | £0                                  | £0                       |
 | 2027-28  | −⁠£42 million            | −⁠£45 million                       | −⁠£30 million            |
-| 2028-29  | −⁠£113 million           | −⁠£90 million                       | −⁠£83 million            |
+| 2028-29  | −⁠£112 million           | −⁠£90 million                       | −⁠£83 million            |
 | 2029-30  | −⁠£193 million           | −⁠£150 million                      | −⁠£144 million           |
 | 2030-31  | £0                       | +⁠£50 million                       | £0                       |
 | 2031-32  | £0                       | −⁠£15 million                       | £0                       |
@@ -754,13 +754,13 @@ In 2027-28, the total cost is £30 million: the £42 million income tax cut less
 
 ### Who gains
 
-In 2027-28, 668,000 people pay less income tax, in 528,000 households; the households gain an average of £56 a year each. The number of people rises to 1.06 million in 2028-29 and 1.36 million in 2029-30, as the PTA grows with the State Pension. The households that gain number 860,000 in 2028-29 and 1.07 million in 2029-30, and gain an average of £96 and £134 a year each. For context, HM Treasury's explainer estimates that about 500,000 pensioners pay less income tax in 2027-28, and about 1 million by the end of this Parliament.
+In 2027-28, 668,000 people pay less income tax, in 528,000 households; the households gain an average of £56 a year each. The number of people rises to 1.06 million in 2028-29 and 1.36 million in 2029-30, as the PTA grows with the State Pension. The households that gain number 857,000 in 2028-29 and 1.09 million in 2029-30, and gain an average of £97 and £132 a year each. For context, HM Treasury's explainer estimates that about 500,000 pensioners pay less income tax in 2027-28, and about 1 million by the end of this Parliament.
 
-No household loses in 2027-28. About 2,700 households lose in 2028-29 and 2,800 in 2029-30; each of them loses a free TV licence, as household 5 does.
+Few households lose: about 1,400 in 2027-28, 5,400 in 2028-29 and 7,200 in 2029-30, from 2, 8 and 9 households in the sample. From 2028-29, some of them lose a free TV licence, as household 5 does.
 
 ### Distributional impact
 
-In 2027-28, the average gain is about £1 to £2 a year in each of the bottom seven income deciles and under £0.50 in each of the top three. In 2029-30, it is £4 to £10 in the bottom seven and £1 or less in the top three. Deciles rank households by equivalised household net income.
+In 2027-28, the average gain is about £1 to £2 a year in each of the bottom seven income deciles and under £0.50 in each of the top three. In 2029-30, it is £4 to £10 in the bottom seven and about £1 or less in the top three. Deciles rank households by equivalised household net income.
 
 ```chart
 {
@@ -788,57 +788,57 @@ In 2027-28, the average gain is about £1 to £2 a year in each of the bottom se
   "data": [
     {
       "decile": "1st",
-      "y2027": 1.04,
-      "y2028": 3.44,
+      "y2027": 1.03,
+      "y2028": 3.43,
       "y2029": 6.44
     },
     {
       "decile": "2nd",
-      "y2027": 1.54,
-      "y2028": 4.35,
+      "y2027": 1.52,
+      "y2028": 4.31,
       "y2029": 7.6
     },
     {
       "decile": "3rd",
-      "y2027": 1.77,
-      "y2028": 5.65,
-      "y2029": 10.45
+      "y2027": 1.79,
+      "y2028": 5.69,
+      "y2029": 10.39
     },
     {
       "decile": "4th",
       "y2027": 1.47,
-      "y2028": 3.99,
-      "y2029": 6.65
+      "y2028": 3.96,
+      "y2029": 6.66
     },
     {
       "decile": "5th",
       "y2027": 1.45,
       "y2028": 3.74,
-      "y2029": 5.95
+      "y2029": 5.98
     },
     {
       "decile": "6th",
-      "y2027": 0.91,
-      "y2028": 2.35,
-      "y2029": 3.94
+      "y2027": 0.89,
+      "y2028": 2.34,
+      "y2029": 3.95
     },
     {
       "decile": "7th",
-      "y2027": 1.39,
+      "y2027": 1.4,
       "y2028": 2.95,
-      "y2029": 4.53
+      "y2029": 4.57
     },
     {
       "decile": "8th",
       "y2027": 0.3,
       "y2028": 0.61,
-      "y2029": 1.18
+      "y2029": 1.16
     },
     {
       "decile": "9th",
       "y2027": 0.13,
       "y2028": 0.56,
-      "y2029": 0.95
+      "y2029": 0.96
     },
     {
       "decile": "10th",
@@ -885,25 +885,25 @@ In 2027-28, the average gain is about £1 to £2 a year in each of the bottom se
       "decile": "1st",
       "y2027": 0.004,
       "y2028": 0.0132,
-      "y2029": 0.0245
+      "y2029": 0.0244
     },
     {
       "decile": "2nd",
-      "y2027": 0.0039,
-      "y2028": 0.0107,
+      "y2027": 0.0038,
+      "y2028": 0.0106,
       "y2029": 0.0186
     },
     {
       "decile": "3rd",
       "y2027": 0.004,
       "y2028": 0.0124,
-      "y2029": 0.0225
+      "y2029": 0.0223
     },
     {
       "decile": "4th",
       "y2027": 0.003,
       "y2028": 0.008,
-      "y2029": 0.0132
+      "y2029": 0.0133
     },
     {
       "decile": "5th",
@@ -919,15 +919,15 @@ In 2027-28, the average gain is about £1 to £2 a year in each of the bottom se
     },
     {
       "decile": "7th",
-      "y2027": 0.0021,
+      "y2027": 0.0022,
       "y2028": 0.0044,
-      "y2029": 0.0067
+      "y2029": 0.0068
     },
     {
       "decile": "8th",
       "y2027": 0.0004,
       "y2028": 0.0008,
-      "y2029": 0.0016
+      "y2029": 0.0015
     },
     {
       "decile": "9th",
@@ -954,7 +954,7 @@ In 2027-28, the average gain is about £1 to £2 a year in each of the bottom se
 
 ### Poverty and inequality
 
-The absolute poverty rate before housing costs falls by 0.01 percentage points in 2027-28 and by 0.02 percentage points in 2029-30. The Gini index of equivalised household net income falls by less than 0.0001.
+The absolute poverty rate before housing costs falls by 0.01 percentage points in 2027-28 and by 0.02 percentage points in 2029-30. The Gini index of equivalised household net income falls by less than 0.0001 in 2027-28 and by about 0.0001 in 2029-30.
 
 The Budget also adjusts the triple lock from April 2030: the State Pension then rises by the highest of 2.5%, inflation, or the increase that keeps its value relative to earnings at the April 2029 level. This post does not cover that change.
 
