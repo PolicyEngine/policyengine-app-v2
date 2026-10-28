@@ -58,3 +58,14 @@ Still needed before publication:
 - Replace preview artifact links when verified public artifacts exist; complete visual preview and editorial review.
 
 The articles remain drafts. Publication approval is separate from readiness for agent review. The trading article will have its own stacked PR, reusing this shared analysis foundation.
+
+
+## Latest review follow-ups and PR split
+
+- Savings/property remains draft PR1460. Trading is separate draft PR1463, stacked on1460 for shared analysis. Both link to dashboard292, and the dashboard cross-reference links both articles.
+- Max confirmed the savings/property revision at5a70185a in comment6473557134 and withdrew the48% inference. The two remaining requests were precise paragraph citations and final component exports.
+- Official Budget PDF physical page142 was checked for paragraphs6.246/6.247 and6.254; physical45 contains paragraph2.50. These are now the rule citations.
+- Max's newer trading comment on1463,6473574155, agrees to omit the unsupported260,000 count and£71m sensitivity; the latter ignores the shared allowance. Those figures remain excluded.
+- Per that follow-up, only the mutually reproduced£180 UC example is retained in the article. The£1,500 diagnostic pair remains in the raw analysis record, with both input sets distinguished, rather than presented as an explained cross-run comparison.
+- The trading lead example is named Alex and remains first: age35, salary30k, receipts4k, costs500, tax reduction400. UC and full-time self-employment are additional examples.
+- A fresh complete pass covered all five Max conversation comments on1460 and the follow-up on1463, including edits through15:45:19UTC. Both PRs had no inline review threads or submitted reviews in that pass.
