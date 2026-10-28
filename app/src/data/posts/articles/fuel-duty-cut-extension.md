@@ -15,14 +15,14 @@ Fuel duty on petrol and diesel has been 52.95p a litre since the 5p cut of March
 
 The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) keeps the 5p cut for six more months, to 1 July 2027, and moves the planned RPI increase to the same date. HM Treasury's [policy costings](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) set out what follows: on 1 July 2027, the rates rise by 5p a litre and by RPI, and from 1 April 2028 they rise by RPI each year. The Office for Budget Responsibility (OBR) puts the main rate after the July 2027 rise at 60.59p ([Economic and fiscal outlook](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), October 2026, paragraph 3.19). The rate before the Budget from 1 April 2027 is our assumption; the appendix sets it out.
 
-| Period                        | Days | Rate before the Budget | Rate after the Budget | Duty saved a litre | Duty and VAT saved a litre |
-| ----------------------------- | ---- | ---------------------- | --------------------- | ------------------ | -------------------------- |
-| To 31 December 2026           | –    | 52.95p                 | 52.95p                | 0p                 | 0p                         |
-| 1 January to 28 February 2027 | 59   | 55.95p                 | 52.95p                | 3.00p              | 3.60p                      |
-| 1 to 31 March 2027            | 31   | 57.95p                 | 52.95p                | 5.00p              | 6.00p                      |
-| 1 April to 30 June 2027       | 91   | 60.59p                 | 52.95p                | 7.64p              | 9.17p                      |
-| 1 July 2027 to 31 March 2028  | 275  | 60.59p                 | 60.59p                | 0p                 | 0p                         |
-| From 1 April 2028             | –    | Rises with RPI         | Rises with RPI        | 0p                 | 0p                         |
+| Period                        | Days | Rate before the Budget | Rate after the Budget | Duty saved per litre | Duty and VAT saved per litre |
+| ----------------------------- | ---- | ---------------------- | --------------------- | -------------------- | ---------------------------- |
+| To 31 December 2026           | –    | 52.95p                 | 52.95p                | 0p                   | 0p                           |
+| 1 January to 28 February 2027 | 59   | 55.95p                 | 52.95p                | 3.00p                | 3.60p                        |
+| 1 to 31 March 2027            | 31   | 57.95p                 | 52.95p                | 5.00p                | 6.00p                        |
+| 1 April to 30 June 2027       | 91   | 60.59p                 | 52.95p                | 7.64p                | 9.17p                        |
+| 1 July 2027 to 31 March 2028  | 275  | 60.59p                 | 60.59p                | 0p                   | 0p                           |
+| From 1 April 2028             | –    | Rises with RPI         | Rises with RPI        | 0p                   | 0p                           |
 
 VAT at 20% applies to the pump price, which includes the duty. If retailers pass the change on in full, a 50-litre tank costs about £2 less in January or February 2027, £3 less in March 2027 and £5 less from April to June 2027.
 
@@ -501,7 +501,7 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
 }
 ```
 
-The absolute poverty rate before housing costs does not change. The Gini index of equivalised household net income falls by 0.01% in 2026-27 and 0.02% in 2027-28.
+The absolute poverty rate before housing costs does not change. This rate counts people whose household's equivalised income before housing costs, after direct taxes but before taxes on spending such as fuel duty and VAT, is below 60% of the 2024-25 median, held constant in real terms. The Gini index of equivalised household net income falls by 0.01% in 2026-27 and 0.02% in 2027-28.
 
 ## Appendix
 
@@ -509,9 +509,13 @@ The absolute poverty rate before housing costs does not change. The Gini index o
 
 PolicyEngine UK's tax years run from 6 April to 5 April, so 2026-27 covers 1 January to 5 April 2027 and 2027-28 covers 6 April to 30 June 2027. HM Treasury's figures use fiscal years from 1 April to 31 March, so the first five days of April 2027 fall in a different year.
 
-Net income is PolicyEngine UK's household net income: income from all sources and benefits, less direct taxes, council tax, the TV licence and the modelled duties, with the VAT change on fuel included. All three households live in London, PolicyEngine UK's default region. The single adult is 40. The couple are both 35, with children aged 8 and 5; they pay £9,600 a year in rent and £1,800 in council tax, and claim Universal Credit. The pensioner is 72, gets the full new State Pension (£13,036 in 2027-28), pays £7,800 in rent and £1,600 in council tax, and gets Housing Benefit and Council Tax Reduction; their income is above the Pension Credit guarantee, so they get no Pension Credit. Their net income includes the £200 Winter Fuel Payment. The 2027-28 benefit amounts are PolicyEngine UK projections on the OBR's October 2026 forecast, the forecast that PolicyEngine's Autumn Budget 2026 dashboard uses.
+Net income is PolicyEngine UK's household net income: income from all sources and benefits, less direct taxes, council tax, the TV licence and the modelled duties, with the VAT change on fuel included. All three households in the net income table live in London, PolicyEngine UK's default region, and use 1,000 litres of fuel a year. The 2027-28 benefit amounts are PolicyEngine UK projections on the OBR's October 2026 forecast, the forecast that PolicyEngine's Autumn Budget 2026 dashboard uses.
 
-The model's pump prices are fixed and below October 2026 prices, when diesel was above £2 a litre, so the same spending buys fewer litres today; the examples in this post are set in litres for that reason.
+- **Single adult:** aged 40, with a £30,000 salary and no benefits.
+- **Couple with two children on Universal Credit:** both aged 35, with children aged 8 and 5. One earns £25,000. They rent privately for £9,600 a year, pay £1,800 in council tax and claim Universal Credit.
+- **Pensioner on Housing Benefit and Council Tax Reduction:** aged 72, on the full new State Pension (£13,036 in 2027-28). They rent from the council for £7,800 a year and pay £1,600 in council tax. Their income is above the Pension Credit guarantee, so they get no Pension Credit. Their net income includes the £200 Winter Fuel Payment.
+
+The model's pump prices are fixed and below October 2026 prices, when diesel was above £2 a litre, so the same spending buys fewer litres today.
 
 ### Projections, prices and coverage
 
@@ -519,17 +523,9 @@ No source gives the pre-Budget rate from 1 April 2027, because the government ha
 
 The same main rate applies to petrol and diesel across the UK. Retailers in [Rural Fuel Duty Relief](https://www.gov.uk/guidance/rural-duty-relief-scheme-notice-2001) areas claim 5p a litre back both before and after the Budget, so the saving is the same if they pass the relief on. The costing also applies a proportionate cut to the rates for other fuels and rebated fuels, where practical; this post covers petrol and diesel only.
 
-### Effective marginal tax rate
-
-The effective marginal tax rate is the share of an extra £1 of earnings that a household loses through taxes and lower benefits: 1 minus the change in household net income, as PolicyEngine UK's `marginal_tax_rate` defines it.
-
-### Poverty and deciles
-
-The poverty measure is the Households Below Average Income (HBAI) absolute measure before housing costs: a person is in absolute poverty if their household's equivalised income before housing costs is below 60% of the 2024-25 median, held constant in real terms. HBAI income deducts direct taxes but not taxes on spending such as fuel duty and VAT, so the measure does not include the saving. Deciles rank households by equivalised HBAI household net income before housing costs, with a tenth of people in each decile. The share of income uses each decile's total household net income.
-
 ### Population run
 
-PolicyEngine's Autumn Budget 2026 dashboard runs the same measure on its representative sample of UK households, with PolicyEngine UK 2.151.0 on the OBR October 2026 forecast. The results in the main text come from a run of the dashboard's measure on 28 October 2026.
+PolicyEngine's Autumn Budget 2026 dashboard runs the same measure on its representative sample of UK households, with PolicyEngine UK 2.151.0 on the OBR October 2026 forecast. The results in the main text come from a run of the dashboard's measure on 28 October 2026. Deciles rank households by equivalised HBAI household net income before housing costs, with a tenth of people in each decile; the share of income uses each decile's total household net income.
 
 ### Comparison with the Treasury and the OBR
 
