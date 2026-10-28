@@ -1,8 +1,13 @@
-> Draft review note: the national figures below use the earlier recorded forecast snapshot. Replacement outputs have not passed reconciliation. The household examples remain as stated.
+> Draft review note: the national figures below are an earlier dashboard snapshot retained for review. Replacement estimates have not passed reconciliation. They are not final national results.
 
-The [Autumn Budget 2026, paragraph 6.254](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) raises the trading allowance from £1,000 to £3,000 from 6 April 2027, covering eligible trading and miscellaneous income. Our preliminary static estimate puts the cost at **£112 million in 2027–28**. The Treasury's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) forecasts a **£225 million receipts cost in 2028–29**. These figures cover different years and use different methods.
+The [Autumn Budget 2026, paragraph 6.254](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) raises the trading allowance from £1,000 to £3,000 from 6 April 2027, covering eligible trading and miscellaneous income. This post explains the rule and its effects on example households, using PolicyEngine UK calculations.
 
-An employee paying 20% income tax on their side income can save £400 a year from the extra £2,000 deduction. A sole trader can also save National Insurance, while Universal Credit can offset part of a claimant's tax saving. Receipts, expenses and other household circumstances determine the gain.
+Key figures:
+
+- An employee paying 20% income tax on eligible side income can save £400 a year from the extra £2,000 deduction.
+- A sole trader with £20,000 of receipts and £500 of expenses gains £520 through lower income tax and Class 4 National Insurance.
+- A Universal Credit claimant in the example below keeps £180 of a £400 tax reduction, after UC falls by £220.
+- The Treasury's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) forecasts a £225 million receipts cost in 2028–29. The earlier dashboard snapshot estimates a £112 million cost in 2027–28; the figures cover different years and methods, and replacement model estimates remain outstanding.
 
 Our [Budget dashboard](https://policyengine.org/uk/budgets/autumn-2026) places it alongside the other announced tax and benefit changes. We cover the savings and property income tax increases in a [separate explainer](/uk/research/uk-autumn-budget-2026-savings-property-income-tax).
 
@@ -18,7 +23,11 @@ There is one allowance per individual across their eligible trades and miscellan
 
 The allowance is unavailable for partnership income and certain connected-party receipts, including income from an individual's employer or a company they control. [HMRC's exclusions](https://www.gov.uk/hmrc-internal-manuals/business-income-manual/bim86030) describe those restrictions.
 
-## Three people with the same receipts
+## Household impacts
+
+The examples isolate the trading allowance increase in 2027–28. They hold earnings, receipts and expenses fixed and exclude other Budget measures.
+
+### Three people with the same receipts
 
 Alex, Blair and Casey are hypothetical single adults aged 35 in England in 2027–28. Each earns £30,000 from employment and receives £4,000 from a side business. They have no other income, dependants, student loan repayments or benefit entitlements. Their trading profits remain in the 20% income tax band. Their costs differ.
 
@@ -40,20 +49,27 @@ At a 40% marginal rate, the same calculations give reductions of £800, £200 an
 
 Alex is also the household proposed for the dashboard's trading-allowance example. Its North West location and salary growth do not change this £400 result. The table fixes income in 2027–28 and isolates the allowance; select that measure alone when comparing with the calculator, whose spending inputs can also activate other Budget measures.
 
-## From £500 to £5,000 of side income
+### From £500 to £5,000 of side income
 
 The chart varies gross receipts for the same £30,000 employee. One series assumes no business expenses; the other assumes expenses equal 75% of receipts. Each calculation chooses the larger deduction in each scenario.
 
 ```chart
 {
-  "type": "bar",
+  "type": "line",
   "title": "Trading allowance: the income tax reduction depends on expenses",
   "subtitle": "Annual income tax reduction; England, £30,000 salary, 2027–28",
   "xKey": "receipts",
-  "yLabel": "Annual income tax reduction (£)",
+  "xLabel": "Annual side-business receipts",
+  "yLabel": "Annual income tax reduction",
   "format": {
     "prefix": "£",
-    "decimals": 0
+    "decimals": 0,
+    "separator": true
+  },
+  "xFormat": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
   },
   "source": "PolicyEngine 6.11.1 / UK 2.151.0; synthetic adults, 2027–28; incomes held fixed.",
   "series": [
@@ -68,54 +84,253 @@ The chart varies gross receipts for the same £30,000 employee. One series assum
       "color": "secondary"
     }
   ],
+  "markers": [
+    {
+      "x": 1000,
+      "label": "Current allowance"
+    },
+    {
+      "x": 3000,
+      "label": "New allowance"
+    },
+    {
+      "x": 4000,
+      "label": "75% expenses equal £3,000"
+    }
+  ],
   "data": [
     {
-      "receipts": "£500",
+      "receipts": 500,
       "noExpenses": 0.0,
       "highExpenses": 0.0
     },
     {
-      "receipts": "£1,000",
+      "receipts": 600,
       "noExpenses": 0.0,
       "highExpenses": 0.0
     },
     {
-      "receipts": "£1,500",
+      "receipts": 700,
+      "noExpenses": 0.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 800,
+      "noExpenses": 0.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 900,
+      "noExpenses": 0.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 1000,
+      "noExpenses": 0.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 1100,
+      "noExpenses": 20.0,
+      "highExpenses": 20.0
+    },
+    {
+      "receipts": 1200,
+      "noExpenses": 40.0,
+      "highExpenses": 40.0
+    },
+    {
+      "receipts": 1300,
+      "noExpenses": 60.0,
+      "highExpenses": 60.0
+    },
+    {
+      "receipts": 1333.3333333333333,
+      "noExpenses": 66.67,
+      "highExpenses": 66.67
+    },
+    {
+      "receipts": 1400,
+      "noExpenses": 80.0,
+      "highExpenses": 70.0
+    },
+    {
+      "receipts": 1500,
       "noExpenses": 100.0,
       "highExpenses": 75.0
     },
     {
-      "receipts": "£2,000",
+      "receipts": 1600,
+      "noExpenses": 120.0,
+      "highExpenses": 80.0
+    },
+    {
+      "receipts": 1700,
+      "noExpenses": 140.0,
+      "highExpenses": 85.0
+    },
+    {
+      "receipts": 1800,
+      "noExpenses": 160.0,
+      "highExpenses": 90.0
+    },
+    {
+      "receipts": 1900,
+      "noExpenses": 180.0,
+      "highExpenses": 95.0
+    },
+    {
+      "receipts": 2000,
       "noExpenses": 200.0,
       "highExpenses": 100.0
     },
     {
-      "receipts": "£2,500",
+      "receipts": 2100,
+      "noExpenses": 220.0,
+      "highExpenses": 105.0
+    },
+    {
+      "receipts": 2200,
+      "noExpenses": 240.0,
+      "highExpenses": 110.0
+    },
+    {
+      "receipts": 2300,
+      "noExpenses": 260.0,
+      "highExpenses": 115.0
+    },
+    {
+      "receipts": 2400,
+      "noExpenses": 280.0,
+      "highExpenses": 120.0
+    },
+    {
+      "receipts": 2500,
       "noExpenses": 300.0,
       "highExpenses": 125.0
     },
     {
-      "receipts": "£3,000",
+      "receipts": 2600,
+      "noExpenses": 320.0,
+      "highExpenses": 130.0
+    },
+    {
+      "receipts": 2700,
+      "noExpenses": 340.0,
+      "highExpenses": 135.0
+    },
+    {
+      "receipts": 2800,
+      "noExpenses": 360.0,
+      "highExpenses": 140.0
+    },
+    {
+      "receipts": 2900,
+      "noExpenses": 380.0,
+      "highExpenses": 145.0
+    },
+    {
+      "receipts": 3000,
       "noExpenses": 400.0,
       "highExpenses": 150.0
     },
     {
-      "receipts": "£3,500",
+      "receipts": 3100,
+      "noExpenses": 400.0,
+      "highExpenses": 135.0
+    },
+    {
+      "receipts": 3200,
+      "noExpenses": 400.0,
+      "highExpenses": 120.0
+    },
+    {
+      "receipts": 3300,
+      "noExpenses": 400.0,
+      "highExpenses": 105.0
+    },
+    {
+      "receipts": 3400,
+      "noExpenses": 400.0,
+      "highExpenses": 90.0
+    },
+    {
+      "receipts": 3500,
       "noExpenses": 400.0,
       "highExpenses": 75.0
     },
     {
-      "receipts": "£4,000",
+      "receipts": 3600,
+      "noExpenses": 400.0,
+      "highExpenses": 60.0
+    },
+    {
+      "receipts": 3700,
+      "noExpenses": 400.0,
+      "highExpenses": 45.0
+    },
+    {
+      "receipts": 3800,
+      "noExpenses": 400.0,
+      "highExpenses": 30.0
+    },
+    {
+      "receipts": 3900,
+      "noExpenses": 400.0,
+      "highExpenses": 15.0
+    },
+    {
+      "receipts": 4000,
       "noExpenses": 400.0,
       "highExpenses": 0.0
     },
     {
-      "receipts": "£4,500",
+      "receipts": 4100,
       "noExpenses": 400.0,
       "highExpenses": 0.0
     },
     {
-      "receipts": "£5,000",
+      "receipts": 4200,
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 4300,
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 4400,
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 4500,
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 4600,
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 4700,
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 4800,
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 4900,
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": 5000,
       "noExpenses": 400.0,
       "highExpenses": 0.0
     }
@@ -125,7 +340,7 @@ The chart varies gross receipts for the same £30,000 employee. One series assum
 
 With no expenses, the tax reduction rises between £1,000 and £3,000 of receipts, then stays at £400. With expenses equal to 75% of receipts, the reduction reaches £150 at £3,000 of receipts and falls to zero at £4,000: actual expenses then equal the new £3,000 allowance.
 
-## A full-time sole trader can gain £520
+### A full-time sole trader can gain £520
 
 The allowance also reduces profits for Class 4 National Insurance, as [HMRC's Business Income Manual, BIM86052](https://www.gov.uk/hmrc-internal-manuals/business-income-manual/bim86052), explains. The side-business examples above remain below the [£12,570 Class 4 lower profits limit](https://www.gov.uk/government/publications/rates-and-allowances-national-insurance-contributions/rates-and-allowances-national-insurance-contributions), so their Class 4 contributions do not change.
 
@@ -140,7 +355,7 @@ Consider instead a 35-year-old sole trader in England working 35 hours a week, w
 
 Both taxable profits exceed the £12,570 lower limit, so the extra £2,000 deduction saves 6% in Class 4 contributions as well as 20% income tax. With benefits unchanged, annual household net income rises by £520.
 
-## Universal Credit can offset part of the tax saving
+### Universal Credit can offset part of the tax saving
 
 The trading allowance itself does not reduce the profit counted for Universal Credit. However, paying less income tax can increase the earnings UC takes into account, reducing the award.
 
@@ -154,9 +369,15 @@ Earnings already exceed the work allowance. Every £1 of tax saved increases cou
 
 These are annual model results. Actual UC uses monthly assessment periods and deducts relevant self-employment income tax and National Insurance when paid, under [regulation 57(2)](https://www.legislation.gov.uk/uksi/2013/376/regulation/57). Uneven receipts or a large tax payment in one month can produce a different pattern of awards and a different annual gain.
 
-## Preliminary national estimates
+## Population impacts
 
-The dashboard's [preliminary cost estimates](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/budgetary_impact.csv) put the cost at **£112 million in 2027–28** and **£131 million in 2031–32**. These are static annual government-balance effects, holding incomes and behaviour fixed. Missing gross receipts and incomplete miscellaneous-income coverage limit the estimates, which remain provisional pending reconciliation with Treasury costings.
+The figures in this section are an archived dashboard snapshot, retained to review the national analysis. Replacement estimates have not passed reconciliation and these figures are not final results.
+
+### Budgetary impact
+
+The dashboard's [earlier cost estimates](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/budgetary_impact.csv) put the cost at **£112 million in 2027–28** and **£131 million in 2031–32**. These are static annual government-balance effects, holding incomes and behaviour fixed. Missing gross receipts and incomplete miscellaneous-income coverage limit the estimates, which remain provisional pending reconciliation with Treasury costings.
+
+### Household income by decile
 
 The [average cash changes](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/winners_losers.csv) show a **£4 annual household income gain across all households** in 2027–28, including unaffected households. Households in decile 8 gain £9 on average. These averages include households with no eligible trading income. Each decile contains roughly equal numbers of people ranked by household income adjusted for household size; the cash figures are household-weighted means within those groups. Figures below are rounded to the nearest pound.
 
@@ -174,13 +395,15 @@ The [average cash changes](https://ab2026-local-preview.vercel.app/uk/autumn-bud
 | 10 (highest income) | +£7 |
 | All households | +£4 |
 
-The dashboard's [affected-population metric](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/metrics.csv) is **0.93% of people living in households whose net income changes by more than 0.01%** in 2027–28. It is not a count of eligible traders. The current exports do not provide separate shares gaining and losing or an absolute affected-person count.
+### People affected
 
-## Treasury costing
+In the earlier snapshot, the dashboard's [affected-population metric](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/metrics.csv) is **0.93% of people living in households whose net income changes by more than 0.01%** in 2027–28. It is not a count of eligible traders. The current exports do not provide separate shares gaining and losing or an absolute affected-person count.
+
+### Treasury costing
 
 The Treasury column reproduces Table 6.1, row 15. The PolicyEngine column reports the provisional static estimates. Both columns express costs to the Exchequer as positive values.
 
-| Year | Treasury cost (£ million) | PolicyEngine provisional static cost (£ million) |
+| Year | Treasury receipts cost (£ million) | PolicyEngine earlier static cost (£ million) |
 | --- | ---: | ---: |
 | 2026–27 | 0 | 0 |
 | 2027–28 | 0 | 112 |
@@ -193,11 +416,11 @@ The effective date remains 6 April 2027 even though the Treasury records no rece
 
 The [Treasury policy costing](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=23) allows for taxpayers switching from actual expenses to the larger allowance, a behavioural response. It does not give an affected-person count. The static model holds circumstances fixed and faces the coverage limits below. Reconciliation has not yet attributed the gap between the estimates to timing, behaviour or coverage.
 
-## Methodology and coverage
+## Assumptions and limitations
 
 The hypothetical examples isolate the allowance increase, holding earnings, receipts and expenses fixed and choosing the larger deduction. The side-business tax table excludes benefit interactions; the lone-parent and sole-trader examples calculate the stated tax, National Insurance and benefit changes. None includes trading losses or behavioural responses.
 
-The household calculations use PolicyEngine 6.11.1 with PolicyEngine UK 2.151.0 and core 3.33.3, matching the dashboard. They supply both gross receipts and profit to represent actual expenses, and check the resulting tax and benefit changes against independent arithmetic.
+The side-business examples have no benefit entitlements. The lone-parent example assumes full take-up of Universal Credit and Child Benefit and no minimum income floor. The sole trader claims no Universal Credit. These are annual results; monthly UC assessment periods and the timing of tax payments can change the annual gain in practice. No example includes pension contributions, Gift Aid, student loan repayments or other tax reliefs.
 
 Gross receipts are unavailable in the population data. The model's [deduction calculation](https://github.com/PolicyEngine/policyengine-uk/blob/2.151.0/policyengine_uk/variables/gov/hmrc/income_tax/allowances/trading_allowance_deduction.py) therefore approximates the allowance using reported profit. Tests with the same hypothetical households show effects in both directions:
 
@@ -208,6 +431,14 @@ This population approximation also misses Class 4 savings: the profits it reliev
 
 The model also omits allowance relief against its separate miscellaneous-income input, although qualifying miscellaneous income shares the legal allowance. This excludes a category of potential gains. The combined direction of bias in the national estimate remains unknown.
 
-The national figures use the dashboard's [documented calculations](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/receipt.json), based on certified 2024–25 UK population data released in October 2026. Both baseline and reform use the October 2026 OBR forecast update. Growth series not updated retain the model's March forecast path, and the population data retain their pre-Budget calibration. Household examples use fixed nominal incomes.
-
 **Preliminary estimates:** reconciliation, absolute affected-person counts and separate shares gaining and losing remain outstanding. The population figures should be read with the coverage limits above.
+
+## Methodology
+
+We use the `policyengine` Python package (version 6.11.1), PolicyEngine UK (version 2.151.0) and core (version 3.33.3), matching the dashboard's adopted bundle. Household calculations use `pe.uk.calculate_household`, with the OBR's October 2026 forecast update applied to both the baseline and reform. The reform changes only the trading allowance, from £1,000 to £3,000. Earnings, receipts and expenses stay at the stated nominal amounts in 2027–28.
+
+The household examples supply both gross receipts and profit to represent actual expenses, choose the larger deduction and check tax and benefit changes against independent arithmetic. The line chart plots the exact points where the schedule changes and regular £100 intervals. Its interpolation agrees with PolicyEngine UK to within one penny at every £2 of receipts. Both scenarios use the October forecast at dashboard commit `64042657`, matching the Pension Tax Allowance analysis. The [shared analysis files](https://github.com/PolicyEngine/policyengine-app-v2/pull/1460/files) record inputs, outputs, validation and the exact forecast source. Tables and chart labels round monetary values to whole pounds.
+
+The archived national figures reuse the dashboard's [documented calculations](https://ab2026-local-preview.vercel.app/uk/autumn-budget-2026/data/artifacts/trading_allowance_raise/230c4665427e0bb1/receipt.json), rather than a new population run for this post. They use the certified Microcosm UK 2024–25 national dataset released in October 2026 (`microcosm-uk-2024-25-national-20261025T091414Z-a6299504`) and the initial October 2026 OBR forecast overlay on both scenarios. Growth series not updated by that overlay retain the model's March forecast path; the data retain their pre-Budget calibration. The analysis is static, with no behavioural response.
+
+Published decile cells contain at least three distinct survey households. The affected-person metric uses absolute household net-income changes above 0.01%, floors baseline income at £1 and includes households with a valid income decile. It does not measure how many individual traders qualify for the allowance.
