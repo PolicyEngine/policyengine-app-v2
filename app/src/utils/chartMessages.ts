@@ -14,7 +14,7 @@ type CountryId = (typeof countryIds)[number];
  * Returns newline-separated text. Consumers that render HTML (e.g. Plotly
  * hover templates) should convert '\n' → '<br>' at point of use.
  */
-function wordWrap(text: string, width: number = 50): string {
+export function wordWrap(text: string, width: number = 50): string {
   return wordwrap.wrap(text, { width });
 }
 
