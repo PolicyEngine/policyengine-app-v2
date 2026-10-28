@@ -7,7 +7,7 @@ Key figures:
 - A Universal Credit claimant in the example below keeps £180 of a £400 tax reduction, after UC falls by £220.
 - The government's costing, certified by the OBR, puts the cost in income tax and National Insurance at nothing in 2027–28 and £221 million in 2028–29. The Budget's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) rounds the measure's total to £225 million in 2028–29.
 
-Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. We cover the property income tax increase in a [separate explainer](/uk/research/uk-autumn-budget-2026-property-income-tax).
+Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for the Budget measures we model. We cover the property income tax increase in a [separate explainer](/uk/research/uk-autumn-budget-2026-property-income-tax).
 
 ## How the allowance works
 
