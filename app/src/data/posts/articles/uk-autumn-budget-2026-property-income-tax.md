@@ -8,6 +8,8 @@ Key figures for 2027–28:
 - PolicyEngine estimates £399 million of additional net government revenue and a £14 reduction in average household net income in 2027–28.
 - The Treasury forecasts £35 million of additional revenue in 2027–28, £575 million in 2028–29, and £435 million to £455 million a year from 2029–30 to 2031–32.
 
+The 2027–28 and 2028–29 figures use different collection-timing bases and are not directly comparable; see the [budgetary impact section](#budgetary-impact).
+
 Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for this and the other Budget measures we model. A [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance) covers the trading allowance increase. The Budget also raises savings income tax rates; we will cover that measure separately.
 
 ## What changes in April 2027?
@@ -30,7 +32,7 @@ The examples below isolate the announced property measure in 2027–28. They hol
 
 For individual residential landlords, mortgage interest normally produces a tax reduction rather than a deduction from rental profits. The reduction is limited by finance costs, property profits, adjusted total income and the tax liability. [HMRC's explanation of residential finance-cost relief](https://www.gov.uk/guidance/changes-to-tax-relief-for-residential-landlords-how-its-worked-out-including-case-studies) describes these limits.
 
-From April 2027 the relief follows the property basic rate, as the [Treasury policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) confirm. This Budget therefore raises it from the already scheduled 22% to 24%. That offsets part of the tax increase for landlords with eligible finance costs. The dashboard calculator has no finance-cost input, so the mortgage examples below illustrate an effect its preset cannot show.
+From April 2027 the relief follows the property basic rate, as the [Treasury policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) confirm. This Budget therefore raises it from the already scheduled 22% to 24%. That offsets part of the tax increase for landlords with eligible finance costs.
 
 Consider two adults in England, each with £12,000 of rent, £2,000 of allowable non-finance expenses and £4,000 of qualifying mortgage interest. Deducting actual non-finance expenses leaves £10,000 of property profit. Both can use the full finance-cost reduction.
 
@@ -49,7 +51,7 @@ The property **rate** increase excludes Scottish taxpayers, whose rental income 
 
 ### A smaller rental profit
 
-A landlord with a £30,000 salary has already used the Personal Allowance against salary. If they also have £6,000 of taxable property profit after deductions and no eligible finance costs, they pay £120 more income tax in 2027–28: £6,000 × 2% = £120. This property-only calculation holds their income fixed and changes no other Budget measure.
+A landlord in England with a £30,000 salary has already used the Personal Allowance against salary. If they also have £6,000 of taxable property profit after deductions and no eligible finance costs, they pay £120 more income tax in 2027–28: £6,000 × 2% = £120. This property-only calculation holds their income fixed and changes no other Budget measure.
 
 ## Population impacts
 
@@ -61,7 +63,7 @@ PolicyEngine estimates that the measure raises £399 million of net government r
 
 | Year | PolicyEngine net government revenue, £ million | Treasury revenue, £ million | Comparison |
 | --- | ---: | ---: | --- |
-| 2026–27 | 0 | 0 | No modelled policy effect |
+| 2026–27 | 0 | 0 | Before implementation |
 | 2027–28 | 399 | 35 | Not comparable |
 | 2028–29 | 412 | 575 | Not comparable |
 | 2029–30 | 429 | 435 | Later-year comparison |
@@ -76,9 +78,7 @@ The [ONS public-finance methodology, section 6.1.2](https://www.ons.gov.uk/econo
 
 The Treasury costing also allows for some landlords incorporating. PolicyEngine holds that choice fixed. Differences in data, behaviour and accounting remain relevant when comparing the later years, even where the rounded estimates are close.
 
-### Reach and distribution
-
-In 2027–28, 5.9% of people live in households whose net income changes by more than 0.01% in either direction under the model's affected-population measure. This includes increases and decreases in household income; it is not a count of people paying more property tax. The Scottish finance-cost example above illustrates one way income can rise.
+### Distribution
 
 Across all households, average annual net income falls by £14 in 2027–28 and £15 in 2031–32. In 2027–28, the average reduction ranges from £1 in the lowest income decile to £58 in the highest; in 2031–32, those averages are £2 and £66.
 
@@ -185,7 +185,7 @@ Income deciles rank people by their household's baseline equivalised net income 
 - The household tables show tax attributable to property income. The mortgage examples assume the full finance-cost reduction can be used.
 - The Scottish mortgage example applies the existing Finance Act rule linking relief to the UK property basic rate. The Finance Bill will set the final implementation of the new rates.
 - National estimates hold households' behaviour fixed. They do not model landlords incorporating in response to the tax change.
-- The national affected-population percentage measures people living in households with an income change above the stated threshold. It does not give a taxpayer count or separate shares gaining and losing.
+- We do not report poverty, inequality or people-affected figures while their disclosure checks remain unverified.
 - Population estimates include changes in means-tested benefits. The worked household examples show income tax; a change in benefits can offset part of a household's extra tax.
 
 ## Methodology
