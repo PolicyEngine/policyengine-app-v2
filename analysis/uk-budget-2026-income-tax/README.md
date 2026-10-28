@@ -71,7 +71,7 @@ This checks five additional synthetic pairs requested in Max's review, including
 
 ## Alignment with Pavel’s PTA post
 
-The exact forecast input is retained as `obr_october_2026.json`; `forecast.py` verifies its Git blob before use and reconstructs the source’s rounded fuel-duty path. Its complete eight-path parameter mapping was checked for exact equality with the immutable dashboard source’s `with_forecast(None).parameter_changes`. `pe.uk.calculate_household` accepts parameter mappings, so both synthetic generators pass that mapping together with only the measure being analysed. There is no population data load to precede, and no other Budget measure is activated.
+The exact forecast input is retained as `obr_october_2026.json`; `forecast.py` verifies its Git blob before use and reconstructs the source’s rounded fuel-duty path. Its complete eight-path parameter mapping was checked for exact equality with the immutable dashboard source’s `with_forecast(None).parameter_changes`. Both synthetic generators pass that mapping to `pe.uk.calculate_household`. The savings/property generator uses the combined savings and property reform; its savings changes have no effect on the landlord records because those households have no savings income. The trading generator uses the trading allowance reform. There is no population data load to precede, and no other Budget measure is activated.
 
 Pavel’s comparison uses £100 chart sampling plus the true breakpoints and verifies the results on a denser model grid. These drafts now follow that method: numeric income axes, explicit £ formats, named threshold markers and independent validation at every £2. Reader-facing tables continue to use whole pounds per Max’s latest correction; raw analysis retains precision.
 
