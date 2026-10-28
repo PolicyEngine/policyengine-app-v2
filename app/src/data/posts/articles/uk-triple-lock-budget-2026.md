@@ -122,7 +122,7 @@ The two estimates differ in method, and DWP's published assumptions do not allow
 
 - DWP projects the population and each person's pension with Pensim3, its dynamic microsimulation model. We reweight today's Family Resources Survey households to the ONS population projection by age and sex, holding each person's age fixed.
 - Our survey counts less State Pension in payment than DWP does: £125.9 billion in Great Britain in 2026-27, against DWP's £148.3 billion, both excluding payments abroad. The adjusted Triple Lock lowers every basic and new State Pension by the same proportion and leaves the additional State Pension alone, so the saving scales with the basic and new State Pension bill. DWP publishes that bill only with payments abroad included, and its tables stop in 2030-31, so we cannot match it exactly or say how the gap looks in 2039-40.
-- DWP's figure rests on one path of uprating, which it does not state. Ours is an average across simulated paths. On the two fixed paths we run, our UK saving is £0.9 billion on the OBR's central path and £10.3 billion when the Triple Lock follows the OBR's long-term assumption.
+- DWP says it applies "a path for uprating" but publishes no rates for it, and its answer to HL3774 says the analysis used no single-year assumptions for earnings or prices growth. Ours averages over simulated paths of CPI and earnings. On the two fixed paths we run, our UK saving is £0.9 billion on the OBR's central path and £10.3 billion when the Triple Lock follows the OBR's long-term assumption.
 
 Our projections end in 2039-40, so we have no figure to set against the £50 billion.
 
