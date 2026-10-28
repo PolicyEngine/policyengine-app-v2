@@ -17,6 +17,8 @@ import warnings
 
 import policyengine as pe
 
+from forecast import provenance as forecast_provenance, with_forecast
+
 
 YEAR = 2027
 ALLOWANCE_PATH = "gov.hmrc.income_tax.allowances.trading_allowance"
@@ -100,7 +102,7 @@ def sole_trader(supply_receipts: bool = True) -> dict:
 
 def calculate(inputs: dict, reform: dict) -> dict:
     result = pe.uk.calculate_household(
-        **inputs, year=YEAR, reform=reform,
+        **inputs, year=YEAR, reform=with_forecast(reform),
         extra_variables=PERSON_OUTPUTS + BENUNIT_OUTPUTS + HOUSEHOLD_OUTPUTS,
     )
     # Preserve wrapper-provided floating-point values, including float32
@@ -213,6 +215,7 @@ def main() -> None:
             "scope": "Five synthetic case pairs; no population data, behavioural responses or national estimates. Annual model calculations; actual UC assessment periods and timing of tax payments can differ.",
             "assumptions": "Lone parent age35 with child age4, employment as main job, £18,000 annual wages, side business with zero expenses, London/Central London private rent £12,000/year, UC and Child Benefit take-up true. Sole trader age35, full-time35hours/week, £20,000 receipts and £500 costs, no other income, owns home outright, no UC claim. Both: council tax input zero; no childcare costs, capital, disability, pensions, losses or other income. Omitted inputs otherwise retain pinned model defaults. No UC award, floor amount, work allowance, or earnings intermediate is forced.",
             "oracle_tolerance_gbp": 0.02,
+            "forecast": forecast_provenance(),
             "independent_arithmetic": "Basic-rate income tax20% above Personal Allowance£12,570; known-receipt taxable profit=max(0,receipts-max(expenses,allowance)); Class4 NI6% above£12,570; active UC award falls55% of extra UC net earnings above its unchanged work allowance. Missing-receipt outputs separately test the pinned fallback, not the legal receipt-based calculation.",
         },
         "cases": outputs,

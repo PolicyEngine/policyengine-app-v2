@@ -19,6 +19,9 @@ import subprocess
 import warnings
 
 import policyengine as pe
+import numpy as np
+
+from forecast import provenance as forecast_provenance, with_forecast
 
 
 YEAR = 2027
@@ -65,7 +68,7 @@ def calculate(person: dict, region: str, reform: dict, axes=None) -> dict:
         people=[{"age": 35, **person}],
         household={"region": region},
         year=YEAR,
-        reform=reform,
+        reform=with_forecast(reform),
         axes=axes,
         extra_variables=PERSON_OUTPUTS,
     )
@@ -242,34 +245,48 @@ def generate_cases() -> list[dict]:
     return output
 
 
-def generate_curves() -> tuple[list[dict], list[dict]]:
-    interest_rows = [{"interest": value} for value in range(500, 5_001, 500)]
+def generate_curves() -> tuple[list[dict], list[dict], dict]:
+    # Model checks use every £2. Displayed curves include all £100 points and
+    # the exact deduction-choice breakpoints, matching the PTA chart method.
+    grid = list(range(500, 5_001, 2))
+    interest_rows = [{"interest": value} for value in range(500, 5_001, 100)]
+    model_errors = []
+    interpolation_errors = []
     for label, salary, allowance, old_rate in (
         ("basic", 30_000, 1_000, 0.22), ("higher", 60_000, 500, 0.42),
     ):
-        axes = [[{"name": "savings_interest_income", "min": 500, "max": 5_000, "count": 10}]]
+        axes = [[{"name": "savings_interest_income", "min": 500, "max": 5_000, "count": len(grid)}]]
         baseline = calculate({"employment_income": salary}, "LONDON", {}, axes)
         reformed = calculate({"employment_income": salary}, "LONDON", SAVINGS_PROPERTY, axes)
-        for index, row in enumerate(interest_rows):
-            taxable = max(0, row["interest"] - allowance)
+        changes = []
+        for index, interest in enumerate(grid):
+            taxable = max(0, interest - allowance)
             before, after = baseline["savings_income_tax"][index], reformed["savings_income_tax"][index]
             close(before, taxable * old_rate, f"{label} savings curve baseline")
             close(after, taxable * (old_rate + 0.02), f"{label} savings curve reform")
+            model_errors.extend((abs(before - taxable * old_rate), abs(after - taxable * (old_rate + 0.02))))
+            changes.append(round(after - before, 2))
+        for row in interest_rows:
+            index = grid.index(row["interest"])
+            before, after = baseline["savings_income_tax"][index], reformed["savings_income_tax"][index]
             row[f"{label}_baseline_tax"] = before
             row[f"{label}_reform_tax"] = after
             row[f"{label}_tax_increase"] = round(after - before, 2)
+        interpolated = np.interp(grid, [row["interest"] for row in interest_rows], [row[f"{label}_tax_increase"] for row in interest_rows])
+        interpolation_errors.extend(abs(float(plotted) - actual) for plotted, actual in zip(interpolated, changes))
 
-    trading_rows = [{"receipts": value} for value in range(500, 5_001, 500)]
+    trading_breakpoints = (1_000, 4_000 / 3, 3_000, 4_000)
+    trading_rows = [{"receipts": value} for value in sorted(set(range(500, 5_001, 100)) | set(trading_breakpoints))]
     for label, expense_share in (("no_expenses", 0), ("expenses_75_percent", 0.75)):
         profit_share = 1 - expense_share
         axes = [[
-            {"name": "self_employment_gross_receipts", "min": 500, "max": 5_000, "count": 10},
-            {"name": "self_employment_income", "min": 500 * profit_share, "max": 5_000 * profit_share, "count": 10},
+            {"name": "self_employment_gross_receipts", "min": 500, "max": 5_000, "count": len(grid)},
+            {"name": "self_employment_income", "min": 500 * profit_share, "max": 5_000 * profit_share, "count": len(grid)},
         ]]
         baseline = calculate({"employment_income": 30_000}, "LONDON", {}, axes)
         reformed = calculate({"employment_income": 30_000}, "LONDON", TRADING, axes)
-        for index, row in enumerate(trading_rows):
-            receipts = row["receipts"]
+        changes = []
+        for index, receipts in enumerate(grid):
             expenses = receipts * expense_share
             old_taxable = max(0, receipts - max(expenses, 1_000))
             new_taxable = max(0, receipts - max(expenses, 3_000))
@@ -279,37 +296,77 @@ def generate_curves() -> tuple[list[dict], list[dict]]:
             close(reduction, (old_taxable - new_taxable) * 0.2, f"{label} trading tax reduction")
             close(baseline["ni_class_4"][index], 0, f"{label} baseline Class 4")
             close(reformed["ni_class_4"][index], 0, f"{label} reform Class 4")
+            model_errors.extend((abs(baseline["income_tax"][index] - (3_486 + old_taxable * 0.2)), abs(reformed["income_tax"][index] - (3_486 + new_taxable * 0.2))))
+            changes.append(reduction)
+        # This non-integer breakpoint cannot be represented by a regular axis.
+        special_inputs = {"employment_income": 30_000, "self_employment_gross_receipts": 4_000 / 3, "self_employment_income": (4_000 / 3) * profit_share}
+        special_before = calculate(special_inputs, "LONDON", {})
+        special_after = calculate(special_inputs, "LONDON", TRADING)
+        for row in trading_rows:
+            receipts = row["receipts"]
+            expenses = receipts * expense_share
+            old_taxable = max(0, receipts - max(expenses, 1_000))
+            new_taxable = max(0, receipts - max(expenses, 3_000))
+            if receipts in grid:
+                index = grid.index(receipts)
+                reduction = changes[index]
+            else:
+                reduction = round(special_before["income_tax"] - special_after["income_tax"], 2)
+            close(reduction, (old_taxable - new_taxable) * 0.2, f"{label} plotted trading reduction")
             row[f"{label}_actual_expenses"] = expenses
             row[f"{label}_baseline_taxable_profit"] = old_taxable
             row[f"{label}_reform_taxable_profit"] = new_taxable
             row[f"{label}_tax_reduction"] = reduction
-    return interest_rows, trading_rows
+        interpolated = np.interp(grid, [row["receipts"] for row in trading_rows], [row[f"{label}_tax_reduction"] for row in trading_rows])
+        interpolation_errors.extend(abs(float(plotted) - actual) for plotted, actual in zip(interpolated, changes))
+    maximum_model_error = max(model_errors)
+    maximum_interpolation_error = max(interpolation_errors)
+    assert maximum_model_error <= 0.01, maximum_model_error
+    assert maximum_interpolation_error <= 0.01, maximum_interpolation_error
+    validation = {
+        "range_gbp": [500, 5_000], "validation_interval_gbp": 2,
+        "points_per_series": len(grid), "series": 4,
+        "liability_checks": len(model_errors), "interpolation_checks": len(interpolation_errors),
+        "chart_interval_gbp": 100,
+        "savings_breakpoints_gbp": [500, 1_000],
+        "trading_breakpoints_gbp": list(trading_breakpoints),
+        "chart_rows": {"savings": len(interest_rows), "trading": len(trading_rows)},
+        "maximum_model_error_gbp": maximum_model_error,
+        "maximum_chart_interpolation_error_gbp": maximum_interpolation_error,
+        "tolerance_gbp": 0.01,
+        "method": "All four series checked against pe.uk at every £2; both scenarios compared with independent tax arithmetic; plotted linear interpolation compared with the engine tax changes. The non-integer expense-choice breakpoint is additionally calculated with pe.uk.",
+    }
+    return interest_rows, trading_rows, validation
 
 
 def chart_specs(savings, trading) -> dict:
     source = "PolicyEngine 6.11.1 / UK 2.151.0; synthetic adults, 2027–28; incomes held fixed."
     return {
         "savings-interest-chart.json": {
-            "type": "bar", "title": "Savings tax increases apply above the Personal Savings Allowance",
+            "type": "line", "title": "Savings tax increases apply above the Personal Savings Allowance",
             "subtitle": "Annual income tax increase; England, salaries £30,000 and £60,000, 2027–28",
-            "xKey": "interest", "yLabel": "Extra annual income tax (£)",
-            "format": {"prefix": "£", "decimals": 0}, "source": source,
+            "xKey": "interest", "xLabel": "Annual savings interest", "yLabel": "Extra annual income tax",
+            "format": {"prefix": "£", "decimals": 0, "separator": True},
+            "xFormat": {"prefix": "£", "decimals": 0, "separator": True}, "source": source,
             "series": [
                 {"key": "basic", "name": "£30,000 salary", "color": "negative"},
                 {"key": "higher", "name": "£60,000 salary", "color": "secondary"},
             ],
-            "data": [{"interest": f"£{row['interest']:,}", "basic": row["basic_tax_increase"], "higher": row["higher_tax_increase"]} for row in savings],
+            "markers": [{"x": 500, "label": "£60,000 salary: savings allowance"}, {"x": 1_000, "label": "£30,000 salary: savings allowance"}],
+            "data": [{"interest": row["interest"], "basic": row["basic_tax_increase"], "higher": row["higher_tax_increase"]} for row in savings],
         },
         "trading-allowance-chart.json": {
-            "type": "bar", "title": "Trading allowance: the income tax reduction depends on expenses",
+            "type": "line", "title": "Trading allowance: the income tax reduction depends on expenses",
             "subtitle": "Annual income tax reduction; England, £30,000 salary, 2027–28",
-            "xKey": "receipts", "yLabel": "Annual income tax reduction (£)",
-            "format": {"prefix": "£", "decimals": 0}, "source": source,
+            "xKey": "receipts", "xLabel": "Annual side-business receipts", "yLabel": "Annual income tax reduction",
+            "format": {"prefix": "£", "decimals": 0, "separator": True},
+            "xFormat": {"prefix": "£", "decimals": 0, "separator": True}, "source": source,
             "series": [
                 {"key": "noExpenses", "name": "No business expenses", "color": "primary"},
                 {"key": "highExpenses", "name": "Expenses equal 75% of receipts", "color": "secondary"},
             ],
-            "data": [{"receipts": f"£{row['receipts']:,}", "noExpenses": row["no_expenses_tax_reduction"], "highExpenses": row["expenses_75_percent_tax_reduction"]} for row in trading],
+            "markers": [{"x": 1_000, "label": "Current allowance"}, {"x": 3_000, "label": "New allowance"}, {"x": 4_000, "label": "75% expenses equal £3,000"}],
+            "data": [{"receipts": row["receipts"], "noExpenses": row["no_expenses_tax_reduction"], "highExpenses": row["expenses_75_percent_tax_reduction"]} for row in trading],
         },
     }
 
@@ -334,7 +391,7 @@ def main() -> None:
     warnings.filterwarnings("ignore", category=UserWarning, message="Accessing \\.values on a MicroSeries returns a plain numpy array without weights\\.")
     comparison = source_comparison(args.dashboard_checkout)
     households = generate_cases()
-    savings, trading = generate_curves()
+    savings, trading, curve_validation = generate_curves()
     payload = {
         "metadata": {
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -343,11 +400,13 @@ def main() -> None:
             "scope": "Synthetic single adults age 35; no microdata, no behavioural responses or national estimates. Income and expenses held fixed; tax liabilities, not full household net-income changes.",
             "assumptions": "No children, pensions, Gift Aid, student loans, capital gains, other tax reliefs, property losses or carried-forward finance costs. Savings are outside ISAs. Trading receipts and profit are both supplied; no connected-party receipts or partnership income. All example benefit totals are checked to be zero.",
             "oracle_tolerance_gbp": 0.02,
+            "forecast": forecast_provenance(),
             "warning_filters": "Known household divide/invalid RuntimeWarnings and single-household model decile .values warnings only; no population weights are accessed by this generator.",
         },
         "reforms": {"savings_property": SAVINGS_PROPERTY, "trading": TRADING},
         "households": households,
         "savings_interest_curve": savings, "trading_receipts_curve": trading,
+        "curve_validation": curve_validation,
     }
     args.output_dir.mkdir(parents=True, exist_ok=True)
     (args.output_dir / "households.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
@@ -366,7 +425,8 @@ def main() -> None:
     write_csv(args.output_dir / "trading-receipts-curve.csv", trading)
     for filename, spec in chart_specs(savings, trading).items():
         (args.output_dir / filename).write_text(json.dumps(spec, indent=2, ensure_ascii=False) + "\n")
-    print(f"Verified {len(households)} household comparisons and {len(savings) + len(trading)} curve points; wrote {args.output_dir}")
+    (args.output_dir / "curve-validation.json").write_text(json.dumps(curve_validation, indent=2, ensure_ascii=False) + "\n")
+    print(f"Verified {len(households)} household comparisons, {len(savings) + len(trading)} plotted curve points and {curve_validation['interpolation_checks']} dense chart checks; wrote {args.output_dir}")
 
 
 if __name__ == "__main__":
