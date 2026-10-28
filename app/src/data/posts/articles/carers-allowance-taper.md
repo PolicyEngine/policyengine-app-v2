@@ -39,7 +39,7 @@ Nothing else about Carer's Allowance changes: the caring conditions, the rate, i
 | 2030-31  |                                      £14.23 |                  £228 |                                   £96 |                           £325 or more |
 | 2031-32  |                                      £14.62 |                  £234 |                                   £98 |                           £333 or more |
 
-The National Living Wage for each year is the OBR's October 2026 forecast for that April ([Economic and fiscal outlook, October 2026](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), detailed forecast tables: economy, Table 1.13); the Treasury's costing also uses the OBR's projections. Carer's Allowance after 2026-27 is PolicyEngine UK's projection, uprated with inflation on the same forecast.
+The National Living Wage for each year is the OBR's October 2026 forecast for that April ([Economic and fiscal outlook, October 2026](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), detailed forecast tables: economy, Table 1.13); the Treasury's costing also uses the OBR's projections. Sixteen hours at £14.23 is just under £228 a week, and at £14.62 just under £234, so the limits, rounded up to the next pound, are £228 and £234. Carer's Allowance after 2026-27 is PolicyEngine UK's projection, uprated with inflation on the same forecast.
 
 The Treasury estimates that the taper costs £40 million in 2030-31 and £80 million in 2031-32, and nothing in earlier years ([Budget 2026, Table 6.1](https://assets.publishing.service.gov.uk/media/6ae187a2779378370fd80a9a/Table_6.1_and_6.2_Budget_2026_Policy_Decisions.xlsx), row 7). Negative values are costs to the Exchequer, and the 2030-31 figure covers part of a year. The costing includes behavioural responses, which our own estimate below does not.
 
@@ -589,7 +589,7 @@ The comparison is between a static estimate and a post-behavioural one. The Trea
 These estimates have important limits:
 
 - The survey sample has no carers in Wales whom the taper affects, so we estimate none there, against the Treasury's 3,000.
-- The estimate rests on 109 households in the model's data, so it is imprecise, and we do not show a breakdown by income decile.
+- The estimate rests on fewer than 50 survey households, so it is imprecise, and we do not show a breakdown by income decile.
 
 ## Assumptions and limitations
 
