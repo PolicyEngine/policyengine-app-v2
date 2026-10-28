@@ -1,4 +1,4 @@
-The [Autumn Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) raises the trading allowance from £1,000 to £3,000 from 6 April 2027, covering eligible trading and miscellaneous income. Our preliminary static estimate puts the cost at **£112 million in 2027–28**. The Treasury's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) forecasts a **£225 million receipts cost in 2028–29**. These figures cover different years and use different methods.
+The [Autumn Budget 2026, paragraph 6.254](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) raises the trading allowance from £1,000 to £3,000 from 6 April 2027, covering eligible trading and miscellaneous income. Our preliminary static estimate puts the cost at **£112 million in 2027–28**. The Treasury's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) forecasts a **£225 million receipts cost in 2028–29**. These figures cover different years and use different methods.
 
 An employee paying 20% income tax on their side income can save £400 a year from the extra £2,000 deduction. A sole trader can also save National Insurance, while Universal Credit can offset part of a claimant's tax saving. Receipts, expenses and other household circumstances determine the gain.
 
@@ -147,9 +147,8 @@ Our example is a 35-year-old lone parent with a four-year-old child, living in C
 | Annual side-business receipts | Income tax reduction | UC reduction | Household net-income gain |
 | --- | ---: | ---: | ---: |
 | £4,000 | £400 | £220 | £180 |
-| £1,500 | £100 | £55 | £45 |
 
-In both cases, earnings already exceed the work allowance. Every £1 of tax saved increases counted earnings by £1, and UC falls by the [55% taper](https://www.gov.uk/universal-credit/how-your-wages-affect-your-payments) applied to that increase. At £1,500 of receipts, the £100 tax saving therefore reduces UC by £55, leaving a £45 net gain.
+Earnings already exceed the work allowance. Every £1 of tax saved increases counted earnings by £1, and UC falls by the [55% taper](https://www.gov.uk/universal-credit/how-your-wages-affect-your-payments) applied to that increase. The £400 tax reduction therefore leaves a £180 household gain.
 
 These are annual model results. Actual UC uses monthly assessment periods and deducts relevant self-employment income tax and National Insurance when paid, under [regulation 57(2)](https://www.legislation.gov.uk/uksi/2013/376/regulation/57). Uneven receipts or a large tax payment in one month can produce a different pattern of awards and a different annual gain.
 
