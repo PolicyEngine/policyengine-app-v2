@@ -367,9 +367,9 @@ These are annual model results. Actual UC uses monthly assessment periods and de
 
 ## The government's costing
 
-The government's costing, certified by the OBR, is set out line by line as measure 15 in Table 1.1 of the OBR's [detailed forecast tables](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), "Breakdown of policy decisions since March 2026". Its Income tax and NICs lines cover the taxes in this post's examples, and income tax is about 93% of their sum in each year. The table shows that sum, with the cost to the Exchequer as a positive value.
+The government's costing, certified by the OBR, is set out line by line as measure 15 in Table 1.1 of the OBR's [detailed forecast tables](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), "Breakdown of policy decisions since March 2026". Its “Income tax” and “NICs” (National Insurance contributions) lines cover the taxes in this post's examples, and income tax is about 93% of their sum in each year from 2028–29. The table shows that sum, with the cost to the Exchequer as a positive value.
 
-For context, the last column gives the measure's rounded total from the Budget's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026). That total also includes the PSCE in RDEL, Scottish BGA (current) and Scottish self-financed expenditure lines, which together add about £2 million a year from 2027–28.
+For context, the last column gives the measure's rounded total from the Budget's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026). That total also includes the “PSCE in RDEL”, “Scottish BGA (current)” and “Scottish self-financed expenditure” lines, which together add about £2 million a year from 2027–28. The Budget's policy costings show the same rounded figures.
 
 | Year | Income tax and NICs (£ million) | Table 6.1 total (£ million) |
 | --- | ---: | ---: |
