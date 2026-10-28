@@ -1,21 +1,23 @@
-In the Autumn Budget on 28 October 2026, the Chancellor announced a Pension Tax Allowance (PTA): an income tax reduction for people over State Pension age whose total income is at or just above the full new State Pension. The PTA applies for three tax years, from 6 April 2027 to 5 April 2030. This post explains how the PTA works and shows its effect on example pensioners, using PolicyEngine UK household calculations.
+In the Autumn Budget on 28 October 2026, the Chancellor announced a Pension Tax Allowance (PTA): an income tax reduction for people over State Pension age whose total income is between the £12,570 Personal Allowance and just above the full new State Pension. The PTA applies for three tax years, from 6 April 2027 to 5 April 2030. This post explains how the PTA works and shows its effect on example pensioners, using PolicyEngine UK household calculations.
 
 Key figures for 2027-28:
 
 - The full new State Pension is £13,036.40 a year, £466.40 above the £12,570 Personal Allowance.
-- The full PTA is £94: 20% of £466.40 is £93.28, which HM Treasury rounds up.
-- A pensioner with total income up to £13,036.40 pays no income tax.
+- The full PTA is £94.
+- A pensioner with the standard Personal Allowance, no other tax charges and total income up to £13,036.40 pays no income tax.
 - The PTA falls by £1 for each £3 of income above £13,036.40 and reaches zero at £13,318.40.
-- Across that £282 withdrawal range, the marginal income tax rate is 53.3%, against 20% without the PTA.
+- In that withdrawal range, a taxpayer outside Scotland has an effective marginal tax rate of 53.3%, against 20% without the PTA.
+- For a pensioner who claims means-tested benefits, those benefits fall as income tax falls, so net income rises by less than the PTA.
 
 ## What the PTA does
 
-The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) describes the PTA in its list of tax measures, and HM Treasury's [Pension Tax Allowance explainer](https://www.gov.uk/government/publications/pension-tax-allowance-explainer/pension-tax-allowance-explainer) gives the rules in full. The PTA has four parts:
+The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) lists the PTA among its tax measures, and HM Treasury's [Pension Tax Allowance explainer](https://www.gov.uk/government/publications/pension-tax-allowance-explainer/pension-tax-allowance-explainer) sets out the rules. The PTA has five parts:
 
-1. **Eligibility.** People over State Pension age, or who reach it during the tax year, qualify. A person does not need to receive the State Pension.
-2. **Value.** The full PTA applies the 20% basic rate to the gap between the full new State Pension and the Personal Allowance. It is a reduction in the tax bill, not a change to the Personal Allowance, and it cannot produce a refund. The rate is 20% for all UK taxpayers, including Scottish taxpayers.
-3. **Income test.** The test uses total income from all sources: pensions, earnings, self-employment, property, savings and dividends. ISA income does not count. A person with total income at or below the full new State Pension gets the full PTA.
-4. **Taper.** In the explainer's words, "For every £3 of income above the full level of the new State Pension, your Pension Tax Allowance will reduce by £1."
+1. **Eligibility.** People over State Pension age, or who reach it during the tax year, qualify. A person does not need to receive the State Pension. The PTA belongs to each person and cannot be transferred to a partner.
+2. **Value.** The full PTA is 20% of the gap between the full new State Pension and the Personal Allowance, rounded up: £94 in 2027-28. Scottish taxpayers receive the same PTA, which the explainer says is "calculated using the 20% basic rate rather than the Scottish starter rate".
+3. **Tax reduction.** The PTA reduces the income tax bill after all allowances and reliefs. It does not change the Personal Allowance, and it cannot produce a refund. In this sense it works like a non-refundable tax credit, as the Married Couple's Allowance does.
+4. **Income test.** The test uses total income from all sources: pensions, earnings, self-employment, property, savings and dividends. ISA income does not count. A person with total income at or below the full new State Pension gets the full PTA.
+5. **Taper.** Above the full new State Pension, the PTA falls by £1 for each £3 of extra total income. In 2027-28 it reaches zero £282 above the full new State Pension.
 
 The PTA rises with the full new State Pension in 2028-29 and 2029-30. HMRC applies it automatically, with no claim.
 
@@ -25,13 +27,15 @@ The PTA rises with the full new State Pension in 2028-29 and 2029-30. HMRC appli
 | 2028-29  | £13,361.40             | £159     | £13,838.40          |
 | 2029-30  | £13,696.80             | £226     | £14,374.80          |
 
-The 2027-28 values come from the explainer. The 2028-29 and 2029-30 State Pension values are PolicyEngine UK's projections under the triple lock, rounded down to 5p a week, because the government has not yet set those rates. The explainer says the PTA is "uprated in line with" the full new State Pension. We read this as the same formula each year, 20% of the full new State Pension above the Personal Allowance, rounded up to the pound. This reading keeps income tax at zero for a pensioner on the full new State Pension, which the Budget states as the aim.
+The 2027-28 values come from the explainer. The government has not yet set the State Pension for 2028-29 and 2029-30, so those rows use PolicyEngine UK's triple lock projections of the weekly rate, rounded down to 5p, for 52 weeks. The explainer says the PTA is "uprated in line with" the full new State Pension. We read this as the same formula each year, 20% of the full new State Pension above the Personal Allowance, rounded up to the pound. This reading keeps income tax at zero for a pensioner on the full new State Pension, which the Budget states as the aim.
 
-The Treasury estimates that the PTA reduces receipts by £45 million in 2027-28, £90 million in 2028-29 and £150 million in 2029-30. The same costing shows +£50 million in 2030-31 and −£15 million in 2031-32, after the PTA ends (Budget 2026, Table 6.1, row 52). The explainer states that about 290,000 pensioners will pay no income tax in 2027-28 because of the PTA, and about 500,000 will pay less. By the end of this Parliament, about 1 million pensioners will receive the PTA.
+The Treasury estimates that the PTA reduces receipts by £45 million in 2027-28, £90 million in 2028-29 and £150 million in 2029-30. The same costing shows a gain of £50 million in 2030-31 and a cost of £15 million in 2031-32, after the PTA ends (Budget 2026, Table 6.1, row 52). The costing assumes no behavioural response. The explainer states that about 500,000 pensioners will pay less income tax in 2027-28 because of the PTA, and that about 290,000 of them will pay none. By the end of this Parliament, about 1 million pensioners will receive the PTA.
 
 ## Worked examples
 
-The explainer gives five example pensioners for 2027-28. PolicyEngine UK reproduces each result.
+### Income tax
+
+The explainer gives five example pensioners for 2027-28. PolicyEngine UK gives the same income tax for each.
 
 | Income                                          | Total income | Income tax without the PTA | PTA used | Income tax with the PTA |
 | ----------------------------------------------- | ------------ | -------------------------- | -------- | ----------------------- |
@@ -43,9 +47,22 @@ The explainer gives five example pensioners for 2027-28. PolicyEngine UK reprodu
 
 A pensioner whose only income is the full new State Pension owes £93.28 of income tax without the PTA. This is below the £94 PTA, so the PTA removes the full tax bill. The pensioner with a part-time salary has income £150 above the full new State Pension, so the PTA is £94 − £150 ÷ 3 = £44. The pensioner with £13,400 of private pension has income above £13,318.40 and gets no PTA.
 
+### Net income and other benefits
+
+Pension Credit, Housing Benefit and Council Tax Reduction all assess income after income tax. When the PTA lowers income tax, these benefits fall, so household net income rises by less than the PTA. The table shows four single pensioners aged 70 in the North West of England in 2027-28. Each owes £1,800 a year of council tax, except the Pension Credit claimant, who has no housing costs in this example; the renter pays £7,800 a year in rent. Each column shows the change that the PTA makes.
+
+| Pensioner                                                                       | Total income | Income tax | Pension Credit | Housing Benefit | Council Tax Reduction | Household net income |
+| ------------------------------------------------------------------------------- | ------------ | ---------- | -------------- | --------------- | --------------------- | -------------------- |
+| Full new State Pension, owns home, claims no means-tested benefits              | £13,036.40   | −£93.28    | £0.00          | £0.00           | £0.00                 | +£93.28              |
+| Full new State Pension, owns home, claims Council Tax Reduction                 | £13,036.40   | −£93.28    | £0.00          | £0.00           | −£18.66               | +£74.62              |
+| Full new State Pension, rents, claims Housing Benefit and Council Tax Reduction | £13,036.40   | −£93.28    | £0.00          | −£60.63         | −£18.66               | +£13.99              |
+| £11,000 State Pension and £1,800 private pension, claims Pension Credit         | £12,800.00   | −£46.00    | −£46.00        | £0.00           | £0.00                 | £0.00                |
+
+Housing Benefit falls by 65p and Council Tax Reduction by 20p for each £1 of extra income after tax, so the renter keeps 15p of each £1 of PTA. Pension Credit tops income after tax up to a minimum guarantee, so a claimant whose income stays below the guarantee loses Pension Credit equal to the full PTA. The explainer also notes that "receipt of the Pension Tax Allowance may affect your entitlement" to means-tested benefits.
+
 ## The PTA in each tax year
 
-The charts below follow a single pensioner aged 70 with a partial new State Pension of £11,000 and a private pension. Total income changes with the private pension.
+The charts below follow a single pensioner aged 70 in England whose income is all pension income, such as the State Pension and a private pension. The results depend only on total income, not on its source.
 
 ```chart
 {
@@ -73,7 +90,13 @@ The charts below follow a single pensioner aged 70 with a partial new State Pens
   ],
   "data": [
     {
-      "income": 12400,
+      "income": 12400.0,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 0.0
+    },
+    {
+      "income": 12500.0,
       "y2027": 0.0,
       "y2028": 0.0,
       "y2029": 0.0
@@ -83,6 +106,36 @@ The charts below follow a single pensioner aged 70 with a partial new State Pens
       "y2027": 0.0,
       "y2028": 0.0,
       "y2029": 0.0
+    },
+    {
+      "income": 12600.0,
+      "y2027": 6.0,
+      "y2028": 6.0,
+      "y2029": 6.0
+    },
+    {
+      "income": 12700.0,
+      "y2027": 26.0,
+      "y2028": 26.0,
+      "y2029": 26.0
+    },
+    {
+      "income": 12800.0,
+      "y2027": 46.0,
+      "y2028": 46.0,
+      "y2029": 46.0
+    },
+    {
+      "income": 12900.0,
+      "y2027": 66.0,
+      "y2028": 66.0,
+      "y2029": 66.0
+    },
+    {
+      "income": 13000.0,
+      "y2027": 86.0,
+      "y2028": 86.0,
+      "y2029": 86.0
     },
     {
       "income": 13036.4,
@@ -95,6 +148,24 @@ The charts below follow a single pensioner aged 70 with a partial new State Pens
       "y2027": 93.55,
       "y2028": 93.55,
       "y2029": 93.55
+    },
+    {
+      "income": 13100.0,
+      "y2027": 72.8,
+      "y2028": 106.0,
+      "y2029": 106.0
+    },
+    {
+      "income": 13200.0,
+      "y2027": 39.47,
+      "y2028": 126.0,
+      "y2029": 126.0
+    },
+    {
+      "income": 13300.0,
+      "y2027": 6.13,
+      "y2028": 146.0,
+      "y2029": 146.0
     },
     {
       "income": 13318.4,
@@ -115,6 +186,24 @@ The charts below follow a single pensioner aged 70 with a partial new State Pens
       "y2029": 158.55
     },
     {
+      "income": 13400.0,
+      "y2027": 0.0,
+      "y2028": 146.13,
+      "y2029": 166.0
+    },
+    {
+      "income": 13500.0,
+      "y2027": 0.0,
+      "y2028": 112.8,
+      "y2029": 186.0
+    },
+    {
+      "income": 13600.0,
+      "y2027": 0.0,
+      "y2028": 79.47,
+      "y2029": 206.0
+    },
+    {
       "income": 13696.8,
       "y2027": 0.0,
       "y2028": 47.2,
@@ -127,10 +216,52 @@ The charts below follow a single pensioner aged 70 with a partial new State Pens
       "y2029": 225.6
     },
     {
+      "income": 13700.0,
+      "y2027": 0.0,
+      "y2028": 46.13,
+      "y2029": 224.93
+    },
+    {
+      "income": 13800.0,
+      "y2027": 0.0,
+      "y2028": 12.8,
+      "y2029": 191.6
+    },
+    {
       "income": 13838.4,
       "y2027": 0.0,
       "y2028": 0.0,
       "y2029": 178.8
+    },
+    {
+      "income": 13900.0,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 158.27
+    },
+    {
+      "income": 14000.0,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 124.93
+    },
+    {
+      "income": 14100.0,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 91.6
+    },
+    {
+      "income": 14200.0,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 58.27
+    },
+    {
+      "income": 14300.0,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 24.93
     },
     {
       "income": 14374.8,
@@ -139,7 +270,13 @@ The charts below follow a single pensioner aged 70 with a partial new State Pens
       "y2029": 0.0
     },
     {
-      "income": 14500,
+      "income": 14400.0,
+      "y2027": 0.0,
+      "y2028": 0.0,
+      "y2029": 0.0
+    },
+    {
+      "income": 14500.0,
       "y2027": 0.0,
       "y2028": 0.0,
       "y2029": 0.0
@@ -160,7 +297,7 @@ The charts below follow a single pensioner aged 70 with a partial new State Pens
 }
 ```
 
-The PTA equals the tax due up to the full new State Pension, then falls by £1 for each £3 of extra income. Because the full new State Pension rises each year while the Personal Allowance stays at £12,570, the maximum PTA rises from £94 in 2027-28 to £226 in 2029-30, and the withdrawal range widens from £282 to £678.
+The chart shows the PTA used, which is the PTA capped at the tax due. Up to the full new State Pension, the PTA used equals the tax due. Above it, the PTA falls by £1 for each £3 of extra income. Because the full new State Pension rises each year while the Personal Allowance stays at £12,570, the maximum PTA rises from £94 in 2027-28 to £226 in 2029-30, and the withdrawal range widens from £282 to £678.
 
 ## Income tax by total income
 
@@ -185,13 +322,38 @@ The PTA equals the tax due up to the full new State Pension, then falls by £1 f
   ],
   "data": [
     {
-      "income": 12500,
+      "income": 12500.0,
       "without": 0.0,
       "with": 0.0
     },
     {
       "income": 12570,
       "without": 0.0,
+      "with": 0.0
+    },
+    {
+      "income": 12600.0,
+      "without": 6.0,
+      "with": 0.0
+    },
+    {
+      "income": 12700.0,
+      "without": 26.0,
+      "with": 0.0
+    },
+    {
+      "income": 12800.0,
+      "without": 46.0,
+      "with": 0.0
+    },
+    {
+      "income": 12900.0,
+      "without": 66.0,
+      "with": 0.0
+    },
+    {
+      "income": 13000.0,
+      "without": 86.0,
       "with": 0.0
     },
     {
@@ -205,12 +367,32 @@ The PTA equals the tax due up to the full new State Pension, then falls by £1 f
       "with": 0.0
     },
     {
+      "income": 13100.0,
+      "without": 106.0,
+      "with": 33.2
+    },
+    {
+      "income": 13200.0,
+      "without": 126.0,
+      "with": 86.53
+    },
+    {
+      "income": 13300.0,
+      "without": 146.0,
+      "with": 139.87
+    },
+    {
       "income": 13318.4,
       "without": 149.68,
       "with": 149.68
     },
     {
-      "income": 13500,
+      "income": 13400.0,
+      "without": 166.0,
+      "with": 166.0
+    },
+    {
+      "income": 13500.0,
       "without": 186.0,
       "with": 186.0
     }
@@ -246,13 +428,812 @@ The PTA equals the tax due up to the full new State Pension, then falls by £1 f
 
 Without the PTA, income tax starts at the £12,570 Personal Allowance. With the PTA, income tax starts at £13,037.75, just above the full new State Pension, and reaches the level without the PTA at £13,318.40. Above £13,318.40, the PTA has no effect.
 
-## Marginal tax rates
+## Net income
+
+This chart shows household net income for a pensioner who claims Pension Credit when eligible. Household net income counts pension income and every tax and benefit that applies: here, Pension Credit, income tax, the £200 Winter Fuel Payment and the £180 TV licence fee. A single person over State Pension age cannot claim Universal Credit. The pensioner has no housing costs, so Housing Benefit and Council Tax Reduction do not apply.
 
 ```chart
 {
   "type": "line",
-  "title": "Marginal income tax rate for a single pensioner, 2027-28",
-  "subtitle": "Income tax on each extra £1 of total income",
+  "title": "Net income for a single pensioner, 2027-28",
+  "subtitle": "Household net income by total pension income, for a pensioner who claims Pension Credit when eligible",
+  "xKey": "income",
+  "xLabel": "Total income",
+  "series": [
+    {
+      "key": "without",
+      "name": "Without the PTA",
+      "color": "quinary"
+    },
+    {
+      "key": "with",
+      "name": "With the PTA",
+      "color": "primary"
+    }
+  ],
+  "data": [
+    {
+      "income": 0.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 1900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 2900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 3900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 4900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 5900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 6900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 7900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 8900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 9900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 10900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 11900.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12000.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12100.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12200.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12300.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12400.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12500.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12570,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12600.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12700.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12800.0,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12859.6,
+      "without": 12879.6,
+      "with": 12879.6
+    },
+    {
+      "income": 12900.0,
+      "without": 12879.6,
+      "with": 12920.0
+    },
+    {
+      "income": 12932.0,
+      "without": 12879.6,
+      "with": 12952.0
+    },
+    {
+      "income": 13000.0,
+      "without": 12934.0,
+      "with": 13020.0
+    },
+    {
+      "income": 13037.75,
+      "without": 12964.2,
+      "with": 13057.75
+    },
+    {
+      "income": 13100.0,
+      "without": 13014.0,
+      "with": 13086.8
+    },
+    {
+      "income": 13200.0,
+      "without": 13094.0,
+      "with": 13133.47
+    },
+    {
+      "income": 13300.0,
+      "without": 13174.0,
+      "with": 13180.13
+    },
+    {
+      "income": 13318.4,
+      "without": 13188.72,
+      "with": 13188.72
+    },
+    {
+      "income": 13400.0,
+      "without": 13254.0,
+      "with": 13254.0
+    },
+    {
+      "income": 13500.0,
+      "without": 13334.0,
+      "with": 13334.0
+    },
+    {
+      "income": 13600.0,
+      "without": 13414.0,
+      "with": 13414.0
+    },
+    {
+      "income": 13700.0,
+      "without": 13494.0,
+      "with": 13494.0
+    },
+    {
+      "income": 13800.0,
+      "without": 13574.0,
+      "with": 13574.0
+    },
+    {
+      "income": 13900.0,
+      "without": 13654.0,
+      "with": 13654.0
+    },
+    {
+      "income": 14000.0,
+      "without": 13734.0,
+      "with": 13734.0
+    },
+    {
+      "income": 14100.0,
+      "without": 13814.0,
+      "with": 13814.0
+    },
+    {
+      "income": 14200.0,
+      "without": 13894.0,
+      "with": 13894.0
+    },
+    {
+      "income": 14300.0,
+      "without": 13974.0,
+      "with": 13974.0
+    },
+    {
+      "income": 14400.0,
+      "without": 14054.0,
+      "with": 14054.0
+    },
+    {
+      "income": 14500.0,
+      "without": 14134.0,
+      "with": 14134.0
+    }
+  ],
+  "yLabel": "Household net income",
+  "format": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "xFormat": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "source": "Source: PolicyEngine UK household calculation; HM Treasury, Pension Tax Allowance explainer (28 October 2026). Pension Credit minimum guarantee of £12,859.60 a year (£247.30 a week), our estimate."
+}
+```
+
+We estimate the 2027-28 Pension Credit minimum guarantee at £247.30 a week, or £12,859.60 a year (see the assumptions below). Up to that income, Pension Credit holds net income at £12,879.60 with or without the PTA. Above it, the PTA raises net income by up to £93.55, at £13,037.75, and the gain falls to zero at £13,318.40.
+
+## Marginal tax rates
+
+The effective marginal tax rate is the share of an extra £1 of income that the pensioner does not keep, after income tax and any loss of benefits. It is 1 minus the change in household net income, as in PolicyEngine's `marginal_tax_rate`, here for a £1 rise in private pension.
+
+```chart
+{
+  "type": "line",
+  "title": "Effective marginal tax rate for a single pensioner, 2027-28",
+  "subtitle": "Share of each extra £1 of private pension lost to income tax and lower Pension Credit",
   "xKey": "income",
   "xLabel": "Total income",
   "series": [
@@ -271,12 +1252,47 @@ Without the PTA, income tax starts at the £12,570 Personal Allowance. With the 
   ],
   "data": [
     {
-      "income": 12500,
-      "without": 0.0,
+      "income": 12400.0,
+      "without": 100.0,
+      "with": 100.0
+    },
+    {
+      "income": 12500.0,
+      "without": 100.0,
+      "with": 100.0
+    },
+    {
+      "income": 12600.0,
+      "without": 100.0,
+      "with": 100.0
+    },
+    {
+      "income": 12700.0,
+      "without": 100.0,
+      "with": 100.0
+    },
+    {
+      "income": 12800.0,
+      "without": 100.0,
+      "with": 100.0
+    },
+    {
+      "income": 12859.6,
+      "without": 100.0,
       "with": 0.0
     },
     {
-      "income": 12570,
+      "income": 12900.0,
+      "without": 100.0,
+      "with": 0.0
+    },
+    {
+      "income": 12932.0,
+      "without": 20.0,
+      "with": 0.0
+    },
+    {
+      "income": 13000.0,
       "without": 20.0,
       "with": 0.0
     },
@@ -286,12 +1302,32 @@ Without the PTA, income tax starts at the £12,570 Personal Allowance. With the 
       "with": 53.3
     },
     {
+      "income": 13100.0,
+      "without": 20.0,
+      "with": 53.3
+    },
+    {
+      "income": 13200.0,
+      "without": 20.0,
+      "with": 53.3
+    },
+    {
+      "income": 13300.0,
+      "without": 20.0,
+      "with": 53.3
+    },
+    {
       "income": 13318.4,
       "without": 20.0,
       "with": 20.0
     },
     {
-      "income": 13500,
+      "income": 13400.0,
+      "without": 20.0,
+      "with": 20.0
+    },
+    {
+      "income": 13500.0,
       "without": 20.0,
       "with": 20.0
     }
@@ -310,7 +1346,7 @@ Without the PTA, income tax starts at the £12,570 Personal Allowance. With the 
       "label": "PTA withdrawn"
     }
   ],
-  "yLabel": "Marginal income tax rate",
+  "yLabel": "Effective marginal tax rate",
   "format": {
     "suffix": "%",
     "decimals": 1
@@ -320,117 +1356,26 @@ Without the PTA, income tax starts at the £12,570 Personal Allowance. With the 
     "decimals": 0,
     "separator": true
   },
-  "source": "Source: PolicyEngine UK household calculation; HM Treasury, Pension Tax Allowance explainer (28 October 2026)."
+  "source": "Source: PolicyEngine UK household calculation; HM Treasury, Pension Tax Allowance explainer (28 October 2026). Pension Credit minimum guarantee of £12,859.60 a year (£247.30 a week), our estimate."
 }
 ```
 
-The PTA changes the marginal income tax rate in two income ranges. Between £12,570 and £13,037.75 it falls from 20% to 0%. Between £13,037.75 and £13,318.40 it rises from 20% to 53.3%: the 20% basic rate plus 33.3% from the taper. A pensioner in that range keeps 47p of each extra £1 of taxable income, against 80p without the PTA.
-
-## Interaction with Pension Credit
-
-Pension Credit tops up income to a minimum guarantee, and it counts income after income tax. For a Pension Credit claimant, a lower income tax bill therefore reduces Pension Credit by the same amount, and household net income does not change.
-
-In PolicyEngine UK, the single-person minimum guarantee is £12,660.62 a year in 2027-28. A single claimant with total income from £12,570 to £12,660.62 receives the PTA but no net income gain. From £12,660.62 to £12,683.27, the claimant's gain rises by £1 for each £1 of income. Above £12,683.27, a claimant and a non-claimant gain the same amount, up to £93.55 at £13,037.75. The chart below shows household net income for a claimant, with and without the PTA. Net income here also includes the £200 Winter Fuel Payment, less the £180 TV licence fee, so it sits £20 above income after tax and Pension Credit.
-
-```chart
-{
-  "type": "line",
-  "title": "Net income for a single pensioner, 2027-28",
-  "subtitle": "Household net income for a pensioner who claims Pension Credit when eligible",
-  "xKey": "income",
-  "xLabel": "Total income",
-  "series": [
-    {
-      "key": "without",
-      "name": "Without the PTA",
-      "color": "quinary"
-    },
-    {
-      "key": "with",
-      "name": "With the PTA",
-      "color": "primary"
-    }
-  ],
-  "data": [
-    {
-      "income": 12400,
-      "without": 12680.62,
-      "with": 12680.62
-    },
-    {
-      "income": 12570,
-      "without": 12680.62,
-      "with": 12680.62
-    },
-    {
-      "income": 12660.62,
-      "without": 12680.62,
-      "with": 12680.62
-    },
-    {
-      "income": 12683.27,
-      "without": 12680.62,
-      "with": 12703.27
-    },
-    {
-      "income": 13037.75,
-      "without": 12964.2,
-      "with": 13057.75
-    },
-    {
-      "income": 13318.4,
-      "without": 13188.72,
-      "with": 13188.72
-    },
-    {
-      "income": 13500,
-      "without": 13334.0,
-      "with": 13334.0
-    }
-  ],
-  "markers": [
-    {
-      "x": 12570,
-      "label": "Personal Allowance"
-    },
-    {
-      "x": 13036.4,
-      "label": "Full new State Pension"
-    },
-    {
-      "x": 13318.4,
-      "label": "PTA withdrawn"
-    }
-  ],
-  "yLabel": "Household net income",
-  "yIncludesZero": false,
-  "format": {
-    "prefix": "£",
-    "decimals": 0,
-    "separator": true
-  },
-  "xFormat": {
-    "prefix": "£",
-    "decimals": 0,
-    "separator": true
-  },
-  "source": "Source: PolicyEngine UK household calculation; HM Treasury, Pension Tax Allowance explainer (28 October 2026). Pension Credit minimum guarantee of £12,660.62 a year from PolicyEngine UK."
-}
-```
-
-The projected minimum guarantee rises faster than the Personal Allowance, so the range where Pension Credit offsets the PTA extends to about £13,000 in 2028-29 and £13,320 in 2029-30.
+Without the PTA, the rate is 100% up to £12,931.99, because Pension Credit falls by £1 for each £1 of income, and 20% above that. With the PTA, the rate is 100% up to the minimum guarantee of £12,859.60, 0% from there to £13,037.75, 53.3% from £13,037.75 to £13,318.40, and 20% above that. The 53.3% is the 20% basic rate plus 33.3% from the taper: a pensioner in that range keeps 47p of each extra £1 of total income, against 80p without the PTA. A Scottish taxpayer pays the 19% starter rate on this income, so the rate in the withdrawal range is 52.3%.
 
 ## Assumptions and limitations
 
-- The analysis covers single pensioners in a household calculation. It is not a microsimulation, and it makes no population-wide estimates of its own; the costs and counts above come from HM Treasury.
-- The 2028-29 and 2029-30 State Pension, PTA and Pension Credit values use PolicyEngine UK projections. The published rates may differ.
+- The analysis covers single pensioners in household calculations. It is not a microsimulation, and it makes no population-wide estimates of its own; the costs and counts above come from HM Treasury.
+- DWP has not yet published the 2027-28 Pension Credit rates. The minimum guarantee rises with earnings, and the April 2027 State Pension rise of 3.9% is above September 2026 CPI inflation (3.5%), so it reflects earnings growth. We apply 3.9% to the 2026-27 rate of £238.00 a week, which gives £247.30. PolicyEngine UK's own projection is £243.47.
+- The 2028-29 and 2029-30 State Pension values are PolicyEngine UK projections. The explainer bases the threshold on the State Pension received in the tax year; we use 52 weeks. The published rates, and the number of payments in a tax year, may differ.
 - The explainer does not state how HMRC rounds the PTA in later years. We round up to the pound, as for 2027-28.
-- We apply the PTA to the final income tax liability. The PTA reduces the tax bill after other allowances; for people with tax charges, such as the High Income Child Benefit Charge, the order of steps may differ from the legislation, which the Finance Bill 2026-27 will set out.
-- The Pension Credit results assume that the person claims Pension Credit when eligible.
-- For the pensioner with £13,400 of income, the explainer's £166 treats all of it as taxable at 20%. We model the income as a private pension. If part of it were savings interest, the starting rate for savings would reduce the tax.
+- We apply the PTA to the final income tax liability. For people with tax charges, such as the High Income Child Benefit Charge, the legislation in the Finance Bill 2026-27 may set a different order. People who transfer part of their Personal Allowance through the Marriage Allowance can still owe tax with the PTA.
+- PolicyEngine UK treats a person as over State Pension age if they reach it by 6 October. The PTA also covers people who reach State Pension age later in the tax year. The example pensioners are all aged 70, so this does not affect the results.
+- We measure total income as the sum of income from each source. HMRC's total income may deduct some reliefs first.
+- In the worked examples, the explainer's part-time worker also has a small amount of property income; we model the full amount as salary. For the pensioner with £13,400 of income, the explainer's £166 treats all of it as taxable at 20%; we model it as a private pension. If part of it were savings interest, the starting rate for savings would reduce the tax.
+- The benefit results assume that each pensioner claims the benefits they are entitled to, and they use PolicyEngine UK's council tax, rent and TV licence values for 2027-28.
 
 The Budget also adjusts the triple lock from April 2030: the State Pension then rises by the highest of 2.5%, inflation, or the increase that keeps its value relative to earnings at the April 2029 level. This post does not cover that change.
 
 ## Methodology
 
-We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). PolicyEngine UK does not yet include the PTA, so we added it as a structural reform that reduces the `income_tax` variable. The rules and values match the PTA modifier in the draft update to PolicyEngine's Autumn Budget 2026 dashboard. Income tax and the PTA are piecewise linear in total income, so the charts plot their breakpoints; these agree with PolicyEngine UK to within £0.01 at every £2 step of total income.
+We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). PolicyEngine UK does not yet include the PTA, so we added it as a structural reform that reduces the `income_tax` variable. The rules and values match the PTA modifier in the draft update to PolicyEngine's Autumn Budget 2026 dashboard. Income tax, the PTA and net income are piecewise linear in total income, so the charts plot their breakpoints and a point every £100. These values agree with PolicyEngine UK to within £0.01 at every £2 of total income, and the effective marginal tax rates agree to within 0.04 percentage points.

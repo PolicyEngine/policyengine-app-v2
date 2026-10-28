@@ -183,6 +183,10 @@ export function LineBody({ spec }: { spec: BlogLineSpec }) {
   const xTicks = xAxis.ticks.filter((t) => t >= xMin && t <= xMax);
   const yTick = (v: number) =>
     formatChartValue(v, { ...format, decimals: yAxis.decimals });
+  // Room for the longest tick label, plus the rotated axis title.
+  const yAxisWidth =
+    Math.max(...yAxis.ticks.map((t) => yTick(t).length)) * 7 +
+    (spec.yLabel ? 28 : 12);
   const xTick = (v: number) =>
     formatChartValue(v, { ...xFormat, decimals: xAxis.decimals });
 
@@ -214,6 +218,7 @@ export function LineBody({ spec }: { spec: BlogLineSpec }) {
           }
         />
         <YAxis
+          width={yAxisWidth}
           tick={AXIS_STYLE}
           axisLine={false}
           tickLine={false}
