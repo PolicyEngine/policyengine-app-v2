@@ -76,3 +76,7 @@ Pavel’s comparison uses £100 chart sampling plus the true breakpoints and ver
 The household forecast pin and the archived national forecast are recorded separately. Applying the new household overlay does not regenerate or validate the historical national snapshot. That snapshot still awaits reconciled replacement outputs with execution-bound component results.
 
 The October-forecast rerun passed all23 household comparisons and all5 trading extension pairs. All policy deltas remain unchanged. Some absolute levels change: the three Scottish cases’ income-tax levels fall by £2.93 on both sides, and the parent’s total benefits/net income rise by about £20.10 on both sides. These do not change the article’s reported tax or household gains. The new93 displayed chart points passed18,008 model-liability comparisons and9,004 interpolation comparisons over2,251 income points per series. The largest interpolation difference is£0.0033, below the£0.01 tolerance.
+
+## Editorial cover images
+
+Both posts use original teal editorial illustrations generated with the built-in image tool. `cover-prompts.json` records the complete prompts, output paths, encoding settings, dimensions and checksums. The WebP files retain the generated1672×941pixel dimensions and are selected by each post's `image` metadata, supplying the article hero, research card and social preview. Original text-based SVG assets remain available in Git for reference. Article text, charts and calculations are unchanged by the cover update.
