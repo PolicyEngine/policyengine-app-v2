@@ -104,6 +104,8 @@ The same saving by litres bought a week, with the duty and VAT saved each week i
 | 40 litres     | about 2,080 litres | £1.44                                   | £2.40                    | £3.67                            | £70                              | £25     | £45     |
 | 60 litres     | about 3,120 litres | £2.16                                   | £3.60                    | £5.50                            | £106                             | £38     | £68     |
 
+The household calculator on PolicyEngine's [Autumn Budget 2026 dashboard](https://policyengine.org/uk/budgets/autumn-2026) includes a driver with a long commute, who spends £2,600 a year on petrol and diesel. At PolicyEngine UK's pump prices, 150.8p a litre for petrol and 170.6p for diesel, that buys about 1,620 litres a year. The measure saves this driver £20 in 2026-27 and £35 in 2027-28, the same per litre as the examples above. The model's pump prices are fixed and below October 2026 prices, when diesel was above £2 a litre, so the same spending buys fewer litres today; the examples in this post are set in litres for that reason.
+
 The saving rises in proportion to the fuel that a household uses. A household with no car, or with an electric car only, pays no fuel duty and sees no change.
 
 ```chart
