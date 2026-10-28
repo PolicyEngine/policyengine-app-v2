@@ -1,4 +1,4 @@
-In the Autumn Budget on 28 October 2026, the Chancellor announced a taper for Carer's Allowance: carers who earn more than the Weekly Earnings Limit will no longer lose the whole allowance, which will instead fall by £1 for each £1 of weekly earnings above the limit. The taper applies in England and Wales from a date within 2030-31. This post explains how the taper works and shows its effect on example carers in 2031-32, the first full year of the taper, using PolicyEngine UK household calculations. It ends with PolicyEngine's estimate of the cost.
+In the Autumn Budget on 28 October 2026, the Chancellor announced a taper for Carer's Allowance: carers who earn more than the Weekly Earnings Limit will no longer lose the whole allowance, which will instead fall by £1 for each £1 of weekly earnings above the limit. The taper applies in England and Wales from some point in 2030-31. This post explains how the taper works and shows its effect on example carers in 2031-32, the first full year of the taper, using PolicyEngine UK household calculations. It ends with PolicyEngine's estimate of the cost.
 
 Key figures for 2031-32:
 
@@ -30,7 +30,7 @@ The [Budget 2026 document](https://www.gov.uk/government/publications/budget-202
 2. **At or below the limit.** Nothing changes: a carer at or below the limit keeps the full allowance, with or without the taper.
 3. **The limit.** The costings set the limit at 16 times the National Living Wage, the rule above: £228 a week in 2030-31 and £234 in 2031-32 on the OBR's forecast.
 4. **Where.** The taper applies in England and Wales. In Scotland, Carer Support Payment has replaced Carer's Allowance, and Northern Ireland, where social security is devolved, is not included.
-5. **When.** The taper begins within the 2030-31 financial year, on a date still to be confirmed.
+5. **When.** The taper starts at some point in 2030-31. The government will confirm the date later: the costings say the measure "will begin within the 2030-31 financial year, with a precise start date confirmed in due course", and the Budget says the taper will be implemented "following the development of a new IT system".
 6. **Who.** The government estimates that around 48,000 people benefit in 2030-31, including people who become newly entitled, of whom around 3,000 live in Wales ([Budget 2026 data sources](https://assets.publishing.service.gov.uk/media/6ae1e9a2460c1346f7be77ff/Budget_2026_-_Data_Sources.pdf), page 30).
 
 Nothing else about Carer's Allowance changes: the caring conditions, the rate, its tax treatment and its effect on Universal Credit and on overlapping benefits stay as they are.
@@ -559,7 +559,7 @@ Carer 2 keeps 36p of each extra £1 up to the limit and 45p from £234 to about 
 
 ## Population estimates
 
-We also ran the measure on PolicyEngine UK's microsimulation model, which uses survey data on UK households, projected to 2030-31 and 2031-32 on the OBR's October 2026 forecast. The estimate is static: carers do not change how much they work, and take-up of Carer's Allowance follows the assumptions in PolicyEngine's data. For consistency with the examples, we set the current-law limit to the government's rule on both sides (£228 in 2030-31 and £234 in 2031-32), and we apply the same Universal Credit adjustment for the PAYE on the allowance. The model applies half a year of the taper in 2030-31, as the start date is not yet set.
+We also ran the measure on PolicyEngine UK's microsimulation model, which uses survey data on UK households, projected to 2030-31 and 2031-32 on the OBR's October 2026 forecast. The estimate is static: carers do not change how much they work, and take-up of Carer's Allowance follows the assumptions in PolicyEngine's data. For consistency with the examples, we set the current-law limit to the government's rule on both sides (£228 in 2030-31 and £234 in 2031-32), and we apply the same Universal Credit adjustment for the PAYE on the allowance. The model applies half a year of the taper in 2030-31, because the taper starts at some point in that year.
 
 | £ million                               |  2030-31 |  2031-32 |
 | --------------------------------------- | -------: | -------: |
