@@ -11,6 +11,7 @@ import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCha
 import HouseholdImpactSection from '@/components/flagship/report/household/HouseholdImpactSection';
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
+import ReportCoverTitle from '@/components/flagship/report/ReportCoverTitle';
 import ReportValidation from '@/components/flagship/report/ReportValidation';
 import UKLocalAreaAutoStart from '@/components/flagship/report/UKLocalAreaAutoStart';
 import UKLocalAreaSection from '@/components/flagship/report/UKLocalAreaSection';
@@ -78,10 +79,18 @@ function SectionHeading({ id, title }: { id: string; title: string }) {
 }
 
 export interface ReportViewProps {
-  /** The reform's name, for the adjust panel. */
+  /**
+   * The report's name: the name `onRename` changes, and the adjust panel's
+   * starting reform name.
+   */
   title: string;
   /** The cover heading; defaults to the title. */
   heading?: string;
+  /**
+   * Saves a new name for the report (its title), for the session that ran
+   * it. With it, the cover offers a rename; without it, the title is read-only.
+   */
+  onRename?: (name: string) => Promise<unknown>;
   /** How the reform came about, e.g. "Hand-built"; carried to the adjust panel's runs. */
   sourceNote: string;
   /**
@@ -162,6 +171,7 @@ export interface ReportViewProps {
 export default function ReportView({
   title,
   heading = title,
+  onRename,
   sourceNote,
   populationLabel,
   budgetWindow,
@@ -335,19 +345,7 @@ export default function ReportView({
                 background: `linear-gradient(105deg, ${colors.primary[900]} 0%, ${colors.primary[800]} 55%, ${colors.primary[700]} 100%)`,
               }}
             >
-              <Title
-                order={1}
-                style={{
-                  margin: 0,
-                  maxWidth: '32ch',
-                  color: colors.text.inverse,
-                  fontSize: `clamp(${typography.fontSize['3xl']}, 3.5vw, ${spacing['4xl']})`,
-                  lineHeight: typography.lineHeight.tight,
-                  letterSpacing: '-0.035em',
-                }}
-              >
-                {heading}
-              </Title>
+              <ReportCoverTitle heading={heading} name={title} onRename={onRename} />
               <Stack style={{ gap: spacing.sm }}>
                 {customBaselineLabel && (
                   <Text style={{ margin: 0, color: colors.primary[100] }}>

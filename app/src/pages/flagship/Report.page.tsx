@@ -31,6 +31,7 @@ import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import {
   useFlagshipReportStore,
+  useRenameReport,
   useReportRecord,
   useSharedReport,
 } from '@/hooks/useFlagshipStores';
@@ -141,6 +142,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // This session's own record, when it ran the report: it names the saved
   // reform the report was run from, and holds the validation pin.
   const reportRecord = useReportRecord(unresolvable ? undefined : userReportId);
+  // Renames that record only; the v1 report keeps its label.
+  const renameReport = useRenameReport(userReportId);
   // Provenance: the run's details, else the saved report's (the same for
   // anyone holding the link), else rebuilt from the reform policy so a
   // link without accounts validates like the original — read in the
@@ -326,7 +329,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     shared?.record.validation ?? null
   );
 
-  const title = meta?.title || report?.label || 'Impact report';
+  // This session's record names the report first: a rename changes it
+  // (and only it), and the run's details may predate the rename.
+  const title = reportRecord?.title || meta?.title || report?.label || 'Impact report';
 
   // Until the results are in, the page is the wait (or what went wrong):
   // adjusting a reform that has no results yet has nothing to adjust
@@ -541,6 +546,12 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     <ReportView
       title={title}
       heading={coverTitle}
+      // Only the session that ran the report has a record of it to rename.
+      onRename={
+        reportRecord
+          ? (name) => renameReport.mutateAsync({ record: reportRecord, title: name })
+          : undefined
+      }
       sourceNote={meta?.sourceNote || ''}
       populationLabel={regionLabel ?? nationalPopulationLabel(report?.countryId)}
       // A window asked for in Build opens running.

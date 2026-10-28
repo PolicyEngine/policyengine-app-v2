@@ -138,6 +138,25 @@ export function readReportMeta(userReportId: string): FlagshipReportMeta | null 
   return result?.ok ? result.value : null;
 }
 
+/**
+ * Gives the report's run details a new title after a rename, wherever this
+ * browser holds them (this page session's copy of a signed-in run, or
+ * localStorage); the details read first, so the old title would otherwise
+ * stay on the page. Everything else in them stays: their provisions and
+ * budget window still describe the report. Details that can't be read are
+ * left as stored.
+ */
+export function renameReportMeta(userReportId: string, title: string): void {
+  const accountMeta = accountReportMeta.get(userReportId);
+  if (accountMeta) {
+    accountReportMeta.set(userReportId, { ...accountMeta, title });
+  }
+  const stored = readReportMetaResult(userReportId);
+  if (stored?.ok) {
+    saveReportMeta(userReportId, { ...stored.value, title });
+  }
+}
+
 /** Drops the report's stored provenance; the other reports' stays as stored. */
 export function removeReportMeta(userReportId: string): void {
   const all = stashWith(userReportId);

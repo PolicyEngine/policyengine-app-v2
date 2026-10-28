@@ -3,10 +3,12 @@ import type { FlagshipReportRecord, FlagshipReportStore } from '@/api/flagshipRe
 import {
   forgetAccountReportMeta,
   readReportMeta,
+  renameReportMeta,
   REPORT_META_KEY,
   reportMetaFromRecord,
   runFlagshipReport,
 } from '@/libs/flagship/runReport';
+import { RENAMED_REPORT_TITLE } from '@/tests/fixtures/libs/flagship/reportRenameMocks';
 
 const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
@@ -503,6 +505,32 @@ describe('runFlagshipReport', () => {
       expect(localStorage.getItem(legacyKey)).toBeNull();
     }
     expect(readReportMeta(REPORT_ROW_ID)?.title).toBe('CTC expansion');
+  });
+
+  test('given a signed-in run renamed then its details take the new title, still only in memory', async () => {
+    // Given
+    const accountStore = {
+      create: vi.fn().mockResolvedValue({ id: REPORT_ROW_ID }),
+    } as unknown as FlagshipReportStore;
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: 'Federal · Introduced',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      accountReportStore: accountStore,
+    });
+
+    // When
+    renameReportMeta(REPORT_ROW_ID, RENAMED_REPORT_TITLE);
+
+    // Then
+    expect(readReportMeta(REPORT_ROW_ID)).toMatchObject({
+      title: RENAMED_REPORT_TITLE,
+      sourceNote: 'Federal · Introduced',
+      provisions: [PROVISION],
+    });
+    expect(localStorage.getItem(REPORT_META_KEY)).toBeNull();
   });
 
   test('given a run with a budget window then the account record keeps the window', async () => {

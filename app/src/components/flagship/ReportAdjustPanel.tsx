@@ -72,9 +72,11 @@ interface ReportAdjustPanelProps {
  * is saved as its own reform — then runs the pipeline and lands on the
  * new report, linked to that reform. Collapses to a slim edge tab.
  *
- * It starts over from the reform whenever the reform changes: a shared
- * link's provisions can arrive after the results, and the values and
- * name it edits must be theirs, not those of the empty reform before.
+ * It starts over from the reform whenever the reform's provisions change:
+ * a shared link's provisions can arrive after the results, and the values
+ * it edits must be theirs, not those of the empty reform before. The
+ * reform name follows the report's name until one is typed here, so
+ * renaming the report keeps what was edited.
  */
 /** "2026 only", or "2026–2035 · 10 years". */
 function yearsText(start: number, size: number): string {
@@ -82,14 +84,13 @@ function yearsText(start: number, size: number): string {
 }
 
 export default function ReportAdjustPanel(props: ReportAdjustPanelProps) {
-  const reform = JSON.stringify([
-    props.title,
+  const reform = JSON.stringify(
     props.provisions.map((provision) => [
       provision.path,
       provision.value,
       provision.intervals ?? null,
-    ]),
-  ]);
+    ])
+  );
   return <AdjustPanel key={reform} {...props} />;
 }
 
@@ -149,8 +150,10 @@ function AdjustPanel({
     }
   }, [reportRegion, populationChosen]);
   // What the recomputed reform and its report are called: this report's
-  // name to start; left as is, the new one is "… (adjusted)".
-  const [name, setName] = useState(title);
+  // name to start, and after a rename of it; left as is, the new one is
+  // "… (adjusted)". A name typed here stays.
+  const [typedName, setTypedName] = useState<string | null>(null);
+  const name = typedName ?? title;
   const renamed = name.trim() !== '' && name.trim() !== title.trim();
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   // How many years a recompute scores, from the report's year: the report's own to start.
@@ -352,7 +355,7 @@ function AdjustPanel({
           <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
             Reform name
           </span>
-          <Input value={name} onChange={(event) => setName(event.target.value)} />
+          <Input value={name} onChange={(event) => setTypedName(event.target.value)} />
         </label>
         <PopulationPicker
           value={population ?? ''}
