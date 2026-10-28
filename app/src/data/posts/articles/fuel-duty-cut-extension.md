@@ -300,7 +300,7 @@ The saving rises in proportion to the fuel that a household uses. A household wi
 
 ## Net income and other benefits
 
-The measure lowers a tax on spending, so it does not change any income that taxes or benefits depend on. The table shows household net income in 2027-28 for three households that each use 1,000 litres a year. Net income is PolicyEngine UK's household net income: income from all sources and benefits, less direct taxes, council tax, the TV licence and the modelled duties, with the VAT change on fuel included. The couple pay £9,600 a year in rent and £1,800 in council tax; the pensioner pays £7,800 in rent and £1,600 in council tax. The pensioner's State Pension is £12,547.60, the 2026-27 full new State Pension, held at that level in 2027-28. The 2027-28 benefit amounts are PolicyEngine UK projections.
+The measure lowers a tax on spending, so it does not change any income that taxes or benefits depend on. The table shows household net income in 2027-28 for three households that each use 1,000 litres a year. Net income is PolicyEngine UK's household net income: income from all sources and benefits, less direct taxes, council tax, the TV licence and the modelled duties, with the VAT change on fuel included. The couple pay £9,600 a year in rent and £1,800 in council tax; the pensioner pays £7,800 in rent and £1,600 in council tax. The pensioner's State Pension is £12,547.60, the 2026-27 full new State Pension, held at that level in 2027-28. The 2027-28 benefit amounts are PolicyEngine UK projections on the OBR's October 2026 forecast, the forecast that PolicyEngine's Autumn Budget 2026 dashboard uses. They are the same on the March 2026 forecast in PolicyEngine UK 2.151.0.
 
 | Household                                                             | Benefits in 2027-28                                                       | Net income before the Budget | Net income after the Budget | Change |
 | --------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------- | --------------------------- | ------ |
@@ -308,9 +308,15 @@ The measure lowers a tax on spending, so it does not change any income that taxe
 | Couple with two children, one earner on £25,000, renting privately    | Universal Credit £16,441, Child Benefit £2,419                            | £38,046                      | £38,067                     | £21.54 |
 | Single pensioner on a £12,548 State Pension, renting from the council | Housing Benefit £7,800, Council Tax Reduction £1,600, Pension Credit £113 | £19,875                      | £19,896                     | £21.54 |
 
-In each household, net income rises by the £21.54 saving on duty and VAT, and no benefit or income tax amount changes. Universal Credit, Pension Credit, Housing Benefit and Council Tax Reduction depend on income, not on spending, so the lower pump price does not reduce them. In 2026-27, each household gains £12.17 in the same way.
+In each household, net income rises by the £21.54 saving on duty and VAT, and no benefit, income tax or National Insurance amount changes. In 2026-27, each household gains £12.17 in the same way.
 
-For the same reason, the measure does not change marginal tax rates: PolicyEngine UK gives the same effective marginal rate before and after the Budget for each household (28% for the single adult and 68% for the couple on Universal Credit in 2027-28).
+The measure does not interact with other programmes in PolicyEngine UK, for three reasons:
+
+- **Means tests use income, not spending.** Universal Credit, Pension Credit, Housing Benefit and Council Tax Reduction depend on income and capital. Fuel duty enters only the household's taxes, so the lower pump price does not reduce any award.
+- **Benefit uprating does not change.** April 2027 uprating uses September 2026 inflation, before the measure applies. April 2028 uprating uses September 2027 inflation. The duty rate is the same with and without the Budget in both September 2026 (52.95p) and September 2027 (60.59p), so the measure does not change the September 2027 annual inflation rate through pump prices.
+- **Marginal tax rates do not change.** PolicyEngine UK gives each household the same effective marginal rate before and after the Budget: 28% for the single adult and 68% for the couple on Universal Credit in 2027-28. So the post has no marginal rate chart.
+
+Outside the model, fuel bought for business use is a cost for the self-employed and for employers. A lower duty raises the profits of self-employed drivers by the amount they save, which can raise their income tax and lower their Universal Credit. This post covers household fuel only.
 
 ## Assumptions and limitations
 
@@ -324,6 +330,6 @@ The Budget estimates that the government's fuel duty decisions in this Parliamen
 
 ## Methodology
 
-We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). We ran `calculate_household` for each household with two parameter reforms to the fuel duty rate on petrol and diesel: one with the pre-Budget rates and one with the Budget rates, each keyed to the dates above. PolicyEngine UK keys its April 2027 rate at 59.75p, uprated by the March 2026 RPI forecast, so both scenarios replace it with 60.59p. PolicyEngine UK weights each rate by the days it applies in the tax year.
+We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). We ran `calculate_household` for each household with two parameter reforms to the fuel duty rate on petrol and diesel: one with the pre-Budget rates and one with the Budget rates, each keyed to the dates above. PolicyEngine UK keys its April 2027 rate at 59.75p, uprated by the March 2026 RPI forecast, so both scenarios replace it with 60.59p. PolicyEngine UK weights each rate by the days it applies in the tax year. The net income table and the marginal rates run on the OBR October 2026 forecast, which we apply as PolicyEngine's Autumn Budget 2026 dashboard does (a scenario applied before data load). The duty and VAT savings do not depend on the forecast.
 
 PolicyEngine UK holds spending on fuel fixed and does not pass a duty change into VAT, so we add 20% of the duty change for the VAT on the pump price. For the net income table, we lower the household's `vat` by that amount in the Budget scenario, so the change flows through `vat_change` into `household_net_income`. The rates, dates and VAT treatment match the fuel duty measure in the draft update to PolicyEngine's Autumn Budget 2026 dashboard. The saving is linear in litres, so the chart plots its value every 100 litres; these agree with PolicyEngine UK to within £0.01 at every point.
