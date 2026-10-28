@@ -11,7 +11,7 @@ The household examples use 2027–28.
 
 The income tax costing records revenue on a different timing basis from the tax-year household examples; see [the government's costing](#the-governments-costing).
 
-Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for the Budget measures we model. A [separate explainer](/uk/research/uk-autumn-budget-2026-property-income-tax) covers the property income tax increase.
+Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for the Budget measures we model. Separate explainers cover the [property income tax increase](/uk/research/uk-autumn-budget-2026-property-income-tax) and the [trading allowance increase](/uk/research/uk-autumn-budget-2026-trading-allowance).
 
 ## What changes in April 2027?
 
