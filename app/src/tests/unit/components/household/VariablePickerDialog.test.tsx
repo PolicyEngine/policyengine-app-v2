@@ -169,9 +169,27 @@ describe('inputKind', () => {
     const kind = (fields: Partial<VariableInfo>) =>
       inputKind({ ...input('x', 'X'), valueType: 'float', ...fields } as VariableInfo);
     expect(kind({ unit: 'currency-USD', definitionPeriod: 'year' })).toBe('Dollars per year');
-    expect(kind({ unit: 'currency-USD', definitionPeriod: 'month' })).toBe('Dollars per month');
+    expect(kind({ unit: 'currency-GBP', definitionPeriod: 'year' })).toBe('Pounds per year');
     expect(kind({ valueType: 'bool' })).toBe('Yes or no');
     expect(kind({ valueType: 'Enum' })).toBe('One of a list');
     expect(kind({ valueType: 'int' })).toBe('Number');
+  });
+
+  test('given money defined per month then it is described per year, as the builder sends it', () => {
+    // The builder sends one value for the tax year; core divides it across the months.
+    const kind = (fields: Partial<VariableInfo>) =>
+      inputKind({ ...input('x', 'X'), valueType: 'float', ...fields } as VariableInfo);
+    expect(kind({ unit: 'currency-USD', definitionPeriod: 'month' })).toBe('Dollars per year');
+  });
+
+  test('given money the model marks as a balance then no period is named', () => {
+    const kind = (fields: Partial<VariableInfo>) =>
+      inputKind({ ...input('x', 'X'), valueType: 'float', ...fields } as VariableInfo);
+    expect(kind({ unit: 'currency-USD', definitionPeriod: 'year', quantityType: 'stock' })).toBe(
+      'Dollars'
+    );
+    expect(kind({ unit: 'currency-GBP', definitionPeriod: 'year', quantityType: 'stock' })).toBe(
+      'Pounds'
+    );
   });
 });
