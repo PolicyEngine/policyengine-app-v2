@@ -330,62 +330,62 @@ The PTA changes the marginal income tax rate in two income ranges. Between £12,
 
 Pension Credit tops up income to a minimum guarantee, and it counts income after income tax. For a Pension Credit claimant, a lower income tax bill therefore reduces Pension Credit by the same amount, and household net income does not change.
 
-In PolicyEngine UK, the single-person minimum guarantee is £12,660.62 a year in 2027-28. A single claimant with total income from £12,570 to £12,660.62 receives the PTA but no net income gain. From £12,660.62 to £12,683.27, the claimant's gain rises by £1 for each £1 of income. Above £12,683.27, a claimant and a non-claimant gain the same amount, up to £93.55 at £13,037.75.
+In PolicyEngine UK, the single-person minimum guarantee is £12,660.62 a year in 2027-28. A single claimant with total income from £12,570 to £12,660.62 receives the PTA but no net income gain. From £12,660.62 to £12,683.27, the claimant's gain rises by £1 for each £1 of income. Above £12,683.27, a claimant and a non-claimant gain the same amount, up to £93.55 at £13,037.75. The chart below shows household net income for a claimant, with and without the PTA. Net income here also includes the £200 Winter Fuel Payment, less the £180 TV licence fee, so it sits £20 above income after tax and Pension Credit.
 
 ```chart
 {
   "type": "line",
-  "title": "Change in net income for a single pensioner, 2027-28",
-  "subtitle": "Change in household net income from the Pension Tax Allowance",
+  "title": "Net income for a single pensioner, 2027-28",
+  "subtitle": "Household net income for a pensioner who claims Pension Credit when eligible",
   "xKey": "income",
   "xLabel": "Total income",
   "series": [
     {
-      "key": "no_pc",
-      "name": "Does not claim Pension Credit",
-      "color": "primary"
+      "key": "without",
+      "name": "Without the PTA",
+      "color": "quinary"
     },
     {
-      "key": "claims_pc",
-      "name": "Claims Pension Credit",
-      "color": "secondary"
+      "key": "with",
+      "name": "With the PTA",
+      "color": "primary"
     }
   ],
   "data": [
     {
       "income": 12400,
-      "no_pc": 0.0,
-      "claims_pc": 0.0
+      "without": 12680.62,
+      "with": 12680.62
     },
     {
       "income": 12570,
-      "no_pc": 0.0,
-      "claims_pc": 0.0
+      "without": 12680.62,
+      "with": 12680.62
     },
     {
       "income": 12660.62,
-      "no_pc": 18.12,
-      "claims_pc": 0.0
+      "without": 12680.62,
+      "with": 12680.62
     },
     {
       "income": 12683.27,
-      "no_pc": 22.65,
-      "claims_pc": 22.65
+      "without": 12680.62,
+      "with": 12703.27
     },
     {
       "income": 13037.75,
-      "no_pc": 93.55,
-      "claims_pc": 93.55
+      "without": 12964.2,
+      "with": 13057.75
     },
     {
       "income": 13318.4,
-      "no_pc": 0.0,
-      "claims_pc": 0.0
+      "without": 13188.72,
+      "with": 13188.72
     },
     {
       "income": 13500,
-      "no_pc": 0.0,
-      "claims_pc": 0.0
+      "without": 13334.0,
+      "with": 13334.0
     }
   ],
   "markers": [
@@ -402,7 +402,8 @@ In PolicyEngine UK, the single-person minimum guarantee is £12,660.62 a year in
       "label": "PTA withdrawn"
     }
   ],
-  "yLabel": "Change in net income",
+  "yLabel": "Household net income",
+  "yIncludesZero": false,
   "format": {
     "prefix": "£",
     "decimals": 0,

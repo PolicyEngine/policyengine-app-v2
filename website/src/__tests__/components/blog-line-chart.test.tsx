@@ -56,6 +56,10 @@ describe("line chart spec", () => {
     expect(parse(SPEC)?.type).toBe("line");
   });
 
+  test("yIncludesZero false parses", () => {
+    expect(parse({ ...SPEC, yIncludesZero: false })?.type).toBe("line");
+  });
+
   test("a step series parses", () => {
     const spec = {
       ...SPEC,
@@ -82,6 +86,7 @@ describe("line chart spec", () => {
     ],
     ["a bad x format", { xFormat: { separator: "yes" } }],
     ["a bad x label", { xLabel: 3 }],
+    ["a non-boolean yIncludesZero", { yIncludesZero: "no" }],
   ])("rejects %s", (_, override) => {
     expect(parse({ ...SPEC, ...override })).toBeNull();
   });

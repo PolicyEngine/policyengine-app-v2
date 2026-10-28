@@ -4,8 +4,8 @@
  * Line body for ```chart blocks of type "line".
  *
  * Draws one or more series against a numeric x axis, such as a tax schedule
- * by income. Both axes round out to nice ticks; the y axis includes zero, the
- * x axis spans the data only. A series with "step": true holds each value
+ * by income. Both axes round out to nice ticks; the y axis includes zero
+ * unless "yIncludesZero" is false, and the x axis spans the data only. A series with "step": true holds each value
  * until the next point, for rates that jump at thresholds. Optional markers
  * draw dashed vertical lines at named x values, labelled horizontally at the
  * top of the plot, one row per marker so close markers' labels do not overlap.
@@ -84,6 +84,8 @@ export interface BlogLineSpec {
   data: BlogChartRow[];
   markers?: BlogLineMarker[];
   yLabel?: string;
+  /** False fits the y axis to the data, for levels far from zero. */
+  yIncludesZero?: boolean;
   format?: BlogChartFormat;
   xFormat?: BlogChartFormat;
   source?: string;
@@ -94,6 +96,9 @@ export function parseLineSpec(s: Record<string, unknown>): BlogLineSpec | null {
   if (s.type !== "line" || typeof s.xKey !== "string") return null;
   if (s.xLabel !== undefined && typeof s.xLabel !== "string") return null;
   if (!validFormat(s.xFormat)) return null;
+  if (s.yIncludesZero !== undefined && typeof s.yIncludesZero !== "boolean") {
+    return null;
+  }
   if (!Array.isArray(s.series) || s.series.length === 0) return null;
   if (
     !s.series.every(
@@ -171,7 +176,7 @@ export function LineBody({ spec }: { spec: BlogLineSpec }) {
   const values = spec.data.flatMap((row) =>
     spec.series.map((s) => row[s.key] as number),
   );
-  const yAxis = niceTicks(values);
+  const yAxis = niceTicks(values, 4, spec.yIncludesZero ?? true);
   const xAxis = niceTicks(xs, 6, false);
   const xMin = Math.min(...xs);
   const xMax = Math.max(...xs);
