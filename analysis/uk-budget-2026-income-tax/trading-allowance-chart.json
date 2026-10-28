@@ -1,0 +1,76 @@
+{
+  "type": "bar",
+  "title": "Trading allowance: the income tax reduction depends on expenses",
+  "subtitle": "Annual income tax reduction; England, £30,000 salary, 2027–28",
+  "xKey": "receipts",
+  "yLabel": "Annual income tax reduction (£)",
+  "format": {
+    "prefix": "£",
+    "decimals": 0
+  },
+  "source": "PolicyEngine 6.11.1 / UK 2.151.0; synthetic adults, 2027–28; incomes held fixed.",
+  "series": [
+    {
+      "key": "noExpenses",
+      "name": "No business expenses",
+      "color": "primary"
+    },
+    {
+      "key": "highExpenses",
+      "name": "Expenses equal 75% of receipts",
+      "color": "secondary"
+    }
+  ],
+  "data": [
+    {
+      "receipts": "£500",
+      "noExpenses": 0.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": "£1,000",
+      "noExpenses": 0.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": "£1,500",
+      "noExpenses": 100.0,
+      "highExpenses": 75.0
+    },
+    {
+      "receipts": "£2,000",
+      "noExpenses": 200.0,
+      "highExpenses": 100.0
+    },
+    {
+      "receipts": "£2,500",
+      "noExpenses": 300.0,
+      "highExpenses": 125.0
+    },
+    {
+      "receipts": "£3,000",
+      "noExpenses": 400.0,
+      "highExpenses": 150.0
+    },
+    {
+      "receipts": "£3,500",
+      "noExpenses": 400.0,
+      "highExpenses": 75.0
+    },
+    {
+      "receipts": "£4,000",
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": "£4,500",
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    },
+    {
+      "receipts": "£5,000",
+      "noExpenses": 400.0,
+      "highExpenses": 0.0
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "type": "bar",
+  "title": "Savings tax increases apply above the Personal Savings Allowance",
+  "subtitle": "Annual income tax increase; England, salaries £30,000 and £60,000, 2027–28",
+  "xKey": "interest",
+  "yLabel": "Extra annual income tax (£)",
+  "format": {
+    "prefix": "£",
+    "decimals": 0
+  },
+  "source": "PolicyEngine 6.11.1 / UK 2.151.0; synthetic adults, 2027–28; incomes held fixed.",
+  "series": [
+    {
+      "key": "basic",
+      "name": "£30,000 salary",
+      "color": "negative"
+    },
+    {
+      "key": "higher",
+      "name": "£60,000 salary",
+      "color": "secondary"
+    }
+  ],
+  "data": [
+    {
+      "interest": "£500",
+      "basic": 0.0,
+      "higher": 0.0
+    },
+    {
+      "interest": "£1,000",
+      "basic": 0.0,
+      "higher": 10.0
+    },
+    {
+      "interest": "£1,500",
+      "basic": 10.0,
+      "higher": 20.0
+    },
+    {
+      "interest": "£2,000",
+      "basic": 20.0,
+      "higher": 30.0
+    },
+    {
+      "interest": "£2,500",
+      "basic": 30.0,
+      "higher": 40.0
+    },
+    {
+      "interest": "£3,000",
+      "basic": 40.0,
+      "higher": 50.0
+    },
+    {
+      "interest": "£3,500",
+      "basic": 50.0,
+      "higher": 60.0
+    },
+    {
+      "interest": "£4,000",
+      "basic": 60.0,
+      "higher": 70.0
+    },
+    {
+      "interest": "£4,500",
+      "basic": 70.0,
+      "higher": 80.0
+    },
+    {
+      "interest": "£5,000",
+      "basic": 80.0,
+      "higher": 90.0
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "as_of": "2026-10-28",
+  "household_year": 2027,
+  "package_versions": {
+    "policyengine": "6.11.1",
+    "policyengine-uk": "2.151.0",
+    "policyengine-core": "3.33.3"
+  },
+  "dashboard_reforms": {
+    "repository": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026",
+    "pull_request": 290,
+    "commit": "b50787aa75ef5aed36b822c973afa6b569464d55",
+    "path": "src/uk_budget_data/reforms.py",
+    "measures": ["unearned_income_rates_up", "trading_allowance_raise"]
+  },
+  "population": {
+    "status": "pending_data_access_and_dashboard_budget_day_outputs",
+    "dataset": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+    "sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
+    "certificate": "https://github.com/PolicyEngine/policyengine.py/pull/720",
+    "dashboard_adoption": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/pull/237",
+    "raw_microdata_used_for_households": false,
+    "national_results_generated": false,
+    "forecast": "October 2026 OBR inputs, applied to both baseline and reform when population scoring is run",
+    "replacement_policy": "Retain this adopted bundle until a later explicitly recorded update; do not silently use the candidate in policyengine.py PR725."
+  },
+  "treasury_costings": {
+    "source": "https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html",
+    "table": "6.1",
+    "units": "GBP million; positive values below indicate revenue for savings/property and cost for trading",
+    "fiscal_years": ["2026-27", "2027-28", "2028-29", "2029-30", "2030-31", "2031-32"],
+    "property_row_61_revenue": [0, 35, 575, 435, 445, 455],
+    "savings_row_62_revenue": [15, 125, 555, 520, 555, 590],
+    "trading_row_15_cost": [0, 0, 225, 165, 175, 180]
+  }
+}
