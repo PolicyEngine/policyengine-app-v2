@@ -79,4 +79,4 @@ The October-forecast rerun passed all23 household comparisons and all5 trading e
 
 ## Editorial cover images
 
-Both posts use original teal editorial illustrations generated with the built-in image tool. `cover-prompts.json` records the complete prompts, output paths, encoding settings, dimensions and checksums. The WebP files retain the generated1672×941pixel dimensions and are selected by each post's `image` metadata, supplying the article hero, research card and social preview. Original text-based SVG assets remain available in Git for reference. Article text, charts and calculations are unchanged by the cover update.
+Both posts use original teal editorial illustrations generated with the built-in image tool. `cover-prompts.json` records the complete prompts, output paths, encoding settings, dimensions and checksums. The WebP files retain the generated 1672 × 941 pixel dimensions and are selected by each post's `image` metadata, supplying the article hero, research card and social preview. Original text-based SVG assets remain available in Git for reference. Article text, charts and calculations are unchanged by the cover update.
