@@ -7,8 +7,9 @@
  * by income. Both axes round out to nice ticks; the y axis includes zero
  * unless "yIncludesZero" is false, and the x axis spans the data only. A series with "step": true holds each value
  * until the next point, for rates that jump at thresholds. Optional markers
- * draw dashed vertical lines at named x values, labelled horizontally at the
- * top of the plot, one row per marker so close markers' labels do not overlap.
+ * draw dashed vertical lines at named x values, labelled horizontally in a
+ * strip above the plot, one row per marker, so labels cross neither the
+ * data nor each other.
  *
  * Spec:
  * {
@@ -142,19 +143,21 @@ interface MarkerLabelProps {
   viewBox?: { x?: number; y?: number };
   value: string;
   row: number;
+  rows: number;
   anchor: "start" | "end";
 }
 
-/** A marker's label beside its line: right of it in the left half of the
- * plot, left of it in the right half. */
-function MarkerLabel({ viewBox, value, row, anchor }: MarkerLabelProps) {
+/** A marker's label in the strip above the plot, in its own row, beside its
+ * line: right of it in the left half of the plot, left of it in the right
+ * half. */
+function MarkerLabel({ viewBox, value, row, rows, anchor }: MarkerLabelProps) {
   const x = Number(viewBox?.x);
   const y = Number(viewBox?.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return (
     <text
       x={anchor === "start" ? x + 4 : x - 4}
-      y={y + 12 + row * MARKER_ROW_HEIGHT}
+      y={y - 6 - (rows - 1 - row) * MARKER_ROW_HEIGHT}
       textAnchor={anchor}
       style={{
         ...AXIS_STYLE,
@@ -181,6 +184,7 @@ export function LineBody({ spec }: { spec: BlogLineSpec }) {
   const xMin = Math.min(...xs);
   const xMax = Math.max(...xs);
   const xTicks = xAxis.ticks.filter((t) => t >= xMin && t <= xMax);
+  const markerRows = spec.markers?.length ?? 0;
   const yTick = (v: number) =>
     formatChartValue(v, { ...format, decimals: yAxis.decimals });
   // Room for the longest tick label, plus the rotated axis title.
@@ -194,7 +198,12 @@ export function LineBody({ spec }: { spec: BlogLineSpec }) {
     <ResponsiveContainer width="100%" height={spec.height ?? 360}>
       <LineChart
         data={spec.data}
-        margin={{ top: 16, right: 24, bottom: 8, left: 8 }}
+        margin={{
+          top: 16 + markerRows * MARKER_ROW_HEIGHT,
+          right: 24,
+          bottom: 8,
+          left: 8,
+        }}
       >
         <CartesianGrid {...GRID_STYLE} vertical={false} />
         <XAxis
@@ -247,6 +256,7 @@ export function LineBody({ spec }: { spec: BlogLineSpec }) {
                 viewBox={props.viewBox}
                 value={m.label}
                 row={i}
+                rows={markerRows}
                 anchor={m.x < (xMin + xMax) / 2 ? "start" : "end"}
               />
             )}

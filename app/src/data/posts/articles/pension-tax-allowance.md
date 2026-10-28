@@ -322,6 +322,11 @@ The chart shows the PTA used, which is the PTA capped at the tax due. Up to the 
   ],
   "data": [
     {
+      "income": 12400.0,
+      "without": 0.0,
+      "with": 0.0
+    },
+    {
       "income": 12500.0,
       "without": 0.0,
       "with": 0.0
