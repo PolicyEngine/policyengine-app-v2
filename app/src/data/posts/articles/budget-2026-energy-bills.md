@@ -27,7 +27,7 @@ Sources: [Budget 2026](https://www.gov.uk/government/publications/budget-2026-do
 
 Prior to the Budget, the Government had reduced VAT on household electricity to 0% from 1 October 2026 to 31 March 2027 ([SI 2026/987](https://www.legislation.gov.uk/uksi/2026/987/made)). Consistent with the Government's costing, we treat the entire period from 1 October 2026 to 1 July 2027 as a Budget measure and compare both measures against a baseline in which VAT on household electricity remains at 5%.
 
-This analysis does not model three related funding allocations: the devolved governments' share of the payment's funding, which the Budget states will enable them to provide similar support; £100 million for local authorities in England "to provide further targeted support to households acutely impacted by rising energy bills", including some households above band D; and funding for the Northern Ireland Executive to provide "comparable support with household electricity bills" in 2026-27, before the VAT cut extends to Northern Ireland in April 2027, as the Budget expects.
+This analysis does not model three related funding allocations: the devolved governments' share of the payment's funding, which the Budget states will enable them to provide similar support; £100 million for local authorities in England "to provide further targeted support to households acutely impacted by rising energy bills", including some households above band D; and funding for the Northern Ireland Executive to provide "comparable support with household electricity bills" in 2026-27, before the expected extension of the VAT cut to Northern Ireland in April 2027.
 
 ## Household impacts
 
@@ -155,6 +155,6 @@ The population results come from PolicyEngine's [Autumn Budget 2026 dashboard](h
 
 [^5]: Our July analysis of the original six-month cut estimated a cost of £769 million for October 2026 to March 2027, using an earlier version of PolicyEngine UK and the Enhanced Family Resources Survey. The Government's costing, certified by the OBR, puts the VAT receipts lost in 2026-27 at £734 million, and Table 6.1 puts the measure at £755 million that year.
 
-[^6]: We compare each household's spending on household energy with its net income after housing costs. We count households with zero or negative income after housing costs and any energy spending as fuel-stressed.
+[^6]: We compare each household's spending on household energy with its net income after housing costs. We count as fuel-stressed any household with zero or negative income after housing costs and any energy spending.
 
 [^7]: Our July analysis instead added each household's VAT saving to its income as an illustration, which moved approximately 14,000 people above the relative poverty line before housing costs.
