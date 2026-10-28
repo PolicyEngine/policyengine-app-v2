@@ -935,7 +935,7 @@ Gains are largest in the lower half of the income distribution and close to zero
   "yLabel": "Change in net income",
   "format": {
     "suffix": "%",
-    "decimals": 3
+    "decimals": 2
   },
   "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast; provisional."
 }
