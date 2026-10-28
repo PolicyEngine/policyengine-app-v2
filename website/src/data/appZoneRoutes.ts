@@ -239,9 +239,9 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://uk-autumn-budget-dashboard.vercel.app/uk/autumn-budget-2025",
   },
   {
-    source: "/uk/budgets/autumn-2026",
+    source: "/uk/autumn-budget-2026",
     destination:
-      "https://uk-autumn-budget-2026.vercel.app/uk/budgets/autumn-2026",
+      "https://uk-autumn-budget-2026.vercel.app/uk/autumn-budget-2026",
   },
   {
     source: "/uk/public-services-spending",
