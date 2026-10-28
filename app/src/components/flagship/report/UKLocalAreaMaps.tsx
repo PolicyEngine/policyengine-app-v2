@@ -407,8 +407,10 @@ export default function UKLocalAreaMaps({
                 focusNation={ukNationFromRegion(region)}
                 exportRef={mapRef}
                 // A breakdown level's missing areas are the ones disclosure control
-                // withheld; a saved level's have no data.
+                // withheld, or only the listed ones when it lists them; a saved
+                // level's have no data.
                 missingAreaText={levelWithheld ? UK_WITHHELD_AREA_TEXT : undefined}
+                missingAreaTextCodes={listedWithheldCodes}
                 navigable
                 selectedId={selectedArea ? selectedName : null}
                 onAreaClick={toggleSelected}

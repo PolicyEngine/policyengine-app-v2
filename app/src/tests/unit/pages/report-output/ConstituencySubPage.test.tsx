@@ -11,10 +11,13 @@ import {
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  boundariesReading,
   HEX_MAP_TAB,
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
+  NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import { NO_DATA_TEXT } from '@/tests/fixtures/components/visualization/hexMapMocks';
 import { EXPECTED_CONSTITUENCY_COUNT } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
 import {
   COMPLETE_RESPONSE,
@@ -163,6 +166,29 @@ describe('ConstituencySubPage', () => {
     expect(noDataHexagons(container)).toHaveLength(
       EXPECTED_CONSTITUENCY_COUNT - 1 - UK_LISTED_WITHHELD_CONSTITUENCY_CODES.length
     );
+  });
+
+  test('given the areas computed with a list of withheld constituencies then the geographic map reads not reported for as many boundaries as the note counts', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_WITHHELD_LISTS);
+    renderWithQueryClient(
+      <ConstituencySubPage
+        output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+        {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+      />
+    );
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then: the boundary fixture holds both listed constituencies and five unlisted ones
+    expect(
+      await screen.findByText(/^2 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(UK_LISTED_WITHHELD_CONSTITUENCY_CODES);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(5);
   });
 
   test('given a breakdown release result with constituencies only then the tab shows them, as the section does', async () => {

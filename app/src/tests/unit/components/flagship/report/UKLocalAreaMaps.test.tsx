@@ -28,6 +28,7 @@ import {
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
   ALDERSHOT_CODE,
+  boundariesReading,
   CARDIFF_CODE,
   CARDIFF_EAST_CODE,
   CLWYD_EAST_CODE,
@@ -1069,5 +1070,62 @@ describe('UKLocalAreaMaps areas a breakdown lists as withheld', () => {
     // Then
     expect(hatchedAreaCodes(container)).toHaveLength(WELSH_CONSTITUENCY_COUNT - 3);
     expect(noDataHexagons(container)).toHaveLength(0);
+  });
+});
+
+describe('UKLocalAreaMaps geographic map with a breakdown’s list of withheld codes', () => {
+  /** v3's local-area maps of the Welsh fixture, on the geographic map. */
+  async function renderGeographicMap(withheld: UKBreakdownWithheldAreas) {
+    const user = userEvent.setup();
+    render(
+      <UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} region={WALES_REGION} withheld={withheld} />,
+      'uk'
+    );
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    return { user };
+  }
+
+  test('given a breakdown’s list then only the listed boundaries read not reported, and the others without a result no data', async () => {
+    // When
+    await renderGeographicMap({ constituency: WALES_LISTED_WITHHELD_CONSTITUENCIES });
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([CARDIFF_NORTH_CODE]);
+  });
+
+  test('given a breakdown’s list then the local authority map reads not reported only for the listed ones', async () => {
+    // Given
+    const { user } = await renderGeographicMap({
+      local_authority: WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES,
+    });
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+    await screen.findByTestId(`area-${NEWPORT_CODE}`);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(
+      LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES
+    );
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([NEWPORT_CODE]);
+  });
+
+  test('given an empty list then every boundary without a result reads no data', async () => {
+    // When
+    await renderGeographicMap({ constituency: WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES });
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual([]);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(3);
+  });
+
+  test('given no list then every boundary without a result reads not reported, as before', async () => {
+    // When
+    await renderGeographicMap({ constituency: SOME_WITHHELD_CONSTITUENCIES });
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toHaveLength(3);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([]);
   });
 });

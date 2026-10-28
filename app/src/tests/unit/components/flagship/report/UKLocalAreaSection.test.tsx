@@ -20,10 +20,13 @@ import {
   ERROR_MESSAGE,
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  boundariesReading,
   HEX_MAP_TAB,
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
+  NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import { NO_DATA_TEXT } from '@/tests/fixtures/components/visualization/hexMapMocks';
 import { EXPECTED_CONSTITUENCY_COUNT } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
 import {
   COMPLETE_RESPONSE,
@@ -252,6 +255,24 @@ describe('UKLocalAreaSection', () => {
     // Then
     expect(screen.getByText(/^1 of 361 local authorities is not reported\./)).toBeInTheDocument();
     expect(hatchedAreaCodes(container)).toEqual(UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES);
+  });
+
+  test('given a breakdown that lists its withheld codes then the geographic map reads not reported for as many boundaries as the note counts', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_WITHHELD_LISTS);
+    renderSection();
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then: the boundary fixture holds both listed constituencies and five unlisted ones
+    expect(
+      await screen.findByText(/^2 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(UK_LISTED_WITHHELD_CONSTITUENCY_CODES);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(5);
   });
 
   test('given saved area data then no disclosure note shows', async () => {

@@ -106,8 +106,10 @@ export function RelativeChangeByLocalAuthority({
           }}
           focusNation={ukNationFromRegion(region)}
           exportRef={mapRef}
-          // A breakdown's missing areas are the ones disclosure control withheld.
+          // A breakdown's missing areas are the ones disclosure control withheld,
+          // or only the listed ones when it lists them.
           missingAreaText={withheld === undefined ? undefined : UK_WITHHELD_AREA_TEXT}
+          missingAreaTextCodes={listedWithheldCodes}
         />
       ) : (
         <HexagonalMap

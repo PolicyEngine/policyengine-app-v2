@@ -16,6 +16,7 @@ import {
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { SOME_WITHHELD_CONSTITUENCIES } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  boundariesReading,
   CARDIFF_EAST_CODE,
   GOWER_CODE,
   MAP_LEGEND_NAME,
@@ -344,5 +345,46 @@ describe('RelativeChangeByConstituency constituencies a breakdown lists as withh
     // Then
     expect(hatchedAreaCodes(container)).toHaveLength(WELSH_CONSTITUENCY_COUNT - 3);
     expect(noDataHexagons(container)).toHaveLength(0);
+  });
+});
+
+describe('RelativeChangeByConstituency geographic map with a breakdown’s list of withheld constituencies', () => {
+  /** The chart of the Welsh fixture, on its geographic map. */
+  async function renderChart(withheld: UKWithheldAreas) {
+    render(
+      <RelativeChangeByConstituency
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={withheld}
+      />
+    );
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+  }
+
+  test('given a breakdown’s list then only the listed boundaries read not reported, and the others without a result no data', async () => {
+    // When
+    await renderChart(WALES_LISTED_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([CARDIFF_NORTH_CODE]);
+  });
+
+  test('given an empty list then every boundary without a result reads no data', async () => {
+    // When
+    await renderChart(WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual([]);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(3);
+  });
+
+  test('given no list then every boundary without a result reads not reported, as before', async () => {
+    // When
+    await renderChart(SOME_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toHaveLength(3);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([]);
   });
 });

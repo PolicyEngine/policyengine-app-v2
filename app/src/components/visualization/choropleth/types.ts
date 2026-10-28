@@ -156,6 +156,13 @@ export interface UKAreaChoroplethMapProps {
    */
   missingAreaText?: string;
   /**
+   * Opt-in: the ONS codes of the areas with no result that
+   * `missingAreaText` describes, e.g. the codes a breakdown lists as
+   * withheld. Any other boundary with no result reads "No data". Null or
+   * absent: every boundary with no result reads `missingAreaText`.
+   */
+  missingAreaTextCodes?: readonly string[] | null;
+  /**
    * Opt-in, as the flagship district map: zoom buttons and a reset, trackpad
    * pinch, and a fixed height. Without it the map scales with its width, as
    * the v2 district map does.

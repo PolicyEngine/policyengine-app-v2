@@ -14,6 +14,7 @@ import {
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { SOME_WITHHELD_LOCAL_AUTHORITIES } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  boundariesReading,
   CARDIFF_CODE,
   HARTLEPOOL_CODE,
   MAP_LEGEND_NAME,
@@ -361,5 +362,48 @@ describe('RelativeChangeByLocalAuthority local authorities a breakdown lists as 
     // Then
     expect(hatchedAreaCodes(container)).toHaveLength(WELSH_LOCAL_AUTHORITY_COUNT - 2);
     expect(noDataHexagons(container)).toHaveLength(0);
+  });
+});
+
+describe('RelativeChangeByLocalAuthority geographic map with a breakdown’s list of withheld local authorities', () => {
+  /** The chart of the Welsh fixture, on its geographic map. */
+  async function renderChart(withheld: UKWithheldAreas) {
+    render(
+      <RelativeChangeByLocalAuthority
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={withheld}
+      />
+    );
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+  }
+
+  test('given a breakdown’s list then only the listed boundaries read not reported, and the others without a result no data', async () => {
+    // When
+    await renderChart(WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(
+      LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES
+    );
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([NEWPORT_CODE]);
+  });
+
+  test('given an empty list then every boundary without a result reads no data', async () => {
+    // When
+    await renderChart(WALES_EMPTY_LIST_WITHHELD_LOCAL_AUTHORITIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual([]);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(2);
+  });
+
+  test('given no list then every boundary without a result reads not reported, as before', async () => {
+    // When
+    await renderChart(SOME_WITHHELD_LOCAL_AUTHORITIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toHaveLength(2);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([]);
   });
 });
