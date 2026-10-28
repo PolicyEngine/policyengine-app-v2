@@ -100,7 +100,7 @@ Figure 1 shows the average change in household net income by income decile in 20
   ],
   "data": [
     { "decile": "1", "payment": 72, "vat": 26 },
-    { "decile": "2", "payment": 74, "vat": 26 },
+    { "decile": "2", "payment": 73, "vat": 26 },
     { "decile": "3", "payment": 72, "vat": 26 },
     { "decile": "4", "payment": 73, "vat": 27 },
     { "decile": "5", "payment": 70, "vat": 28 },
@@ -116,7 +116,7 @@ Figure 1 shows the average change in household net income by income decile in 20
 }
 ```
 
-The payment increases net income by an average of £67 per UK household, and by between £68 and £74 in each of the bottom eight income deciles. The average falls to £47 in the top decile, as fewer higher-income households live in band A to D properties in England. Households in Wales, Scotland and Northern Ireland do not receive the payment, which lowers the average in every decile.
+The payment increases net income by an average of £67 per UK household, and by between £68 and £73 in each of the bottom eight income deciles. The average falls to £47 in the top decile, as fewer higher-income households live in band A to D properties in England. Households in Wales, Scotland and Northern Ireland do not receive the payment, which lowers the average in every decile.
 
 The VAT cut increases net income by an average of £29 per household in 2026-27, ranging from £26 in the bottom decile to £37 in the top decile, as higher-income households consume more electricity. As a share of net income, however, the gain declines from 0.10% in the bottom decile to 0.02% in the top decile. We project that 28.4 million households in Great Britain gain from the VAT cut in 2026-27, close to the Budget's estimate of "around 29 million households across the UK".
 
