@@ -13,7 +13,7 @@ Key figures for 2027-28:
 
 The [Budget 2026 document](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) lists the PTA among its tax measures, and HM Treasury's [Pension Tax Allowance explainer](https://www.gov.uk/government/publications/pension-tax-allowance-explainer/pension-tax-allowance-explainer) sets out the rules. The PTA has five parts:
 
-1. **Eligibility.** People over State Pension age, or who reach it during the tax year, qualify. A person does not need to receive the State Pension. The PTA belongs to each person, who cannot transfer it to a partner.
+1. **Eligibility.** People over State Pension age, or who reach it during the tax year, qualify. A person does not need to receive the State Pension. Each person has their own PTA and cannot transfer it to a partner.
 2. **Value.** The full PTA is 20% of the gap between the full new State Pension and the Personal Allowance, rounded up to the pound. In 2027-28, 20% of £466.40 (£13,036.40 − £12,570) is £93.28, rounded up to £94. Scottish taxpayers receive the same PTA, which the explainer says is "calculated using the 20% basic rate rather than the Scottish starter rate".
 3. **Tax reduction.** The PTA reduces the income tax bill after all allowances and reliefs. It does not change the Personal Allowance, and it cannot produce a refund. It works as a non-refundable tax credit, like the Married Couple's Allowance.
 4. **Income test.** The test uses total income from all sources: pensions, earnings, self-employment, property, savings, dividends and benefits that replace earnings. ISA income does not count. A person with total income at or below the full new State Pension gets the full PTA.
@@ -29,7 +29,7 @@ The PTA rises with the full new State Pension in 2028-29 and 2029-30, and HMRC a
 
 ## Household impacts
 
-This section shows the PTA's effect on example pensioners in 2027-28, unless stated. The appendix defines each household.
+This section shows the PTA's effect on example pensioners in 2027-28, unless it names another year. The appendix defines each household.
 
 ### Worked examples
 
@@ -735,7 +735,7 @@ Without the PTA, the rate is 100% up to £12,932, because Pension Credit falls b
 
 ## Population impacts
 
-We ran the PTA on PolicyEngine UK's representative sample of UK households, set up as PolicyEngine's Autumn Budget 2026 dashboard sets up its runs (see the appendix).
+We ran the PTA on PolicyEngine UK's representative sample of UK households, with the same set-up as the runs for PolicyEngine's Autumn Budget 2026 dashboard (see the appendix).
 
 ### Budgetary impact
 
@@ -975,7 +975,7 @@ The 2027-28 values come from the explainer. The government has not yet set the S
 
 ### Income taxed above 20%
 
-Because the full PTA is worth 20% of the gap between the full new State Pension and the Personal Allowance, income taxed above 20% can still leave tax to pay. This Budget raises the basic rate on property income to 24% from April 2027 (22% before it). At 24%, a pensioner with £11,000 of State Pension and £2,036 of property income pays £18 with the PTA, down from £112. A Scottish taxpayer pays the 19% starter rate on income in the withdrawal range, so the effective marginal tax rate there is 52.3%, from about £13,047 of total income, where Scottish income tax first exceeds the PTA.
+Because the full PTA equals 20% of the gap between the full new State Pension and the Personal Allowance, income taxed above 20% can still leave tax to pay. This Budget raises the basic rate on property income to 24% from April 2027 (22% before it). At 24%, a pensioner with £11,000 of State Pension and £2,036 of property income pays £18 with the PTA, down from £112. A Scottish taxpayer pays the 19% starter rate on income in the withdrawal range, so the effective marginal tax rate there is 52.3%, from about £13,047 of total income, where Scottish income tax first exceeds the PTA.
 
 ### Charts
 
@@ -987,7 +987,7 @@ The population results use PolicyEngine UK's representative sample of UK househo
 
 ### Comparison with the Treasury and the OBR
 
-The Treasury's costing (Budget 2026, Table 6.1, row 52) uses a National Accounts basis and does not explain its figures for 2030-31 and 2031-32, after the PTA ends. PolicyEngine counts each tax year's liabilities, so it shows nothing then. The two also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK. The OBR's detailed policy table records the PTA's income tax at −£44 million, −£83 million and −£144 million in 2027-28 to 2029-30, then +£49 million and −£15 million, and no benefit spending. Small Scottish and departmental spending lines take its total to −£47 million, −£88 million and −£152 million (Economic and fiscal outlook, October 2026, detailed forecast table 1.1). That the OBR's income tax equals PolicyEngine's total cost in 2028-29 and 2029-30, which includes benefit effects, is a coincidence of rounding to the million. The explainer states that about 290,000 of the 500,000 pensioners who pay less income tax in 2027-28 will pay none.
+The Treasury's costing (Budget 2026, Table 6.1, row 52) follows a National Accounts basis and does not explain its figures for 2030-31 and 2031-32, after the PTA ends. PolicyEngine counts each tax year's liabilities, so it shows nothing then. The two also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK. The OBR's detailed policy table records the PTA's income tax at −£44 million, −£83 million and −£144 million in 2027-28 to 2029-30, then +£49 million and −£15 million, and no benefit spending. Small Scottish and departmental spending lines take its total to −£47 million, −£88 million and −£152 million (Economic and fiscal outlook, October 2026, detailed forecast table 1.1). That the OBR's income tax equals PolicyEngine's total cost in 2028-29 and 2029-30, which includes benefit effects, is a coincidence of rounding to the million. The explainer states that about 290,000 of the 500,000 pensioners who pay less income tax in 2027-28 will pay none.
 
 ### Assumptions and limitations
 
