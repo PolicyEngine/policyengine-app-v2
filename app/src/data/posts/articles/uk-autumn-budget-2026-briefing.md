@@ -217,6 +217,22 @@ Official: the OBR's [detailed forecast table 1.1](https://obr.uk/efo/economic-an
 
 The official costing includes some savers moving their savings into ISAs and other tax-advantaged products. We hold our estimate back from this release while we update the savings income in our data; it follows with that update.
 
+## What we're improving
+
+We plan to update these results later this week. The update will:
+
+- add poverty and people-affected figures;
+- add national figures for the savings income tax rise, once we have improved our savings income data (the calculator already includes it);
+- apply the trading allowance to miscellaneous income as well as trading income, which will raise our estimate of its cost;
+- correct how the Carer's Allowance taper interacts with overlapping benefits, such as the State Pension, in 2030-31;
+- extend the fuel duty cut to road fuel gases (LPG and natural gas), as the government's costing does;
+- give the Pension Tax Allowance to everyone who reaches State Pension age during the tax year.
+
+We are also working on:
+
+- projecting household electricity spending with retail energy prices rather than general inflation;
+- adding the Budget's measures to PolicyEngine UK itself, so anyone using our open-source model can run them.
+
 ## Methodology
 
 Our estimates come from PolicyEngine's [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/budgets/autumn-2026), which runs the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0) on Microcosm UK 2024-25, our survey-based dataset calibrated before the Budget. Prices and earnings follow the OBR's [October 2026 Economic and fiscal outlook](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/): every simulation, with and without the Budget's measures, uses its growth rates for CPI, RPI, average earnings and house prices.
