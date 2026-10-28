@@ -1,13 +1,17 @@
-The Autumn Budget 2026 increases the basic, higher and additional income tax rates on savings income by a further two percentage points from **6 April 2027**, taking them to **24%, 44% and 49%** across the UK. Interest earned inside an ISA remains exempt from income tax. The change appears in [Budget 2026, paragraph 6.247](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142).
+The Autumn Budget 2026 announces a further two-percentage-point increase in the basic, higher and additional income tax rates on savings income from **6 April 2027**, taking them to **24%, 44% and 49%** across the UK. Interest earned inside an ISA remains exempt from income tax. The government plans to legislate for the new rates in Finance Bill 2026–27, as [Budget paragraph 6.247](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) sets out.
 
-Key figures for 2027–28:
+Key figures:
+
+The household examples use 2027–28.
 
 - A basic-rate saver with £2,000 of annual interest outside ISAs pays £20 more a year.
 - A higher-rate saver with the same interest pays £30 more, because their Personal Savings Allowance is lower.
 - A basic-rate saver with £500 of interest pays no extra tax in the example below.
-- The government's costing, certified by the OBR, has £63 million of extra income tax in 2027–28, rising to £510 million in 2031–32. Its total in the Budget's Table 6.1, which adds the costing's “Onshore CT” line, is £125 million in 2027–28 and £590 million in 2031–32.
+- The government's costing, certified by the OBR, has £63 million of extra income tax in 2027–28, rising to £510 million in 2031–32. Its total in the Budget's Table 6.1, which adds the costing's “Onshore CT” (Corporation Tax) line, is £125 million in 2027–28 and £590 million in 2031–32.
 
-Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for the Budget measures we model. Population estimates for the savings measure remain under review, and this article does not include them. Separate explainers cover the [property income tax increase](/uk/research/uk-autumn-budget-2026-property-income-tax) and the [trading allowance increase](/uk/research/uk-autumn-budget-2026-trading-allowance).
+The income tax costing records revenue on a different timing basis from the tax-year household examples; see [the government's costing](#the-governments-costing).
+
+Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for the Budget measures we model. A [separate explainer](/uk/research/uk-autumn-budget-2026-property-income-tax) covers the property income tax increase.
 
 ## What changes in April 2027?
 
@@ -21,9 +25,9 @@ The [Budget 2025 technical note](https://www.gov.uk/government/publications/chan
 
 ## Household impacts
 
-The examples isolate the announced savings measure in 2027–28. They hold the stated income fixed and show income tax rather than household income after means-tested benefits.
+The examples show the additional income tax on savings in 2027–28. They hold the stated income fixed and show tax on interest, before any changes in means-tested benefits.
 
-### Savers pay the higher rates on interest above their allowances
+### Savers pay the new rates on interest above their allowances
 
 The Personal Savings Allowance remains £1,000 for basic-rate taxpayers, £500 for higher-rate taxpayers and £0 for additional-rate taxpayers. People with low other income can also qualify for a starting rate of 0% on up to £5,000 of savings interest. These allowances depend on total income, as [HMRC's savings guidance](https://www.gov.uk/apply-tax-free-interest-on-savings/how-much-is-tax-free) explains. Interest earned inside an ISA remains exempt from income tax.
 
@@ -57,7 +61,7 @@ The chart varies annual interest for the same two salaries. At these income leve
     "decimals": 0,
     "separator": true
   },
-  "source": "PolicyEngine 6.11.1 / UK 2.151.0; synthetic adults, 2027–28; incomes held fixed.",
+  "source": "PolicyEngine 6.11.1 / UK 2.151.0; hypothetical adults, 2027–28; incomes held fixed.",
   "series": [
     {
       "key": "basic",
@@ -321,7 +325,7 @@ From April 2027, employment, pension and trading income fill the tax bands first
 
 Consider an adult in England with £45,000 of salary, £6,000 of property profit after allowable expenses, £2,000 of interest and no mortgage interest. The £12,570 Personal Allowance leaves £32,430 of taxable salary. That uses £32,430 of the £37,700 basic-rate band, leaving £5,270. Property income fills the remaining basic-rate band and enters the higher band.
 
-The individual qualifies for a £500 Personal Savings Allowance. The remaining £1,500 of interest faces the higher savings rate: £1,500 × 42% = £630 before, against £1,500 × 44% = £660 after. The savings measure alone therefore increases their tax by **£30 a year**. This example holds property tax rates unchanged to isolate savings.
+The property income takes their total income to £53,000, which exceeds the £50,270 higher-rate threshold. Their Personal Savings Allowance is therefore £500. The remaining £1,500 of interest faces the higher savings rate: £1,500 × 42% = £630 before, against £1,500 × 44% = £660 after. Their tax on interest increases by **£30 a year**.
 
 ## The government's costing
 
@@ -333,21 +337,22 @@ The government's costing, certified by the OBR, appears in the OBR's [detailed p
 | OBR “Onshore CT” line | 13 | 63 | 74 | 78 | 80 | 81 |
 | Table 6.1 total | 15 | 125 | 555 | 520 | 555 | 590 |
 
-The [Budget policy costings, page 75](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=75) allow for savers moving funds into tax-advantaged products such as ISAs; the OBR puts that response at around £0.2 billion a year ([Economic and fiscal outlook, paragraph 3.17](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/)). PolicyEngine's national estimates hold those choices fixed.
+The [Budget policy costings, page 75](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=75) allow for savers moving funds into tax-advantaged products such as ISAs; the OBR puts that response at around £0.2 billion a year ([Economic and fiscal outlook, paragraph 3.17](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/)).
 
-Collection timing affects comparisons. PolicyEngine scores each tax year's liabilities in that year. Self Assessment payments on account normally rest on the previous year's tax bill; the balancing payment for 2027–28 is due on 31 January 2029, alongside the first payment on account for 2028–29. [HMRC's payment guidance](https://www.gov.uk/understand-self-assessment-bill/payments-on-account) explains that schedule. The [ONS public-finance methodology, section 6.1.2](https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/methodologies/monthlystatisticsonthepublicsectorfinancesamethodologicalguide) records Self Assessment income tax using cash receipts, without shifting them back to the year the income arose.
+The year tax is owed and the year it reaches the Exchequer can differ. Self Assessment payments on account normally rest on the previous year's tax bill; the balancing payment for 2027–28 is due on 31 January 2029, alongside the first payment on account for 2028–29. [HMRC's payment guidance](https://www.gov.uk/understand-self-assessment-bill/payments-on-account) explains that schedule. The [ONS public-finance methodology, section 6.1.2](https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/methodologies/monthlystatisticsonthepublicsectorfinancesamethodologicalguide) records Self Assessment income tax using cash receipts, without shifting them back to the year the income arose. This can produce a small first-year receipts effect followed by a catch-up.
 
-The dashboard comparison marks 2027–28 and 2028–29 as not comparable on this timing basis. Its 2026–27 comparison is also not comparable: the £15 million in Table 6.1 for that year sits entirely on the costing's “Onshore CT” line, and the costing's income tax line, like the model, has nothing before the new rates take effect. Timing alone does not reconcile the later savings revenue gap. The national savings estimates and the underlying data remain under review; this article reports no PolicyEngine national revenue, affected-person count or distribution.
+The OBR puts 2026–27's small yield on the “Onshore CT” line and shows no additional income tax before the new rates take effect. The independently rounded Table 6.1 total is £15 million for that year.
 
 ## Assumptions and limitations
 
 - The worked examples are hypothetical single adults aged 35 in England. We hold their income fixed at the stated 2027–28 amounts. They include no pension contributions, Gift Aid, student loans, property losses, carried-forward finance costs or other reliefs. Their savings sit outside ISAs.
 - The household examples show income tax, holding behaviour fixed. They do not estimate household income after means-tested benefits or responses such as moving savings into ISAs.
 - The savings rate increase applies across the UK. The English examples do not establish the effect for a Scottish taxpayer with different tax on their other income.
-- These household calculations do not validate the population dataset or resolve the national revenue comparison. National results require their own analysis and disclosure checks.
 
 ## Methodology
 
-The household calculations use the `policyengine` Python package (version 6.11.1), PolicyEngine UK (version 2.151.0) and PolicyEngine core (version 3.33.3). Each savings comparison applies only the announced savings rate change against the already scheduled 2027–28 rules. Both household scenarios use the OBR’s October 2026 forecast update at dashboard commit `64042657`. Supplied 2027–28 income stays fixed; the forecast updates the model’s projected parameters. We check tax calculations against independent arithmetic. The line chart plots the exact schedule breakpoints and points every £100, and its interpolation agrees with PolicyEngine UK to within one penny at every £2 of interest.
+The household calculations use the `policyengine` Python package (version 6.11.1), PolicyEngine UK (version 2.151.0) and PolicyEngine core (version 3.33.3), against the already scheduled 2027–28 rules. The shared generator raises savings and property rates together. The savers in the table and chart have no property income, so only the savings rate change affects them. In the mixed-income example, property income is taxed before savings, so the property rate change does not move interest between bands. We report the change in tax on interest alone.
+
+The baseline and reform calculations both use the OBR's October 2026 forecast update, as the dashboard does. Supplied 2027–28 income stays fixed; the forecast updates the model's projected parameters. We check tax calculations against independent arithmetic. The line chart plots the exact schedule breakpoints and points every £100, and its interpolation agrees with PolicyEngine UK to within one penny at every £2 of interest.
 
 The [shared analysis files](https://github.com/PolicyEngine/policyengine-app-v2/tree/main/analysis/uk-budget-2026-income-tax) record the household inputs, model versions, forecast settings and validation. We round monetary amounts in tables to whole pounds; the calculation records retain precision. The household calculations use hypothetical people and do not require population microdata.
