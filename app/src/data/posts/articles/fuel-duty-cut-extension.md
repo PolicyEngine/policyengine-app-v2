@@ -34,7 +34,7 @@ The same main rate applies to petrol and diesel across the UK. Retailers in [Rur
   "type": "bar",
   "title": "Main fuel duty rate before and after the Budget",
   "valueLabels": false,
-  "subtitle": "Pence per litre of petrol or diesel, before VAT",
+  "subtitle": "Pence per litre of petrol or diesel, before VAT, January 2027 to March 2028",
   "xKey": "period",
   "series": [
     {
@@ -50,27 +50,22 @@ The same main rate applies to petrol and diesel across the UK. Retailers in [Rur
   ],
   "data": [
     {
-      "period": "Oct to Dec 2026",
-      "before": 52.95,
-      "after": 52.95
-    },
-    {
-      "period": "Jan to Feb 2027",
+      "period": "Jan–Feb",
       "before": 55.95,
       "after": 52.95
     },
     {
-      "period": "Mar 2027",
+      "period": "Mar",
       "before": 57.95,
       "after": 52.95
     },
     {
-      "period": "Apr to Jun 2027",
+      "period": "Apr–Jun",
       "before": 60.59,
       "after": 52.95
     },
     {
-      "period": "Jul 2027 to Mar 2028",
+      "period": "Jul–Mar",
       "before": 60.59,
       "after": 60.59
     }
@@ -360,7 +355,7 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
   "type": "bar",
   "title": "Average gain by income decile",
   "valueLabels": false,
-  "subtitle": "Change in household net income, £ a year, by tax year",
+  "subtitle": "Change in household net income, £ a year, by income decile (1 = lowest) and tax year",
   "xKey": "decile",
   "series": [
     {
@@ -376,52 +371,52 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
   ],
   "data": [
     {
-      "decile": "1st",
+      "decile": "1",
       "y2026": 6.93,
       "y2027": 12.07
     },
     {
-      "decile": "2nd",
+      "decile": "2",
       "y2026": 7.49,
       "y2027": 12.77
     },
     {
-      "decile": "3rd",
+      "decile": "3",
       "y2026": 8.09,
       "y2027": 13.91
     },
     {
-      "decile": "4th",
+      "decile": "4",
       "y2026": 9.08,
       "y2027": 15.43
     },
     {
-      "decile": "5th",
+      "decile": "5",
       "y2026": 9.56,
       "y2027": 16.76
     },
     {
-      "decile": "6th",
+      "decile": "6",
       "y2026": 11.12,
       "y2027": 18.89
     },
     {
-      "decile": "7th",
+      "decile": "7",
       "y2026": 11.3,
       "y2027": 19.55
     },
     {
-      "decile": "8th",
+      "decile": "8",
       "y2026": 12.9,
       "y2027": 22.3
     },
     {
-      "decile": "9th",
+      "decile": "9",
       "y2026": 13.86,
       "y2027": 23.9
     },
     {
-      "decile": "10th",
+      "decile": "10",
       "y2026": 13.35,
       "y2027": 22.95
     }
@@ -440,7 +435,7 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
   "type": "bar",
   "title": "Gain as a share of income by income decile",
   "valueLabels": false,
-  "subtitle": "Change in household net income, % of baseline income, by tax year",
+  "subtitle": "Change in household net income, % of baseline income, by income decile (1 = lowest) and tax year",
   "xKey": "decile",
   "series": [
     {
@@ -456,52 +451,52 @@ In cash terms, the average gain in 2027-28 rises from £12 in the lowest income 
   ],
   "data": [
     {
-      "decile": "1st",
+      "decile": "1",
       "y2026": 0.0271,
       "y2027": 0.0466
     },
     {
-      "decile": "2nd",
+      "decile": "2",
       "y2026": 0.0189,
       "y2027": 0.032
     },
     {
-      "decile": "3rd",
+      "decile": "3",
       "y2026": 0.0184,
       "y2027": 0.0312
     },
     {
-      "decile": "4th",
+      "decile": "4",
       "y2026": 0.0192,
       "y2027": 0.0319
     },
     {
-      "decile": "5th",
+      "decile": "5",
       "y2026": 0.018,
       "y2027": 0.0309
     },
     {
-      "decile": "6th",
+      "decile": "6",
       "y2026": 0.0192,
       "y2027": 0.032
     },
     {
-      "decile": "7th",
+      "decile": "7",
       "y2026": 0.0178,
       "y2027": 0.03
     },
     {
-      "decile": "8th",
+      "decile": "8",
       "y2026": 0.0178,
       "y2027": 0.0303
     },
     {
-      "decile": "9th",
+      "decile": "9",
       "y2026": 0.0162,
       "y2027": 0.0274
     },
     {
-      "decile": "10th",
+      "decile": "10",
       "y2026": 0.0086,
       "y2027": 0.0145
     }
