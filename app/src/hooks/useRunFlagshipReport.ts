@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { isAccountUnavailableError } from '@/api/resilientReformStore';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
@@ -11,6 +12,7 @@ import {
   RunReportBaseline,
   RunReportProvision,
 } from '@/libs/flagship/runReport';
+import { RUN_ACCOUNT_UNAVAILABLE_ERROR } from '@/libs/flagship/savedOnDevice';
 import { RootState } from '@/store';
 
 /**
@@ -93,8 +95,14 @@ export function useRunFlagshipReport() {
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.all });
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.statuses });
       nav.push(`/${countryId}/report/${userReportId}`);
-    } catch {
-      setError('Could not start the report. Try again.');
+    } catch (runError) {
+      // The account's report record is the run's last step: while the
+      // account is unavailable, that is what failed, not the reform.
+      setError(
+        reportStore.isAccount && isAccountUnavailableError(runError)
+          ? RUN_ACCOUNT_UNAVAILABLE_ERROR
+          : 'Could not start the report. Try again.'
+      );
       setIsRunning(false);
     }
   };

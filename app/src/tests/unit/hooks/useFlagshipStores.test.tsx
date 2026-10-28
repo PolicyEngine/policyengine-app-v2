@@ -1,10 +1,11 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApiFlagshipReportStore, LocalStorageFlagshipReportStore } from '@/api/flagshipReportStore';
 import { ApiReformStore, LocalStorageReformStore } from '@/api/reformStore';
+import { resetReformSyncState, ResilientReformStore } from '@/api/resilientReformStore';
 import { UNAUTHENTICATED_USER_HEADER } from '@/api/v2UserClient';
 import { CountryProvider } from '@/contexts/CountryContext';
 import {
@@ -16,6 +17,12 @@ import {
 } from '@/hooks/useFlagshipStores';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
+import {
+  clearDraftReform,
+  getDraftReform,
+  setDraftEditingReform,
+  startDraftReform,
+} from '@/libs/draftReform';
 import { store } from '@/store';
 import {
   ASSOCIATION_IDS,
@@ -93,8 +100,8 @@ describe('v3 store choice', () => {
     const reports = renderHook(() => useFlagshipReportStore(), { wrapper }).result.current;
     const savedWork = renderHook(() => useV3SavedWork(), { wrapper }).result.current;
 
-    // Then
-    expect(reforms).toBeInstanceOf(ApiReformStore);
+    // Then: reforms keep saving on this device while the account is unavailable
+    expect(reforms).toBeInstanceOf(ResilientReformStore);
     expect(reports.store).toBeInstanceOf(ApiFlagshipReportStore);
     expect(reports.isAccount).toBe(true);
     expect(savedWork.scope).toBe(`account:${TEST_AUTH0_SUBJECT}`);
@@ -179,6 +186,67 @@ describe('useReformStore', () => {
     expect(first[0].parameters).toHaveLength(1);
     expect(second[0].parameters).toEqual(first[0].parameters);
     expect(v1PolicyRequests()).toBe(1);
+  });
+});
+
+describe('useReformStore while the account is unavailable', () => {
+  const DEVICE_SAVE = {
+    countryId: 'us' as const,
+    label: 'CTC to $3,600',
+    parameters: [
+      {
+        name: 'gov.irs.credits.ctc.amount.base[0]',
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3600 }],
+      },
+    ],
+    // Already a v1 policy, so the save makes none.
+    policyId: String(REFORM_POLICY_ID),
+    baseline: 'current-law' as const,
+    provenance: { source: 'chat' as const },
+  };
+
+  beforeEach(() => {
+    localStorage.clear();
+    resetReformSyncState();
+    clearDraftReform();
+  });
+
+  test("given signed out then a 503 is still an error: the browser user's store is unchanged", async () => {
+    // Given
+    fetchMock.mockImplementation(async () => errorResponse(503, 'unavailable'));
+    const reforms = renderHook(() => useReformStore(), { wrapper: wrapperFor(makeAuthValue()) })
+      .result.current;
+
+    // When / Then
+    expect(reforms).toBeInstanceOf(ApiReformStore);
+    await expect(reforms.create(DEVICE_SAVE)).rejects.toMatchObject({ status: 503 });
+  });
+
+  test('given signed in and a 503 then the save waits on this device, and focus adds it to the account', async () => {
+    // Given: the account is unavailable
+    fetchMock.mockImplementation(async () => errorResponse(503, 'unavailable'));
+    const { result } = renderHook(() => useReformStore(), {
+      wrapper: wrapperFor(signedInAuthValue()),
+    });
+    const saved = await result.current.create(DEVICE_SAVE);
+    startDraftReform('us', 'manual');
+    setDraftEditingReform(saved.id!);
+    expect(saved.pendingSync).toBe(true);
+    expect(localStorage.getItem(`reforms-pending-sync:account:${TEST_AUTH0_SUBJECT}`)).toContain(
+      saved.id
+    );
+
+    // When: it is back, and the window regains focus
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
+      init.method === 'POST' ? itemResponse(REFORM_ROW, 201) : respond(url)
+    );
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+
+    // Then: added once, and the draft now edits the account's reform
+    await waitFor(() => expect(getDraftReform()?.editingReformId).toBe(ASSOCIATION_IDS.REFORM));
+    expect(fetchMock.mock.calls.filter(([, init]) => init.method === 'POST')).toHaveLength(1);
   });
 });
 

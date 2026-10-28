@@ -41,10 +41,16 @@ export interface ReformStore {
   findById: (reformId: string) => Promise<Reform | null>;
   update: (reformId: string, updates: ReformUpdates) => Promise<Reform>;
   delete: (reformId: string) => Promise<void>;
+  /**
+   * True when the last call to the account found it unavailable, so a list
+   * holds only what this device keeps (see ResilientReformStore). Stores
+   * without an account never are.
+   */
+  isAccountUnavailable?: () => boolean;
 }
 
 /** Most recently updated first. */
-function byRecentUpdate(reforms: Reform[]): Reform[] {
+export function byRecentUpdate(reforms: Reform[]): Reform[] {
   return [...reforms].sort((first, second) =>
     (second.updatedAt ?? second.createdAt ?? '').localeCompare(
       first.updatedAt ?? first.createdAt ?? ''
@@ -58,6 +64,16 @@ export class ReformNotFoundError extends Error {
     super('Failed to update reform');
     this.name = 'ReformNotFoundError';
   }
+}
+
+/**
+ * A unique ID for a reform kept in this browser: "rf-[short-timestamp][random]",
+ * base36 for compactness.
+ */
+export function newLocalReformId(): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 6);
+  return `rf-${timestamp}${random}`;
 }
 
 /** Reforms saved in this browser, each with the ID of its v1 policy. */
@@ -84,12 +100,7 @@ export class LocalStorageReformStore implements ReformStore {
           )
         );
 
-    // Generate a unique ID for local storage
-    // Format: "rf-[short-timestamp][random]"
-    // Use base36 encoding for compactness
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 6);
-    const uniqueId = `rf-${timestamp}${random}`;
+    const uniqueId = newLocalReformId();
 
     const now = new Date().toISOString();
     const newReform: Reform = {
