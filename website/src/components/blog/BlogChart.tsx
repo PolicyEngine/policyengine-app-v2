@@ -9,8 +9,8 @@
  * Posts carry data, not styling. Styles are inline token variables because
  * the website's Tailwind build uses a prefix that ui-kit's utility classes lack.
  *
- * Types: "bar" (below), "waterfall" (BlogWaterfallChart.tsx) and "stateMap"
- * (BlogStateMap.tsx). Every type takes an optional "title", "subtitle" and
+ * Types: "bar" (below), "line" (BlogLineChart.tsx), "waterfall"
+ * (BlogWaterfallChart.tsx) and "stateMap" (BlogStateMap.tsx). Every type takes an optional "title", "subtitle" and
  * "source"; an invalid spec renders nothing.
  *
  * Spec (type "bar"):
@@ -22,8 +22,13 @@
  *   "data": [{ "group": "All people", "census": 0.07 }, ...],
  *   "yLabel": "...",
  *   "format": { "decimals": 2, "suffix": " pp", "signed": true },
+ *   "valueLabels": false,
  *   "source": "..."
  * }
+ *
+ * "valueLabels" (default true) prints each bar's value above it. Set it to
+ * false when several series make the labels overlap; the tooltip still
+ * gives each value.
  */
 
 import { type ReactNode, useId } from "react";
@@ -58,6 +63,7 @@ import {
   niceTicks,
   validSharedFields,
 } from "./blogChartUtils";
+import { type BlogLineSpec, LineBody, parseLineSpec } from "./BlogLineChart";
 import {
   type BlogStateMapSpec,
   StateMapBody,
@@ -87,17 +93,22 @@ export interface BlogBarChartSpec {
   data: BlogChartRow[];
   yLabel?: string;
   format?: BlogChartFormat;
+  valueLabels?: boolean;
   source?: string;
   height?: number;
 }
 
 export type BlogChartSpec =
   | BlogBarChartSpec
+  | BlogLineSpec
   | BlogWaterfallSpec
   | BlogStateMapSpec;
 
 function parseBarSpec(s: Record<string, unknown>): BlogBarChartSpec | null {
   if (s.type !== "bar" || typeof s.xKey !== "string") return null;
+  if (s.valueLabels !== undefined && typeof s.valueLabels !== "boolean") {
+    return null;
+  }
   if (!Array.isArray(s.series) || s.series.length === 0) return null;
   if (!Array.isArray(s.data) || s.data.length === 0) return null;
   if (
@@ -134,6 +145,8 @@ export function parseBlogChartSpec(raw: string): BlogChartSpec | null {
   switch (spec.type) {
     case "bar":
       return parseBarSpec(spec);
+    case "line":
+      return parseLineSpec(spec);
     case "waterfall":
       return parseWaterfallSpec(spec);
     case "stateMap":
@@ -240,10 +253,12 @@ function BarBody({ spec }: { spec: BlogBarChartSpec }) {
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
           >
-            <LabelList
-              dataKey={s.key}
-              content={(props) => <ValueLabel {...props} format={format} />}
-            />
+            {spec.valueLabels !== false && (
+              <LabelList
+                dataKey={s.key}
+                content={(props) => <ValueLabel {...props} format={format} />}
+              />
+            )}
           </Bar>
         ))}
       </BarChart>
@@ -325,6 +340,7 @@ export function BlogChart({ data }: { data: string | string[] }) {
   return (
     <ChartFigure spec={spec}>
       {spec.type === "bar" && <BarBody spec={spec} />}
+      {spec.type === "line" && <LineBody spec={spec} />}
       {spec.type === "waterfall" && <WaterfallBody spec={spec} />}
       {spec.type === "stateMap" && <StateMapBody spec={spec} />}
     </ChartFigure>

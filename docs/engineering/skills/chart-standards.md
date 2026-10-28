@@ -242,9 +242,9 @@ import {
 
 Posts draw charts as ` ```chart ` fenced blocks holding a JSON spec.
 `website/src/components/blog/BlogChart.tsx` parses each block and wraps it in a figure with
-title, subtitle, watermark and source line. `bar` (in `BlogChart.tsx`) and `waterfall`
-(`BlogWaterfallChart.tsx`) draw with Recharts, Inter, the `--chart-*` tokens and ui-kit's
-shared axis, grid, tooltip and legend styles. `stateMap` (`BlogStateMap.tsx`) draws an 11 by
+title, subtitle, watermark and source line. `bar` (in `BlogChart.tsx`), `line`
+(`BlogLineChart.tsx`) and `waterfall` (`BlogWaterfallChart.tsx`) draw with Recharts, Inter,
+the `--chart-*` tokens and ui-kit's shared axis, grid, tooltip and legend styles. `stateMap` (`BlogStateMap.tsx`) draws an 11 by
 8 tile grid shaded from `--background` to `--primary`. Each file's header comment documents
 its spec.
 
@@ -254,6 +254,14 @@ its spec.
 - Do not add matplotlib PNGs or Plotly JSON to new posts. When a post needs a chart type the
   website lacks (a line or scatter chart, say), add the type to `website/src/components/blog/`
   with tests before the post uses it.
+- `line` draws series against a numeric x axis, such as a tax or benefit schedule by income.
+  Give it the exact breakpoints plus regular points (every £100, say) so the tooltip has detail
+  without drawing anything inexact. `"step": true` holds a series' value to the next point, for
+  marginal rates; `markers` label named x values in a strip above the plot; `xFormat` formats
+  the x axis; `"yIncludesZero": false` fits the y axis to levels far from zero.
+- `format` and `xFormat` take `"separator": true` to group thousands (£13,036).
+- A `bar` chart with several series can set `"valueLabels": false` when the labels above the
+  bars would overlap; the tooltip still gives each value.
 - `website/src/__tests__/components/blog-chart-posts.test.ts` fails CI when a post's chart
   block does not parse. Keep the chart's numbers identical to the tables and text beside it.
 - The website builds Tailwind with the `tw:` prefix, so ui-kit components that rely on
