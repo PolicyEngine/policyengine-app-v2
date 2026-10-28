@@ -18,6 +18,10 @@ The checked outputs include 23 household comparisons and 93 displayed points acr
 
 The article chart blocks reproduce `savings-interest-chart.json` and `trading-allowance-chart.json`. Reinsert their contents when regenerating them.
 
+## Current article scope
+
+Both posts now publish household calculations and Treasury costings only. Model national estimates, decile tables and affected shares from earlier preview batches have been removed from the articles. The dashboard is the linked source for national results. The saved population files below are historical records and must not be treated as the current publication run.
+
 ## Dataset decision
 
 Retain the dashboard's adopted `policyengine` 6.11.1 bundle, with UK 2.151.0, core 3.33.3 and national data cut `a6299504`. The certificate, full dataset ID and checksum are recorded in `provenance.json`. The newer candidate in policyengine.py PR725 is awaiting certification/adoption. A future update must change the package and dataset provenance together and regenerate the analysis.
@@ -38,7 +42,7 @@ Treasury forecasts are labelled separately. Compare fiscal-year Treasury receipt
 
 ## Checks before publication
 
-- Replace or confirm the provisional national revenue and decile results after final reconciliation. Add absolute affected-person counts and separate winner/loser shares when the producer exports those quantities; do not infer them from average changes or the affected percentage.
+- Add national revenue and decile results only after final reconciliation if that population scope is restored to the posts. Add absolute affected-person counts and separate winner/loser shares when the producer exports those quantities; do not infer them from average changes or the affected percentage.
 - Confirm the treatment of Scottish landlords' finance-cost relief against the final Budget implementation. The pinned model links that relief to the UK property basic rate even for Scotland.
 - Check trading allowance coverage: gross receipts and actual expenses are needed to model the deduction choice; the pinned model does not apply the allowance to its separate miscellaneous-income input.
 - Verify the final public dashboard link and add links to these explainers within the dashboard. The source checkout's README supplies the current Vercel dashboard URL.
@@ -52,7 +56,7 @@ See `REVIEW_NOTES.md` for the independent draft-readiness check, the comparison 
 
 `make format`, `make lint`, `make typecheck` and `make test` passed. The tests ran on Node 26.12.1: 6,042 app tests and 508 website tests passed, with 10 app tests skipped by the existing suite. After inserting the final chart data, the chart-parser and post-metadata checks passed again (18 tests). All 23 household comparisons and 20 curve points passed independent arithmetic checks.
 
-After adding the provisional national sections, snapshot verification and the article/chart checks passed again. Browser access to the local preview was declined, so visual preview remains outstanding. The SVG cover XML and native chart specs were validated, but this does not confirm page layout at desktop or mobile widths.
+The earlier addition of provisional national sections passed snapshot verification and article/chart checks; those sections have since been removed pending the final run. Browser access to the local preview was declined, so visual preview remains outstanding. The SVG cover XML and native chart specs were validated, but this does not confirm page layout at desktop or mobile widths.
 
 
 ## Additional trading and calculator examples

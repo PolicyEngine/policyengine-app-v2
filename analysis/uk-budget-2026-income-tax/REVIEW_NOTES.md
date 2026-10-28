@@ -104,3 +104,18 @@ Both posts now use the shared line-chart renderer from app-v2 PR1462, the same d
 The line renderer, bar renderer, article-chart parser and post metadata checks passed (51 tests); website ESLint and TypeScript checks passed. No CI monitoring was performed. The 23 household cases, five extension pairs and dense curve checks passed on the pinned October forecast. Browser approval declined the public dashboard preview origin, so its rendered policy tab and the final visual layout were not verified in this pass. No alternative access to that blocked origin was attempted.
 
 Max's 16:18:54 UTC webinar update asks authors to introduce each measure for 30–60 seconds: say what it does and who it reaches, leaving costings to the dashboard. Q&A should use displayed dashboard figures and describe missing figures as still being checked. The archived national figures in these draft articles are not webinar-approved estimates.
+
+
+## Remaining review comments addressed on 28 October
+
+The savings/property article removes the withdrawn combined national snapshot, its model fiscal row, decile table and affected share. Its key figures and national table now contain Treasury costings only, separated into property and savings with the combined official total. The archived data and earlier review records remain here for reproducibility; they are not current article results. This follows the cut-or-match-final-run rule Max applied in trading commits8751cf29 andc78cdd60, without substituting unverified replacement figures.
+
+The mixed-income paragraph now confirms the dashboard's landlord-45k preset and the £120 property plus£30 savings split. It retains the salary-uprating explanation. Canonical dashboard links use www.policyengine.org/uk/autumn-budget-2026, and publication wording holds before and after the production switch. The model's hypothetical households and chart values are unchanged.
+
+The Treasury comparison now cites HMRC's payments-on-account guidance and ONS public-finance methodology6.1.2: prior-year instalments, the31January2029 balancing payment and first subsequent-year payment explain why same-year tax liability and early-year receipts require a collection bridge. No fitted cash share or illustrative bridge is published as an independently verified result. Property's timing issue does not establish the source of the savings shortfall. Dashboard review6475368627 recommends marking property2027–28 and2028–29 not comparable; its final-regeneration freeze remains separate from these prose edits.
+
+Trading inline4403534071 is implemented: an excluded employer/connected-party payment removes allowance relief for the whole tax year across relevant sources, with spouse/civilpartner, connected-partnership and company conditions. Inline4403569478's dashboard-introduction suggestion is also implemented. Primary HMRC/ITTOIA sources were checked. Max's direct edits and all household/table/chart values are retained.
+
+Both PRs remain drafts at the user's explicit request. No merge authorization is given by implementing review comments.
+
+Validation after these edits and the main-branch metadata merge: make format, make lint, make typecheck and make test passed on Node26.12.1. App:6,042passed/10existing skips; website:529passed; total6,571passed. Existing household-table rows and line-chart JSON compare identically with the previous head. Every main-branch post metadata entry is preserved. No model or generator changes were required, and no CI monitoring was performed.

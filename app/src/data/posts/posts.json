@@ -3,10 +3,35 @@
     "title": "Autumn Budget 2026: higher tax on savings and property income",
     "description": "Worked examples of the additional two percentage point increase from April 2027, including savings allowances and landlords' mortgage-interest relief.",
     "date": "2026-10-28 14:00:00",
-    "tags": ["uk", "policy", "tax", "autumn-budget"],
-    "authors": ["ziming-hua"],
+    "tags": [
+      "uk",
+      "policy",
+      "tax",
+      "autumn-budget"
+    ],
+    "authors": [
+      "ziming-hua"
+    ],
     "filename": "uk-autumn-budget-2026-savings-property-income-tax.md",
     "image": "uk-autumn-budget-2026-savings-property-income-tax.svg"
+  },
+  {
+    "title": "Analysis of the Autumn Budget 2026 energy bill measures",
+    "description": "PolicyEngine estimates the £100 Household Energy Payment and the zero rate of VAT on domestic electricity cost £2.81 billion in 2026-27 and raise household net income by an average of £96.",
+    "date": "2026-10-28 18:30:00",
+    "tags": ["uk", "autumn-budget", "policy", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "budget-2026-energy-bills.md",
+    "image": "budget-2026-energy-bills/cover.webp"
+  },
+  {
+    "title": "The Pension Tax Allowance in the Autumn Budget 2026",
+    "description": "From April 2027, the Pension Tax Allowance removes income tax for most pensioners with total income up to the full new State Pension. We show how the \u00a394 allowance and its \u00a31-in-\u00a33 taper work, and how they pass through to Pension Credit, Housing Benefit and Council Tax Reduction.",
+    "date": "2026-10-28 18:00:00",
+    "tags": ["uk", "policy", "tax"],
+    "authors": ["pavel-makarchuk"],
+    "filename": "pension-tax-allowance.md",
+    "image": "pension-tax-allowance/cover-illustration.webp"
   },
   {
     "title": "High value council tax surcharge: revenue by constituency",
