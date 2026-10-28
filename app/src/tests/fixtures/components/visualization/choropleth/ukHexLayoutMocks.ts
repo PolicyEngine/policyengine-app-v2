@@ -96,3 +96,29 @@ export const WELSH_LOCAL_AUTHORITY_COUNT = 22;
 /** Swansea, a Welsh local authority, and its name in the boundary file. */
 export const SWANSEA_CODE = 'W06000011';
 export const SWANSEA_NAME = 'Swansea';
+
+/** Cardiff West, a Welsh constituency. */
+export const CARDIFF_WEST_CODE = 'W07000092';
+
+/**
+ * Cardiff North, a Welsh constituency that WELSH_CONSTITUENCY_POINTS leave
+ * out and that LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES does not name: an
+ * area with no data.
+ */
+export const CARDIFF_NORTH_CODE = 'W07000090';
+export const CARDIFF_NORTH_NAME = 'Cardiff North';
+
+/**
+ * The Welsh constituencies a Wales breakdown of WELSH_CONSTITUENCY_POINTS
+ * lists as withheld, sorted, as the simulation API's
+ * `constituency_withheld_codes` gives them: Cardiff East and Cardiff West.
+ * Wales's other 27 absent constituencies have no data.
+ */
+export const LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES = [CARDIFF_EAST_CODE, CARDIFF_WEST_CODE];
+
+/** Newport, a Welsh local authority that no fixture's list names, and its name in the boundary file. */
+export const NEWPORT_CODE = 'W06000022';
+export const NEWPORT_NAME = 'Newport';
+
+/** The Welsh local authorities a Wales breakdown lists as withheld: Swansea alone. */
+export const LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES = [SWANSEA_CODE];

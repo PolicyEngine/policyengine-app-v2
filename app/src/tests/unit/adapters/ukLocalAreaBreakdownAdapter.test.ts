@@ -20,6 +20,7 @@ import {
   UK_LOCAL_AUTHORITY_COUNT,
   UK_WIDE_WITHHELD_CONSTITUENCIES,
   UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
+  WALES_CONSTITUENCY_COUNT,
   WALES_LOCAL_AUTHORITY_COUNT,
   WALES_WITHHELD_CONSTITUENCIES,
 } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
@@ -31,6 +32,10 @@ import {
   SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY,
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import {
+  BARNSLEY_NORTH_CODE,
+  LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+} from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
 import {
   COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
   NORMALIZED_BREAKDOWN,
@@ -180,6 +185,83 @@ describe('countWithheldUKAreas', () => {
       expect(result?.withheld).toBe(withheldUKHexAreas(level, points, region).length);
     }
   );
+});
+
+describe('countWithheldUKAreas with a breakdown’s list of withheld codes', () => {
+  test('given a list then it counts the listed codes and carries the list', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+    });
+
+    // Then
+    expect(result).toEqual({
+      withheld: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length,
+      total: WALES_CONSTITUENCY_COUNT,
+      listedCodes: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+    });
+  });
+
+  test('given an empty list then it counts none withheld', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes: [],
+    });
+
+    // Then
+    expect(result).toEqual({ withheld: 0, total: WALES_CONSTITUENCY_COUNT, listedCodes: [] });
+  });
+
+  test('given a null list then it counts every area the result leaves out, as before', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes: null,
+    });
+
+    // Then
+    expect(result).toStrictEqual(WALES_WITHHELD_CONSTITUENCIES);
+  });
+
+  test('given a listed code outside the report’s nation then it is not counted', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes: [BARNSLEY_NORTH_CODE, ...LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES],
+    });
+
+    // Then
+    expect(result?.withheld).toBe(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length);
+  });
+
+  test('given a list then the count is the number of areas the hex map draws as withheld', () => {
+    // Given
+    const points = PUBLISHED_WELSH_CONSTITUENCY_CODES.map((code) => ({ code }));
+    const listedWithheldCodes = [BARNSLEY_NORTH_CODE, ...LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES];
+
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes,
+    });
+
+    // Then
+    expect(result?.withheld).toBe(
+      withheldUKHexAreas('constituency', points, 'country/wales', listedWithheldCodes).length
+    );
+  });
 });
 
 describe('withheldUKAreasOf', () => {

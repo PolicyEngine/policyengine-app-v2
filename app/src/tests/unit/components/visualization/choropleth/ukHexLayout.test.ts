@@ -4,6 +4,7 @@ import {
   placeUKHexMap,
   UK_HEX_LAYOUTS,
   ukHexPosition,
+  withheldUKAreaCodes,
   withheldUKHexAreas,
 } from '@/components/visualization/choropleth/ukHexLayout';
 import {
@@ -14,12 +15,16 @@ import {
   BARNSLEY_NORTH_POINT,
   CARDIFF_EAST_CODE,
   CARDIFF_EAST_NAME,
+  CARDIFF_NORTH_CODE,
+  CARDIFF_NORTH_NAME,
+  CARDIFF_WEST_CODE,
   CONSTITUENCY_REGION,
   DARLINGTON_POINT,
   HARTLEPOOL_CODE,
   HARTLEPOOL_HEX,
   HARTLEPOOL_NAME,
   HARTLEPOOL_POINT,
+  LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
   UK_WIDE_REGION,
   UNCODED_POINT,
   WALES_REGION,
@@ -291,6 +296,173 @@ describe('placeUKHexMap', () => {
       points: [BARNSLEY_NORTH_POINT, UNCODED_POINT],
       tiled: false,
       withheldAreas: [],
+      noDataAreas: [],
     });
+  });
+});
+
+describe('withheldUKAreaCodes with a breakdown’s list of withheld codes', () => {
+  const welshCodes = WELSH_CONSTITUENCY_POINTS.map((point) => point.code);
+
+  test('given a list then only its codes are withheld, and the region’s other absent areas have no data', () => {
+    // When
+    const missing = withheldUKAreaCodes(
+      'constituency',
+      welshCodes,
+      WALES_REGION,
+      LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES
+    );
+
+    // Then
+    expect(missing?.codes).toEqual(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES);
+    expect(missing?.noDataCodes).toHaveLength(
+      WELSH_CONSTITUENCY_COUNT - welshCodes.length - LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length
+    );
+    expect(missing?.noDataCodes).toContain(CARDIFF_NORTH_CODE);
+    expect(missing?.total).toBe(WELSH_CONSTITUENCY_COUNT);
+  });
+
+  test('given an empty list then none is withheld and every absent area has no data', () => {
+    // When
+    const missing = withheldUKAreaCodes('constituency', welshCodes, WALES_REGION, []);
+
+    // Then
+    expect(missing?.codes).toEqual([]);
+    expect(missing?.noDataCodes).toHaveLength(WELSH_CONSTITUENCY_COUNT - welshCodes.length);
+  });
+
+  test.each([
+    ['a null', null],
+    ['an absent', undefined],
+  ])(
+    'given %s list then every absent area is withheld, as before, and none has no data',
+    (_, list) => {
+      // When
+      const missing = withheldUKAreaCodes('constituency', welshCodes, WALES_REGION, list);
+
+      // Then
+      expect(missing?.codes).toHaveLength(WELSH_CONSTITUENCY_COUNT - welshCodes.length);
+      expect(missing?.noDataCodes).toEqual([]);
+    }
+  );
+
+  test('given a listed code outside the report’s nation then it is not withheld', () => {
+    // When: an English constituency in a Wales breakdown's list
+    const missing = withheldUKAreaCodes('constituency', welshCodes, WALES_REGION, [
+      BARNSLEY_NORTH_CODE,
+      CARDIFF_EAST_CODE,
+    ]);
+
+    // Then
+    expect(missing?.codes).toEqual([CARDIFF_EAST_CODE]);
+  });
+
+  test('given a listed code the result also publishes then it is not withheld', () => {
+    // When
+    const missing = withheldUKAreaCodes('constituency', welshCodes, WALES_REGION, [
+      welshCodes[0]!,
+      CARDIFF_EAST_CODE,
+    ]);
+
+    // Then
+    expect(missing?.codes).toEqual([CARDIFF_EAST_CODE]);
+    expect(missing?.noDataCodes).not.toContain(welshCodes[0]);
+  });
+
+  test('given a list and a result that cannot be matched to the layout then it gives nothing, as without one', () => {
+    // When
+    const missing = withheldUKAreaCodes(
+      'constituency',
+      [...welshCodes, undefined],
+      WALES_REGION,
+      LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES
+    );
+
+    // Then
+    expect(missing).toBeNull();
+  });
+});
+
+describe('placeUKHexMap with a breakdown’s list of withheld codes', () => {
+  test('given a disclosure-controlled level with a list then it draws the listed areas as withheld and the others as having no data', () => {
+    // When
+    const hexMap = placeUKHexMap('constituency', WELSH_CONSTITUENCY_POINTS, {
+      disclosureControlled: true,
+      region: WALES_REGION,
+      listedWithheldCodes: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+    });
+
+    // Then
+    expect(hexMap.withheldAreas.map((area) => area.id)).toEqual([
+      CARDIFF_EAST_CODE,
+      CARDIFF_WEST_CODE,
+    ]);
+    expect(hexMap.noDataAreas).toHaveLength(
+      WELSH_CONSTITUENCY_COUNT -
+        WELSH_CONSTITUENCY_POINTS.length -
+        LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length
+    );
+    expect(hexMap.noDataAreas.find((area) => area.id === CARDIFF_NORTH_CODE)).toEqual({
+      id: CARDIFF_NORTH_CODE,
+      label: CARDIFF_NORTH_NAME,
+      ...ukHexPosition('constituency', CARDIFF_NORTH_CODE),
+    });
+  });
+
+  test('given an empty list then no area is withheld and every absent one has no data', () => {
+    // When
+    const hexMap = placeUKHexMap('constituency', WELSH_CONSTITUENCY_POINTS, {
+      disclosureControlled: true,
+      region: WALES_REGION,
+      listedWithheldCodes: [],
+    });
+
+    // Then
+    expect(hexMap.withheldAreas).toEqual([]);
+    expect(hexMap.noDataAreas).toHaveLength(
+      WELSH_CONSTITUENCY_COUNT - WELSH_CONSTITUENCY_POINTS.length
+    );
+  });
+
+  test('given a disclosure-controlled level with a null list then every absent area is withheld, as before', () => {
+    // When
+    const hexMap = placeUKHexMap('constituency', WELSH_CONSTITUENCY_POINTS, {
+      disclosureControlled: true,
+      region: WALES_REGION,
+      listedWithheldCodes: null,
+    });
+
+    // Then
+    expect(hexMap.withheldAreas).toHaveLength(
+      WELSH_CONSTITUENCY_COUNT - WELSH_CONSTITUENCY_POINTS.length
+    );
+    expect(hexMap.noDataAreas).toEqual([]);
+  });
+
+  test('given a list on a level that is not disclosure-controlled then it draws neither', () => {
+    // When
+    const hexMap = placeUKHexMap('constituency', WELSH_CONSTITUENCY_POINTS, {
+      disclosureControlled: false,
+      region: WALES_REGION,
+      listedWithheldCodes: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+    });
+
+    // Then
+    expect(hexMap.withheldAreas).toEqual([]);
+    expect(hexMap.noDataAreas).toEqual([]);
+  });
+
+  test('given a list and an area the layout cannot place then it draws neither, untiled', () => {
+    // When
+    const hexMap = placeUKHexMap('constituency', [...WELSH_CONSTITUENCY_POINTS, UNCODED_POINT], {
+      disclosureControlled: true,
+      region: WALES_REGION,
+      listedWithheldCodes: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+    });
+
+    // Then
+    expect(hexMap.tiled).toBe(false);
+    expect(hexMap.withheldAreas).toEqual([]);
+    expect(hexMap.noDataAreas).toEqual([]);
   });
 });

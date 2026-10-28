@@ -128,35 +128,54 @@ export const UK_AREA_NOUNS: Record<UKAreaLevel, { one: string; many: string }> =
 export const UK_WITHHELD_AREA_TEXT = 'Not reported';
 
 /**
- * How many of a level's areas a disclosure-controlled breakdown left out,
- * out of how many there are; null when the app cannot count them.
+ * How many of a level's areas a disclosure-controlled breakdown withheld,
+ * out of how many there are, and the breakdown's own list of withheld
+ * codes when it gives one, which the hex map draws from; null when the app
+ * cannot count them.
  */
-export type UKWithheldAreas = { withheld: number; total: number } | null;
+export type UKWithheldAreas = {
+  withheld: number;
+  total: number;
+  /** The breakdown's withheld ONS codes at this level; absent when it does not list them. */
+  listedCodes?: string[];
+} | null;
 
 /** Each level's withheld areas; a level absent here gets no withheld note. */
 export type UKBreakdownWithheldAreas = Partial<Record<UKAreaLevel, UKWithheldAreas>>;
 
 /**
- * The areas of a level a breakdown did not report, out of the level's areas
- * in the report's region; null when the app cannot count them. The count
+ * The areas of a level a breakdown withheld, out of the level's areas in
+ * the report's region; null when the app cannot count them. The count
  * follows the hex map's rule (withheldUKAreaCodes): each published area's
  * ONS code against the layout, all of it for a UK-wide report and the
  * nation's for a nation's report, so the note under the map and the
- * areas it draws as withheld always agree. A published area with no code,
- * or a code outside the region's layout, gives no count.
+ * areas it draws as withheld always agree. With the breakdown's list of
+ * withheld codes, only the listed areas the result leaves out count;
+ * without one, every area it leaves out does. A published area with no
+ * code, or a code outside the region's layout, gives no count.
  */
 export function countWithheldUKAreas({
   level,
   region,
   publishedCodes,
+  listedWithheldCodes,
 }: {
   level: UKAreaLevel;
   region?: string | null;
   /** The published areas' ONS codes, one per area. */
   publishedCodes: (string | undefined)[];
+  /** The breakdown's withheld codes at this level; null or absent when it does not list them. */
+  listedWithheldCodes?: string[] | null;
 }): UKWithheldAreas {
-  const withheld = withheldUKAreaCodes(level, publishedCodes, region);
-  return withheld ? { withheld: withheld.codes.length, total: withheld.total } : null;
+  const withheld = withheldUKAreaCodes(level, publishedCodes, region, listedWithheldCodes);
+  if (!withheld) {
+    return null;
+  }
+  return {
+    withheld: withheld.codes.length,
+    total: withheld.total,
+    ...(listedWithheldCodes && { listedCodes: listedWithheldCodes }),
+  };
 }
 
 /**
