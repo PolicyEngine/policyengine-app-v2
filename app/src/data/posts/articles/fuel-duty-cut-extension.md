@@ -336,11 +336,13 @@ Outside the model, fuel bought for business use is a cost for the self-employed 
 
 PolicyEngine's Autumn Budget 2026 dashboard runs the same measure on its representative sample of UK households, with PolicyEngine UK 2.151.0 on the OBR October 2026 forecast. The results below come from a run of the dashboard's measure on 28 October 2026.
 
-| Tax year        | PolicyEngine: static, household fuel | HM Treasury: Table 6.1, with behavioural response |
-| --------------- | ------------------------------------ | ------------------------------------------------- |
-| 2026-27         | −£301 million                        | −£575 million                                     |
-| 2027-28         | −£521 million                        | −£780 million                                     |
-| 2028-29 onwards | £0                                   | £0                                                |
+| Tax year        | Fuel duty: PolicyEngine | VAT: PolicyEngine | Total cost: PolicyEngine | HM Treasury (Table 6.1) |
+| --------------- | ----------------------- | ----------------- | ------------------------ | ----------------------- |
+| 2026-27         | −⁠£251 million          | −⁠£50 million     | −⁠£301 million           | −⁠£575 million          |
+| 2027-28         | −⁠£434 million          | −⁠£87 million     | −⁠£521 million           | −⁠£780 million          |
+| 2028-29 onwards | £0                      | £0                | £0                       | £0                      |
+
+_Total cost is the fall in fuel duty plus the fall in VAT on the lower pump price; no benefit changes, so it equals the rise in household net income. Negative figures are costs. PolicyEngine's estimate is static and covers fuel that households buy. The Treasury's costing covers every litre of taxable fuel and includes a behavioural response, in which consumers change how much fuel they buy as pump prices change (policy costings, page 13); it does not say whether it includes VAT. PolicyEngine gives the change in liability in each tax year, from 6 April; the Treasury gives the change in receipts in each fiscal year, from 1 April. Sources: PolicyEngine UK microsimulation; HM Treasury, Budget 2026, Table 6.1 and policy costings._
 
 PolicyEngine's figures are 52% of the Treasury's in 2026-27 and 67% in 2027-28. Most of the difference is scope. PolicyEngine covers the petrol and diesel that households buy, which carry about £13 billion of the £24 billion of fuel duty receipts that the OBR expects in 2026-27. The Treasury's base is every litre of taxable fuel used in the UK, including vans, lorries and business use of cars. The other differences work the other way: the Treasury's demand response lowers its cost, and PolicyEngine's tax years, which start on 6 April, put 1 to 5 April 2027 into 2026-27. PolicyEngine's figures include the VAT on the lower pump price, about a sixth of the total.
 
