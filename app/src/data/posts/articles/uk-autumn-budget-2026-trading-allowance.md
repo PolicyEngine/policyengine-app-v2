@@ -1,3 +1,5 @@
+> Draft review note: the national figures below use the earlier recorded forecast snapshot. Replacement outputs have not passed reconciliation. The household examples remain as stated.
+
 The [Autumn Budget 2026, paragraph 6.254](https://assets.publishing.service.gov.uk/media/6ae1ec57bdb574cf1c9b3f12/E03668986_HMT_Budget_2026_ELAY__2_.pdf#page=142) raises the trading allowance from £1,000 to £3,000 from 6 April 2027, covering eligible trading and miscellaneous income. Our preliminary static estimate puts the cost at **£112 million in 2027–28**. The Treasury's [Table 6.1, row 15](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) forecasts a **£225 million receipts cost in 2028–29**. These figures cover different years and use different methods.
 
 An employee paying 20% income tax on their side income can save £400 a year from the extra £2,000 deduction. A sole trader can also save National Insurance, while Universal Credit can offset part of a claimant's tax saving. Receipts, expenses and other household circumstances determine the gain.
