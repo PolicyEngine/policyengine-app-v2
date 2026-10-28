@@ -452,7 +452,7 @@ Even with the adjustment, carer 2 is better off without the allowance: without t
 
 ## Marginal tax rates
 
-The effective marginal tax rate is the share of an extra £1 of gross pay that the carer loses to income tax, employee National Insurance, the change in Carer's Allowance and the withdrawal of Universal Credit. It is 100% minus the share kept: a 72% rate means the carer keeps 28p of each extra £1.
+The effective marginal tax rate is the share of an extra £1 of gross pay that the carer loses to income tax, employee National Insurance, the change in Carer's Allowance and the withdrawal of Universal Credit. It is 1 minus the change in household net income for a £1 rise in weekly gross pay, as in PolicyEngine's `marginal_tax_rate`, so it is 100% minus the share kept: a 72% rate means the carer keeps 28p of each extra £1.
 
 | Gross weekly pay | Not on UC, without the taper | Not on UC, with the taper | On UC, without the taper | On UC, with the taper |
 | ---------------- | ---------------------------: | ------------------------: | -----------------------: | --------------------: |
@@ -495,41 +495,138 @@ The effective marginal tax rate is the share of an extra £1 of gross pay that t
     }
   ],
   "data": [
-    {
-      "pay": 150,
-      "notOnUcWithout": 20.0,
-      "notOnUcWith": 20.0,
-      "onUcWithout": 64.0,
-      "onUcWith": 64.0
-    },
-    {
-      "pay": 234,
-      "notOnUcWithout": 0.0,
-      "notOnUcWith": 100.0,
-      "onUcWithout": 55.0,
-      "onUcWith": 55.0
-    },
-    {
-      "pay": 247,
-      "notOnUcWithout": 28.0,
-      "notOnUcWith": 85.6,
-      "onUcWithout": 67.6,
-      "onUcWith": 61.1
-    },
-    {
-      "pay": 366,
-      "notOnUcWithout": 28.0,
-      "notOnUcWith": 28.0,
-      "onUcWithout": 67.6,
-      "onUcWith": 67.6
-    },
-    {
-      "pay": 400,
-      "notOnUcWithout": 28.0,
-      "notOnUcWith": 28.0,
-      "onUcWithout": 67.6,
-      "onUcWith": 67.6
-    }
+    {"pay": 150.0, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 151.92, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 153.85, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 155.77, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 157.69, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 159.62, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 161.54, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 163.46, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 165.38, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 167.31, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 169.23, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 171.15, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 173.08, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 175.0, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 176.92, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 178.85, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 180.77, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 182.69, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 184.62, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 186.54, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 188.46, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 190.38, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 192.31, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 194.23, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 196.15, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 198.08, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 200.0, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 201.92, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 203.85, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 205.77, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 207.69, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 209.62, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 211.54, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 213.46, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 215.38, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 217.31, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 219.23, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 221.15, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 223.08, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 225.0, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 226.92, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 228.85, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 230.77, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 232.69, "notOnUcWithout": 20.0, "notOnUcWith": 20.0, "onUcWithout": 64.0, "onUcWith": 64.0},
+    {"pay": 234.01, "notOnUcWithout": 0.0, "notOnUcWith": 100.0, "onUcWithout": 55.0, "onUcWith": 55.0},
+    {"pay": 234.62, "notOnUcWithout": 0.0, "notOnUcWith": 100.0, "onUcWithout": 55.0, "onUcWith": 55.0},
+    {"pay": 236.54, "notOnUcWithout": 0.0, "notOnUcWith": 100.0, "onUcWithout": 55.0, "onUcWith": 55.0},
+    {"pay": 238.46, "notOnUcWithout": 0.0, "notOnUcWith": 100.0, "onUcWithout": 55.0, "onUcWith": 55.0},
+    {"pay": 240.38, "notOnUcWithout": 0.0, "notOnUcWith": 100.0, "onUcWithout": 55.0, "onUcWith": 55.0},
+    {"pay": 242.31, "notOnUcWithout": 0.0, "notOnUcWith": 100.0, "onUcWithout": 55.0, "onUcWith": 55.0},
+    {"pay": 244.23, "notOnUcWithout": 0.0, "notOnUcWith": 100.0, "onUcWithout": 55.0, "onUcWith": 55.0},
+    {"pay": 246.73, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 248.08, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 250.0, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 251.92, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 253.85, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 255.77, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 257.69, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 259.62, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 261.54, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 263.46, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 265.38, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 267.31, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 269.23, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 271.15, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 273.08, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 275.0, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 276.92, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 278.85, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 280.77, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 282.69, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 284.62, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 286.54, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 288.46, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 290.38, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 292.31, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 294.23, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 296.15, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 298.08, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 300.0, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 301.92, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 303.85, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 305.77, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 307.69, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 309.62, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 311.54, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 313.46, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 315.38, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 317.31, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 319.23, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 321.15, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 323.08, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 325.0, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 326.92, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 328.85, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 330.77, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 332.69, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 334.62, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 336.54, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 338.46, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 340.38, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 342.31, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 344.23, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 346.15, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 348.08, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 350.0, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 351.92, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 353.85, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 355.77, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 357.69, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 359.62, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 361.54, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 363.46, "notOnUcWithout": 28.0, "notOnUcWith": 85.6, "onUcWithout": 67.6, "onUcWith": 61.1},
+    {"pay": 365.68, "notOnUcWithout": 28.0, "notOnUcWith": 28.2, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 367.31, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 369.23, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 371.15, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 373.08, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 375.0, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 376.92, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 378.85, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 380.77, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 382.69, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 384.62, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 386.54, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 388.46, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 390.38, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 392.31, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 394.23, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 396.15, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 398.08, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6},
+    {"pay": 400.0, "notOnUcWithout": 28.0, "notOnUcWith": 28.0, "onUcWithout": 67.6, "onUcWith": 67.6}
   ],
   "markers": [
     {
@@ -537,11 +634,11 @@ The effective marginal tax rate is the share of an extra £1 of gross pay that t
       "label": "Weekly Earnings Limit"
     },
     {
-      "x": 247,
+      "x": 246.73,
       "label": "Personal Allowance"
     },
     {
-      "x": 366,
+      "x": 365.68,
       "label": "Allowance runs out"
     }
   ],
@@ -555,7 +652,7 @@ The effective marginal tax rate is the share of an extra £1 of gross pay that t
     "decimals": 0,
     "separator": true
   },
-  "source": "Source: PolicyEngine UK household calculation, 2031-32, on the OBR's October 2026 forecast, with the Universal Credit adjustment described below; Budget 2026."
+  "source": "Source: PolicyEngine UK household calculation (marginal_tax_rate), 2031-32, on the OBR's October 2026 forecast, with the Universal Credit adjustment described above; Budget 2026."
 }
 ```
 
@@ -606,4 +703,4 @@ These estimates have important limits:
 
 We used the `policyengine` Python package (version 6.11.1) with PolicyEngine UK (version 2.151.0). PolicyEngine UK does not yet include the taper, so we applied the `carers_allowance_earnings_taper` modifier from PolicyEngine's Autumn Budget 2026 dashboard (pull request #290 of `PolicyEngine/uk-autumn-budget-dashboard-2026`). It uses the OBR's National Living Wage forecast for each April and rounds the limit up to the next pound, which gives £228 in 2030-31 and £234 in 2031-32. The population estimates are the dashboard's run at commit `beae5998`. We calculated the worked examples with the modifier at commit `004c5281`, whose code differs from `beae5998` only in documentation and formatting.
 
-Both sides of every calculation use the OBR's October 2026 forecast, as the dashboard does. In the worked examples, both sides also set PolicyEngine UK's current-law earnings limit to the government's rule and use our Universal Credit adjustment: for a person with employment income, the income tax that Universal Credit deducts from earnings is worked out with Carer's Allowance counted as part of the earnings, so it includes the tax on the allowance. We calculated each household for gross pay from £150 to £400 a week in £1 steps. The charts plot whole-pound points where the schedules change slope and a point every £20. PolicyEngine UK reduces all employees' pay by 0.16% in 2031-32, to reflect employers passing on the cost of the salary sacrifice cap, so we set pay 0.16% higher to give whole-pound gross pay.
+Both sides of every calculation use the OBR's October 2026 forecast, as the dashboard does. In the worked examples, both sides also set PolicyEngine UK's current-law earnings limit to the government's rule and use our Universal Credit adjustment: for a person with employment income, the income tax that Universal Credit deducts from earnings is worked out with Carer's Allowance counted as part of the earnings, so it includes the tax on the allowance. We calculated each household for gross pay from £150 to £400 a week in £1 steps. The charts of the allowance and of net income plot whole-pound points where the schedules change slope and a point every £20. The marginal tax rates are PolicyEngine UK's `marginal_tax_rate` variable, with its pay rise set to £52 a year (£1 a week) on both sides; the chart plots a point every £100 of annual pay and the points where the rates change, and leaves out the points whose £1 rise crosses one of those points, which would average two rates. The variable agrees with a direct difference of household net income to within 0.01 percentage points. PolicyEngine UK reduces all employees' pay by 0.16% in 2031-32, to reflect employers passing on the cost of the salary sacrifice cap, so we set pay 0.16% higher to give whole-pound gross pay.
