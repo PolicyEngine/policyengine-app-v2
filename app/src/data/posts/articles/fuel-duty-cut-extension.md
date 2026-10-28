@@ -312,7 +312,7 @@ The saving rises in proportion to the fuel that a household uses. A household wi
 
 ## Net income and other benefits
 
-The measure lowers a tax on spending, so it does not change any income that taxes or benefits depend on. The table shows household net income in 2027-28 for three households that each use 1,000 litres a year. Net income is PolicyEngine UK's household net income: income from all sources and benefits, less direct taxes, council tax, the TV licence and the modelled duties, with the VAT change on fuel included. The couple pay £9,600 a year in rent and £1,800 in council tax; the pensioner pays £7,800 in rent and £1,600 in council tax. The pensioner gets the full new State Pension, £13,036.40 in 2027-28. The 2027-28 benefit amounts are PolicyEngine UK projections on the OBR's October 2026 forecast, the forecast that PolicyEngine's Autumn Budget 2026 dashboard uses. They are the same on the March 2026 forecast in PolicyEngine UK 2.151.0.
+The measure lowers a tax on spending, so it does not change any income that taxes or benefits depend on. The table shows household net income in 2027-28 for three households that each use 1,000 litres a year. Net income is PolicyEngine UK's household net income: income from all sources and benefits, less direct taxes, council tax, the TV licence and the modelled duties, with the VAT change on fuel included. The couple pay £9,600 a year in rent and £1,800 in council tax; the pensioner pays £7,800 in rent and £1,600 in council tax. The pensioner gets the full new State Pension, £13,036 in 2027-28. The 2027-28 benefit amounts are PolicyEngine UK projections on the OBR's October 2026 forecast, the forecast that PolicyEngine's Autumn Budget 2026 dashboard uses. They are the same on the March 2026 forecast in PolicyEngine UK 2.151.0.
 
 | Household                                                                | Benefits in 2027-28                                  | Net income before the Budget | Net income after the Budget | Change |
 | ------------------------------------------------------------------------ | ---------------------------------------------------- | ---------------------------- | --------------------------- | ------ |
@@ -342,9 +342,9 @@ PolicyEngine's Autumn Budget 2026 dashboard runs the same measure on its represe
 
 PolicyEngine's figures are 52% of the Treasury's in 2026-27 and 67% in 2027-28. Most of the difference is scope. PolicyEngine covers the petrol and diesel that households buy. The Treasury's base is every litre of taxable fuel used in the UK, including vans, lorries and business use of cars; the OBR expects £24 billion of fuel duty receipts in 2026-27. The other differences work the other way: the Treasury's demand response lowers its cost, and PolicyEngine's tax years, which start on 6 April, put 1 to 5 April 2027 into 2026-27. PolicyEngine's figures include the VAT on the lower pump price, about a sixth of the total.
 
-The Budget states that the measure supports 35 million motorists and businesses across the UK. In PolicyEngine's data, 21.7 million of the 29.2 million households in 2026-27, or 74%, buy petrol or diesel.
+The Budget states that the measure supports 35 million motorists and businesses across the UK. In PolicyEngine's data, 21.7 million of the 29.2 million households in 2026-27, or 74%, buy petrol or diesel and gain from the measure. The other 26% buy none and see no change.
 
-Household net income rises by an average of £10 in 2026-27 and £18 in 2027-28, across all households. 61% of people in 2026-27 and 73% in 2027-28 live in a household whose net income rises by more than 0.01%. The others live in households that buy no petrol or diesel, or very little.
+Household net income rises by an average of £10 in 2026-27 and £18 in 2027-28, across all households.
 
 In cash terms, the average gain in 2027-28 rises from £12 in the lowest income decile to £24 in the ninth, because higher-income households buy more fuel. As a share of income, it falls from 0.047% in the lowest decile to 0.014% in the highest. Deciles rank households by equivalised household net income before housing costs.
 
