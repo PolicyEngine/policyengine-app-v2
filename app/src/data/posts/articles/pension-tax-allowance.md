@@ -39,11 +39,11 @@ The explainer gives five example pensioners for 2027-28. PolicyEngine UK gives t
 
 | Income                                          | Total income | Income tax without the PTA | PTA used | Income tax with the PTA |
 | ----------------------------------------------- | ------------ | -------------------------- | -------- | ----------------------- |
-| Basic and additional State Pension              | £10,300.00   | £0.00                      | £0.00    | £0.00                   |
-| Partial new State Pension and a private pension | £12,970.00   | £80.00                     | £80.00   | £0.00                   |
-| Full new State Pension only                     | £13,036.40   | £93.28                     | £93.28   | £0.00                   |
-| Part-time salary, State Pension deferred        | £13,186.40   | £123.28                    | £44.00   | £79.28                  |
-| Private pension                                 | £13,400.00   | £166.00                    | £0.00    | £166.00                 |
+| Basic and additional State Pension              | £10,300      | £0                         | £0       | £0                      |
+| Partial new State Pension and a private pension | £12,970      | £80                        | £80      | £0                      |
+| Full new State Pension only                     | £13,036      | £93                        | £93      | £0                      |
+| Part-time salary, State Pension deferred        | £13,186      | £123                       | £44      | £79                     |
+| Private pension                                 | £13,400      | £166                       | £0       | £166                    |
 
 A pensioner whose only income is the full new State Pension owes £93 of income tax without the PTA. This is below the £94 PTA, so the PTA removes the full tax bill. The pensioner with a part-time salary has income £150 above the full new State Pension, so the PTA is £94 − £150 ÷ 3 = £44. The pensioner with £13,400 of private pension has income above £13,319 and gets no PTA.
 
@@ -51,16 +51,18 @@ A pensioner whose only income is the full new State Pension owes £93 of income 
 
 Pension Credit, Housing Benefit and Council Tax Reduction all assess income after income tax. When the PTA lowers income tax, these benefits fall, so household net income rises by less than the PTA. The table shows eight households in the North West of England in 2027-28. Households 1 to 5 are single pensioners aged 70, except household 5, aged 76. Households 1 to 3 and the older partner in households 6 and 7 have the full new State Pension and no other income. Households 4 and 5 have £11,000 of State Pension and a private pension of £1,800 and £1,860, and no housing costs. In household 8, the older partner earns £13,036 and has deferred the State Pension. The couples are aged 70 and 60, and the younger partner has no income. Each household owes £1,800 a year of council tax, except households 4 and 5, and the renters pay £7,800 a year in rent. Each column shows the change that the PTA makes, and a dash means no change; for the TV licence fee, a positive change is a new cost.
 
-| Household                                                                | Total income | Income tax | Pension Credit | Housing Benefit | Council Tax Reduction | Universal Credit | TV licence fee | Net income    |
-| ------------------------------------------------------------------------ | ------------ | ---------- | -------------- | --------------- | --------------------- | ---------------- | -------------- | ------------- |
-| 1. Owns home, claims no means-tested benefits                            | £13,036.40   | −⁠£93.28   | —              | —               | —                     | —                | —              | **+⁠£93.28**  |
-| 2. Owns home, claims Council Tax Reduction                               | £13,036.40   | −⁠£93.28   | —              | —               | −⁠£18.66              | —                | —              | **+⁠£74.62**  |
-| 3. Rents, claims Housing Benefit and Council Tax Reduction               | £13,036.40   | −⁠£93.28   | —              | −⁠£60.63        | −⁠£18.66              | —                | —              | **+⁠£13.99**  |
-| 4. Claims Pension Credit                                                 | £12,800.00   | −⁠£46.00   | −⁠£46.00       | —               | —                     | —                | —              | **£0.00**     |
-| 5. Aged 76, claims Pension Credit                                        | £12,860.00   | −⁠£58.00   | −⁠£57.60       | —               | —                     | —                | +⁠£180.00      | **−⁠£179.60** |
-| 6. Married couple, rents, claims Universal Credit                        | £13,036.40   | —          | —              | —               | —                     | —                | —              | **£0.00**     |
-| 7. Unmarried couple, rents, claims Universal Credit                      | £13,036.40   | −⁠£93.28   | —              | —               | —                     | —                | —              | **+⁠£93.28**  |
-| 8. Unmarried couple, older partner works, rents, claims Universal Credit | £13,036.40   | −⁠£93.28   | —              | —               | —                     | −⁠£51.30         | —              | **+⁠£41.97**  |
+| Household                                                                | Total income | Income tax | Pension Credit | Housing Benefit | Council Tax Reduction | Universal Credit | TV licence fee | Net income |
+| ------------------------------------------------------------------------ | ------------ | ---------- | -------------- | --------------- | --------------------- | ---------------- | -------------- | ---------- |
+| 1. Owns home, claims no means-tested benefits                            | £13,036      | −⁠£93      | —              | —               | —                     | —                | —              | **+⁠£93**  |
+| 2. Owns home, claims Council Tax Reduction                               | £13,036      | −⁠£93      | —              | —               | −⁠£19                 | —                | —              | **+⁠£75**  |
+| 3. Rents, claims Housing Benefit and Council Tax Reduction               | £13,036      | −⁠£93      | —              | −⁠£61           | −⁠£19                 | —                | —              | **+⁠£14**  |
+| 4. Claims Pension Credit                                                 | £12,800      | −⁠£46      | −⁠£46          | —               | —                     | —                | —              | **£0**     |
+| 5. Aged 76, claims Pension Credit                                        | £12,860      | −⁠£58      | −⁠£58          | —               | —                     | —                | +⁠£180         | **−⁠£180** |
+| 6. Married couple, rents, claims Universal Credit                        | £13,036      | —          | —              | —               | —                     | —                | —              | **£0**     |
+| 7. Unmarried couple, rents, claims Universal Credit                      | £13,036      | −⁠£93      | —              | —               | —                     | —                | —              | **+⁠£93**  |
+| 8. Unmarried couple, older partner works, rents, claims Universal Credit | £13,036      | −⁠£93      | —              | —               | —                     | −⁠£51            | —              | **+⁠£42**  |
+
+Figures may not sum because of rounding.
 
 Housing Benefit falls by 65p and Council Tax Reduction by 20p for each £1 of extra income after tax, so household 3 keeps 15p of each £1 of PTA. Pension Credit tops income after tax up to a minimum guarantee, so a claimant whose income stays below the guarantee, such as household 4, loses Pension Credit equal to the full PTA.
 
@@ -743,11 +745,11 @@ The Treasury estimates that the PTA reduces receipts by £45 million in 2027-28,
 | Tax year | Income tax: PolicyEngine | Income tax: HM Treasury (Table 6.1) | Household net income: PolicyEngine |
 | -------- | ------------------------ | ----------------------------------- | ---------------------------------- |
 | 2026-27  | £0                       | £0                                  | £0                                 |
-| 2027-28  | −£42 million             | −£45 million                        | +£30 million                       |
-| 2028-29  | −£113 million            | −£90 million                        | +£83 million                       |
-| 2029-30  | −£193 million            | −£150 million                       | +£144 million                      |
-| 2030-31  | £0                       | +£50 million                        | £0                                 |
-| 2031-32  | £0                       | −£15 million                        | £0                                 |
+| 2027-28  | −⁠£42 million            | −⁠£45 million                       | +⁠£30 million                      |
+| 2028-29  | −⁠£113 million           | −⁠£90 million                       | +⁠£83 million                      |
+| 2029-30  | −⁠£193 million           | −⁠£150 million                      | +⁠£144 million                     |
+| 2030-31  | £0                       | +⁠£50 million                       | £0                                 |
+| 2031-32  | £0                       | −⁠£15 million                       | £0                                 |
 
 PolicyEngine's estimate is within £3 million of the Treasury's in 2027-28 and higher in the next two years. The two differ in method: the Treasury counts receipts in fiscal years, and its +£50 million and −£15 million fall after the PTA ends on 5 April 2030, while PolicyEngine counts tax liabilities in each tax year, so it shows nothing after 2029-30. They also use different data: the Treasury uses HMRC's Personal Tax Model, and PolicyEngine uses Microcosm UK.
 
