@@ -8,9 +8,11 @@ import BudgetaryImpactByProgramSubPage, {
 import DistributionalImpactIncomeAverageSubPage from '@/components/flagship/report/charts/DistributionalImpactIncomeAverageSubPage';
 import WinnersLosersIncomeDecileSubPage from '@/components/flagship/report/charts/WinnersLosersIncomeDecileSubPage';
 import {
+  EMPLOYER_NI_TOTAL,
   REPORT_4332_OUTPUT,
   UC_FREEZE_TOTAL,
   withBudget,
+  withEmployerNIBudget,
   withFlaggedUCFreezeBudget,
   withUCFreezeBudget,
   withUKBreakdowns,
@@ -108,6 +110,17 @@ describe('getOtherProgramsAmount', () => {
   test('given a total that no listed program explains then returns all of it', () => {
     expect(getOtherProgramsAmount(17e6, [])).toBe(17e6);
   });
+
+  test('given a row the total leaves out then it does not count towards the total', () => {
+    // Given: the employer NI threshold rise, whose £15.5bn of employer NI the total leaves out.
+    const programs = getChangedPrograms(withEmployerNIBudget(REPORT_4332_OUTPUT), {});
+
+    // When
+    const other = getOtherProgramsAmount(EMPLOYER_NI_TOTAL, programs);
+
+    // Then: the other rows add up to the total, so there is nothing else.
+    expect(other).toBe(0);
+  });
 });
 
 describe('BudgetaryImpactByProgramSubPage', () => {
@@ -135,6 +148,24 @@ describe('BudgetaryImpactByProgramSubPage', () => {
 
     expect(screen.queryByText('Other programmes')).not.toBeInTheDocument();
     expect(screen.getByText('£25.0m')).toBeInTheDocument();
+  });
+
+  test('given a row the total leaves out then no other programmes bar offsets it', () => {
+    // Given
+    const output = withEmployerNIBudget(REPORT_4332_OUTPUT);
+
+    // When
+    const { container } = render(
+      <BudgetaryImpactByProgramSubPage output={output} fillHeight />,
+      'uk'
+    );
+
+    // Then: the bars before the total add up to it, and employer NI stands after it.
+    expect(screen.queryByText('Other programmes')).not.toBeInTheDocument();
+    expect(screen.getByText('£5.3bn')).toBeInTheDocument();
+    // The axis label wraps over two lines.
+    expect(container).toHaveTextContent(/Total.*Employer NI \(not\s*in total\)/);
+    expect(screen.getByText('−£15.5bn')).toBeInTheDocument();
   });
 
   test('given programmes that add up to the total then there is no other programmes bar', () => {
