@@ -29,7 +29,7 @@ The same replay shows what the adjusted triple lock would have changed. Had it s
 
 ## What it saves
 
-The saving depends on which of the three figures leads in each year from 2030. A monthly model of CPI and earnings, fitted to 2000 to 2026 without the furlough months, simulates 50,000 paths whose average matches the OBR's March 2026 forecast in every year. We run 160 of those paths through PolicyEngine UK under both rules and weight them to stand for all 50,000.
+The Budget notes that under the triple lock, spending "depends on which of prices, earnings or 2.5% is highest in each year, and on how those differences compound over time." So does the saving. A monthly model of CPI and earnings, fitted to 2000 to 2026 without the furlough months, simulates 50,000 paths whose average matches the OBR's March 2026 forecast in every year. We run 160 of those paths through PolicyEngine UK under both rules and weight them to stand for all 50,000.
 
 The adjusted triple lock first pays less in 2031-32. Averaged across the paths, it saves £3.2 billion in 2034-35 and £11.1 billion in 2039-40, or £2.3 billion and £7.9 billion net of tax and benefits.
 
