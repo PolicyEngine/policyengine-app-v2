@@ -53,7 +53,7 @@ We round figures to the nearest pound; totals may therefore differ from the sum 
 
 The Welsh Government [has said](https://www.gov.wales/written-statement-welsh-government-response-uk-autumn-budget-2026) it will make a £100 cost-of-living payment to all households in council tax bands A to D, which would give the band C household in Wales a further £100. The Scottish Government [has said](https://www.gov.scot/news/uk-budget-delivers-real-cut-to-scotlands-funding/) it will ensure that households in Scotland benefit from a one-time £100 payment, without saying which households. We model neither.
 
-Households that use more electricity gain more. For a couple with two children renting an all-electric home in the North West of England, with annual electricity spending of £1,800, the VAT cut increases net income by £49 in 2026-27 and £19 in 2027-28.
+Households with higher electricity consumption receive larger savings. For example, a couple with two children renting an all-electric home in the North West of England, with annual electricity spending of £1,800, would save £49 in 2026-27 and £19 in 2027-28.
 
 Neither measure reduces benefit entitlements in our model. For example, a lone parent with one child aged 4, earning £14,000 and renting a band B property in England for £975 per month, receives £14,585 of Universal Credit in 2026-27 with or without the payment, so the household's net income increases by the full £100.
 
