@@ -1,7 +1,19 @@
 import { colors, spacing, typography } from "@/designTokens";
 
-const EVENT_URL =
-  "https://us06web.zoom.us/meeting/register/2DLUeZAbRwKkKEK-2JrFrQ";
+// The Budget dashboard, served on this site through its app zone route
+// (src/data/appZoneRoutes.ts).
+const DASHBOARD_URL = "/uk/budgets/autumn-2026";
+// The recording of our Budget-day webinar on 28 October.
+const RECORDING_URL = "https://www.youtube.com/watch?v=ZutKULXLhU0";
+
+const pill = {
+  borderRadius: 999,
+  padding: "8px 18px",
+  fontSize: 15,
+  fontWeight: 600,
+  whiteSpace: "nowrap",
+  textDecoration: "none",
+} as const;
 
 export default function AutumnBudgetEventBanner({
   countryId,
@@ -11,10 +23,7 @@ export default function AutumnBudgetEventBanner({
   if (countryId !== "uk") return null;
 
   return (
-    <a
-      href={EVENT_URL}
-      target="_blank"
-      rel="noopener noreferrer"
+    <div
       style={{
         // Stay pinned just below the sticky header while scrolling.
         position: "sticky",
@@ -34,26 +43,48 @@ export default function AutumnBudgetEventBanner({
         fontSize: 17,
         fontWeight: 500,
         lineHeight: 1.4,
-        textDecoration: "none",
       }}
     >
       <span>
-        <strong style={{ fontWeight: 700 }}>Autumn Budget 2026:</strong> join
-        our same-day first look online, Wednesday 28 October, 4:30pm
+        <strong style={{ fontWeight: 700 }}>Autumn Budget 2026:</strong> explore
+        our analysis, and watch our same-day first look
       </span>
       <span
         style={{
-          background: colors.primary[600],
-          color: colors.white,
-          borderRadius: 999,
-          padding: "8px 18px",
-          fontSize: 15,
-          fontWeight: 600,
-          whiteSpace: "nowrap",
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: spacing.md,
         }}
       >
-        Register free &rarr;
+        {/* The aria-labels name the Budget for screen readers' link lists,
+            and start with the visible text so voice control still matches. */}
+        <a
+          href={DASHBOARD_URL}
+          aria-label="See the analysis of Autumn Budget 2026"
+          style={{
+            ...pill,
+            background: colors.primary[600],
+            color: colors.white,
+          }}
+        >
+          See the analysis &rarr;
+        </a>
+        <a
+          href={RECORDING_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Watch the recording of our Autumn Budget 2026 webinar (opens in a new tab)"
+          style={{
+            ...pill,
+            background: colors.white,
+            color: colors.primary[700],
+            border: `1px solid ${colors.primary[600]}`,
+          }}
+        >
+          Watch the recording &rarr;
+        </a>
       </span>
-    </a>
+    </div>
   );
 }

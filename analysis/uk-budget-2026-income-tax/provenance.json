@@ -1,0 +1,137 @@
+{
+  "as_of": "2026-10-28",
+  "household_year": 2027,
+  "package_versions": {
+    "policyengine": "6.11.1",
+    "policyengine-uk": "2.151.0",
+    "policyengine-core": "3.33.3"
+  },
+  "dashboard_reforms": {
+    "repository": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026",
+    "pull_request": 290,
+    "commit": "b50787aa75ef5aed36b822c973afa6b569464d55",
+    "path": "src/uk_budget_data/reforms.py",
+    "measures": [
+      "unearned_income_rates_up",
+      "trading_allowance_raise"
+    ]
+  },
+  "population": {
+    "status": "approved_property_branch_snapshot_used_in_property_draft",
+    "dataset": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+    "sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
+    "certificate": "https://github.com/PolicyEngine/policyengine.py/pull/720",
+    "dashboard_adoption": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/pull/237",
+    "raw_microdata_used_for_households": false,
+    "forecast": "October 2026 OBR inputs, applied to both baseline and reform when population scoring is run",
+    "replacement_policy": "Retain this adopted bundle until a later explicitly recorded update; do not silently use the candidate in policyengine.py PR725.",
+    "national_results_generated_locally": false,
+    "national_results_reused_from_dashboard": true,
+    "article_national_results_published": false,
+    "article_scope_note": "The property draft includes national revenue and decile averages from the approved property-only dashboard artifact recorded in property-population/. Savings and trading retain household calculations and Treasury costings only. Withdrawn combined outputs are not published. Reach, poverty and inequality figures are omitted pending separate disclosure clearance.",
+    "national_results_record": "property-population/summary.json",
+    "retained_national_measures": [
+      "property_income_rates_up"
+    ],
+    "national_results_scope": "Approved property-only national revenue and decile outputs; reach, poverty and inequality outputs are omitted pending separate disclosure clearance."
+  },
+  "treasury_costings": {
+    "source": "https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html",
+    "table": "6.1",
+    "units": "GBP million; positive values below indicate revenue for savings/property and cost for trading",
+    "fiscal_years": [
+      "2026-27",
+      "2027-28",
+      "2028-29",
+      "2029-30",
+      "2030-31",
+      "2031-32"
+    ],
+    "property_row_61_revenue": [
+      0,
+      35,
+      575,
+      435,
+      445,
+      455
+    ],
+    "savings_row_62_revenue": [
+      15,
+      125,
+      555,
+      520,
+      555,
+      590
+    ],
+    "trading_row_15_cost": [
+      0,
+      0,
+      225,
+      165,
+      175,
+      180
+    ]
+  },
+  "review_follow_up": {
+    "trading_comment": "https://github.com/PolicyEngine/policyengine-app-v2/pull/1460#issuecomment-6472758764",
+    "savings_property_comment": "https://github.com/PolicyEngine/policyengine-app-v2/pull/1460#issuecomment-6472939282",
+    "dashboard_households_pr": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/pull/292",
+    "additional_household_pairs": 5,
+    "raw_population_accessed": false,
+    "additional_internal_population_numbers_adopted": false,
+    "final_regeneration_note": "Compare the approved property artifact recorded in property-population/ with the final released dashboard before publication; update and review the article if its execution-bound results change.",
+    "remaining_comments_resolution": "The property draft uses approved property-only national revenue and decile results alongside verified household examples and separate Treasury costings. Savings and trading retain household calculations and Treasury costings only. Withdrawn combined outputs and uncleared reach, poverty and inequality figures are not published."
+  },
+  "household_forecast": {
+    "dashboard_commit": "640426575270224db9b04d6c94d30e264a347be2",
+    "forecast_file_git_blob": "b504a48fffb93714ff358d869cad712b6daea20e",
+    "forecast_module_git_blob": "b2ca186b6fd514f334ced11934d38b256e6d2127",
+    "both_baseline_and_reform": true,
+    "fixed_nominal_inputs": true,
+    "reference_pr": "https://github.com/PolicyEngine/policyengine-app-v2/pull/1457",
+    "reference_pr_head": "d282ef870176c81feb87175d02584121bdc50197",
+    "equivalence": "Exact eight-path equality with source with_forecast(None).parameter_changes was checked; synthetic households have no population data load.",
+    "national_outputs_regenerated": false,
+    "national_forecast_still_recorded_separately": true,
+    "forecast_file_sha256": "dc039d30660d17f30a45e49538dbd22953e02bd4f6b63eda2eaebcf8252baf54"
+  },
+  "chart_methodology": {
+    "renderer_dependency": "https://github.com/PolicyEngine/policyengine-app-v2/pull/1462",
+    "type": "numeric line",
+    "chart_interval_gbp": 100,
+    "validation_interval_gbp": 2,
+    "validation_record": "curve-validation.json",
+    "tolerance_gbp": 0.01,
+    "breakpoints": "All allowance and expense-choice breakpoints within the plotted £500–£5,000 range.",
+    "validation_results": {
+      "range_gbp": [
+        500,
+        5000
+      ],
+      "validation_interval_gbp": 2,
+      "points_per_series": 2251,
+      "series": 4,
+      "liability_checks": 18008,
+      "interpolation_checks": 9004,
+      "chart_interval_gbp": 100,
+      "savings_breakpoints_gbp": [
+        500,
+        1000
+      ],
+      "trading_breakpoints_gbp": [
+        1000,
+        1333.3333333333333,
+        3000,
+        4000
+      ],
+      "chart_rows": {
+        "savings": 46,
+        "trading": 47
+      },
+      "maximum_model_error_gbp": 2.2737367544323206e-13,
+      "maximum_chart_interpolation_error_gbp": 0.0033000000000242835,
+      "tolerance_gbp": 0.01,
+      "method": "All four series checked against pe.uk at every £2; both scenarios compared with independent tax arithmetic; plotted linear interpolation compared with the engine tax changes. The non-integer expense-choice breakpoint is additionally calculated with pe.uk."
+    }
+  }
+}
