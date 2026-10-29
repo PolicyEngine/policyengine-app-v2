@@ -61,7 +61,7 @@ Neither measure reduces benefit entitlements in our model. For example, a lone p
 
 ### Budgetary impact
 
-According to PolicyEngine's static modelling, the two measures cost £2.81 billion in 2026-27, against £2.84 billion for the same parts in the official costing. The official costing's full figure, £3.38 billion, also covers the devolved governments' share of the payment's funding, the £100 million for councils in England and £21 million of other spending that the OBR lists for the VAT cut. The VAT cut costs a further £0.35 billion in 2027-28. Table 3 compares the estimates.
+According to PolicyEngine's static modelling, the two measures cost £2.81 billion in 2026-27, against £2.84 billion for the same parts in the official costing, certified by the OBR. The official costing's full figure, £3.38 billion, also covers the devolved governments' share of the payment's funding, the £100 million for councils in England and £21 million of other spending that the OBR lists for the VAT cut. The VAT cut costs a further £0.35 billion in 2027-28. Table 3 compares the estimates.
 
 **Table 3: Cost of the energy bill measures (£ million)**
 
