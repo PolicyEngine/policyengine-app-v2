@@ -84,10 +84,12 @@ export async function fetchV2Household(
 
 export async function submitV2HouseholdCalculation(
   request: V2HouseholdCalculationRequest,
-  client: PublicApiClient = createPublicApiClient()
+  client: PublicApiClient = createPublicApiClient(),
+  signal?: AbortSignal
 ): Promise<V2HouseholdCalculationItem> {
   return requireResult(
     client.POST('/v2/household-calculations', {
+      signal,
       body: {
         country_id: publicApiCountryId(request.countryId),
         household_id: request.householdId,
@@ -101,10 +103,12 @@ export async function submitV2HouseholdCalculation(
 
 export async function fetchV2HouseholdCalculation(
   calculationId: string,
-  client: PublicApiClient = createPublicApiClient()
+  client: PublicApiClient = createPublicApiClient(),
+  signal?: AbortSignal
 ): Promise<V2HouseholdCalculationItem> {
   return requireResult(
     client.GET('/v2/household-calculations/{calculation_id}', {
+      signal,
       params: { path: { calculation_id: calculationId } },
     })
   );
@@ -130,12 +134,12 @@ export async function calculateV2Household(
 ): Promise<V2HouseholdCalculationOutput> {
   let calculationId = '';
   const calculation = await pollUntilFinished({
-    first: async () => {
-      const submitted = await submitV2HouseholdCalculation(request, client);
+    first: async (signal) => {
+      const submitted = await submitV2HouseholdCalculation(request, client, signal);
       calculationId = submitted.calculation_id;
       return submitted;
     },
-    read: () => fetchV2HouseholdCalculation(calculationId, client),
+    read: (signal) => fetchV2HouseholdCalculation(calculationId, client, signal),
     isFinished: ({ status }) => status === 'succeeded' || status === 'failed',
     timeoutMessage: 'The household calculation timed out.',
     ...pollOptions,

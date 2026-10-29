@@ -1,3 +1,6 @@
+// @vitest-environment node
+// These requests carry an abort signal, which Node's Request accepts only from
+// Node's own AbortController, not from jsdom's.
 import { describe, expect, test } from 'vitest';
 import { runV2FlagshipHousehold, v2PolicyIdFor } from '@/libs/flagship/v2HouseholdRun';
 import {

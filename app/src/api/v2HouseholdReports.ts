@@ -87,10 +87,12 @@ export async function submitV2HouseholdReport(
 export async function fetchV2HouseholdReport(
   countryId: string,
   reportId: string,
-  client: PublicApiClient = createPublicApiClient()
+  client: PublicApiClient = createPublicApiClient(),
+  signal?: AbortSignal
 ): Promise<V2HouseholdReportItem> {
   const result = await requireResult(
     client.GET('/v2/reports/{report_id}', {
+      signal,
       params: {
         path: { report_id: reportId },
         query: { country_id: publicApiCountryId(countryId) },
@@ -145,7 +147,7 @@ export async function waitForV2HouseholdReport(
   { client = createPublicApiClient(), ...pollOptions }: CalculateV2HouseholdOptions = {}
 ): Promise<V2HouseholdReportItem> {
   const item = await pollUntilFinished({
-    read: () => fetchV2HouseholdReport(countryId, reportId, client),
+    read: (signal) => fetchV2HouseholdReport(countryId, reportId, client, signal),
     isFinished: ({ status }) => status !== 'pending' && status !== 'running',
     timeoutMessage: 'The household report timed out.',
     ...pollOptions,

@@ -1,3 +1,6 @@
+// @vitest-environment node
+// These requests carry an abort signal, which Node's Request accepts only from
+// Node's own AbortController, not from jsdom's.
 import { describe, expect, test, vi } from 'vitest';
 import { pollUntilFinished, TRANSIENT_READ_RETRIES } from '@/api/v2Polling';
 import { V2ApiError } from '@/api/v2UserClient';
@@ -63,6 +66,34 @@ describe('pollUntilFinished', () => {
 
     // Then
     await expect(polling).rejects.toMatchObject({ name: 'AbortError' });
+    expect(read).toHaveBeenCalledTimes(1);
+  });
+
+  test('given the wait aborted while a read is in progress then the read is handed the signal, and the wait stops at once', async () => {
+    // Given: a read cancelled by its signal fails as the client reports it
+    const controller = new AbortController();
+    const read = vi.fn(
+      (signal?: AbortSignal) =>
+        new Promise<ReadState>((_resolve, reject) => {
+          signal?.addEventListener('abort', () =>
+            reject(new V2ApiError(0, 'Network error: This operation was aborted'))
+          );
+        })
+    );
+    const polling = pollUntilFinished({
+      read,
+      isFinished,
+      timeoutMessage: TIMEOUT_MESSAGE,
+      signal: controller.signal,
+    });
+    await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(1));
+
+    // When
+    controller.abort();
+
+    // Then
+    await expect(polling).rejects.toMatchObject({ name: 'AbortError' });
+    expect(read).toHaveBeenCalledWith(controller.signal);
     expect(read).toHaveBeenCalledTimes(1);
   });
 

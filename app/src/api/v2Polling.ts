@@ -3,7 +3,9 @@
  * household calculation, a household report): the work is read again at
  * an interval until it has finished, for at most a time limit, and the
  * wait stops at once when its signal is aborted (a query no longer needed,
- * or a sibling calculation that failed). The work itself runs on.
+ * or a sibling calculation that failed): the timer stops, and each request
+ * is sent with the signal, so one in progress is cancelled. The work
+ * itself runs on in the simulation service.
  */
 
 import { isV2ApiError } from '@/api/v2UserClient';
@@ -77,8 +79,10 @@ export async function pollUntilFinished<Answer>({
   now = Date.now,
   signal,
 }: PollOptions & {
-  first?: () => Promise<Answer>;
-  read: () => Promise<Answer>;
+  /** Sends the work, with the signal for its request. */
+  first?: (signal?: AbortSignal) => Promise<Answer>;
+  /** Reads the work, with the signal for its request. */
+  read: (signal?: AbortSignal) => Promise<Answer>;
   isFinished: (answer: Answer) => boolean;
   timeoutMessage: string;
 }): Promise<Answer> {
@@ -86,8 +90,11 @@ export async function pollUntilFinished<Answer>({
   const readWithRetries = async (): Promise<Answer> => {
     for (let retries = 0; ; retries += 1) {
       try {
-        return await read();
+        return await read(signal);
       } catch (error) {
+        // A request the signal cancelled fails as the client reports it; the
+        // wait ends with the abort, and is not asked again.
+        signal?.throwIfAborted();
         if (!isTransientFailure(error) || retries >= TRANSIENT_READ_RETRIES) {
           throw error;
         }
@@ -96,8 +103,19 @@ export async function pollUntilFinished<Answer>({
       signal?.throwIfAborted();
     }
   };
+  const sendFirst = async (): Promise<Answer> => {
+    if (!first) {
+      return readWithRetries();
+    }
+    try {
+      return await first(signal);
+    } catch (error) {
+      signal?.throwIfAborted();
+      throw error;
+    }
+  };
   signal?.throwIfAborted();
-  let answer = await (first ?? readWithRetries)();
+  let answer = await sendFirst();
   while (!isFinished(answer)) {
     if (now() - startedAt >= timeLimitMs) {
       throw new Error(timeoutMessage);
