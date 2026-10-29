@@ -113,6 +113,117 @@ Why not `website/vercel.json`? It retains a few legacy zone rewrites and host-on
 
 Reference PRs to copy from: [#1047 South Carolina 2026](https://github.com/PolicyEngine/policyengine-app-v2/pull/1047), [#1027 multizone apps registry](https://github.com/PolicyEngine/policyengine-app-v2/pull/1027).
 
+Once the route is live, the zone adds the direct-host redirect below.
+
+### The direct-host redirect
+
+**Every zone 308s a direct visit to its production Vercel host to the same page on policyengine.org, and leaves requests that policyengine.org proxies alone.** The website proxies each route to `<project>.vercel.app`, so that host serves the same page outside the site, and its links leak into newsletters, posts and READMEs. Public text links to policyengine.org only; this redirect catches the links that slipped through. The 29 October 2026 US newsletter, for one, linked `ballot-measures-2026.vercel.app` seven times.
+
+**How a zone tells the two apart.** Both requests reach the zone with the same `host`. Vercel sets `x-forwarded-host` to the host the visitor asked for, and overwrites any value the visitor sends:
+
+- on a direct visit, it holds the zone's own host;
+- on a request the website proxies, it holds the website's host: `www.policyengine.org` in production, and a preview's own `*.vercel.app` host on a preview.
+
+A header-echo origin behind a copy of this website's rewrite and middleware showed this on 2026-10-29. Vercel's [rewrites docs](https://vercel.com/docs/rewrites) say the same under "Identifying the visitor at your origin".
+
+So the rule matches the zone's production host, never "anything but policyengine.org": that form would redirect this website's previews, which proxy to the same production host, and the zone's own previews.
+
+A Next.js zone adds three rules to `next.config.js`:
+
+```js
+const PUBLIC_URL = "https://www.policyengine.org/us/<slug>";
+// Escape the dots: Vercel matches the value as a regex against the whole header.
+const directVisit = [
+  {
+    type: "header",
+    key: "x-forwarded-host",
+    value: "<project>\\.vercel\\.app",
+  },
+];
+
+const nextConfig = {
+  basePath: "/us/<slug>",
+  async redirects() {
+    return [
+      // The host's root, outside the basePath.
+      {
+        source: "/",
+        basePath: false,
+        has: directVisit,
+        destination: PUBLIC_URL,
+        permanent: true,
+      },
+      // The bare basePath. Without this rule Vercel sends it to PUBLIC_URL + "/", a second hop.
+      {
+        source: "/",
+        has: directVisit,
+        destination: PUBLIC_URL,
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: directVisit,
+        destination: `${PUBLIC_URL}/:path*`,
+        permanent: true,
+      },
+    ];
+  },
+};
+```
+
+A zone built with another framework adds two rules to `vercel.json`. Use `/(.*)` rather than `/:path*`, which misses URLs that end in a slash, and put the `/` rule first, since `/(.*)` would send the root to the site's home page:
+
+```json
+{
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-forwarded-host",
+          "value": "<project>\\.vercel\\.app"
+        }
+      ],
+      "destination": "https://www.policyengine.org/us/<slug>",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-forwarded-host",
+          "value": "<project>\\.vercel\\.app"
+        }
+      ],
+      "destination": "https://www.policyengine.org/$1",
+      "permanent": true
+    }
+  ]
+}
+```
+
+Both forms keep the query. Redirect to `www.policyengine.org`, not the apex: the apex 307s to www, which costs readers a hop. Keep `<link rel="canonical">`, `og:url` and the zone's sitemap on `https://policyengine.org/...`, as the other zones do. `app-zone-shell-audit` maps a zone's sitemap entries to routes only on that origin.
+
+**Order matters.** Add the redirect only after the route goes live: the website has merged and deployed the `appZoneRoutes.ts` entry, and its policyengine.org URL serves the page. Before then, the redirect sends readers to a 404. It also breaks the shell audit on the route's PR: with the route not live yet, the audit loads the zone's host directly and follows the redirect to that 404. So a new zone ships without the redirect and adds it in a follow-up. A zone that deploys from the CLI, not from git, ships whatever its main holds at the next routine deploy, so hold the merge, not just the deploy.
+
+**Check it.** After the zone deploys, run `node .github/scripts/audit-zone-direct-hosts.mjs`. For each zone it requests the zone's host directly, at the route's root and at a path under it, the way a reader with an old link would. It then checks that the redirect:
+
+- is permanent;
+- names a policyengine.org URL that the zone's rewrite in `appZoneRoutes.ts` proxies back to the same path and query;
+- ends on a page that answers 200, with no loop.
+
+When it passes, add the source to `DIRECT_HOST_REDIRECTS` in that script. The `zone-direct-host-audit` workflow runs it daily and on route changes. It fails if a listed zone stops redirecting, or if any zone's redirect lands on the wrong page, a 404 or a loop. It reports zones without the redirect but doesn't fail them.
+
+Pitfalls:
+
+- **Hosts that something iframes.** An iframe of a redirecting host loads policyengine.org instead of the tool. The audit fails if a research article iframes a redirecting host. It can't see embeds on other sites, so check those before adding the redirect.
+- **Hosts that serve paths unlike the website's.** CliffWatch (`/us/cliffwatch`) and the student loan visualisation serve from their host's root, and `/us/pe84` rewrites to `/us/pe84/calculator`. Map each host path to the public path that serves it: `"destination": "https://www.policyengine.org/us/cliffwatch/$1"` for a root-served zone. The audit maps every redirect back through `appZoneRoutes.ts` and fails one that lands on another page.
+- **Hosts that two routes share.** `/uk/marriage` and `/uk/ai-inequality` rewrite to the US path with `?country=uk`. The plain rules send a UK reader to `/us/marriage?country=uk`, which serves the UK view at a US address. To send them to `/uk/marriage`, add a rule ahead of the others that also has `{ "type": "query", "key": "country", "value": "uk" }`, then run the audit.
+- **Assets.** Vercel builds each redirect from its `source`, without the `/_next` exclusion Next's own router applies. So on Vercel these rules also redirect direct requests for `_next` assets. Pages served through policyengine.org fetch their assets through policyengine.org too, so they never meet the redirect.
+- **Frameworks.** The Next.js form ran on Next 16.2, and the `vercel.json` form on a static site. Vite, Create React App and SvelteKit zones use the `vercel.json` form; run the audit after deploying one.
+
 ### GitHub Pages iframes (legacy)
 
 No route embeds a GitHub Pages site as a whole page any more: the 2025 year in review is now a zone (`website/src/data/appZoneRoutes.ts`). Do not add page-level iframe embeds — use multizones. Research articles can still embed `policyengine.github.io` charts in their markdown. The `check-embeds` job in `pr.yaml` and `push.yaml` doesn't scan articles; it checks that `policyengine.github.io` URLs under `app/src/pages/` and `website/src/app/` return 200.

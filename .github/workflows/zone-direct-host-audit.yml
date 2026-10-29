@@ -1,0 +1,56 @@
+name: Zone direct-host audit
+
+on:
+  pull_request:
+    paths:
+      - "website/src/data/appZoneRoutes.ts"
+      - "app/src/data/posts/articles/**"
+      - ".github/scripts/audit-zone-direct-hosts.mjs"
+      - ".github/scripts/audit-zone-direct-hosts.test.mjs"
+      - ".github/scripts/audit-app-zone-shell.mjs"
+      - ".github/workflows/zone-direct-host-audit.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "47 9 * * *"
+
+jobs:
+  audit:
+    name: Audit direct visits to zone hosts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # Like the app-zone shell audit, this connects to production sites over
+      # HTTPS, so it uses a Node 24 release without the compromised eMudhra
+      # (emSign) CAs.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          check-latest: true
+
+      - name: Run direct-host audit unit tests
+        run: node --test .github/scripts/audit-zone-direct-hosts.test.mjs
+
+      - name: Run direct-host audit
+        run: node .github/scripts/audit-zone-direct-hosts.mjs
+
+      - name: File or bump an issue when the scheduled audit fails
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Zone direct-host audit is failing"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "in:title \"$title\"" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" \
+              --body "Still failing: $run_url"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "The scheduled zone direct-host audit failed: $run_url
+
+          A zone's production Vercel host stopped redirecting direct visits to policyengine.org, or its redirect now sends readers to the wrong page, a 404 or a loop, or an article iframes a host that redirects. The run log names the route. Fix it in the zone's repository (docs/engineering/skills/repository-guidance.md → Embedded sites → The direct-host redirect)."
+          fi
