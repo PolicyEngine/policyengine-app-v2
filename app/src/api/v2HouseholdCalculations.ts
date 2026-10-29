@@ -5,6 +5,7 @@ import {
   type PublicApiClient,
 } from '@/api/publicApi/client';
 import type { components } from '@/api/publicApi/schema';
+import { pollUntilFinished, type PollOptions } from '@/api/v2Polling';
 import type { Household } from '@/models/Household';
 import { householdToV2CreateBody } from '@/models/household/v2DocumentCodec';
 import type { V2HouseholdItem } from '@/types/v2Households';
@@ -24,15 +25,6 @@ export type V2HouseholdCalculationItem = Schemas['HouseholdCalculationItem'];
 export type V2HouseholdCalculationAxis = Schemas['HouseholdCalculationAxis'];
 /** A succeeded calculation's household, warnings, SPM settings and receipt, and .py version. */
 export type V2HouseholdCalculationOutput = Schemas['HouseholdCalculationOutput'];
-
-/** How often a calculation that has not finished is read again. */
-export const CALCULATION_POLL_INTERVAL_MS = 2000;
-
-/**
- * How long a calculation may take before the app stops waiting for it: a
- * variation across earnings takes a few minutes, as on the v1 routes.
- */
-export const CALCULATION_TIME_LIMIT_MS = 10 * 60 * 1000;
 
 export interface V2HouseholdCalculationRequest {
   countryId: string;
@@ -118,22 +110,10 @@ export async function fetchV2HouseholdCalculation(
   );
 }
 
-export interface CalculateV2HouseholdOptions {
+/** How a calculation is waited for (see `pollUntilFinished`), and the client it is sent with. */
+export interface CalculateV2HouseholdOptions extends PollOptions {
   client?: PublicApiClient;
-  pollIntervalMs?: number;
-  timeLimitMs?: number;
-  /** Waits between reads; a timer by default. */
-  wait?: (milliseconds: number) => Promise<void>;
-  /** The time now, for the time limit; the clock by default. */
-  now?: () => number;
-  /** Stops waiting (a query that is no longer needed); the calculation itself runs on. */
-  signal?: AbortSignal;
 }
-
-const waitFor = (milliseconds: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, milliseconds);
-  });
 
 /**
  * Submits a calculation and reads it until it has succeeded, returning its
@@ -146,25 +126,20 @@ const waitFor = (milliseconds: number) =>
  */
 export async function calculateV2Household(
   request: V2HouseholdCalculationRequest,
-  {
-    client = createPublicApiClient(),
-    pollIntervalMs = CALCULATION_POLL_INTERVAL_MS,
-    timeLimitMs = CALCULATION_TIME_LIMIT_MS,
-    wait = waitFor,
-    now = Date.now,
-    signal,
-  }: CalculateV2HouseholdOptions = {}
+  { client = createPublicApiClient(), ...pollOptions }: CalculateV2HouseholdOptions = {}
 ): Promise<V2HouseholdCalculationOutput> {
-  const startedAt = now();
-  let calculation = await submitV2HouseholdCalculation(request, client);
-  while (calculation.status !== 'succeeded' && calculation.status !== 'failed') {
-    if (now() - startedAt >= timeLimitMs) {
-      throw new Error('The household calculation timed out.');
-    }
-    await wait(pollIntervalMs);
-    signal?.throwIfAborted();
-    calculation = await fetchV2HouseholdCalculation(calculation.calculation_id, client);
-  }
+  let calculationId = '';
+  const calculation = await pollUntilFinished({
+    first: async () => {
+      const submitted = await submitV2HouseholdCalculation(request, client);
+      calculationId = submitted.calculation_id;
+      return submitted;
+    },
+    read: () => fetchV2HouseholdCalculation(calculationId, client),
+    isFinished: ({ status }) => status === 'succeeded' || status === 'failed',
+    timeoutMessage: 'The household calculation timed out.',
+    ...pollOptions,
+  });
   if (calculation.status === 'failed' || !calculation.result) {
     throw new V2HouseholdCalculationFailedError(
       calculation.error?.message || 'The household calculation failed.',

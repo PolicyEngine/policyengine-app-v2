@@ -7,12 +7,11 @@ import {
 import type { components } from '@/api/publicApi/schema';
 import { AccountAssociationRoutes, type ApiStoreContext } from '@/api/v2Associations';
 import {
-  CALCULATION_POLL_INTERVAL_MS,
-  CALCULATION_TIME_LIMIT_MS,
   V2HouseholdCalculationFailedError,
   type CalculateV2HouseholdOptions,
   type V2HouseholdCalculationOutput,
 } from '@/api/v2HouseholdCalculations';
+import { pollUntilFinished } from '@/api/v2Polling';
 import { isV2ApiError } from '@/api/v2UserClient';
 import type { FlagshipHouseholdRun } from '@/libs/flagship/householdRun';
 import { clampStoreText } from '@/libs/flagship/storeText';
@@ -102,11 +101,6 @@ export async function fetchV2HouseholdReport(
   return asHouseholdReport(result.item);
 }
 
-const waitFor = (milliseconds: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, milliseconds);
-  });
-
 /** The reason a failed run gives: its first failed calculation's. */
 function failureOf(item: V2HouseholdReportItem): V2HouseholdCalculationFailedError {
   const failed = [item.run?.baseline, item.run?.reform].find((calculation) => calculation?.error);
@@ -125,25 +119,14 @@ function failureOf(item: V2HouseholdReportItem): V2HouseholdCalculationFailedErr
 export async function waitForV2HouseholdReport(
   countryId: string,
   reportId: string,
-  {
-    client = createPublicApiClient(),
-    pollIntervalMs = CALCULATION_POLL_INTERVAL_MS,
-    timeLimitMs = CALCULATION_TIME_LIMIT_MS,
-    wait = waitFor,
-    now = Date.now,
-    signal,
-  }: CalculateV2HouseholdOptions = {}
+  { client = createPublicApiClient(), ...pollOptions }: CalculateV2HouseholdOptions = {}
 ): Promise<V2HouseholdReportItem> {
-  const startedAt = now();
-  let item = await fetchV2HouseholdReport(countryId, reportId, client);
-  while (item.status === 'pending' || item.status === 'running') {
-    if (now() - startedAt >= timeLimitMs) {
-      throw new Error('The household report timed out.');
-    }
-    await wait(pollIntervalMs);
-    signal?.throwIfAborted();
-    item = await fetchV2HouseholdReport(countryId, reportId, client);
-  }
+  const item = await pollUntilFinished({
+    read: () => fetchV2HouseholdReport(countryId, reportId, client),
+    isFinished: ({ status }) => status !== 'pending' && status !== 'running',
+    timeoutMessage: 'The household report timed out.',
+    ...pollOptions,
+  });
   if (item.status === 'not_run' || !item.run) {
     throw new Error('The household report has not been calculated. Try again later.');
   }

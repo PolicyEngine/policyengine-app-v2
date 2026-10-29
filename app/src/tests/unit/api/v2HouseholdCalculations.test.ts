@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
   calculateV2Household,
   fetchV2Household,
@@ -183,6 +183,27 @@ describe('calculateV2Household', () => {
       expect((error as Error).message).toBe(message);
     }
   );
+
+  test('given the wait aborted while the calculation runs then it reads the calculation no more', async () => {
+    // Given
+    const controller = new AbortController();
+    const { client, fetchMock } = routedClient({
+      [SUBMIT]: () => calculationResponse(runningCalculation(), 202),
+      [READ_BASELINE]: () => calculationResponse(runningCalculation()),
+    });
+    const calculation = calculateV2Household(
+      { countryId: 'us', householdId: V2_STORED_HOUSEHOLD_ID, policyId: null },
+      { client, pollIntervalMs: 60_000, signal: controller.signal }
+    );
+    await vi.waitFor(() => expect(requestsFor(fetchMock, SUBMIT)).toHaveLength(1));
+
+    // When
+    controller.abort();
+
+    // Then
+    await expect(calculation).rejects.toMatchObject({ name: 'AbortError' });
+    expect(requestsFor(fetchMock, READ_BASELINE)).toHaveLength(0);
+  });
 
   test('given a calculation that does not finish within the time limit then it stops waiting', async () => {
     // Given
