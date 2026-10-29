@@ -24,6 +24,7 @@ import type {
   SharedReportItem,
   UserReportCreateBody,
   UserReportItem,
+  UserReportPatchBody,
 } from '@/types/v2User';
 
 /**
@@ -60,6 +61,15 @@ export interface FlagshipReportRecord {
 
 export type NewFlagshipReport = Omit<FlagshipReportRecord, 'id' | 'createdAt' | 'validation'>;
 
+/**
+ * What an update may change: the v1 report a saved report points at, and
+ * the provisions and year that report ran. The record keeps its ID, which
+ * is its link, and its saved-reform links.
+ */
+export type FlagshipReportUpdates = Partial<
+  Pick<FlagshipReportRecord, 'apiReportId' | 'provisions' | 'year'>
+>;
+
 /** Newest first. */
 function newestFirst(records: FlagshipReportRecord[]): FlagshipReportRecord[] {
   return [...records].sort((first, second) => second.createdAt.localeCompare(first.createdAt));
@@ -74,6 +84,8 @@ export interface FlagshipReportStore {
   findByApiReportId: (apiReportId: string) => Promise<FlagshipReportRecord | null>;
   /** Pins the validation snapshot to a record. */
   saveValidation: (id: string, snapshot: ReportValidationSnapshot) => Promise<FlagshipReportRecord>;
+  /** Changes only the supplied fields; a new `apiReportId` repoints the record to another run. */
+  update: (id: string, updates: FlagshipReportUpdates) => Promise<FlagshipReportRecord>;
 }
 
 /** A provision's growth settings on the wire, each only when set. */
@@ -278,6 +290,20 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
   ): Promise<FlagshipReportRecord> {
     return recordFromItem(await this.routes.patch(id, { validation: validationToWire(snapshot) }));
   }
+
+  /** The row keeps no year: the v1 report it points at carries it. */
+  async update(id: string, updates: FlagshipReportUpdates): Promise<FlagshipReportRecord> {
+    const body: UserReportPatchBody = {};
+    if (updates.apiReportId !== undefined) {
+      body.legacy_report_id = Number(updates.apiReportId);
+      // Pointing at another v1 report is running the report again.
+      body.last_run_at = new Date().toISOString();
+    }
+    if (updates.provisions !== undefined) {
+      body.provisions = provisionsToWire(updates.provisions);
+    }
+    return recordFromItem(await this.routes.patch(id, body));
+  }
 }
 
 export const FLAGSHIP_REPORTS_KEY = 'pe-flagship-reports';
@@ -360,6 +386,17 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
       throw new Error('Report not found');
     }
     const updated = { ...found.record, validation: snapshot };
+    found.entries[found.index] = stampReportRecord(updated);
+    this.write(found.entries);
+    return updated;
+  }
+
+  async update(id: string, updates: FlagshipReportUpdates): Promise<FlagshipReportRecord> {
+    const found = this.findStored('id', id);
+    if (!found) {
+      throw new Error('Report not found');
+    }
+    const updated = { ...found.record, ...updates };
     found.entries[found.index] = stampReportRecord(updated);
     this.write(found.entries);
     return updated;
