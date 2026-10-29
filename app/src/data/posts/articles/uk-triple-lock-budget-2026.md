@@ -121,7 +121,7 @@ The saving depends on how often inflation or 2.5% exceeds earnings growth after 
 | 2033  | 2.0%      | 3.0%            | 3.0%        | 3.0%                 |
 | 2034  | 2.0%      | 3.3%            | 3.3%        | 3.3%                 |
 
-In April 2028, inflation of 3.4% comes out highest, and both rules pay it. Neither inflation nor earnings growth exceeds 2.5% in the inputs to the rises of April 2029 to April 2031, so both rules pay 2.5% in each of those years. The rises of April 2028 and April 2029 set the 2029-30 level that the adjusted Triple Lock protects, and the April 2030 rise, 2.5% against earnings growth of 2.3%, lifts the pension above its floor. In April 2032, the adjusted Triple Lock pays 2.5% against the Triple Lock's 2.7%. In April 2033, it pays 3.0%, the rise that brings the pension back to its floor, and the same as the Triple Lock. From April 2034, both rules pay earnings growth. In 2039-40, the full new State Pension is £18,840 a year under the adjusted Triple Lock, against the Triple Lock's £18,876, and the saving is £0.5 billion.
+In April 2028, inflation of 3.4% comes out highest, and both rules pay it. Neither inflation nor earnings growth exceeds 2.5% in the inputs to the rises of April 2029 to April 2031, so both rules pay 2.5% in each of those years. The rises of April 2028 and April 2029 set the 2029-30 level that the adjusted Triple Lock protects, and the April 2030 rise, 2.5% against earnings growth of 2.3%, lifts the pension above its floor. In April 2032, the adjusted Triple Lock pays 2.5% against the Triple Lock's 2.7%. In April 2033, it pays 3.0%, the same as the Triple Lock: the rise that returns the pension to its floor, rounded up to 0.1 percentage point. From April 2034, both rules pay earnings growth. In 2039-40, the full new State Pension is £18,840 a year under the adjusted Triple Lock, against the Triple Lock's £18,876, and the saving is £0.5 billion.
 
 **The OBR's long-term assumption.** In its long-term projections, the OBR assumes that the Triple Lock raises the pension 0.6 percentage points a year faster than earnings on average, a stylised allowance for the years when inflation or 2.5% comes out highest. In this scenario, the Triple Lock follows that assumption, phased in over the rises of April 2032 and April 2033, while the adjusted Triple Lock follows the central path. The saving in 2039-40 is £10.8 billion, and the full new State Pension is £829 a year lower than under the Triple Lock. The scenario gives the adjusted Triple Lock no credit for those same years: whenever inflation or 2.5% exceeds earnings growth, the adjusted Triple Lock pays it too. It compares the adjusted Triple Lock with the OBR's way of costing the Triple Lock, and is not a forecast.
 
@@ -182,7 +182,7 @@ DWP's analysis costs the adjusted Triple Lock at £15 billion in 2039-40 and £5
 
 The estimates differ in three ways, and DWP's published assumptions do not let us size them ([HL3774](https://questions-statements.parliament.uk/written-questions/detail/2026-10-05/hl3774)):
 
-- DWP projects the population and each person's pension with Pensim3, its dynamic microsimulation model. We reweight the households in Microcosm UK, our dataset built from the Family Resources Survey, to the ONS population projection by age and sex, holding each person's age fixed.
+- DWP projects the population and each person's pension with Pensim3, its dynamic microsimulation model. We reweight the households in Microcosm UK, our dataset of UK households, which starts from the Family Resources Survey, to the ONS population projection by age and sex, holding each person's age fixed.
 - Our data count slightly less State Pension in payment than DWP does: £144.8 billion in Great Britain in 2026-27, against DWP's £148.3 billion, both excluding payments abroad. The saving scales with the basic and new State Pension, which DWP publishes only with payments abroad included, and only to 2030-31, so we cannot match that part of the bill exactly.
 - DWP says it applies "a path for uprating" but publishes no rates for it, and its answer to HL3774 says the analysis used no single-year assumptions for earnings or prices growth.
 
@@ -222,7 +222,7 @@ Under the OBR's long-term assumption in 2039-40, 30% of UK households have less 
 }
 ```
 
-Under the same scenario, the share of pensioners in poverty after housing costs rises from 10.7% to 11.5% on the relative measure and from 6.8% to 7.7% on the absolute measure. Across the whole population, absolute poverty after housing costs rises from 15.9% to 16.1%, while relative poverty falls from 19.3% to 19.1%. The relative line is 60% of median income, and lower pensions pull the median down.
+Under the same scenario, the share of pensioners in poverty after housing costs rises from 10.7% to 11.5% on the relative measure and from 6.8% to 7.7% on the absolute measure. Across the whole population, absolute poverty after housing costs rises from 15.9% to 16.1%, while relative poverty falls from 19.3% to 19.1%. The relative line is 60% of the median person's household income after housing costs, adjusted for household size, and lower pensions pull that median down.
 
 ## How uncertain the saving is
 
@@ -249,7 +249,7 @@ The withdrawn average came from a monthly statistical model of CPI and average w
 
 ### Model and data
 
-Every fiscal and household figure is a full run of PolicyEngine UK (policyengine.py 6.11.1, policyengine-uk 2.151.0) on Microcosm UK 2024-25 (microcosm-data 0.1.0), PolicyEngine's dataset of UK households built from the Family Resources Survey. Each scenario's CPI and earnings replace the model's own forecasts, so CPI-uprated benefits, CPI-indexed thresholds and employment income follow it. The net saving is the change in the government's balance across every tax and benefit the model covers.
+Every fiscal and household figure is a full run of PolicyEngine UK (policyengine.py 6.11.1, policyengine-uk 2.151.0) on Microcosm UK 2024-25 (microcosm-data 0.1.0), PolicyEngine's dataset of UK households, which starts from the Family Resources Survey. Each scenario's CPI and earnings replace the model's own forecasts, so CPI-uprated benefits, CPI-indexed thresholds and employment income follow it. The net saving is the change in the government's balance across every tax and benefit the model covers.
 
 ### Population
 
