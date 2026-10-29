@@ -2,9 +2,14 @@
 // These requests carry an abort signal, which Node's Request accepts only from
 // Node's own AbortController, not from jsdom's.
 import { describe, expect, test } from 'vitest';
-import { runV2FlagshipHousehold, v2PolicyIdFor } from '@/libs/flagship/v2HouseholdRun';
+import {
+  runV2FlagshipHousehold,
+  spmOfV2Calculation,
+  v2PolicyIdFor,
+} from '@/libs/flagship/v2HouseholdRun';
 import {
   answerByPolicy,
+  calculationOutput,
   calculationResponse,
   failedCalculation,
   noWait,
@@ -267,5 +272,20 @@ describe('v2PolicyIdFor', () => {
     expect(() => v2PolicyIdFor(REFORM_POLICY_ID, CURRENT_LAW_ID)).toThrow(
       `Policy ${REFORM_POLICY_ID} is a v1 policy, which the v2 household calculations cannot use.`
     );
+  });
+});
+
+describe('spmOfV2Calculation', () => {
+  test('given a US calculation then its SPM settings and receipt are read as the app types them', () => {
+    expect(spmOfV2Calculation(calculationOutput())).toEqual({
+      spmConfig: V2_SPM_CONFIG,
+      spmProvenance: V2_SPM_PROVENANCE,
+    });
+  });
+
+  test('given a calculation without SPM settings then neither is read', () => {
+    expect(
+      spmOfV2Calculation(calculationOutput({ spm_config: null, spm_provenance: null }))
+    ).toEqual({});
   });
 });

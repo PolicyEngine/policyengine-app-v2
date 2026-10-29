@@ -3,12 +3,15 @@ import { useSelector } from 'react-redux';
 import { calculateV2Household } from '@/api/v2HouseholdCalculations';
 import { fetchV2Household } from '@/api/v2Households';
 import type { CountryId } from '@/libs/countries';
-import { plainV2HouseholdError, v2PolicyIdFor } from '@/libs/flagship/v2HouseholdRun';
+import {
+  plainV2HouseholdError,
+  spmOfV2Calculation,
+  v2PolicyIdFor,
+} from '@/libs/flagship/v2HouseholdRun';
 import { v2StoredHouseholdKeys } from '@/libs/queryKeys';
 import { householdDataFromV2Calculation } from '@/models/household/v2DocumentCodec';
 import type { RootState } from '@/store';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
-import type { SPMProvenance, SPMSelection } from '@/types/spm';
 import { v2EarningsVariationAxes } from '@/utils/householdVariationAxes';
 
 export interface V2HouseholdVariationArgs {
@@ -77,10 +80,7 @@ export function useV2HouseholdVariation({
             stored.household_data,
             output.household
           ),
-          ...(output.spm_config ? { spmConfig: output.spm_config as unknown as SPMSelection } : {}),
-          ...(output.spm_provenance
-            ? { spmProvenance: output.spm_provenance as unknown as SPMProvenance }
-            : {}),
+          ...spmOfV2Calculation(output),
         };
       } catch (error) {
         throw plainV2HouseholdError(error);

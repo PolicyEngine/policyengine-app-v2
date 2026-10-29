@@ -58,6 +58,22 @@ export function v2PolicyIdFor(
   );
 }
 
+/**
+ * A US calculation's SPM settings and receipt, as the app types them (the
+ * Public API gives each as open JSON); neither for a calculation without SPM.
+ */
+export function spmOfV2Calculation(output: V2HouseholdCalculationOutput): {
+  spmConfig?: SPMSelection;
+  spmProvenance?: SPMProvenance;
+} {
+  return {
+    ...(output.spm_config ? { spmConfig: output.spm_config as unknown as SPMSelection } : {}),
+    ...(output.spm_provenance
+      ? { spmProvenance: output.spm_provenance as unknown as SPMProvenance }
+      : {}),
+  };
+}
+
 /** What a calculation's output says about how it was made: as v1's responses say it. */
 export function provenanceOfV2Calculation(
   output: V2HouseholdCalculationOutput
@@ -67,10 +83,7 @@ export function provenanceOfV2Calculation(
     policyengineBundle: output.policyengine_version
       ? { policyengine_version: output.policyengine_version }
       : null,
-    ...(output.spm_config ? { spmConfig: output.spm_config as unknown as SPMSelection } : {}),
-    ...(output.spm_provenance
-      ? { spmProvenance: output.spm_provenance as unknown as SPMProvenance }
-      : {}),
+    ...spmOfV2Calculation(output),
   };
 }
 
