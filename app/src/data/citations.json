@@ -1,5 +1,109 @@
 [
   {
+    "title": "Congressional Hackathon 7.0 Report",
+    "outlet": "U.S. House of Representatives",
+    "date": "2026-09-22",
+    "url": "https://www.house.gov/sites/default/files/2026-09/Hackathon%207.0%20Report_2026.09.22.pdf",
+    "image": "house-hackathon-7.jpg",
+    "tags": ["us", "technical"]
+  },
+  {
+    "title": "State Tax Liability and Post-Tax Income Estimates by State using the Current Population Survey Annual Social and Economic Supplement Tax Model",
+    "outlet": "U.S. Census Bureau",
+    "date": "2026-09-15",
+    "url": "https://www.census.gov/library/working-papers/2026/demo/sehsd-wp2026-19.html",
+    "image": "census-state-tax-liability-2026.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "The MyFriendBen Benefits Screener: Findings from Implementation in Colorado and North Carolina",
+    "outlet": "Urban Institute",
+    "date": "2026-08-25",
+    "url": "https://www.urban.org/research/publication/myfriendben-benefits-screener",
+    "image": "urban-myfriendben-screener.jpg",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "New Approaches to Social Security Benefit Taxation",
+    "outlet": "Committee for a Responsible Federal Budget",
+    "date": "2026-07-30",
+    "url": "https://www.crfb.org/papers/new-approaches-social-security-benefit-taxation",
+    "image": "crfb-benefit-taxation.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Summary of Methodological Updates: Distribution of Personal Income by State, July 2026 Release",
+    "outlet": "U.S. Bureau of Economic Analysis",
+    "date": "2026-07-16",
+    "url": "https://www.bea.gov/sites/default/files/2026-07/Summary%20of%20Methodological%20Updates%20to%20Distribution%20of%20Personal%20Income%20by%20State-July26.pdf",
+    "image": "bea-dpi-state-methodology-2026.jpg",
+    "tags": ["us", "technical"]
+  },
+  {
+    "title": "Bridging the Information Gap: How Organizations Can Assess and Use Benefits Screeners",
+    "outlet": "Aspen Institute",
+    "date": "2026-07-01",
+    "url": "https://www.aspeninstitute.org/publications/assessing-benefits-screeners/",
+    "image": "aspen-benefits-screeners.jpg",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Defining top wealth and income thresholds for U.S. tax policy design and analysis",
+    "outlet": "Washington Center for Equitable Growth",
+    "date": "2026-05-27",
+    "url": "https://equitablegrowth.org/research-paper/defining-top-wealth-and-income-thresholds-for-u-s-tax-policy-design-and-analysis/",
+    "image": "equitable-growth-top-thresholds.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "California Billionaires: Wealth, Taxes, and Wealth Tax Revenue Estimates",
+    "outlet": "National Bureau of Economic Research",
+    "date": "2026-05-25",
+    "url": "https://www.nber.org/papers/w35218",
+    "image": "nber-california-billionaires.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Living Wage Benchmark Series: 2026 Technical Documentation",
+    "outlet": "Living Wage Institute (MIT Living Wage Calculator)",
+    "date": "2026-02-15",
+    "url": "https://livingwage.mit.edu/resources/living_wage_technical_documentation.pdf",
+    "image": "lwi-benchmark-technical-documentation.jpg",
+    "tags": ["us", "technical"]
+  },
+  {
+    "title": "Rules as Code for a More Transparent and Efficient Global Economy",
+    "outlet": "Think7 (T7)",
+    "date": "2025-04-02",
+    "url": "https://www.think7.org/publications/rules-as-code-for-a-more-transparent-and-efficient-global-economy/",
+    "image": "t7-rules-as-code.jpg",
+    "tags": ["global", "technical"]
+  },
+  {
+    "title": "Rachel Reeves' 4 tax hikes set to cost British families over £1,000 per year",
+    "outlet": "Daily Express",
+    "date": "2025-03-29",
+    "url": "https://www.express.co.uk/finance/personalfinance/2034211/rachel-reevesl-tax-hikes-cost-british-families",
+    "image": "express-reeves-tax-hikes.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "Amazon-hosted AI tool for UK military recruitment ‘carries risk of data breach’",
+    "outlet": "The Guardian",
+    "date": "2024-12-17",
+    "url": "https://www.theguardian.com/technology/2024/dec/17/amazon-hosted-ai-tool-for-uk-military-recruitment-carries-risk-of-data-breach",
+    "image": "guardian-ai-transparency-records.jpg",
+    "tags": ["uk", "technical"]
+  },
+  {
+    "title": "Cost-of-living crisis: How does the Government's response compare to our proposal?",
+    "outlet": "Social Market Foundation",
+    "date": "2022-02-15",
+    "url": "https://www.smf.co.uk/commentary_podcasts/cost-of-living-crisis-response/",
+    "image": "smf-cost-of-living-response.jpg",
+    "tags": ["uk", "policy"]
+  },
+  {
     "title": "Universities UK's £6bn National Insurance proposal",
     "outlet": "Tax Policy Associates",
     "date": "2026-09-10",
