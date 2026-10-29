@@ -29,7 +29,7 @@ Sources: [Budget 2026](https://www.gov.uk/government/publications/budget-2026-do
 
 The Budget makes other changes that reach households, which our dashboard does not model:
 
-- **Savings income tax.** From 6 April 2027 the rates on savings income also rise 2 points, to 24%, 44% and 49% across the UK. We give the official costing [below](#savings-income); our own estimate follows with a data update.
+- **Savings income tax.** From 6 April 2027 the rates on savings income also rise 2 points, to 24%, 44% and 49% across the UK. We give the official costing [below](#savings-income) but no national estimate of our own.
 - **The Triple Lock.** From April 2030 the State Pension rises each year by the highest of 2.5%, inflation, or the amount that keeps its value relative to earnings at its April 2029 level. The government estimates this reduces State Pension spending by £15 billion a year by the late 2030s. We analyse it [separately](https://www.policyengine.org/uk/research/uk-triple-lock-budget-2026).
 - **The National Living Wage** rises 3.9% to £13.21 an hour on 1 April 2027, as the Low Pay Commission recommended.
 - **The Bank Corporation Tax Surcharge** rises from 3% to 6% from 1 January 2027 to 31 March 2028, to help fund the energy support.
@@ -55,7 +55,7 @@ Source: the OBR's [detailed forecast table 1.1](https://obr.uk/efo/economic-and-
 
 ## The combined effect
 
-We run the seven measures together as one package, in a single simulation for each year. We leave out the savings income rate rise until our estimate is ready.
+We run the seven measures together as one package, in a single simulation for each year. The package leaves out the savings income rate rise.
 
 ### Cost to the public finances
 
@@ -192,7 +192,7 @@ Our estimates differ from the official costings for four main reasons: timing (w
 
 Official: the OBR's [detailed forecast table 1.1](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), measures 1, 2, 3, 52, 61, 15 and 7, the line or lines that match what we model, under the table's own names. Table 6.1 total: HM Treasury, [Table 6.1](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026), rows 1, 2, 3, 52, 61, 15 and 7. Its totals also include the OBR table's other lines for each measure that aren't zero: Other AME (current) for zero VAT; PSCE in RDEL, Scottish BGA (current) and Scottish self-financed expenditure for the Pension Tax Allowance and the trading allowance; Onshore CT, Scottish BGA (current) and Scottish self-financed expenditure for property income tax; and Scottish BGA (current) for the Carer's Allowance taper.
 
-Why each differs. The reasons come from the [dashboard's notes](https://www.policyengine.org/uk/budgets/autumn-2026?tab=dashboard&sub=finances) on its comparison with the official costings, from the OBR's October 2026 Economic and fiscal outlook and from the Budget documents. The notes explain the comparisons and also draw on further runs of our model, so some of their figures aren't in Table 6 or in our published results:
+Why each differs. The reasons come from the [dashboard's notes](https://www.policyengine.org/uk/budgets/autumn-2026?tab=dashboard&sub=finances) on its comparison with the official costings, from the OBR's October 2026 Economic and fiscal outlook and from the Budget documents. The notes explain the comparisons, and some of their figures appear in neither Table 6 nor our published results:
 
 - **Household Energy Payment (scope).** Ours falls 25% below the official £2,627 million because the official figure also covers two things we don't model: the devolved governments' share of the funding (about £425 million, our estimate using the Barnett formula) and £100 million for councils in England to target support at the households that rising energy bills hit hardest. Without them, about £2,100 million remains for the payment in England, and ours is 94% of that. At £100 each, the up to 20 million households the Budget names take up to £2,000 million of it; neither the OBR nor the Budget itemises the rest.
 - **Zero VAT on electricity (coverage).** Ours exceeds the OBR's VAT line by £106 million (14%) in 2026-27 and by £57 million (19%) in 2027-28. The official costing also covers charities, residential care and some businesses, and counts households switching from gas to electricity; both make the official figure larger, so neither explains the gap. The two start from different spending: we calculate ours from the Department for Energy Security and Net Zero's domestic electricity volumes and the average prices households pay, then project that spending using CPI; the official costing starts from ONS consumer spending, which is 10% to 12% lower.
@@ -215,23 +215,21 @@ From 6 April 2027 the income tax rates on savings income rise 2 points, on top o
 
 Official: the OBR's [detailed forecast table 1.1](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), measure 62, the line that matches what we model. Table 6.1's total also includes the OBR table's Onshore CT line for the measure.
 
-The official costing includes some savers moving their savings into ISAs and other tax-advantaged products. We hold our estimate back from this release while we update the savings income in our data; it follows with that update.
+The official costing includes some savers moving their savings into ISAs and other tax-advantaged products. Our national estimates leave out the rate rise.
 
-## What we're improving
+## Limitations
 
-We plan to update these results later this week. The update will:
+These results:
 
-- add poverty and people-affected figures;
-- add national figures for the savings income tax rise, once we have improved our savings income data (the calculator already includes it);
-- apply the trading allowance to miscellaneous income as well as trading income, which will raise our estimate of its cost;
-- correct how the Carer's Allowance taper interacts with overlapping benefits, such as the State Pension, in 2030-31;
-- extend the fuel duty cut to road fuel gases (LPG and natural gas), as the government's costing does;
-- give the Pension Tax Allowance to everyone who reaches State Pension age during the tax year.
+- leave out poverty figures and the dashboard's separate people-affected figures;
+- leave out national figures for the savings income tax rise (the calculator includes it);
+- apply the trading allowance to trading income but not to miscellaneous income (including it would raise our estimate of the allowance's cost);
+- don't correctly reflect how the Carer's Allowance taper interacts with overlapping benefits, such as the State Pension, in 2030-31;
+- apply the fuel duty cut to petrol and diesel but not to road fuel gases (LPG and natural gas), which the government's costing covers;
+- don't give the Pension Tax Allowance to everyone who reaches State Pension age during the tax year;
+- project household electricity spending with general inflation rather than retail energy prices.
 
-We are also working on:
-
-- projecting household electricity spending with retail energy prices rather than general inflation;
-- adding the Budget's measures to PolicyEngine UK itself, so anyone using our open-source model can run them.
+PolicyEngine UK 2.151.0, our open-source model, doesn't include the Budget's measures; the dashboard runs them.
 
 ## Methodology
 
@@ -243,6 +241,6 @@ Our estimates come from PolicyEngine's [Autumn Budget 2026 dashboard](https://ww
 - **The package.** The combined results come from one simulation of the seven measures together, which models each exactly as in its own run.
 - **Small samples.** The dashboard withholds any result that rests on fewer than three survey households. For the package in 2030-31 and 2031-32, it withholds the results for two income deciles and the average change across all households, the same cells it withholds for the Carer's Allowance taper on its own.
 
-Every PolicyEngine figure in this briefing comes from the dashboard's published results (manifest revision 17), and we read each from files that match the checksums in their receipt; the exceptions are the further figures we quote from the dashboard's notes on the comparison with the official costings, which come from further runs of our model. Every official figure comes from the OBR's October 2026 Economic and fiscal outlook or the Budget documents we link above.
+Every PolicyEngine figure in this briefing comes from the dashboard's published results (manifest revision 17), except the further figures we quote from the dashboard's notes on the comparison with the official costings, which the published results don't include. Every official figure comes from the OBR's October 2026 Economic and fiscal outlook or the Budget documents we link above.
 
 _PolicyEngine's UK Budget analysis is funded by the [Nuffield Foundation](https://www.nuffieldfoundation.org/). The views expressed are ours and not necessarily the Foundation's._
