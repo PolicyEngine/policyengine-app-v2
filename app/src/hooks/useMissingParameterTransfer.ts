@@ -18,8 +18,11 @@ import type { Reform } from '@/types/ingredients/Reform';
 
 export const REFORM_TRANSFER_FAILED = 'Could not transfer the reform. Try again.';
 export const REPORT_TRANSFER_FAILED = 'Could not transfer the report. Try again.';
-const COMPARISON_CHANGES_NOTHING =
-  'Without these parameters, the reform this report is compared with changes nothing, so the report cannot be transferred.';
+/** Why a report whose comparison would change nothing is not transferred. */
+function comparisonChangesNothing(missingParameters: string[]): string {
+  const them = missingParameters.length === 1 ? 'this parameter' : 'these parameters';
+  return `Without ${them}, the reform this report is compared with changes nothing, so the report cannot be transferred.`;
+}
 
 /**
  * Moves one of the user's saved reforms onto a new policy without the
@@ -84,6 +87,8 @@ export function useSavedReportTransfer() {
         savedReform: (reformId) =>
           reformId === report.baselineReformId ? (comparisonReform ?? undefined) : undefined,
         currentLawPolicyId,
+        // The saved report's run is replaced: its year and population must be the ones it ran.
+        requireRun: true,
       });
       const transferredBaseline = baseline
         ? await baselineWithout(
@@ -94,7 +99,7 @@ export function useSavedReportTransfer() {
           )
         : undefined;
       if (transferredBaseline === null) {
-        setError(COMPARISON_CHANGES_NOTHING);
+        setError(comparisonChangesNothing(missingParameters));
         return false;
       }
       const link = await runReport.run(
