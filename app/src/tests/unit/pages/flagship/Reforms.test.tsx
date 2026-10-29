@@ -1511,6 +1511,15 @@ describe('ReformsPage', () => {
         });
       });
 
+      test('then a report kept in this browser is said to open the new results, not to keep its link', async () => {
+        // When: sign-in is off here, so the report's link is its v1 report
+        const { dialog } = await openTransferDialog(REPORT_WITH_REMOVED_PARAMETER);
+
+        // Then
+        expect(dialog).toHaveTextContent(/your saved report then opens the new results/i);
+        expect(dialog).not.toHaveTextContent(/keeps its link/i);
+      });
+
       test('then Not now runs nothing, and the notice names them', async () => {
         // Given
         const { user, dialog } = await openTransferDialog(REPORT_WITH_REMOVED_PARAMETER);

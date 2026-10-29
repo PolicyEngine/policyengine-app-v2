@@ -29,6 +29,9 @@ import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutput
 
 const REPORT_DIALOG_NAME = 'This report uses parameters the model no longer has';
 
+/** The v1 report a transfer runs. */
+const NEW_API_REPORT_ID = '9002';
+
 const mockUseFlagshipReport = vi.fn();
 const mockFetchEconomy = vi.fn();
 const mockRun = vi.fn();
@@ -158,6 +161,19 @@ describe('FlagshipReportPage with parameters the model no longer has', () => {
     expect(within(dialog).queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
   });
 
+  test("given this browser's saved report then the dialog says it opens the new results, not that its link does", async () => {
+    // Given: kept in this browser, the report's link is its v1 report, which a transfer replaces
+    await saveReport();
+
+    // When
+    renderPage();
+
+    // Then
+    const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
+    expect(dialog).toHaveTextContent(/your saved report then opens the new results/i);
+    expect(dialog).not.toHaveTextContent(/keeps its link/i);
+  });
+
   test('given a report this browser did not save then only the notice shows', async () => {
     // When
     renderPage();
@@ -199,7 +215,8 @@ describe('FlagshipReportPage with parameters the model no longer has', () => {
   test('given Transfer and run again then the report runs without them, onto the same saved report', async () => {
     // Given
     const saved = await saveReport();
-    mockRun.mockResolvedValue(EXISTING_REPORT_ID);
+    // Kept in this browser, the run's link is the new v1 report.
+    mockRun.mockResolvedValue(NEW_API_REPORT_ID);
     const user = userEvent.setup();
     renderPage();
     const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
