@@ -14,8 +14,12 @@ import {
   EXISTING_REPORT_ID,
   EXISTING_SIMULATIONS,
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
-import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
 import {
+  REMOVED_US_PARAMETER,
+  v1PolicyContent,
+} from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import {
+  KEPT_PARAMETER,
   KEPT_PROVISION,
   REMOVED_PROVISION,
 } from '@/tests/fixtures/libs/flagship/missingParameterTransferMocks';
@@ -49,6 +53,35 @@ vi.mock('@/hooks/useRunFlagshipReport', () => ({
 vi.mock('@/libs/flagship/reportRerun', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/reportRerun')>()),
   rerunSettings: (...args: unknown[]) => mockRerunSettings(...args),
+}));
+
+// The transfer reads the report's policies again: its reform policy sets the removed parameter.
+vi.mock('@/api/report', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/report')>()),
+  fetchReportById: async () => ({ simulation_1_id: '101', simulation_2_id: '102', year: '2026' }),
+}));
+
+vi.mock('@/api/simulation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/simulation')>()),
+  fetchSimulationById: async (_countryId: string, simulationId: string) => ({
+    population_type: 'geography',
+    population_id: 'us',
+    policy_id: simulationId === '101' ? '2' : '77',
+  }),
+}));
+
+vi.mock('@/api/policy', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/policy')>()),
+  fetchPolicyById: async (_countryId: string, policyId: string) =>
+    policyId === '77'
+      ? v1PolicyContent(
+          {
+            [KEPT_PARAMETER]: { '2026-01-01.2100-12-31': 3600 },
+            [REMOVED_US_PARAMETER]: { '2026-01-01.2100-12-31': 0 },
+          },
+          [REMOVED_US_PARAMETER]
+        )
+      : v1PolicyContent({}, []),
 }));
 
 vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
