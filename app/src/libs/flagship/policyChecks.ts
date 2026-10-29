@@ -38,12 +38,14 @@ export function readV1Policy(
  * The parameters an existing v1 report's policies (its reform and its
  * baseline) set that the model no longer has. A re-run of the report runs
  * the same changes against the same baseline policy, so it checks these.
- * Rejects when the report or its simulations cannot be read.
+ * Rejects when the report or its simulations cannot be read, and, with
+ * `requireEveryPolicy`, when any of its policies cannot be read.
  */
 export async function reportMissingParameters(
   countryId: CountryId,
   apiReportId: string,
-  readPolicy: (countryId: string, policyId: string) => Promise<V1PolicyContent>
+  readPolicy: (countryId: string, policyId: string) => Promise<V1PolicyContent>,
+  { requireEveryPolicy = false }: { requireEveryPolicy?: boolean } = {}
 ): Promise<string[]> {
   const report = await fetchReportById(countryId, apiReportId);
   const simulationIds = [report.simulation_1_id, report.simulation_2_id].filter(
@@ -60,6 +62,11 @@ export async function reportMissingParameters(
         .map(String)
     ),
   ];
+  if (requireEveryPolicy) {
+    return combinedMissingParameters(
+      await Promise.all(policyIds.map((policyId) => readPolicy(countryId, policyId)))
+    );
+  }
   // A policy that cannot be read says nothing; the others still count.
   const policies = await Promise.allSettled(
     policyIds.map((policyId) => readPolicy(countryId, policyId))

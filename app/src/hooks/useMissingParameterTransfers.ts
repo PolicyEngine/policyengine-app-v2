@@ -10,13 +10,15 @@ import {
   parametersWithout,
   provisionsWithout,
 } from '@/libs/flagship/missingParameterTransfer';
-import { readV1Policy } from '@/libs/flagship/policyChecks';
+import { readV1Policy, reportMissingParameters } from '@/libs/flagship/policyChecks';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import type { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const REFORM_TRANSFER_FAILED = 'Could not transfer the reform. Try again.';
 const REPORT_TRANSFER_FAILED = 'Could not transfer the report. Try again.';
+const REPORT_CHANGES_NOTHING =
+  'Without the parameters the model no longer has, this report changes nothing, so there is nothing to transfer.';
 
 /** Why a saved item was not transferred, as its dialog says it; the item is as it was. */
 export class TransferError extends Error {
@@ -87,6 +89,8 @@ export function useSavedReportTransfer() {
   return useMutation<string, TransferError, SavedReportTransfer>({
     mutationFn: async ({ report, missingParameters, findReform, title, sourceNote }) => {
       let link: string | null;
+      const readPolicy = (policyCountryId: string, policyId: string) =>
+        readV1Policy(queryClient, policyCountryId, policyId);
       try {
         // The saved reform it is compared with, which names the comparison;
         // a lookup that fails leaves the comparison as its record has it.
@@ -100,25 +104,37 @@ export function useSavedReportTransfer() {
           // The saved report's run is replaced: its year and population must be the ones it ran.
           requireRun: true,
         });
+        // Read now, from every policy the report ran: the list the dialog
+        // opened with leaves out a policy whose read failed. A policy that
+        // cannot be read now stops the transfer.
+        const removed = [
+          ...new Set([
+            ...missingParameters,
+            ...(await reportMissingParameters(countryId, report.apiReportId, readPolicy, {
+              requireEveryPolicy: true,
+            })),
+          ]),
+        ];
+        const provisions = provisionsWithout(report.provisions, removed);
+        if (provisions.length === 0) {
+          throw new TransferError(REPORT_CHANGES_NOTHING);
+        }
         const transferredBaseline = baseline
           ? await baselineWithout(
               baseline,
-              missingParameters,
-              (policyId) => readV1Policy(queryClient, countryId, policyId),
+              removed,
+              (policyId) => readPolicy(countryId, policyId),
               parameters
             )
           : undefined;
         if (transferredBaseline === null) {
-          throw new TransferError(comparisonChangesNothing(missingParameters));
+          throw new TransferError(comparisonChangesNothing(removed));
         }
-        link = await runReport.run(
-          title,
-          sourceNote,
-          provisionsWithout(report.provisions, missingParameters),
-          report.reformId,
-          year,
-          { ...runSettings, baseline: transferredBaseline, savedReportId: report.id }
-        );
+        link = await runReport.run(title, sourceNote, provisions, report.reformId, year, {
+          ...runSettings,
+          baseline: transferredBaseline,
+          savedReportId: report.id,
+        });
       } catch (error) {
         throw error instanceof TransferError ? error : new TransferError(REPORT_TRANSFER_FAILED);
       }
