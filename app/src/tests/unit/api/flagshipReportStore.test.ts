@@ -141,6 +141,19 @@ describe('LocalStorageFlagshipReportStore', () => {
     await expect(store.findById(created.id)).resolves.toEqual(created);
   });
 
+  test('given a field passed as undefined then update keeps what is stored, as the account store does', async () => {
+    // Given
+    const store = new LocalStorageFlagshipReportStore();
+    const created = await store.create(newReport);
+
+    // When
+    const updated = await store.update(created.id, { provisions: undefined, year: undefined });
+
+    // Then
+    expect(updated.provisions).toEqual(newReport.provisions);
+    expect(updated.year).toBe(newReport.year);
+  });
+
   test('given an unknown record then update fails', async () => {
     const store = new LocalStorageFlagshipReportStore();
 

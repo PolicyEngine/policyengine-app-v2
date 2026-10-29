@@ -412,7 +412,8 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
     }
     const updated: FlagshipReportRecord = {
       ...found.record,
-      ...updates,
+      // Only the supplied fields, as the account store sends them.
+      ...Object.fromEntries(Object.entries(updates).filter(([, value]) => value !== undefined)),
       // A new run, dated now, whose validation is pinned afresh.
       ...(updates.apiReportId !== undefined
         ? { createdAt: new Date().toISOString(), validation: null }
