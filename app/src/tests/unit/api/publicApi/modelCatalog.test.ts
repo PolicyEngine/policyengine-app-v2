@@ -6,6 +6,8 @@ import {
   TEST_CURRENT_LAW_ID,
   TEST_POLICYENGINE_VERSION,
   TEST_TAX_BENEFIT_MODEL_ID,
+  US_MODEL_CATALOG_RESULT,
+  US_SPM_AVAILABILITY,
 } from '@/tests/fixtures/api/publicApi/modelCatalogMocks';
 import { errorResponse, okResponse, TEST_API_BASE } from '@/tests/fixtures/api/v2UserMocks';
 
@@ -90,6 +92,33 @@ describe('fetchV2ModelCatalogMetadata', () => {
     expect(payload.result.economy_options.datasets).toEqual([
       { name: 'populace_us_2024', label: 'Microcosm', title: 'Microcosm', default: true },
     ]);
+  });
+
+  test('given a US catalog version with SPM settings then the metadata offers them, as v1 gave them', async () => {
+    const { client } = clientReturning(okResponse(modelCatalogEnvelope().result));
+
+    const payload = await fetchV2ModelCatalogMetadata('us', client);
+
+    expect(payload.result.spm).toEqual({
+      available: true,
+      settings_schema: US_SPM_AVAILABILITY.settings_schema,
+      defaults: US_SPM_AVAILABILITY.defaults,
+    });
+  });
+
+  test('given a catalog version without SPM settings then the metadata says none are available', async () => {
+    const { client } = clientReturning(
+      okResponse(
+        modelCatalogEnvelope({
+          ...US_MODEL_CATALOG_RESULT,
+          spm: { available: false, settings_schema: null, defaults: null },
+        }).result
+      )
+    );
+
+    const payload = await fetchV2ModelCatalogMetadata('us', client);
+
+    expect(payload.result.spm).toEqual({ available: false });
   });
 
   test('given a failed request then it rejects with the API status', async () => {

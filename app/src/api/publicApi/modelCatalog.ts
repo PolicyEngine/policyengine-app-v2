@@ -6,6 +6,7 @@ import {
 } from '@/api/publicApi/client';
 import type { components } from '@/api/publicApi/schema';
 import type { MetadataApiPayload, MetadataRegionEntry } from '@/types/metadata';
+import type { SPMMetadata, SPMSelection } from '@/types/spm';
 
 /**
  * The v3 workspace's model metadata at start, from the Public API's
@@ -18,9 +19,9 @@ import type { MetadataApiPayload, MetadataRegionEntry } from '@/types/metadata';
  * (the parameters of what is open, the parameter tree one level at a time,
  * and a search file in the background) and loads every variable once in the
  * background after a page renders (`useV3VariablesInBackground`), so they
- * start empty here. v1's
- * variable modules, modelled policies and SPM settings are not published
- * by v2 and stay empty too.
+ * start empty here. v1's variable modules and modelled policies are not
+ * published by v2 and stay empty too. The US SPM settings come from the
+ * catalog's `spm`, in the shape v1's metadata gave them.
  */
 
 type Schemas = components['schemas'];
@@ -73,6 +74,22 @@ function entityCollection(
   );
 }
 
+/**
+ * Whether the catalog version offers SPM settings, and which: the JSON
+ * schema of a household's `spm` selection and the certified defaults, as
+ * v1's metadata gave them (fields it does not have are left out).
+ */
+function spmMetadata(spm: Schemas['MetadataSPMAvailability']): SPMMetadata {
+  if (!spm.available) {
+    return { available: false };
+  }
+  return {
+    available: true,
+    ...(spm.settings_schema ? { settings_schema: spm.settings_schema } : {}),
+    ...(spm.defaults ? { defaults: spm.defaults as unknown as SPMSelection } : {}),
+  };
+}
+
 /** A country's model metadata at start, from the v2 routes, as a v1 metadata envelope. */
 export async function fetchV2ModelCatalogMetadata(
   countryId: string,
@@ -109,6 +126,7 @@ export async function fetchV2ModelCatalogMetadata(
       basicInputs: catalog.basic_inputs,
       modelled_policies: { core: {}, filtered: {} },
       version: catalog.policyengine_version,
+      spm: spmMetadata(catalog.spm),
       v2Catalog: {
         policyengineVersion: catalog.policyengine_version,
         taxBenefitModelId: catalog.model.id,
