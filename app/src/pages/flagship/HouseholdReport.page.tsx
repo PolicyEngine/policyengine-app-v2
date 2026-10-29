@@ -14,6 +14,7 @@ import {
   HouseholdRunProgress,
 } from '@/components/flagship/report/household/householdRunParts';
 import { ErrorState } from '@/components/flagship/states';
+import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import { Label, Spinner, Stack, Text, Title } from '@/components/ui';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -269,135 +270,141 @@ export default function HouseholdReportPage({
         <Text style={quietText}>{comparison}</Text>
       </Stack>
 
-      <ReportSection label="Household">
-        <Stack style={{ gap: spacing.lg }}>
-          <Stack style={{ gap: spacing.sm }}>
-            <Title order={2} style={{ margin: 0, fontSize: typography.fontSize.lg }}>
-              Saved households
-            </Title>
-            <SavedHouseholdPicker
-              countryId={countryId}
-              selectedId={saved?.id}
-              onSelect={openSaved}
-              disabled={running}
+      {/* The builder, the results and the inputs read every variable (v2 loads them in the background). */}
+      <V3VariablesGate label="Loading the household report">
+        <ReportSection label="Household">
+          <Stack style={{ gap: spacing.lg }}>
+            <Stack style={{ gap: spacing.sm }}>
+              <Title order={2} style={{ margin: 0, fontSize: typography.fontSize.lg }}>
+                Saved households
+              </Title>
+              <SavedHouseholdPicker
+                countryId={countryId}
+                selectedId={saved?.id}
+                onSelect={openSaved}
+                disabled={running}
+              />
+            </Stack>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end', gap: spacing.md }}>
+              <Stack style={{ gap: spacing.xs }}>
+                <Label htmlFor={yearId}>Year</Label>
+                <select
+                  id={yearId}
+                  value={year}
+                  disabled={running}
+                  onChange={(event) => changeYear(event.target.value)}
+                  className="tw:rounded-md tw:border tw:border-input tw:bg-background tw:p-sm"
+                >
+                  {yearOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </Stack>
+              {yearError && (
+                <Text role="alert" style={{ ...quietText, color: colors.error }}>
+                  {yearError}
+                </Text>
+              )}
+            </div>
+
+            <div style={{ minWidth: 0 }}>
+              <HouseholdBuilderPanel
+                household={household}
+                countryId={countryId}
+                year={year}
+                onChange={setHousehold}
+                disabled={running}
+              />
+            </div>
+
+            <HouseholdCalculateRow
+              onCalculate={() => request(household)}
+              disabled={running || !validation.isValid || shows(household)}
+              validation={validation}
+            />
+
+            <SaveHouseholdForm
+              key={savedHouseholdOpenings}
+              household={household}
+              saved={saved}
+              onSaved={setSaved}
             />
           </Stack>
+        </ReportSection>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end', gap: spacing.md }}>
-            <Stack style={{ gap: spacing.xs }}>
-              <Label htmlFor={yearId}>Year</Label>
-              <select
-                id={yearId}
-                value={year}
-                disabled={running}
-                onChange={(event) => changeYear(event.target.value)}
-                className="tw:rounded-md tw:border tw:border-input tw:bg-background tw:p-sm"
-              >
-                {yearOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </Stack>
-            {yearError && (
-              <Text role="alert" style={{ ...quietText, color: colors.error }}>
-                {yearError}
-              </Text>
-            )}
-          </div>
+        {running && <HouseholdRunProgress />}
 
-          <div style={{ minWidth: 0 }}>
-            <HouseholdBuilderPanel
-              household={household}
-              countryId={countryId}
-              year={year}
-              onChange={setHousehold}
-              disabled={running}
-            />
-          </div>
-
-          <HouseholdCalculateRow
-            onCalculate={() => request(household)}
-            disabled={running || !validation.isValid || shows(household)}
-            validation={validation}
+        {failed && (
+          <HouseholdRunFailure
+            error={run.error}
+            onRetry={() => retry(household, validation.isValid)}
           />
+        )}
 
-          <SaveHouseholdForm
-            key={savedHouseholdOpenings}
-            household={household}
-            saved={saved}
-            onSaved={setSaved}
-          />
-        </Stack>
-      </ReportSection>
-
-      {running && <HouseholdRunProgress />}
-
-      {failed && (
-        <HouseholdRunFailure
-          error={run.error}
-          onRetry={() => retry(household, validation.isValid)}
-        />
-      )}
-
-      {result && requested && breakdowns && (
-        <>
-          {runsReform ? (
-            <HouseholdImpactResult
-              impact={result}
-              countryId={countryId}
-              summary={summary}
-              methodology={{
-                baseline: result.provenance.baseline,
-                reform: result.provenance.reform,
-              }}
-              breakdowns={breakdowns}
-            />
-          ) : (
-            <HouseholdNetIncomeResult
-              netIncome={result.netIncome.baseline}
-              countryId={countryId}
-              summary={summary}
-              methodology={result.provenance.baseline}
-              breakdowns={breakdowns}
-            />
-          )}
-
-          <ReportSection label="Household inputs">
-            <HouseholdSubPage baselineHousehold={requested.household} />
-          </ReportSection>
-
-          <ReportSection label="Policy">
-            {policyQuery.error ? (
-              <ErrorState
-                compact
-                title="The report's policies could not be loaded"
-                description={policyQuery.error.message}
-                onRetry={policyQuery.retry}
+        {result && requested && breakdowns && (
+          <>
+            {runsReform ? (
+              <HouseholdImpactResult
+                impact={result}
+                countryId={countryId}
+                summary={summary}
+                methodology={{
+                  baseline: result.provenance.baseline,
+                  reform: result.provenance.reform,
+                }}
+                breakdowns={breakdowns}
               />
-            ) : policyQuery.isLoading ? (
-              <div role="status" style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-                <Spinner size="sm" />
-                <Text style={quietText}>Loading the report&apos;s policies...</Text>
-              </div>
             ) : (
-              <ReportYearProvider year={year}>
-                <PolicySubPage policies={policyQuery.policies} reportType="household" />
-              </ReportYearProvider>
+              <HouseholdNetIncomeResult
+                netIncome={result.netIncome.baseline}
+                countryId={countryId}
+                summary={summary}
+                methodology={result.provenance.baseline}
+                breakdowns={breakdowns}
+              />
             )}
-          </ReportSection>
 
-          <ReportSection label="Reproduce in Python">
-            <HouseholdReproducibility
-              countryId={countryId}
-              year={year}
-              simulations={reproductions}
-              offerDataFrame
-            />
-          </ReportSection>
-        </>
-      )}
+            <ReportSection label="Household inputs">
+              <HouseholdSubPage baselineHousehold={requested.household} />
+            </ReportSection>
+
+            <ReportSection label="Policy">
+              {policyQuery.error ? (
+                <ErrorState
+                  compact
+                  title="The report's policies could not be loaded"
+                  description={policyQuery.error.message}
+                  onRetry={policyQuery.retry}
+                />
+              ) : policyQuery.isLoading ? (
+                <div
+                  role="status"
+                  style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}
+                >
+                  <Spinner size="sm" />
+                  <Text style={quietText}>Loading the report&apos;s policies...</Text>
+                </div>
+              ) : (
+                <ReportYearProvider year={year}>
+                  <PolicySubPage policies={policyQuery.policies} reportType="household" />
+                </ReportYearProvider>
+              )}
+            </ReportSection>
+
+            <ReportSection label="Reproduce in Python">
+              <HouseholdReproducibility
+                countryId={countryId}
+                year={year}
+                simulations={reproductions}
+                offerDataFrame
+              />
+            </ReportSection>
+          </>
+        )}
+      </V3VariablesGate>
     </Stack>
   );
 }

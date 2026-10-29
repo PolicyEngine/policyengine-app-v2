@@ -6,6 +6,7 @@ import {
   householdInputNameOf,
   householdTopicIcon,
 } from '@/components/flagship/report/household/householdPickerInputs';
+import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import type { CountryId } from '@/libs/countries';
 import { householdState } from '@/libs/flagship/householdDescription';
@@ -46,7 +47,9 @@ export function householdPersonNameOf(
  * lists only the household's own state's programs, only inputs that
  * describe a household (no survey-reported totals), and not the twin of a
  * field the builder already shows; the US SPM geography choice; and each
- * input labelled.
+ * input labelled. It reads every variable of the model, so on the v2
+ * routes, where they load in the background, it waits for them
+ * (V3VariablesGate), and a failed load says so and asks again.
  */
 export default function HouseholdBuilderPanel({
   household,
@@ -101,36 +104,40 @@ export default function HouseholdBuilderPanel({
   );
 
   return (
-    <HouseholdBuilderForm
-      household={household}
-      metadata={metadata}
-      year={year}
-      maritalStatus={composition.maritalStatus}
-      numChildren={composition.numChildren}
-      basicPersonFields={basicPersonFields || []}
-      basicNonPersonFields={basicNonPersonFields}
-      onChange={onChange}
-      onMaritalStatusChange={(status) => onChange(household.withBuilderMaritalStatus(year, status))}
-      onNumChildrenChange={(count) => onChange(household.withBuilderChildCount(year, count))}
-      disabled={disabled}
-      layout="columns"
-      suggestedVariables={suggestedVariables}
-      suggestedLabel="Related to this reform"
-      searchRanking="relevance"
-      variableGroupOf={picker.groupOf}
-      variableGroupOrder={HOUSEHOLD_VARIABLE_GROUPS}
-      variableFilter={variableFilter}
-      variableSubgroupOf={picker.subgroupOf}
-      variableSubgroupOrder={HOUSEHOLD_INCOME_SUBGROUPS}
-      searchByEntity
-      variablePickerCommon={picker.common}
-      variableGroupIcon={householdTopicIcon}
-      variableNameOf={picker.nameOf}
-      variableDescribe={picker.describe}
-      personDisplayNameOf={picker.personNameOf}
-      labelInputs
-      onVariablePickerOpen={onVariablePickerOpen}
-      onVariableAdd={onVariableAdd}
-    />
+    <V3VariablesGate label="Loading the household builder">
+      <HouseholdBuilderForm
+        household={household}
+        metadata={metadata}
+        year={year}
+        maritalStatus={composition.maritalStatus}
+        numChildren={composition.numChildren}
+        basicPersonFields={basicPersonFields || []}
+        basicNonPersonFields={basicNonPersonFields}
+        onChange={onChange}
+        onMaritalStatusChange={(status) =>
+          onChange(household.withBuilderMaritalStatus(year, status))
+        }
+        onNumChildrenChange={(count) => onChange(household.withBuilderChildCount(year, count))}
+        disabled={disabled}
+        layout="columns"
+        suggestedVariables={suggestedVariables}
+        suggestedLabel="Related to this reform"
+        searchRanking="relevance"
+        variableGroupOf={picker.groupOf}
+        variableGroupOrder={HOUSEHOLD_VARIABLE_GROUPS}
+        variableFilter={variableFilter}
+        variableSubgroupOf={picker.subgroupOf}
+        variableSubgroupOrder={HOUSEHOLD_INCOME_SUBGROUPS}
+        searchByEntity
+        variablePickerCommon={picker.common}
+        variableGroupIcon={householdTopicIcon}
+        variableNameOf={picker.nameOf}
+        variableDescribe={picker.describe}
+        personDisplayNameOf={picker.personNameOf}
+        labelInputs
+        onVariablePickerOpen={onVariablePickerOpen}
+        onVariableAdd={onVariableAdd}
+      />
+    </V3VariablesGate>
   );
 }
