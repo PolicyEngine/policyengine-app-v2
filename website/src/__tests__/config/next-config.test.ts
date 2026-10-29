@@ -180,9 +180,14 @@ describe("nextConfig redirects", () => {
       destination: "/uk/budgets/autumn-2026/:path*",
       permanent: false,
     });
-    // No redirect matches the dashboard's own address or a path below it, as
-    // Next.js matches sources (next/dist/server/lib/router-utils/filesystem.js),
-    // so the former address's redirect can't loop
+    // So the former address's redirect can't loop: no redirect source starts
+    // with the dashboard's address, and none matches it or a path below it as
+    // Next.js matches sources (next/dist/server/lib/router-utils/filesystem.js)
+    expect(
+      redirects
+        .map((redirect) => redirect.source)
+        .filter((source) => source.startsWith("/uk/budgets/autumn-2026")),
+    ).toEqual([]);
     for (const path of [
       "/uk/budgets/autumn-2026",
       "/uk/budgets/autumn-2026/data/living_standards_outlook.json",
