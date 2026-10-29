@@ -82,6 +82,14 @@ export function useReformStore(): ReformStore {
   );
 }
 
+/** The query keys a saved report's page reads it under, without the session and link. */
+export const savedReportQueryKeys = {
+  /** This session's record a report link names. */
+  record: ['flagship-report-record'] as const,
+  /** A saved report as anyone holding its link reads it. */
+  shared: ['shared-report'] as const,
+};
+
 export interface FlagshipReportStoreSelection {
   store: FlagshipReportStore;
   /** True when records go to the account (one `/v2/user-reports` row per run). */
@@ -111,7 +119,7 @@ export function useFlagshipReportStore(): FlagshipReportStoreSelection {
 export function useReportRecord(link: string | undefined) {
   const { store, scope } = useFlagshipReportStore();
   const { data } = useQuery({
-    queryKey: ['flagship-report-record', scope, link ?? ''],
+    queryKey: [...savedReportQueryKeys.record, scope, link ?? ''],
     queryFn: () => findReportRecordByLink(store, link!),
     enabled: !!link,
     staleTime: 5 * 60 * 1000,
@@ -137,7 +145,7 @@ export interface SharedReport {
 export function useSharedReport(link: string | undefined) {
   const countryId = useCurrentCountry();
   return useQuery({
-    queryKey: ['shared-report', countryId, link ?? ''],
+    queryKey: [...savedReportQueryKeys.shared, countryId, link ?? ''],
     queryFn: async (): Promise<SharedReport | null> => {
       const item = await fetchSharedReport(countryId, link!);
       return item
