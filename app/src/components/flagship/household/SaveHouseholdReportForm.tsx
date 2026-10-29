@@ -43,10 +43,13 @@ export default function SaveHouseholdReportForm({
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedReportId, setSavedReportId] = useState<string | null>(null);
-  // The household report this form created: saving again (after the save in
-  // the account failed, or under another name) saves it, rather than
-  // creating another report of the same household.
-  const [createdReportId, setCreatedReportId] = useState<string | null>(null);
+  // The household report this form created, with what it calculates: saving
+  // again (after the save in the account failed, or under another name)
+  // saves it, rather than creating another report of the same household and
+  // policies. Once the household or a policy changes, it is not this report.
+  const [created, setCreated] = useState<{ reportId: string; calculates: string } | null>(null);
+  const calculates = [householdId, baselinePolicyId, reformPolicyId].join(' ');
+  const createdReportId = created?.calculates === calculates ? created.reportId : null;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const quietText = { margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary };
@@ -69,7 +72,7 @@ export default function SaveHouseholdReportForm({
             reformPolicyId: v2PolicyIdFor(reformPolicyId, currentLawId),
           })
         ).id;
-      setCreatedReportId(reportId);
+      setCreated({ reportId, calculates });
       setSavedReportId(await saveV2HouseholdReport(account, { countryId, reportId, name }));
     } catch (error) {
       setErrorMessage(plainV2HouseholdError(error).message);

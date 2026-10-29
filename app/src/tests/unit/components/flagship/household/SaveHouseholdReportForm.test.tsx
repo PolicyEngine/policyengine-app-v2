@@ -41,18 +41,21 @@ function renderForm(reformPolicyId = V2_REFORM_POLICY_ID) {
       },
     },
   });
-  render(
+  const queryClient = testQueryClient();
+  const formFor = (reform: string) => (
     <Provider store={store}>
-      <QueryClientProvider client={testQueryClient()}>
+      <QueryClientProvider client={queryClient}>
         <SaveHouseholdReportForm
           countryId="us"
           householdId={STORED_V2_HOUSEHOLD_ID}
           baselinePolicyId={String(TEST_CURRENT_LAW_ID)}
-          reformPolicyId={reformPolicyId}
+          reformPolicyId={reform}
         />
       </QueryClientProvider>
     </Provider>
   );
+  const rendered = render(formFor(reformPolicyId));
+  return { showReform: (reform: string) => rendered.rerender(formFor(reform)) };
 }
 
 async function saveAs(name: string) {
@@ -135,6 +138,34 @@ describe('SaveHouseholdReportForm', () => {
       V2_HOUSEHOLD_REPORT_IDS.REPORT,
       V2_HOUSEHOLD_REPORT_IDS.REPORT,
     ]);
+  });
+
+  test('given the policies changed after only the save failed then a report of the new policies is created and saved', async () => {
+    // Given
+    const user = userEvent.setup();
+    const otherReformPolicyId = '5e5e5e5e-5e5e-4e5e-8e5e-5e5e5e5e5e5e';
+    const otherReportId = 'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd';
+    mockSubmitReport
+      .mockResolvedValueOnce(householdReportItem('pending'))
+      .mockResolvedValueOnce({ ...householdReportItem('pending'), id: otherReportId });
+    mockSaveReport.mockRejectedValueOnce(new Error('Saved work is temporarily unavailable.'));
+    const { showReform } = renderForm();
+    await saveAs(SAVED_HOUSEHOLD_REPORT_NAME);
+    await screen.findByRole('alert');
+
+    // When
+    showReform(otherReformPolicyId);
+    await user.click(screen.getByRole('button', { name: 'Save report' }));
+
+    // Then
+    await screen.findByRole('link', { name: /Open the saved report/ });
+    expect(mockSubmitReport).toHaveBeenLastCalledWith(
+      expect.objectContaining({ reformPolicyId: otherReformPolicyId })
+    );
+    expect(mockSaveReport).toHaveBeenLastCalledWith(
+      ACCOUNT,
+      expect.objectContaining({ reportId: otherReportId })
+    );
   });
 
   test('given a reform known only by its v1 policy number then it says why, and nothing is sent', async () => {
