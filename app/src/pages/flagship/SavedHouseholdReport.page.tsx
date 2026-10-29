@@ -108,7 +108,11 @@ export default function SavedHouseholdReportPage({
     </Title>
   );
 
-  const failedQuery = [shared, report, stored].find((query) => query.error);
+  // A read that failed with nothing to show. A background re-read that fails
+  // (on window focus, once stale) keeps what is on screen.
+  const failedQuery = [shared, report, stored].find(
+    (query) => query.error && query.data === undefined
+  );
   let body: ReactNode;
   if (shared.isSuccess && !shared.data) {
     body = (

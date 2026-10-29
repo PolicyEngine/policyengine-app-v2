@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, within } from '@test-utils';
+import { act, render, screen, userEvent, within } from '@test-utils';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SavedHouseholdReportPage from '@/pages/flagship/SavedHouseholdReport.page';
@@ -64,9 +64,10 @@ function renderSavedReport() {
       },
     },
   });
+  const queryClient = testQueryClient();
   render(
     <Provider store={store}>
-      <QueryClientProvider client={testQueryClient()}>
+      <QueryClientProvider client={queryClient}>
         <SavedHouseholdReportPage
           countryId="us"
           savedReportId={V2_HOUSEHOLD_REPORT_IDS.SAVED_REPORT}
@@ -74,6 +75,7 @@ function renderSavedReport() {
       </QueryClientProvider>
     </Provider>
   );
+  return { queryClient };
 }
 
 describe('SavedHouseholdReportPage', () => {
@@ -174,5 +176,27 @@ describe('SavedHouseholdReportPage', () => {
     // Then
     expect(await screen.findByRole('region', { name: 'Household impact' })).toBeInTheDocument();
     expect(mockWaitForReport).toHaveBeenCalledTimes(2);
+  });
+
+  test('given a report on screen whose background re-read fails then the report stays on screen', async () => {
+    // Given
+    const { queryClient } = renderSavedReport();
+    await screen.findByRole('region', { name: 'Household impact' });
+    mockReadShared.mockRejectedValue(new Error('Network error: Failed to fetch'));
+    mockWaitForReport.mockRejectedValue(new Error('Network error: Failed to fetch'));
+    mockFetchStoredHousehold.mockRejectedValue(new Error('Network error: Failed to fetch'));
+
+    // When
+    await act(async () => {
+      await queryClient.refetchQueries();
+      // The query library tells the page of the failures on its next tick.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0);
+      });
+    });
+
+    // Then
+    expect(screen.getByRole('region', { name: 'Household impact' })).toBeInTheDocument();
+    expect(screen.queryByText('This household report could not be opened')).not.toBeInTheDocument();
   });
 });
