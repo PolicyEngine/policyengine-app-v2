@@ -1,3 +1,4 @@
+import { isAccountId } from '@/api/v2Associations';
 import {
   calculateV2Household,
   storeV2Household,
@@ -33,6 +34,28 @@ export interface V2HouseholdRunArgs {
   /** A v2 policy (`/v2/policies`); null for current law. */
   baselinePolicyId: string | null;
   reformPolicyId: string | null;
+}
+
+/**
+ * The policy a v2 household calculation names, for a policy ID v3 holds:
+ * none for current law (no ID, or the model catalog's current-law ID), and
+ * a v2 policy (`/v2/policies`) by its own ID. A policy known only by its v1
+ * number cannot be calculated on the v2 routes, so it is refused rather
+ * than calculated as current law.
+ */
+export function v2PolicyIdFor(
+  policyId: string | null | undefined,
+  currentLawId: string | number
+): string | null {
+  if (!policyId || policyId === String(currentLawId)) {
+    return null;
+  }
+  if (isAccountId(policyId)) {
+    return policyId;
+  }
+  throw new Error(
+    `Policy ${policyId} is a v1 policy, which the v2 household calculations cannot use.`
+  );
 }
 
 /** What a calculation's output says about how it was made: as v1's responses say it. */

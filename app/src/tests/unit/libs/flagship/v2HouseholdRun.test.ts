@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { runV2FlagshipHousehold } from '@/libs/flagship/v2HouseholdRun';
+import { runV2FlagshipHousehold, v2PolicyIdFor } from '@/libs/flagship/v2HouseholdRun';
 import {
   answerByPolicy,
   calculationResponse,
@@ -13,6 +13,7 @@ import {
   V2_SPM_PROVENANCE,
 } from '@/tests/fixtures/api/v2HouseholdCalculationMocks';
 import { itemResponse } from '@/tests/fixtures/api/v2UserMocks';
+import { REFORM_POLICY_ID } from '@/tests/fixtures/libs/flagship/householdRunMocks';
 import {
   STORED_V2_HOUSEHOLD_ID,
   storedV2Household,
@@ -197,5 +198,28 @@ describe('runV2FlagshipHousehold', () => {
     // Then
     await expect(run).rejects.toThrow('The household is set up for 2026, not 2027.');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('v2PolicyIdFor', () => {
+  /** The catalog's current-law policy, as the model catalog names it. */
+  const CURRENT_LAW_ID = 2;
+
+  test.each([
+    ["the catalog's current-law ID", String(CURRENT_LAW_ID)],
+    ['no policy', undefined],
+    ['an empty ID', ''],
+  ])('given %s then the calculation is for current law', (_case, policyId) => {
+    expect(v2PolicyIdFor(policyId, CURRENT_LAW_ID)).toBeNull();
+  });
+
+  test('given a v2 policy ID then the calculation names it', () => {
+    expect(v2PolicyIdFor(V2_REFORM_POLICY_ID, CURRENT_LAW_ID)).toBe(V2_REFORM_POLICY_ID);
+  });
+
+  test('given a policy known only by its v1 number then it is refused, saying why', () => {
+    expect(() => v2PolicyIdFor(REFORM_POLICY_ID, CURRENT_LAW_ID)).toThrow(
+      `Policy ${REFORM_POLICY_ID} is a v1 policy, which the v2 household calculations cannot use.`
+    );
   });
 });
