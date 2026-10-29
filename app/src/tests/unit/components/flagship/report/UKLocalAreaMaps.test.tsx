@@ -1,11 +1,17 @@
 import { fireEvent, render, screen, userEvent, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { normalizeSocietyWideOutput } from '@/adapters/societyWideOutputNormalizer';
+import type { UKBreakdownWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import UKLocalAreaMaps, {
   areaNation,
   ukAreaDetailFigures,
 } from '@/components/flagship/report/UKLocalAreaMaps';
 import { LIST_SHAPE_UK_RESULT } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
+import {
+  WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES,
+  WALES_LISTED_WITHHELD_CONSTITUENCIES,
+  WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES,
+} from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   UK_LOCAL_AREAS_OUTPUT,
   UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
@@ -22,6 +28,7 @@ import {
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
   ALDERSHOT_CODE,
+  boundariesReading,
   CARDIFF_CODE,
   CARDIFF_EAST_CODE,
   CLWYD_EAST_CODE,
@@ -34,11 +41,17 @@ import {
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import {
   CARDIFF_EAST_NAME,
+  CARDIFF_NORTH_CODE,
+  CARDIFF_NORTH_NAME,
+  LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+  LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES,
+  NEWPORT_CODE,
   SWANSEA_CODE,
   SWANSEA_NAME,
   WELSH_CONSTITUENCY_COUNT,
   WELSH_LOCAL_AUTHORITY_COUNT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
+import { NO_DATA_TEXT } from '@/tests/fixtures/components/visualization/hexMapMocks';
 import {
   EXPECTED_CONSTITUENCY_COUNT,
   EXPECTED_LOCAL_AUTHORITY_COUNT,
@@ -52,8 +65,11 @@ import {
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
   areaNames,
+  hatchedAreaCodes,
   hexagonArrangement,
   isPointyTopped,
+  noDataHexagon,
+  noDataHexagons,
   v3HexagonArrangement,
 } from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
 
@@ -961,5 +977,155 @@ describe('UKLocalAreaMaps withheld areas on the hex map', () => {
     // Then
     expect([...container.querySelectorAll('[data-area-id]')].some(isPointyTopped)).toBe(false);
     expect(withheldHexagons(container).length).toBe(0);
+  });
+});
+
+describe('UKLocalAreaMaps areas a breakdown lists as withheld', () => {
+  const listedWithheld = {
+    constituency: WALES_LISTED_WITHHELD_CONSTITUENCIES,
+    local_authority: WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES,
+  };
+
+  /** v3's local-area maps of the Welsh fixture, with the hex grid chosen. */
+  async function renderHexMap(withheld: UKBreakdownWithheldAreas) {
+    const user = userEvent.setup();
+    const view = render(
+      <UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} region={WALES_REGION} withheld={withheld} />,
+      'uk'
+    );
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    await showHexMap(user);
+    return { ...view, user };
+  }
+
+  test('given a breakdown’s list then the hex map hatches only the listed constituencies', async () => {
+    // When
+    const { container } = await renderHexMap(listedWithheld);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES);
+  });
+
+  test('given a breakdown’s list then a constituency it leaves out but does not list reads no data', async () => {
+    // Given
+    const { container, user } = await renderHexMap(listedWithheld);
+
+    // When
+    await user.hover(noDataHexagon(container, CARDIFF_NORTH_CODE)!);
+
+    // Then
+    expect(noDataHexagons(container)).toHaveLength(
+      WELSH_CONSTITUENCY_COUNT - 3 - LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length
+    );
+    expect(screen.getByText(`${CARDIFF_NORTH_NAME}: ${NO_DATA_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given a no-data hexagon clicked then no details show, and the rankings list only the areas with results', async () => {
+    // Given
+    const { container, user } = await renderHexMap(listedWithheld);
+    const cardiffNorth = noDataHexagon(container, CARDIFF_NORTH_CODE);
+    expect(cardiffNorth).toBeInTheDocument();
+
+    // When
+    await user.click(cardiffNorth!);
+
+    // Then
+    expect(screen.queryByRole('region', { name: /details$/ })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^Show details for / })).toHaveLength(3);
+    expect(
+      screen.queryByRole('button', { name: `Show details for ${CARDIFF_NORTH_NAME}` })
+    ).not.toBeInTheDocument();
+  });
+
+  test('given a breakdown’s list then the local authority hex map hatches only the listed local authorities, and the others read no data', async () => {
+    // Given
+    const { container, user } = await renderHexMap(listedWithheld);
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual(LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES);
+    expect(noDataHexagon(container, NEWPORT_CODE)).toBeInTheDocument();
+    expect(noDataHexagons(container)).toHaveLength(
+      WELSH_LOCAL_AUTHORITY_COUNT - 2 - LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES.length
+    );
+  });
+
+  test('given an empty list then the hex map hatches nothing and every absent constituency reads no data', async () => {
+    // When
+    const { container } = await renderHexMap({
+      constituency: WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES,
+    });
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual([]);
+    expect(noDataHexagons(container)).toHaveLength(WELSH_CONSTITUENCY_COUNT - 3);
+  });
+
+  test('given no list then every absent constituency is hatched, as before, and none reads no data', async () => {
+    // When
+    const { container } = await renderHexMap({ constituency: SOME_WITHHELD_CONSTITUENCIES });
+
+    // Then
+    expect(hatchedAreaCodes(container)).toHaveLength(WELSH_CONSTITUENCY_COUNT - 3);
+    expect(noDataHexagons(container)).toHaveLength(0);
+  });
+});
+
+describe('UKLocalAreaMaps geographic map with a breakdown’s list of withheld codes', () => {
+  /** v3's local-area maps of the Welsh fixture, on the geographic map. */
+  async function renderGeographicMap(withheld: UKBreakdownWithheldAreas) {
+    const user = userEvent.setup();
+    render(
+      <UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} region={WALES_REGION} withheld={withheld} />,
+      'uk'
+    );
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    return { user };
+  }
+
+  test('given a breakdown’s list then only the listed boundaries read not reported, and the others without a result no data', async () => {
+    // When
+    await renderGeographicMap({ constituency: WALES_LISTED_WITHHELD_CONSTITUENCIES });
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([CARDIFF_NORTH_CODE]);
+  });
+
+  test('given a breakdown’s list then the local authority map reads not reported only for the listed ones', async () => {
+    // Given
+    const { user } = await renderGeographicMap({
+      local_authority: WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES,
+    });
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+    await screen.findByTestId(`area-${NEWPORT_CODE}`);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(
+      LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES
+    );
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([NEWPORT_CODE]);
+  });
+
+  test('given an empty list then every boundary without a result reads no data', async () => {
+    // When
+    await renderGeographicMap({ constituency: WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES });
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual([]);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(3);
+  });
+
+  test('given no list then every boundary without a result reads not reported, as before', async () => {
+    // When
+    await renderGeographicMap({ constituency: SOME_WITHHELD_CONSTITUENCIES });
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toHaveLength(3);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([]);
   });
 });

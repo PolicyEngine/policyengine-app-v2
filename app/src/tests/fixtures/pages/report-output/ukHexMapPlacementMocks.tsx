@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { render, screen, userEvent, within } from '@test-utils';
 import type { UKAreaLevel } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
@@ -94,4 +95,30 @@ export async function v3HexagonArrangement(
 /** v2's hexagons: its hex map is not selectable, so they carry no ids, and draw in the result's order. */
 export function v2Hexagons(container: HTMLElement): Element[] {
   return [...container.querySelectorAll('svg polygon')];
+}
+
+/** A v2 chart rendered with its hex grid chosen, once its geographic map has loaded. */
+export async function renderWithHexGrid(chart: ReactElement) {
+  const user = userEvent.setup();
+  const view = render(chart);
+  await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+  await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
+  return { ...view, user };
+}
+
+/** The ONS codes of the hexagons a hex map hatches as withheld, in drawing order. */
+export function hatchedAreaCodes(container: HTMLElement): string[] {
+  return [...container.querySelectorAll('[data-missing-area-id]')].map(
+    (hexagon) => hexagon.getAttribute('data-missing-area-id')!
+  );
+}
+
+/** The hexagons a hex map draws as having no data. */
+export function noDataHexagons(container: HTMLElement): Element[] {
+  return [...container.querySelectorAll('[data-no-data-area-id]')];
+}
+
+/** A no-data hexagon, by its ONS code. */
+export function noDataHexagon(container: HTMLElement, code: string): Element | null {
+  return container.querySelector(`[data-no-data-area-id="${code}"]`);
 }

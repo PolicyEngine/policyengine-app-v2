@@ -15,6 +15,9 @@ import {
   MOCK_TILED_HEX_DATA,
   MOCK_UK_SHAPED_HEX_DATA,
   mockRenderedSvgWidth,
+  NO_DATA_AREA_FILL,
+  NO_DATA_NORTH_WEST,
+  NO_DATA_TEXT,
   NOT_REPORTED_TEXT,
   PHONE_WIDTH_PIXELS,
   stripeSpacingOnScreen,
@@ -786,5 +789,139 @@ describe('HexagonalMap missing areas', () => {
     // Then
     expect(container.querySelector('pattern')).not.toBeInTheDocument();
     expect(container.querySelector('[data-missing-area-id]')).not.toBeInTheDocument();
+  });
+});
+
+describe('HexagonalMap no-data areas', () => {
+  /** The tiled grid, on which the UK hex maps draw the areas they have no value for. */
+  const TILED_CONFIG = { tiled: true };
+
+  /** A no-data area's hexagon, by its id. */
+  function noDataHexagon(container: HTMLElement, id: string): Element | null {
+    return container.querySelector(`[data-no-data-area-id="${id}"]`);
+  }
+
+  test('given a no-data area then it is drawn in its place with a plain neutral fill, not hatched', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        config={TILED_CONFIG}
+        noDataAreas={[NO_DATA_NORTH_WEST]}
+      />
+    );
+
+    // Then
+    const hexagon = noDataHexagon(container, NO_DATA_NORTH_WEST.id)!;
+    expect(hexagon).toBeInTheDocument();
+    expect(hexagon.getAttribute('fill')).toBe(NO_DATA_AREA_FILL);
+    expect(container.querySelector('pattern')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('svg polygon')).toHaveLength(4);
+  });
+
+  test('given a no-data area beside a missing area then its fill is neither the hatching nor a valued colour', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        config={TILED_CONFIG}
+        missingAreas={[MISSING_NORTH_EAST]}
+        noDataAreas={[NO_DATA_NORTH_WEST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then
+    const noDataFill = noDataHexagon(container, NO_DATA_NORTH_WEST.id)!.getAttribute('fill');
+    const hatchedFill = container
+      .querySelector(`[data-missing-area-id="${MISSING_NORTH_EAST.id}"]`)!
+      .getAttribute('fill');
+    const valuedFills = [...container.querySelectorAll('[data-area-id]')].map((hexagon) =>
+      hexagon.getAttribute('fill')
+    );
+    expect(noDataFill).not.toBe(hatchedFill);
+    expect(valuedFills).not.toContain(noDataFill);
+  });
+
+  test('given a no-data area then it sits in the row above, beside the area east of it', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        config={TILED_CONFIG}
+        noDataAreas={[NO_DATA_NORTH_WEST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then: one column west of North, in North's row
+    const [west, east, north] = ['west', 'east', 'north'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const northWest = noDataHexagon(container, NO_DATA_NORTH_WEST.id)!;
+    expect(centre(northWest)[1]).toBeCloseTo(centre(north)[1], 5);
+    expect(centre(north)[0] - centre(northWest)[0]).toBeCloseTo(
+      centre(east)[0] - centre(west)[0],
+      5
+    );
+  });
+
+  test('given a no-data area hovered then its tooltip reads no data, whatever the missing areas read', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        config={TILED_CONFIG}
+        missingAreas={[MISSING_NORTH_EAST]}
+        missingAreaText={NOT_REPORTED_TEXT}
+        noDataAreas={[NO_DATA_NORTH_WEST]}
+      />
+    );
+
+    // When
+    await user.hover(noDataHexagon(container, NO_DATA_NORTH_WEST.id)!);
+
+    // Then
+    expect(screen.getByText(`${NO_DATA_NORTH_WEST.label}: ${NO_DATA_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given a selectable map then a no-data area is not selectable', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        config={TILED_CONFIG}
+        noDataAreas={[NO_DATA_NORTH_WEST]}
+        onSelect={onSelect}
+      />
+    );
+    const hexagon = noDataHexagon(container, NO_DATA_NORTH_WEST.id)!;
+
+    // When
+    await user.click(hexagon);
+
+    // Then
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(hexagon).not.toHaveAttribute('data-area-id');
+  });
+
+  test('given a no-data area far from the valued ones then the map fits it in its frame too', () => {
+    // Given: twenty columns east of the valued areas
+    const farEast = { ...MISSING_FAR_EAST, id: 'far-east-no-data' };
+
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} config={TILED_CONFIG} noDataAreas={[farEast]} />
+    );
+
+    // Then
+    const svg = container.querySelector('svg')!;
+    const [, , frameWidth] = svg.getAttribute('viewBox')!.split(' ').map(Number);
+    const allVertices = [...container.querySelectorAll('svg polygon')].flatMap(vertices);
+    expect(noDataHexagon(container, farEast.id)).toBeInTheDocument();
+    expect(Math.max(...allVertices.map(([vertexX]) => vertexX))).toBeLessThanOrEqual(frameWidth);
   });
 });

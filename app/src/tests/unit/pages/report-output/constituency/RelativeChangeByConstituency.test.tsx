@@ -1,7 +1,12 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { RelativeChangeByConstituency } from '@/pages/report-output/constituency/RelativeChangeByConstituency';
+import {
+  WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES,
+  WALES_LISTED_WITHHELD_CONSTITUENCIES,
+} from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   UK_LOCAL_AREAS_OUTPUT,
   UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
@@ -11,6 +16,7 @@ import {
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { SOME_WITHHELD_CONSTITUENCIES } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  boundariesReading,
   CARDIFF_EAST_CODE,
   GOWER_CODE,
   MAP_LEGEND_NAME,
@@ -19,15 +25,23 @@ import {
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import {
   CARDIFF_EAST_NAME,
+  CARDIFF_NORTH_CODE,
+  CARDIFF_NORTH_NAME,
+  LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
   WELSH_CONSTITUENCY_COUNT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
+import { NO_DATA_TEXT } from '@/tests/fixtures/components/visualization/hexMapMocks';
 import {
   MOCK_UK_REPORT_OUTPUT,
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
 } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
 import {
+  hatchedAreaCodes,
   hexagonArrangement,
   isPointyTopped,
+  noDataHexagon,
+  noDataHexagons,
+  renderWithHexGrid,
   v2Hexagons,
   v3HexagonArrangement,
 } from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
@@ -278,5 +292,99 @@ describe('RelativeChangeByConstituency withheld areas on the hex map', () => {
 
     // Then
     expect(withheldHexagons(container).length).toBe(0);
+  });
+});
+
+describe('RelativeChangeByConstituency constituencies a breakdown lists as withheld', () => {
+  /** The chart of the Welsh fixture's 3 constituencies, with the hex grid chosen. */
+  function renderChart(withheld: UKWithheldAreas) {
+    return renderWithHexGrid(
+      <RelativeChangeByConstituency
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={withheld}
+      />
+    );
+  }
+
+  test('given a breakdown’s list then the hex map hatches only the listed constituencies', async () => {
+    // When
+    const { container } = await renderChart(WALES_LISTED_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES);
+  });
+
+  test('given a breakdown’s list then a constituency it leaves out but does not list reads no data', async () => {
+    // Given
+    const { container, user } = await renderChart(WALES_LISTED_WITHHELD_CONSTITUENCIES);
+
+    // When
+    await user.hover(noDataHexagon(container, CARDIFF_NORTH_CODE)!);
+
+    // Then
+    expect(noDataHexagons(container)).toHaveLength(
+      WELSH_CONSTITUENCY_COUNT - 3 - LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length
+    );
+    expect(screen.getByText(`${CARDIFF_NORTH_NAME}: ${NO_DATA_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given an empty list then the hex map hatches nothing and every absent constituency reads no data', async () => {
+    // When
+    const { container } = await renderChart(WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual([]);
+    expect(noDataHexagons(container)).toHaveLength(WELSH_CONSTITUENCY_COUNT - 3);
+  });
+
+  test('given no list then every absent constituency is hatched, as before, and none reads no data', async () => {
+    // When
+    const { container } = await renderChart(SOME_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toHaveLength(WELSH_CONSTITUENCY_COUNT - 3);
+    expect(noDataHexagons(container)).toHaveLength(0);
+  });
+});
+
+describe('RelativeChangeByConstituency geographic map with a breakdown’s list of withheld constituencies', () => {
+  /** The chart of the Welsh fixture, on its geographic map. */
+  async function renderChart(withheld: UKWithheldAreas) {
+    render(
+      <RelativeChangeByConstituency
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={withheld}
+      />
+    );
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+  }
+
+  test('given a breakdown’s list then only the listed boundaries read not reported, and the others without a result no data', async () => {
+    // When
+    await renderChart(WALES_LISTED_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([CARDIFF_NORTH_CODE]);
+  });
+
+  test('given an empty list then every boundary without a result reads no data', async () => {
+    // When
+    await renderChart(WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual([]);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(3);
+  });
+
+  test('given no list then every boundary without a result reads not reported, as before', async () => {
+    // When
+    await renderChart(SOME_WITHHELD_CONSTITUENCIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toHaveLength(3);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([]);
   });
 });

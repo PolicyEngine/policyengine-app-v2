@@ -6,8 +6,11 @@ import { UKAreaChoroplethMap } from '@/components/visualization/choropleth/UKAre
 import { colors } from '@/designTokens';
 import {
   ALDERSHOT_CODE,
+  boundariesReading,
   CARDIFF_CODE,
   CARDIFF_EAST_CODE,
+  CARDIFF_NORTH_CODE,
+  CARDIFF_WEST_CODE,
   CLWYD_EAST_CODE,
   GOWER_CODE,
   HARTLEPOOL_CODE,
@@ -22,6 +25,7 @@ import {
   UK_CONSTITUENCY_BOUNDARY_PATH,
   UK_LOCAL_AUTHORITY_BOUNDARY_PATH,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import { NO_DATA_TEXT } from '@/tests/fixtures/components/visualization/hexMapMocks';
 
 const NO_DATA_FILL = colors.gray[300];
 
@@ -113,6 +117,44 @@ describe('UKAreaChoroplethMap', () => {
     // Then: the boundary file names it, as the result does not.
     expect(cardiffEast).toHaveAttribute('fill', NO_DATA_FILL);
     expect(tooltipLines()).toEqual(['Cardiff East', NOT_REPORTED_TEXT]);
+  });
+
+  test('given the codes the missing-area text is about then only those boundaries read it, and the others no data', async () => {
+    // Given: Cardiff East and Cardiff West named, Cardiff North not
+    render(
+      <UKAreaChoroplethMap
+        data={MOCK_UK_CONSTITUENCY_POINTS}
+        level="constituency"
+        missingAreaText={NOT_REPORTED_TEXT}
+        missingAreaTextCodes={[CARDIFF_EAST_CODE, CARDIFF_WEST_CODE]}
+      />
+    );
+    await boundary(CARDIFF_EAST_CODE);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual([CARDIFF_EAST_CODE, CARDIFF_WEST_CODE]);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([CARDIFF_NORTH_CODE]);
+  });
+
+  test('given no codes the missing-area text is about then every boundary without a result reads it', async () => {
+    // Given
+    render(
+      <UKAreaChoroplethMap
+        data={MOCK_UK_CONSTITUENCY_POINTS}
+        level="constituency"
+        missingAreaText={NOT_REPORTED_TEXT}
+        missingAreaTextCodes={null}
+      />
+    );
+    await boundary(CARDIFF_EAST_CODE);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual([
+      CARDIFF_EAST_CODE,
+      CARDIFF_WEST_CODE,
+      CARDIFF_NORTH_CODE,
+    ]);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([]);
   });
 
   test('given an approximate area with a 90% range then its tooltip gives both', async () => {

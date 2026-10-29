@@ -105,6 +105,28 @@ export const MISSING_FAR_EAST: HexMapMissingArea = {
 /** The text a missing area's tooltip reads when the caller says why it has no value. */
 export const NOT_REPORTED_TEXT = 'Not reported';
 
+/**
+ * An area without a value and without a stated reason, in the next row up
+ * from MOCK_TILED_HEX_DATA's, west of North: a hexagon the map draws as
+ * having no data.
+ */
+export const NO_DATA_NORTH_WEST: HexMapMissingArea = {
+  id: 'north-west',
+  label: 'North West',
+  x: -1,
+  y: 1,
+};
+
+/** What a no-data area's tooltip reads after its name. */
+export const NO_DATA_TEXT = 'No data';
+
+/**
+ * A no-data area's fill: the map's background, a plain colour that the
+ * colour scale never produces (its lightest colour, at zero, is the
+ * tertiary background) and that is not the missing areas' hatching.
+ */
+export const NO_DATA_AREA_FILL = colors.background.primary;
+
 /** An area without a value inside MOCK_UK_SHAPED_HEX_DATA's grid, which is as dense as the UK constituency map. */
 export const MISSING_UK_SHAPED_AREA: HexMapMissingArea = {
   id: 'glasgow',

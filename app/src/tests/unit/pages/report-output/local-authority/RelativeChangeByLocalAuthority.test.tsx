@@ -1,7 +1,12 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { RelativeChangeByLocalAuthority } from '@/pages/report-output/local-authority/RelativeChangeByLocalAuthority';
+import {
+  WALES_EMPTY_LIST_WITHHELD_LOCAL_AUTHORITIES,
+  WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES,
+} from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   UK_LOCAL_AREAS_OUTPUT,
   WALES_REGION,
@@ -9,6 +14,7 @@ import {
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { SOME_WITHHELD_LOCAL_AUTHORITIES } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  boundariesReading,
   CARDIFF_CODE,
   HARTLEPOOL_CODE,
   MAP_LEGEND_NAME,
@@ -16,10 +22,14 @@ import {
   NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import {
+  LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES,
+  NEWPORT_CODE,
+  NEWPORT_NAME,
   SWANSEA_CODE,
   SWANSEA_NAME,
   WELSH_LOCAL_AUTHORITY_COUNT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
+import { NO_DATA_TEXT } from '@/tests/fixtures/components/visualization/hexMapMocks';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_DATA,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
@@ -28,9 +38,13 @@ import {
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
   areaNames,
+  hatchedAreaCodes,
   hexagonArrangement,
   hexagonCentre,
   isPointyTopped,
+  noDataHexagon,
+  noDataHexagons,
+  renderWithHexGrid,
   v2Hexagons,
   v3HexagonArrangement,
 } from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
@@ -295,5 +309,101 @@ describe('RelativeChangeByLocalAuthority withheld areas on the hex map', () => {
 
     // Then
     expect(withheldHexagons(container).length).toBe(0);
+  });
+});
+
+describe('RelativeChangeByLocalAuthority local authorities a breakdown lists as withheld', () => {
+  /** The chart of the Welsh fixture's 2 local authorities, with the hex grid chosen. */
+  function renderChart(withheld: UKWithheldAreas) {
+    return renderWithHexGrid(
+      <RelativeChangeByLocalAuthority
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={withheld}
+      />
+    );
+  }
+
+  test('given a breakdown’s list then the hex map hatches only the listed local authorities', async () => {
+    // When
+    const { container } = await renderChart(WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual(LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES);
+  });
+
+  test('given a breakdown’s list then a local authority it leaves out but does not list reads no data', async () => {
+    // Given
+    const { container, user } = await renderChart(WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES);
+
+    // When
+    await user.hover(noDataHexagon(container, NEWPORT_CODE)!);
+
+    // Then
+    expect(noDataHexagons(container)).toHaveLength(
+      WELSH_LOCAL_AUTHORITY_COUNT - 2 - LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES.length
+    );
+    expect(screen.getByText(`${NEWPORT_NAME}: ${NO_DATA_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given an empty list then the hex map hatches nothing and every absent local authority reads no data', async () => {
+    // When
+    const { container } = await renderChart(WALES_EMPTY_LIST_WITHHELD_LOCAL_AUTHORITIES);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual([]);
+    expect(noDataHexagons(container)).toHaveLength(WELSH_LOCAL_AUTHORITY_COUNT - 2);
+  });
+
+  test('given no list then every absent local authority is hatched, as before, and none reads no data', async () => {
+    // When
+    const { container } = await renderChart(SOME_WITHHELD_LOCAL_AUTHORITIES);
+
+    // Then
+    expect(hatchedAreaCodes(container)).toHaveLength(WELSH_LOCAL_AUTHORITY_COUNT - 2);
+    expect(noDataHexagons(container)).toHaveLength(0);
+  });
+});
+
+describe('RelativeChangeByLocalAuthority geographic map with a breakdown’s list of withheld local authorities', () => {
+  /** The chart of the Welsh fixture, on its geographic map. */
+  async function renderChart(withheld: UKWithheldAreas) {
+    render(
+      <RelativeChangeByLocalAuthority
+        output={UK_LOCAL_AREAS_OUTPUT}
+        region={WALES_REGION}
+        withheld={withheld}
+      />
+    );
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+  }
+
+  test('given a breakdown’s list then only the listed boundaries read not reported, and the others without a result no data', async () => {
+    // When
+    await renderChart(WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(
+      LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES
+    );
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([NEWPORT_CODE]);
+  });
+
+  test('given an empty list then every boundary without a result reads no data', async () => {
+    // When
+    await renderChart(WALES_EMPTY_LIST_WITHHELD_LOCAL_AUTHORITIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual([]);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(2);
+  });
+
+  test('given no list then every boundary without a result reads not reported, as before', async () => {
+    // When
+    await renderChart(SOME_WITHHELD_LOCAL_AUTHORITIES);
+
+    // Then
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toHaveLength(2);
+    expect(boundariesReading(NO_DATA_TEXT)).toEqual([]);
   });
 });
