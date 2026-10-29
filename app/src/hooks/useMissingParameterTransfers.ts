@@ -68,6 +68,8 @@ export interface SavedReportTransfer {
   /** The run's title and source note: the report's own, or what the caller names it by. */
   title: string;
   sourceNote: string;
+  /** The report link the page shows, when it is the report's own page. */
+  currentLink?: string;
 }
 
 /**
@@ -87,7 +89,14 @@ export function useSavedReportTransfer() {
     Number(useSelector((state: RootState) => state.metadata.currentLawId)) || undefined;
 
   return useMutation<string, TransferError, SavedReportTransfer>({
-    mutationFn: async ({ report, missingParameters, findReform, title, sourceNote }) => {
+    mutationFn: async ({
+      report,
+      missingParameters,
+      findReform,
+      title,
+      sourceNote,
+      currentLink,
+    }) => {
       let link: string | null;
       const readPolicy = (policyCountryId: string, policyId: string) =>
         readV1Policy(queryClient, policyCountryId, policyId);
@@ -134,6 +143,7 @@ export function useSavedReportTransfer() {
           ...runSettings,
           baseline: transferredBaseline,
           savedReportId: report.id,
+          currentLink,
         });
       } catch (error) {
         throw error instanceof TransferError ? error : new TransferError(REPORT_TRANSFER_FAILED);

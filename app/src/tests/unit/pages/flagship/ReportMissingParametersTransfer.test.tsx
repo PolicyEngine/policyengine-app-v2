@@ -265,7 +265,8 @@ describe('FlagshipReportPage with parameters the model no longer has', () => {
       [KEPT_PROVISION],
       'rf-local1',
       2026,
-      { savedReportId: saved.id }
+      // The page it runs from shows this link: a run that keeps it stays here.
+      { savedReportId: saved.id, currentLink: EXISTING_REPORT_ID }
     );
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });

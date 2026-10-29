@@ -222,7 +222,8 @@ export interface RunFlagshipReportArgs {
    * With accounts (US/UK): the report store for this session's user, the
    * account or this browser's unauthenticated user. The run then writes
    * exactly one `/v2/user-reports` row — with the title, source note,
-   * provisions and reform links — instead of the browser record.
+   * provisions and reform links — instead of the browser record, or, with
+   * `savedReportId`, repoints that row instead.
    */
   accountReportStore?: FlagshipReportStore | null;
   /** The model's parameters, to check and type each value as v2 does. */
@@ -350,10 +351,11 @@ export async function runFlagshipReport({
     year: String(year),
   };
 
-  // The v1 report comes first. Then exactly one record of it: through the
-  // API with accounts, whose ID is the report's link (anyone can open it),
-  // otherwise this browser's flagship record, with the v1 report's ID as
-  // the link (v3 never writes the legacy report keys).
+  // The v1 report comes first. Then exactly one record of it, new or (with
+  // savedReportId) the saved report repointed at it: through the API with
+  // accounts, whose ID is the report's link (anyone can open it), otherwise
+  // this browser's flagship record, with the v1 report's ID as the link
+  // (v3 never writes the legacy report keys).
   const reportMetadata = await createReport(countryId, payload);
   const reportId = String(reportMetadata.id);
   const budgetWindow =

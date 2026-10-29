@@ -186,6 +186,24 @@ describe('useRunFlagshipReport', () => {
       expect(queryClient.getQueryData(recordKey)).toBeUndefined();
     });
 
+    test('given the run answers the link the page already shows then it stays there, adding no history entry', async () => {
+      // Given: the saved report's own page, an account row's link that the run keeps
+      mockRunFlagshipReport.mockResolvedValue(SAVED_REPORT_ROW_ID);
+      const push = vi.fn();
+      const { result } = renderRunWithAuth(signedInAuthValue(), push);
+
+      // When
+      await act(async () => {
+        await result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS, null, 2026, {
+          savedReportId: SAVED_REPORT_ROW_ID,
+          currentLink: SAVED_REPORT_ROW_ID,
+        });
+      });
+
+      // Then
+      expect(push).not.toHaveBeenCalled();
+    });
+
     test('given the run fails then it answers no link', async () => {
       // Given
       mockRunFlagshipReport.mockRejectedValue(new Error('Saved work is temporarily unavailable.'));
