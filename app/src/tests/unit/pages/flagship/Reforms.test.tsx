@@ -1542,6 +1542,53 @@ describe('ReformsPage', () => {
         );
       });
 
+      test('then a report that cannot be read is not transferred, and the dialog says so', async () => {
+        // Given: Re-run falls back to Plan B's parameters, but nothing says what year or population ran
+        mockFindMine.mockResolvedValue([
+          CHAT_REFORM,
+          {
+            ...PLAN_B_REFORM,
+            parameters: [...CHAT_REFORM.parameters, REMOVED_PARAMETER_CHANGE],
+            missingParameters: [REMOVED_US_PARAMETER],
+          },
+        ]);
+        mockFindReports.mockResolvedValue([REPORT_WITH_REMOVED_PARAMETER]);
+        mockFetchReportByIdOverride.current = () => Promise.reject(new Error('Not found'));
+        const user = userEvent.setup();
+        renderReforms('/us/reforms?filter=yours');
+        await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+        await user.click(screen.getByRole('button', { name: /re-run/i }));
+        const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
+
+        // When
+        await user.click(within(dialog).getByRole('button', { name: 'Transfer and run again' }));
+
+        // Then: the saved report keeps its run rather than take one in another year or place
+        expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+          'Could not transfer the report. Try again.'
+        );
+        expect(mockRun).not.toHaveBeenCalled();
+      });
+
+      test('then a comparison left with no changes is not transferred, and the dialog says why', async () => {
+        // Given: the comparison policy (88) sets only the removed parameter
+        mockFetchPolicyById.mockResolvedValue(
+          v1PolicyContent({ [REMOVED_US_PARAMETER]: { '2026-01-01.2100-12-31': 0 } }, [
+            REMOVED_US_PARAMETER,
+          ])
+        );
+        const { user, dialog } = await openTransferDialog(REPORT_WITH_REMOVED_PARAMETER);
+
+        // When
+        await user.click(within(dialog).getByRole('button', { name: 'Transfer and run again' }));
+
+        // Then
+        expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+          'Without this parameter, the reform this report is compared with changes nothing, so the report cannot be transferred.'
+        );
+        expect(mockRun).not.toHaveBeenCalled();
+      });
+
       test('then a run that cannot start says so in the dialog', async () => {
         // Given
         mockRun.mockResolvedValue(null);

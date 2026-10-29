@@ -229,5 +229,33 @@ describe('rerunSettings', () => {
       // When / Then: rather than run against current law
       await expect(rerunSettings('us', ACCOUNT_REPORT)).rejects.toThrow();
     });
+
+    describe('given the run it replaces must be read, as a transfer needs', () => {
+      test('then a report the API cannot read fails, rather than run nationwide this year', async () => {
+        // Given
+        fetchReportById.mockRejectedValue(new Error('down'));
+
+        // When / Then
+        await expect(
+          rerunSettings('us', ACCOUNT_REPORT, { savedReform, requireRun: true })
+        ).rejects.toThrow('down');
+      });
+
+      test('then a report whose year nobody records fails', async () => {
+        // Given: the API's report has no year, and an account row keeps none
+        fetchReportById.mockResolvedValue({ simulation_1_id: '9' });
+
+        // When / Then
+        await expect(
+          rerunSettings('us', ACCOUNT_REPORT, { savedReform, requireRun: true })
+        ).rejects.toThrow('The report’s year could not be read');
+      });
+
+      test('then a readable report gives the same settings as a re-run', async () => {
+        expect(
+          await rerunSettings('us', ACCOUNT_REPORT, { savedReform, requireRun: true })
+        ).toEqual(await rerunSettings('us', ACCOUNT_REPORT, { savedReform }));
+      });
+    });
   });
 });
