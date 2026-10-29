@@ -94,6 +94,49 @@ function Tr({ children }: { children?: React.ReactNode }) {
   );
 }
 
+/**
+ * Horizontal scroll container for a markdown table, so a table wider than
+ * the column scrolls on its own instead of widening the page. It carries the
+ * table's vertical margins (so they still collapse with neighbouring
+ * paragraphs) and its shadow (which a scroll container would otherwise clip).
+ */
+export function TableScroll({ children }: { children?: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [overflowing, setOverflowing] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const update = () => setOverflowing(el.scrollWidth > el.clientWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      data-table-scroll=""
+      // Only a table that scrolls needs a tab stop, so keyboard users can
+      // reach its hidden columns.
+      tabIndex={overflowing ? 0 : undefined}
+      role={overflowing ? "region" : undefined}
+      aria-label={overflowing ? "Scrollable table" : undefined}
+      style={{
+        overflowX: "auto",
+        maxWidth: "100%",
+        marginTop: blogSpacing.marginTop.table,
+        marginBottom: blogSpacing.marginBottom.table,
+        boxShadow: blogShadows.table,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 function Th({ children }: { children?: React.ReactNode }) {
   const displayCategory = useDisplayCategory();
   const mobile = displayCategory === "mobile";
@@ -868,20 +911,19 @@ export function MarkdownFormatter({
     },
 
     table: ({ children }) => (
-      <table
-        style={{
-          marginTop: blogSpacing.marginTop.table,
-          marginBottom: blogSpacing.marginBottom.table,
-          display: "table",
-          width: "100%",
-          borderCollapse: "separate",
-          borderSpacing: 0,
-          overflow: "hidden",
-          boxShadow: blogShadows.table,
-        }}
-      >
-        {children}
-      </table>
+      <TableScroll>
+        <table
+          style={{
+            display: "table",
+            width: "100%",
+            borderCollapse: "separate",
+            borderSpacing: 0,
+            overflow: "hidden",
+          }}
+        >
+          {children}
+        </table>
+      </TableScroll>
     ),
 
     th: Th,
