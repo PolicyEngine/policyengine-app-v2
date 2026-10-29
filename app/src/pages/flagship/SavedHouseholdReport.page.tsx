@@ -15,7 +15,7 @@ import { HOUSEHOLD_RUN_EXPECTED_MS } from '@/components/flagship/report/househol
 import RunProgress from '@/components/flagship/report/RunProgress';
 import { ErrorState } from '@/components/flagship/states';
 import V3VariablesGate from '@/components/flagship/V3VariablesGate';
-import { Stack, Text, Title } from '@/components/ui';
+import { Spinner, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { describeHousehold } from '@/libs/flagship/householdDescription';
 import { householdAmountInputs } from '@/libs/flagship/householdReport';
@@ -30,6 +30,16 @@ export interface SavedHouseholdReportPageProps {
   countryId: AssociationCountryId;
   /** The saved report's ID (a `/v2/user-reports` row): the report's link. */
   savedReportId: string;
+}
+
+/** A short wait the page names: opening the link, or reading the household. */
+function LoadingStatus({ children }: { children: ReactNode }) {
+  return (
+    <div role="status" style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+      <Spinner size="sm" />
+      <Text style={{ margin: 0, fontSize: typography.fontSize.sm }}>{children}</Text>
+    </div>
+  );
 }
 
 /** One section of the report, named for assistive technology. */
@@ -133,13 +143,17 @@ export default function SavedHouseholdReportPage({
         onRetry={failedQuery ? () => failedQuery.refetch() : undefined}
       />
     );
-  } else if (!opened?.run || !opened.household || !report.data?.run) {
+  } else if (shared.data === undefined) {
+    body = <LoadingStatus>Opening the saved report</LoadingStatus>;
+  } else if (!report.data?.run) {
     body = (
       <RunProgress
         title="Calculating this household report"
         expectedMs={HOUSEHOLD_RUN_EXPECTED_MS}
       />
     );
+  } else if (!opened?.run || !opened.household) {
+    body = <LoadingStatus>Reading the household</LoadingStatus>;
   } else {
     const { run, household } = opened;
     const reportRun = report.data.run;

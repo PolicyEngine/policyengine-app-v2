@@ -140,6 +140,29 @@ describe('SavedHouseholdReportPage', () => {
     );
   });
 
+  test('given the link still opening then the page says it is opening the saved report', async () => {
+    // Given
+    mockReadShared.mockReturnValue(new Promise(() => {}));
+
+    // When
+    renderSavedReport();
+
+    // Then
+    expect(await screen.findByText('Opening the saved report')).toBeInTheDocument();
+  });
+
+  test('given the household still being read then the page says so', async () => {
+    // Given
+    mockFetchStoredHousehold.mockReturnValue(new Promise(() => {}));
+
+    // When
+    renderSavedReport();
+
+    // Then
+    expect(await screen.findByText('Reading the household')).toBeInTheDocument();
+    expect(screen.queryByText('Calculating this household report')).not.toBeInTheDocument();
+  });
+
   test('given the report still calculating then its progress shows', async () => {
     // Given
     mockWaitForReport.mockReturnValue(new Promise(() => {}));
