@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { FOREVER } from '@/constants';
 import { useFlagshipHouseholdPolicies } from '@/hooks/useFlagshipHousehold';
+import { v2PolicyKeys } from '@/libs/queryKeys';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { catalogParametersResult } from '@/tests/fixtures/api/publicApi/catalogParametersMocks';
@@ -14,7 +15,11 @@ import {
 import { STANDARD_DEDUCTION_SINGLE } from '@/tests/fixtures/api/publicApi/searchFileMocks';
 import { CURRENT_LAW_POLICY_METADATA } from '@/tests/fixtures/api/publicApi/v2ReportPolicyMocks';
 import { V2_REFORM_POLICY_ID } from '@/tests/fixtures/api/v2HouseholdCalculationMocks';
-import { seedV2ModelCatalog, v3Wrapper } from '@/tests/fixtures/hooks/v3MetadataWrapper';
+import {
+  seedV2ModelCatalog,
+  testQueryClient,
+  v3Wrapper,
+} from '@/tests/fixtures/hooks/v3MetadataWrapper';
 
 /** v3 after the switch: V3_API_ROUTES is 'v2'. */
 vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
@@ -176,5 +181,31 @@ describe('useFlagshipHouseholdPolicies with v3 on the v2 routes, for v2 policies
     expect(result.current.error?.message).toBe(
       `Could not load the parameters of policy ${V2_REFORM_POLICY_ID}`
     );
+  });
+
+  test('given a v2 policy the session already read, as the reform store does, then it is not read again', async () => {
+    // Given
+    const fetchStub = stubPublicApiFetch({
+      [PARAMETERS_PATH]: answerParameters,
+      [REFORM_POLICY_PATH]: () => okItem(V2_REFORM_POLICY_ITEM),
+    });
+    await seedV2ModelCatalog();
+    const queryClient = testQueryClient();
+    queryClient.setQueryData(v2PolicyKeys.byId('us', V2_REFORM_POLICY_ID), V2_REFORM_POLICY_ITEM);
+
+    // When
+    const { result } = renderHook(
+      () =>
+        useFlagshipHouseholdPolicies({
+          countryId: 'us',
+          policyIds: [V2_REFORM_POLICY_ID],
+          enabled: true,
+        }),
+      { wrapper: v3Wrapper(queryClient) }
+    );
+
+    // Then
+    await waitFor(() => expect(result.current.policies).toHaveLength(1));
+    expect(requestsTo(fetchStub, REFORM_POLICY_PATH)).toHaveLength(0);
   });
 });

@@ -23,6 +23,7 @@ import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
+import { v2PolicyKeys } from '@/libs/queryKeys';
 import { selectV2Catalog, selectV2ParameterIds } from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
@@ -72,10 +73,6 @@ export function useV3SavedWork(): V3SavedWork {
 const v1PolicyJsonKey = (countryId: string, policyId: string) =>
   ['v1-policy-json', countryId, policyId] as const;
 
-/** A v2 policy (`GET /v2/policies/{id}`), per country. */
-const v2PolicyKey = (countryId: string, policyId: string) =>
-  ['v2-policy', countryId, policyId] as const;
-
 /** How long a fetched policy (v1 or v2) stays cached without a reader. */
 const SAVED_POLICY_GC_TIME = 30 * 60 * 1000;
 
@@ -116,7 +113,7 @@ export function useReformStore(): ReformStore {
           }),
         fetchV2Policy: (countryId, policyId) =>
           queryClient.fetchQuery({
-            queryKey: v2PolicyKey(countryId, policyId),
+            queryKey: v2PolicyKeys.byId(countryId, policyId),
             queryFn: () => fetchV2PolicyItem(countryId, policyId),
             staleTime: Infinity,
             gcTime: SAVED_POLICY_GC_TIME,

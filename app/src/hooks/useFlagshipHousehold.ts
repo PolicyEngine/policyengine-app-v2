@@ -13,7 +13,7 @@ import { useParallelQueries } from '@/hooks/utils/queryUtils';
 import { runFlagshipHouseholdPayload } from '@/libs/flagship/householdRun';
 import { runV2FlagshipHousehold, v2PolicyIdFor } from '@/libs/flagship/v2HouseholdRun';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
-import { policyKeys } from '@/libs/queryKeys';
+import { policyKeys, v2PolicyKeys } from '@/libs/queryKeys';
 import type { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
@@ -238,10 +238,6 @@ function useV1HouseholdPolicies({
   };
 }
 
-/** A v2 policy (`GET /v2/policies/{id}`), under the key the reform store reads it with. */
-const v2PolicyKey = (countryId: string, policyId: string) =>
-  ['v2-policy', countryId, policyId] as const;
-
 /**
  * The stored v2 policies' results, kept by the query library while nothing
  * changes (a module-level combine is not re-run each render), so what is
@@ -267,7 +263,7 @@ function combineStoredV2Policies(
 function useStoredV2Policies(countryId: string, policyIds: string[], enabled: boolean) {
   const stored = useQueries({
     queries: policyIds.map((policyId) => ({
-      queryKey: v2PolicyKey(countryId, policyId),
+      queryKey: v2PolicyKeys.byId(countryId, policyId),
       queryFn: () => fetchV2PolicyItem(countryId, policyId),
       enabled,
       staleTime: Infinity,

@@ -137,3 +137,24 @@ export const householdVariationKeys = {
       personName,
     ] as const,
 };
+
+/**
+ * v2 policies (`GET /v2/policies/{policy_id}`), per country. Policies never
+ * change, so the reform store and the household report share one read.
+ */
+export const v2PolicyKeys = {
+  all: ['v2-policy'] as const,
+  byId: (countryId: string, policyId: string) =>
+    [...v2PolicyKeys.all, countryId, policyId] as const,
+};
+
+/**
+ * Stored v2 households (`GET /v2/households/{household_id}`), per country.
+ * Stored households never change, so the variation charts and a saved
+ * household report share one read.
+ */
+export const v2StoredHouseholdKeys = {
+  all: ['v2-stored-household'] as const,
+  byId: (countryId: string, householdId: string) =>
+    [...v2StoredHouseholdKeys.all, countryId, householdId] as const,
+};

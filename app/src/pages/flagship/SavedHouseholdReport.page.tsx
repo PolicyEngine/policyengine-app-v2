@@ -20,6 +20,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { describeHousehold } from '@/libs/flagship/householdDescription';
 import { householdAmountInputs } from '@/libs/flagship/householdReport';
 import { plainV2HouseholdError } from '@/libs/flagship/v2HouseholdRun';
+import { v2StoredHouseholdKeys } from '@/libs/queryKeys';
 import { householdFromV2Item } from '@/models/household/v2DocumentCodec';
 import HouseholdSubPage from '@/pages/report-output/HouseholdSubPage';
 import type { RootState } from '@/store';
@@ -86,7 +87,7 @@ export default function SavedHouseholdReportPage({
   });
   const householdId = report.data?.household_id ?? null;
   const stored = useQuery({
-    queryKey: ['v2-stored-household', countryId, householdId],
+    queryKey: v2StoredHouseholdKeys.byId(countryId, householdId ?? ''),
     queryFn: () => fetchV2Household(countryId, householdId!),
     enabled: !!householdId,
     staleTime: Infinity,

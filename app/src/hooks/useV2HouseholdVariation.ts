@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { calculateV2Household, fetchV2Household } from '@/api/v2HouseholdCalculations';
 import type { CountryId } from '@/libs/countries';
 import { plainV2HouseholdError, v2PolicyIdFor } from '@/libs/flagship/v2HouseholdRun';
+import { v2StoredHouseholdKeys } from '@/libs/queryKeys';
 import { householdDataFromV2Calculation } from '@/models/household/v2DocumentCodec';
 import type { RootState } from '@/store';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
@@ -20,10 +21,6 @@ export interface V2HouseholdVariationArgs {
   personName: string | null;
   enabled: boolean;
 }
-
-/** A stored household, kept for the session: stored households never change. */
-const storedHouseholdKey = (countryId: string, householdId: string) =>
-  ['v2-stored-household', countryId, householdId] as const;
 
 /**
  * One policy's calculation of a stored household across earnings, on the
@@ -57,7 +54,7 @@ export function useV2HouseholdVariation({
     queryFn: async ({ signal }): Promise<HouseholdCalculationOutput> => {
       try {
         const stored = await queryClient.fetchQuery({
-          queryKey: storedHouseholdKey(countryId, householdId),
+          queryKey: v2StoredHouseholdKeys.byId(countryId, householdId),
           queryFn: () => fetchV2Household(countryId, householdId),
           staleTime: Infinity,
         });
