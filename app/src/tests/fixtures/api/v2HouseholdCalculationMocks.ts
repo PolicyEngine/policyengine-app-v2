@@ -142,3 +142,40 @@ export function requestsFor(
 
 /** Waiting between reads takes no time in tests. */
 export const noWait = () => Promise.resolve();
+
+/** The single parent's calculation under the reform: more EITC, so more net income. */
+export const US_SINGLE_PARENT_REFORM_SITUATION = {
+  ...US_SINGLE_PARENT_CALCULATED_SITUATION,
+  households: {
+    'household-1': {
+      ...US_SINGLE_PARENT_CALCULATED_SITUATION.households['household-1'],
+      household_net_income: { 2026: 13500 },
+    },
+  },
+  tax_units: {
+    'tax_unit-1': {
+      ...US_SINGLE_PARENT_CALCULATED_SITUATION.tax_units['tax_unit-1'],
+      eitc: { 2026: 5500 },
+    },
+  },
+};
+
+/**
+ * Answers `POST /v2/household-calculations` by the policy it names: the
+ * baseline calculation for current law, the reform's for the reform policy.
+ */
+export function answerByPolicy(reformPolicyId: string): RouteAnswer {
+  return async (request) => {
+    const body = (await request.clone().json()) as { policy_id: string | null };
+    return body.policy_id === reformPolicyId
+      ? calculationResponse(
+          calculationItem({
+            calculation_id: V2_CALCULATION_IDS.REFORM,
+            policy_id: reformPolicyId,
+            result: calculationOutput({ household: US_SINGLE_PARENT_REFORM_SITUATION }),
+          }),
+          202
+        )
+      : calculationResponse(calculationItem({ policy_id: body.policy_id }), 202);
+  };
+}
