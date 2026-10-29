@@ -20,6 +20,7 @@ import {
   REMOVED_US_PARAMETER,
   v1PolicyContent,
 } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import { KEPT_PARAMETER_CHANGE } from '@/tests/fixtures/libs/flagship/missingParameterTransferMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockReformInput: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -230,6 +231,35 @@ describe('ApiReformStore', () => {
     // Then
     expect(materializePolicy).not.toHaveBeenCalled();
     expect(fetchCall(fetchMock).body).toEqual({ name: 'Renamed' });
+  });
+
+  it('given a transfer without the parameters the model no longer has, when updated, then only the policy is repointed and the name, baseline and provenance stay', async () => {
+    // Given
+    const { store, fetchMock, materializePolicy } = apiReformStore();
+    materializePolicy.mockResolvedValue(REPLACEMENT_POLICY_ID);
+    fetchMock.mockResolvedValue(
+      itemResponse({
+        ...reformRow,
+        baseline: 'current-policy',
+        legacy_policy_id: REPLACEMENT_POLICY_ID,
+      })
+    );
+
+    // When
+    const updated = await store.update(ASSOCIATION_IDS.REFORM, {
+      parameters: [KEPT_PARAMETER_CHANGE],
+    });
+
+    // Then
+    expect(fetchCall(fetchMock).body).toEqual({ legacy_policy_id: REPLACEMENT_POLICY_ID });
+    expect(updated).toMatchObject({
+      label: 'CTC to $3,600 for children under 6',
+      baseline: 'current-policy',
+      provenance: { source: 'chat', ref: 'session-1', confidence: 'exact' },
+      policyId: String(REPLACEMENT_POLICY_ID),
+      parameters: [KEPT_PARAMETER_CHANGE],
+    });
+    expect(updated.missingParameters).toBeUndefined();
   });
 
   it.each([
@@ -531,6 +561,32 @@ describe('LocalStorageReformStore', () => {
     expect(materializePolicy).toHaveBeenLastCalledWith('us', parameters, undefined);
     expect(updated.policyId).toBe(String(REPLACEMENT_POLICY_ID));
     expect((await store.findById(created.id!))?.parameters).toEqual(parameters);
+  });
+
+  it('given a transfer without the parameters the model no longer has, when updated, then the reform keeps its name, baseline and provenance on a new policy', async () => {
+    // Given: the old policy sets a removed parameter, the new one does not
+    const fetchPolicy = vi.fn(async (_countryId: string, policyId: string) =>
+      policyId === String(MATERIALIZED_POLICY_ID)
+        ? v1PolicyContent(POLICY_JSON, [REMOVED_US_PARAMETER])
+        : v1PolicyContent(POLICY_JSON, [])
+    );
+    const checkedStore = new LocalStorageReformStore({ materializePolicy, fetchPolicy });
+    const created = await checkedStore.create({ ...mockReformInput, baseline: 'current-policy' });
+    materializePolicy.mockResolvedValue(REPLACEMENT_POLICY_ID);
+
+    // When
+    await checkedStore.update(created.id!, { parameters: [KEPT_PARAMETER_CHANGE] });
+
+    // Then
+    const reread = await checkedStore.findById(created.id!);
+    expect(reread).toMatchObject({
+      label: mockReformInput.label,
+      baseline: 'current-policy',
+      provenance: mockReformInput.provenance,
+      policyId: String(REPLACEMENT_POLICY_ID),
+      parameters: [KEPT_PARAMETER_CHANGE],
+    });
+    expect(reread?.missingParameters).toBeUndefined();
   });
 
   it('given the new v1 policy cannot be created, when updated, then the stored reform is unchanged', async () => {

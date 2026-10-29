@@ -5,6 +5,7 @@ import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/society
 import { isAccountId } from '@/api/v2Associations';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
+import MissingParametersTransferDialog from '@/components/flagship/MissingParametersTransferDialog';
 import {
   nationalPopulationLabel,
   populationLabel,
@@ -32,10 +33,12 @@ import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import {
   useFlagshipReportStore,
+  useReformStore,
   useReportRecord,
   useSharedReport,
 } from '@/hooks/useFlagshipStores';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
+import { useSavedReportTransfer } from '@/hooks/useMissingParameterTransfer';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
@@ -46,6 +49,7 @@ import {
   reportYearLabel,
   reportYearSpanLabel,
 } from '@/libs/flagship/draftLabels';
+import { provisionsWithout } from '@/libs/flagship/missingParameterTransfer';
 import {
   reportBaselineLabel,
   reportBaselineUnknown,
@@ -178,6 +182,12 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // Anything on the page may calculate only once the policies are checked
   // and none sets a parameter the model no longer has.
   const runsAllowed = policiesChecked && !runsBlocked;
+  // The user's own saved report offers, as the page opens, to run again
+  // without those parameters, until "Not now" puts it off; a report
+  // someone else saved only says why it cannot run.
+  const reformStore = useReformStore();
+  const reportTransfer = useSavedReportTransfer();
+  const [transferPutOffFor, setTransferPutOffFor] = useState<string | null>(null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.
@@ -347,6 +357,31 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     <div style={{ width: '100%', minWidth: 0 }}>{main}</div>
   );
 
+  const transferDialog = reportRecord && runsBlocked && (
+    <MissingParametersTransferDialog
+      open={transferPutOffFor !== userReportId}
+      onOpenChange={(open) => !open && setTransferPutOffFor(userReportId)}
+      subject="report"
+      parameterPaths={missingParameters}
+      transferLabel="Transfer and run again"
+      transferNote="Transferring runs the report again without them, for the same year, population and comparison. It keeps its link, which then shows the new results."
+      nothingLeft={provisionsWithout(reportRecord.provisions, missingParameters).length === 0}
+      transferring={reportTransfer.transferring}
+      error={reportTransfer.error}
+      onTransfer={async () => {
+        const started = await reportTransfer.transfer(reportRecord, missingParameters, {
+          findReform: (reformId) => reformStore.findById(reformId),
+          title: reportRecord.title || title,
+          sourceNote: reportRecord.sourceNote || meta?.sourceNote || '',
+        });
+        // The saved report now points at the new run, which is not blocked.
+        if (started) {
+          setTransferPutOffFor(userReportId);
+        }
+      }}
+    />
+  );
+
   // Unreadable stored provenance says so, until the report is opened without it.
   if (unreadableMeta.error) {
     return layout(
@@ -378,6 +413,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           {title}
         </Title>
         <MissingParametersNotice subject="This report" parameterPaths={missingParameters} />
+        {transferDialog}
       </Stack>
     );
   }
@@ -580,6 +616,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
               Its stored results are shown as they were calculated.
             </MissingParametersNotice>
           )}
+          {transferDialog}
           {!meta && metadata.status === 'error' && (
             <LeadError>
               <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />

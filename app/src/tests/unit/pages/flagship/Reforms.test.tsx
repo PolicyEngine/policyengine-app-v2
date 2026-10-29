@@ -21,6 +21,12 @@ import {
   REMOVED_US_PARAMETER,
   v1PolicyContent,
 } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import {
+  KEPT_PARAMETER_CHANGE,
+  REFORM_WITH_ONLY_REMOVED_PARAMETERS,
+  REFORM_WITH_REMOVED_PARAMETER,
+  REMOVED_PROVISION,
+} from '@/tests/fixtures/libs/flagship/missingParameterTransferMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockFindMine = vi.fn();
@@ -123,6 +129,10 @@ const CHAT_REFORM: Reform = {
   provenance: { source: 'chat', ref: 'session-1' },
   updatedAt: '2026-08-01T00:00:00Z',
 };
+
+/** The transfer dialogs, by their titles. */
+const REFORM_DIALOG_NAME = 'This reform uses parameters the model no longer has';
+const REPORT_DIALOG_NAME = 'This report uses parameters the model no longer has';
 
 /** A change to a parameter the model no longer has, as a saved reform keeps it. */
 const REMOVED_PARAMETER_CHANGE = {
@@ -1012,7 +1022,7 @@ describe('ReformsPage', () => {
     expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled();
   });
 
-  test('given a reform whose policy sets parameters the model no longer has then its card and detail name them, and it cannot run', async () => {
+  test('given a reform whose policy sets parameters the model no longer has then its card says so, and once its dialog is put off the detail names them and it cannot run', async () => {
     mockFindMine.mockResolvedValue([
       CHAT_REFORM,
       {
@@ -1032,12 +1042,140 @@ describe('ReformsPage', () => {
     expect(screen.getByText('Uses parameters the model no longer has')).toBeInTheDocument();
 
     await user.click(screen.getByText('Reform with a removed parameter'));
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Not now' })
+    );
 
     const notice = screen.getByRole('alert');
     expect(notice).toHaveTextContent(/cannot be run/i);
     expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /view full impact report/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled();
+  });
+
+  describe('given a saved reform whose policy uses parameters the model no longer has', () => {
+    /** The reform after its transfer: a new policy, with only its other change. */
+    const TRANSFERRED_REFORM: Reform = {
+      ...REFORM_WITH_REMOVED_PARAMETER,
+      policyId: '95800',
+      parameters: [KEPT_PARAMETER_CHANGE],
+      missingParameters: undefined,
+    };
+
+    async function openSavedReform(reform: Reform) {
+      mockFindMine.mockResolvedValue([CHAT_REFORM, reform]);
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+      await user.click(await screen.findByText(reform.label!));
+      return user;
+    }
+
+    test('given its card clicked then its transfer dialog opens and names them', async () => {
+      // When
+      await openSavedReform(REFORM_WITH_REMOVED_PARAMETER);
+
+      // Then
+      const dialog = await screen.findByRole('dialog', { name: REFORM_DIALOG_NAME });
+      expect(within(dialog).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole('button', { name: 'Transfer to a new policy' })
+      ).toBeEnabled();
+      expect(within(dialog).getByRole('button', { name: 'Not now' })).toBeEnabled();
+      expect(within(dialog).queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
+    });
+
+    test('given a reform the model can run then no dialog opens', async () => {
+      // Given
+      mockFindMine.mockResolvedValue([CHAT_REFORM, REFORM_WITH_REMOVED_PARAMETER]);
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+
+      // When
+      await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+      // Then
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(CHAT_REFORM.label!);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    test('given Transfer then the reform is saved with only its other changes, and the block lifts', async () => {
+      // Given: once updated, the store lists the reform on its new policy
+      let transferred = false;
+      mockFindMine.mockImplementation(async () => [
+        CHAT_REFORM,
+        transferred ? TRANSFERRED_REFORM : REFORM_WITH_REMOVED_PARAMETER,
+      ]);
+      mockUpdate.mockImplementation(async () => {
+        transferred = true;
+        return TRANSFERRED_REFORM;
+      });
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+      await user.click(await screen.findByText(REFORM_WITH_REMOVED_PARAMETER.label!));
+      const dialog = await screen.findByRole('dialog', { name: REFORM_DIALOG_NAME });
+
+      // When
+      await user.click(within(dialog).getByRole('button', { name: 'Transfer to a new policy' }));
+
+      // Then: only the parameters change, so the name, baseline and provenance stay
+      expect(mockUpdate).toHaveBeenCalledWith(REFORM_WITH_REMOVED_PARAMETER.id, {
+        parameters: [KEPT_PARAMETER_CHANGE],
+      });
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+        REFORM_WITH_REMOVED_PARAMETER.label!
+      );
+    });
+
+    test('given nothing would remain then Transfer is off and the dialog says why', async () => {
+      // When
+      await openSavedReform(REFORM_WITH_ONLY_REMOVED_PARAMETERS);
+
+      // Then
+      const dialog = await screen.findByRole('dialog', { name: REFORM_DIALOG_NAME });
+      expect(
+        within(dialog).getByRole('button', { name: 'Transfer to a new policy' })
+      ).toBeDisabled();
+      expect(dialog).toHaveTextContent(
+        /this reform changes nothing, so there is nothing to transfer/i
+      );
+      expect(within(dialog).getByRole('button', { name: 'Not now' })).toBeEnabled();
+    });
+
+    test('given Not now then the dialog closes, and the notice and the block stay', async () => {
+      // Given
+      const user = await openSavedReform(REFORM_WITH_REMOVED_PARAMETER);
+      const dialog = await screen.findByRole('dialog', { name: REFORM_DIALOG_NAME });
+
+      // When
+      await user.click(within(dialog).getByRole('button', { name: 'Not now' }));
+
+      // Then
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(within(screen.getByRole('alert')).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /view full impact report/i })).toBeDisabled();
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    test('given the transfer fails then the dialog says so, and the reform stays as it was', async () => {
+      // Given
+      mockUpdate.mockRejectedValue(new Error('Saved work is temporarily unavailable.'));
+      const user = await openSavedReform(REFORM_WITH_REMOVED_PARAMETER);
+      const dialog = await screen.findByRole('dialog', { name: REFORM_DIALOG_NAME });
+
+      // When
+      await user.click(within(dialog).getByRole('button', { name: 'Transfer to a new policy' }));
+
+      // Then: once, with no retry of its own
+      expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+        'Could not transfer the reform. Try again.'
+      );
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      expect(
+        within(dialog).getByRole('button', { name: 'Transfer to a new policy' })
+      ).toBeEnabled();
+    });
   });
 
   test('given a reform whose changes could not load then "Try again" reloads the list', async () => {
@@ -1159,7 +1297,7 @@ describe('ReformsPage', () => {
       return user;
     }
 
-    test('given a report compared with a reform that sets parameters the model no longer has then Re-run names them and runs nothing', async () => {
+    test('given a report compared with a reform that sets parameters the model no longer has then Re-run opens its transfer dialog and runs nothing', async () => {
       // Given: the comparison policy the report ran (88) is the affected one
       mockFindMine.mockResolvedValue([
         CHAT_REFORM,
@@ -1185,12 +1323,12 @@ describe('ReformsPage', () => {
       await user.click(within(list).getByRole('button', { name: /re-run/i }));
 
       // Then
-      const notice = await screen.findByRole('alert');
-      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
+      expect(within(dialog).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
       expect(mockRun).not.toHaveBeenCalled();
     });
 
-    test('given the report cannot be read and its saved comparison sets removed parameters then Re-run names them and runs nothing', async () => {
+    test('given the report cannot be read and its saved comparison sets removed parameters then Re-run opens its transfer dialog and runs nothing', async () => {
       // Given: the report is unreadable, so a re-run would compare with Plan B's policy
       mockFindMine.mockResolvedValue([
         CHAT_REFORM,
@@ -1210,8 +1348,8 @@ describe('ReformsPage', () => {
       await user.click(screen.getByRole('button', { name: /re-run/i }));
 
       // Then
-      const notice = await screen.findByRole('alert');
-      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
+      expect(within(dialog).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
       expect(mockRun).not.toHaveBeenCalled();
     });
 
@@ -1240,7 +1378,7 @@ describe('ReformsPage', () => {
       expect(mockRun).not.toHaveBeenCalled();
     });
 
-    test('given a report whose own policies set parameters the model no longer has then Re-run names them and runs nothing', async () => {
+    test('given a report whose own policies set parameters the model no longer has then Re-run opens its transfer dialog and runs nothing', async () => {
       // Given: the saved reforms are fine, but the report ran a policy (88) with a removed parameter
       mockFetchPolicyById.mockResolvedValue(
         v1PolicyContent({ [REMOVED_US_PARAMETER]: { '2026-01-01.2100-12-31': 0 } }, [
@@ -1253,9 +1391,9 @@ describe('ReformsPage', () => {
       await user.click(screen.getByRole('button', { name: /re-run/i }));
 
       // Then
-      const notice = await screen.findByRole('alert');
-      expect(notice).toHaveTextContent(/this report cannot be run/i);
-      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
+      expect(dialog).toHaveTextContent(/this report cannot be run/i);
+      expect(within(dialog).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
       expect(mockRun).not.toHaveBeenCalled();
     });
 
@@ -1308,6 +1446,115 @@ describe('ReformsPage', () => {
         region: 'state/md',
         windowYears: 3,
         baseline: { reformId: 'rf-plan-b', label: 'Plan B', policyId: 88 },
+      });
+    });
+
+    describe('given Re-run finds parameters the model no longer has', () => {
+      /** The account report, with a provision for the removed parameter too. */
+      const REPORT_WITH_REMOVED_PARAMETER = {
+        ...ACCOUNT_REPORT,
+        provisions: [RUN_PROVISION, REMOVED_PROVISION],
+      };
+
+      beforeEach(() => {
+        // Every policy the report ran (88) sets the kept and the removed parameter.
+        mockFetchPolicyById.mockResolvedValue(
+          v1PolicyContent(
+            {
+              [RUN_PROVISION.path]: { '2026-01-01.2100-12-31': 3600 },
+              [REMOVED_US_PARAMETER]: { '2026-01-01.2100-12-31': 0 },
+            },
+            [REMOVED_US_PARAMETER]
+          )
+        );
+      });
+
+      async function openTransferDialog(report: object) {
+        const user = await openReform([report]);
+        await user.click(screen.getByRole('button', { name: /re-run/i }));
+        const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
+        return { user, dialog };
+      }
+
+      test('then Transfer and run again runs it without them, onto the same saved report', async () => {
+        // Given
+        mockRun.mockResolvedValue(ACCOUNT_REPORT_ROW_ID);
+        const { user, dialog } = await openTransferDialog(REPORT_WITH_REMOVED_PARAMETER);
+
+        // When
+        await user.click(within(dialog).getByRole('button', { name: 'Transfer and run again' }));
+
+        // Then: its year, population, window and comparison, the comparison made without them
+        await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+        const [title, sourceNote, provisions, reformId, year, settings] = mockRun.mock.calls[0];
+        expect({ title, sourceNote, provisions, reformId, year }).toEqual({
+          title: 'CTC',
+          sourceNote: 'Hand-built',
+          provisions: [RUN_PROVISION],
+          reformId: 'rf-1',
+          year: 2028,
+        });
+        expect(settings).toEqual({
+          region: 'state/md',
+          windowYears: 10,
+          baseline: {
+            reformId: 'rf-plan-b',
+            label: 'Plan B',
+            parameters: [
+              {
+                name: RUN_PROVISION.path,
+                values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3600 }],
+              },
+            ],
+          },
+          savedReportId: ACCOUNT_REPORT_ROW_ID,
+        });
+      });
+
+      test('then Not now runs nothing, and the notice names them', async () => {
+        // Given
+        const { user, dialog } = await openTransferDialog(REPORT_WITH_REMOVED_PARAMETER);
+
+        // When
+        await user.click(within(dialog).getByRole('button', { name: 'Not now' }));
+
+        // Then
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        const notice = screen.getByRole('alert');
+        expect(notice).toHaveTextContent(/this report cannot be run/i);
+        expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+        expect(mockRun).not.toHaveBeenCalled();
+      });
+
+      test('then with nothing left to run, Transfer and run again is off and says why', async () => {
+        // When
+        const { dialog } = await openTransferDialog({
+          ...ACCOUNT_REPORT,
+          provisions: [REMOVED_PROVISION],
+        });
+
+        // Then
+        expect(
+          within(dialog).getByRole('button', { name: 'Transfer and run again' })
+        ).toBeDisabled();
+        expect(dialog).toHaveTextContent(
+          /this report changes nothing, so there is nothing to transfer/i
+        );
+      });
+
+      test('then a run that cannot start says so in the dialog', async () => {
+        // Given
+        mockRun.mockResolvedValue(null);
+        const { user, dialog } = await openTransferDialog(REPORT_WITH_REMOVED_PARAMETER);
+
+        // When
+        await user.click(within(dialog).getByRole('button', { name: 'Transfer and run again' }));
+
+        // Then
+        expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+          'Could not transfer the report. Try again.'
+        );
+        expect(mockRun).toHaveBeenCalledTimes(1);
       });
     });
 
