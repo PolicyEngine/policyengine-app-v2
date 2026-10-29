@@ -6,8 +6,21 @@
  * or a sibling calculation that failed). The work itself runs on.
  */
 
+import { isV2ApiError } from '@/api/v2UserClient';
+
 /** How often unfinished work is read again. */
 export const POLL_INTERVAL_MS = 2000;
+
+/**
+ * How many times in a row one read is asked again after a failure that may
+ * pass (the Public API unreachable, or answering 503), before the wait fails.
+ */
+export const TRANSIENT_READ_RETRIES = 3;
+
+/** A read that failed for a reason that may pass: no answer, or 503. */
+function isTransientFailure(error: unknown): boolean {
+  return isV2ApiError(error, 0) || isV2ApiError(error, 503);
+}
 
 /**
  * How long the app waits for work before it stops: a variation across
@@ -49,7 +62,9 @@ export function waitOrAbort(milliseconds: number, signal?: AbortSignal): Promise
  * The first answer (a submission, or the first read when none is given),
  * then each read, until one has finished; rejects with `timeoutMessage`
  * once the time limit has passed, and with the signal's reason (an
- * AbortError) once it aborts.
+ * AbortError) once it aborts. A read that fails for a reason that may pass
+ * is asked again, an interval later, up to TRANSIENT_READ_RETRIES times in
+ * a row; a submission is never sent again.
  */
 export async function pollUntilFinished<Answer>({
   first,
@@ -68,15 +83,28 @@ export async function pollUntilFinished<Answer>({
   timeoutMessage: string;
 }): Promise<Answer> {
   const startedAt = now();
+  const readWithRetries = async (): Promise<Answer> => {
+    for (let retries = 0; ; retries += 1) {
+      try {
+        return await read();
+      } catch (error) {
+        if (!isTransientFailure(error) || retries >= TRANSIENT_READ_RETRIES) {
+          throw error;
+        }
+      }
+      await wait(pollIntervalMs, signal);
+      signal?.throwIfAborted();
+    }
+  };
   signal?.throwIfAborted();
-  let answer = await (first ?? read)();
+  let answer = await (first ?? readWithRetries)();
   while (!isFinished(answer)) {
     if (now() - startedAt >= timeLimitMs) {
       throw new Error(timeoutMessage);
     }
     await wait(pollIntervalMs, signal);
     signal?.throwIfAborted();
-    answer = await read();
+    answer = await readWithRetries();
   }
   return answer;
 }

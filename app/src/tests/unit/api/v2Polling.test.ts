@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
-import { pollUntilFinished } from '@/api/v2Polling';
+import { pollUntilFinished, TRANSIENT_READ_RETRIES } from '@/api/v2Polling';
+import { V2ApiError } from '@/api/v2UserClient';
 
 /** A calculation's state as a read answers it. */
 interface ReadState {
@@ -86,5 +87,91 @@ describe('pollUntilFinished', () => {
     // Then
     await expect(polling).rejects.toThrow(TIMEOUT_MESSAGE);
     expect(read).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe('pollUntilFinished when a read fails', () => {
+  const noWait = () => Promise.resolve();
+  const SERVICE_UNAVAILABLE = new V2ApiError(503, 'The simulation service is unavailable.');
+  const UNREACHABLE = new V2ApiError(0, 'Network error: Failed to fetch');
+
+  test.each([
+    ['503', SERVICE_UNAVAILABLE],
+    ['a network failure', UNREACHABLE],
+  ])(
+    'given one read failing with %s then it reads again and the wait goes on',
+    async (_case, failure) => {
+      // Given
+      const read = vi
+        .fn<() => Promise<ReadState>>()
+        .mockResolvedValueOnce(RUNNING)
+        .mockRejectedValueOnce(failure)
+        .mockResolvedValueOnce(SUCCEEDED);
+
+      // When
+      const finished = await pollUntilFinished({
+        read,
+        isFinished,
+        timeoutMessage: TIMEOUT_MESSAGE,
+        wait: noWait,
+      });
+
+      // Then
+      expect(finished).toBe(SUCCEEDED);
+      expect(read).toHaveBeenCalledTimes(3);
+    }
+  );
+
+  test('given reads that keep failing then the wait fails after its retries, with the failure', async () => {
+    // Given
+    const read = vi.fn<() => Promise<ReadState>>().mockRejectedValue(SERVICE_UNAVAILABLE);
+
+    // When
+    const polling = pollUntilFinished({
+      read,
+      isFinished,
+      timeoutMessage: TIMEOUT_MESSAGE,
+      wait: noWait,
+    });
+
+    // Then
+    await expect(polling).rejects.toBe(SERVICE_UNAVAILABLE);
+    expect(read).toHaveBeenCalledTimes(TRANSIENT_READ_RETRIES + 1);
+  });
+
+  test('given a read refused for another reason then the wait fails at once', async () => {
+    // Given
+    const notFound = new V2ApiError(404, 'Household calculation not found.');
+    const read = vi.fn<() => Promise<ReadState>>().mockRejectedValue(notFound);
+
+    // When
+    const polling = pollUntilFinished({
+      read,
+      isFinished,
+      timeoutMessage: TIMEOUT_MESSAGE,
+      wait: noWait,
+    });
+
+    // Then
+    await expect(polling).rejects.toBe(notFound);
+    expect(read).toHaveBeenCalledTimes(1);
+  });
+
+  test('given a submission that fails with 503 then it is not sent again', async () => {
+    // Given
+    const first = vi.fn<() => Promise<ReadState>>().mockRejectedValue(SERVICE_UNAVAILABLE);
+
+    // When
+    const polling = pollUntilFinished({
+      first,
+      read: async () => SUCCEEDED,
+      isFinished,
+      timeoutMessage: TIMEOUT_MESSAGE,
+      wait: noWait,
+    });
+
+    // Then
+    await expect(polling).rejects.toBe(SERVICE_UNAVAILABLE);
+    expect(first).toHaveBeenCalledTimes(1);
   });
 });
