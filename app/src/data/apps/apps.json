@@ -778,7 +778,7 @@
     "type": "iframe",
     "slug": "ballot-measures-2026",
     "title": "2026 ballot measures: taxes and benefits",
-    "description": "Estimate how six state ballot measures on the November 3, 2026 ballot — in Colorado, California, Washington, North Dakota and South Dakota — would change taxes, benefits, and health coverage for households and state budgets.",
+    "description": "Estimate how six measures on the November 3, 2026 ballot in California, Colorado, North Dakota, South Dakota, and Washington would change taxes, benefits, and health coverage for households and state budgets (South Dakota's as a conditional scenario), plus PolicyEngine's calculator for California's Proposition 40 billionaire tax.",
     "source": "https://ballot-measures-2026.vercel.app/us/ballot-measures-2026",
     "tags": ["us", "policy", "interactives"],
     "countryId": "us",
