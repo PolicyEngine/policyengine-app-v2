@@ -4,16 +4,17 @@ import {
   isAccountId,
   type ApiStoreContext,
 } from '@/api/v2Associations';
+import { fetchV2Household, storeV2Household } from '@/api/v2Households';
 import { clampStoreText } from '@/libs/flagship/storeText';
 import type { Household } from '@/models/Household';
-import { householdFromV2Item, householdToV2CreateBody } from '@/models/household/v2DocumentCodec';
+import { householdFromV2Item } from '@/models/household/v2DocumentCodec';
 import type {
   UserHouseholdCreateBody,
   UserHouseholdItem,
   UserHouseholdPatchBody,
   V2HouseholdItem,
 } from '@/types/v2Households';
-import type { AssociationCountryId, V2ItemResult } from '@/types/v2User';
+import type { AssociationCountryId } from '@/types/v2User';
 
 /**
  * v3's saved households, in the account (signed in, or signed out as this
@@ -279,14 +280,8 @@ export class ApiSavedHouseholdStore implements SavedHouseholdStore {
   }
 
   /** Stores a household's content (`POST /v2/households`), or finds the identical stored one. */
-  private async storeHousehold(household: Household): Promise<V2HouseholdItem> {
-    const body = householdToV2CreateBody(household);
-    const result = await this.context.client.request<V2ItemResult<V2HouseholdItem>>(
-      'POST',
-      'households',
-      { query: { country_id: body.country_id }, body }
-    );
-    return result.item;
+  private storeHousehold(household: Household): Promise<V2HouseholdItem> {
+    return storeV2Household(household, this.context.client);
   }
 
   /** A stored household as the app's model, kept for later reads. */
@@ -297,14 +292,9 @@ export class ApiSavedHouseholdStore implements SavedHouseholdStore {
   }
 
   private fetchHousehold(countryId: string, householdId: string): Promise<Household> {
-    return this.storedHouseholds.get(countryId, householdId, async () => {
-      const result = await this.context.client.request<V2ItemResult<V2HouseholdItem>>(
-        'GET',
-        `households/${encodeURIComponent(householdId)}`,
-        { query: { country_id: countryId } }
-      );
-      return householdFromV2Item(result.item);
-    });
+    return this.storedHouseholds.get(countryId, householdId, async () =>
+      householdFromV2Item(await fetchV2Household(countryId, householdId, this.context.client))
+    );
   }
 }
 

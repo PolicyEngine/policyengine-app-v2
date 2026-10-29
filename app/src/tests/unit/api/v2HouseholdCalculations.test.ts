@@ -4,8 +4,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
   calculateV2Household,
-  fetchV2Household,
-  storeV2Household,
   V2HouseholdCalculationFailedError,
 } from '@/api/v2HouseholdCalculations';
 import { isV2ApiError } from '@/api/v2UserClient';
@@ -23,52 +21,10 @@ import {
   V2_REFORM_POLICY_ID,
   V2_STORED_HOUSEHOLD_ID,
 } from '@/tests/fixtures/api/v2HouseholdCalculationMocks';
-import { errorResponse, itemResponse } from '@/tests/fixtures/api/v2UserMocks';
-import {
-  storedV2Household,
-  US_SINGLE_PARENT,
-  US_SINGLE_PARENT_V2_BODY,
-} from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
+import { errorResponse } from '@/tests/fixtures/api/v2UserMocks';
 
 const SUBMIT = 'POST /v2/household-calculations';
 const READ_BASELINE = `GET /v2/household-calculations/${V2_CALCULATION_IDS.BASELINE}`;
-
-describe('storeV2Household', () => {
-  test('given a household then it is stored through POST /v2/households, and the stored record returned', async () => {
-    // Given
-    const stored = storedV2Household('us', US_SINGLE_PARENT_V2_BODY.household_data);
-    const { client, fetchMock } = routedClient({
-      'POST /v2/households': () => itemResponse(stored, 201),
-    });
-
-    // When
-    const item = await storeV2Household(US_SINGLE_PARENT, client);
-
-    // Then
-    const [request] = requestsFor(fetchMock, 'POST /v2/households');
-    expect(new URL(request.url).searchParams.get('country_id')).toBe('us');
-    expect(await request.json()).toEqual(US_SINGLE_PARENT_V2_BODY);
-    expect(item).toEqual(stored);
-  });
-});
-
-describe('fetchV2Household', () => {
-  test('given a stored household ID then it is read in its country', async () => {
-    // Given
-    const stored = storedV2Household('us', US_SINGLE_PARENT_V2_BODY.household_data);
-    const { client, fetchMock } = routedClient({
-      [`GET /v2/households/${stored.id}`]: () => itemResponse(stored),
-    });
-
-    // When
-    const item = await fetchV2Household('us', stored.id, client);
-
-    // Then
-    const [request] = requestsFor(fetchMock, `GET /v2/households/${stored.id}`);
-    expect(new URL(request.url).searchParams.get('country_id')).toBe('us');
-    expect(item).toEqual(stored);
-  });
-});
 
 describe('calculateV2Household', () => {
   test('given a household, a policy, axes and missing variables then the calculation names each', async () => {

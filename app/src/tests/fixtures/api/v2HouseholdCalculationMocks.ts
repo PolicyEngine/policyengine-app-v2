@@ -5,6 +5,7 @@ import type {
   V2HouseholdCalculationItem,
   V2HouseholdCalculationOutput,
 } from '@/api/v2HouseholdCalculations';
+import { createV2UserClient } from '@/api/v2UserClient';
 import { TEST_API_BASE } from '@/tests/fixtures/api/v2UserMocks';
 import {
   US_SINGLE_PARENT_CALCULATED_SITUATION,
@@ -128,7 +129,14 @@ export function routedClient(routes: Record<string, RouteAnswer | RouteAnswer[]>
     baseUrl: TEST_API_BASE,
     fetchImpl: fetchMock as unknown as typeof fetch,
   });
-  return { client, fetchMock };
+  // The user client sends (url, init): routed as the same requests.
+  const householdClient = createV2UserClient({
+    credentials: { kind: 'none' },
+    baseUrl: TEST_API_BASE,
+    fetchImpl: ((url: string, init?: RequestInit) =>
+      fetchMock(new Request(url, init))) as unknown as typeof fetch,
+  });
+  return { client, householdClient, fetchMock };
 }
 
 /** The requests a routed client sent for one route, in order. */

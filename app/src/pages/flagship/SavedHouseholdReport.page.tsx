@@ -1,7 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { fetchV2Household } from '@/api/v2HouseholdCalculations';
 import {
   householdRunFromV2Report,
   readSharedHouseholdReport,
@@ -9,6 +8,7 @@ import {
   V2HouseholdReportNotRunError,
   waitForV2HouseholdReport,
 } from '@/api/v2HouseholdReports';
+import { fetchV2Household } from '@/api/v2Households';
 import HouseholdNetIncomeResult from '@/components/flagship/household/HouseholdNetIncomeResult';
 import type { HouseholdBreakdownSource } from '@/components/flagship/report/household/HouseholdBreakdowns';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';

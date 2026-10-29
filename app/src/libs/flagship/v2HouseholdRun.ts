@@ -1,11 +1,11 @@
 import { isAccountId } from '@/api/v2Associations';
 import {
   calculateV2Household,
-  storeV2Household,
   type CalculateV2HouseholdOptions,
   type V2HouseholdCalculationOutput,
 } from '@/api/v2HouseholdCalculations';
-import { isV2ApiError } from '@/api/v2UserClient';
+import { storeV2Household } from '@/api/v2Households';
+import { isV2ApiError, type V2UserClient } from '@/api/v2UserClient';
 import {
   compareHouseholds,
   plainHouseholdError,
@@ -114,9 +114,14 @@ export function householdRunFromV2Calculations(
 }
 
 /** Stores the household and calculates it under the baseline and the reform at once. */
+/** How the run waits for its calculations, and the client the household is stored with. */
+export interface V2HouseholdRunOptions extends CalculateV2HouseholdOptions {
+  householdClient?: V2UserClient;
+}
+
 export async function runV2FlagshipHousehold(
   { year, household, baselinePolicyId, reformPolicyId }: V2HouseholdRunArgs,
-  options: CalculateV2HouseholdOptions = {}
+  { householdClient, ...options }: V2HouseholdRunOptions = {}
 ): Promise<FlagshipHouseholdRun> {
   if (household.year !== null && String(household.year) !== year) {
     throw new Error(`The household is set up for ${household.year}, not ${year}.`);
@@ -130,7 +135,7 @@ export async function runV2FlagshipHousehold(
   }
   options.signal?.addEventListener('abort', stopWithCaller, { once: true });
   try {
-    const stored = await storeV2Household(household, options.client);
+    const stored = await storeV2Household(household, householdClient);
     const calculate = (policyId: string | null) =>
       calculateV2Household(
         {

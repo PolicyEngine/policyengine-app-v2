@@ -36,6 +36,9 @@ const mockFetchPolicyById = vi.fn();
 vi.mock('@/api/v2HouseholdCalculations', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/v2HouseholdCalculations')>()),
   calculateV2Household: (...args: unknown[]) => mockCalculate(...args),
+}));
+vi.mock('@/api/v2Households', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/v2Households')>()),
   fetchV2Household: (...args: unknown[]) => mockFetchStoredHousehold(...args),
 }));
 vi.mock('@/api/policy', () => ({

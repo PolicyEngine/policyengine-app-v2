@@ -46,7 +46,7 @@ async function submittedBodies(fetchMock: ReturnType<typeof routedClient>['fetch
 describe('runV2FlagshipHousehold', () => {
   test('given a household and a reform then it is stored once and calculated under each policy, with every variable', async () => {
     // Given
-    const { client, fetchMock } = clientForSingleParent();
+    const { client, householdClient, fetchMock } = clientForSingleParent();
 
     // When
     await runV2FlagshipHousehold(
@@ -56,7 +56,7 @@ describe('runV2FlagshipHousehold', () => {
         baselinePolicyId: null,
         reformPolicyId: V2_REFORM_POLICY_ID,
       },
-      { client, wait: noWait }
+      { client, householdClient, wait: noWait }
     );
 
     // Then
@@ -79,7 +79,7 @@ describe('runV2FlagshipHousehold', () => {
 
   test('given both calculations then the run compares them, in the v1 names, for the stored household', async () => {
     // Given
-    const { client } = clientForSingleParent();
+    const { client, householdClient } = clientForSingleParent();
 
     // When
     const run = await runV2FlagshipHousehold(
@@ -89,7 +89,7 @@ describe('runV2FlagshipHousehold', () => {
         baselinePolicyId: null,
         reformPolicyId: V2_REFORM_POLICY_ID,
       },
-      { client, wait: noWait }
+      { client, householdClient, wait: noWait }
     );
 
     // Then
@@ -101,7 +101,7 @@ describe('runV2FlagshipHousehold', () => {
 
   test('given the same policy as baseline and reform then one calculation serves both', async () => {
     // Given
-    const { client, fetchMock } = clientForSingleParent();
+    const { client, householdClient, fetchMock } = clientForSingleParent();
 
     // When
     const run = await runV2FlagshipHousehold(
@@ -111,7 +111,7 @@ describe('runV2FlagshipHousehold', () => {
         baselinePolicyId: null,
         reformPolicyId: null,
       },
-      { client, wait: noWait }
+      { client, householdClient, wait: noWait }
     );
 
     // Then
@@ -122,7 +122,7 @@ describe('runV2FlagshipHousehold', () => {
 
   test('given a US calculation then each policy keeps its SPM settings and receipt and its .py version', async () => {
     // Given
-    const { client } = clientForSingleParent();
+    const { client, householdClient } = clientForSingleParent();
 
     // When
     const run = await runV2FlagshipHousehold(
@@ -132,7 +132,7 @@ describe('runV2FlagshipHousehold', () => {
         baselinePolicyId: null,
         reformPolicyId: V2_REFORM_POLICY_ID,
       },
-      { client, wait: noWait }
+      { client, householdClient, wait: noWait }
     );
 
     // Then
@@ -145,7 +145,7 @@ describe('runV2FlagshipHousehold', () => {
 
   test('given a calculation that fails then the run fails with the reason', async () => {
     // Given
-    const { client } = clientForSingleParent(() =>
+    const { client, householdClient } = clientForSingleParent(() =>
       calculationResponse(failedCalculation('The household has a negative age.'), 202)
     );
 
@@ -157,7 +157,7 @@ describe('runV2FlagshipHousehold', () => {
         baselinePolicyId: null,
         reformPolicyId: V2_REFORM_POLICY_ID,
       },
-      { client, wait: noWait }
+      { client, householdClient, wait: noWait }
     );
 
     // Then
@@ -167,7 +167,7 @@ describe('runV2FlagshipHousehold', () => {
   test("given one policy's calculation fails then the other's is no longer read", async () => {
     // Given
     const readBaseline = `GET /v2/household-calculations/${V2_CALCULATION_IDS.BASELINE}`;
-    const { client, fetchMock } = routedClient({
+    const { client, householdClient, fetchMock } = routedClient({
       [STORE]: () =>
         itemResponse(storedV2Household('us', US_SINGLE_PARENT_V2_BODY.household_data), 201),
       [SUBMIT]: async (request) => {
@@ -193,7 +193,7 @@ describe('runV2FlagshipHousehold', () => {
           baselinePolicyId: null,
           reformPolicyId: V2_REFORM_POLICY_ID,
         },
-        { client, pollIntervalMs: 5 }
+        { client, householdClient, pollIntervalMs: 5 }
       )
     ).rejects.toThrow('The reform changes a parameter this version lacks.');
     const readsAtFailure = requestsFor(fetchMock, readBaseline).length;
@@ -207,7 +207,7 @@ describe('runV2FlagshipHousehold', () => {
 
   test('given the Public API cannot be reached then the run fails in plain words', async () => {
     // Given
-    const { client } = routedClient({
+    const { client, householdClient } = routedClient({
       [STORE]: () => Promise.reject(new TypeError('Failed to fetch')),
     });
 
@@ -219,7 +219,7 @@ describe('runV2FlagshipHousehold', () => {
         baselinePolicyId: null,
         reformPolicyId: V2_REFORM_POLICY_ID,
       },
-      { client, wait: noWait }
+      { client, householdClient, wait: noWait }
     );
 
     // Then
@@ -228,7 +228,7 @@ describe('runV2FlagshipHousehold', () => {
 
   test('given a household whose inputs are in another year then nothing is sent', async () => {
     // Given
-    const { client, fetchMock } = clientForSingleParent();
+    const { client, householdClient, fetchMock } = clientForSingleParent();
 
     // When
     const run = runV2FlagshipHousehold(
@@ -238,7 +238,7 @@ describe('runV2FlagshipHousehold', () => {
         baselinePolicyId: null,
         reformPolicyId: V2_REFORM_POLICY_ID,
       },
-      { client, wait: noWait }
+      { client, householdClient, wait: noWait }
     );
 
     // Then

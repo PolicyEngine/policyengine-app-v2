@@ -6,17 +6,14 @@ import {
 } from '@/api/publicApi/client';
 import type { components } from '@/api/publicApi/schema';
 import { pollUntilFinished, type PollOptions } from '@/api/v2Polling';
-import type { Household } from '@/models/Household';
-import { householdToV2CreateBody } from '@/models/household/v2DocumentCodec';
-import type { V2HouseholdItem } from '@/types/v2Households';
 
 /**
- * Households calculated on the Public API's v2 routes: a household is
- * stored once (`POST /v2/households`, which returns the existing one for
- * identical content), then calculated under a stored policy, or current
- * law, for its default year (`POST /v2/household-calculations`), and the
- * calculation is read (`GET /v2/household-calculations/{calculation_id}`)
- * until it has succeeded or failed.
+ * Households calculated on the Public API's v2 routes: a household stored
+ * on `/v2/households` (see api/v2Households) is calculated under a stored
+ * policy, or current law, for its default year
+ * (`POST /v2/household-calculations`), and the calculation is read
+ * (`GET /v2/household-calculations/{calculation_id}`) until it has
+ * succeeded or failed.
  */
 
 type Schemas = components['schemas'];
@@ -47,39 +44,6 @@ export class V2HouseholdCalculationFailedError extends Error {
     this.name = 'V2HouseholdCalculationFailedError';
     this.code = code;
   }
-}
-
-/** Stores a household's content, or finds the identical stored household. */
-export async function storeV2Household(
-  household: Household,
-  client: PublicApiClient = createPublicApiClient()
-): Promise<V2HouseholdItem> {
-  const body = householdToV2CreateBody(household);
-  const result = await requireResult(
-    client.POST('/v2/households', {
-      params: { query: { country_id: body.country_id } },
-      // The app's document type is the stored shape the generated types describe.
-      body: body as unknown as Schemas['HouseholdCreateRequest'],
-    })
-  );
-  return result.item as unknown as V2HouseholdItem;
-}
-
-/** A stored household by its ID. Stored households never change, so callers may cache them. */
-export async function fetchV2Household(
-  countryId: string,
-  householdId: string,
-  client: PublicApiClient = createPublicApiClient()
-): Promise<V2HouseholdItem> {
-  const result = await requireResult(
-    client.GET('/v2/households/{household_id}', {
-      params: {
-        path: { household_id: householdId },
-        query: { country_id: publicApiCountryId(countryId) },
-      },
-    })
-  );
-  return result.item as unknown as V2HouseholdItem;
 }
 
 export async function submitV2HouseholdCalculation(

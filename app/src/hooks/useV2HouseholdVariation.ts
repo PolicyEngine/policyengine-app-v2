@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { calculateV2Household, fetchV2Household } from '@/api/v2HouseholdCalculations';
+import { calculateV2Household } from '@/api/v2HouseholdCalculations';
+import { fetchV2Household } from '@/api/v2Households';
 import type { CountryId } from '@/libs/countries';
 import { plainV2HouseholdError, v2PolicyIdFor } from '@/libs/flagship/v2HouseholdRun';
 import { v2StoredHouseholdKeys } from '@/libs/queryKeys';

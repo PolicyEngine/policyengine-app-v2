@@ -37,8 +37,8 @@ vi.mock('@/api/v2HouseholdReports', async (importOriginal) => ({
   readSharedHouseholdReport: (...args: unknown[]) => mockReadShared(...args),
   waitForV2HouseholdReport: (...args: unknown[]) => mockWaitForReport(...args),
 }));
-vi.mock('@/api/v2HouseholdCalculations', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/api/v2HouseholdCalculations')>()),
+vi.mock('@/api/v2Households', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/v2Households')>()),
   fetchV2Household: (...args: unknown[]) => mockFetchStoredHousehold(...args),
 }));
 vi.mock('@/hooks/useV3Variables', async (importOriginal) => ({
