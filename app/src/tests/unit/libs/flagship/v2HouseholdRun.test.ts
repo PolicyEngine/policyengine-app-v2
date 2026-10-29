@@ -7,6 +7,8 @@ import {
   noWait,
   requestsFor,
   routedClient,
+  runningCalculation,
+  V2_CALCULATION_IDS,
   V2_CALCULATION_POLICYENGINE_VERSION,
   V2_REFORM_POLICY_ID,
   V2_SPM_CONFIG,
@@ -157,6 +159,47 @@ describe('runV2FlagshipHousehold', () => {
 
     // Then
     await expect(run).rejects.toThrow('The household has a negative age.');
+  });
+
+  test("given one policy's calculation fails then the other's is no longer read", async () => {
+    // Given
+    const readBaseline = `GET /v2/household-calculations/${V2_CALCULATION_IDS.BASELINE}`;
+    const { client, fetchMock } = routedClient({
+      [STORE]: () =>
+        itemResponse(storedV2Household('us', US_SINGLE_PARENT_V2_BODY.household_data), 201),
+      [SUBMIT]: async (request) => {
+        const { policy_id: policyId } = (await request.clone().json()) as {
+          policy_id: string | null;
+        };
+        return calculationResponse(
+          policyId === V2_REFORM_POLICY_ID
+            ? failedCalculation('The reform changes a parameter this version lacks.')
+            : runningCalculation(),
+          202
+        );
+      },
+      [readBaseline]: () => calculationResponse(runningCalculation()),
+    });
+
+    // When
+    await expect(
+      runV2FlagshipHousehold(
+        {
+          year: V2_CODEC_YEAR,
+          household: US_SINGLE_PARENT,
+          baselinePolicyId: null,
+          reformPolicyId: V2_REFORM_POLICY_ID,
+        },
+        { client, pollIntervalMs: 5 }
+      )
+    ).rejects.toThrow('The reform changes a parameter this version lacks.');
+    const readsAtFailure = requestsFor(fetchMock, readBaseline).length;
+    await new Promise((resolve) => {
+      setTimeout(resolve, 60);
+    });
+
+    // Then
+    expect(requestsFor(fetchMock, readBaseline)).toHaveLength(readsAtFailure);
   });
 
   test('given the Public API cannot be reached then the run fails in plain words', async () => {

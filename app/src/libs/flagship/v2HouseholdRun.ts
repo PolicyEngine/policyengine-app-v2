@@ -121,6 +121,14 @@ export async function runV2FlagshipHousehold(
   if (household.year !== null && String(household.year) !== year) {
     throw new Error(`The household is set up for ${household.year}, not ${year}.`);
   }
+  // Both calculations wait on one signal: when either fails, or the caller
+  // stops waiting, the other stops being read (it still runs on the service).
+  const stopWaiting = new AbortController();
+  const stopWithCaller = () => stopWaiting.abort(options.signal?.reason);
+  if (options.signal?.aborted) {
+    stopWithCaller();
+  }
+  options.signal?.addEventListener('abort', stopWithCaller, { once: true });
   try {
     const stored = await storeV2Household(household, options.client);
     const calculate = (policyId: string | null) =>
@@ -131,8 +139,11 @@ export async function runV2FlagshipHousehold(
           policyId,
           addMissingVariables: true,
         },
-        options
-      );
+        { ...options, signal: stopWaiting.signal }
+      ).catch((error: unknown) => {
+        stopWaiting.abort();
+        throw error;
+      });
     const [baseline, reform] = await Promise.all([
       calculate(baselinePolicyId),
       baselinePolicyId === reformPolicyId ? null : calculate(reformPolicyId),
@@ -140,5 +151,7 @@ export async function runV2FlagshipHousehold(
     return householdRunFromV2Calculations(stored, year, baseline, reform ?? baseline);
   } catch (error) {
     throw plainV2HouseholdError(error);
+  } finally {
+    options.signal?.removeEventListener('abort', stopWithCaller);
   }
 }
