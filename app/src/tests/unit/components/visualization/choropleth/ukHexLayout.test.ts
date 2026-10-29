@@ -96,63 +96,50 @@ describe('placeOnUKHexLayout', () => {
     expect(ukHexPosition('local_authority', ALLERDALE_CODE)).toBeNull();
   });
 
-  test('given points whose codes the layout has then each takes its layout position, tiled', () => {
+  test('given points whose codes the layout has then each takes its layout position', () => {
     // When
-    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT]);
+    const points = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT]);
 
     // Then
-    expect(placement).toEqual({
-      points: [{ ...BARNSLEY_NORTH_POINT, x: BARNSLEY_NORTH_HEX[0], y: BARNSLEY_NORTH_HEX[1] + 1 }],
-      tiled: true,
-    });
+    expect(points).toEqual([
+      { ...BARNSLEY_NORTH_POINT, x: BARNSLEY_NORTH_HEX[0], y: BARNSLEY_NORTH_HEX[1] + 1 },
+    ]);
   });
 
   test('given a local authority then it reads the local authority layout', () => {
     // When
-    const placement = placeOnUKHexLayout('local_authority', [HARTLEPOOL_POINT]);
+    const points = placeOnUKHexLayout('local_authority', [HARTLEPOOL_POINT]);
 
     // Then
-    expect(placement.points[0]).toEqual({
-      ...HARTLEPOOL_POINT,
-      x: HARTLEPOOL_HEX[0],
-      y: HARTLEPOOL_HEX[1] + 1,
-    });
-  });
-
-  test('given a point without a code then every point keeps its own position, untiled', () => {
-    // When
-    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT]);
-
-    // Then: one grid for every point, not layout positions mixed with the result's
-    expect(placement).toEqual({ points: [BARNSLEY_NORTH_POINT, UNCODED_POINT], tiled: false });
-  });
-
-  test("given a code the level's layout lacks then every point keeps its own position, untiled", () => {
-    // When: a local authority code at the constituency level
-    const placement = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, HARTLEPOOL_POINT]);
-
-    // Then
-    expect(placement).toEqual({ points: [BARNSLEY_NORTH_POINT, HARTLEPOOL_POINT], tiled: false });
-  });
-
-  test('given a local authority on a pre-2023 code then every point keeps its own position, untiled', () => {
-    // When
-    const placement = placeOnUKHexLayout('local_authority', [DARLINGTON_POINT, ALLERDALE_POINT]);
-
-    // Then
-    expect(placement).toEqual({ points: [DARLINGTON_POINT, ALLERDALE_POINT], tiled: false });
-  });
-
-  test('given every code in the layout then no point keeps its own position', () => {
-    // When
-    const placement = placeOnUKHexLayout('local_authority', [DARLINGTON_POINT, HARTLEPOOL_POINT]);
-
-    // Then
-    expect(placement.points.map(({ x, y }) => [x, y])).toEqual([
-      [7, 19],
-      [HARTLEPOOL_HEX[0], HARTLEPOOL_HEX[1] + 1],
+    expect(points).toEqual([
+      { ...HARTLEPOOL_POINT, x: HARTLEPOOL_HEX[0], y: HARTLEPOOL_HEX[1] + 1 },
     ]);
-    expect(placement.tiled).toBe(true);
+  });
+
+  test('given a point without a code then it is left out and the others are placed', () => {
+    // When
+    const points = placeOnUKHexLayout('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT]);
+
+    // Then
+    expect(points).toEqual([
+      { ...BARNSLEY_NORTH_POINT, ...ukHexPosition('constituency', BARNSLEY_NORTH_CODE) },
+    ]);
+  });
+
+  test("given a code the level's layout lacks then the point is left out", () => {
+    // When
+    const points = placeOnUKHexLayout('constituency', [HARTLEPOOL_POINT]);
+
+    // Then
+    expect(points).toEqual([]);
+  });
+
+  test('given a local authority on a pre-2023 code then it is left out and the others are placed', () => {
+    // When
+    const points = placeOnUKHexLayout('local_authority', [DARLINGTON_POINT, ALLERDALE_POINT]);
+
+    // Then: Darlington at its layout position, a row above the Public API's
+    expect(points).toEqual([{ ...DARLINGTON_POINT, x: 7, y: 19 }]);
   });
 });
 
@@ -257,10 +244,7 @@ describe('placeUKHexMap', () => {
     });
 
     // Then
-    expect(hexMap.tiled).toBe(true);
-    expect(hexMap.points).toEqual(
-      placeOnUKHexLayout('constituency', WELSH_CONSTITUENCY_POINTS).points
-    );
+    expect(hexMap.points).toEqual(placeOnUKHexLayout('constituency', WELSH_CONSTITUENCY_POINTS));
     expect(hexMap.withheldAreas).toHaveLength(
       WELSH_CONSTITUENCY_COUNT - WELSH_CONSTITUENCY_POINTS.length
     );
@@ -275,11 +259,11 @@ describe('placeUKHexMap', () => {
     });
 
     // Then
-    expect(hexMap.tiled).toBe(true);
+    expect(hexMap.points).toHaveLength(WELSH_CONSTITUENCY_POINTS.length);
     expect(hexMap.withheldAreas).toEqual([]);
   });
 
-  test("given an area the layout cannot place then every area keeps its result's position, untiled, with no withheld areas", () => {
+  test('given an area the layout cannot place then it is left out, the others are placed, and no withheld areas are listed', () => {
     // When
     const hexMap = placeUKHexMap('constituency', [BARNSLEY_NORTH_POINT, UNCODED_POINT], {
       disclosureControlled: true,
@@ -288,8 +272,7 @@ describe('placeUKHexMap', () => {
 
     // Then
     expect(hexMap).toEqual({
-      points: [BARNSLEY_NORTH_POINT, UNCODED_POINT],
-      tiled: false,
+      points: [{ ...BARNSLEY_NORTH_POINT, ...ukHexPosition('constituency', BARNSLEY_NORTH_CODE) }],
       withheldAreas: [],
     });
   });

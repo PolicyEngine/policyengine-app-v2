@@ -34,6 +34,7 @@ import {
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
 } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
 import {
+  HEX_MAP_OMISSION_NOTE_PATTERN,
   hexagonArrangement,
   hexagonVertices,
   isPointyTopped,
@@ -198,6 +199,19 @@ describe('AbsoluteChangeByConstituency map type', () => {
   });
 });
 
+describe('AbsoluteChangeByConstituency saved results', () => {
+  test('given a saved result that still carries x and y then its geographic map draws its areas by name', async () => {
+    // When: an older keyed result, with no codes and each area's x and y
+    render(<AbsoluteChangeByConstituency output={UK_LOCAL_AREAS_OUTPUT_NO_CODES} />);
+
+    // Then
+    expect(await screen.findByTestId(`area-${GOWER_CODE}`)).toHaveAttribute('fill');
+    expect(
+      screen.getByText('Absolute household income change by constituency')
+    ).toBeInTheDocument();
+  });
+});
+
 describe('AbsoluteChangeByConstituency hex map placement', () => {
   /** The chart's hex map of `output`, with the hex grid chosen. */
   async function renderHexMap(output: SocietyWideReportOutput) {
@@ -241,19 +255,20 @@ describe('AbsoluteChangeByConstituency hex map placement', () => {
     expect(Math.max(...vertexYs)).toBeLessThanOrEqual(frameHeight);
   });
 
-  test('given constituencies without codes then the hex map keeps their results’ positions, as v3’s does', async () => {
-    // Given
-    const v3Arrangement = await v3HexagonArrangement(
-      UK_LOCAL_AREAS_OUTPUT_NO_CODES,
-      'constituency'
-    );
-
+  test('given constituencies without codes then the hex map draws none of them, as v3’s does', async () => {
     // When
     const container = await renderHexMap(UK_LOCAL_AREAS_OUTPUT_NO_CODES);
 
-    // Then: on the square grid of flat-topped hexagons those positions were made for
-    expect(hexagonArrangement(v2Hexagons(container))).toEqual(v3Arrangement);
-    expect(v2Hexagons(container).some(isPointyTopped)).toBe(false);
+    // Then
+    expect(v2Hexagons(container)).toHaveLength(0);
+  });
+
+  test('given constituencies without codes then no note says the hex map leaves them out', async () => {
+    // When
+    await renderHexMap(UK_LOCAL_AREAS_OUTPUT_NO_CODES);
+
+    // Then
+    expect(screen.queryByText(HEX_MAP_OMISSION_NOTE_PATTERN)).not.toBeInTheDocument();
   });
 });
 

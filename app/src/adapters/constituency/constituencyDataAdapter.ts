@@ -1,23 +1,21 @@
 import { areaEstimateFields } from '@/adapters/ukAreaEstimateFields';
+import type { UKAreaChoroplethDataPoint } from '@/components/visualization/choropleth/types';
 import type { ReportOutputSocietyWideByConstituency } from '@/types/metadata/ReportOutputSocietyWideByConstituency';
-import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 
 /**
- * Transform API constituency data to hexagonal map data points
+ * Transform API constituency data to map points
  *
  * Converts the raw constituency impact data from the API response into
- * a standardized format for hexagonal map visualization.
+ * one point per area for the geographic and hexagonal maps.
  *
  * @param apiData - Raw constituency impact data from API (uses existing type)
  * @param valueField - Which field to use as the value ('average_household_income_change' or 'relative_household_income_change')
- * @returns Array of HexMapDataPoint ready for visualization
+ * @returns One point per area for the geographic and hex maps; the hex map places each by its code (placeOnUKHexLayout)
  *
  * @example
  * ```typescript
  * const apiData = {
  *   'Westminster North': {
- *     x: 0,
- *     y: 0,
  *     average_household_income_change: 1234.56,
  *     relative_household_income_change: 0.025
  *   }
@@ -27,22 +25,18 @@ import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
  * // points[0] = {
  * //   id: 'Westminster North',
  * //   label: 'Westminster North',
- * //   value: 1234.56,
- * //   x: 0,
- * //   y: 0
+ * //   value: 1234.56
  * // }
  * ```
  */
 export function transformConstituencyData(
   apiData: ReportOutputSocietyWideByConstituency,
   valueField: 'average_household_income_change' | 'relative_household_income_change'
-): HexMapDataPoint[] {
+): UKAreaChoroplethDataPoint[] {
   return Object.entries(apiData).map(([constituencyName, data]) => ({
     id: constituencyName,
     label: constituencyName,
     value: data[valueField],
-    x: data.x,
-    y: data.y,
     ...(data.code && { code: data.code }),
     ...areaEstimateFields(data, valueField),
   }));
@@ -55,18 +49,18 @@ export function transformConstituencyData(
  * average household income change field.
  *
  * @param apiData - Raw constituency impact data from API
- * @returns Array of HexMapDataPoint with average income changes
+ * @returns One point per area, with its average income change
  *
  * @example
  * ```typescript
  * const apiData = output.constituency_impact?.by_constituency;
  * const hexMapData = transformConstituencyAbsoluteChange(apiData);
- * // Use with HexagonalMap component for currency visualization
+ * // Use with UKAreaChoroplethMap, or placeOnUKHexLayout for the hex map
  * ```
  */
 export function transformConstituencyAbsoluteChange(
   apiData: ReportOutputSocietyWideByConstituency
-): HexMapDataPoint[] {
+): UKAreaChoroplethDataPoint[] {
   return transformConstituencyData(apiData, 'average_household_income_change');
 }
 
@@ -77,17 +71,17 @@ export function transformConstituencyAbsoluteChange(
  * relative household income change field (percentage).
  *
  * @param apiData - Raw constituency impact data from API
- * @returns Array of HexMapDataPoint with relative income changes
+ * @returns One point per area, with its relative income change
  *
  * @example
  * ```typescript
  * const apiData = output.constituency_impact?.by_constituency;
  * const hexMapData = transformConstituencyRelativeChange(apiData);
- * // Use with HexagonalMap component for percentage visualization
+ * // Use with UKAreaChoroplethMap, or placeOnUKHexLayout for the hex map
  * ```
  */
 export function transformConstituencyRelativeChange(
   apiData: ReportOutputSocietyWideByConstituency
-): HexMapDataPoint[] {
+): UKAreaChoroplethDataPoint[] {
   return transformConstituencyData(apiData, 'relative_household_income_change');
 }

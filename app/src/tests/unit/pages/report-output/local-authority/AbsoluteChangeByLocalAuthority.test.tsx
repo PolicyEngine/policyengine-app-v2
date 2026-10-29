@@ -1,4 +1,4 @@
-import { cleanup, render, screen, userEvent } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { AbsoluteChangeByLocalAuthority } from '@/pages/report-output/local-authority/AbsoluteChangeByLocalAuthority';
@@ -24,11 +24,11 @@ import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_DATA,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
   MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
-  MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED,
   MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
   areaNames,
+  HEX_MAP_OMISSION_NOTE_PATTERN,
   hexagonArrangement,
   hexagonCentre,
   isPointyTopped,
@@ -154,18 +154,21 @@ describe('AbsoluteChangeByLocalAuthority hex map placement', () => {
     return container;
   }
 
-  test('given a saved result with pre-2023 local authority codes then every authority keeps its result’s position, untiled', async () => {
-    // Given: the same result without codes, which the map draws at its results' positions
-    const uncoded = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED);
-    const resultsArrangement = hexagonArrangement(v2Hexagons(uncoded));
-    cleanup();
-
+  test('given a saved result with pre-2023 local authority codes then the hex map leaves those authorities out and draws the others, tiled', async () => {
     // When
     const container = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA);
 
-    // Then: one grid for every authority, not layout positions mixed with the results'
-    expect(hexagonArrangement(v2Hexagons(container))).toEqual(resultsArrangement);
-    expect(v2Hexagons(container).some(isPointyTopped)).toBe(false);
+    // Then: Hartlepool and Darlington, at their layout positions; not Allerdale, Craven or Mendip
+    expect(v2Hexagons(container)).toHaveLength(2);
+    expect(v2Hexagons(container).every(isPointyTopped)).toBe(true);
+  });
+
+  test('given a saved result with pre-2023 local authority codes then no note says the hex map leaves them out', async () => {
+    // When
+    await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA);
+
+    // Then
+    expect(screen.queryByText(HEX_MAP_OMISSION_NOTE_PATTERN)).not.toBeInTheDocument();
   });
 
   test('given local authorities the results put in one hex then the hex map draws each in its own', async () => {
@@ -204,19 +207,20 @@ describe('AbsoluteChangeByLocalAuthority hex map placement', () => {
     expect(v2Hexagons(container).every(isPointyTopped)).toBe(true);
   });
 
-  test('given local authorities without codes then the hex map keeps their results’ positions, as v3’s does', async () => {
-    // Given
-    const v3Arrangement = await v3HexagonArrangement(
-      MOCK_UK_REPORT_OUTPUT_WITH_LA,
-      'local_authority'
-    );
-
+  test('given local authorities without codes then the hex map draws none of them, as v3’s does', async () => {
     // When
     const container = await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_LA);
 
-    // Then: on the square grid of flat-topped hexagons those positions were made for
-    expect(hexagonArrangement(v2Hexagons(container))).toEqual(v3Arrangement);
-    expect(v2Hexagons(container).some(isPointyTopped)).toBe(false);
+    // Then
+    expect(v2Hexagons(container)).toHaveLength(0);
+  });
+
+  test('given local authorities without codes then no note says the hex map leaves them out', async () => {
+    // When
+    await renderHexMap(MOCK_UK_REPORT_OUTPUT_WITH_LA);
+
+    // Then
+    expect(screen.queryByText(HEX_MAP_OMISSION_NOTE_PATTERN)).not.toBeInTheDocument();
   });
 });
 

@@ -1,4 +1,4 @@
-import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
+import type { UKAreaChoroplethDataPoint } from '@/components/visualization/choropleth/types';
 
 /** A constituency and its `[q, r]` position in data/ukHexLayouts/constituencies_2024.json. */
 export const BARNSLEY_NORTH_CODE = 'E14001074';
@@ -8,60 +8,50 @@ export const BARNSLEY_NORTH_HEX = [57, -23];
 export const HARTLEPOOL_CODE = 'E06000001';
 export const HARTLEPOOL_HEX = [8, 18];
 
-/** Barnsley North's hex-map point, at the position its result gives it. */
-export const BARNSLEY_NORTH_POINT: HexMapDataPoint = {
+/** Barnsley North's result, as the maps' adapters give it. */
+export const BARNSLEY_NORTH_POINT: UKAreaChoroplethDataPoint = {
   id: 'Barnsley North',
   label: 'Barnsley North',
   value: 120,
-  x: BARNSLEY_NORTH_HEX[0],
-  y: BARNSLEY_NORTH_HEX[1],
   code: BARNSLEY_NORTH_CODE,
 };
 
-/** Hartlepool's hex-map point, at the position its result gives it. */
-export const HARTLEPOOL_POINT: HexMapDataPoint = {
+/** Hartlepool's result, as the maps' adapters give it. */
+export const HARTLEPOOL_POINT: UKAreaChoroplethDataPoint = {
   id: 'Hartlepool',
   label: 'Hartlepool',
   value: -60,
-  x: 8,
-  y: 19,
   code: HARTLEPOOL_CODE,
 };
 
-/** A point from an older saved result, which gives a position and no code. */
-export const UNCODED_POINT: HexMapDataPoint = {
+/** An area from an older saved result, which has no code. */
+export const UNCODED_POINT: UKAreaChoroplethDataPoint = {
   id: 'Westminster North',
   label: 'Westminster North',
   value: -40,
-  x: 3,
-  y: 4,
 };
 
 /**
- * Darlington's hex-map point, at the Public API's position (7, 18). The
- * layout places it a row higher, at (7, 19), so the point moves when placed.
+ * Darlington's result, as the maps' adapters give it. The layout places it
+ * at (7, 19), a row above the Public API's position for it.
  */
-export const DARLINGTON_POINT: HexMapDataPoint = {
+export const DARLINGTON_POINT: UKAreaChoroplethDataPoint = {
   id: 'Darlington',
   label: 'Darlington',
   value: 45,
-  x: 7,
-  y: 18,
   code: 'E06000005',
 };
 
 /**
  * Allerdale, a district abolished in April 2023, as an older saved result
  * holds it: a code the layout, which follows the April 2023 boundaries,
- * does not have. The position is made up.
+ * does not have.
  */
 export const ALLERDALE_CODE = 'E07000026';
-export const ALLERDALE_POINT: HexMapDataPoint = {
+export const ALLERDALE_POINT: UKAreaChoroplethDataPoint = {
   id: 'Allerdale',
   label: 'Allerdale',
   value: -15,
-  x: 3,
-  y: 19,
   code: ALLERDALE_CODE,
 };
 
@@ -80,14 +70,11 @@ export const CARDIFF_EAST_NAME = 'Cardiff East';
 /** Hartlepool's name in the local authority boundary file. */
 export const HARTLEPOOL_NAME = 'Hartlepool';
 
-/**
- * Three of Wales's 32 constituencies' results, as the maps' adapters give
- * them, with the Public API's positions.
- */
-export const WELSH_CONSTITUENCY_POINTS: HexMapDataPoint[] = [
-  { id: 'Clwyd East', label: 'Clwyd East', value: -355.03, x: 49, y: -30, code: 'W07000094' },
-  { id: 'Monmouthshire', label: 'Monmouthshire', value: -90.78, x: 50, y: -36, code: 'W07000101' },
-  { id: 'Gower', label: 'Gower', value: 237.22, x: 44, y: -37, code: 'W07000097' },
+/** Three of Wales's 32 constituencies' results, as the maps' adapters give them. */
+export const WELSH_CONSTITUENCY_POINTS: UKAreaChoroplethDataPoint[] = [
+  { id: 'Clwyd East', label: 'Clwyd East', value: -355.03, code: 'W07000094' },
+  { id: 'Monmouthshire', label: 'Monmouthshire', value: -90.78, code: 'W07000101' },
+  { id: 'Gower', label: 'Gower', value: 237.22, code: 'W07000097' },
 ];
 
 /** Wales's local authorities in the layout, by code prefix. */

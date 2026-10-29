@@ -10,7 +10,7 @@ import constituencyNames from '@/data/ukHexLayouts/constituency_names_2024.json'
 import localAuthorities from '@/data/ukHexLayouts/local_authorities_2023.json';
 import localAuthorityNames from '@/data/ukHexLayouts/local_authority_names_2023.json';
 import type { HexMapDataPoint, HexMapMissingArea } from '@/types/visualization/HexMapDataPoint';
-import type { UKBoundaryLevel } from './types';
+import type { UKAreaChoroplethDataPoint, UKBoundaryLevel } from './types';
 import { ukNationFromCode, ukNationFromRegion } from './ukAreaBoundaries';
 
 /** Each level's `[q, r]` HexJSON `odd-r` position, by ONS code. */
@@ -51,36 +51,23 @@ function gridPosition([q, r]: number[]): { x: number; y: number } {
   return { x: q, y: r + 1 };
 }
 
-/** A level's hex-map points placed on its layout, and whether the map tiles them. */
-export interface UKHexMapPlacement {
-  points: HexMapDataPoint[];
-  /** Whether the layout placed every point, so the map draws the tiled grid its positions need. */
-  tiled: boolean;
-}
-
 /**
- * A level's hex-map points, placed from the app's layout, all or none.
- * When the layout has a position for every point's code, each point takes
- * its position, on the tiled grid. When it lacks even one (a point with no
- * code, as in an older saved result, or with a code the layout does not
- * have, such as a district abolished in April 2023), every point keeps the
- * position its result gave it, on the untiled square grid those positions
- * were made for: the two sets of positions are different grids, so mixing
- * them would overlap or scatter the hexagons. v2's and v3's UK hex maps
- * both place their areas with this.
+ * A level's areas as hex-map points, placed from the app's layout: each
+ * area whose code the layout has takes that position. An area the layout
+ * has no position for (no code, as in an older saved result, or a code the
+ * layout lacks, such as a district abolished in April 2023) is left out, as
+ * the map has nowhere to draw it; mixing in its result's position would put
+ * two different grids on one map. v2's and v3's UK hex maps both place
+ * their areas with this, on the tiled grid.
  */
 export function placeOnUKHexLayout(
   level: UKBoundaryLevel,
-  points: HexMapDataPoint[]
-): UKHexMapPlacement {
-  const positions = points.map((point) => ukHexPosition(level, point.code));
-  if (positions.some((position) => position === null)) {
-    return { points, tiled: false };
-  }
-  return {
-    points: points.map((point, index) => ({ ...point, ...positions[index] })),
-    tiled: true,
-  };
+  points: UKAreaChoroplethDataPoint[]
+): HexMapDataPoint[] {
+  return points.flatMap((point) => {
+    const position = ukHexPosition(level, point.code);
+    return position ? [{ ...point, ...position }] : [];
+  });
 }
 
 /** The areas of a report's region a result leaves out, by ONS code, and how many the region has. */
@@ -133,13 +120,15 @@ export function withheldUKAreaCodes(
  * breakdown these are the areas disclosure control withheld.
  *
  * They follow withheldUKAreaCodes, and none are listed when the result
- * cannot be matched to the layout. So a map that keeps its result's own
- * positions, because placeOnUKHexLayout could not place every area, never
- * gets any: they are drawn only on the tiled grid.
+ * cannot be matched to the layout: a layout area the result lacks may then
+ * be covered by one of the result's unmatched areas, such as the districts
+ * a 2023 unitary authority replaced, so calling it withheld could be wrong.
+ * A hex map that leaves out areas placeOnUKHexLayout cannot place
+ * therefore draws no withheld areas either.
  */
 export function withheldUKHexAreas(
   level: UKBoundaryLevel,
-  points: Pick<HexMapDataPoint, 'code'>[],
+  points: Pick<UKAreaChoroplethDataPoint, 'code'>[],
   region?: string | null
 ): HexMapMissingArea[] {
   const withheld = withheldUKAreaCodes(
@@ -156,31 +145,32 @@ export function withheldUKHexAreas(
 }
 
 /** A level's hex map: its result's areas, placed, and the areas drawn as withheld. */
-export interface UKHexMap extends UKHexMapPlacement {
+export interface UKHexMap {
+  /** The result's areas the layout places, at their layout positions. */
+  points: HexMapDataPoint[];
   /**
    * The region's areas the result leaves out, which the map draws as not
-   * reported: only for a disclosure-controlled level, on the tiled grid.
+   * reported: only for a disclosure-controlled level whose areas the layout
+   * can all match.
    */
   withheldAreas: HexMapMissingArea[];
 }
 
 /**
- * A level's hex map, as v2's charts and v3's local-area map draw it: the
- * result's areas placed from the layout, all or none (placeOnUKHexLayout),
- * and, for a level from a disclosure-controlled breakdown, the region's
- * areas the result leaves out (withheldUKHexAreas). Withheld areas are
- * listed only when the map is tiled: a result that keeps its own positions
- * cannot be matched to the layout. A saved level has none.
+ * A level's hex map, as v2's charts and v3's local-area map draw it, on the
+ * tiled grid: the result's areas placed from the layout, leaving out any it
+ * cannot place (placeOnUKHexLayout), and, for a level from a
+ * disclosure-controlled breakdown, the region's areas the result leaves out
+ * (withheldUKHexAreas), of which there are none when any of the result's
+ * areas cannot be matched to the layout. A saved level has none.
  */
 export function placeUKHexMap(
   level: UKBoundaryLevel,
-  points: HexMapDataPoint[],
+  points: UKAreaChoroplethDataPoint[],
   { disclosureControlled, region }: { disclosureControlled: boolean; region?: string | null }
 ): UKHexMap {
-  const placement = placeOnUKHexLayout(level, points);
   return {
-    ...placement,
-    withheldAreas:
-      disclosureControlled && placement.tiled ? withheldUKHexAreas(level, points, region) : [],
+    points: placeOnUKHexLayout(level, points),
+    withheldAreas: disclosureControlled ? withheldUKHexAreas(level, points, region) : [],
   };
 }

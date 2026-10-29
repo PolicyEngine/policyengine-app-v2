@@ -38,6 +38,18 @@ describe('normalizeSocietyWideOutput', () => {
     expect(result.model_version).toBe(UK_RESULT_OTHER_FIELDS.model_version);
   });
 
+  test('given rows that carry x and y then the normalized areas leave them out', () => {
+    // When
+    const result = normalizeSocietyWideOutput(LIST_SHAPE_UK_RESULT) as any;
+
+    // Then
+    const areas = [
+      ...Object.values(result.constituency_impact.by_constituency),
+      ...Object.values(result.local_authority_impact.by_local_authority),
+    ] as object[];
+    expect(areas.some((area) => 'x' in area || 'y' in area)).toBe(false);
+  });
+
   test('given a normalized result then the map adapter reads every area', () => {
     // When
     const result = normalizeSocietyWideOutput(LIST_SHAPE_UK_RESULT) as any;
@@ -50,8 +62,6 @@ describe('normalizeSocietyWideOutput', () => {
       id: 'Aldershot',
       label: 'Aldershot',
       value: 571.146162,
-      x: 56,
-      y: -40,
       code: 'E14001063',
     });
   });

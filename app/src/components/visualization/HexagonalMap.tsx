@@ -289,11 +289,11 @@ function useHexMapZoom(enabled: boolean, centerX: number, centerY: number) {
   return { svgRef, view, handlers, controls };
 }
 
-/** A tiled grid's row spacing, in columns: rows of touching pointy-top hexagons. */
-const TILED_ROW_SPACING = Math.sqrt(3) / 2;
+/** The grid's row spacing, in columns: rows of touching pointy-top hexagons. */
+const ROW_SPACING = Math.sqrt(3) / 2;
 
-/** A tiled hexagon's radius, in columns: just under 1/√3, so neighbours keep a hairline gap. */
-const TILED_HEX_RADIUS = 0.55;
+/** A hexagon's radius, in columns: just under 1/√3, so neighbours keep a hairline gap. */
+const HEX_RADIUS = 0.55;
 
 /** A map with no missing areas: one array, so memos keep their values. */
 const NO_MISSING_AREAS: HexMapMissingArea[] = [];
@@ -317,14 +317,14 @@ const MISSING_AREA_EDGE_WIDTH = 0.75;
 const MISSING_AREA_STRIPES_PER_RADIUS = 2;
 const MIN_MISSING_AREA_STRIPE_PIXELS = 4;
 
-/**
- * SVG polygon points for a hexagon centred at (cx, cy): flat-topped, or
- * pointy-topped for a tiled grid.
- */
-function hexPoints(cx: number, cy: number, size: number, pointy = false): string {
+/** The margin between the map's hexagons and its frame, in SVG units. */
+const MAP_MARGIN = 16;
+
+/** SVG polygon points for a pointy-topped hexagon centred at (cx, cy). */
+function hexPoints(cx: number, cy: number, size: number): string {
   const points: string[] = [];
   for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i + (pointy ? Math.PI / 6 : 0);
+    const angle = (Math.PI / 3) * i + Math.PI / 6;
     const px = cx + size * Math.cos(angle);
     const py = cy + size * Math.sin(angle);
     points.push(`${px},${py}`);
@@ -355,23 +355,11 @@ const FRAME_INSET = 8;
 const FIXED_SVG_WIDTH = 600;
 
 /**
- * Points on the map's grid: even rows shifted half a column, then the
- * coordinates scaled and the rows spaced as the grid needs.
+ * Points on the map's grid: even rows shifted half a column, and the rows
+ * spaced as touching pointy-top hexagons need.
  */
-function positionOnGrid<Point extends { x: number; y: number }>(
-  points: Point[],
-  coordinateScale: number,
-  rowSpacing: number
-): Point[] {
-  const hexPositioned = applyHexagonalPositioning(points);
-  if (coordinateScale === 1 && rowSpacing === 1) {
-    return hexPositioned;
-  }
-  return hexPositioned.map((point) => ({
-    ...point,
-    x: point.x * coordinateScale,
-    y: point.y * rowSpacing * coordinateScale,
-  }));
+function positionOnGrid<Point extends { x: number; y: number }>(points: Point[]): Point[] {
+  return applyHexagonalPositioning(points).map((point) => ({ ...point, y: point.y * ROW_SPACING }));
 }
 
 /** The rendered width of `element`, in CSS pixels, kept up to date; null until measured. */
@@ -416,8 +404,6 @@ export function HexagonalMap({
   const fullConfig: HexMapConfig = useMemo(
     () => ({
       height: 380,
-      hexSize: 8,
-      coordinateScale: 1,
       showColorBar: true,
       colorScale: {
         colors: getColorScale('diverging-gray-teal'),
@@ -431,18 +417,11 @@ export function HexagonalMap({
     [config]
   );
 
-  // Transform data for hexagonal positioning and apply coordinate scaling.
-  // Missing areas take the same grid as the areas with values.
-  const coordinateScale = fullConfig.coordinateScale ?? 1;
-  const rowSpacing = fullConfig.tiled ? TILED_ROW_SPACING : 1;
-  const positionedData = useMemo(
-    () => positionOnGrid(data, coordinateScale, rowSpacing),
-    [data, coordinateScale, rowSpacing]
-  );
-  const positionedMissingAreas = useMemo(
-    () => positionOnGrid(missingAreas, coordinateScale, rowSpacing),
-    [missingAreas, coordinateScale, rowSpacing]
-  );
+  // Shift the even rows half a column, and space the rows as touching
+  // pointy-top hexagons need: the odd-r grid of the UK layouts. Missing
+  // areas take the same grid as the areas with values.
+  const positionedData = useMemo(() => positionOnGrid(data), [data]);
+  const positionedMissingAreas = useMemo(() => positionOnGrid(missingAreas), [missingAreas]);
 
   // The selected hexagon draws last, so no neighbour covers its outline.
   const drawOrder = useMemo(() => {
@@ -459,7 +438,7 @@ export function HexagonalMap({
     ? (positionedData.find((point) => point.id === selectedId) ?? null)
     : null;
 
-  // Calculate data bounds, over the areas with values and without. A tiled
+  // Calculate data bounds, over the areas with values and without. A
   // hexagon's size is a share of the scale, so the bounds take in each
   // hexagon's edges, not only its centre: the map of a few areas, whose
   // hexagons are large, then still fits its frame.
@@ -471,17 +450,15 @@ export function HexagonalMap({
     const xs = placed.map((p) => p.x);
     const ys = placed.map((p) => p.y);
     // A pointy-top hexagon reaches its radius up and down, and √3/2 of it sideways.
-    const verticalReach = fullConfig.tiled
-      ? TILED_HEX_RADIUS * (fullConfig.coordinateScale ?? 1)
-      : 0;
-    const horizontalReach = (verticalReach * Math.sqrt(3)) / 2;
+    const verticalReach = HEX_RADIUS;
+    const horizontalReach = (HEX_RADIUS * Math.sqrt(3)) / 2;
     return {
       xMin: Math.min(...xs) - horizontalReach,
       xMax: Math.max(...xs) + horizontalReach,
       yMin: Math.min(...ys) - verticalReach,
       yMax: Math.max(...ys) + verticalReach,
     };
-  }, [positionedData, positionedMissingAreas, fullConfig.tiled, fullConfig.coordinateScale]);
+  }, [positionedData, positionedMissingAreas]);
 
   // Calculate color range: from the areas with values alone
   const colorValues = positionedData.map((p) => p.value);
@@ -500,11 +477,10 @@ export function HexagonalMap({
 
   const scaleColors = fullConfig.colorScale!.colors;
   const height = fullConfig.height ?? 380;
-  const hexSize = fullConfig.hexSize ?? 8;
 
   // Compute SVG coordinate system
   // We map data coordinates to SVG pixels with padding
-  const padding = hexSize * 2;
+  const padding = MAP_MARGIN;
   const colorBarSpace = fullConfig.showColorBar ? COLOR_BAR_MARGIN + COLOR_BAR_WIDTH + 40 : 0;
   // With fillWidth, one viewBox unit is one CSS pixel, as the SVG's height is `height` pixels.
   const [svgElement, setSvgElement] = useState<SVGSVGElement | null>(null);
@@ -523,10 +499,7 @@ export function HexagonalMap({
   const availW = svgWidth - padding * 2 - colorBarSpace;
   const availH = height - padding * 2;
   const scale = Math.min(availW / dataWidth, availH / dataHeight);
-  const tiled = !!fullConfig.tiled;
-  const hexPixelSize = tiled
-    ? scale * (fullConfig.coordinateScale ?? 1) * TILED_HEX_RADIUS
-    : Math.min(hexSize * (scale / 20), scale * 0.45);
+  const hexPixelSize = scale * HEX_RADIUS;
   const stripeSpacing = Math.max(
     MIN_MISSING_AREA_STRIPE_PIXELS / screenPixelsPerUnit,
     hexPixelSize / MISSING_AREA_STRIPES_PER_RADIUS
@@ -599,7 +572,7 @@ export function HexagonalMap({
       {positionedMissingAreas.map((area) => (
         <polygon
           key={`missing-${area.id}`}
-          points={hexPoints(toSvgX(area.x), toSvgY(area.y), hexPixelSize, tiled)}
+          points={hexPoints(toSvgX(area.x), toSvgY(area.y), hexPixelSize)}
           fill={`url(#${hatchingId})`}
           stroke={MISSING_AREA_EDGE_COLOR}
           strokeWidth={MISSING_AREA_EDGE_WIDTH}
@@ -621,7 +594,7 @@ export function HexagonalMap({
         return (
           <polygon
             key={point.id}
-            points={hexPoints(cx, cy, hexPixelSize, tiled)}
+            points={hexPoints(cx, cy, hexPixelSize)}
             fill={fill}
             stroke={isSelected ? SELECTED_STROKE_COLOR : colors.background.primary}
             strokeWidth={isSelected ? SELECTED_STROKE_WIDTH : 0.5}
@@ -640,12 +613,7 @@ export function HexagonalMap({
       {selectedPoint && (
         <g data-export-exclude pointerEvents="none" data-testid="hex-selection-ring">
           <polygon
-            points={hexPoints(
-              toSvgX(selectedPoint.x),
-              toSvgY(selectedPoint.y),
-              hexPixelSize,
-              tiled
-            )}
+            points={hexPoints(toSvgX(selectedPoint.x), toSvgY(selectedPoint.y), hexPixelSize)}
             fill="none"
             stroke={SELECTED_STROKE_COLOR}
             strokeWidth={SELECTED_RING_WIDTH}
@@ -653,12 +621,7 @@ export function HexagonalMap({
             vectorEffect={outlineEffect}
           />
           <polygon
-            points={hexPoints(
-              toSvgX(selectedPoint.x),
-              toSvgY(selectedPoint.y),
-              hexPixelSize,
-              tiled
-            )}
+            points={hexPoints(toSvgX(selectedPoint.x), toSvgY(selectedPoint.y), hexPixelSize)}
             fill="none"
             stroke={SELECTED_CORE_COLOR}
             strokeWidth={SELECTED_CORE_WIDTH}
