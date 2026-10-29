@@ -115,6 +115,28 @@ describe('SaveHouseholdReportForm', () => {
     expect(mockSaveReport).not.toHaveBeenCalled();
   });
 
+  test('given only the save in the account failed then trying again saves the same report, and creates no other', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockSaveReport
+      .mockRejectedValueOnce(new Error('Saved work is temporarily unavailable.'))
+      .mockResolvedValueOnce(V2_HOUSEHOLD_REPORT_IDS.SAVED_REPORT);
+    renderForm();
+    await saveAs(SAVED_HOUSEHOLD_REPORT_NAME);
+    await screen.findByRole('alert');
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Save report' }));
+
+    // Then
+    expect(await screen.findByRole('link', { name: /Open the saved report/ })).toBeInTheDocument();
+    expect(mockSubmitReport).toHaveBeenCalledTimes(1);
+    expect(mockSaveReport.mock.calls.map(([, saved]) => saved.reportId)).toEqual([
+      V2_HOUSEHOLD_REPORT_IDS.REPORT,
+      V2_HOUSEHOLD_REPORT_IDS.REPORT,
+    ]);
+  });
+
   test('given a reform known only by its v1 policy number then it says why, and nothing is sent', async () => {
     // When
     renderForm(REFORM_POLICY_ID);

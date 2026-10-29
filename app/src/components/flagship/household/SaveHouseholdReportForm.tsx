@@ -43,6 +43,10 @@ export default function SaveHouseholdReportForm({
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedReportId, setSavedReportId] = useState<string | null>(null);
+  // The household report this form created: saving again (after the save in
+  // the account failed, or under another name) saves it, rather than
+  // creating another report of the same household.
+  const [createdReportId, setCreatedReportId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const quietText = { margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary };
@@ -55,15 +59,18 @@ export default function SaveHouseholdReportForm({
     setErrorMessage(null);
     setSavedReportId(null);
     try {
-      const report = await submitV2HouseholdReport({
-        countryId,
-        householdId,
-        baselinePolicyId: v2PolicyIdFor(baselinePolicyId, currentLawId),
-        reformPolicyId: v2PolicyIdFor(reformPolicyId, currentLawId),
-      });
-      setSavedReportId(
-        await saveV2HouseholdReport(account, { countryId, reportId: report.id, name })
-      );
+      const reportId =
+        createdReportId ??
+        (
+          await submitV2HouseholdReport({
+            countryId,
+            householdId,
+            baselinePolicyId: v2PolicyIdFor(baselinePolicyId, currentLawId),
+            reformPolicyId: v2PolicyIdFor(reformPolicyId, currentLawId),
+          })
+        ).id;
+      setCreatedReportId(reportId);
+      setSavedReportId(await saveV2HouseholdReport(account, { countryId, reportId, name }));
     } catch (error) {
       setErrorMessage(plainV2HouseholdError(error).message);
     } finally {
