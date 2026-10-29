@@ -83,6 +83,36 @@ describe('LocalStorageFlagshipReportStore', () => {
       'Report not found'
     );
   });
+
+  test('given a new run then update repoints the record and keeps its links', async () => {
+    // Given
+    const store = new LocalStorageFlagshipReportStore();
+    const created = await store.create({
+      ...newReport,
+      reformId: 'rf-local1',
+      baselineReformId: 'rf-plan-b',
+    });
+
+    // When
+    const updated = await store.update(created.id, {
+      apiReportId: OTHER_API_REPORT_ID,
+      provisions: [],
+    });
+
+    // Then
+    expect(updated).toEqual({ ...created, apiReportId: OTHER_API_REPORT_ID, provisions: [] });
+    const reloaded = await new LocalStorageFlagshipReportStore().findById(created.id);
+    expect(reloaded).toEqual(updated);
+    await expect(store.findByApiReportId(API_REPORT_ID)).resolves.toBeNull();
+  });
+
+  test('given an unknown record then update fails', async () => {
+    const store = new LocalStorageFlagshipReportStore();
+
+    await expect(store.update('lfr-missing', { apiReportId: OTHER_API_REPORT_ID })).rejects.toThrow(
+      'Report not found'
+    );
+  });
 });
 
 const DATED_PROVISION = {
@@ -313,6 +343,55 @@ describe('ApiFlagshipReportStore', () => {
     expect(call.body).toEqual({ validation: wire });
     expect(record.validation).toEqual(mockReportValidationSnapshot);
   });
+
+  test('given a new run then update repoints the row to it, with its provisions, and nothing else', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(
+      itemResponse(
+        reportItem({
+          legacy_report_id: Number(OTHER_API_REPORT_ID),
+          provisions: provisionsToWire(newReport.provisions),
+          user_policy_id: ASSOCIATION_IDS.REFORM,
+        })
+      )
+    );
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    const record = await store.update(ASSOCIATION_IDS.REPORT, {
+      apiReportId: OTHER_API_REPORT_ID,
+      provisions: newReport.provisions,
+    });
+
+    // Then: the row keeps its ID, which is the report's link
+    const call = fetchCall(fetchMock);
+    expect(call.method).toBe('PATCH');
+    expect(call.path).toBe(`/v2/user-reports/${ASSOCIATION_IDS.REPORT}`);
+    expect(call.body).toEqual({
+      legacy_report_id: Number(OTHER_API_REPORT_ID),
+      provisions: provisionsToWire(newReport.provisions),
+      last_run_at: expect.any(String),
+    });
+    expect(record).toMatchObject({
+      id: ASSOCIATION_IDS.REPORT,
+      apiReportId: OTHER_API_REPORT_ID,
+      reformId: ASSOCIATION_IDS.REFORM,
+    });
+  });
+
+  test('given only provisions then update sends only them', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(itemResponse(reportItem()));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    await store.update(ASSOCIATION_IDS.REPORT, { provisions: [] });
+
+    // Then
+    expect(fetchCall(fetchMock).body).toEqual({ provisions: [] });
+  });
 });
 
 describe('ApiFlagshipReportStore with records saved in this browser', () => {
@@ -330,6 +409,9 @@ describe('ApiFlagshipReportStore with records saved in this browser', () => {
     await expect(store.findById(localRecord.id)).rejects.toBeInstanceOf(BrowserOnlyIdError);
     await expect(
       store.saveValidation(localRecord.id, mockReportValidationSnapshot)
+    ).rejects.toBeInstanceOf(BrowserOnlyIdError);
+    await expect(
+      store.update(localRecord.id, { apiReportId: OTHER_API_REPORT_ID })
     ).rejects.toBeInstanceOf(BrowserOnlyIdError);
     expect(fetchMock).not.toHaveBeenCalled();
   });

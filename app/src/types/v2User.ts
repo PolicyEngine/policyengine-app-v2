@@ -166,6 +166,9 @@ export interface UserReportCreateBody {
   last_run_at?: string | null;
 }
 
+/** The fields a saved report's update may change; `legacy_report_id` repoints it to another run. */
+export type UserReportPatchBody = Partial<Omit<UserReportCreateBody, 'country_id'>>;
+
 /* /v2/me/export */
 
 /** Everything saved to the account, in every country; downloaded as is. */
