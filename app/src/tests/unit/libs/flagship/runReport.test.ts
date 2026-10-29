@@ -655,7 +655,11 @@ describe('runFlagshipReport', () => {
       // Then
       expect(link).toBe('55');
       const records = await new LocalStorageFlagshipReportStore().findMine();
-      expect(records).toEqual([{ ...saved, apiReportId: '55' }]);
+      // The same record, dated by the new run and with no pin from the old one.
+      expect(records).toEqual([
+        { ...saved, apiReportId: '55', createdAt: expect.any(String), validation: null },
+      ]);
+      expect(records[0].createdAt >= saved.createdAt).toBe(true);
     });
 
     test('then a browser record that is gone fails the run', async () => {
