@@ -178,3 +178,59 @@ export const UK_DOCUMENT_WITHOUT_YEARS: V2HouseholdDocument = {
   household: [{ id: 'household-1', source_name: 'your household', values: {} }],
   benunit: [{ id: 'benunit-1', source_name: 'your benefit unit', values: {} }],
 };
+
+/**
+ * The US single parent as `/v2/household-calculations` answers with it: the
+ * situation the household functions took, its people and groups named by
+ * their record IDs, with the calculated values filled in.
+ */
+export const US_SINGLE_PARENT_CALCULATED_SITUATION = {
+  people: {
+    'person-1': { age: { 2026: 30 }, employment_income: { 2026: 0 }, income_tax: { 2026: 0 } },
+    'person-2': { age: { 2026: 10 }, employment_income: { 2026: 0 }, income_tax: { 2026: 0 } },
+  },
+  households: {
+    'household-1': {
+      members: ['person-1', 'person-2'],
+      state_name: { 2026: 'CA' },
+      household_net_income: { 2026: 12000 },
+    },
+  },
+  families: { 'family-1': { members: ['person-1', 'person-2'] } },
+  tax_units: { 'tax_unit-1': { members: ['person-1', 'person-2'], eitc: { 2026: 4000 } } },
+  spm_units: { 'spm_unit-1': { members: ['person-1', 'person-2'], snap: { 2026: 3000 } } },
+  marital_units: {
+    'marital_unit-1': { members: ['person-2'] },
+    'marital_unit-2': { members: ['person-1'] },
+  },
+};
+
+/** The same household's calculation, named as the v1 household routes name it. */
+export const US_SINGLE_PARENT_CALCULATED_IN_V1_NAMES = {
+  people: {
+    you: { age: { 2026: 30 }, employment_income: { 2026: 0 }, income_tax: { 2026: 0 } },
+    'your first dependent': {
+      age: { 2026: 10 },
+      employment_income: { 2026: 0 },
+      income_tax: { 2026: 0 },
+    },
+  },
+  households: {
+    'your household': {
+      members: ['you', 'your first dependent'],
+      state_name: { 2026: 'CA' },
+      household_net_income: { 2026: 12000 },
+    },
+  },
+  families: { 'your family': { members: ['you', 'your first dependent'] } },
+  tax_units: {
+    'your tax unit': { members: ['you', 'your first dependent'], eitc: { 2026: 4000 } },
+  },
+  spm_units: {
+    'your household': { members: ['you', 'your first dependent'], snap: { 2026: 3000 } },
+  },
+  marital_units: {
+    "your first dependent's marital unit": { members: ['your first dependent'] },
+    'your marital unit': { members: ['you'] },
+  },
+};
