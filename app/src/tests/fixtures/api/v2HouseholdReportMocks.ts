@@ -5,10 +5,12 @@ import {
   V2_REFORM_POLICY_ID,
   V2_SPM_CONFIG,
   V2_SPM_PROVENANCE,
+  type RouteAnswer,
 } from '@/tests/fixtures/api/v2HouseholdCalculationMocks';
 import {
   STORED_V2_HOUSEHOLD_ID,
   US_SINGLE_PARENT_CALCULATED_SITUATION,
+  US_SINGLE_PARENT_INPUTS_SITUATION,
   V2_CODEC_YEAR,
 } from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
 
@@ -51,12 +53,28 @@ function calculation(
   };
 }
 
-/** The single parent's household report, current law against the reform, as it stands. */
+/**
+ * The single parent's household report, current law against the reform, as
+ * it stands. Once succeeded, each calculation's household is what the
+ * simulation service returns: the stored household with only the values
+ * it stores, unless the report was created with `add_missing_variables`,
+ * which calculates every variable the household lacks (net income, taxes,
+ * benefits).
+ */
 export function householdReportItem(
   status: V2HouseholdReportItem['status'] = 'succeeded',
-  { reform = true }: { reform?: boolean } = {}
+  {
+    reform = true,
+    addMissingVariables = true,
+  }: { reform?: boolean; addMissingVariables?: boolean } = {}
 ): V2HouseholdReportItem {
   const finished = status === 'succeeded';
+  const baselineHousehold = addMissingVariables
+    ? US_SINGLE_PARENT_CALCULATED_SITUATION
+    : US_SINGLE_PARENT_INPUTS_SITUATION;
+  const reformHousehold = addMissingVariables
+    ? US_SINGLE_PARENT_REFORM_SITUATION
+    : US_SINGLE_PARENT_INPUTS_SITUATION;
   return {
     id: V2_HOUSEHOLD_REPORT_IDS.REPORT,
     country_id: 'us',
@@ -78,14 +96,14 @@ export function householdReportItem(
       baseline: calculation(
         V2_HOUSEHOLD_REPORT_IDS.BASELINE_SIMULATION,
         null,
-        finished ? US_SINGLE_PARENT_CALCULATED_SITUATION : null,
+        finished ? baselineHousehold : null,
         status
       ),
       reform: reform
         ? calculation(
             V2_HOUSEHOLD_REPORT_IDS.REFORM_SIMULATION,
             V2_REFORM_POLICY_ID,
-            finished ? US_SINGLE_PARENT_REFORM_SITUATION : null,
+            finished ? reformHousehold : null,
             status
           )
         : null,
@@ -134,5 +152,24 @@ export function sharedHouseholdReportItem(
     last_run_at: null,
     created_at: CREATED_AT,
     updated_at: CREATED_AT,
+  };
+}
+
+/**
+ * `POST /v2/reports` and `GET /v2/reports/{report_id}` as the Public API and
+ * the simulation service answer them: the report is created pending, and
+ * read back succeeded, its households calculated with every variable only
+ * when the submission asked for `add_missing_variables`.
+ */
+export function householdReportRoutes(): Record<string, RouteAnswer> {
+  let addMissingVariables = false;
+  return {
+    'POST /v2/reports': async (request) => {
+      const body = (await request.clone().json()) as { add_missing_variables?: unknown };
+      addMissingVariables = body.add_missing_variables === true;
+      return reportResponse(householdReportItem('pending', { addMissingVariables }), 201);
+    },
+    [`GET /v2/reports/${V2_HOUSEHOLD_REPORT_IDS.REPORT}`]: () =>
+      reportResponse(householdReportItem('succeeded', { addMissingVariables })),
   };
 }

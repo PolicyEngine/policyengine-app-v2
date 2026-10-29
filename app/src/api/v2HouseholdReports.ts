@@ -55,7 +55,8 @@ function asHouseholdReport(item: Schemas['ReportDetailResult']['item']): V2House
 }
 
 /**
- * Creates a household report and starts its run. The Public API refuses,
+ * Creates a household report and starts its run, each calculation adding
+ * every variable the household lacks. The Public API refuses,
  * before creating anything, a household or policy the country lacks
  * (404), and a country without household calculations or a household
  * without a default year (422); 503 when the simulation service is
@@ -75,6 +76,10 @@ export async function submitV2HouseholdReport(
         household_id: householdId,
         baseline: { policy_id: baselinePolicyId },
         reform: reformPolicyId === baselinePolicyId ? null : { policy_id: reformPolicyId },
+        // Every variable the household lacks, as v1's household routes calculate
+        // them: without it only the household's null values are filled in, and
+        // there is no net income to compare.
+        add_missing_variables: true,
       },
     })
   );

@@ -955,9 +955,13 @@ export interface components {
     };
     /**
      * EconomyReportRunRequest
-     * @description A re-run on the current catalog version; ``{}`` reuses existing runs.
+     * @description A re-run of an economy or household report on the current catalog version.
      *
-     *     With ``force``, both simulations are calculated again as new attempts.
+     *     ``{}`` reuses existing runs: an economy report's simulation runs for that
+     *     version and year, or a household report's calculations that are
+     *     unfinished or succeeded within the last 28 days. With ``force``, each of
+     *     the report's simulations (one for a household report of the baseline
+     *     alone) is calculated again as a new attempt.
      */
     EconomyReportRunRequest: {
       /**
@@ -1392,7 +1396,9 @@ export interface components {
      *
      *     ``baseline`` and ``reform`` each name a v2 policy of the country, and an
      *     empty object means current law; ``reform`` is null for a report of the
-     *     baseline alone. It is calculated for the household's ``default_year``.
+     *     baseline alone. It is calculated for the household's ``default_year``;
+     *     with ``add_missing_variables``, each calculation also adds every variable
+     *     the household lacks, as ``/calculate-full`` does.
      */
     HouseholdReportCreateRequest: {
       /**
@@ -1408,6 +1414,11 @@ export interface components {
       household_id: string;
       baseline: components['schemas']['HouseholdPolicyChoice'];
       reform?: components['schemas']['HouseholdPolicyChoice'] | null;
+      /**
+       * Add Missing Variables
+       * @default false
+       */
+      add_missing_variables: boolean;
       /**
        * Country Id
        * @description Supported PolicyEngine country ID
@@ -7128,7 +7139,7 @@ export interface operations {
           'application/json': components['schemas']['ReportRunListResponse'];
         };
       };
-      /** @description No report has this ID or v1 number in this country. */
+      /** @description No economy report has this ID in this country. A household report does not list its runs; its newest run is in the report itself. */
       404: {
         headers: {
           [name: string]: unknown;

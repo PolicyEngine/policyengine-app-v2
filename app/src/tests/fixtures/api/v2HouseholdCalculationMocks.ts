@@ -8,6 +8,7 @@ import type {
 import { TEST_API_BASE } from '@/tests/fixtures/api/v2UserMocks';
 import {
   US_SINGLE_PARENT_CALCULATED_SITUATION,
+  US_SINGLE_PARENT_INPUTS_SITUATION,
   V2_CODEC_YEAR,
 } from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
 import type { SPMProvenance, SPMSelection } from '@/types/spm';
@@ -161,21 +162,32 @@ export const US_SINGLE_PARENT_REFORM_SITUATION = {
 };
 
 /**
- * Answers `POST /v2/household-calculations` by the policy it names: the
- * baseline calculation for current law, the reform's for the reform policy.
+ * Answers `POST /v2/household-calculations` as the simulation service does:
+ * by the policy it names (the baseline calculation for current law, the
+ * reform's for the reform policy), calculating every variable the household
+ * lacks only when asked to add them; otherwise the household comes back
+ * with only its stored values.
  */
 export function answerByPolicy(reformPolicyId: string): RouteAnswer {
   return async (request) => {
-    const body = (await request.clone().json()) as { policy_id: string | null };
-    return body.policy_id === reformPolicyId
-      ? calculationResponse(
-          calculationItem({
-            calculation_id: V2_CALCULATION_IDS.REFORM,
-            policy_id: reformPolicyId,
-            result: calculationOutput({ household: US_SINGLE_PARENT_REFORM_SITUATION }),
-          }),
-          202
-        )
-      : calculationResponse(calculationItem({ policy_id: body.policy_id }), 202);
+    const body = (await request.clone().json()) as {
+      policy_id: string | null;
+      add_missing_variables?: unknown;
+    };
+    const addsMissing = body.add_missing_variables === true;
+    const reform = body.policy_id === reformPolicyId;
+    const calculated = reform
+      ? US_SINGLE_PARENT_REFORM_SITUATION
+      : US_SINGLE_PARENT_CALCULATED_SITUATION;
+    return calculationResponse(
+      calculationItem({
+        calculation_id: reform ? V2_CALCULATION_IDS.REFORM : V2_CALCULATION_IDS.BASELINE,
+        policy_id: body.policy_id,
+        result: calculationOutput({
+          household: addsMissing ? calculated : US_SINGLE_PARENT_INPUTS_SITUATION,
+        }),
+      }),
+      202
+    );
   };
 }

@@ -18,6 +18,7 @@ import {
 import {
   failedHouseholdReportItem,
   householdReportItem,
+  householdReportRoutes,
   reportResponse,
   SAVED_HOUSEHOLD_REPORT_NAME,
   sharedHouseholdReportItem,
@@ -67,6 +68,7 @@ describe('submitV2HouseholdReport', () => {
       household_id: STORED_V2_HOUSEHOLD_ID,
       baseline: { policy_id: null },
       reform: { policy_id: V2_REFORM_POLICY_ID },
+      add_missing_variables: true,
     });
     expect(item.id).toBe(V2_HOUSEHOLD_REPORT_IDS.REPORT);
   });
@@ -90,7 +92,35 @@ describe('submitV2HouseholdReport', () => {
 
     // Then
     const [request] = requestsFor(fetchMock, SUBMIT);
-    expect(await request.json()).toMatchObject({ baseline: { policy_id: null }, reform: null });
+    expect(await request.json()).toMatchObject({
+      baseline: { policy_id: null },
+      reform: null,
+      add_missing_variables: true,
+    });
+  });
+
+  test("given a household report submitted and calculated then its run has the household's net income", async () => {
+    // Given
+    const { client } = routedClient(householdReportRoutes());
+    const submitted = await submitV2HouseholdReport(
+      {
+        countryId: 'us',
+        householdId: STORED_V2_HOUSEHOLD_ID,
+        baselinePolicyId: null,
+        reformPolicyId: V2_REFORM_POLICY_ID,
+      },
+      client
+    );
+
+    // When
+    const calculated = await waitForV2HouseholdReport('us', submitted.id, { client, wait: noWait });
+
+    // Then
+    const run = householdRunFromV2Report(
+      calculated,
+      storedV2Household('us', US_SINGLE_PARENT_V2_BODY.household_data)
+    );
+    expect(run.netIncome).toEqual({ baseline: 12000, reform: 13500, change: 1500 });
   });
 
   test.each([

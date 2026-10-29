@@ -43,6 +43,12 @@ describe('the Public API OpenAPI document', () => {
     expect(body).toContain('#/components/schemas/HouseholdReportCreateRequest');
   });
 
+  test('given a household report then its request can add the variables the household lacks', () => {
+    expect(Object.keys(schemas.HouseholdReportCreateRequest?.properties ?? {})).toContain(
+      'add_missing_variables'
+    );
+  });
+
   test('given a household calculation then its request takes axes and add_missing_variables', () => {
     expect(Object.keys(schemas.HouseholdCalculationRequest?.properties ?? {})).toEqual(
       expect.arrayContaining(['household_id', 'policy_id', 'axes', 'add_missing_variables'])

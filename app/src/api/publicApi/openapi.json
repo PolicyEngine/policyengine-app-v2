@@ -4777,7 +4777,7 @@
             }
           },
           "404": {
-            "description": "No report has this ID or v1 number in this country.",
+            "description": "No economy report has this ID in this country. A household report does not list its runs; its newest run is in the report itself.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9359,7 +9359,7 @@
         "additionalProperties": false,
         "type": "object",
         "title": "EconomyReportRunRequest",
-        "description": "A re-run on the current catalog version; ``{}`` reuses existing runs.\n\nWith ``force``, both simulations are calculated again as new attempts."
+        "description": "A re-run of an economy or household report on the current catalog version.\n\n``{}`` reuses existing runs: an economy report's simulation runs for that\nversion and year, or a household report's calculations that are\nunfinished or succeeded within the last 28 days. With ``force``, each of\nthe report's simulations (one for a household report of the baseline\nalone) is calculated again as a new attempt."
       },
       "FiniteJsonValue": {
         "anyOf": [
@@ -10307,6 +10307,11 @@
               }
             ]
           },
+          "add_missing_variables": {
+            "type": "boolean",
+            "title": "Add Missing Variables",
+            "default": false
+          },
           "country_id": {
             "type": "string",
             "enum": [
@@ -10326,7 +10331,7 @@
           "country_id"
         ],
         "title": "HouseholdReportCreateRequest",
-        "description": "A new household report; ``country_id`` must match the query's.\n\n``baseline`` and ``reform`` each name a v2 policy of the country, and an\nempty object means current law; ``reform`` is null for a report of the\nbaseline alone. It is calculated for the household's ``default_year``."
+        "description": "A new household report; ``country_id`` must match the query's.\n\n``baseline`` and ``reform`` each name a v2 policy of the country, and an\nempty object means current law; ``reform`` is null for a report of the\nbaseline alone. It is calculated for the household's ``default_year``;\nwith ``add_missing_variables``, each calculation also adds every variable\nthe household lacks, as ``/calculate-full`` does."
       },
       "HouseholdReportItem": {
         "properties": {
