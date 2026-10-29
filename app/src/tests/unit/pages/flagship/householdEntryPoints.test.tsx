@@ -6,11 +6,12 @@ import PopulationPicker from '@/components/flagship/reform/PopulationPicker';
 import * as householdEntryPoints from '@/pages/flagship/householdEntryPoints';
 
 /**
- * v3's standalone household report and saved households work only on the
- * Public API's v2 routes, so until v3 moves to them nothing a user can
- * reach leads there. These checks keep it so: the change that moves v3
- * changes them on purpose. (A report whose simulations are households
- * still shows "This report cannot open here": see ReportLoadStates.test.tsx.)
+ * v3's standalone household report, saved household reports and saved
+ * households work only on the Public API's v2 routes, so until v3 moves to
+ * them nothing a user can reach leads there. These checks keep it so: the
+ * change that moves v3 changes them on purpose. (A report whose
+ * simulations are households still shows "This report cannot open here":
+ * see ReportLoadStates.test.tsx.)
  */
 
 /** app/src, whether the tests run from the app's directory or the repository's. */
@@ -29,14 +30,17 @@ const CALCULATOR_SOURCE = resolve(APP_SOURCE, '../../calculator-app/src');
 const UNROUTED_MODULES = [
   '@/pages/flagship/householdEntryPoints',
   '@/pages/flagship/HouseholdReport.page',
+  '@/pages/flagship/SavedHouseholdReport.page',
   '@/pages/flagship/SavedHouseholds.page',
   '@/components/flagship/household/SaveHouseholdForm',
+  '@/components/flagship/household/SaveHouseholdReportForm',
   '@/components/flagship/household/SavedHouseholdPicker',
   '@/components/flagship/household/SavedHouseholdsList',
   '@/components/flagship/household/savedHouseholdDisplay',
   '@/components/flagship/household/HouseholdNetIncomeResult',
   '@/hooks/useSavedHouseholds',
   '@/api/savedHouseholdStore',
+  '@/api/v2HouseholdReports',
 ];
 
 function sourceFiles(directory: string): string[] {
@@ -117,11 +121,12 @@ describe('household entry points before v3 moves to the v2 routes', () => {
     expect(importsAHouseholdModule(routedPage, source)).toBe(true);
   });
 
-  test('given the entry points then the report, the saved households page, the picker and the save form are gathered there', () => {
+  test('given the entry points then the reports, the saved households page, the picker and the save form are gathered there', () => {
     expect(Object.keys(householdEntryPoints).sort()).toEqual([
       'HouseholdReportPage',
       'SaveHouseholdForm',
       'SavedHouseholdPicker',
+      'SavedHouseholdReportPage',
       'SavedHouseholdsPage',
     ]);
   });

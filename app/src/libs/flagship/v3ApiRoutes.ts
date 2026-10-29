@@ -3,15 +3,19 @@ import type { MetadataRoutes } from '@/types/metadata';
 /**
  * Which Public API routes the v3 workspace uses.
  *
- * - 'v1': `GET /{country}/metadata` for the whole model at start, and saved
+ * - 'v1': `GET /{country}/metadata` for the whole model at start, saved
  *   reforms as `/v2/user-policies` rows pointing at v1 policies
- *   (`POST /{country}/policy`, `legacy_policy_id`).
- * - 'v2': only the small `/v2/model-catalog` at start; parameters, the
- *   parameter tree and search load on demand from the v2 catalog routes,
- *   and every variable of the catalog version loads once in the background
- *   (`/v2/model-catalog/variables`) for the household builder and
- *   breakdown; saved reforms are `/v2/user-policies` rows pointing at
- *   `/v2/policies` (`policy_id`).
+ *   (`POST /{country}/policy`, `legacy_policy_id`), and households
+ *   calculated through v1's household routes.
+ * - 'v2': only the small `/v2/model-catalog` at start (with the US SPM
+ *   settings it offers); parameters, the parameter tree and search load on
+ *   demand from the v2 catalog routes, and every variable of the catalog
+ *   version loads once in the background (`/v2/model-catalog/variables`)
+ *   for the household builder and breakdown; saved reforms are
+ *   `/v2/user-policies` rows pointing at `/v2/policies` (`policy_id`);
+ *   households are stored on `/v2/households` and calculated through
+ *   `/v2/household-calculations`, and a household report can be saved as
+ *   a household report on `/v2/reports`.
  *
  * This constant is the only place v3 chooses. It is not a runtime flag or an
  * environment variable, so every build behaves the same. It stays 'v1' until
