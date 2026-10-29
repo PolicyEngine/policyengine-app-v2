@@ -11,7 +11,7 @@ Key findings for 2039-40, the first of the two years DWP costs (UK, cash terms):
 - The saving depends on how often inflation or 2.5% exceeds earnings growth after 2030. On the OBR's central path, earnings growth comes out highest every year from April 2032, and the adjusted Triple Lock saves £0.5 billion. If the Triple Lock instead raises the pension 0.6 percentage points a year faster than earnings, as the OBR assumes in its long-term projections, it saves £10.8 billion.
 - After the lower pension reduces income tax and raises means-tested benefits, the two savings are £0.3 billion and £7.3 billion.
 - For Great Britain, the area DWP covers, our two figures are £0.5 billion and £10.5 billion, against DWP's £15 billion. Our data count 2% less State Pension in payment than DWP does, and DWP does not publish the path of prices and earnings behind its estimate.
-- Under the OBR's long-term assumption, the full new State Pension is £829 a year lower than under the Triple Lock, and 30% of UK households have less income: nearly nine in ten of the households with someone over State Pension age.
+- Under the OBR's long-term assumption, the full new State Pension is £829 a year lower than under the Triple Lock, and 30% of UK households have less income.
 - Had the adjusted Triple Lock started in April 2017, the full new State Pension would be £642 a year lower in 2026-27, 5.1% below the amount paid.
 
 [Explore the dashboard](https://www.policyengine.org/uk/triple-lock) | [Read the code](https://github.com/PolicyEngine/uk-triple-lock)
@@ -194,7 +194,7 @@ The OBR gives no figure for 2039-40. Instead, it replays both rules on prices an
 
 ## Who has less income
 
-Under the OBR's long-term assumption in 2039-40, 30% of UK households have less income than under the Triple Lock, by £795 a year on average. Households with someone over State Pension age make up 34% of all households, so nearly nine in ten of them lose. Households with nobody over State Pension age see no change. Pensioner couples have £1,062 a year less on average, 1.3% of their income, and single pensioners £387 less, 0.8%. By income decile, households in the third decile lose the largest share of their income, 0.6%. Fewer than 1 in 300 households have more income. On the OBR's central path, 30% of households also lose, by £35 a year on average.
+Under the OBR's long-term assumption in 2039-40, 30% of UK households have less income than under the Triple Lock, by £795 a year on average. Households with someone over State Pension age make up 34% of all households, and those with nobody over State Pension age see no change on average. Pensioner couples have £1,062 a year less on average, 1.3% of their income, and single pensioners £387 less, 0.8%. By income decile, households in the third decile lose the largest share of their income, 0.6%. Fewer than 1 in 300 households have more income. On the OBR's central path, 30% of households also lose, by £35 a year on average.
 
 ```chart
 {
