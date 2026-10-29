@@ -16,7 +16,8 @@ import { RootState } from '@/store';
 /**
  * Runs the flagship report pipeline for a set of provisions and
  * navigates to the report page, exposing pending/error state for the
- * triggering button.
+ * triggering button. A run answers the report's link, or null when it
+ * did not start.
  */
 export function useRunFlagshipReport() {
   const nav = useAppNavigate();
@@ -49,6 +50,7 @@ export function useRunFlagshipReport() {
       region,
       windowYears,
       baseline,
+      savedReportId,
     }: {
       /** A run from the draft hands the draft over: its report clears it. */
       fromDraft?: boolean;
@@ -58,14 +60,16 @@ export function useRunFlagshipReport() {
       windowYears?: number;
       /** A saved reform to compare with; current law when unset. */
       baseline?: RunReportBaseline;
+      /** A saved report to move onto this run, instead of saving a new one. */
+      savedReportId?: string;
     } = {}
-  ) => {
+  ): Promise<string | null> => {
     if (isRunning) {
-      return;
+      return null;
     }
     if (!currentLawId) {
       setError('Model metadata is still loading — try again in a moment.');
-      return;
+      return null;
     }
     setIsRunning(true);
     setError(null);
@@ -85,6 +89,7 @@ export function useRunFlagshipReport() {
         // With accounts, the run's record goes through the API (the account,
         // or this browser's unauthenticated user); otherwise this browser's.
         accountReportStore: reportStore.isAccount ? reportStore.store : null,
+        savedReportId,
       });
       if (fromDraft) {
         markDraftRun(userReportId);
@@ -92,10 +97,20 @@ export function useRunFlagshipReport() {
       // Your reforms lists the new report at once, not when its cache goes stale.
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.all });
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.statuses });
+      if (savedReportId) {
+        // The saved report now points at this run: its page, which may be
+        // the one open, reads the record again. It keeps its link, so the
+        // page may stay mounted, and its next run must not wait on this one.
+        void queryClient.invalidateQueries({ queryKey: ['shared-report'] });
+        void queryClient.invalidateQueries({ queryKey: ['flagship-report-record'] });
+        setIsRunning(false);
+      }
       nav.push(`/${countryId}/report/${userReportId}`);
+      return userReportId;
     } catch {
       setError('Could not start the report. Try again.');
       setIsRunning(false);
+      return null;
     }
   };
 

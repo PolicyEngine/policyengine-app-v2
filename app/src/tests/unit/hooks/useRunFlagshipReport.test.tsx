@@ -129,6 +129,64 @@ describe('useRunFlagshipReport', () => {
     });
   });
 
+  describe('a saved report moved onto the run', () => {
+    /** The saved report's row: the link it keeps. */
+    const SAVED_REPORT_ROW_ID = '44444444-4444-4444-8444-444444444444';
+
+    test('given a saved report then the run repoints it and answers its link', async () => {
+      // Given
+      mockRunFlagshipReport.mockResolvedValue(SAVED_REPORT_ROW_ID);
+      const push = vi.fn();
+      const { result } = renderRunWithAuth(signedInAuthValue(), push);
+
+      // When
+      let link: string | null = null;
+      await act(async () => {
+        link = await result.current.run(
+          'CTC expansion',
+          'Hand-built draft',
+          PROVISIONS,
+          null,
+          2026,
+          {
+            savedReportId: SAVED_REPORT_ROW_ID,
+          }
+        );
+      });
+
+      // Then: the page it may already be on can run again
+      expect(runArguments().savedReportId).toBe(SAVED_REPORT_ROW_ID);
+      expect(link).toBe(SAVED_REPORT_ROW_ID);
+      expect(push).toHaveBeenCalledWith(`/us/report/${SAVED_REPORT_ROW_ID}`);
+      expect(result.current.isRunning).toBe(false);
+    });
+
+    test('given the run fails then it answers no link', async () => {
+      // Given
+      mockRunFlagshipReport.mockRejectedValue(new Error('Saved work is temporarily unavailable.'));
+      const { result } = renderRunWithAuth(signedInAuthValue());
+
+      // When
+      let link: string | null = 'unset';
+      await act(async () => {
+        link = await result.current.run(
+          'CTC expansion',
+          'Hand-built draft',
+          PROVISIONS,
+          null,
+          2026,
+          {
+            savedReportId: SAVED_REPORT_ROW_ID,
+          }
+        );
+      });
+
+      // Then
+      expect(link).toBeNull();
+      expect(result.current.error).toBe('Could not start the report. Try again.');
+    });
+  });
+
   describe('Your reforms after a run', () => {
     /** Your reforms' list of reports, as fresh for five minutes as the app keeps it. */
     function ReportsList() {

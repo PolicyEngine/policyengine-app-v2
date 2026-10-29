@@ -227,6 +227,12 @@ export interface RunFlagshipReportArgs {
   accountReportStore?: FlagshipReportStore | null;
   /** The model's parameters, to check and type each value as v2 does. */
   parameters?: ParameterMetadataCollection;
+  /**
+   * A saved report this run replaces: its record is repointed at the new
+   * v1 report, with the provisions run, instead of a new record saved.
+   * An account record keeps its ID, so its link opens the new results.
+   */
+  savedReportId?: string;
 }
 
 /**
@@ -308,6 +314,7 @@ export async function runFlagshipReport({
   baseline: requestedBaseline,
   accountReportStore,
   parameters,
+  savedReportId,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -379,11 +386,19 @@ export async function runFlagshipReport({
     baselineReformId: comparison?.reformId ?? null,
   };
 
+  // A saved report moved onto this run keeps its record and its links.
+  const repointed = { apiReportId: reportId, provisions, year: String(year) };
   let link = reportId;
   if (accountReportStore) {
     // A failure fails the run, so a report that opens is one that was saved.
-    link = (await accountReportStore.create(record)).id;
+    link = savedReportId
+      ? (await accountReportStore.update(savedReportId, repointed)).id
+      : (await accountReportStore.create(record)).id;
     rememberAccountReportMeta(link, meta);
+  } else if (savedReportId) {
+    // The saved report must move, or it would still point at the old run.
+    await new LocalStorageFlagshipReportStore().update(savedReportId, repointed);
+    saveReportMeta(reportId, meta);
   } else {
     saveReportMeta(reportId, meta);
     // Best-effort: the run already succeeded, and the link opens without it.
