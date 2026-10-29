@@ -25,7 +25,7 @@ _[Use PolicyEngine's Autumn Budget 2026 dashboard](https://www.policyengine.org/
 
 Sources: [Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html), paragraphs 3.4 to 3.6 and 6.24, and the OBR's [Economic and fiscal outlook, October 2026](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), detailed forecast table 1.1, measures 1 and 2.
 
-Before the Budget, the Government had reduced VAT on household electricity to 0% from 1 October 2026 to 31 March 2027 ([SI 2026/987](https://www.legislation.gov.uk/uksi/2026/987/made)). Consistent with the official costing, we treat the entire period from 1 October 2026 to 1 July 2027 as a Budget measure and compare both measures against a baseline in which VAT on household electricity remains at 5%.
+Prior to the Budget, the Government had reduced VAT on household electricity to 0% from 1 October 2026 to 31 March 2027 ([SI 2026/987](https://www.legislation.gov.uk/uksi/2026/987/made)). Consistent with the official costing, we treat the entire period from 1 October 2026 to 1 July 2027 as a Budget measure and compare both measures against a baseline in which VAT on household electricity remains at 5%.
 
 This analysis does not model three related funding allocations:
 
