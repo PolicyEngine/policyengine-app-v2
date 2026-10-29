@@ -1,8 +1,28 @@
 import { SimulationAdapter } from '@/adapters/SimulationAdapter';
 import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
+import { canonicalRegionCode } from '@/models/region';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/payloads';
+
+/**
+ * A geography simulation's population is a region code: the code the app
+ * uses for it, so a simulation saved for "country/ni" reads, and is sent,
+ * as "country/northern_ireland". A household's ID is kept as it is.
+ */
+function withCanonicalPopulationId<
+  SimulationRecord extends Pick<SimulationCreationPayload, 'population_id' | 'population_type'>,
+>(simulation: SimulationRecord): SimulationRecord {
+  if (
+    !simulation ||
+    simulation.population_type !== 'geography' ||
+    typeof simulation.population_id !== 'string'
+  ) {
+    return simulation;
+  }
+
+  return { ...simulation, population_id: canonicalRegionCode(simulation.population_id) };
+}
 
 export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
@@ -35,7 +55,7 @@ export async function fetchSimulationById(
     throw new Error(json.message || `Failed to fetch simulation ${simulationId}`);
   }
 
-  return json.result;
+  return withCanonicalPopulationId(json.result);
 }
 
 export async function createSimulation(
@@ -50,7 +70,7 @@ export async function createSimulation(
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(withCanonicalPopulationId(data)),
   });
 
   if (!response.ok) {
@@ -110,7 +130,7 @@ export async function updateSimulationOutput(
     throw new Error(json.message || `Failed to update simulation ${simulationId}`);
   }
 
-  return json.result;
+  return withCanonicalPopulationId(json.result);
 }
 
 /**
@@ -164,5 +184,5 @@ export async function markSimulationError(
     throw new Error(json.message || `Failed to mark simulation ${simulationId} as error`);
   }
 
-  return json.result;
+  return withCanonicalPopulationId(json.result);
 }

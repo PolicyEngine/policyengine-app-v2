@@ -4,6 +4,10 @@
 
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import type { SavedGeographySelection } from '@/models/geography';
+import {
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_LABEL,
+} from '@/tests/fixtures/models/regionMocks';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
@@ -196,4 +200,32 @@ export const createUserReportWithoutReportId = (): UserReport =>
 export const UNICODE_SHARE_DATA: ReportIngredientsInput = {
   ...VALID_SHARE_DATA,
   userReport: { ...VALID_SHARE_DATA.userReport, label: 'Family — £75,000 · 家庭 🏠' },
+};
+
+// ============================================================================
+// A UK report on Northern Ireland, shared while the Public API listed it as "country/ni"
+// ============================================================================
+
+export const LEGACY_NORTHERN_IRELAND_SHARE_DATA: ReportIngredientsInput = {
+  userReport: {
+    id: TEST_USER_REPORT_IDS.TEST,
+    reportId: TEST_BASE_REPORT_IDS.TEST,
+    countryId: TEST_COUNTRIES.UK,
+    label: 'Northern Ireland report',
+  },
+  userSimulations: [
+    { simulationId: 'sim-4', countryId: TEST_COUNTRIES.UK, label: 'Baseline' },
+    { simulationId: 'sim-5', countryId: TEST_COUNTRIES.UK, label: 'Reform' },
+  ],
+  userPolicies: [{ policyId: 'policy-4', countryId: TEST_COUNTRIES.UK, label: 'My Policy' }],
+  userHouseholds: [],
+  userGeographies: [
+    {
+      id: 'uk-ni',
+      geographyId: LEGACY_NORTHERN_IRELAND_REGION_CODE,
+      countryId: TEST_COUNTRIES.UK,
+      scope: 'subnational',
+      label: NORTHERN_IRELAND_LABEL,
+    },
+  ],
 };

@@ -40,7 +40,38 @@ const US_DISTRICT_CODE_RE = /^[a-z]{2}-\d{1,2}$/i;
 const US_LEGACY_STATE_CODE_RE = /^us-([a-z]{2})$/i;
 const US_LEGACY_DISTRICT_CODE_RE = /^us-([a-z]{2}-\d{1,2})$/i;
 const UK_LEGACY_COUNTRY_CODE_RE = /^uk-(.+)$/i;
-const UK_COUNTRY_CODES = new Set(['england', 'scotland', 'wales', 'ni', 'northern_ireland']);
+const UK_COUNTRY_PREFIX = 'country/';
+const UK_COUNTRY_CODES = new Set(['england', 'scotland', 'wales', 'northern_ireland']);
+
+/** Northern Ireland's region code, as the UK region registry in policyengine.py names it. */
+const NORTHERN_IRELAND_REGION_CODE: RegionCode = 'country/northern_ireland';
+
+/**
+ * Region codes the app no longer uses, each with the code that replaces
+ * it. The Public API's metadata listed Northern Ireland as "country/ni",
+ * so saved simulations, shared links, saved geographies and stored drafts
+ * from that time can still carry it, and the Public API will refuse it.
+ */
+const REPLACED_REGION_CODES: Record<string, RegionCode> = {
+  'country/ni': NORTHERN_IRELAND_REGION_CODE,
+};
+
+/**
+ * The code the app uses for a region: a replaced code (in any case, with
+ * any surrounding spaces) becomes its replacement, and any other code is
+ * returned as given. Every place a region code enters the app, or leaves
+ * it for the Public API, passes it through here.
+ */
+export function canonicalRegionCode(regionCode: string): RegionCode {
+  return REPLACED_REGION_CODES[regionCode.trim().toLowerCase()] ?? regionCode;
+}
+
+/** "country/wales" for a bare UK country code ("wales", "ni"); null when it names no UK country. */
+function ukCountryRegionCode(countryCode: string): RegionCode | null {
+  const regionCode = canonicalRegionCode(`${UK_COUNTRY_PREFIX}${countryCode}`);
+  return UK_COUNTRY_CODES.has(regionCode.slice(UK_COUNTRY_PREFIX.length)) ? regionCode : null;
+}
+
 function buildMetadataRegionId(countryId: CountryId, regionName: string): string {
   return `metadata:${countryId}:${regionName}`;
 }
@@ -184,20 +215,22 @@ export function normalizeRegionCode(countryId: CountryId, regionCode: string): R
   }
 
   if (trimmedCode.includes('/')) {
-    return trimmedCode;
+    return canonicalRegionCode(trimmedCode);
   }
 
   if (countryId === 'uk') {
-    const normalizedCode = trimmedCode.toLowerCase().replace(/\s+/g, '_');
-    if (UK_COUNTRY_CODES.has(normalizedCode)) {
-      return `country/${normalizedCode}`;
+    const countryRegionCode = ukCountryRegionCode(trimmedCode.toLowerCase().replace(/\s+/g, '_'));
+    if (countryRegionCode) {
+      return countryRegionCode;
     }
 
     const legacyCountryMatch = trimmedCode.match(UK_LEGACY_COUNTRY_CODE_RE);
     if (legacyCountryMatch) {
-      const normalizedLegacyCode = legacyCountryMatch[1].toLowerCase().replace(/[-\s]+/g, '_');
-      if (UK_COUNTRY_CODES.has(normalizedLegacyCode)) {
-        return `country/${normalizedLegacyCode}`;
+      const legacyCountryRegionCode = ukCountryRegionCode(
+        legacyCountryMatch[1].toLowerCase().replace(/[-\s]+/g, '_')
+      );
+      if (legacyCountryRegionCode) {
+        return legacyCountryRegionCode;
       }
     }
   }
@@ -235,11 +268,11 @@ export function getRegionCodeCandidates(regionCode: string): RegionCode[] {
 
   if (!trimmedCode.includes('/')) {
     candidates.add(`state/${trimmedCode.toLowerCase()}`);
-    candidates.add(`country/${trimmedCode.toLowerCase()}`);
+    candidates.add(`${UK_COUNTRY_PREFIX}${trimmedCode.toLowerCase()}`);
     candidates.add(`constituency/${trimmedCode}`);
     candidates.add(`local_authority/${trimmedCode}`);
     candidates.add(`congressional_district/${trimmedCode.toUpperCase()}`);
   }
 
-  return [...candidates];
+  return [...new Set([...candidates].map(canonicalRegionCode))];
 }

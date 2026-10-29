@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { NORTHERN_IRELAND_REGION_CODE } from '@/tests/fixtures/models/regionMocks';
 import {
   createInvalidShareDataBadCountryId,
   createInvalidShareDataBadGeographyScope,
@@ -8,6 +9,7 @@ import {
   createShareDataWithoutId,
   createUserReportWithoutId,
   createUserReportWithoutReportId,
+  LEGACY_NORTHERN_IRELAND_SHARE_DATA,
   MOCK_USER_GEOGRAPHIES,
   MOCK_USER_HOUSEHOLDS,
   MOCK_USER_POLICIES,
@@ -319,5 +321,36 @@ describe('shareUtils', () => {
       // Then
       expect(result).toBe(TEST_BASE_REPORT_IDS.SOCIETY_WIDE);
     });
+  });
+});
+
+describe('shareUtils Northern Ireland region', () => {
+  test('given a link shared for country/ni then decoding it reads country/northern_ireland', () => {
+    // Given
+    const encoded = encodeShareData(LEGACY_NORTHERN_IRELAND_SHARE_DATA);
+
+    // When
+    const decoded = decodeShareData(encoded);
+
+    // Then
+    expect(decoded?.userGeographies).toEqual([
+      {
+        ...LEGACY_NORTHERN_IRELAND_SHARE_DATA.userGeographies[0],
+        geographyId: NORTHERN_IRELAND_REGION_CODE,
+      },
+    ]);
+  });
+
+  test('given a URL shared for country/ni then the share data reads country/northern_ireland', () => {
+    // Given
+    const searchParams = new URLSearchParams({
+      share: encodeShareData(LEGACY_NORTHERN_IRELAND_SHARE_DATA),
+    });
+
+    // When
+    const shareData = extractShareDataFromUrl(searchParams);
+
+    // Then
+    expect(shareData?.userGeographies[0].geographyId).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 });
