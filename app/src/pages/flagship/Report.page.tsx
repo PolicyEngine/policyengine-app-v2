@@ -600,7 +600,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       )
     ) : undefined;
 
-  return (
+  const reportView = (
     <ReportView
       title={title}
       heading={coverTitle}
@@ -616,7 +616,6 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
               Its stored results are shown as they were calculated.
             </MissingParametersNotice>
           )}
-          {transferDialog}
           {!meta && metadata.status === 'error' && (
             <LeadError>
               <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
@@ -687,5 +686,15 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       calibrationPin={pin}
       trackRecord={trackRecord}
     />
+  );
+  // Beside the report, not in one of its sections: it opens on whichever
+  // section the link names.
+  return transferDialog ? (
+    <>
+      {transferDialog}
+      {reportView}
+    </>
+  ) : (
+    reportView
   );
 }
