@@ -48,8 +48,11 @@ const PROVISIONS: RunReportProvision[] = [
 /** The scope a session with sign-in off keeps its saved work under. */
 const BROWSER_SCOPE = 'browser';
 
-function renderRunWithAuth(auth: AuthContextValue, push = vi.fn()) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderRunWithAuth(
+  auth: AuthContextValue,
+  push = vi.fn(),
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+) {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <ReduxProvider store={store}>
@@ -159,6 +162,28 @@ describe('useRunFlagshipReport', () => {
       expect(link).toBe(SAVED_REPORT_ROW_ID);
       expect(push).toHaveBeenCalledWith(`/us/report/${SAVED_REPORT_ROW_ID}`);
       expect(result.current.isRunning).toBe(false);
+    });
+
+    test("given a saved report moved onto the run then its page's cached record and shared report are dropped", async () => {
+      // Given: its report page was open earlier, so their old run is cached
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      const sharedReportKey = ['shared-report', 'us', SAVED_REPORT_ROW_ID];
+      const recordKey = ['flagship-report-record', 'account:owner', SAVED_REPORT_ROW_ID];
+      queryClient.setQueryData(sharedReportKey, { record: { apiReportId: '55' } });
+      queryClient.setQueryData(recordKey, { id: SAVED_REPORT_ROW_ID, apiReportId: '55' });
+      mockRunFlagshipReport.mockResolvedValue(SAVED_REPORT_ROW_ID);
+      const { result } = renderRunWithAuth(signedInAuthValue(), vi.fn(), queryClient);
+
+      // When
+      await act(async () => {
+        await result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS, null, 2026, {
+          savedReportId: SAVED_REPORT_ROW_ID,
+        });
+      });
+
+      // Then: the page it opens reads the saved report afresh, not the old run
+      expect(queryClient.getQueryData(sharedReportKey)).toBeUndefined();
+      expect(queryClient.getQueryData(recordKey)).toBeUndefined();
     });
 
     test('given the run fails then it answers no link', async () => {

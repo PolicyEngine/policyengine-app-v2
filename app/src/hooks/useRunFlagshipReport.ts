@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
+import { savedReportQueryKeys, useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import { markDraftRun } from '@/libs/draftReform';
 import {
   flagshipReportQueryKeys,
@@ -98,11 +98,13 @@ export function useRunFlagshipReport() {
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.all });
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.statuses });
       if (savedReportId) {
-        // The saved report now points at this run: its page, which may be
-        // the one open, reads the record again. It keeps its link, so the
-        // page may stay mounted, and its next run must not wait on this one.
-        void queryClient.invalidateQueries({ queryKey: ['shared-report'] });
-        void queryClient.invalidateQueries({ queryKey: ['flagship-report-record'] });
+        // The saved report now points at this run. Its page, open now or
+        // cached from earlier, reads it afresh rather than show the old run
+        // (and offer its transfer again) until a refetch returns. It keeps
+        // its link, so the page may stay mounted, and its next run must not
+        // wait on this one.
+        void queryClient.resetQueries({ queryKey: savedReportQueryKeys.shared });
+        void queryClient.resetQueries({ queryKey: savedReportQueryKeys.record });
         setIsRunning(false);
       }
       nav.push(`/${countryId}/report/${userReportId}`);
