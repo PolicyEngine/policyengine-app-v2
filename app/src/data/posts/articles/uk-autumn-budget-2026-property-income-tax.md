@@ -10,7 +10,7 @@ Key figures:
 
 The 2027–28 and 2028–29 figures use different collection-timing bases and are not directly comparable. From 2029–30, PolicyEngine's estimate exceeds the costing's income tax line by 9% to 11%; see the [budgetary impact section](#budgetary-impact).
 
-Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for the Budget measures we model. A [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance) covers the trading allowance increase. The Budget also raises savings income tax rates; we will cover that measure separately.
+Our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/autumn-budget-2026) is where we publish estimates for the Budget measures we model. A [separate explainer](/uk/research/uk-autumn-budget-2026-trading-allowance) covers the trading allowance increase. The Budget also raises savings income tax rates, which this post doesn't cover.
 
 ## What changes in April 2027?
 
@@ -76,7 +76,7 @@ Positive values are additional revenue. PolicyEngine measures the change in gove
 
 The [ONS public-finance methodology, section 6.1.2](https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/methodologies/monthlystatisticsonthepublicsectorfinancesamethodologicalguide) records Self Assessment income tax using cash receipts, without shifting them back to the year the income arose. This can produce a small first-year receipts effect followed by a catch-up. Comparing those first two years with same-year model liabilities requires a collection-timing adjustment; it does not by itself establish a difference in the tax base.
 
-The government's costing also allows for some landlords incorporating, as the [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) set out. PolicyEngine holds that choice fixed. We have not yet explained the later-year gap; differences in data, behaviour and accounting could each contribute.
+The government's costing also allows for some landlords incorporating, as the [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) set out. PolicyEngine holds that choice fixed. Our analysis doesn't explain the later-year gap; differences in data, behaviour and accounting could each contribute.
 
 ### Distribution
 
@@ -192,7 +192,7 @@ Income deciles rank people by their household's baseline equivalised net income 
 
 The calculations use the `policyengine` Python package (version 6.11.1), PolicyEngine UK (version 2.151.0) and PolicyEngine core (version 3.33.3).
 
-The household generator changes savings and property rates together against the already scheduled 2027–28 rules. The landlord examples in this article have no savings income, so the savings rate change has no effect on them: their tax differences isolate the property changes, including finance-cost relief. We checked the £6,000 property-only example separately. The baseline and reform household calculations both use the OBR’s October 2026 forecast update. Supplied 2027–28 income stays fixed; the forecast updates the model’s projected parameters. Independent arithmetic checks the tax calculations.
+The household generator changes savings and property rates together against the already scheduled 2027–28 rules. The landlord examples in this article have no savings income, so the savings rate change has no effect on them: their tax differences isolate the property changes, including finance-cost relief. The baseline and reform household calculations both use the OBR’s October 2026 forecast update. Supplied 2027–28 income stays fixed; the forecast updates the model’s projected parameters.
 
 The population run uses the certified Microcosm UK 2024–25 dataset (`a6299504`) and the detailed October forecast at dashboard commit `4de166f0`, applied to baseline and reform alike. It changes the property measure alone and includes the finance-cost-relief increase. Household net income and government revenue include interactions with the other taxes and benefits in the model. The decile averages are household-weighted means of unequivalised household net income changes; the income ranking uses person-weighted equivalised HBAI income before housing costs. We round monetary values only for presentation.
 
