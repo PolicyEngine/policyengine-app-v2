@@ -12,12 +12,17 @@ interface AppEntry {
   date?: string;
 }
 
+// Interactives that change every day, such as the bill tracker, which follows
+// bills as they move. The sitemap gives them a daily change frequency and no
+// date: their apps.json date is the day they launched.
+const DAILY_PAGES = new Set(["/us/bill-tracker"]);
+
 /**
  * The interactives this site serves from app zones (appZoneRoutes.ts): each
  * zone's page, and each apps.json app at a path a zone serves for every
  * country, such as /us/bill-tracker. An apps.json slug that now redirects to
- * another (next.config.ts) has no zone of its own, so it is left out. Each
- * carries its apps.json date, where apps.json lists it.
+ * another (next.config.ts) has no zone of its own, so the sitemap leaves it
+ * out. Each carries its apps.json date, where apps.json lists it.
  */
 function getAppZonePages(): { path: string; date?: string }[] {
   const sources = new Set(appZoneRewrites.map((route) => route.source));
@@ -92,10 +97,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   // Interactives
   for (const { path, date } of getAppZonePages()) {
+    const daily = DAILY_PAGES.has(path);
     entries.push({
       url: `${BASE_URL}${path}`,
-      ...(date && { lastModified: toPostIsoDate(date, "date") }),
-      changeFrequency: "weekly",
+      ...(date && !daily && { lastModified: toPostIsoDate(date, "date") }),
+      changeFrequency: daily ? "daily" : "weekly",
       priority: 0.8,
     });
   }
