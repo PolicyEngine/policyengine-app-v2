@@ -51,6 +51,7 @@ export function useRunFlagshipReport() {
       windowYears,
       baseline,
       savedReportId,
+      currentLink,
     }: {
       /** A run from the draft hands the draft over: its report clears it. */
       fromDraft?: boolean;
@@ -62,6 +63,8 @@ export function useRunFlagshipReport() {
       baseline?: RunReportBaseline;
       /** A saved report to move onto this run, instead of saving a new one. */
       savedReportId?: string;
+      /** The report link the page shows: a run that answers it stays on the page. */
+      currentLink?: string;
     } = {}
   ): Promise<string | null> => {
     if (isRunning) {
@@ -107,7 +110,11 @@ export function useRunFlagshipReport() {
         void queryClient.resetQueries({ queryKey: savedReportQueryKeys.record });
         setIsRunning(false);
       }
-      nav.push(`/${countryId}/report/${userReportId}`);
+      // Opened again, the page the run started from would add a second
+      // history entry for itself.
+      if (userReportId !== currentLink) {
+        nav.push(`/${countryId}/report/${userReportId}`);
+      }
       return userReportId;
     } catch {
       setError('Could not start the report. Try again.');

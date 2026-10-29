@@ -92,7 +92,10 @@ export const savedReportQueryKeys = {
 
 export interface FlagshipReportStoreSelection {
   store: FlagshipReportStore;
-  /** True when records go to the account (one `/v2/user-reports` row per run). */
+  /**
+   * True when records go to the account: one `/v2/user-reports` row per
+   * saved report, which a transfer repoints at its new run.
+   */
   isAccount: boolean;
   /** The session scope for cached records (see V3SavedWork). */
   scope: string;

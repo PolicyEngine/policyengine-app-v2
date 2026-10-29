@@ -365,6 +365,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       findReform={(reformId) => reformStore.findById(reformId)}
       title={reportRecord.title || title}
       sourceNote={reportRecord.sourceNote || meta?.sourceNote || ''}
+      currentLink={userReportId}
       // The saved report now points at the new run, which is not blocked.
       onTransferred={() => setTransferPutOffFor(userReportId)}
     />
