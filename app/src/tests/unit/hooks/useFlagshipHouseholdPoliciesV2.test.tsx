@@ -124,4 +124,57 @@ describe('useFlagshipHouseholdPolicies with v3 on the v2 routes, for v2 policies
     await waitFor(() => expect(result.current.policies).toHaveLength(2));
     expect(result.current.error).toBeNull();
   });
+
+  test('given two v2 policies and one cannot be read then the error names only that one', async () => {
+    // Given
+    const otherPolicyId = '5e5e5e5e-5e5e-4e5e-8e5e-5e5e5e5e5e5e';
+    stubPublicApiFetch({
+      [PARAMETERS_PATH]: answerParameters,
+      [REFORM_POLICY_PATH]: () => jsonResponse({ status: 'error', message: 'Unavailable' }, 503),
+      [`/v2/policies/${otherPolicyId}`]: () =>
+        okItem({ ...V2_REFORM_POLICY_ITEM, id: otherPolicyId }),
+    });
+    await seedV2ModelCatalog();
+
+    // When
+    const { result } = renderHook(
+      () =>
+        useFlagshipHouseholdPolicies({
+          countryId: 'us',
+          policyIds: [otherPolicyId, V2_REFORM_POLICY_ID],
+          enabled: true,
+        }),
+      { wrapper: v3Wrapper() }
+    );
+
+    // Then
+    await waitFor(() => expect(result.current.error).not.toBeNull());
+    expect(result.current.error?.message).toBe(`Could not load policy ${V2_REFORM_POLICY_ID}`);
+  });
+
+  test('given the parameters a v2 policy names fail to load then the error says so, naming the policy', async () => {
+    // Given
+    stubPublicApiFetch({
+      [PARAMETERS_PATH]: () => jsonResponse({ status: 'error', message: 'Unavailable' }, 503),
+      [REFORM_POLICY_PATH]: () => okItem(V2_REFORM_POLICY_ITEM),
+    });
+    await seedV2ModelCatalog();
+
+    // When
+    const { result } = renderHook(
+      () =>
+        useFlagshipHouseholdPolicies({
+          countryId: 'us',
+          policyIds: [V2_REFORM_POLICY_ID],
+          enabled: true,
+        }),
+      { wrapper: v3Wrapper() }
+    );
+
+    // Then
+    await waitFor(() => expect(result.current.error).not.toBeNull());
+    expect(result.current.error?.message).toBe(
+      `Could not load the parameters of policy ${V2_REFORM_POLICY_ID}`
+    );
+  });
 });

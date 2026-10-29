@@ -252,7 +252,8 @@ function combineStoredV2Policies(
 ) {
   return {
     data: results.map((result) => result.data),
-    failed: results.some((result) => !!result.error && !result.data),
+    /** Per policy: read and failed, with nothing to show. */
+    failed: results.map((result) => !!result.error && !result.data),
     refetchFailed: () =>
       Promise.all(results.filter((result) => result.error).map((result) => result.refetch())),
   };
@@ -298,15 +299,18 @@ function useStoredV2Policies(countryId: string, policyIds: string[], enabled: bo
       ),
     [stored.data, policyIds]
   );
+  const parametersFailed = parameterStatus.status === 'error';
   return {
     policies,
-    failed: stored.failed || parameterStatus.status === 'error',
+    /** The policies that could not be read. */
+    unreadPolicyIds: policyIds.filter((_, index) => stored.failed[index]),
+    /** The policies read whose parameters could not be loaded. */
+    parametersFailedPolicyIds: parametersFailed
+      ? policyIds.filter((_, index) => (stored.data[index]?.parameter_values.length ?? 0) > 0)
+      : [],
     waiting: parameterStatus.waiting && policies.length > 0,
     retry: () =>
-      Promise.all([
-        stored.refetchFailed(),
-        parameterStatus.status === 'error' ? parameterStatus.retry() : null,
-      ]),
+      Promise.all([stored.refetchFailed(), parametersFailed ? parameterStatus.retry() : null]),
   };
 }
 
@@ -329,11 +333,15 @@ function useV2HouseholdPolicies({
     () => [...results.policies, ...v2Policies.policies],
     [results.policies, v2Policies.policies]
   );
+  // Each failure names only the policies it concerns.
+  const unreadPolicyIds = [...results.failedPolicyIds, ...v2Policies.unreadPolicyIds];
   const error =
-    results.failedPolicyIds.length > 0
-      ? new Error(`Could not load policy ${results.failedPolicyIds.join(', ')}`)
-      : v2Policies.failed
-        ? new Error(`Could not load policy ${v2PolicyIds.join(', ')}`)
+    unreadPolicyIds.length > 0
+      ? new Error(`Could not load policy ${unreadPolicyIds.join(', ')}`)
+      : v2Policies.parametersFailedPolicyIds.length > 0
+        ? new Error(
+            `Could not load the parameters of policy ${v2Policies.parametersFailedPolicyIds.join(', ')}`
+          )
         : null;
   return {
     policies,
@@ -346,12 +354,16 @@ function useV2HouseholdPolicies({
 }
 
 /**
- * The report's policies in the app's model, for the v2 household
- * breakdowns that send a policy's parameters with their request (earnings
- * variation, marginal tax rates). Fetched as the report page fetches them,
- * under the same keys, so a policy the page already holds is not fetched
- * again. Nothing runs until `enabled`. The routes v3 uses (V3_API_ROUTES,
- * a constant) pick the implementation.
+ * A v3 household result's policies in the app's model. On the v1 routes
+ * the v2 household breakdowns send a policy's parameters with their
+ * variation request (earnings variation, marginal tax rates), and the
+ * standalone household report shows them (its Policy section and
+ * Reproduce in Python); on the v2 routes only the household report reads
+ * them, as the variation names each policy by its ID, and a v2 policy is
+ * read from `/v2/policies`. Fetched as the report page fetches them, under
+ * the same keys, so a policy already held is not fetched again. Nothing
+ * runs until `enabled`. The routes v3 uses (V3_API_ROUTES, a constant) pick
+ * the implementation.
  */
 export const useFlagshipHouseholdPolicies =
   V3_API_ROUTES === 'v2' ? useV2HouseholdPolicies : useV1HouseholdPolicies;
