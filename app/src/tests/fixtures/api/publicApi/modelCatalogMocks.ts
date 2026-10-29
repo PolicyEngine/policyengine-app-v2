@@ -32,6 +32,21 @@ function region(
 
 const CALIFORNIA = { code: 'CA', name: 'California' };
 
+/**
+ * A US catalog version's SPM settings, as `GET /v2/model-catalog` gives
+ * them: the settings a household's `spm` selection takes, and the
+ * certified selection for every field a household leaves out.
+ */
+export const US_SPM_AVAILABILITY: Schemas['MetadataSPMAvailability'] = {
+  available: true,
+  settings_schema: {
+    title: 'SPMSelection',
+    type: 'object',
+    properties: { geography_kind: { enum: ['county', 'national', 'metro'] } },
+  },
+  defaults: { geography_kind: 'national', scenario: 'ce_trend' },
+};
+
 /** A small US catalog version, as `GET /v2/model-catalog` returns it. */
 export const US_MODEL_CATALOG_RESULT: Schemas['MetadataModelCatalogResult'] = {
   policyengine_version: TEST_POLICYENGINE_VERSION,
@@ -87,6 +102,7 @@ export const US_MODEL_CATALOG_RESULT: Schemas['MetadataModelCatalogResult'] = {
     ],
     datasets: [{ name: 'populace_us_2024', label: 'Microcosm', default: true }],
   },
+  spm: US_SPM_AVAILABILITY,
 };
 
 export function modelCatalogEnvelope(
