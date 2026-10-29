@@ -35,11 +35,11 @@ This analysis does not model three related funding allocations:
 
 ## Household impacts
 
-Consider a household that consumes 2,500 kWh of electricity a year, [Ofgem's typical consumption value](https://www.ofgem.gov.uk/sites/default/files/2026-05/Review%20of%20typical%20domestic%20consumption%20values%20decision.pdf). At the prices in our energy bills dashboard, its annual electricity bill is £906 in 2026-27 and £952 in 2027-28, including £43 and £45 of VAT, respectively. Because the zero rate applies for only part of each year, we remove VAT from the share of annual electricity consumption that falls within those months: 56.7% in 2026-27 (October to March) and 22.3% in 2027-28 (April to June).[^1] The VAT cut therefore increases this household's net income by £24 in 2026-27 and £10 in 2027-28.[^2]
+Consider a household that consumes 2,500 kWh of electricity per year, [Ofgem's typical consumption value](https://www.ofgem.gov.uk/sites/default/files/2026-05/Review%20of%20typical%20domestic%20consumption%20values%20decision.pdf). At the prices in our energy bills dashboard, its annual electricity bill is £906 in 2026-27 and £952 in 2027-28, including £43 and £45 of VAT, respectively. Because the zero rate applies for only part of each year, we remove VAT from the share of annual electricity consumption that falls within those months: 56.7% in 2026-27 (October to March) and 22.3% in 2027-28 (April to June).[^1] The VAT cut therefore increases this household's net income by £24 in 2026-27 and £10 in 2027-28.[^2]
 
 If the household lives in a band A to D property in England, it also receives the £100 payment, for a total increase in net income of £135 across the two years. The same household gains £35 from the two measures in a band E to H property in England, or in Wales or Scotland, and £10 in Northern Ireland. Table 2 presents each case.
 
-**Table 2: Change in net income for a household consuming 2,500 kWh of electricity a year**
+**Table 2: Change in net income for a household consuming 2,500 kWh of electricity per year**
 
 | Location and council tax band | Payment, 2026-27 | VAT cut, 2026-27 | VAT cut, 2027-28 | Total |
 | ----------------------------- | ---------------- | ---------------- | ---------------- | ----- |
