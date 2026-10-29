@@ -161,17 +161,17 @@ const nextConfig: NextConfig = {
         destination: "/us/pe84",
         permanent: true,
       },
-      // The Autumn Budget 2026 dashboard's chosen address. The dashboard
-      // serves /uk/autumn-budget-2026 until its basePath moves (dashboard
-      // #212, after Budget day); then this pair is reversed.
+      // The Autumn Budget 2026 dashboard's former address. The dashboard
+      // serves /uk/budgets/autumn-2026 (its basePath since dashboard #212),
+      // so old links, tabs and data files follow it there.
       {
-        source: "/uk/budgets/autumn-2026",
-        destination: "/uk/autumn-budget-2026",
+        source: "/uk/autumn-budget-2026",
+        destination: "/uk/budgets/autumn-2026",
         permanent: false,
       },
       {
-        source: "/uk/budgets/autumn-2026/:path*",
-        destination: "/uk/autumn-budget-2026/:path*",
+        source: "/uk/autumn-budget-2026/:path*",
+        destination: "/uk/budgets/autumn-2026/:path*",
         permanent: false,
       },
       // Vanity redirects to the standalone PolicyBench site (external).

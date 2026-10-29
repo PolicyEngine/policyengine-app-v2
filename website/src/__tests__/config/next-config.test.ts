@@ -146,30 +146,45 @@ describe("nextConfig redirects", () => {
     expect(sources).toContain("/:countryId/model");
   });
 
-  test("sends /uk/budgets/autumn-2026 to the Autumn Budget 2026 dashboard, which is proxied", async () => {
+  test("proxies /uk/budgets/autumn-2026 to the Autumn Budget 2026 dashboard, at the same path", async () => {
+    // The dashboard's basePath is /uk/budgets/autumn-2026, so the public path
+    // and the proxied path must match, or its pages and assets 404.
+    const beforeFiles = await getBeforeFileRewrites();
+    expect(beforeFiles).toContainEqual({
+      source: "/uk/budgets/autumn-2026",
+      destination:
+        "https://uk-autumn-budget-2026.vercel.app/uk/budgets/autumn-2026",
+    });
+    expect(beforeFiles).toContainEqual({
+      source: "/uk/budgets/autumn-2026/:path*",
+      destination:
+        "https://uk-autumn-budget-2026.vercel.app/uk/budgets/autumn-2026/:path*",
+    });
+    expect(
+      beforeFiles.filter((rewrite) =>
+        rewrite.destination.includes("/uk/autumn-budget-2026"),
+      ),
+    ).toEqual([]);
+  });
+
+  test("sends the former /uk/autumn-budget-2026 address there in one redirect", async () => {
     const redirects = await getRedirects();
     expect(redirects).toContainEqual({
-      source: "/uk/budgets/autumn-2026",
-      destination: "/uk/autumn-budget-2026",
+      source: "/uk/autumn-budget-2026",
+      destination: "/uk/budgets/autumn-2026",
       permanent: false,
     });
     expect(redirects).toContainEqual({
-      source: "/uk/budgets/autumn-2026/:path*",
-      destination: "/uk/autumn-budget-2026/:path*",
+      source: "/uk/autumn-budget-2026/:path*",
+      destination: "/uk/budgets/autumn-2026/:path*",
       permanent: false,
     });
-
-    const rewrites = await nextConfig.rewrites!();
-    if (Array.isArray(rewrites)) {
-      throw new Error("Expected rewrites to be grouped by phase.");
-    }
-    const sources = [
-      ...(rewrites.beforeFiles ?? []),
-      ...(rewrites.afterFiles ?? []),
-      ...(rewrites.fallback ?? []),
-    ].map((rewrite) => rewrite.source);
-    expect(sources).toContain("/uk/autumn-budget-2026");
-    expect(sources).toContain("/uk/autumn-budget-2026/:path*");
+    // Nothing redirects away from the dashboard's own address, so no loop
+    expect(
+      redirects.filter((redirect) =>
+        redirect.source.startsWith("/uk/budgets/autumn-2026"),
+      ),
+    ).toEqual([]);
   });
 });
 
