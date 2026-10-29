@@ -10331,7 +10331,7 @@
           "country_id"
         ],
         "title": "HouseholdReportCreateRequest",
-        "description": "A new household report; ``country_id`` must match the query's.\n\n``baseline`` and ``reform`` each name a v2 policy of the country, and an\nempty object means current law; ``reform`` is null for a report of the\nbaseline alone. It is calculated for the household's ``default_year``;\nwith ``add_missing_variables``, each calculation also adds every variable\nthe household lacks, as ``/calculate-full`` does."
+        "description": "A new household report; ``country_id`` must match the query's.\n\n``baseline`` and ``reform`` each name a v2 policy of the country, and an\nempty object means current law; ``reform`` is null for a report of the\nbaseline alone. It is calculated for the household's ``default_year``;\nwith ``add_missing_variables``, each calculation also adds every yearly,\nmonthly and eternal variable the household lacks, as ``/calculate-full``\ndoes. A re-run keeps the choice made when the report was created."
       },
       "HouseholdReportItem": {
         "properties": {
