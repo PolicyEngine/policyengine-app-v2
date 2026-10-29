@@ -15,8 +15,12 @@ import {
   mockErrorResponse,
   mockFetchSimulationNotFoundResponse,
   mockFetchSimulationSuccessResponse,
+  mockHouseholdSimulationMetadataWithRegionLikeId,
+  mockLegacyNorthernIrelandSimulationMetadata,
+  mockLegacyNorthernIrelandSimulationPayload,
   mockMarkSimulationErrorSuccessResponse,
   mockNonJsonResponse,
+  mockNorthernIrelandSimulationMetadata,
   mockSimulationMetadata,
   mockSimulationMetadataError,
   mockSimulationMetadataWithOutput,
@@ -24,12 +28,14 @@ import {
   mockSimulationPayload,
   mockSimulationPayloadGeography,
   mockSimulationPayloadMinimal,
+  mockSimulationResponse,
   mockSuccessResponse,
   mockUpdateSimulationOutputErrorResponse,
   mockUpdateSimulationOutputSuccessResponse,
   SIMULATION_IDS,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/api/simulationMocks';
+import { NORTHERN_IRELAND_REGION_CODE } from '@/tests/fixtures/models/regionMocks';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -625,5 +631,90 @@ describe('markSimulationError', () => {
     await expect(markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)).rejects.toThrow(
       networkError
     );
+  });
+});
+
+describe('simulation Northern Ireland region', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('given a simulation saved for country/ni then fetching it reads country/northern_ireland', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      mockSuccessResponse(
+        mockSimulationResponse(mockLegacyNorthernIrelandSimulationMetadata)
+      ) as any
+    );
+
+    // When
+    const result = await fetchSimulationById(TEST_COUNTRIES.UK, SIMULATION_IDS.VALID);
+
+    // Then
+    expect(result).toEqual(mockNorthernIrelandSimulationMetadata);
+  });
+
+  test('given an updated simulation saved for country/ni then the update reads country/northern_ireland', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      mockSuccessResponse(
+        mockSimulationResponse(mockLegacyNorthernIrelandSimulationMetadata)
+      ) as any
+    );
+
+    // When
+    const result = await updateSimulationOutput(
+      TEST_COUNTRIES.UK,
+      SIMULATION_IDS.VALID,
+      mockSimulationOutput
+    );
+
+    // Then
+    expect(result.population_id).toBe(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  test('given a simulation marked as errored for country/ni then the result reads country/northern_ireland', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      mockSuccessResponse(
+        mockSimulationResponse(mockLegacyNorthernIrelandSimulationMetadata)
+      ) as any
+    );
+
+    // When
+    const result = await markSimulationError(TEST_COUNTRIES.UK, SIMULATION_IDS.VALID);
+
+    // Then
+    expect(result.population_id).toBe(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  test('given a household simulation then its household ID is kept as it is', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      mockSuccessResponse(
+        mockSimulationResponse(mockHouseholdSimulationMetadataWithRegionLikeId)
+      ) as any
+    );
+
+    // When
+    const result = await fetchSimulationById(TEST_COUNTRIES.UK, SIMULATION_IDS.VALID);
+
+    // Then
+    expect(result).toEqual(mockHouseholdSimulationMetadataWithRegionLikeId);
+  });
+
+  test('given a new simulation for country/ni then it is created for country/northern_ireland', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(
+      mockSuccessResponse(mockCreateSimulationSuccessResponse) as any
+    );
+
+    // When
+    await createSimulation(TEST_COUNTRIES.UK, mockLegacyNorthernIrelandSimulationPayload);
+
+    // Then
+    const sentBody = JSON.parse(String(mockFetch.mock.calls[0][1]?.body));
+    expect(sentBody.population_id).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 });

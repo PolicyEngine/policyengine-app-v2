@@ -6,7 +6,13 @@ import {
   getCountryDisplayName,
   getGeographyRegionTypeLabel,
 } from '@/models/geography';
-import type { RegionRecord } from '@/models/region';
+import { fromMetadataRegionEntry, type RegionRecord } from '@/models/region';
+import {
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_LABEL,
+  NORTHERN_IRELAND_REGION_CODE,
+  UK_METADATA_REGION_SPELLINGS,
+} from '@/tests/fixtures/models/regionMocks';
 
 const usRegions: RegionRecord[] = [
   {
@@ -100,5 +106,42 @@ describe('geography model helpers', () => {
   test('given an unsupported country display name then it falls back to upper-case', () => {
     expect(getCountryDisplayName('us')).toBe('United States');
     expect(getCountryDisplayName('ca')).toBe('Canada');
+  });
+});
+
+describe('geography model Northern Ireland region', () => {
+  test.each(UK_METADATA_REGION_SPELLINGS)(
+    'given a simulation saved for country/ni and metadata listing %s then the geography is country/northern_ireland',
+    (_spelling, metadataRegions) => {
+      // Given
+      const regions = metadataRegions.map((region) => fromMetadataRegionEntry('uk', region));
+
+      // When
+      const geography = buildCanonicalGeography({
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: LEGACY_NORTHERN_IRELAND_REGION_CODE,
+        regions,
+      });
+
+      // Then
+      expect(geography).toEqual({
+        id: NORTHERN_IRELAND_REGION_CODE,
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: NORTHERN_IRELAND_REGION_CODE,
+        name: NORTHERN_IRELAND_LABEL,
+      });
+    }
+  );
+
+  test('given a simulation saved for country/ni before metadata loads then the geography is country/northern_ireland', () => {
+    const geography = buildCanonicalGeography({
+      countryId: 'uk',
+      scope: 'subnational',
+      geographyId: LEGACY_NORTHERN_IRELAND_REGION_CODE,
+    });
+
+    expect(geography.geographyId).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 });
