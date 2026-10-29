@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import type { FlagshipReportRecord } from '@/api/flagshipReportStore';
@@ -16,8 +15,17 @@ import { rerunSettings } from '@/libs/flagship/reportRerun';
 import type { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
 
-export const REFORM_TRANSFER_FAILED = 'Could not transfer the reform. Try again.';
-export const REPORT_TRANSFER_FAILED = 'Could not transfer the report. Try again.';
+const REFORM_TRANSFER_FAILED = 'Could not transfer the reform. Try again.';
+const REPORT_TRANSFER_FAILED = 'Could not transfer the report. Try again.';
+
+/** Why a saved item was not transferred, as its dialog says it; the item is as it was. */
+export class TransferError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TransferError';
+  }
+}
+
 /** Why a report whose comparison would change nothing is not transferred. */
 function comparisonChangesNothing(missingParameters: string[]): string {
   const them = missingParameters.length === 1 ? 'this parameter' : 'these parameters';
@@ -34,16 +42,25 @@ function comparisonChangesNothing(missingParameters: string[]): string {
 export function useSavedReformTransfer() {
   const reformStore = useReformStore();
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (reform: Reform) =>
-      reformStore.update(reform.id!, {
-        parameters: parametersWithout(reform.parameters, reformMissingParameters(reform)),
-      }),
+  return useMutation<Reform, TransferError, Reform>({
+    mutationFn: async (reform) => {
+      try {
+        return await reformStore.update(reform.id!, {
+          parameters: parametersWithout(reform.parameters, reformMissingParameters(reform)),
+        });
+      } catch {
+        throw new TransferError(REFORM_TRANSFER_FAILED);
+      }
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reforms'] }),
   });
 }
 
-export interface SavedReportTransferOptions {
+/** A saved report to transfer, and what its new run is called. */
+export interface SavedReportTransfer {
+  report: FlagshipReportRecord;
+  /** The parameters its policies set that the model no longer has. */
+  missingParameters: string[];
   /** This session's saved reform by its ID, to name the reform the report is compared with. */
   findReform?: (reformId: string) => Reform | null | undefined | Promise<Reform | null | undefined>;
   /** The run's title and source note: the report's own, or what the caller names it by. */
@@ -57,7 +74,7 @@ export interface SavedReportTransferOptions {
  * the same year, population, budget window and comparison. The saved
  * report itself is repointed at the new run, so it keeps its ID, and an
  * account report its link, which then opens the new results. Its links to
- * saved reforms stay as they are.
+ * saved reforms stay as they are. Answers the report's link.
  */
 export function useSavedReportTransfer() {
   const countryId = useCurrentCountry();
@@ -66,62 +83,49 @@ export function useSavedReportTransfer() {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const currentLawPolicyId =
     Number(useSelector((state: RootState) => state.metadata.currentLawId)) || undefined;
-  const [transferring, setTransferring] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  /** Answers whether the run started; when it did not, the saved report is as it was. */
-  const transfer = async (
-    report: FlagshipReportRecord,
-    missingParameters: string[],
-    { findReform, title, sourceNote }: SavedReportTransferOptions
-  ): Promise<boolean> => {
-    setTransferring(true);
-    setError(null);
-    try {
-      // The saved reform it is compared with, which names the comparison;
-      // a lookup that fails leaves the comparison as its record has it.
-      const comparisonReform = report.baselineReformId
-        ? await Promise.resolve(findReform?.(report.baselineReformId)).catch(() => null)
-        : null;
-      const { year, baseline, ...runSettings } = await rerunSettings(countryId, report, {
-        savedReform: (reformId) =>
-          reformId === report.baselineReformId ? (comparisonReform ?? undefined) : undefined,
-        currentLawPolicyId,
-        // The saved report's run is replaced: its year and population must be the ones it ran.
-        requireRun: true,
-      });
-      const transferredBaseline = baseline
-        ? await baselineWithout(
-            baseline,
-            missingParameters,
-            (policyId) => readV1Policy(queryClient, countryId, policyId),
-            parameters
-          )
-        : undefined;
-      if (transferredBaseline === null) {
-        setError(comparisonChangesNothing(missingParameters));
-        return false;
+  return useMutation<string, TransferError, SavedReportTransfer>({
+    mutationFn: async ({ report, missingParameters, findReform, title, sourceNote }) => {
+      let link: string | null;
+      try {
+        // The saved reform it is compared with, which names the comparison;
+        // a lookup that fails leaves the comparison as its record has it.
+        const comparisonReform = report.baselineReformId
+          ? await Promise.resolve(findReform?.(report.baselineReformId)).catch(() => null)
+          : null;
+        const { year, baseline, ...runSettings } = await rerunSettings(countryId, report, {
+          savedReform: (reformId) =>
+            reformId === report.baselineReformId ? (comparisonReform ?? undefined) : undefined,
+          currentLawPolicyId,
+          // The saved report's run is replaced: its year and population must be the ones it ran.
+          requireRun: true,
+        });
+        const transferredBaseline = baseline
+          ? await baselineWithout(
+              baseline,
+              missingParameters,
+              (policyId) => readV1Policy(queryClient, countryId, policyId),
+              parameters
+            )
+          : undefined;
+        if (transferredBaseline === null) {
+          throw new TransferError(comparisonChangesNothing(missingParameters));
+        }
+        link = await runReport.run(
+          title,
+          sourceNote,
+          provisionsWithout(report.provisions, missingParameters),
+          report.reformId,
+          year,
+          { ...runSettings, baseline: transferredBaseline, savedReportId: report.id }
+        );
+      } catch (error) {
+        throw error instanceof TransferError ? error : new TransferError(REPORT_TRANSFER_FAILED);
       }
-      const link = await runReport.run(
-        title,
-        sourceNote,
-        provisionsWithout(report.provisions, missingParameters),
-        report.reformId,
-        year,
-        { ...runSettings, baseline: transferredBaseline, savedReportId: report.id }
-      );
       if (!link) {
-        setError(REPORT_TRANSFER_FAILED);
-        return false;
+        throw new TransferError(REPORT_TRANSFER_FAILED);
       }
-      return true;
-    } catch {
-      setError(REPORT_TRANSFER_FAILED);
-      return false;
-    } finally {
-      setTransferring(false);
-    }
-  };
-
-  return { transfer, transferring, error, clearError: () => setError(null) };
+      return link;
+    },
+  });
 }

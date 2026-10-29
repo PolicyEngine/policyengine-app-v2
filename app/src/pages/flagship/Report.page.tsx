@@ -5,7 +5,6 @@ import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/society
 import { isAccountId } from '@/api/v2Associations';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
-import MissingParametersTransferDialog from '@/components/flagship/MissingParametersTransferDialog';
 import {
   nationalPopulationLabel,
   populationLabel,
@@ -23,6 +22,7 @@ import ReportYearSwitcher, {
 import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgress';
 import UKLocalAreaAutoStart from '@/components/flagship/report/UKLocalAreaAutoStart';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
+import SavedReportTransferDialog from '@/components/flagship/SavedReportTransferDialog';
 import { ErrorState } from '@/components/flagship/states';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Title } from '@/components/ui';
@@ -38,7 +38,6 @@ import {
   useSharedReport,
 } from '@/hooks/useFlagshipStores';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
-import { useSavedReportTransfer } from '@/hooks/useMissingParameterTransfer';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
@@ -49,7 +48,6 @@ import {
   reportYearLabel,
   reportYearSpanLabel,
 } from '@/libs/flagship/draftLabels';
-import { provisionsWithout } from '@/libs/flagship/missingParameterTransfer';
 import {
   reportBaselineLabel,
   reportBaselineUnknown,
@@ -186,7 +184,6 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // without those parameters, until "Not now" puts it off; a report
   // someone else saved only says why it cannot run.
   const reformStore = useReformStore();
-  const reportTransfer = useSavedReportTransfer();
   const [transferPutOffFor, setTransferPutOffFor] = useState<string | null>(null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
@@ -358,27 +355,17 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   );
 
   const transferDialog = reportRecord && runsBlocked && (
-    <MissingParametersTransferDialog
+    <SavedReportTransferDialog
       open={transferPutOffFor !== userReportId}
       onOpenChange={(open) => !open && setTransferPutOffFor(userReportId)}
-      subject="report"
-      parameterPaths={missingParameters}
-      transferLabel="Transfer and run again"
-      transferNote="Transferring runs the report again without them, for the same year, population and comparison. It keeps its link, which then shows the new results."
-      nothingLeft={provisionsWithout(reportRecord.provisions, missingParameters).length === 0}
-      transferring={reportTransfer.transferring}
-      error={reportTransfer.error}
-      onTransfer={async () => {
-        const started = await reportTransfer.transfer(reportRecord, missingParameters, {
-          findReform: (reformId) => reformStore.findById(reformId),
-          title: reportRecord.title || title,
-          sourceNote: reportRecord.sourceNote || meta?.sourceNote || '',
-        });
-        // The saved report now points at the new run, which is not blocked.
-        if (started) {
-          setTransferPutOffFor(userReportId);
-        }
-      }}
+      report={reportRecord}
+      missingParameters={missingParameters}
+      keepsLink={isAccount}
+      findReform={(reformId) => reformStore.findById(reformId)}
+      title={reportRecord.title || title}
+      sourceNote={reportRecord.sourceNote || meta?.sourceNote || ''}
+      // The saved report now points at the new run, which is not blocked.
+      onTransferred={() => setTransferPutOffFor(userReportId)}
     />
   );
 

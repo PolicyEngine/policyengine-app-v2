@@ -22,6 +22,7 @@ import MissingParametersNotice from '@/components/flagship/MissingParametersNoti
 import MissingParametersTransferDialog from '@/components/flagship/MissingParametersTransferDialog';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReformReports, { LatestReportBadge } from '@/components/flagship/ReformReports';
+import SavedReportTransferDialog from '@/components/flagship/SavedReportTransferDialog';
 import {
   CARD_GRID_STYLE,
   CardGridSkeleton,
@@ -40,11 +41,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { billRegion } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
-import {
-  REFORM_TRANSFER_FAILED,
-  useSavedReformTransfer,
-  useSavedReportTransfer,
-} from '@/hooks/useMissingParameterTransfer';
+import { useSavedReformTransfer } from '@/hooks/useMissingParameterTransfers';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import {
@@ -63,7 +60,7 @@ import {
 import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import { reformMissingParameters } from '@/libs/flagship/missingParameters';
-import { parametersWithout, provisionsWithout } from '@/libs/flagship/missingParameterTransfer';
+import { parametersWithout } from '@/libs/flagship/missingParameterTransfer';
 import { readV1Policy, reportMissingParameters } from '@/libs/flagship/policyChecks';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
@@ -329,7 +326,7 @@ export default function ReformsPage() {
 
   const runReport = useRunFlagshipReport();
   const reformStore = useReformStore();
-  const { store: reportStore } = useFlagshipReportStore();
+  const { store: reportStore, isAccount } = useFlagshipReportStore();
   const { scope } = useV3SavedWork();
   // A re-run whose settings could not be read; the run's own errors are runReport's.
   const [rerunError, setRerunError] = useState<string | null>(null);
@@ -522,7 +519,6 @@ export default function ReformsPage() {
   const reformTransfer = useSavedReformTransfer();
   const [reformTransferPutOffFor, setReformTransferPutOffFor] = useState<string | null>(null);
   // A saved report whose Re-run found such parameters offers the same.
-  const reportTransfer = useSavedReportTransfer();
   const [reportToTransfer, setReportToTransfer] = useState<{
     report: FlagshipReportRecord;
     missingParameters: string[];
@@ -798,7 +794,7 @@ export default function ReformsPage() {
               parametersWithout(selectedReform.parameters, missingParameters).length === 0
             }
             transferring={reformTransfer.isPending}
-            error={reformTransfer.isError ? REFORM_TRANSFER_FAILED : null}
+            error={reformTransfer.error?.message ?? null}
             onTransfer={() => reformTransfer.mutate(selectedReform)}
           />
           {selectedReform.parametersUnavailable && (
@@ -1011,32 +1007,21 @@ export default function ReformsPage() {
             />
           )}
           {reportToTransfer && (
-            <MissingParametersTransferDialog
+            <SavedReportTransferDialog
+              // A report opened for transfer starts with no earlier transfer's error.
+              key={reportToTransfer.report.id}
               open
               onOpenChange={(open) => !open && setReportToTransfer(null)}
-              subject="report"
-              parameterPaths={reportToTransfer.missingParameters}
-              transferLabel="Transfer and run again"
-              transferNote="Transferring runs the report again without them, for the same year, population and comparison. It keeps its link, which then shows the new results."
-              nothingLeft={
-                provisionsWithout(
-                  reportToTransfer.report.provisions,
-                  reportToTransfer.missingParameters
-                ).length === 0
+              report={reportToTransfer.report}
+              missingParameters={reportToTransfer.missingParameters}
+              keepsLink={isAccount}
+              findReform={savedReform}
+              title={reportToTransfer.report.title || selectedReform.label || 'Untitled reform'}
+              sourceNote={
+                reportToTransfer.report.sourceNote ||
+                SOURCE_LABELS[selectedReform.provenance.source]
               }
-              transferring={reportTransfer.transferring}
-              error={reportTransfer.error}
-              onTransfer={async () => {
-                const { report, missingParameters: missing } = reportToTransfer;
-                const started = await reportTransfer.transfer(report, missing, {
-                  findReform: savedReform,
-                  title: report.title || selectedReform.label || 'Untitled reform',
-                  sourceNote: report.sourceNote || SOURCE_LABELS[selectedReform.provenance.source],
-                });
-                if (started) {
-                  setReportToTransfer(null);
-                }
-              }}
+              onTransferred={() => setReportToTransfer(null)}
             />
           )}
           {(runReport.error || rerunError) && (
@@ -1080,7 +1065,6 @@ export default function ReformsPage() {
                 .finally(() => setRerunChecking(false));
               if (missing.length > 0) {
                 setRerunMissingParameters(missing);
-                reportTransfer.clearError();
                 setReportToTransfer({ report, missingParameters: missing });
                 return;
               }
