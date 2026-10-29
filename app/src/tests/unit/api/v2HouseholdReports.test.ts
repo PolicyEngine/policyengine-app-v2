@@ -5,6 +5,8 @@ import {
   readSharedHouseholdReport,
   saveV2HouseholdReport,
   submitV2HouseholdReport,
+  V2HouseholdReportFailedError,
+  V2HouseholdReportNotRunError,
   waitForV2HouseholdReport,
 } from '@/api/v2HouseholdReports';
 import { isV2ApiError } from '@/api/v2UserClient';
@@ -217,7 +219,9 @@ describe('waitForV2HouseholdReport', () => {
     });
 
     // Then
-    await expect(waiting).rejects.toThrow('ctc_value cannot be negative');
+    await expect(waiting).rejects.toEqual(
+      new V2HouseholdReportFailedError('ctc_value cannot be negative')
+    );
   });
 
   test('given a report the simulation service could not run then it rejects, saying so', async () => {
@@ -233,9 +237,7 @@ describe('waitForV2HouseholdReport', () => {
     });
 
     // Then
-    await expect(waiting).rejects.toThrow(
-      'The household report has not been calculated. Try again later.'
-    );
+    await expect(waiting).rejects.toEqual(new V2HouseholdReportNotRunError());
   });
 });
 

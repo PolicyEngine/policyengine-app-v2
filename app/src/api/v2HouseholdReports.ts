@@ -7,7 +7,6 @@ import {
 import type { components } from '@/api/publicApi/schema';
 import { AccountAssociationRoutes, type ApiStoreContext } from '@/api/v2Associations';
 import {
-  V2HouseholdCalculationFailedError,
   type CalculateV2HouseholdOptions,
   type V2HouseholdCalculationOutput,
 } from '@/api/v2HouseholdCalculations';
@@ -101,20 +100,44 @@ export async function fetchV2HouseholdReport(
   return asHouseholdReport(result.item);
 }
 
-/** The reason a failed run gives: its first failed calculation's. */
-function failureOf(item: V2HouseholdReportItem): V2HouseholdCalculationFailedError {
+/**
+ * A household report whose run failed. Reading it again cannot change that:
+ * the Public API never starts a household report's run on a read, so only
+ * a new run (`POST /v2/reports/{report_id}/runs`) can calculate it again.
+ */
+export class V2HouseholdReportFailedError extends Error {
+  /** The simulation service's reason, when it gave one. */
+  readonly reason: string | null;
+
+  constructor(reason: string | null) {
+    super(reason || "This household report's calculation failed.");
+    this.name = 'V2HouseholdReportFailedError';
+    this.reason = reason;
+  }
+}
+
+/**
+ * A household report with no run: its calculation never started. As with a
+ * failed run, reading it again cannot calculate it.
+ */
+export class V2HouseholdReportNotRunError extends Error {
+  constructor() {
+    super('This household report has not been calculated.');
+    this.name = 'V2HouseholdReportNotRunError';
+  }
+}
+
+/** A failed run's reason: its first failed calculation's. */
+function failureOf(item: V2HouseholdReportItem): V2HouseholdReportFailedError {
   const failed = [item.run?.baseline, item.run?.reform].find((calculation) => calculation?.error);
-  return new V2HouseholdCalculationFailedError(
-    failed?.error?.message || 'The household report could not be calculated.',
-    failed?.error?.code ?? null
-  );
+  return new V2HouseholdReportFailedError(failed?.error?.message || null);
 }
 
 /**
  * Reads a household report until its newest run has succeeded, returning
- * it, or failed, rejecting with the reason. A report with no run (the
- * simulation service could not start one) is refused, as is a report that
- * does not finish within the time limit.
+ * it, or failed, rejecting with V2HouseholdReportFailedError. A report with
+ * no run rejects with V2HouseholdReportNotRunError, and one that does not
+ * finish within the time limit with a timeout.
  */
 export async function waitForV2HouseholdReport(
   countryId: string,
@@ -128,7 +151,7 @@ export async function waitForV2HouseholdReport(
     ...pollOptions,
   });
   if (item.status === 'not_run' || !item.run) {
-    throw new Error('The household report has not been calculated. Try again later.');
+    throw new V2HouseholdReportNotRunError();
   }
   if (item.status === 'failed') {
     throw failureOf(item);
@@ -157,7 +180,7 @@ export function householdRunFromV2Report(
   stored: V2HouseholdItem
 ): FlagshipHouseholdRun {
   if (!item.run) {
-    throw new Error('The household report has not been calculated. Try again later.');
+    throw new V2HouseholdReportNotRunError();
   }
   const version = item.run.policyengine_version;
   const baseline = outputOf(item.run.baseline, version);

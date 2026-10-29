@@ -3,6 +3,11 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, userEvent, within } from '@test-utils';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  V2HouseholdReportFailedError,
+  V2HouseholdReportNotRunError,
+} from '@/api/v2HouseholdReports';
+import { V2ApiError } from '@/api/v2UserClient';
 import SavedHouseholdReportPage from '@/pages/flagship/SavedHouseholdReport.page';
 import metadataReducer from '@/reducers/metadataReducer';
 import { TEST_CURRENT_LAW_ID } from '@/tests/fixtures/api/publicApi/modelCatalogMocks';
@@ -186,14 +191,48 @@ describe('SavedHouseholdReportPage', () => {
     expect(mockWaitForReport).not.toHaveBeenCalled();
   });
 
-  test('given a report whose calculation failed then it says why, and Try again reads it again', async () => {
+  test("given a report whose calculation failed then it says so, with the service's reason, and offers no Try again", async () => {
     // Given
-    const user = userEvent.setup();
-    mockWaitForReport.mockRejectedValueOnce(new Error('ctc_value cannot be negative'));
+    mockWaitForReport.mockRejectedValue(
+      new V2HouseholdReportFailedError('ctc_value cannot be negative')
+    );
 
     // When
     renderSavedReport();
-    expect(await screen.findByText('ctc_value cannot be negative')).toBeInTheDocument();
+
+    // Then
+    expect(
+      await screen.findByText("This household report's calculation failed")
+    ).toBeInTheDocument();
+    expect(screen.getByText('ctc_value cannot be negative')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+  });
+
+  test('given a report whose calculation has not run then it says so, and offers no Try again', async () => {
+    // Given
+    mockWaitForReport.mockRejectedValue(new V2HouseholdReportNotRunError());
+
+    // When
+    renderSavedReport();
+
+    // Then
+    expect(
+      await screen.findByText('This household report has not been calculated')
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/try again later/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+  });
+
+  test('given the report could not be read then Try again reads it again', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockWaitForReport.mockRejectedValueOnce(
+      new V2ApiError(503, 'The simulation service is unavailable.')
+    );
+
+    // When
+    renderSavedReport();
+    expect(await screen.findByText('The simulation service is unavailable.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
     // Then

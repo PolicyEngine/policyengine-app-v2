@@ -5,6 +5,8 @@ import { fetchV2Household } from '@/api/v2HouseholdCalculations';
 import {
   householdRunFromV2Report,
   readSharedHouseholdReport,
+  V2HouseholdReportFailedError,
+  V2HouseholdReportNotRunError,
   waitForV2HouseholdReport,
 } from '@/api/v2HouseholdReports';
 import HouseholdNetIncomeResult from '@/components/flagship/household/HouseholdNetIncomeResult';
@@ -124,12 +126,33 @@ export default function SavedHouseholdReportPage({
   const failedQuery = [shared, report, stored].find(
     (query) => query.error && query.data === undefined
   );
+  // The report's own outcome when it has none to show: its run failed, or never ran.
+  const reportOutcome = report.data === undefined ? report.error : opened?.error;
   let body: ReactNode;
   if (shared.isSuccess && !shared.data) {
     body = (
       <ErrorState
         title="This report could not be found"
         description="It may have been deleted, or the link may be incomplete."
+      />
+    );
+  } else if (reportOutcome instanceof V2HouseholdReportFailedError) {
+    // Reading the report again cannot calculate it: only a new run can.
+    body = (
+      <ErrorState
+        title="This household report's calculation failed"
+        description={
+          reportOutcome.reason ? (
+            <span style={{ overflowWrap: 'anywhere' }}>{reportOutcome.reason}</span>
+          ) : undefined
+        }
+      />
+    );
+  } else if (reportOutcome instanceof V2HouseholdReportNotRunError) {
+    body = (
+      <ErrorState
+        title="This household report has not been calculated"
+        description="Its calculation has not run, so there is no result to show."
       />
     );
   } else if (failedQuery || opened?.error) {
