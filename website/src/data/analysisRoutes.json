@@ -1,0 +1,722 @@
+{
+  "schema": "analysis-routes/1",
+  "paths": [
+    {
+      "path": "/ca/bill-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/ca/state-legislative-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/il/bill-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/il/state-legislative-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/ng/bill-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/ng/state-legislative-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/pe84",
+      "prefix": false,
+      "entry": "app us/pe84"
+    },
+    {
+      "path": "/uk/2024-manifestos",
+      "prefix": true,
+      "entry": "app uk/2024-manifestos"
+    },
+    {
+      "path": "/uk/autumn-budget-2025",
+      "prefix": true,
+      "entry": "app uk/autumn-budget-2025"
+    },
+    {
+      "path": "/uk/bill-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/uk/bus-fare-cap",
+      "prefix": true,
+      "entry": "app uk/bus-fare-cap"
+    },
+    {
+      "path": "/uk/cancelling-fuel-duty-rise",
+      "prefix": true,
+      "entry": "app uk/cancelling-fuel-duty-rise"
+    },
+    {
+      "path": "/uk/cliff-watch",
+      "prefix": true,
+      "entry": "app us/cliffwatch"
+    },
+    {
+      "path": "/uk/cliffwatch",
+      "prefix": true,
+      "entry": "app us/cliffwatch"
+    },
+    {
+      "path": "/uk/electricity-vat-cut",
+      "prefix": true,
+      "entry": "app uk/electricity-vat-cut"
+    },
+    {
+      "path": "/uk/energy-autumn-budget",
+      "prefix": true,
+      "entry": "app uk/energy-autumn-budget"
+    },
+    {
+      "path": "/uk/energy-price-shock",
+      "prefix": true,
+      "entry": "app uk/energy-price-shock"
+    },
+    {
+      "path": "/uk/free-childcare-reform",
+      "prefix": true,
+      "entry": "app uk/free-childcare-reform"
+    },
+    {
+      "path": "/uk/local-areas-dashboard",
+      "prefix": true,
+      "entry": "app uk/local-areas-dashboard"
+    },
+    {
+      "path": "/uk/marriage",
+      "prefix": true,
+      "entry": "app uk/marriage"
+    },
+    {
+      "path": "/uk/middle-east-war-living-standards",
+      "prefix": true,
+      "entry": "app uk/middle-east-war-living-standards"
+    },
+    {
+      "path": "/uk/nics-exemption-inactive-employees",
+      "prefix": true,
+      "entry": "app uk/nics-exemption-inactive-employees"
+    },
+    {
+      "path": "/uk/public-services-spending",
+      "prefix": true,
+      "entry": "app uk/public-services-spending"
+    },
+    {
+      "path": "/uk/scotland-income-tax-reform",
+      "prefix": true,
+      "entry": "app uk/scotland-income-tax-reform"
+    },
+    {
+      "path": "/uk/scottish-budget-2026-27",
+      "prefix": true,
+      "entry": "app uk/scottish-budget-2026-27"
+    },
+    {
+      "path": "/uk/spring-statement-2026",
+      "prefix": true,
+      "entry": "app uk/spring-statement-2026"
+    },
+    {
+      "path": "/uk/state-legislative-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/uk/student-loan-visualisation",
+      "prefix": true,
+      "entry": "app uk/student-loan-visualisation"
+    },
+    {
+      "path": "/uk/targeted-energy-discount",
+      "prefix": true,
+      "entry": "app uk/targeted-energy-discount"
+    },
+    {
+      "path": "/uk/triple-lock",
+      "prefix": true,
+      "entry": "app uk/triple-lock"
+    },
+    {
+      "path": "/uk/two-child-limit-comparison",
+      "prefix": true,
+      "entry": "app uk/two-child-limit-comparison"
+    },
+    {
+      "path": "/uk/uc-rebalancing",
+      "prefix": true,
+      "entry": "app uk/uc-rebalancing"
+    },
+    {
+      "path": "/uk/uk-cliff-watch",
+      "prefix": true,
+      "entry": "app uk/uk-cliff-watch"
+    },
+    {
+      "path": "/uk/uk-land-value-tax",
+      "prefix": true,
+      "entry": "app uk/uk-land-value-tax"
+    },
+    {
+      "path": "/uk/uk-salary-sacrifice-tool",
+      "prefix": true,
+      "entry": "app uk/uk-salary-sacrifice-tool"
+    },
+    {
+      "path": "/uk/uk-student-loan-calculator",
+      "prefix": true,
+      "entry": "app uk/uk-student-loan-calculator"
+    },
+    {
+      "path": "/uk/young-worker-nics",
+      "prefix": true,
+      "entry": "app uk/young-worker-nics"
+    },
+    {
+      "path": "/us/2024-election-calculator",
+      "prefix": true,
+      "entry": "app us/2024-election-calculator"
+    },
+    {
+      "path": "/us/aca-calc",
+      "prefix": true,
+      "entry": "app us/aca-calc"
+    },
+    {
+      "path": "/us/aca-reforms-calculator",
+      "prefix": true,
+      "entry": "app us/aca-calc"
+    },
+    {
+      "path": "/us/bill-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/us/california-wealth-tax",
+      "prefix": true,
+      "entry": "app us/california-wealth-tax"
+    },
+    {
+      "path": "/us/california-wealth-tax/embed",
+      "prefix": true,
+      "entry": "app us/california-wealth-tax"
+    },
+    {
+      "path": "/us/child-poverty-impact-dashboard",
+      "prefix": true,
+      "entry": "app us/child-poverty-impact-dashboard"
+    },
+    {
+      "path": "/us/child-tax-credit-2024-election-calculator",
+      "prefix": true,
+      "entry": "app us/child-tax-credit-2024-election-calculator"
+    },
+    {
+      "path": "/us/child-tax-credit-calculator",
+      "prefix": true,
+      "entry": "app us/child-tax-credit-calculator"
+    },
+    {
+      "path": "/us/cliff-watch",
+      "prefix": true,
+      "entry": "app us/cliffwatch"
+    },
+    {
+      "path": "/us/cliffwatch",
+      "prefix": true,
+      "entry": "app us/cliffwatch"
+    },
+    {
+      "path": "/us/coverage-compass",
+      "prefix": true,
+      "entry": "app us/coverage-compass"
+    },
+    {
+      "path": "/us/encode-policy-multi-agent-ai",
+      "prefix": true,
+      "entry": "app us/encode-policy-multi-agent-ai"
+    },
+    {
+      "path": "/us/futa-wage-base-dashboard",
+      "prefix": true,
+      "entry": "app us/futa-wage-base-dashboard"
+    },
+    {
+      "path": "/us/givecalc",
+      "prefix": true,
+      "entry": "app us/givecalc"
+    },
+    {
+      "path": "/us/keep-your-pay-act",
+      "prefix": true,
+      "entry": "app us/keep-your-pay-act"
+    },
+    {
+      "path": "/us/marriage",
+      "prefix": true,
+      "entry": "app us/marriage"
+    },
+    {
+      "path": "/us/missouri-income-tax-elimination",
+      "prefix": true,
+      "entry": "app us/missouri-income-tax-elimination"
+    },
+    {
+      "path": "/us/nj-ctc-increase",
+      "prefix": true,
+      "entry": "app us/nj-ctc-increase"
+    },
+    {
+      "path": "/us/ob3-households",
+      "prefix": true,
+      "entry": "app us/obbba-households"
+    },
+    {
+      "path": "/us/obba-household-explorer",
+      "prefix": true,
+      "entry": "app us/obbba-households"
+    },
+    {
+      "path": "/us/obbba-household-by-household",
+      "prefix": true,
+      "entry": "app us/obbba-households"
+    },
+    {
+      "path": "/us/obbba-household-explorer",
+      "prefix": true,
+      "entry": "app us/obbba-households"
+    },
+    {
+      "path": "/us/obbba-households",
+      "prefix": true,
+      "entry": "app us/obbba-households"
+    },
+    {
+      "path": "/us/obbba-scatter",
+      "prefix": true,
+      "entry": "app us/obbba-households"
+    },
+    {
+      "path": "/us/oregon-kicker-refund",
+      "prefix": true,
+      "entry": "app us/oregon-kicker-refund"
+    },
+    {
+      "path": "/us/pe84",
+      "prefix": true,
+      "entry": "app us/pe84"
+    },
+    {
+      "path": "/us/research/obbba-household-by-household",
+      "prefix": false,
+      "entry": "app us/obbba-households"
+    },
+    {
+      "path": "/us/research/obbba-household-explorer",
+      "prefix": false,
+      "entry": "app us/obbba-households"
+    },
+    {
+      "path": "/us/rhode-island-ctc-calculator",
+      "prefix": true,
+      "entry": "app us/rhode-island-ctc-calculator"
+    },
+    {
+      "path": "/us/salternative",
+      "prefix": true,
+      "entry": "app us/salternative"
+    },
+    {
+      "path": "/us/snap-district-map",
+      "prefix": true,
+      "entry": "app us/snap-district-map"
+    },
+    {
+      "path": "/us/snap-payment-error-simulator",
+      "prefix": true,
+      "entry": "app us/snap-payment-error-simulator"
+    },
+    {
+      "path": "/us/south-carolina-2026-tax-changes",
+      "prefix": true,
+      "entry": "app us/south-carolina-2026-tax-changes"
+    },
+    {
+      "path": "/us/state-eitcs-ctcs",
+      "prefix": true,
+      "entry": "app us/state-eitcs-ctcs"
+    },
+    {
+      "path": "/us/state-legislative-tracker",
+      "prefix": true,
+      "entry": "app us/bill-tracker"
+    },
+    {
+      "path": "/us/tanf-calculator",
+      "prefix": true,
+      "entry": "app us/tanf-calculator"
+    },
+    {
+      "path": "/us/taxation-of-benefits-reforms",
+      "prefix": true,
+      "entry": "app us/taxation-of-benefits-reforms"
+    },
+    {
+      "path": "/us/utah-2026-tax-changes",
+      "prefix": true,
+      "entry": "app us/utah-2026-tax-changes"
+    },
+    {
+      "path": "/us/watca",
+      "prefix": true,
+      "entry": "app us/watca"
+    },
+    {
+      "path": "/us/working-parents-tax-relief-act",
+      "prefix": true,
+      "entry": "app us/working-parents-tax-relief-act"
+    },
+    {
+      "path": "/us/wv-sb392-tax-cut",
+      "prefix": true,
+      "entry": "app us/wv-sb392-tax-cut"
+    }
+  ],
+  "hosts": [
+    {
+      "host": "2024-election-dashboard-omega.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/2024-election-calculator"]
+    },
+    {
+      "host": "2024-election-dashboard.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/2024-election-calculator"]
+    },
+    {
+      "host": "aca-calc.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/aca-calc", "app us/aca-reforms-calculator"]
+    },
+    {
+      "host": "aca-calc.vercel.app",
+      "pathPrefix": "/us/aca-calc",
+      "entries": ["app us/aca-calc"]
+    },
+    {
+      "host": "april-fools-2026-two.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/pe84"]
+    },
+    {
+      "host": "autumn-budget-local-area.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/local-areas-dashboard"]
+    },
+    {
+      "host": "bus-fare-cap.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/bus-fare-cap"]
+    },
+    {
+      "host": "california-wealth-tax.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/california-wealth-tax"]
+    },
+    {
+      "host": "cancelling-fuel-duty-rise.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/cancelling-fuel-duty-rise"]
+    },
+    {
+      "host": "child-poverty-impact-dashboard-sigma.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/child-poverty-impact-dashboard"]
+    },
+    {
+      "host": "cliff-watch.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/cliffwatch"]
+    },
+    {
+      "host": "coverage-compass-policy-engine.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/coverage-compass"]
+    },
+    {
+      "host": "crfb-tob-impacts.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/taxation-of-benefits-reforms"]
+    },
+    {
+      "host": "ctc-calculator-seven.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/child-tax-credit-calculator"]
+    },
+    {
+      "host": "ctc-calculator.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/child-tax-credit-calculator"]
+    },
+    {
+      "host": "electricity-vat-cut.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/electricity-vat-cut"]
+    },
+    {
+      "host": "energy-price-shock.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/energy-price-shock"]
+    },
+    {
+      "host": "free-childcare-reform.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/free-childcare-reform"]
+    },
+    {
+      "host": "futa-wage-base-dashboard.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/futa-wage-base-dashboard"]
+    },
+    {
+      "host": "givecalc.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/givecalc"]
+    },
+    {
+      "host": "keep-your-pay-act.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/keep-your-pay-act"]
+    },
+    {
+      "host": "local-area.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/local-areas-dashboard"]
+    },
+    {
+      "host": "marriage-zeta-beryl.vercel.app",
+      "pathPrefix": "/us/marriage",
+      "entries": ["app uk/marriage", "app us/marriage"]
+    },
+    {
+      "host": "missouri-income-tax-elimination.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/missouri-income-tax-elimination"]
+    },
+    {
+      "host": "nics-exemption-inactive-employees.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/nics-exemption-inactive-employees"]
+    },
+    {
+      "host": "nj-ctc-increase.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/nj-ctc-increase"]
+    },
+    {
+      "host": "obbba-household-by-household.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/obbba-households"]
+    },
+    {
+      "host": "oregon-kicker-refund.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/oregon-kicker-refund"]
+    },
+    {
+      "host": "policyengine--state-legislative-tracker.modal.run",
+      "pathPrefix": "/",
+      "entries": ["app us/bill-tracker"]
+    },
+    {
+      "host": "policyengine-utah-2026-tax-changes.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/utah-2026-tax-changes"]
+    },
+    {
+      "host": "policyengine.github.io",
+      "pathPrefix": "/obbba-scatter",
+      "entries": ["app us/obbba-scatter"]
+    },
+    {
+      "host": "policyengine.github.io",
+      "pathPrefix": "/snap-district-map",
+      "entries": ["app us/snap-district-map"]
+    },
+    {
+      "host": "policyengine.github.io",
+      "pathPrefix": "/tanf-calculator",
+      "entries": ["app us/tanf-calculator"]
+    },
+    {
+      "host": "policyengine.github.io",
+      "pathPrefix": "/uk-salary-sacrifice-analysis",
+      "entries": ["app uk/uk-salary-sacrifice-tool"]
+    },
+    {
+      "host": "policyengine.github.io",
+      "pathPrefix": "/us-state-eitcs-ctcs",
+      "entries": ["app us/state-eitcs-ctcs"]
+    },
+    {
+      "host": "post-scottish-budget-dashboard.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/scottish-budget-2026-27"]
+    },
+    {
+      "host": "ri-ctc-calculator-policy-engine.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/rhode-island-ctc-calculator"]
+    },
+    {
+      "host": "salt-amt-calculator.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/salternative"]
+    },
+    {
+      "host": "scotland-income-tax-reform.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/scotland-income-tax-reform"]
+    },
+    {
+      "host": "snap-district-map.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/snap-district-map"]
+    },
+    {
+      "host": "snap-qc-sim.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/snap-payment-error-simulator"]
+    },
+    {
+      "host": "south-carolina-2026-tax-changes.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/south-carolina-2026-tax-changes"]
+    },
+    {
+      "host": "student-loan-visualisation.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/student-loan-visualisation"]
+    },
+    {
+      "host": "tanf-calculator.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/tanf-calculator"]
+    },
+    {
+      "host": "uc-rebalancing.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/uc-rebalancing"]
+    },
+    {
+      "host": "uk-2024-manifestos-comparison.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/2024-manifestos"]
+    },
+    {
+      "host": "uk-autumn-budget-dashboard.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/autumn-budget-2025"]
+    },
+    {
+      "host": "uk-cliff-watch.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/uk-cliff-watch"]
+    },
+    {
+      "host": "uk-energy-autumn-budget.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/energy-autumn-budget"]
+    },
+    {
+      "host": "uk-energy-shock-impact.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/middle-east-war-living-standards"]
+    },
+    {
+      "host": "uk-land-value-tax.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/uk-land-value-tax"]
+    },
+    {
+      "host": "uk-public-services-imputation.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/public-services-spending"]
+    },
+    {
+      "host": "uk-salary-sacrifice-analysis.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/uk-salary-sacrifice-tool"]
+    },
+    {
+      "host": "uk-spring-statement-2026-policy-engine.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/spring-statement-2026"]
+    },
+    {
+      "host": "uk-student-loan-calculator.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/uk-student-loan-calculator"]
+    },
+    {
+      "host": "uk-targeted-energy-discount.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/targeted-energy-discount"]
+    },
+    {
+      "host": "uk-triple-lock.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/triple-lock"]
+    },
+    {
+      "host": "uk-two-child-limit-app.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/two-child-limit-comparison"]
+    },
+    {
+      "host": "us-state-eitcs-ctcs.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/state-eitcs-ctcs"]
+    },
+    {
+      "host": "vance-harris-ctc-comparison.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/child-tax-credit-2024-election-calculator"]
+    },
+    {
+      "host": "working-americans-tax-cut-act-one.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/watca"]
+    },
+    {
+      "host": "wptra.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/working-parents-tax-relief-act"]
+    },
+    {
+      "host": "wv-sb392-tax-cut.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app us/wv-sb392-tax-cut"]
+    },
+    {
+      "host": "young-worker-nics.vercel.app",
+      "pathPrefix": "/",
+      "entries": ["app uk/young-worker-nics"]
+    }
+  ]
+}
