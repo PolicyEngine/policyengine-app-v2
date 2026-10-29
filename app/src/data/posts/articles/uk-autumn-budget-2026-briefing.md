@@ -221,7 +221,7 @@ The official costing includes some savers moving their savings into ISAs and oth
 
 These results:
 
-- leave out poverty and people-affected figures;
+- leave out poverty figures and the dashboard's separate people-affected figures;
 - leave out national figures for the savings income tax rise (the calculator includes it);
 - apply the trading allowance to trading income but not to miscellaneous income (including it would raise our estimate of the allowance's cost);
 - don't correctly reflect how the Carer's Allowance taper interacts with overlapping benefits, such as the State Pension, in 2030-31;

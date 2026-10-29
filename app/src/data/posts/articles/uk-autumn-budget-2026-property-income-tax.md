@@ -76,7 +76,7 @@ Positive values are additional revenue. PolicyEngine measures the change in gove
 
 The [ONS public-finance methodology, section 6.1.2](https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/methodologies/monthlystatisticsonthepublicsectorfinancesamethodologicalguide) records Self Assessment income tax using cash receipts, without shifting them back to the year the income arose. This can produce a small first-year receipts effect followed by a catch-up. Comparing those first two years with same-year model liabilities requires a collection-timing adjustment; it does not by itself establish a difference in the tax base.
 
-The government's costing also allows for some landlords incorporating, as the [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) set out. PolicyEngine holds that choice fixed. We have not yet explained the later-year gap; differences in data, behaviour and accounting could each contribute.
+The government's costing also allows for some landlords incorporating, as the [policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=74) set out. PolicyEngine holds that choice fixed. Our analysis doesn't explain the later-year gap; differences in data, behaviour and accounting could each contribute.
 
 ### Distribution
 
