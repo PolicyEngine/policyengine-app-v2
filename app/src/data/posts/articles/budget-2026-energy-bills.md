@@ -158,7 +158,7 @@ The population results come from PolicyEngine's [Autumn Budget 2026 dashboard](h
 
 [^4]: We assume that every eligible household in England receives the payment, as the Government plans to pay it through the council tax system. Council tax bands come from the survey data underlying Microcosm UK.
 
-[^5]: Our July analysis of the original six-month cut estimated a cost of £769 million for October 2026 to March 2027, using an earlier version of PolicyEngine UK and the Enhanced Family Resources Survey. This is close to the official costing's £734 million of lost VAT receipts in 2026-27.
+[^5]: Our July analysis of the original six-month cut estimated a cost of £769 million for October 2026 to March 2027, using an earlier version of PolicyEngine UK and the Enhanced Family Resources Survey. The Government's costing, certified by the OBR, puts the VAT receipts lost in 2026-27 at £734 million, and Table 6.1 puts the measure at £755 million that year.
 
 [^6]: We compare each household's spending on household energy with its net income after housing costs. We count as fuel-stressed any household with zero or negative income after housing costs and any energy spending.
 
