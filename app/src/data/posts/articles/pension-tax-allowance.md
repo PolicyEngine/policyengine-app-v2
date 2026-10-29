@@ -6,7 +6,7 @@ Key figures for 2027-28:
 - The full PTA is £94.
 - A pensioner with the standard Personal Allowance, income taxed at the 20% basic rate and total income up to £13,036 pays no income tax.
 - The PTA falls by £1 for each £3 of income above £13,036 and reaches zero at £13,319.
-- In that withdrawal range, a taxpayer outside Scotland has an effective marginal tax rate of 53.3%, against 20% without the PTA.
+- In that withdrawal range, a taxpayer outside Scotland who claims no means-tested benefits has an effective marginal tax rate of 53.3%, against 20% without the PTA.
 - For a pensioner who claims means-tested benefits, those benefits fall as income tax falls, so net income rises by less than the PTA. A Pension Credit claimant aged 75 or over without Savings Credit can lose up to £180, because leaving Pension Credit ends the free TV licence.
 
 ## What the PTA does
@@ -756,6 +756,8 @@ In 2027-28, the total cost is £30 million: the £42 million income tax cut less
 
 In 2027-28, 668,000 people pay less income tax, in 528,000 households; the households gain an average of £56 a year each. The number of people rises to 1.06 million in 2028-29 and 1.36 million in 2029-30, as the PTA grows with the State Pension. The households that gain number 857,000 in 2028-29 and 1.09 million in 2029-30, and gain an average of £97 and £132 a year each. For context, HM Treasury's explainer estimates that about 500,000 pensioners pay less income tax in 2027-28, and about 1 million by the end of this Parliament. PolicyEngine's counts are about a third higher than the Treasury's, and we have not established why. Both count people over State Pension age whose income tax falls; the government's costing estimates them with HMRC's Personal Tax Model and administrative data, and PolicyEngine with its representative sample of households.
 
+We estimate that about 260,000 people over State Pension age, or reaching it during the tax year, face a 53.3% marginal income tax rate in 2027-28 (52.3% in Scotland), rising to about 380,000 in 2028-29 and 480,000 in 2029-30 as the withdrawal range widens. In 2027-28, about 150,000 of them claim none of Pension Credit, Housing Benefit, Council Tax Reduction or Universal Credit, so 53.3% (52.3% in Scotland) is also their effective marginal tax rate. For most of the others, Pension Credit, Housing Benefit or Council Tax Reduction falls as their income after tax rises, so the effective rate exceeds the income tax rate: for example, 72% with Savings Credit, 84% with Housing Benefit, 93% with Housing Benefit and Council Tax Reduction, and 100% for about 30,000 people on the Pension Credit guarantee, the same rate they face without the PTA.
+
 Very few households lose: fewer than 10,000 in each year, too few in the survey sample to estimate the number precisely. From 2028-29, some of them lose a free TV licence, as household 5 does.
 
 ### Distributional impact
@@ -984,6 +986,8 @@ The net income and marginal rate charts follow a pensioner with no housing costs
 ### Population run
 
 The population results use PolicyEngine UK's representative sample of UK households, Microcosm UK: the certified dataset that `policyengine` 6.11.1 pins, with PolicyEngine UK 2.151.0 and the OBR's October 2026 forecast. They are static, with no behavioural response, and use PolicyEngine UK's take-up assumptions and its own Pension Credit guarantee (£245 a week in 2027-28), as the dashboard does. On that guarantee, a Pension Credit claimant aged 75 or over can lose only with total income from £12,760 to £12,807 in 2027-28, and the sample has no household in that band. Absolute poverty uses the official HBAI measure: household income below 60% of the 2024-25 median, held constant in real terms.
+
+The count of people facing the 53.3% marginal income tax rate treats a pensioner whose only income is the full new State Pension as having income equal to the PTA threshold, as the explainer does. PolicyEngine UK pays the projected State Pension at its unrounded weekly rate, which in 2028-29 would leave about 170,000 of them paying a little tax, with a 53.3% marginal rate. The split of that count by benefits uses PolicyEngine UK's State Pension age test (by 6 October) and its take-up assumptions, and measures the effective marginal tax rate as the charts do, for a £1 rise in private pension.
 
 ### Comparison with the Treasury and the OBR
 
