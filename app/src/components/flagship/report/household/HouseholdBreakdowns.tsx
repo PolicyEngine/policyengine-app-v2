@@ -6,6 +6,7 @@ import { Spinner, Stack, Text } from '@/components/ui';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPolicies } from '@/hooks/useFlagshipHousehold';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { normalizeHouseholdGroupAppKey } from '@/models/household/schema';
 import EarningsVariationSubPage from '@/pages/report-output/earnings-variation/EarningsVariationSubPage';
 import MarginalTaxRatesSubPage from '@/pages/report-output/marginal-tax-rates/MarginalTaxRatesSubPage';
@@ -14,6 +15,7 @@ import type {
   HouseholdCalculationOutput,
 } from '@/types/calculation/household';
 import type { Simulation } from '@/types/ingredients/Simulation';
+import V2HouseholdVariation from './V2HouseholdVariation';
 
 /** The v2 household outputs a v3 household result offers, after its own summary. */
 export const HOUSEHOLD_BREAKDOWN_VIEWS = [
@@ -122,11 +124,24 @@ export default function HouseholdBreakdowns({
   if (needsPolicies && variationStartedAt === null) {
     setVariationStartedAt(Date.now());
   }
+  // On the v2 routes the variation names each policy by its ID, so no policy loads.
   const policyQuery = useFlagshipHouseholdPolicies({
     countryId,
     policyIds,
-    enabled: needsPolicies,
+    enabled: needsPolicies && V3_API_ROUTES !== 'v2',
   });
+  const renderVariationLoading = () => (
+    <RunProgress
+      title={
+        view === 'earnings-variation'
+          ? 'Calculating the household across earnings'
+          : 'Calculating marginal tax rates across earnings'
+      }
+      expectedMs={VARIATION_EXPECTED_MS}
+      startedAt={variationStartedAt ?? undefined}
+      note="Both views use this one calculation, so the other opens at once."
+    />
+  );
 
   let content: ReactNode;
   if (view === 'net-income') {
@@ -149,6 +164,17 @@ export default function HouseholdBreakdowns({
           Click on any item to see its detailed breakdown
         </Text>
       </Stack>
+    );
+  } else if (V3_API_ROUTES === 'v2') {
+    content = (
+      <V2HouseholdVariation
+        view={view}
+        source={source}
+        baseline={baseline}
+        reform={reform}
+        simulations={simulations}
+        renderLoading={renderVariationLoading}
+      />
     );
   } else if (policyQuery.error) {
     content = (
@@ -174,18 +200,7 @@ export default function HouseholdBreakdowns({
       reform,
       simulations,
       policies: policyQuery.policies,
-      renderLoading: () => (
-        <RunProgress
-          title={
-            view === 'earnings-variation'
-              ? 'Calculating the household across earnings'
-              : 'Calculating marginal tax rates across earnings'
-          }
-          expectedMs={VARIATION_EXPECTED_MS}
-          startedAt={variationStartedAt ?? undefined}
-          note="Both views use this one calculation, so the other opens at once."
-        />
-      ),
+      renderLoading: renderVariationLoading,
     };
     content =
       view === 'earnings-variation' ? (
