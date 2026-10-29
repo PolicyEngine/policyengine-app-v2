@@ -1,4 +1,5 @@
 import { BASE_URL } from '@/constants';
+import { canonicalRegionCode } from '@/models/region';
 
 /** One year of a budget window, as the simulation API scores it. */
 export interface BudgetWindowYear {
@@ -61,7 +62,8 @@ export async function fetchBudgetWindow(
   { region, startYear, windowSize }: BudgetWindowParams
 ): Promise<BudgetWindowResponse> {
   const query = new URLSearchParams({
-    region,
+    // The region the app uses: a report saved for "country/ni" asks for "country/northern_ireland".
+    region: canonicalRegionCode(region),
     start_year: String(startYear),
     window_size: String(windowSize),
   });

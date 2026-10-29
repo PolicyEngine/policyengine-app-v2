@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import { canonicalRegionCode } from '@/models/region';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -264,7 +265,14 @@ function readDraft(key: string = STORAGE_KEY): DraftReform | null {
       return null;
     }
     // Drafts saved before the population component existed default to national.
-    return { population: { scope: 'national' }, ...parsed };
+    const draft: DraftReform = { population: { scope: 'national' }, ...parsed };
+    // A draft kept for "country/ni" runs on "country/northern_ireland".
+    return draft.population?.region
+      ? {
+          ...draft,
+          population: { ...draft.population, region: canonicalRegionCode(draft.population.region) },
+        }
+      : draft;
   } catch {
     return null;
   }

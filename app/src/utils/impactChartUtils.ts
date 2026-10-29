@@ -3,6 +3,8 @@
  * These are used across multiple chart types (budgetary, distributional, etc.)
  */
 
+import { canonicalRegionCode } from '@/models/region';
+
 interface Metadata {
   economyOptions: {
     region: Array<{ name: string; label: string }>;
@@ -23,7 +25,9 @@ interface Metadata {
 export function regionName(metadata: Metadata): string | undefined {
   const ignoreList = ['us', 'uk'];
   const urlParams = new URLSearchParams(window.location.search);
-  const region = urlParams.get('region');
+  const regionParam = urlParams.get('region');
+  // A link made for "country/ni" names "country/northern_ireland".
+  const region = regionParam && canonicalRegionCode(regionParam);
   if (!region || ignoreList.includes(region)) {
     return undefined;
   }
