@@ -1,3 +1,4 @@
+import { getPathMatch } from "next/dist/shared/lib/router/utils/path-match";
 import { describe, expect, test } from "vitest";
 
 import nextConfig from "../../../next.config";
@@ -179,12 +180,25 @@ describe("nextConfig redirects", () => {
       destination: "/uk/budgets/autumn-2026/:path*",
       permanent: false,
     });
-    // Nothing redirects away from the dashboard's own address, so no loop
-    expect(
-      redirects.filter((redirect) =>
-        redirect.source.startsWith("/uk/budgets/autumn-2026"),
-      ),
-    ).toEqual([]);
+    // No redirect matches the dashboard's own address or a path below it, as
+    // Next.js matches sources (next/dist/server/lib/router-utils/filesystem.js),
+    // so the former address's redirect can't loop
+    for (const path of [
+      "/uk/budgets/autumn-2026",
+      "/uk/budgets/autumn-2026/data/living_standards_outlook.json",
+    ]) {
+      expect(
+        redirects
+          .filter((redirect) =>
+            getPathMatch(redirect.source, {
+              strict: true,
+              removeUnnamedParams: true,
+            })(path),
+          )
+          .map((redirect) => redirect.source),
+        path,
+      ).toEqual([]);
+    }
   });
 });
 
