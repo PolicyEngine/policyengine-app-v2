@@ -189,6 +189,15 @@ describe('HouseholdReportPage', () => {
     );
   });
 
+  test('given v3 on the v1 routes then a calculated report offers no way to save it', async () => {
+    renderReport({ household: FAMILY_HOUSEHOLD, reformPolicyId: REFORM_POLICY_ID });
+
+    await calculate();
+
+    await screen.findByRole('region', { name: 'Household impact' });
+    expect(screen.queryByRole('region', { name: 'Save this report' })).not.toBeInTheDocument();
+  });
+
   test('given a household and a reform then the change in its net income is reported', async () => {
     renderReport({ household: FAMILY_HOUSEHOLD, reformPolicyId: REFORM_POLICY_ID });
 

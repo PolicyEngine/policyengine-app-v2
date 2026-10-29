@@ -5,6 +5,7 @@ import HouseholdBuilderPanel from '@/components/flagship/household/HouseholdBuil
 import HouseholdNetIncomeResult from '@/components/flagship/household/HouseholdNetIncomeResult';
 import SavedHouseholdPicker from '@/components/flagship/household/SavedHouseholdPicker';
 import SaveHouseholdForm from '@/components/flagship/household/SaveHouseholdForm';
+import SaveHouseholdReportForm from '@/components/flagship/household/SaveHouseholdReportForm';
 import type { HouseholdBreakdownSource } from '@/components/flagship/report/household/HouseholdBreakdowns';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
 import { householdResultCardStyle } from '@/components/flagship/report/household/householdResultParts';
@@ -25,6 +26,7 @@ import {
 import { describeHousehold } from '@/libs/flagship/householdDescription';
 import { householdAmountInputs, newV3Household } from '@/libs/flagship/householdReport';
 import type { HouseholdCalculationProvenance } from '@/libs/flagship/householdRun';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { getTaxYears } from '@/libs/metadataUtils';
 import type { Household } from '@/models/Household';
 import HouseholdSubPage from '@/pages/report-output/HouseholdSubPage';
@@ -125,9 +127,13 @@ function ReportSection({ label, children }: { label: string; children: ReactNode
  * pandas DataFrame option, issue #1095). With accounts, a saved household
  * can be opened, and the household saved or its changes saved.
  *
- * It calculates through the Public API's v1 household routes, as the
- * report section does, until v3's household calculations move to v2. No
- * route renders it yet: see `pages/flagship/householdEntryPoints.ts`.
+ * It calculates through the routes v3 uses (V3_API_ROUTES), as the report
+ * section does: the Public API's v1 household routes today, and
+ * `/v2/household-calculations` after the switch, where a calculated report
+ * can also be saved as a household report (`/v2/reports`, saved through
+ * `/v2/user-reports`) that anyone opens by its link
+ * (`SavedHouseholdReport.page.tsx`). No route renders it yet: see
+ * `pages/flagship/householdEntryPoints.ts`.
  */
 export default function HouseholdReportPage({
   countryId,
@@ -365,6 +371,20 @@ export default function HouseholdReportPage({
                 methodology={result.provenance.baseline}
                 breakdowns={breakdowns}
               />
+            )}
+
+            {/* Household reports are kept on the v2 routes only. */}
+            {V3_API_ROUTES === 'v2' && (
+              <ReportSection label="Save this report">
+                <SaveHouseholdReportForm
+                  // Each calculation is a report of its own to save.
+                  key={`${result.householdId}:${year}`}
+                  countryId={countryId}
+                  householdId={result.householdId}
+                  baselinePolicyId={baselinePolicyId}
+                  reformPolicyId={runsReform ? reformPolicyId : baselinePolicyId}
+                />
+              </ReportSection>
             )}
 
             <ReportSection label="Household inputs">
