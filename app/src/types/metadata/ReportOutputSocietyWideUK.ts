@@ -1,3 +1,4 @@
+import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { ReportOutputSocietyWideByConstituency } from './ReportOutputSocietyWideByConstituency';
 import { ReportOutputSocietyWideByLocalAuthority } from './ReportOutputSocietyWideByLocalAuthority';
 
@@ -11,7 +12,12 @@ export interface ReportOutputSocietyWideUK {
     tax_revenue_impact: number;
   };
   cliff_impact: Record<string, any> | null;
-  constituency_impact: {
+  /**
+   * Absent or null in national UK results from .py 6.10.0 on, which leave
+   * the local areas to a separate breakdown run (useUKLocalAreaBreakdown).
+   * Older saved results still hold them.
+   */
+  constituency_impact?: {
     by_constituency: ReportOutputSocietyWideByConstituency;
     /** Absent from results in the API's newer list shape (see normalizeSocietyWideOutput). */
     outcomes_by_region?: {
@@ -51,13 +57,19 @@ export interface ReportOutputSocietyWideUK {
         'No change': number;
       };
     };
-  };
+  } | null;
+  /** Absent or null as constituency_impact is. */
   local_authority_impact?: {
     by_local_authority: ReportOutputSocietyWideByLocalAuthority;
-  };
+  } | null;
   data_version: string;
   dataset?: string | null;
   policyengine_version?: string | null;
+  /**
+   * The versions and dataset the Public API ran the result on, inside the
+   * result as its economy route returns it. Saved results keep it.
+   */
+  policyengine_bundle?: PolicyEngineBundle | null;
   decile: {
     average: Record<string, number>;
     relative: Record<string, number>;

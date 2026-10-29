@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
+import { outputServesLocalAreaBreakdowns } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { BillChange } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { CalibrationPin } from '@/components/flagship/CalibrationMatches';
@@ -10,7 +12,7 @@ import HouseholdImpactSection from '@/components/flagship/report/household/House
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportValidation from '@/components/flagship/report/ReportValidation';
-import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
+import UKLocalAreaSection from '@/components/flagship/report/UKLocalAreaSection';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
   leadsWithStateRevenue,
@@ -18,6 +20,7 @@ import ReportContents, {
   type DistrictsCardCopy,
   type ReportMetric,
 } from '@/components/flagship/ReportContents';
+import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import type { ModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Tabs, TabsContent, TabsList, TabsTrigger, Text, Title } from '@/components/ui';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
@@ -25,6 +28,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportTabHistory } from '@/hooks/useReportTabHistory';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
+import { reportYearLabel, UK_FISCAL_YEAR_NOTE } from '@/libs/flagship/draftLabels';
 import type { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
 import { regionKindOf, trackReportTabViewed } from '@/utils/analytics';
@@ -46,6 +50,12 @@ const UK_DISTRICTS_CARD_COPY: DistrictsCardCopy = {
   title: 'Local area impacts',
   action: 'Explore local areas',
   preview: 'Compare income changes across constituencies and local authorities on a map.',
+};
+/** The card for results without area impacts, which a separate run calculates on request. */
+const UK_DISTRICTS_COMPUTE_CARD_COPY: DistrictsCardCopy = {
+  ...UK_DISTRICTS_CARD_COPY,
+  preview:
+    'Calculate income changes across constituencies and local authorities, and compare them on a map.',
 };
 
 function SectionHeading({ id, title }: { id: string; title: string }) {
@@ -125,7 +135,7 @@ export interface ReportViewProps {
   yearSwitcher?: ReactNode;
   /** In place of the section tabs, e.g. a budget window's all-years view. */
   sectionsOverride?: ReactNode;
-  /** The cover's year, when it differs from `year` (a window's span). */
+  /** The cover's year as written, when it differs from `year` (a window's span). */
   coverYear?: string;
   /** Content below the overview's section cards, e.g. data provenance. */
   overviewFooter?: ReactNode;
@@ -349,7 +359,20 @@ export default function ReportView({
                       fontSize: typography.fontSize.sm,
                     }}
                   >
-                    {[populationLabel, coverYear ?? year].filter(Boolean).join(' · ')}
+                    {[populationLabel, coverYear ?? reportYearLabel(year, countryId)]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                )}
+                {isUK && (
+                  <Text
+                    style={{
+                      margin: 0,
+                      color: colors.primary[100],
+                      fontSize: typography.fontSize.xs,
+                    }}
+                  >
+                    {UK_FISCAL_YEAR_NOTE}
                   </Text>
                 )}
               </Stack>
@@ -409,7 +432,15 @@ export default function ReportView({
                       metrics={metrics}
                       metricsNote={output ? undefined : storedMetricsNote}
                       districtAvailable={districtScope || isUK}
-                      districtsCopy={isUK ? UK_DISTRICTS_CARD_COPY : undefined}
+                      districtsCopy={
+                        isUK
+                          ? output &&
+                            !hasUKLocalAreaImpacts(output) &&
+                            outputServesLocalAreaBreakdowns(output)
+                            ? UK_DISTRICTS_COMPUTE_CARD_COPY
+                            : UK_DISTRICTS_CARD_COPY
+                          : undefined
+                      }
                       showDistricts={showDistrictsSection}
                       onOpen={openReportSection}
                     />
@@ -463,7 +494,13 @@ export default function ReportView({
                         </CongressionalDistrictDataProvider>
                       )}
                       {output && !showUSDistricts && isUK && (
-                        <UKLocalAreaMaps output={output} region={region} />
+                        <UKLocalAreaSection
+                          output={output}
+                          region={region}
+                          year={year}
+                          reformPolicyId={reformPolicyId}
+                          baselinePolicyId={baselinePolicyId}
+                        />
                       )}
                       {output && !showUSDistricts && !isUK && (
                         <Text
@@ -480,17 +517,20 @@ export default function ReportView({
                     <SectionHeading id="household" title="Household" />
                     {/* A household runs on the report's own policies, once they exist. */}
                     {reformPolicyId && baselinePolicyId ? (
-                      <HouseholdImpactSection
-                        // New policies, year or region start a new form, with nothing run.
-                        key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
-                        countryId={countryId}
-                        year={year}
-                        region={region}
-                        baselinePolicyId={baselinePolicyId}
-                        reformPolicyId={reformPolicyId}
-                        reformPaths={provisions.map((provision) => provision.path)}
-                        reformChangesNothing={!!output && isSocietyWideReportNoOp(output)}
-                      />
+                      // The builder and breakdown read every variable (v2 loads them in the background).
+                      <V3VariablesGate label="Loading the household builder">
+                        <HouseholdImpactSection
+                          // New policies, year or region start a new form, with nothing run.
+                          key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
+                          countryId={countryId}
+                          year={year}
+                          region={region}
+                          baselinePolicyId={baselinePolicyId}
+                          reformPolicyId={reformPolicyId}
+                          reformPaths={provisions.map((provision) => provision.path)}
+                          reformChangesNothing={!!output && isSocietyWideReportNoOp(output)}
+                        />
+                      </V3VariablesGate>
                     ) : (
                       <>
                         <Text

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { ukLocalAreaBreakdownRequest } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
@@ -125,9 +126,20 @@ const OUTPUT_TABS: Record<string, (props: OutputTabProps) => React.ReactElement>
     />
   ),
 
-  constituency: ({ output }) => <ConstituencySubPage output={output} />,
+  // A UK result without area impacts offers to compute them for the report.
+  constituency: ({ output, report, simulations, geographies }) => (
+    <ConstituencySubPage
+      output={output}
+      {...ukLocalAreaBreakdownRequest({ report, simulations, geographies })}
+    />
+  ),
 
-  'local-authority': ({ output }) => <LocalAuthoritySubPage output={output} />,
+  'local-authority': ({ output, report, simulations, geographies }) => (
+    <LocalAuthoritySubPage
+      output={output}
+      {...ukLocalAreaBreakdownRequest({ report, simulations, geographies })}
+    />
+  ),
 };
 
 interface SocietyWideReportOutputProps {

@@ -222,6 +222,34 @@ describe('rerunSettings', () => {
       expect(settings.baseline).toEqual({ reformId: 'rf-plan-b', label: 'Plan B', policyId: 87 });
     });
 
+    test('given the API cannot be read and the saved reform is a v2 policy then the comparison is its parameters', async () => {
+      // Given: saved on the v2 routes, the reform has no v1 policy to run against.
+      fetchReportById.mockRejectedValue(new Error('down'));
+      const v2PlanB: Reform = {
+        ...PLAN_B,
+        policyId: null,
+        v2PolicyId: '6f1c2a9e-3b4d-4e5f-8a7b-9c0d1e2f3a4b',
+        parameters: [
+          {
+            name: 'gov.irs.deductions.standard.amount.SINGLE',
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 20000 }],
+          },
+        ],
+      };
+
+      // When
+      const settings = await rerunSettings('us', ACCOUNT_REPORT, {
+        savedReform: (reformId) => (reformId === v2PlanB.id ? v2PlanB : undefined),
+      });
+
+      // Then: the run makes a v1 policy from the parameters, as Build's runs do.
+      expect(settings.baseline).toEqual({
+        reformId: 'rf-plan-b',
+        label: 'Plan B',
+        parameters: v2PlanB.parameters,
+      });
+    });
+
     test('given neither the API nor the saved reform names the comparison then it does not run', async () => {
       // Given
       fetchReportById.mockRejectedValue(new Error('down'));

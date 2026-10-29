@@ -76,6 +76,21 @@ export function isPercentageUnit(unit: string | null | undefined): boolean {
 }
 
 /**
+ * How many decimals a money amount shows: whole pounds or dollars stay
+ * whole, and other amounts show pence or cents ("£346.37", not
+ * "£346.367"). An amount under 1, such as a rate a mile, keeps up to 3
+ * decimals so it does not round away.
+ */
+export function moneyDigits(amount: number): Intl.NumberFormatOptions {
+  if (Number.isInteger(amount)) {
+    return { maximumFractionDigits: 0 };
+  }
+  return Math.abs(amount) < 1
+    ? { minimumFractionDigits: 2, maximumFractionDigits: 3 }
+    : { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+}
+
+/**
  * A parameter value as the flagship (v3) pages show it as text. Only
  * flagship code reads it; legacy pages format values on their own.
  */
@@ -89,10 +104,25 @@ export function formatValue(value: any, unit: string | null): string {
   const currency = currencySymbolForUnit(unit);
   if (typeof value === 'number' && currency) {
     // The sign goes before the symbol: "−£500", not "£-500".
-    return `${value < 0 ? '−' : ''}${currency}${Math.abs(value).toLocaleString()}`;
+    return `${value < 0 ? '−' : ''}${currency}${Math.abs(value).toLocaleString(undefined, moneyDigits(value))}`;
   }
   if (typeof value === 'number' && isPercentageUnit(unit)) {
     return `${Math.round(value * 100 * 100) / 100}%`;
   }
   return String(value);
+}
+
+/**
+ * What current law reads as where it leaves an amount to a formula.
+ * Metadata sends null for an amount not legislated yet, which the
+ * country model then sets from a formula.
+ */
+export const SET_BY_FORMULA = 'Set by formula (not legislated)';
+
+/** The same, where a value box or a narrow cell has no room for the rest. */
+export const SET_BY_FORMULA_SHORT = 'Set by formula';
+
+/** Current law as text: null is an amount current law leaves to a formula, not "—". */
+export function formatCurrentLaw(value: unknown, unit: string | null): string {
+  return value === null ? SET_BY_FORMULA : formatValue(value, unit);
 }

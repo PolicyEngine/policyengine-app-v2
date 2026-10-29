@@ -2,9 +2,9 @@ import { Fragment, useMemo, useState } from 'react';
 import { STATE_NAMES } from '@/api/billFeed';
 import { Switch } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { isEditableValue, sameParameterValue } from '@/libs/draftReform';
+import { isEditableCurrentLaw, sameParameterValue } from '@/libs/draftReform';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
-import { formatValue } from '@/utils/parameterValues';
+import { formatCurrentLaw } from '@/utils/parameterValues';
 import ValueInput, { ValueDisplay } from './ValueInput';
 
 export interface ValueGridMember {
@@ -315,7 +315,7 @@ export default function ValueGrid({
     const value = valueAt(member.path, year);
     const baseline = baselineAt(member.path, year);
     const changed = !sameValue(value, baseline);
-    const baselineText = formatValue(baseline, param.unit ?? null);
+    const baselineText = formatCurrentLaw(baseline, param.unit ?? null);
     // Three fields of one height, each labeled above: when it starts,
     // current law (read-only, a quiet box), and the new value.
     const field = (label: string, content: React.ReactNode) => (
@@ -379,7 +379,7 @@ export default function ValueGrid({
               background: changed ? colors.primary[50] : undefined,
             }}
           >
-            {isEditableValue(baseline) ? (
+            {isEditableCurrentLaw(baseline) ? (
               <ValueInput
                 param={param}
                 value={value}
@@ -597,7 +597,7 @@ export default function ValueGrid({
                   const value = valueAt(member.path, year);
                   const baseline = baselineAt(member.path, year);
                   const changed = !sameValue(value, baseline);
-                  const baselineText = formatValue(baseline, param.unit ?? null);
+                  const baselineText = formatCurrentLaw(baseline, param.unit ?? null);
                   return (
                     <td
                       key={year}
@@ -630,7 +630,7 @@ export default function ValueGrid({
                               onChange={(next) => onChange(member.path, year, next)}
                             />
                           </div>
-                        ) : isEditableValue(baseline) ? (
+                        ) : isEditableCurrentLaw(baseline) ? (
                           <ValueInput
                             param={param}
                             value={value}
@@ -651,14 +651,18 @@ export default function ValueGrid({
                           </span>
                         )}
                       </div>
-                      {!lone && changed && (
+                      {/* The line keeps its room when hidden, so a first change
+                          doesn't push the rows below away from the pointer. */}
+                      {!lone && (
                         <span
+                          aria-hidden={!changed}
                           style={{
                             display: 'block',
                             marginTop: 2,
                             fontSize: typography.fontSize.xs,
                             color: colors.text.tertiary,
                             whiteSpace: 'nowrap',
+                            visibility: changed ? undefined : 'hidden',
                           }}
                         >
                           Baseline: {baselineText}
@@ -675,7 +679,7 @@ export default function ValueGrid({
                     <td
                       key={year}
                       aria-label={`${member.label}, ${year}`}
-                      title={`Current law: ${formatValue(baselineAt(member.path, year), param.unit ?? null)}`}
+                      title={`Current law: ${formatCurrentLaw(baselineAt(member.path, year), param.unit ?? null)}`}
                       style={{
                         ...previewCell,
                         color: changed ? colors.primary[700] : colors.text.secondary,
@@ -776,7 +780,7 @@ function MemberValueCards({
                 ? asYes(baseline)
                   ? 'true'
                   : 'false'
-                : formatValue(baseline, param.unit ?? null);
+                : formatCurrentLaw(baseline, param.unit ?? null);
             return (
               <div
                 key={member.path}
@@ -825,7 +829,7 @@ function MemberValueCards({
                         label={name}
                         onChange={(next) => onChange(member.path, year, next)}
                       />
-                    ) : isEditableValue(baseline) ? (
+                    ) : isEditableCurrentLaw(baseline) ? (
                       <ValueInput
                         param={param}
                         value={value}

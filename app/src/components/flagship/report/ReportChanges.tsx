@@ -1,16 +1,19 @@
+import type { ReactNode } from 'react';
 import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import type { BillChange } from '@/api/billFeed';
 import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
+import { VariableNamesFailed, VariableNamesLoading } from '@/components/flagship/V3VariablesGate';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useV3Variables } from '@/hooks/useV3Variables';
 import { sameParameterValue } from '@/libs/draftReform';
 import { changeNamesPath } from '@/libs/flagship/billProvisions';
-import { dayLabel, describeChange, reportProvisionName } from '@/libs/flagship/draftLabels';
+import { changeDateLabel, describeChange, reportProvisionName } from '@/libs/flagship/draftLabels';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
-import { formatValue } from '@/utils/parameterValues';
+import { formatCurrentLaw, formatValue } from '@/utils/parameterValues';
 
 /** Columns that show from the small breakpoint up; below it the values stack under the name. */
 const WIDE_ONLY = 'tw:hidden tw:sm:table-cell';
@@ -54,7 +57,8 @@ interface ChangeRow {
   /** Where in the bill, e.g. "Section 1, amending C.G.S. § 12-700". */
   section?: string;
   before?: string;
-  after: string;
+  /** Text, or a placeholder while the variable names it lists load. */
+  after: ReactNode;
   /** The value is today's law already, so there is no "before" to show. */
   currentLaw?: boolean;
   /** When the change applies (ISO dates); absent when it cannot be told. */
@@ -113,12 +117,15 @@ export default function ReportChanges({
   beforeLabel?: string;
 }) {
   const countryId = useCurrentCountry();
-  // Dates as the country writes them: "Jan 1, 2026" in the US, "1 Jan 2026" in the UK.
-  const dateText = (date: string) => dayLabel(date, countryId);
+  // Dates as the country writes them: "Jan 1, 2026" in the US; in the UK,
+  // the tax year ("2026-27") for a change from a year's start, else "1 Apr 2026".
+  const dateText = (date: string) => changeDateLabel(date, countryId);
   const endText = (date: string) => (date === FOREVER ? 'No end date' : dateText(date));
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const variables = useSelector((state: RootState) => state.metadata.variables);
   const variableLabel = (name: string) => variables?.[name]?.label ?? name;
+  // On v2 the variables load in the background: a list of them waits for their labels.
+  const variablesStatus = useV3Variables();
 
   const scored = Boolean(changes && changes.length > 0);
   // A tracker row has no dates of its own: it takes those of the parameter
@@ -162,10 +169,21 @@ export default function ReportChanges({
             name: reportProvisionName(provision),
             detail: parameters?.[provision.path]?.description ?? undefined,
             // A set of variables reads as what it takes out and puts in.
-            before: currentLaw || list ? undefined : format(provision.baselineValue),
-            after: list
-              ? describeChange(provision.baselineValue, provision.value, String, variableLabel)
-              : format(provision.value),
+            before:
+              currentLaw || list
+                ? undefined
+                : formatCurrentLaw(provision.baselineValue, provision.unit),
+            after: list ? (
+              variablesStatus.status === 'loading' ? (
+                <VariableNamesLoading />
+              ) : variablesStatus.status === 'error' ? (
+                <VariableNamesFailed onRetry={variablesStatus.retry} />
+              ) : (
+                describeChange(provision.baselineValue, provision.value, String, variableLabel)
+              )
+            ) : (
+              format(provision.value)
+            ),
             currentLaw,
             dates: provisionDates(provision),
           };

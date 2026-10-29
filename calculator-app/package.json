@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "sh -c 'next dev --port ${PORT:-3001}'",
-    "build": "next build",
+    "build": "next build && node ../scripts/check-built-css.mjs . src/app/globals.css",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
@@ -30,6 +30,7 @@
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.575.0",
     "next": "^15.3.3",
+    "openapi-fetch": "0.17.0",
     "radix-ui": "^1.4.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

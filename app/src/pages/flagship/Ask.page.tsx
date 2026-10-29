@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IconAdjustments,
   IconChevronRight,
@@ -7,7 +7,7 @@ import {
   IconPlus,
 } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
-import { useSelector } from 'react-redux';
+import { useSelector, useStore } from 'react-redux';
 import remarkGfm from 'remark-gfm';
 import {
   askChatEndpoint,
@@ -16,22 +16,22 @@ import {
   toolActivityLabel,
 } from '@/api/askChat';
 import ChatComposer from '@/components/flagship/ChatComposer';
+import { ErrorState } from '@/components/flagship/states';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useEnsureV3Parameters, useLoadV3Parameters } from '@/hooks/useV3Parameters';
+import { useV3SearchCatalog } from '@/hooks/useV3SearchCatalog';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
 import {
   ChatReformBridge,
   provisionsFromChatReform,
   reformFromToolInput,
 } from '@/libs/flagship/chatDraftBridge';
-import {
-  ParameterSearchEntry,
-  searchParameters,
-  selectParameterSearchIndex,
-} from '@/libs/parameterSearch';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
+import { ParameterSearchEntry, searchParameters } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 import { formatValue, getCurrentValue, parseValueFromQuestion } from '@/utils/parameterValues';
 
@@ -58,6 +58,11 @@ interface ChatTurnState {
   suggestions: string[];
   /** Provisions extracted from the model's validated reform, if any */
   bridge: ChatReformBridge | null;
+  /**
+   * The validated reform while its current law loads (on the v2 routes),
+   * or after that load failed; null once its provisions are in `bridge`.
+   */
+  bridgeLoad: { status: 'loading' | 'error'; reform: Record<string, any> } | null;
 }
 
 interface AskTurn {
@@ -164,8 +169,22 @@ export default function AskPage() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const draft = useDraftReform();
-  const index = useSelector(selectParameterSearchIndex);
+  // From the whole metadata on the v1 routes, the search file on v2.
+  const catalog = useV3SearchCatalog();
+  const index = catalog.index;
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const store = useStore<RootState>();
+  const loadParameters = useLoadV3Parameters();
+  // On the v2 routes the search file loads in the background: until it is
+  // in, nothing can match, so the page says so instead of answering empty.
+  const searchLoading = V3_API_ROUTES === 'v2' && catalog.status !== 'ready';
+  // Current law for the matches shown, which on the v2 routes load once listed.
+  const shownMatchPaths = useMemo(
+    () => turns.flatMap((turn) => (turn.matches ?? []).map((entry) => entry.path)),
+    [turns]
+  );
+  const matchParameters = useEnsureV3Parameters(shownMatchPaths);
+  const [pickError, setPickError] = useState<string | null>(null);
 
   const examples = EXAMPLES[countryId] ?? EXAMPLES.default;
   const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
@@ -188,10 +207,53 @@ export default function AskPage() {
     });
   };
 
+  /** Applies a patch to one turn's chat state. */
+  const patchChatAt = (turnIndex: number) => (patch: (chat: ChatTurnState) => ChatTurnState) =>
+    setTurns((prev) =>
+      prev.map((turn, index) =>
+        index === turnIndex && turn.chat ? { ...turn, chat: patch(turn.chat) } : turn
+      )
+    );
+
+  /**
+   * Turns the chat's validated reform into draft provisions. Their current
+   * law comes with the reform's parameters, which on the v2 routes load
+   * first; a failed load leaves no provisions and says so, with a retry.
+   */
+  const bridgeChatReform = (
+    reform: Record<string, any>,
+    patchChat: (patch: (chat: ChatTurnState) => ChatTurnState) => void
+  ): Promise<void> | undefined => {
+    const bridgeReform = () => {
+      const bridge = provisionsFromChatReform(
+        reform,
+        index.entries,
+        store.getState().metadata.parameters
+      );
+      patchChat((chat) => ({
+        ...chat,
+        bridge: bridge.provisions.length > 0 ? bridge : chat.bridge,
+        bridgeLoad: null,
+      }));
+    };
+    const pending = loadParameters(Object.keys(reform));
+    if (!pending) {
+      bridgeReform();
+      return undefined;
+    }
+    patchChat((chat) => ({ ...chat, bridgeLoad: { status: 'loading', reform } }));
+    return pending.then(bridgeReform, () =>
+      patchChat((chat) => ({ ...chat, bridgeLoad: { status: 'error', reform } }))
+    );
+  };
+
   const sendChatTurn = (question: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    // The turn this question starts: work that finishes after another
+    // question (the reform's draft step) still belongs to it.
+    const turnIndex = turns.length;
 
     const history: AskChatMessage[] = turns.flatMap((turn) => {
       const messages: AskChatMessage[] = [{ role: 'user', content: turn.question }];
@@ -220,7 +282,14 @@ export default function AskPage() {
       {
         question,
         matches: [],
-        chat: { answer: '', status: 'streaming', activity: null, suggestions: [], bridge: null },
+        chat: {
+          answer: '',
+          status: 'streaming',
+          activity: null,
+          suggestions: [],
+          bridge: null,
+          bridgeLoad: null,
+        },
       },
     ]);
 
@@ -236,12 +305,8 @@ export default function AskPage() {
           patchLastChat((chat) => ({ ...chat, activity: toolActivityLabel(toolName) })),
         onToolUse: ({ toolName, toolInput }) => {
           const reform = reformFromToolInput(toolName, toolInput);
-          if (!reform) {
-            return;
-          }
-          const bridge = provisionsFromChatReform(reform, index.entries, parameters);
-          if (bridge.provisions.length > 0) {
-            patchLastChat((chat) => ({ ...chat, bridge }));
+          if (reform) {
+            void bridgeChatReform(reform, patchChatAt(turnIndex));
           }
         },
         onSuggestions: (suggestions) => patchLastChat((chat) => ({ ...chat, suggestions })),
@@ -287,7 +352,8 @@ export default function AskPage() {
 
   const send = (raw?: string) => {
     const question = (raw ?? input).trim();
-    if (!question) {
+    // Nothing can match until the search file is in; the question waits in the box.
+    if (!question || searchLoading) {
       return;
     }
     setInput('');
@@ -305,19 +371,42 @@ export default function AskPage() {
   };
 
   const addMatch = (entry: ParameterSearchEntry, question: string) => {
-    const provision = provisionFromSearchEntry(entry, parameters?.[entry.path]?.values);
-    const proposed = parseValueFromQuestion(question, entry.unit);
-    addDraftProvision(
-      countryId,
-      proposed === undefined ? provision : { ...provision, value: proposed },
-      'chat',
-      'ask-keyword-v0'
-    );
+    const add = () => {
+      setPickError(null);
+      const provision = provisionFromSearchEntry(
+        entry,
+        store.getState().metadata.parameters?.[entry.path]?.values
+      );
+      const proposed = parseValueFromQuestion(question, entry.unit);
+      addDraftProvision(
+        countryId,
+        proposed === undefined ? provision : { ...provision, value: proposed },
+        'chat',
+        'ask-keyword-v0'
+      );
+    };
+    // A match joins the draft at current law, which on the v2 routes loads first.
+    const pending = loadParameters([entry.path]);
+    if (pending) {
+      pending.then(add, () => setPickError('Could not load that parameter. Try picking it again.'));
+    } else {
+      add();
+    }
   };
 
   const renderMatchRow = (entry: ParameterSearchEntry, question: string) => {
     const inDraft = draftPaths.has(entry.path);
-    const baseline = getCurrentValue(parameters?.[entry.path]?.values);
+    const values = parameters?.[entry.path]?.values;
+    const baseline = getCurrentValue(values);
+    // On the v2 routes a listed match's current law loads after it shows.
+    const currentLaw =
+      values !== undefined
+        ? formatValue(baseline, entry.unit)
+        : matchParameters.waiting
+          ? 'loading…'
+          : matchParameters.status === 'error'
+            ? 'could not load'
+            : formatValue(baseline, entry.unit);
     return (
       <button
         key={entry.path}
@@ -349,7 +438,7 @@ export default function AskPage() {
             {entry.breadcrumb || entry.label}
           </Text>
           <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-            current: {formatValue(baseline, entry.unit)}
+            current: {currentLaw}
           </Text>
           <Text
             style={{
@@ -394,7 +483,8 @@ export default function AskPage() {
     lineHeight: 1.4,
   };
 
-  const renderChatReply = (chat: ChatTurnState) => {
+  const renderChatReply = (chat: ChatTurnState, turnIndex: number) => {
+    const bridgeLoad = chat.bridgeLoad;
     const bridgeInDraft =
       chat.bridge !== null && chat.bridge.provisions.every((p) => draftPaths.has(p.path));
     return (
@@ -413,6 +503,21 @@ export default function AskPage() {
               Thinking…
             </Text>
           )
+        )}
+        {bridgeLoad?.status === 'loading' && (
+          <Text
+            role="status"
+            style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+          >
+            Loading current law for this reform…
+          </Text>
+        )}
+        {bridgeLoad?.status === 'error' && (
+          <ErrorState
+            compact
+            title="Could not load current law for this reform, so it cannot join your draft yet."
+            onRetry={() => bridgeChatReform(bridgeLoad.reform, patchChatAt(turnIndex))}
+          />
         )}
         {chat.bridge && (
           <div
@@ -500,20 +605,50 @@ export default function AskPage() {
   };
 
   const composer = (
-    <ChatComposer
-      value={input}
-      onChange={setInput}
-      onSend={() => send()}
-      examples={examples}
-      animatePlaceholder={!hasTurns}
-      note={
-        chatEnabled
-          ? countryId === 'uk'
-            ? 'Answers computed live by the PolicyEngine UK model'
-            : 'AI drafting against the policyengine-us parameters — impacts compute when you run the report'
-          : 'Matches your description to PolicyEngine parameters — pick one to start a draft'
-      }
-    />
+    <>
+      {searchLoading && catalog.status === 'error' && (
+        <ErrorState compact title="Could not load the parameters." onRetry={catalog.retry} />
+      )}
+      {searchLoading && catalog.status !== 'error' && (
+        <p
+          role="status"
+          style={{
+            margin: 0,
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
+            textAlign: 'center',
+          }}
+        >
+          Loading the parameters to match against…
+        </p>
+      )}
+      {shownMatchPaths.length > 0 && matchParameters.status === 'error' && (
+        <ErrorState
+          compact
+          title="Could not load current law for these matches."
+          onRetry={matchParameters.retry}
+        />
+      )}
+      {pickError && (
+        <p role="alert" style={{ margin: 0, textAlign: 'center' }}>
+          {pickError}
+        </p>
+      )}
+      <ChatComposer
+        value={input}
+        onChange={setInput}
+        onSend={() => send()}
+        examples={examples}
+        animatePlaceholder={!hasTurns}
+        note={
+          chatEnabled
+            ? countryId === 'uk'
+              ? 'Answers computed live by the PolicyEngine UK model'
+              : 'AI drafting against the policyengine-us parameters — impacts compute when you run the report'
+            : 'Matches your description to PolicyEngine parameters — pick one to start a draft'
+        }
+      />
+    </>
   );
 
   if (!hasTurns) {
@@ -630,7 +765,7 @@ export default function AskPage() {
                 </div>
               </div>
               {turn.chat ? (
-                renderChatReply(turn.chat)
+                renderChatReply(turn.chat, turnIndex)
               ) : (
                 <Stack style={{ gap: spacing.sm }}>
                   {turn.matches.length === 0 ? (

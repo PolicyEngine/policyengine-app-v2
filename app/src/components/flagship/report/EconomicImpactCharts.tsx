@@ -8,14 +8,17 @@ import DeepPovertyImpactByGenderSubPage from '@/components/flagship/report/chart
 import DistributionalImpactIncomeAverageSubPage from '@/components/flagship/report/charts/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from '@/components/flagship/report/charts/DistributionalImpactIncomeRelativeSubPage';
 import InequalityImpactSubPage from '@/components/flagship/report/charts/InequalityImpactSubPage';
+import { POVERTY_AGE_CSV_LABELS } from '@/components/flagship/report/charts/povertyAgeGroups';
 import PovertyImpactByAgeSubPage from '@/components/flagship/report/charts/PovertyImpactByAgeSubPage';
 import PovertyImpactByGenderSubPage from '@/components/flagship/report/charts/PovertyImpactByGenderSubPage';
 import PovertyImpactByRaceSubPage from '@/components/flagship/report/charts/PovertyImpactByRaceSubPage';
 import WinnersLosersIncomeDecileSubPage from '@/components/flagship/report/charts/WinnersLosersIncomeDecileSubPage';
 import ReportChartCard from '@/components/flagship/report/ReportChartCard';
+import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import { SegmentedControl, Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useV3Variables } from '@/hooks/useV3Variables';
 import {
   getBudgetCsvRows,
   getDetailedBudgetCsvRows,
@@ -72,6 +75,13 @@ const DECILE_MODE_OPTIONS = [
 export default function EconomicImpactCharts({ output }: { output: SocietyWideReportOutput }) {
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const variablesStatus = useV3Variables();
+  const programmeCsvReason =
+    variablesStatus.status === 'loading'
+      ? 'Loading programme names'
+      : variablesStatus.status === 'error'
+        ? 'Could not load the programme names'
+        : undefined;
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');
   const [wealthDecileMode, setWealthDecileMode] = useState<DecileMode>('absolute');
   // The UK's results also break the budget down by program and rank households by wealth.
@@ -110,7 +120,7 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
   const povertyCsvData = (() => {
     const variable = povertyDepth === 'deep' ? 'deep_poverty' : undefined;
     if (povertyBreakdown === 'by-age') {
-      return getPovertyByAgeCsvRows(output, variable);
+      return getPovertyByAgeCsvRows(output, variable, POVERTY_AGE_CSV_LABELS);
     }
     if (povertyBreakdown === 'by-gender') {
       return getPovertyByGenderCsvRows(output, variable);
@@ -176,9 +186,14 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
             fullWidth
             downloadFilename="budgetary-impact-by-program.svg"
             csvFilename="budgetary-impact-by-program.csv"
-            csvData={getDetailedBudgetCsvRows(output, metadata)}
+            // Its rows name programmes by variable label: on v2 they wait for the variables.
+            csvData={programmeCsvReason ? undefined : getDetailedBudgetCsvRows(output, metadata)}
+            csvUnavailableReason={programmeCsvReason}
           >
-            <BudgetaryImpactByProgramSubPage output={output} fillHeight />
+            {/* Programme names are variable labels (v2 loads them in the background). */}
+            <V3VariablesGate label="Loading programme names">
+              <BudgetaryImpactByProgramSubPage output={output} fillHeight />
+            </V3VariablesGate>
           </ReportChartCard>
         )}
 

@@ -4,9 +4,11 @@ import {
   addDraftProvision,
   clearDraftAfterRun,
   clearDraftReform,
+  currentLawForYear,
   draftToReform,
   draftYear,
   getDraftReform,
+  isEditableCurrentLaw,
   isEditableValue,
   loadProvisionsIntoDraft,
   loadReformIntoDraft,
@@ -15,12 +17,14 @@ import {
   provisionChanged,
   provisionIntervals,
   provisionsForYear,
+  provisionsToRun,
   provisionValueInYear,
   provisionVariesOverTime,
   setDraftProvisionIntervals,
   setDraftYear,
   startDraftReform,
   updateDraftProvisionValue,
+  yearReadDate,
 } from '@/libs/draftReform';
 import { Reform } from '@/types/ingredients/Reform';
 
@@ -53,6 +57,33 @@ describe('draft provisions over time', () => {
     expect(provisionValueInYear(provision, 2027)).toBe(17000);
     expect(provisionValueInYear(provision, 2026)).toBeNull();
     expect(provisionVariesOverTime(provision)).toBe(true);
+  });
+
+  test('given a country then a year reads on 1 January in the US and 30 April in the UK', () => {
+    expect(yearReadDate(2027)).toBe('2027-01-01');
+    expect(yearReadDate(2027, 'us')).toBe('2027-01-01');
+    expect(yearReadDate(2027, 'uk')).toBe('2027-04-30');
+  });
+
+  test('given a UK rate uprated in April then its year reads the uprated rate', () => {
+    // UC single allowance (25 or over): £400.14 from April 2025, £424.90 from April 2026.
+    const currentLaw = { '2025-04-01': 400.14, '2026-04-01': 424.9 };
+    const provision = {
+      path: 'gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD',
+      breadcrumb: 'UC → Standard allowance → Single, 25 or over',
+      unit: 'currency-GBP',
+      baselineValue: 400.14,
+      value: 430,
+      intervals: [{ startDate: '2026-01-01', endDate: FOREVER, value: 430 }],
+    };
+    const parameters = { [provision.path]: { values: currentLaw } } as any;
+
+    const [uk] = provisionsToRun([provision], 2026, parameters, 'uk');
+    const [us] = provisionsToRun([provision], 2026, parameters);
+
+    expect(uk.baselineValue).toBe(424.9);
+    expect(uk.value).toBe(430);
+    expect(us.baselineValue).toBe(400.14);
   });
 
   test('given intervals for a parameter not in the draft then it is added with them', () => {
@@ -251,5 +282,60 @@ describe('a run hands the draft over to its report', () => {
       year: 2027,
       provisions: [{ path: SINGLE.path, value: 18000 }],
     });
+  });
+});
+
+// The UC protected LCWRA element as metadata sends it: 2027's amount is
+// not legislated, so policyengine-uk sets it from a formula.
+const PROTECTED = 'gov.dwp.universal_credit.rebalancing.protected_health_element';
+const PROTECTED_VALUES = { '2015-01-01': 429.8, '2026-04-01': 429.8, '2027-04-01': null };
+
+describe('current law left to a formula', () => {
+  test('given a null value during the year then current law is null', () => {
+    expect(currentLawForYear(PROTECTED_VALUES, 2027)).toBeNull();
+    expect(currentLawForYear(PROTECTED_VALUES, 2030)).toBeNull();
+  });
+
+  test('given a year before the null value then current law is the set value', () => {
+    expect(currentLawForYear(PROTECTED_VALUES, 2026)).toBe(429.8);
+  });
+
+  test('given a UK year then current law is read in April, after the uprating', () => {
+    const UC_SINGLE = { '2025-04-01': 400.14, '2026-04-01': 424.9 };
+
+    expect(currentLawForYear(UC_SINGLE, 2026, 'uk')).toBe(424.9);
+    expect(currentLawForYear(UC_SINGLE, 2026, 'us')).toBe(400.14);
+    expect(currentLawForYear(PROTECTED_VALUES, 2027, 'uk')).toBeNull();
+  });
+
+  test('given no values or a year before the first then current law is undefined', () => {
+    expect(currentLawForYear(undefined, 2027)).toBeUndefined();
+    expect(currentLawForYear(PROTECTED_VALUES, 2010)).toBeUndefined();
+  });
+
+  test('given a formula current law then a box can still set a value', () => {
+    expect(isEditableCurrentLaw(null)).toBe(true);
+    expect(isEditableCurrentLaw(undefined)).toBe(false);
+    expect(isEditableCurrentLaw('text')).toBe(false);
+  });
+
+  test('given the last set value typed for a formula year then the report runs it as a change', () => {
+    // Given: 429.8 typed from 2027, the value current law last set.
+    const frozen = {
+      path: PROTECTED,
+      breadcrumb: 'Protected LCWRA element',
+      unit: 'currency-GBP',
+      baselineValue: 429.8,
+      value: 429.8,
+      intervals: [{ startDate: '2027-01-01', endDate: FOREVER, value: 429.8 }],
+    };
+    const parameters = { [PROTECTED]: { values: PROTECTED_VALUES } } as any;
+
+    // When
+    const [run] = provisionsToRun([frozen], 2027, parameters);
+
+    // Then: current law reads as a formula, not as the value typed.
+    expect(run.baselineValue).toBeNull();
+    expect(run.value).toBe(429.8);
   });
 });

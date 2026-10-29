@@ -33,6 +33,31 @@ describe('ReportChanges', () => {
     expect(screen.getByText('From 6 Apr 2026')).toBeInTheDocument();
   });
 
+  test("given a UK change from a year's start then it reads as the tax year, in pence", () => {
+    render(
+      <ReportChanges
+        provisions={[
+          {
+            path: 'gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD',
+            breadcrumb: 'DWP → Universal Credit → Standard allowance → Single, 25 or over',
+            unit: 'currency-GBP',
+            baselineValue: 434.6716,
+            value: 424.9,
+            intervals: [{ startDate: '2027-01-01', endDate: '2028-12-31', value: 424.9 }],
+          },
+        ]}
+      />,
+      'uk'
+    );
+
+    expect(screen.getAllByText('£434.67').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('£424.90').length).toBeGreaterThan(0);
+    expect(screen.getByText('2027-28')).toBeInTheDocument();
+    expect(screen.getByText('2028-29')).toBeInTheDocument();
+    expect(screen.getByText('2027-28 – 2028-29')).toBeInTheDocument();
+    expect(screen.queryByText('1 Jan 2027')).not.toBeInTheDocument();
+  });
+
   test('given a US change then its date reads month first, as before', () => {
     render(<ReportChanges provisions={[US_PROVISION]} />, 'us');
 

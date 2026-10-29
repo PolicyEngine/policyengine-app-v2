@@ -142,6 +142,27 @@ export function getParameterAtInstant(parameter: any, instant: string): any {
 }
 
 /**
+ * The variables a parameter-named `adds` or `subtracts` lists at an instant.
+ *
+ * On the v1 routes the parameter is in the whole parameter list. On the v2
+ * routes there is no whole parameter list: the variables response carries
+ * the dated values of every parameter that adds or subtracts name
+ * (`partParameterValues`), and those take precedence. A parameter with no
+ * value at the instant lists nothing.
+ */
+export function getParameterNamedParts(
+  parameterPath: string,
+  instant: string,
+  parameters: Record<string, any>,
+  partParameterValues?: Record<string, Record<string, unknown>>
+): string[] {
+  const partValues = partParameterValues?.[parameterPath];
+  const parameter = partValues ? { values: partValues } : parameters[parameterPath];
+  const parts = parameter ? getParameterAtInstant(parameter, instant) : [];
+  return Array.isArray(parts) ? parts : [];
+}
+
+/**
  * Determines if a variable should be shown based on whether it has non-zero values
  * in baseline and/or reform scenarios
  *

@@ -24,6 +24,7 @@ import {
   provisionAdjusts,
   provisionIntervals,
   sameParameterValue,
+  yearReadDate,
 } from '@/libs/draftReform';
 import { isUntitledReform, periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
@@ -32,7 +33,7 @@ import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { regionKindOf, trackReportAdjusted } from '@/utils/analytics';
-import { formatValue } from '@/utils/parameterValues';
+import { formatCurrentLaw } from '@/utils/parameterValues';
 import ProvisionSkeleton from './ProvisionSkeleton';
 import PopulationPicker from './reform/PopulationPicker';
 import NumberInput from './reform/ValueInput';
@@ -197,7 +198,7 @@ function AdjustPanel({
           value: periodValues[provision.path][index],
         }));
         const inYear = new ValueIntervalCollection(intervals).getValueAtDate(
-          `${runYear ?? CURRENT_YEAR}-01-01`
+          yearReadDate(runYear ?? CURRENT_YEAR, countryId)
         );
         return {
           ...provision,
@@ -494,7 +495,7 @@ function AdjustPanel({
                       </div>
                     ))}
                     <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-                      Baseline: {formatValue(provision.baselineValue, provision.unit)}
+                      Baseline: {formatCurrentLaw(provision.baselineValue, provision.unit)}
                     </Text>
                   </div>
                 ) : (
@@ -532,7 +533,7 @@ function AdjustPanel({
                       <Text
                         style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
                       >
-                        Baseline: {formatValue(provision.baselineValue, provision.unit)}
+                        Baseline: {formatCurrentLaw(provision.baselineValue, provision.unit)}
                       </Text>
                     )}
                   </div>

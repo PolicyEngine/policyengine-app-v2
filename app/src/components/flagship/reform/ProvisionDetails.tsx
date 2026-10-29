@@ -12,7 +12,9 @@ import {
 } from '@/components/ui';
 import { FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { useV3SearchCatalog } from '@/hooks/useV3SearchCatalog';
 import {
+  currentLawForYear,
   DraftProvision,
   DraftReform,
   draftYear,
@@ -40,7 +42,6 @@ import {
   setValueFromYear,
 } from '@/libs/flagship/uprating';
 import { getDateRange, getTaxYears } from '@/libs/metadataUtils';
-import { selectParameterEntriesByPath } from '@/libs/parameterSearch';
 import { ChangesCard } from '@/pages/reportBuilder/modals/policyCreation/ChangesCard';
 import { RootState } from '@/store';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -98,7 +99,7 @@ function fitsGrid(provision: DraftProvision | undefined): boolean {
  */
 export default function ProvisionDetails({ draft, path, group, focusPath }: ProvisionDetailsProps) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const entriesByPath = useSelector(selectParameterEntriesByPath);
+  const entriesByPath = useV3SearchCatalog().entriesByPath;
   const { minDate, maxDate } = useSelector(getDateRange);
   const taxYears = useSelector(getTaxYears);
   const year = draftYear(draft);
@@ -188,11 +189,9 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     return null;
   }
 
-  const baselineAt = (memberPath: string, at: number) => {
-    const values = parameters[memberPath]?.values;
-    const value = values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : null;
-    return value ?? null;
-  };
+  // Null is an amount current law leaves to a formula; undefined, no value.
+  const baselineAt = (memberPath: string, at: number) =>
+    currentLawForYear(parameters[memberPath]?.values, at, draft.countryId);
   const baselineOn = (memberPath: string, date: string) => {
     const values = parameters[memberPath]?.values;
     return (values ? new ValueIntervalCollection(values).getValueAtDate(date) : null) ?? null;
@@ -211,7 +210,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     if (!provision || !provisionChanged(provision)) {
       return baselineAt(memberPath, at);
     }
-    return provisionValueInYear(provision, at) ?? baselineAt(memberPath, at);
+    return provisionValueInYear(provision, at, draft.countryId) ?? baselineAt(memberPath, at);
   };
 
   /** The provision to write to — the draft's own, or a new one from the search entry. */

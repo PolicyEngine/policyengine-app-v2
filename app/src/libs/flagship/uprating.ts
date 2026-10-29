@@ -5,6 +5,7 @@ import {
   provisionChanged,
   provisionIntervals,
   setDraftProvisionIntervals,
+  yearReadDate,
 } from '@/libs/draftReform';
 import { ParameterMetadata, ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -106,6 +107,11 @@ export function growthOf(
   return provision?.growth ?? 'fixed';
 }
 
+/** The parameter paths of the indexes a value can grow with in this country. */
+export function growthIndexPaths(countryId: string): string[] {
+  return (INDEXES[countryId] ?? []).map((index) => index.path);
+}
+
 export function availableIndexes(
   countryId: string,
   parameters: ParameterMetadataCollection
@@ -151,8 +157,8 @@ export function growthPhrase(growth: Growth | undefined, countryId: string, shor
   return short ? (index?.short ?? 'indexed') : `indexed to ${index?.label ?? growth}`;
 }
 
-const at = (series: ValueIntervalCollection, year: number) => {
-  const value = series.getValueAtDate(`${year}-01-01`);
+const at = (series: ValueIntervalCollection, year: number, countryId: string) => {
+  const value = series.getValueAtDate(yearReadDate(year, countryId));
   return typeof value === 'number' ? value : null;
 };
 
@@ -279,7 +285,8 @@ export function grownIntervals(
   param: ParameterMetadata | undefined,
   parameters: ParameterMetadataCollection,
   timing: GrowthTiming = growthTiming(startYear),
-  rounding: GrowthRounding = defaultRounding(undefined, value)
+  rounding: GrowthRounding = defaultRounding(undefined, value),
+  countryId: string = 'us'
 ): ValueInterval[] {
   const fixed = [{ startDate: `${startYear}-01-01`, endDate: FOREVER, value }];
   if (growth === 'fixed') {
@@ -291,13 +298,13 @@ export function grownIntervals(
     return fixed;
   }
   const series = new ValueIntervalCollection(seriesValues ?? {});
-  const base = at(series, timing.base);
+  const base = at(series, timing.base, countryId);
   if (!base) {
     return fixed;
   }
   const intervals: ValueInterval[] = [];
   for (let year = startYear; year <= endYear; year++) {
-    const level = at(series, year) ?? base;
+    const level = at(series, year, countryId) ?? base;
     intervals.push({
       startDate: `${year}-01-01`,
       endDate: year === endYear ? FOREVER : `${year}-12-31`,
@@ -357,7 +364,8 @@ export function setValueFromYear({
     param,
     parameters,
     when,
-    rounded
+    rounded,
+    countryId
   )) {
     collection.addInterval(interval);
   }

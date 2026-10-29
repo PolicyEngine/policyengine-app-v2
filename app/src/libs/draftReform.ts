@@ -181,19 +181,65 @@ export function isEditableValue(value: unknown): boolean {
   return typeof value === 'number' || typeof value === 'boolean' || isUnlimitedValue(value);
 }
 
+/**
+ * Whether a box can edit a parameter whose current law is `value`: a
+ * number or a switch, or an amount current law leaves to a formula (null).
+ */
+export function isEditableCurrentLaw(value: unknown): boolean {
+  return value === null || isEditableValue(value);
+}
+
+/**
+ * Current law for a parameter in `year`, as Build and reports describe
+ * it: its value on 1 January — or null when current law leaves the amount
+ * to a formula on any day of the year. Metadata sends null for an amount
+ * not legislated yet, so the last value set before it never stands in
+ * for current law. Undefined without values, or before the first of them.
+ */
+export function currentLawForYear(
+  values: Record<string, any> | undefined | null,
+  year: number,
+  countryId: string = 'us'
+): any {
+  if (!values) {
+    return undefined;
+  }
+  const collection = new ValueIntervalCollection(values);
+  const setByFormula = collection
+    .getIntervals()
+    .some(
+      (interval) =>
+        interval.value === null &&
+        interval.startDate <= `${year}-12-31` &&
+        interval.endDate >= `${year}-01-01`
+    );
+  return setByFormula ? null : collection.getValueAtDate(yearReadDate(year, countryId));
+}
+
 /** True when the provision's intervals amount to more than one value from one date. */
 export function provisionVariesOverTime(provision: Pick<DraftProvision, 'intervals'>): boolean {
   const intervals = provision.intervals ?? [];
   return intervals.length > 1 || (intervals.length === 1 && intervals[0].endDate !== FOREVER);
 }
 
-/** The proposed value in effect on 1 January of `year`, or null where current law holds. */
+/**
+ * The day a year's law is read on. The US model reads a year on
+ * 1 January. The UK model reads a fiscal year on 30 April, inside the
+ * year that starts in April, so a rate uprated in April counts for the
+ * year it starts in.
+ */
+export function yearReadDate(year: number | string, countryId: string = 'us'): string {
+  return countryId === 'uk' ? `${year}-04-30` : `${year}-01-01`;
+}
+
+/** The proposed value in effect in `year`, or null where current law holds. */
 export function provisionValueInYear(
   provision: Pick<DraftProvision, 'value' | 'intervals'>,
-  year: number
+  year: number,
+  countryId: string = 'us'
 ): any {
   const value = new ValueIntervalCollection(provisionIntervals(provision)).getValueAtDate(
-    `${year}-01-01`
+    yearReadDate(year, countryId)
   );
   return value === undefined ? null : value;
 }
@@ -612,7 +658,9 @@ export function setDraftYear(year: number): void {
     year,
     // Dated provisions mirror the value in effect for the draft's year.
     provisions: draft.provisions.map((p) =>
-      p.intervals?.length ? { ...p, value: provisionValueInYear(p, year) ?? p.baselineValue } : p
+      p.intervals?.length
+        ? { ...p, value: provisionValueInYear(p, year, draft.countryId) ?? p.baselineValue }
+        : p
     ),
   });
 }
@@ -625,18 +673,18 @@ export function setDraftYear(year: number): void {
 export function provisionsToRun(
   provisions: DraftProvision[],
   year: number,
-  parameters: ParameterMetadataCollection | null | undefined
+  parameters: ParameterMetadataCollection | null | undefined,
+  countryId: string = 'us'
 ): DraftProvision[] {
-  const currentLawAt = (path: string, at: number) => {
-    const values = parameters?.[path]?.values;
-    return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
-  };
+  const currentLawAt = (path: string, at: number) =>
+    currentLawForYear(parameters?.[path]?.values, at, countryId);
   return provisionsForYear(
     provisions.filter((provision) =>
       provisionAdjusts(provision, parameters?.[provision.path]?.values)
     ),
     year,
-    currentLawAt
+    currentLawAt,
+    countryId
   );
 }
 
@@ -652,16 +700,19 @@ export function provisionsToRun(
 export function provisionsForYear(
   provisions: DraftProvision[],
   year: number,
-  currentLawAt: (path: string, year: number) => any
+  currentLawAt: (path: string, year: number) => any,
+  countryId: string = 'us'
 ): DraftProvision[] {
   return provisions.map((p) => {
-    const baseline = currentLawAt(p.path, year) ?? p.baselineValue;
+    // Null is current law too: an amount it leaves to a formula.
+    const law = currentLawAt(p.path, year);
+    const baseline = law === undefined ? p.baselineValue : law;
     const changed = provisionChanged(p);
     return {
       ...p,
       ...(changed && !p.intervals?.length && { intervals: provisionIntervals(p) }),
       baselineValue: baseline,
-      value: changed ? (provisionValueInYear(p, year) ?? baseline) : baseline,
+      value: changed ? (provisionValueInYear(p, year, countryId) ?? baseline) : baseline,
     };
   });
 }

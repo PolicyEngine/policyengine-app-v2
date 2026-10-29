@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconChevronDown, IconSearch } from '@tabler/icons-react';
+import { areaEstimateFields } from '@/adapters/ukAreaEstimateFields';
+import {
+  UK_AREA_NOUNS,
+  type UKAreaLevel,
+  type UKBreakdownWithheldAreas,
+} from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import {
   AreaDetails,
@@ -9,6 +15,7 @@ import {
   rankedEnds,
 } from '@/components/flagship/report/DistrictImpactCard';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
+import UKAreaDisclosureNotes from '@/components/report/UKAreaDisclosureNotes';
 import {
   Command,
   CommandEmpty,
@@ -23,6 +30,14 @@ import {
   Stack,
   Text,
 } from '@/components/ui';
+import { MapTypeToggle } from '@/components/visualization/choropleth/MapTypeToggle';
+import type { MapVisualizationType } from '@/components/visualization/choropleth/types';
+import {
+  UK_NATION_NAMES,
+  ukNationFromCode,
+  ukNationFromRegion,
+} from '@/components/visualization/choropleth/ukAreaBoundaries';
+import { UKAreaChoroplethMap } from '@/components/visualization/choropleth/UKAreaChoroplethMap';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import { colors, spacing, typography } from '@/designTokens';
 import type { ReportOutputSocietyWideByConstituency } from '@/types/metadata/ReportOutputSocietyWideByConstituency';
@@ -45,28 +60,14 @@ const MODE_OPTIONS = [
   { label: 'Relative', value: 'relative' as UKChangeMode },
 ];
 
-/** Singular and plural names for each kind of area. */
-const AREA_NOUNS: Record<UKAreaKind, { one: string; many: string }> = {
-  constituencies: { one: 'constituency', many: 'constituencies' },
-  'local-authorities': { one: 'local authority', many: 'local authorities' },
+/** The level each kind of area is, as the breakdown's disclosure notes name it. */
+const AREA_LEVELS: Record<UKAreaKind, UKAreaLevel> = {
+  constituencies: 'constituency',
+  'local-authorities': 'local_authority',
 };
 
-/** The nation each ONS code's first letter stands for. */
-const NATION_BY_CODE_PREFIX: Record<string, string> = {
-  E: 'England',
-  W: 'Wales',
-  S: 'Scotland',
-  N: 'Northern Ireland',
-};
-
-/** The nation a report's region names, e.g. "country/wales" is Wales. */
-const NATION_BY_REGION: Record<string, string> = {
-  'country/england': 'England',
-  'country/wales': 'Wales',
-  'country/scotland': 'Scotland',
-  'country/ni': 'Northern Ireland',
-  'country/northern_ireland': 'Northern Ireland',
-};
+/** The geographic map's height: the US district map's in the districts card. */
+const GEOGRAPHIC_MAP_HEIGHT = 460;
 
 /** One area's results, keyed by its name. */
 type AreaImpacts = ReportOutputSocietyWideByConstituency;
@@ -77,11 +78,12 @@ type AreaImpact = AreaImpacts[string];
  * the report's region when that is a nation. Null when neither says.
  */
 export function areaNation(area: AreaImpact, region?: string | null): string | null {
-  const prefix = area.code?.charAt(0).toUpperCase();
-  if (prefix && NATION_BY_CODE_PREFIX[prefix]) {
-    return NATION_BY_CODE_PREFIX[prefix];
-  }
-  return (region && NATION_BY_REGION[region.toLowerCase()]) || null;
+  const nation = ukNationFromCode(area.code) ?? ukNationFromRegion(region);
+  return nation ? UK_NATION_NAMES[nation] : null;
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /** Whole pounds; an amount that rounds to zero reads £0, with no minus. */
@@ -92,27 +94,41 @@ function formatPounds(value: number): string {
   });
 }
 
-/** One area's figures for its details panel. */
+/**
+ * One area's figures for its details panel. A disclosure-controlled area
+ * adds each change's 90% range, and says when its estimate is approximate.
+ */
 export function ukAreaDetailFigures(area: AreaImpact): { label: string; value: string }[] {
   const average = area.average_household_income_change;
   const relative = area.relative_household_income_change;
   const decimals = percentDecimals([relative]);
-  const relativeRoundsToZero = Number((relative * 100).toFixed(decimals)) === 0;
-  return [
-    {
-      label: 'Average household income change',
-      value: formatCurrency(Math.round(average) === 0 ? 0 : average, 'uk', {
-        maximumFractionDigits: 0,
-      }),
-    },
-    {
-      label: 'Relative household income change',
-      value: formatPercent(relativeRoundsToZero ? 0 : relative, 'uk', {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      }),
-    },
-  ];
+  const pounds = (value: number) =>
+    formatCurrency(Math.round(value) === 0 ? 0 : value, 'uk', { maximumFractionDigits: 0 });
+  const percent = (value: number) =>
+    formatPercent(Number((value * 100).toFixed(decimals)) === 0 ? 0 : value, 'uk', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  const averageRange = areaEstimateFields(area, 'average_household_income_change');
+  const relativeRange = areaEstimateFields(area, 'relative_household_income_change');
+  const figures = [{ label: 'Average household income change', value: pounds(average) }];
+  if (averageRange.lower !== undefined && averageRange.upper !== undefined) {
+    figures.push({
+      label: 'Average household income change, 90% range',
+      value: `${pounds(averageRange.lower)} to ${pounds(averageRange.upper)}`,
+    });
+  }
+  figures.push({ label: 'Relative household income change', value: percent(relative) });
+  if (relativeRange.lower !== undefined && relativeRange.upper !== undefined) {
+    figures.push({
+      label: 'Relative household income change, 90% range',
+      value: `${percent(relativeRange.lower)} to ${percent(relativeRange.upper)}`,
+    });
+  }
+  if (area.disclosure_tier === 'approximate') {
+    figures.push({ label: 'Estimate', value: 'Approximate' });
+  }
+  return figures;
 }
 
 /** A filterable list of every area, so the keyboard can reach any of them. */
@@ -183,45 +199,67 @@ function AreaFinder({
 }
 
 /**
- * A UK report's local areas: the constituency map or the local authority
- * map, with the areas that gain and lose most beside it. Click a hexagon
- * or a ranked area, or find one by name, to see its details.
+ * A UK report's local areas, laid out as the US districts card: the
+ * constituency map or the local authority map, geographic by default or
+ * as a hex grid, with the areas that gain and lose most beside it. A
+ * nation's report draws that nation alone. Click an area on the map or in
+ * a ranking, or find one by name, to see its details.
  */
 export default function UKLocalAreaMaps({
   output,
   region,
+  withheld,
+  missingLevelContent,
 }: {
   output: SocietyWideReportOutput;
   /** The report's region, e.g. "country/wales", which names the areas' nation. */
   region?: string | null;
+  /**
+   * For a disclosure-controlled breakdown: the areas each level left out,
+   * which a note under the map gives. Undefined for a saved result.
+   */
+  withheld?: UKBreakdownWithheldAreas;
+  /**
+   * Shown in place of a level's map when the result does not hold that
+   * level at all (absent or null), e.g. the panel that computes it. A level
+   * computed with no areas left still says there is no data.
+   */
+  missingLevelContent?: ReactNode;
 }) {
   const [areaKind, setAreaKind] = useState<UKAreaKind>('constituencies');
+  const [mapType, setMapType] = useState<MapVisualizationType>('geographic');
   const [mode, setMode] = useState<UKChangeMode>('absolute');
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
-  const noun = AREA_NOUNS[areaKind];
+  const level = AREA_LEVELS[areaKind];
+  const noun = UK_AREA_NOUNS[level];
 
-  const areas = useMemo((): AreaImpacts | null => {
+  const levelAreas = useMemo((): AreaImpacts | undefined => {
     const uk = output as ReportOutputSocietyWideUK;
-    const byName =
-      areaKind === 'constituencies'
-        ? uk.constituency_impact?.by_constituency
-        : uk.local_authority_impact?.by_local_authority;
-    return byName && Object.keys(byName).length > 0 ? byName : null;
+    return areaKind === 'constituencies'
+      ? uk.constituency_impact?.by_constituency
+      : uk.local_authority_impact?.by_local_authority;
   }, [areaKind, output]);
+  const areas = levelAreas && Object.keys(levelAreas).length > 0 ? levelAreas : null;
+  const levelMissing = !levelAreas;
 
   const mapData = useMemo(
     () =>
-      Object.entries(areas ?? {}).map(([name, area]) => ({
-        id: name,
-        label: name,
-        value:
+      Object.entries(areas ?? {}).map(([name, area]) => {
+        const field =
           mode === 'absolute'
-            ? area.average_household_income_change
-            : area.relative_household_income_change,
-        x: area.x,
-        y: area.y,
-      })),
+            ? 'average_household_income_change'
+            : 'relative_household_income_change';
+        return {
+          id: name,
+          label: name,
+          value: area[field],
+          x: area.x,
+          y: area.y,
+          ...(area.code && { code: area.code }),
+          ...areaEstimateFields(area, field),
+        };
+      }),
     [areas, mode]
   );
 
@@ -261,6 +299,14 @@ export default function UKLocalAreaMaps({
   }, [selectedArea]);
 
   const headerSuffix = mode === 'absolute' ? '(absolute)' : '(relative)';
+  const mapConfig = {
+    colorScale: {
+      colors: DIVERGING_GRAY_TEAL.colors,
+      tickFormat: mode === 'absolute' ? '£,.0f' : `.${decimals}%`,
+      symmetric: true,
+    },
+    formatValue,
+  };
 
   return (
     <Stack
@@ -282,24 +328,28 @@ export default function UKLocalAreaMaps({
           alignItems: 'center',
         }}
       >
-        <SegmentedControl
-          animated
-          value={areaKind}
-          onValueChange={(value) => {
-            const next = value as UKAreaKind;
-            if (next !== areaKind) {
-              trackLocalAreaMapToggled({
-                countryId: 'uk',
-                area: next === 'constituencies' ? 'constituencies' : 'local_authorities',
-              });
-              // A constituency's name does not pick a local authority.
-              setSelectedName(null);
-            }
-            setAreaKind(next);
-          }}
-          size="xs"
-          options={AREA_OPTIONS}
-        />
+        {/* As the US districts card: the map type first, then (UK only) the area kind. */}
+        <div style={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap', alignItems: 'center' }}>
+          <MapTypeToggle value={mapType} onChange={setMapType} />
+          <SegmentedControl
+            animated
+            value={areaKind}
+            onValueChange={(value) => {
+              const next = value as UKAreaKind;
+              if (next !== areaKind) {
+                trackLocalAreaMapToggled({
+                  countryId: 'uk',
+                  area: next === 'constituencies' ? 'constituencies' : 'local_authorities',
+                });
+                // A constituency's name does not pick a local authority.
+                setSelectedName(null);
+              }
+              setAreaKind(next);
+            }}
+            size="xs"
+            options={AREA_OPTIONS}
+          />
+        </div>
         <div style={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap', alignItems: 'center' }}>
           {areas && <AreaFinder names={names} noun={noun.one} onChoose={setSelectedName} />}
           <SegmentedControl
@@ -320,7 +370,7 @@ export default function UKLocalAreaMaps({
       {areas ? (
         // A new map fades in rather than snapping.
         <div
-          key={areaKind}
+          key={`${areaKind}-${mapType}`}
           className="tw:motion-safe:fade-in-soft"
           style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xl, alignItems: 'flex-start' }}
         >
@@ -328,26 +378,40 @@ export default function UKLocalAreaMaps({
             <Text size="sm" c={colors.text.secondary} style={{ marginBottom: spacing.sm }}>
               {mode === 'absolute' ? 'Absolute' : 'Relative'} household income change by {noun.one}
             </Text>
-            <HexagonalMap
-              data={mapData}
-              config={{
-                colorScale: {
-                  colors: DIVERGING_GRAY_TEAL.colors,
-                  tickFormat: mode === 'absolute' ? '£,.0f' : `.${decimals}%`,
-                  symmetric: true,
-                },
-                formatValue,
-                // The legend reads in the rankings' units: pounds or percentages.
-                formatColorBarTick: formatValue,
-              }}
-              exportRef={mapRef}
-              selectedId={selectedArea ? selectedName : null}
-              onSelect={toggleSelected}
-              insetWatermark
-              zoomable
-              centered
-              fillWidth
-            />
+            {mapType === 'geographic' ? (
+              <UKAreaChoroplethMap
+                data={mapData}
+                level={level}
+                config={{ ...mapConfig, height: GEOGRAPHIC_MAP_HEIGHT }}
+                focusNation={ukNationFromRegion(region)}
+                exportRef={mapRef}
+                // A breakdown's missing areas are the ones disclosure control withheld.
+                missingAreaText={withheld ? 'Not published' : undefined}
+                navigable
+                selectedId={selectedArea ? selectedName : null}
+                onAreaClick={toggleSelected}
+                ariaLabel={`${capitalize(noun.one)} map, coloured by the change. The lists of ${noun.many} give the values.`}
+              />
+            ) : (
+              <HexagonalMap
+                data={mapData}
+                config={{
+                  ...mapConfig,
+                  // The legend reads in the rankings' units: pounds or percentages.
+                  formatColorBarTick: formatValue,
+                }}
+                exportRef={mapRef}
+                selectedId={selectedArea ? selectedName : null}
+                onSelect={toggleSelected}
+                insetWatermark
+                zoomable
+                centered
+                fillWidth
+              />
+            )}
+            <div style={{ marginTop: spacing.sm }}>
+              <UKAreaDisclosureNotes level={level} areas={areas} withheld={withheld?.[level]} />
+            </div>
           </div>
           <div
             style={{
@@ -403,8 +467,13 @@ export default function UKLocalAreaMaps({
             </div>
           </div>
         </div>
+      ) : levelMissing && missingLevelContent ? (
+        missingLevelContent
       ) : (
-        <Text c={colors.text.secondary}>No {noun.one} data available</Text>
+        <Stack style={{ gap: spacing.sm }}>
+          <Text c={colors.text.secondary}>No {noun.one} data available</Text>
+          <UKAreaDisclosureNotes level={level} areas={areas} withheld={withheld?.[level]} />
+        </Stack>
       )}
     </Stack>
   );

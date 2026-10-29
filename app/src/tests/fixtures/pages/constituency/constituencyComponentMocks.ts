@@ -185,7 +185,7 @@ export const MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY: ReportOutputSocietyWideUK = 
   ...MOCK_UK_REPORT_OUTPUT,
   constituency_impact: {
     by_constituency: {},
-    outcomes_by_region: MOCK_UK_REPORT_OUTPUT.constituency_impact.outcomes_by_region,
+    outcomes_by_region: MOCK_UK_REPORT_OUTPUT.constituency_impact?.outcomes_by_region,
   },
 };
 

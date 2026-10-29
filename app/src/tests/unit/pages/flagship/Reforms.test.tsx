@@ -8,6 +8,7 @@ import ReformsPage from '@/pages/flagship/Reforms.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
 import {
   FEDERAL_ENACTED,
   FEDERAL_PROPOSED,
@@ -349,6 +350,34 @@ describe('ReformsPage', () => {
     expect(screen.getByRole('button', { name: /run impact report/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /open as draft reform/i })).toBeInTheDocument();
     expect(screen.getByText(/raises the base child tax credit/i)).toBeInTheDocument();
+  });
+
+  test("given v1's metadata failed then a bill's detail lists its provisions and offers its actions, as before", async () => {
+    // Given
+    seedMetadataError();
+
+    // When
+    renderReforms('/us/reforms?bill=us-ctc-expansion');
+
+    // Then
+    expect(await screen.findByRole('button', { name: /run impact report/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /open as draft reform/i })).toBeEnabled();
+    expect(screen.queryByText('Could not load the parameters')).not.toBeInTheDocument();
+  });
+
+  test("given v1's metadata failed then a saved reform's report button stays enabled, as before", async () => {
+    // Given
+    const user = userEvent.setup();
+    seedMetadataError();
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    renderReforms('/us/reforms?filter=yours');
+
+    // When
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+    // Then
+    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeEnabled();
+    expect(screen.queryByText('Could not load the parameters')).not.toBeInTheDocument();
   });
 
   test('given a ?bill deep link then the detail opens directly', async () => {

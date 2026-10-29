@@ -9,6 +9,7 @@ import { Badge, Button, Stack, Text } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
+import { reportYearLabel } from '@/libs/flagship/draftLabels';
 import { ranAgainstReform, UNNAMED_COMPARISON } from '@/libs/flagship/reportComparison';
 import { flagshipReportQueryKeys, readReportMeta } from '@/libs/flagship/runReport';
 import type { RootState } from '@/store';
@@ -183,7 +184,7 @@ function ReportRow({
             color: colors.text.primary,
           }}
         >
-          {year ? `${year} report` : 'Report'}
+          {year ? `${reportYearLabel(year, countryId)} report` : 'Report'}
         </span>
         <span
           className="tw:truncate"

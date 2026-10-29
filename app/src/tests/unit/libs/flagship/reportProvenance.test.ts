@@ -101,6 +101,33 @@ describe('provisionsFromPolicy', () => {
   });
 });
 
+describe('provisionsFromPolicy in the UK', () => {
+  test('given a UK report then current law is the rate of its tax year, uprated in April', () => {
+    const path = 'gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD';
+    const policy: Policy = {
+      id: '98850',
+      countryId: 'uk',
+      label: 'UC freeze',
+      parameters: [
+        { name: path, values: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 424.9 }] },
+      ],
+    };
+    const parameters = {
+      [path]: {
+        parameter: path,
+        label: 'Single, 25 or over',
+        unit: 'currency-GBP',
+        values: { '2026-04-01': 424.9, '2027-04-01': 434.67 },
+      },
+    };
+
+    const [provision] = provisionsFromPolicy(policy, parameters, '2027', 'uk');
+
+    expect(provision.baselineValue).toBe(434.67);
+    expect(provision.value).toBe(424.9);
+  });
+});
+
 describe('provenanceFromPolicy', () => {
   test('given a policy then the report label leads and the policy label backs it', () => {
     expect(provenanceFromPolicy(reformPolicy, metadataParameters, 'Shared CTC run')?.title).toBe(
@@ -143,5 +170,35 @@ describe('allSimulationsLoaded', () => {
   test('given no report or no simulation ids then it never starts', () => {
     expect(allSimulationsLoaded(undefined, [baseline])).toBe(false);
     expect(allSimulationsLoaded({ id: 'x', simulationIds: [] } as any, [])).toBe(false);
+  });
+});
+
+describe('provisionsFromPolicy with current law left to a formula', () => {
+  const PROTECTED = 'gov.dwp.universal_credit.rebalancing.protected_health_element';
+  const freeze: Policy = {
+    id: '98851',
+    countryId: 'uk',
+    label: 'Freeze the protected LCWRA element',
+    parameters: [
+      {
+        name: PROTECTED,
+        values: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 429.8 }],
+      },
+    ],
+  };
+  const parameters = {
+    [PROTECTED]: {
+      parameter: PROTECTED,
+      label: 'Universal Credit protected LCWRA element amount',
+      unit: 'currency-GBP',
+      values: { '2015-01-01': 429.8, '2026-04-01': 429.8, '2027-04-01': null },
+    },
+  };
+
+  test('given a year current law leaves to a formula then current law is null, not the last set value', () => {
+    const [provision] = provisionsFromPolicy(freeze, parameters, '2027');
+
+    expect(provision.baselineValue).toBeNull();
+    expect(provision.value).toBe(429.8);
   });
 });

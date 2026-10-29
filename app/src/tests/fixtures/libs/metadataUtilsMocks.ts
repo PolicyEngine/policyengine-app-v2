@@ -1,6 +1,10 @@
 import { transformMetadataPayload } from '@/libs/metadataUtils';
 import type { RootState } from '@/store';
 import type { MetadataApiPayload } from '@/types/metadata';
+import type {
+  ParameterMetadata,
+  ParameterMetadataCollection,
+} from '@/types/metadata/parameterMetadata';
 
 export const TEST_FIELD_NAMES = {
   STATE_NAME: 'state_name',
@@ -103,3 +107,45 @@ export const mockStateWithMetadata = (
     },
   } as Partial<RootState>;
 };
+
+// Search visibility follows buildParameterTree; API defaults arrive as explicit true flags.
+export const SEARCH_VISIBILITY_CASES: Array<{
+  name: string;
+  flags: Pick<ParameterMetadata, 'economy' | 'household'>;
+  visible: boolean;
+}> = [
+  { name: 'true true', flags: { economy: true, household: true }, visible: true },
+  { name: 'true false', flags: { economy: true, household: false }, visible: true },
+  { name: 'true absent', flags: { economy: true }, visible: true },
+  { name: 'false true', flags: { economy: false, household: true }, visible: true },
+  { name: 'false false', flags: { economy: false, household: false }, visible: false },
+  { name: 'false absent', flags: { economy: false }, visible: false },
+  { name: 'absent true', flags: { household: true }, visible: true },
+  { name: 'absent false', flags: { household: false }, visible: false },
+  { name: 'absent absent', flags: {}, visible: false },
+];
+export const VISIBLE_SEARCH_PARAMETER: ParameterMetadata = {
+  parameter: 'gov.income_tax.basic_rate',
+  label: 'Basic tax rate',
+  type: 'parameter',
+  economy: true,
+  household: true,
+};
+export const SAME_LABEL_SEARCH_PARAMETERS: ParameterMetadataCollection = {
+  first: { ...VISIBLE_SEARCH_PARAMETER, parameter: 'gov.income_tax.basic_rate' },
+  second: { ...VISIBLE_SEARCH_PARAMETER, parameter: 'gov.capital_gains.basic_rate' },
+};
+export const SORTED_SEARCH_PARAMETERS: ParameterMetadataCollection = {
+  zulu: { ...VISIBLE_SEARCH_PARAMETER, parameter: 'gov.tax.zulu', label: 'Zulu rate' },
+  alpha: { ...VISIBLE_SEARCH_PARAMETER, parameter: 'gov.tax.alpha', label: 'Alpha rate' },
+};
+export const INELIGIBLE_SEARCH_PARAMETERS: ParameterMetadataCollection = {
+  node: { ...VISIBLE_SEARCH_PARAMETER, parameter: 'gov.income_tax', type: 'parameterNode' },
+  unlabelled: { ...VISIBLE_SEARCH_PARAMETER, parameter: 'gov.tax.unlabelled', label: '' },
+  cache: { ...VISIBLE_SEARCH_PARAMETER, parameter: 'gov.pycache.rate' },
+};
+export function searchVisibilityState(
+  parameters: ParameterMetadataCollection | undefined
+): RootState {
+  return { metadata: { parameters } } as RootState;
+}

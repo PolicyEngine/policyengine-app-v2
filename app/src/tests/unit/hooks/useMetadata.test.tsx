@@ -18,11 +18,14 @@ import {
 
 // Mock must be before imports that use it
 vi.mock('@/reducers/metadataReducer', () => ({
-  fetchMetadataThunk: vi.fn((country: string) => {
-    const thunk = () => ({ type: 'metadata/fetch/pending', meta: { arg: country } });
-    thunk.country = country; // Add country as property for testing
+  fetchMetadataThunk: vi.fn((request: string | { countryId: string; routes: string }) => {
+    const thunk = () => ({ type: 'metadata/fetch/pending', meta: { arg: request } });
+    // Record a v1 request as its country, as before, and a v2 one by its routes.
+    thunk.country = typeof request === 'string' ? request : `${request.countryId}:v2`;
     return thunk;
   }),
+  metadataRequest: (countryId: string, routes: string) =>
+    routes === 'v1' ? countryId : { countryId, routes },
   default: (state = {}) => state,
 }));
 
@@ -202,5 +205,43 @@ describe('useFetchMetadata', () => {
 
     // Then - unmount should not throw
     expect(() => unmount()).not.toThrow();
+  });
+
+  describe('metadata routes', () => {
+    test('given v1 metadata loaded and v2 requested then the v2 routes are fetched', () => {
+      // Given
+      const { wrapper } = createTestSetup({ ...mockLoadedMetadataState, routes: 'v1' });
+
+      // When
+      renderHook(() => useFetchMetadata(mockLoadedMetadataState.currentCountry!, 'v2'), {
+        wrapper,
+      });
+
+      // Then
+      expect(dispatchedThunks).toEqual([`${mockLoadedMetadataState.currentCountry}:v2`]);
+    });
+
+    test('given v2 metadata loaded and v2 requested then nothing is fetched', () => {
+      // Given
+      const { wrapper } = createTestSetup({ ...mockLoadedMetadataState, routes: 'v2' });
+
+      // When
+      renderHook(() => useFetchMetadata(mockLoadedMetadataState.currentCountry!, 'v2'), {
+        wrapper,
+      });
+
+      // Then
+      expect(dispatchedThunks).toEqual([]);
+    });
+  });
+});
+
+describe('useFetchMetadata for a page that loads none', () => {
+  test('given no routes then nothing is fetched', () => {
+    const { wrapper } = createTestSetup(mockInitialMetadataState);
+
+    renderHook(() => useFetchMetadata(TEST_COUNTRY_US, null), { wrapper });
+
+    expect(dispatchedThunks).toEqual([]);
   });
 });

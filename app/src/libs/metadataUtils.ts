@@ -200,6 +200,7 @@ export const selectSearchableParameters = createSelector(
       .filter(
         (param): param is ParameterMetadata =>
           param.type === 'parameter' &&
+          !!(param.economy || param.household) &&
           !!param.label &&
           !EXCLUDED_PARAMETER_PATTERNS.some((pattern) => param.parameter.includes(pattern))
       )

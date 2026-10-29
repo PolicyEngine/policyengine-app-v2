@@ -41,9 +41,11 @@ Components read the country from this hook, not from Redux.
 
 ## Redux copy and metadata loading
 
-`MetadataBootstrap` in `providers.tsx` copies the country into Redux with `setCurrentCountry(countryId)` and calls `useFetchMetadata(countryId)`. Loading is non-blocking: pages render while metadata loads.
+`MetadataBootstrap` in `providers.tsx` copies the country into Redux with `setCurrentCountry(countryId)` and calls `useFetchMetadata(countryId, routes)`. Loading is non-blocking: pages render while metadata loads.
 
-`useFetchMetadata` (`src/hooks/useMetadata.ts`) dispatches `fetchMetadataThunk(countryId)` only when there is no metadata yet or it belongs to another country, so moving between pages of one country does not refetch. Hooks that need metadata for the current country compare `metadata.currentCountry` with the country they were given.
+`routes` comes from `metadataRoutesForPage(useSelectedLayoutSegments())` (`src/libs/flagship/v3ApiRoutes.ts`): `'v1'` (`GET /{country}/metadata`, the whole model) for the older report builder, the routes `V3_API_ROUTES` names for the v3 workspace (`'v2'` loads only the small `GET /v2/model-catalog`; v3 loads parameters on demand and every variable once in the background, after a page renders, from `GET /v2/model-catalog/variables`, skipping a model catalog of another country than the page's), and, once `V3_API_ROUTES` is `'v2'`, `null` (load nothing) for pages that only redirect into v3: the country index, the old Home launcher (`(calculator)/home`, to Build), the old Library and bill tracker (`(calculator)/library` and `(calculator)/tracker`, to Reforms) and the paused Ask page (`(workspace)/ask`, to Build). The page each one lands on loads its own metadata.
+
+`useFetchMetadata` (`src/hooks/useMetadata.ts`) dispatches `fetchMetadataThunk(metadataRequest(countryId, routes))` only when there is no metadata yet, it belongs to another country, or it came from other routes, so moving between pages of one country does not refetch. Hooks that need metadata for the current country compare `metadata.currentCountry` with the country they were given.
 
 ## Implementation checklist
 
@@ -62,4 +64,5 @@ When adding a country-dependent feature:
 - `src/contexts/CountryContext.tsx`: `CountryProvider` and `useCountryContext`
 - `src/hooks/useCurrentCountry.ts`: hook that reads the country
 - `src/hooks/useMetadata.ts`: `useFetchMetadata`
+- `src/libs/flagship/v3ApiRoutes.ts`: `V3_API_ROUTES` and which routes a page loads metadata from
 - `src/reducers/metadataReducer.ts`: metadata state and `setCurrentCountry`

@@ -74,6 +74,49 @@ export function dayLabel(
   return dayjs(date).format(countryId === 'uk' ? `D ${month} YYYY` : `${month} D, YYYY`);
 }
 
+/** A UK tax year as it is written: 2027 is "2027-28". */
+export function taxYearLabel(year: number | string): string {
+  const start = Number(year);
+  return `${start}-${String((start + 1) % 100).padStart(2, '0')}`;
+}
+
+/**
+ * A report's year as the country counts it. US results are for a
+ * calendar year ("2027"); UK results are for a fiscal year, April to
+ * March, so a UK year reads as the tax year it starts ("2027-28").
+ */
+export function reportYearLabel(year: number | string, countryId: string = 'us'): string {
+  return countryId === 'uk' ? taxYearLabel(year) : String(year);
+}
+
+/** A run of report years: "2026–2030" in the US, "2026-27 to 2030-31" in the UK. */
+export function reportYearSpanLabel(
+  first: number | string,
+  last: number | string,
+  countryId: string = 'us'
+): string {
+  return countryId === 'uk'
+    ? `${taxYearLabel(first)} to ${taxYearLabel(last)}`
+    : `${first}–${last}`;
+}
+
+/** Said wherever UK results show: their years are fiscal years. */
+export const UK_FISCAL_YEAR_NOTE = 'UK figures are for fiscal years, April to March.';
+
+/**
+ * When a change starts or ends, for a table of changes. The UK model
+ * reads a year in its tax year (from April), so a change from 1 January
+ * applies from that tax year, and one to 31 December applies to the end
+ * of that tax year: they read "2027-28", not "1 Jan 2027". Other dates,
+ * and every US date, read as the day.
+ */
+export function changeDateLabel(date: string, countryId: string = 'us'): string {
+  if (countryId === 'uk' && (isYearStart(date) || isYearEnd(date))) {
+    return taxYearLabel(date.slice(0, 4));
+  }
+  return dayLabel(date, countryId);
+}
+
 const startLabel = (date: string, countryId: string) =>
   isYearStart(date) ? date.slice(0, 4) : dayLabel(date, countryId);
 

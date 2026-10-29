@@ -1,12 +1,47 @@
 import { describe, expect, test } from 'vitest';
 import { FOREVER } from '@/constants';
 import {
+  changeDateLabel,
   dayLabel,
   describeChange,
   periodLabel,
   provisionName,
+  reportYearLabel,
+  reportYearSpanLabel,
   summarizeIntervals,
+  taxYearLabel,
 } from '@/libs/flagship/draftLabels';
+
+describe('changeDateLabel', () => {
+  test('given a UK change from 1 January then it reads as the tax year it applies to', () => {
+    expect(changeDateLabel('2027-01-01', 'uk')).toBe('2027-28');
+    expect(changeDateLabel('2028-12-31', 'uk')).toBe('2028-29');
+  });
+
+  test('given a UK change on another day then it reads as that day', () => {
+    expect(changeDateLabel('2027-04-06', 'uk')).toBe('6 Apr 2027');
+  });
+
+  test('given a US change then it reads as the day, as before', () => {
+    expect(changeDateLabel('2027-01-01', 'us')).toBe('Jan 1, 2027');
+  });
+
+  test('given the tax year that starts in 1999 then the century rolls over', () => {
+    expect(taxYearLabel(1999)).toBe('1999-00');
+  });
+});
+
+describe('reportYearLabel', () => {
+  test('given a UK report then its year reads as the fiscal year it starts', () => {
+    expect(reportYearLabel('2027', 'uk')).toBe('2027-28');
+    expect(reportYearSpanLabel('2026', '2030', 'uk')).toBe('2026-27 to 2030-31');
+  });
+
+  test('given a US report then its year reads as the calendar year, as before', () => {
+    expect(reportYearLabel('2027', 'us')).toBe('2027');
+    expect(reportYearSpanLabel('2026', '2030', 'us')).toBe('2026–2030');
+  });
+});
 
 describe('describeChange', () => {
   test('given numbers then the change reads current law to new value', () => {

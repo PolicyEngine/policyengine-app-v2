@@ -2,23 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { IconListTree, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
-import PolicyBrowser from '@/components/flagship/policyBrowser/PolicyBrowser';
+import V3PolicyBrowser from '@/components/flagship/policyBrowser/V3PolicyBrowser';
 import ParametersStatus from '@/components/flagship/reform/ParametersStatus';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useV3SearchCatalog } from '@/hooks/useV3SearchCatalog';
 import { useDraftReform } from '@/libs/draftReform';
 import { PHONE_QUERY } from '@/libs/flagship/viewport';
 import { getStateLabels } from '@/libs/metadataUtils';
-import {
-  ParameterSearchEntry,
-  properNodeLabel,
-  selectAddableParameterPaths,
-  selectConceptClusters,
-  selectParameterEntriesByPath,
-  selectParameterSearchEntries,
-  selectParameterSearchIndex,
-} from '@/libs/parameterSearch';
+import { ParameterSearchEntry, properNodeLabel } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 import { trackParameterSearchSelected } from '@/utils/analytics';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
@@ -61,15 +54,14 @@ export default function AddParameterBar({
   inTable = false,
 }: AddParameterBarProps) {
   const countryId = useCurrentCountry();
-  const entries = useSelector(selectParameterSearchEntries);
-  const clusters = useSelector(selectConceptClusters);
+  // From the whole metadata on the v1 routes, the search file on v2;
+  // memoized outside the component, so mounts don't rebuild the index.
+  const catalog = useV3SearchCatalog();
+  const { entries, clusters, entriesByPath, addablePaths } = catalog;
+  const searchIndex = catalog.index;
   const stateLabels = useSelector(getStateLabels);
-  // Store-memoized: survives navigation, so mounts don't rebuild it.
-  const searchIndex = useSelector(selectParameterSearchIndex);
+  // Current-law values, for the parameters loaded so far on the v2 routes.
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const parameterTree = useSelector((state: RootState) => state.metadata.parameterTree);
-  const entriesByPath = useSelector(selectParameterEntriesByPath);
-  const addablePaths = useSelector(selectAddableParameterPaths);
   const draft = useDraftReform();
   const draftPaths = new Set(
     draft?.countryId === countryId ? draft.provisions.map((p) => p.path) : []
@@ -142,8 +134,8 @@ export default function AddParameterBar({
   }, [inTable, entries.length]);
 
   // Until the index is in, the bar's place holds its loading (or failed) state.
-  if (entries.length === 0) {
-    return <ParametersStatus />;
+  if (catalog.status !== 'ready') {
+    return <ParametersStatus loader={catalog} />;
   }
 
   return (
@@ -174,7 +166,7 @@ export default function AddParameterBar({
           pick(entry);
         }}
         labelFor={(path) => {
-          const label = parameters?.[path]?.label;
+          const label = catalog.labelFor(path);
           return label ? properNodeLabel(path, label) : null;
         }}
         backgroundSearch
@@ -182,6 +174,12 @@ export default function AddParameterBar({
         placeholder={placeholder}
         resultsInFlow={inTable}
         hideResults={!active || browseOpen}
+        // Typing a query puts the policy tree away, so the results show in its place.
+        onQueryChange={(query) => {
+          if (query !== '') {
+            setBrowseOpen(false);
+          }
+        }}
         // A breakdown by state is in the draft once any state's value is.
         inDraft={(path) =>
           draftPaths.has(path) || [...draftPaths].some((p) => p.startsWith(`${path}.`))
@@ -250,8 +248,7 @@ export default function AddParameterBar({
           >
             <IconX size={16} />
           </button>
-          <PolicyBrowser
-            tree={parameterTree}
+          <V3PolicyBrowser
             addablePaths={addablePaths}
             draftPaths={draftPaths}
             path={browsePath}

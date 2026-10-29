@@ -1,6 +1,6 @@
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 
-/** Three Welsh constituencies and two local authorities, with ONS codes. */
+/** Three Welsh constituencies and two local authorities, with their ONS codes. */
 export const UK_LOCAL_AREAS_OUTPUT = {
   constituency_impact: {
     by_constituency: {
@@ -9,21 +9,21 @@ export const UK_LOCAL_AREAS_OUTPUT = {
         y: -30,
         average_household_income_change: -355.03,
         relative_household_income_change: -0.0132,
-        code: 'W07000081',
+        code: 'W07000094',
       },
       Monmouthshire: {
         x: 50,
         y: -36,
         average_household_income_change: -90.78,
         relative_household_income_change: -0.0059,
-        code: 'W07000098',
+        code: 'W07000101',
       },
       Gower: {
         x: 44,
         y: -37,
         average_household_income_change: 237.22,
         relative_household_income_change: 0.0065,
-        code: 'W07000084',
+        code: 'W07000097',
       },
     },
   },

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   currencySymbolForUnit,
+  formatCurrentLaw,
   formatValue,
   getCurrentValue,
   isPercentageUnit,
@@ -61,6 +62,12 @@ describe('formatValue', () => {
     [-500, 'currency-GBP', '−£500'],
     [-500, 'currency-USD', '−$500'],
     [0.5, 'marginal-rate', '50%'],
+    // Money shows pence or cents, not the raw float.
+    [346.366589511, 'currency-GBP', '£346.37'],
+    [424.9, 'currency-GBP', '£424.90'],
+    [-12.5, 'currency-USD', '−$12.50'],
+    // An amount under 1 keeps its third decimal.
+    [0.655, 'currency-USD', '$0.655'],
   ])('given %s with unit %s then renders %s', (value, unit, expected) => {
     expect(formatValue(value, unit as string | null)).toBe(expected);
   });
@@ -84,5 +91,19 @@ describe('isPercentageUnit', () => {
     expect(isPercentageUnit('/1')).toBe(true);
     expect(isPercentageUnit('marginal-rate')).toBe(true);
     expect(isPercentageUnit('GBP')).toBe(false);
+  });
+});
+
+describe('formatCurrentLaw', () => {
+  it('given null then reads as an amount set by formula', () => {
+    expect(formatCurrentLaw(null, 'currency-GBP')).toBe('Set by formula (not legislated)');
+  });
+
+  it('given a number then formats it as formatValue does', () => {
+    expect(formatCurrentLaw(429.8, 'currency-GBP')).toBe(formatValue(429.8, 'currency-GBP'));
+  });
+
+  it('given no value then reads as a dash', () => {
+    expect(formatCurrentLaw(undefined, 'currency-GBP')).toBe('—');
   });
 });
