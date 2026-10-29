@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   ApiFlagshipReportStore,
   getFlagshipReportStore,
@@ -40,9 +40,18 @@ const newReport: NewFlagshipReport = {
   reformId: null,
 };
 
+/** When a report first ran, and when it ran again. */
+const FIRST_RUN_AT = '2026-10-14T09:00:00.000Z';
+const SECOND_RUN_AT = '2026-10-29T10:00:00.000Z';
+
 describe('LocalStorageFlagshipReportStore', () => {
   beforeEach(() => {
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   test('given a created report then it is found by its API report id', async () => {
@@ -84,14 +93,18 @@ describe('LocalStorageFlagshipReportStore', () => {
     );
   });
 
-  test('given a new run then update repoints the record and keeps its links', async () => {
-    // Given
+  test('given a new run then update repoints the record, dated now, unpinned, and keeps its links', async () => {
+    // Given: a record pinned to its first run's validation
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(FIRST_RUN_AT));
     const store = new LocalStorageFlagshipReportStore();
     const created = await store.create({
       ...newReport,
       reformId: 'rf-local1',
       baselineReformId: 'rf-plan-b',
     });
+    await store.saveValidation(created.id, mockReportValidationSnapshot);
+    vi.setSystemTime(new Date(SECOND_RUN_AT));
 
     // When
     const updated = await store.update(created.id, {
@@ -99,11 +112,33 @@ describe('LocalStorageFlagshipReportStore', () => {
       provisions: [],
     });
 
-    // Then
-    expect(updated).toEqual({ ...created, apiReportId: OTHER_API_REPORT_ID, provisions: [] });
+    // Then: the record's date is its run's, and the new run is pinned afresh
+    expect(updated).toEqual({
+      ...created,
+      apiReportId: OTHER_API_REPORT_ID,
+      provisions: [],
+      createdAt: SECOND_RUN_AT,
+      validation: null,
+    });
     const reloaded = await new LocalStorageFlagshipReportStore().findById(created.id);
     expect(reloaded).toEqual(updated);
     await expect(store.findByApiReportId(API_REPORT_ID)).resolves.toBeNull();
+  });
+
+  test('given the browser refuses the write then update fails and the record stays as it was', async () => {
+    // Given
+    const store = new LocalStorageFlagshipReportStore();
+    const created = await store.create(newReport);
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+
+    // When / Then
+    await expect(store.update(created.id, { apiReportId: OTHER_API_REPORT_ID })).rejects.toThrow(
+      'QuotaExceededError'
+    );
+    vi.restoreAllMocks();
+    await expect(store.findById(created.id)).resolves.toEqual(created);
   });
 
   test('given an unknown record then update fails', async () => {
@@ -353,6 +388,7 @@ describe('ApiFlagshipReportStore', () => {
           legacy_report_id: Number(OTHER_API_REPORT_ID),
           provisions: provisionsToWire(newReport.provisions),
           user_policy_id: ASSOCIATION_IDS.REFORM,
+          last_run_at: SECOND_RUN_AT,
         })
       )
     );
@@ -368,15 +404,18 @@ describe('ApiFlagshipReportStore', () => {
     const call = fetchCall(fetchMock);
     expect(call.method).toBe('PATCH');
     expect(call.path).toBe(`/v2/user-reports/${ASSOCIATION_IDS.REPORT}`);
+    // The new run is pinned afresh, and the record is dated by it.
     expect(call.body).toEqual({
       legacy_report_id: Number(OTHER_API_REPORT_ID),
       provisions: provisionsToWire(newReport.provisions),
+      validation: null,
       last_run_at: expect.any(String),
     });
     expect(record).toMatchObject({
       id: ASSOCIATION_IDS.REPORT,
       apiReportId: OTHER_API_REPORT_ID,
       reformId: ASSOCIATION_IDS.REFORM,
+      createdAt: SECOND_RUN_AT,
     });
   });
 

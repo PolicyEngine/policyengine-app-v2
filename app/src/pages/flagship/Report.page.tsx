@@ -342,7 +342,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       calibration,
       programs: trackRecordPrograms(trackRecord),
     },
-    shared?.record.validation ?? null
+    shared?.record.validation ?? null,
+    report?.id
   );
 
   const title = meta?.title || report?.label || 'Impact report';

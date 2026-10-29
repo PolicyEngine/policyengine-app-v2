@@ -27,7 +27,12 @@ export interface ReportValidationState {
 export function useReportValidationSnapshot(
   userReportId: string | undefined,
   live: LiveValidation,
-  sharedSnapshot: ReportValidationSnapshot | null = null
+  sharedSnapshot: ReportValidationSnapshot | null = null,
+  /**
+   * The v1 report the link shows. A saved report moved onto a new run
+   * keeps its link, so its record is read again when this changes.
+   */
+  runId?: string
 ): ReportValidationState {
   const { store } = useFlagshipReportStore();
   const [snapshot, setSnapshot] = useState<ReportValidationSnapshot | null>(null);
@@ -59,7 +64,7 @@ export function useReportValidationSnapshot(
     return () => {
       cancelled = true;
     };
-  }, [store, userReportId]);
+  }, [store, userReportId, runId]);
 
   const settled = isLiveValidationSettled(live);
   useEffect(() => {

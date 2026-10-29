@@ -6,15 +6,21 @@ import { snapshotFromLive, type LiveValidation } from '@/libs/flagship/reportVal
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { NEWER_RELEASE_ID } from '@/tests/fixtures/libs/flagship/reportValidationMocks';
 
+/** A store standing in for the account's, for one test; this browser's otherwise. */
+const mockStoreOverride: { current: unknown } = { current: null };
+
 vi.mock('@/api/flagshipReportStore', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/flagshipReportStore')>();
   return {
     ...actual,
-    getFlagshipReportStore: () => new actual.LocalStorageFlagshipReportStore(),
+    getFlagshipReportStore: () =>
+      mockStoreOverride.current ?? new actual.LocalStorageFlagshipReportStore(),
   };
 });
 
 const API_REPORT_ID = '4512';
+/** The v1 report a saved report was moved onto. */
+const NEW_RUN_REPORT_ID = '4513';
 
 const settledLive: LiveValidation = {
   calibration: mockCalibrationMatches,
@@ -35,6 +41,47 @@ async function createRecord() {
 describe('useReportValidationSnapshot', () => {
   beforeEach(() => {
     localStorage.clear();
+    mockStoreOverride.current = null;
+  });
+
+  test('given its link moved onto a new run then the record is read again and the new run pinned', async () => {
+    // Given: an account report's link, its row pinned for the run it had
+    const reportRowId = '44444444-4444-4444-8444-444444444444';
+    const oldRunPin = snapshotFromLive({
+      ...settledLive,
+      calibration: { ...mockCalibrationMatches, releaseId: NEWER_RELEASE_ID },
+    });
+    const row = {
+      id: reportRowId,
+      countryId: 'us',
+      apiReportId: API_REPORT_ID,
+      title: 'CTC to $2,500',
+      sourceNote: null,
+      provisions: [],
+      createdAt: '2026-10-14T09:00:00Z',
+    };
+    const store = {
+      findById: vi.fn().mockResolvedValue({ ...row, validation: oldRunPin }),
+      findByApiReportId: vi.fn(),
+      saveValidation: vi.fn(async (_id: string, pin: unknown) => ({ ...row, validation: pin })),
+    };
+    mockStoreOverride.current = store;
+    const { result, rerender } = renderHook(
+      ({ runId }: { runId: string }) =>
+        useReportValidationSnapshot(reportRowId, settledLive, null, runId),
+      { initialProps: { runId: API_REPORT_ID } }
+    );
+    await waitFor(() => expect(result.current.snapshot).toEqual(oldRunPin));
+
+    // When: the same row now points at a new run, with no pin yet
+    store.findById.mockResolvedValue({ ...row, apiReportId: NEW_RUN_REPORT_ID, validation: null });
+    rerender({ runId: NEW_RUN_REPORT_ID });
+
+    // Then
+    await waitFor(() => expect(store.saveValidation).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(result.current.snapshot?.calibration?.releaseId).toBe(mockCalibrationMatches.releaseId)
+    );
   });
 
   test('given a record and settled checks then the live validation is pinned once', async () => {
