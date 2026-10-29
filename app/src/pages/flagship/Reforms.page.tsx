@@ -19,6 +19,7 @@ import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
 import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
+import MissingParametersTransferDialog from '@/components/flagship/MissingParametersTransferDialog';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReformReports, { LatestReportBadge } from '@/components/flagship/ReformReports';
 import {
@@ -39,6 +40,11 @@ import { colors, spacing, typography } from '@/designTokens';
 import { billRegion } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
+import {
+  REFORM_TRANSFER_FAILED,
+  useSavedReformTransfer,
+  useSavedReportTransfer,
+} from '@/hooks/useMissingParameterTransfer';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import {
@@ -57,6 +63,7 @@ import {
 import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import { reformMissingParameters } from '@/libs/flagship/missingParameters';
+import { parametersWithout, provisionsWithout } from '@/libs/flagship/missingParameterTransfer';
 import { readV1Policy, reportMissingParameters } from '@/libs/flagship/policyChecks';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
@@ -509,11 +516,27 @@ export default function ReformsPage() {
     ? (reforms ?? []).find((reform) => reform.id === selectedId)
     : null;
 
+  // A saved reform whose policy sets parameters the model no longer has
+  // offers to transfer the rest to a new policy as it opens, as the old
+  // app's policy page did, until "Not now" puts it off for that reform.
+  const reformTransfer = useSavedReformTransfer();
+  const [reformTransferPutOffFor, setReformTransferPutOffFor] = useState<string | null>(null);
+  // A saved report whose Re-run found such parameters offers the same.
+  const reportTransfer = useSavedReportTransfer();
+  const [reportToTransfer, setReportToTransfer] = useState<{
+    report: FlagshipReportRecord;
+    missingParameters: string[];
+  } | null>(null);
+
   const openReform = (reform: Reform) => {
     // A failed delete or re-run belongs to the reform it was tried on.
     deleteMutation.reset();
     setRerunError(null);
     setRerunMissingParameters([]);
+    // Opened again, a reform that cannot run offers its transfer again.
+    reformTransfer.reset();
+    setReformTransferPutOffFor(null);
+    setReportToTransfer(null);
     setSelectedId(reform.id!);
   };
 
@@ -764,6 +787,20 @@ export default function ReformsPage() {
           {missingParameters.length > 0 && (
             <MissingParametersNotice subject="This reform" parameterPaths={missingParameters} />
           )}
+          <MissingParametersTransferDialog
+            open={missingParameters.length > 0 && reformTransferPutOffFor !== selectedReform.id}
+            onOpenChange={(open) => !open && setReformTransferPutOffFor(selectedReform.id!)}
+            subject="reform"
+            parameterPaths={missingParameters}
+            transferLabel="Transfer to a new policy"
+            transferNote="Transferring saves the reform’s other changes as a new policy. It keeps its name and baseline, and the reports already run from it keep their results."
+            nothingLeft={
+              parametersWithout(selectedReform.parameters, missingParameters).length === 0
+            }
+            transferring={reformTransfer.isPending}
+            error={reformTransfer.isError ? REFORM_TRANSFER_FAILED : null}
+            onTransfer={() => reformTransfer.mutate(selectedReform)}
+          />
           {selectedReform.parametersUnavailable && (
             <Stack role="alert" style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
               <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
@@ -973,6 +1010,35 @@ export default function ReformsPage() {
               parameterPaths={rerunMissingParameters}
             />
           )}
+          {reportToTransfer && (
+            <MissingParametersTransferDialog
+              open
+              onOpenChange={(open) => !open && setReportToTransfer(null)}
+              subject="report"
+              parameterPaths={reportToTransfer.missingParameters}
+              transferLabel="Transfer and run again"
+              transferNote="Transferring runs the report again without them, for the same year, population and comparison. It keeps its link, which then shows the new results."
+              nothingLeft={
+                provisionsWithout(
+                  reportToTransfer.report.provisions,
+                  reportToTransfer.missingParameters
+                ).length === 0
+              }
+              transferring={reportTransfer.transferring}
+              error={reportTransfer.error}
+              onTransfer={async () => {
+                const { report, missingParameters: missing } = reportToTransfer;
+                const started = await reportTransfer.transfer(report, missing, {
+                  findReform: savedReform,
+                  title: report.title || selectedReform.label || 'Untitled reform',
+                  sourceNote: report.sourceNote || SOURCE_LABELS[selectedReform.provenance.source],
+                });
+                if (started) {
+                  setReportToTransfer(null);
+                }
+              }}
+            />
+          )}
           {(runReport.error || rerunError) && (
             <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
               {runReport.error || rerunError}
@@ -1014,6 +1080,8 @@ export default function ReformsPage() {
                 .finally(() => setRerunChecking(false));
               if (missing.length > 0) {
                 setRerunMissingParameters(missing);
+                reportTransfer.clearError();
+                setReportToTransfer({ report, missingParameters: missing });
                 return;
               }
               // The same report on today's model: its reform as it ran, its

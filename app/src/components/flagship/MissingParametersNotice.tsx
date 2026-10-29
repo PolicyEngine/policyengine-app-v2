@@ -12,6 +12,31 @@ interface MissingParametersNoticeProps {
 }
 
 /**
+ * The parameter paths the model no longer has. They have no labels in the
+ * model any more, so each is shown by its path.
+ */
+export function MissingParameterList({ parameterPaths }: { parameterPaths: string[] }) {
+  return (
+    <ul style={{ margin: 0, paddingLeft: spacing.lg }}>
+      {parameterPaths.map((path) => (
+        <li key={path}>
+          <code
+            style={{
+              fontFamily: typography.fontFamily.mono,
+              fontSize: typography.fontSize.xs,
+              color: colors.text.primary,
+              overflowWrap: 'anywhere',
+            }}
+          >
+            {path}
+          </code>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
  * Says that something cannot be run because its policy sets parameters the
  * current model no longer has, and names them. They have no labels in the
  * model any more, so each is shown by its path.
@@ -28,22 +53,7 @@ export default function MissingParametersNotice({
         {parameterPaths.length === 1 ? 'a parameter' : 'parameters'} that PolicyEngine’s model no
         longer has:
       </Text>
-      <ul style={{ margin: 0, paddingLeft: spacing.lg }}>
-        {parameterPaths.map((path) => (
-          <li key={path}>
-            <code
-              style={{
-                fontFamily: typography.fontFamily.mono,
-                fontSize: typography.fontSize.xs,
-                color: colors.text.primary,
-                overflowWrap: 'anywhere',
-              }}
-            >
-              {path}
-            </code>
-          </li>
-        ))}
-      </ul>
+      <MissingParameterList parameterPaths={parameterPaths} />
       {children && (
         <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
           {children}
