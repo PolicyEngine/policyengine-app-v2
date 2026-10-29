@@ -1,6 +1,6 @@
 > **Updated 28 October 2026.** We first published this post earlier on 28 October with an estimated average saving across 50,000 simulated paths of prices and earnings, £11.1 billion in 2039-40, and a range around it. The same day, the model behind those paths failed a test we had registered before the Budget ([uk-triple-lock#45](https://github.com/PolicyEngine/uk-triple-lock/pull/45)). We have withdrawn the average and the range around it, and this version reports scenarios instead. We no longer describe any of the model's paths as typical or likely.
 >
-> Every PolicyEngine figure below comes from the pre-Budget release of our [Triple Lock dashboard](https://www.policyengine.org/uk/triple-lock), finished on 15 October, before September's inflation figure (21 October) and the Budget's forecast (28 October) were published. It uses the Office for Budget Responsibility's (OBR) March 2026 forecast, PolicyEngine UK 2.125.1 and the Enhanced Family Resources Survey 2024-25. Our other Budget posts use PolicyEngine UK 2.151.0 and the OBR's October 2026 forecast. On PolicyEngine UK 2.151.0, the Microcosm UK dataset and the October forecast, the figures below could differ.
+> Every PolicyEngine figure below comes from the pre-Budget release of our [Triple Lock dashboard](https://www.policyengine.org/uk/triple-lock), finished on 15 October, before September's inflation figure (21 October) and the Budget's forecast (28 October) were published. It uses the Office for Budget Responsibility's (OBR) March 2026 forecast, PolicyEngine UK 2.125.1 and the Enhanced Family Resources Survey 2024-25. Our other Budget posts use PolicyEngine UK 2.151.0 and the OBR's October 2026 forecast. The figures below could differ on PolicyEngine UK 2.151.0, the Microcosm UK dataset and the OBR's October 2026 forecast to 2030, with its March 2026 long-term assumptions after that.
 
 Each April, the State Pension rises by the highest of inflation, earnings growth and 2.5%. This rule is the Triple Lock. The [Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#box-5atriple-lock-adjustment175) on 28 October 2026 keeps it until April 2029 and adjusts it from April 2030. Earnings growth stops being a minimum rise, and the pension instead keeps its April 2029 value relative to earnings. In the Budget's words, from April 2030 "the State Pension rises each year by the highest of 2.5%, inflation, or the amount required to maintain its value relative to earnings as reached in April 2029."
 
@@ -230,7 +230,7 @@ Under the same scenario, the share of pensioners in poverty after housing costs 
 
 The two scenarios differ more than tenfold because the saving comes from the years in which inflation or 2.5% exceeds earnings growth. The OBR's central path has none after April 2031. The last ten years had three, in April 2018, 2021 and 2023, leaving aside April 2022, for which Parliament suspended the earnings link.
 
-To average over the possible years ahead, a statistical model of prices and earnings generated 50,000 paths. Before the Budget, we registered a test of that model on every March forecast of the OBR from 2016 whose four years of outcomes were complete, and committed to reporting scenarios only if it failed. There were six such forecasts when we registered the test, and September's inflation figure completed a seventh, from March 2022. Scored on all seven on 28 October, the model failed one check. It expected earnings growth to come in below 2.5% in 45% of the years tested, against 18% in practice, beyond the limit we had set. Its other checks passed: its central 80% range contained the outcome in 5 of the 7 final years and 83% of the annual checks.
+To average over the possible years ahead, we drew 50,000 paths from a statistical model of prices and earnings. Before the Budget, we registered a test of that model on every March forecast of the OBR from 2016 whose four years of outcomes were complete, and committed, if the model failed, to reporting scenarios only. There were six such forecasts when we registered the test, and September's inflation figure completed a seventh, from March 2022. Scored on all seven on 28 October, the model failed one check. It expected earnings growth to come in below 2.5% in 45% of the years tested, against 18% in practice, beyond the limit we had set. Its other checks passed: its central 80% range contained the outcome in 5 of the 7 final years and 83% of the annual checks.
 
 So we report the two scenarios, and they are not a range: the saving could fall outside them.
 
@@ -270,7 +270,7 @@ We reweight the survey households each year after 2025 so that each age and sex 
 
 </details>
 
-[^name]: Our dashboard calls the policy by its earlier name, the Burnham plan.
+[^name]: Our dashboard's pre-Budget release calls the policy by its earlier name, the Burnham plan.
 
 ---
 

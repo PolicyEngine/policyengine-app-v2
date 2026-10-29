@@ -223,13 +223,13 @@ These results:
 
 - leave out poverty and people-affected figures;
 - leave out national figures for the savings income tax rise (the calculator includes it);
-- apply the trading allowance to trading income but not to miscellaneous income; including miscellaneous income would raise our estimate of its cost;
+- apply the trading allowance to trading income but not to miscellaneous income (including it would raise our estimate of the allowance's cost);
 - don't correctly reflect how the Carer's Allowance taper interacts with overlapping benefits, such as the State Pension, in 2030-31;
 - apply the fuel duty cut to petrol and diesel but not to road fuel gases (LPG and natural gas), which the government's costing covers;
 - don't give the Pension Tax Allowance to everyone who reaches State Pension age during the tax year;
 - project household electricity spending with general inflation rather than retail energy prices.
 
-PolicyEngine UK itself, our open-source model, doesn't include the Budget's measures; the dashboard runs them.
+PolicyEngine UK 2.151.0, our open-source model, doesn't include the Budget's measures; the dashboard runs them.
 
 ## Methodology
 
@@ -241,6 +241,6 @@ Our estimates come from PolicyEngine's [Autumn Budget 2026 dashboard](https://ww
 - **The package.** The combined results come from one simulation of the seven measures together, which models each exactly as in its own run.
 - **Small samples.** The dashboard withholds any result that rests on fewer than three survey households. For the package in 2030-31 and 2031-32, it withholds the results for two income deciles and the average change across all households, the same cells it withholds for the Carer's Allowance taper on its own.
 
-Every PolicyEngine figure in this briefing comes from the dashboard's published results (manifest revision 17), except the further figures we quote from the dashboard's notes on the comparison with the official costings, which those results don't include. Every official figure comes from the OBR's October 2026 Economic and fiscal outlook or the Budget documents we link above.
+Every PolicyEngine figure in this briefing comes from the dashboard's published results (manifest revision 17), except the further figures we quote from the dashboard's notes on the comparison with the official costings, which the published results don't include. Every official figure comes from the OBR's October 2026 Economic and fiscal outlook or the Budget documents we link above.
 
 _PolicyEngine's UK Budget analysis is funded by the [Nuffield Foundation](https://www.nuffieldfoundation.org/). The views expressed are ours and not necessarily the Foundation's._
