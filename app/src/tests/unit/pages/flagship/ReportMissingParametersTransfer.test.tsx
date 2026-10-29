@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, waitFor, within } from '@test-utils';
+import { render, renderWithCountry, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   LocalStorageFlagshipReportStore,
@@ -98,16 +98,35 @@ function saveReport(
   });
 }
 
-function renderPage() {
+/** The page, at `path` when given: a section's link opens that section. */
+function renderPage(path?: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  const page = (
     <QueryClientProvider client={queryClient}>
       <CalcOrchestratorProvider>
         <FlagshipReportPage userReportId={EXISTING_REPORT_ID} />
       </CalcOrchestratorProvider>
     </QueryClientProvider>
   );
+  return path ? renderWithCountry(page, 'us', path) : render(page);
 }
+
+/** The run's details, so stored results need not wait for the reform's. */
+function saveRunDetails() {
+  saveReportMeta(EXISTING_REPORT_ID, {
+    title: 'Bigger CTC',
+    sourceNote: 'Hand-built',
+    provisions: [KEPT_PROVISION, REMOVED_PROVISION],
+    createdAt: '2026-10-13T00:00:00Z',
+  });
+}
+
+/** The report with its results stored. */
+const COMPLETE_REPORT = {
+  ...EXISTING_REPORT,
+  status: 'complete' as const,
+  output: createMockSocietyWideOutput(),
+};
 
 describe('FlagshipReportPage with parameters the model no longer has', () => {
   beforeEach(() => {
@@ -150,19 +169,10 @@ describe('FlagshipReportPage with parameters the model no longer has', () => {
   });
 
   test('given stored results then the dialog opens over them too', async () => {
-    // Given: the run's details, so the results need not wait for the reform's
+    // Given
     await saveReport();
-    saveReportMeta(EXISTING_REPORT_ID, {
-      title: 'Bigger CTC',
-      sourceNote: 'Hand-built',
-      provisions: [KEPT_PROVISION, REMOVED_PROVISION],
-      createdAt: '2026-10-13T00:00:00Z',
-    });
-    mockUseFlagshipReport.mockReturnValue(
-      reportData({
-        report: { ...EXISTING_REPORT, status: 'complete', output: createMockSocietyWideOutput() },
-      })
-    );
+    saveRunDetails();
+    mockUseFlagshipReport.mockReturnValue(reportData({ report: COMPLETE_REPORT }));
 
     // When
     renderPage();
@@ -171,6 +181,19 @@ describe('FlagshipReportPage with parameters the model no longer has', () => {
     const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
     expect(within(dialog).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
     expect(mockFetchEconomy).not.toHaveBeenCalled();
+  });
+
+  test('given stored results opened at another section then the dialog opens there too', async () => {
+    // Given
+    await saveReport();
+    saveRunDetails();
+    mockUseFlagshipReport.mockReturnValue(reportData({ report: COMPLETE_REPORT }));
+
+    // When: a link to the economic impacts, as Back, a reload or a copied link opens it
+    renderPage(`/us/report/${EXISTING_REPORT_ID}?tab=economy`);
+
+    // Then
+    expect(await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME })).toBeInTheDocument();
   });
 
   test('given Transfer and run again then the report runs without them, onto the same saved report', async () => {
