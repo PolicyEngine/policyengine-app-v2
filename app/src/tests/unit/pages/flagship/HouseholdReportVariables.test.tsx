@@ -119,17 +119,16 @@ describe('the household report and builder while the model variables load', () =
     expect(screen.getByRole('button', { name: 'Calculate' })).toBeInTheDocument();
   });
 
-  test('given the variables still loading then the household builder waits behind a placeholder', () => {
-    // Given
+  test('given the variables still loading then the builder panel leaves the wait to its callers', () => {
+    // Given: both callers wait for the variables themselves (the report's
+    // household section inside ReportView's wait, and the household report).
     mockVariables.mockReturnValue({ status: 'loading', message: null, retry: mockRetryVariables });
 
     // When
     renderBuilderPanel();
 
     // Then
-    expect(
-      screen.getByRole('status', { name: 'Loading the household builder' })
-    ).toBeInTheDocument();
-    expect(screen.queryByLabelText('Household builder')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Household builder')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });
