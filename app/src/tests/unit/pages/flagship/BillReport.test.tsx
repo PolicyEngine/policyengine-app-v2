@@ -612,6 +612,26 @@ describe('BillReportPage', () => {
     expect(mockFetchTrackerBillDistricts).toHaveBeenCalledWith(TRACKED_BILL.id);
   });
 
+  test('given a federal bill’s full results then the districts tab offers the state runs, not the nationwide districts', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockUseBillEconomy.mockReturnValue(
+      economy({ status: 'complete', output: createMockSocietyWideOutput() })
+    );
+    renderReport();
+    await user.click(await screen.findByRole('tab', { name: 'Districts' }));
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
+
+    // Then
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByRole('button', { name: 'Compute district impacts' })
+    ).toBeInTheDocument();
+    expect(within(panel).queryByText(/District map: full results/)).not.toBeInTheDocument();
+  });
+
   test('given a bill with no mapped provisions then it says the results cannot be calculated', async () => {
     const user = userEvent.setup();
     mockFetchTrackerBills.mockResolvedValue([{ ...TRACKED_BILL, provisions: [] }]);

@@ -1,6 +1,10 @@
+import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { ChoroplethDataPoint } from '@/components/visualization/USDistrictChoroplethMap';
 import type { Region } from '@/models/region';
-import type { USCongressionalDistrictBreakdown } from '@/types/metadata/ReportOutputSocietyWideByCongressionalDistrict';
+import type {
+  USCongressionalDistrictBreakdown,
+  USCongressionalDistrictBreakdownItem,
+} from '@/types/metadata/ReportOutputSocietyWideByCongressionalDistrict';
 import { US_REGION_TYPES } from '@/types/regionTypes';
 
 /**
@@ -24,6 +28,89 @@ export function normalizeDistrictId(districtId: string): string {
     return 'DC-01';
   }
   return districtId;
+}
+
+/**
+ * A result's congressional districts, with their IDs normalised; null when
+ * the result has none (a UK result, or one whose districts are null).
+ */
+export function districtsOf(
+  output: SocietyWideReportOutput | null | undefined
+): USCongressionalDistrictBreakdownItem[] | null {
+  if (!output || !('congressional_district_impact' in output)) {
+    return null;
+  }
+  const districts = output.congressional_district_impact?.districts;
+  if (!districts) {
+    return null;
+  }
+  return districts.map((district) => ({
+    ...district,
+    district: normalizeDistrictId(district.district),
+  }));
+}
+
+/** Each state's districts as one list, skipping states with none yet. */
+export function mergeStateDistricts(
+  stateDistricts: Array<USCongressionalDistrictBreakdownItem[] | null | undefined>
+): USCongressionalDistrictBreakdownItem[] {
+  return stateDistricts.flatMap((districts) => districts ?? []);
+}
+
+/**
+ * Which states a nationwide report's districts are still waiting for, and
+ * which failed, when the districts come from each state's own run.
+ * States are named as the API names them (`state/ca`) or by abbreviation.
+ */
+export interface DistrictCoverage {
+  pendingStates?: string[];
+  failedStates?: string[];
+}
+
+export interface DistrictErrorSummary {
+  /** Expected districts with no data, to say how many are missing. */
+  errorDistrictCount: number;
+  /** The states to mark on the map as having missing data, by abbreviation (`CA`). */
+  errorStateAbbrs: string[];
+}
+
+/** A state's abbreviation, from `state/ca` or `ca`. */
+function stateAbbreviation(state: string): string {
+  return state.replace(/^state\//i, '').toUpperCase();
+}
+
+/**
+ * The districts the region metadata expects (`expectedDistrictIds`) that
+ * the saved districts lack, and their states. Without coverage, every one
+ * missing counts, as a single result's districts are all there or not.
+ * With coverage, a state still pending is neither counted nor marked, and
+ * a failed state is marked even when the metadata lists none of its
+ * districts. No saved districts at all is nothing missing yet.
+ */
+export function districtErrorSummary(
+  saved: Array<Pick<USCongressionalDistrictBreakdownItem, 'district'>> | null,
+  expectedDistrictIds: string[],
+  coverage?: DistrictCoverage
+): DistrictErrorSummary {
+  if (!saved) {
+    return { errorDistrictCount: 0, errorStateAbbrs: [] };
+  }
+  const savedIds = new Set(saved.map((district) => district.district));
+  const pending = new Set((coverage?.pendingStates ?? []).map(stateAbbreviation));
+  const missingStates = new Set<string>();
+  let errorDistrictCount = 0;
+  for (const districtId of expectedDistrictIds) {
+    const state = districtId.split('-')[0];
+    if (savedIds.has(districtId) || pending.has(state)) {
+      continue;
+    }
+    errorDistrictCount += 1;
+    missingStates.add(state);
+  }
+  for (const state of coverage?.failedStates ?? []) {
+    missingStates.add(stateAbbreviation(state));
+  }
+  return { errorDistrictCount, errorStateAbbrs: Array.from(missingStates) };
 }
 
 /**

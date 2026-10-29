@@ -1,12 +1,38 @@
-import { render, screen } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, userEvent, waitFor } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
+import type { CongressionalDistrictDataContextValue } from '@/contexts/congressional-district';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { typography } from '@/designTokens';
+import { useRegions } from '@/hooks/useRegions';
 import SocietyWideOverview, {
   buildOutcomeMapData,
   getDistrictPayloadAvailability,
   hasCompleteDistrictOutcomePayload,
 } from '@/pages/report-output/SocietyWideOverview';
+import {
+  TEXAS_REGION,
+  UTAH_AND_TEXAS_LABELS,
+} from '@/tests/fixtures/components/flagship/report/districtImpactMocks';
+import { COMPUTE_DISTRICTS_LABEL } from '@/tests/fixtures/components/flagship/report/stateDistrictComputePanelMocks';
+import { createMockContextValue } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
+import {
+  economyWhere,
+  fakeStateDistrictApi,
+  NATIONWIDE_OUTPUT_WITH_DISTRICTS,
+  STATE_COMPUTING,
+  STATE_ERROR,
+  STATE_RUNS_BASELINE_POLICY_ID,
+  STATE_RUNS_REFORM_POLICY_ID,
+  STATE_RUNS_YEAR,
+  stateOk,
+  US_STATE_REGIONS,
+  UTAH,
+  UTAH_REPORT_OUTPUT,
+  type FakeStateApi,
+} from '@/tests/fixtures/hooks/useStateDistrictRunsMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 // Budget with every component exactly zero (an exact no-op). The mock's shallow
@@ -48,30 +74,26 @@ vi.mock('@/components/visualization/USDistrictChoroplethMap', () => ({
   USDistrictChoroplethMap: vi.fn(() => <div data-testid="district-map" />),
 }));
 
-function createCongressionalDistrictContextMock(overrides: Record<string, unknown> = {}) {
-  return {
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({ data: [] })),
+}));
+
+/** Renders inside a query client: the district card looks up and runs states. */
+function renderWithQueries(ui: ReactNode) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
+
+function createCongressionalDistrictContextMock(
+  overrides: Partial<CongressionalDistrictDataContextValue> = {}
+) {
+  return createMockContextValue({
     reformPolicyId: '96491',
     baselinePolicyId: '2',
     year: '2026',
-    stateResponses: new Map(),
-    completedCount: 0,
-    loadingCount: 0,
-    totalDistrictsLoaded: 0,
-    totalStates: 51,
-    isComplete: false,
-    isLoading: false,
-    hasStarted: false,
-    errorCount: 0,
-    erroredStates: new Set(),
     labelLookup: new Map([['AL-01', "Alabama's 1st congressional district"]]),
-    isStateLevelReport: false,
-    stateCode: null,
-    startFetch: vi.fn(),
-    validateAllLoaded: vi.fn(),
-    getCompletedStates: vi.fn(),
-    getLoadingStates: vi.fn(),
     ...overrides,
-  };
+  });
 }
 
 // Mock useCurrentCountry hook
@@ -481,119 +503,109 @@ describe('SocietyWideOverview', () => {
       )
     ).toBe(false);
   });
+});
 
-  test('saved districts without outcome shares do not trigger a refresh', () => {
-    const startFetch = vi.fn();
-    mockUseCongressionalDistrictData.mockReturnValue(
-      createCongressionalDistrictContextMock({ startFetch })
-    );
+describe('SocietyWideOverview congressional districts from state runs', () => {
+  let api: FakeStateApi;
 
-    const output = createMockSocietyWideOutput({
-      congressional_district_impact: {
-        districts: [
-          {
-            district: 'AL-01',
-            average_household_income_change: 120,
-            relative_household_income_change: 0.01,
-          },
-        ],
-      },
+  const contextFor = (overrides: Record<string, unknown> = {}) =>
+    createCongressionalDistrictContextMock({
+      reformPolicyId: STATE_RUNS_REFORM_POLICY_ID,
+      baselinePolicyId: STATE_RUNS_BASELINE_POLICY_ID,
+      year: STATE_RUNS_YEAR,
+      scope: 'nationwide',
+      labelLookup: UTAH_AND_TEXAS_LABELS,
+      ...overrides,
     });
 
-    render(<SocietyWideOverview output={output as any} showCongressionalCard />);
+  const serve = (options: Parameters<typeof fakeStateDistrictApi>[0] = {}) => {
+    api = fakeStateDistrictApi(options);
+    vi.stubGlobal('fetch', api.fetch);
+  };
 
-    expect(startFetch).not.toHaveBeenCalled();
+  /** What the card last asked the district map to draw. */
+  const lastMap = () => vi.mocked(USDistrictChoroplethMap).mock.calls.at(-1)?.[0];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useRegions).mockReturnValue({
+      data: US_STATE_REGIONS,
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as unknown as ReturnType<typeof useRegions>);
+    mockUseCongressionalDistrictData.mockReturnValue(contextFor());
   });
 
-  test('saved districts with outcome shares do not trigger a refresh', () => {
-    const startFetch = vi.fn();
-    mockUseCongressionalDistrictData.mockReturnValue(
-      createCongressionalDistrictContextMock({ startFetch })
-    );
-
-    const output = createMockSocietyWideOutput({
-      congressional_district_impact: {
-        districts: [
-          {
-            district: 'AL-01',
-            average_household_income_change: 120,
-            relative_household_income_change: 0.01,
-            winner_percentage: 0.58,
-            loser_percentage: 0.21,
-          },
-        ],
-      },
-    });
-
-    render(<SocietyWideOverview output={output as any} showCongressionalCard />);
-
-    expect(startFetch).not.toHaveBeenCalled();
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
-  test('saved districts with complete winner shares but missing loser shares do not trigger a refresh', () => {
-    const startFetch = vi.fn();
-    mockUseCongressionalDistrictData.mockReturnValue(
-      createCongressionalDistrictContextMock({
-        startFetch,
-        labelLookup: new Map([
-          ['AL-01', "Alabama's 1st congressional district"],
-          ['AL-02', "Alabama's 2nd congressional district"],
-        ]),
-      })
+  test('given a nationwide report then the card offers Compute and maps none of the result’s districts', async () => {
+    // Given
+    serve();
+
+    // When
+    renderWithQueries(
+      <SocietyWideOverview output={NATIONWIDE_OUTPUT_WITH_DISTRICTS} showCongressionalCard />
     );
 
-    const output = createMockSocietyWideOutput({
-      congressional_district_impact: {
-        districts: [
-          {
-            district: 'AL-01',
-            average_household_income_change: 120,
-            relative_household_income_change: 0.01,
-            winner_percentage: 0.58,
-          },
-          {
-            district: 'AL-02',
-            average_household_income_change: 80,
-            relative_household_income_change: 0.008,
-            winner_percentage: 0.52,
-          },
-        ],
-      },
-    });
-
-    render(<SocietyWideOverview output={output as any} showCongressionalCard />);
-
-    expect(startFetch).not.toHaveBeenCalled();
+    // Then
+    expect(
+      await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL })
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('district-map')).not.toBeInTheDocument();
+    expect(api.economyRequests()).toHaveLength(0);
   });
 
-  test('truncated saved districts do not trigger a refresh', () => {
-    const startFetch = vi.fn();
-    mockUseCongressionalDistrictData.mockReturnValue(
-      createCongressionalDistrictContextMock({
-        startFetch,
-        labelLookup: new Map([
-          ['AL-01', "Alabama's 1st congressional district"],
-          ['AL-02', "Alabama's 2nd congressional district"],
-        ]),
-      })
+  test('given Compute then the card maps the finished states with how many are in', async () => {
+    // Given
+    const user = userEvent.setup();
+    serve({ economy: economyWhere({ [UTAH]: () => stateOk(UTAH) }, () => STATE_COMPUTING) });
+    renderWithQueries(
+      <SocietyWideOverview output={NATIONWIDE_OUTPUT_WITH_DISTRICTS} showCongressionalCard />
     );
 
-    const output = createMockSocietyWideOutput({
-      congressional_district_impact: {
-        districts: [
-          {
-            district: 'AL-01',
-            average_household_income_change: 120,
-            relative_household_income_change: 0.01,
-            winner_percentage: 0.58,
-            loser_percentage: 0.21,
-          },
-        ],
-      },
-    });
+    // When
+    await user.click(await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL }));
 
-    render(<SocietyWideOverview output={output as any} showCongressionalCard />);
+    // Then
+    expect(await screen.findByText('1 of 51 states')).toBeInTheDocument();
+    expect(screen.getByTestId('district-map')).toBeInTheDocument();
+    expect(lastMap()?.data.map((point) => point.geoId)).toEqual(['UT-01', 'UT-02']);
+  });
 
-    expect(startFetch).not.toHaveBeenCalled();
+  test('given a failed state then the map marks it and the card offers Retry', async () => {
+    // Given
+    const user = userEvent.setup();
+    serve({ economy: economyWhere({ [TEXAS_REGION]: () => STATE_ERROR }) });
+    renderWithQueries(
+      <SocietyWideOverview output={NATIONWIDE_OUTPUT_WITH_DISTRICTS} showCongressionalCard />
+    );
+
+    // When
+    await user.click(await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL }));
+
+    // Then
+    expect(await screen.findByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    await waitFor(() => expect(lastMap()?.errorStates).toEqual(['TX']));
+    expect(screen.getByText('50 of 51 states are in')).toBeInTheDocument();
+  });
+
+  test('given a state report then the card maps its own districts and looks nothing up', async () => {
+    // Given
+    serve();
+    mockUseCongressionalDistrictData.mockReturnValue(
+      contextFor({ scope: 'state', stateCode: 'ut' })
+    );
+
+    // When
+    renderWithQueries(<SocietyWideOverview output={UTAH_REPORT_OUTPUT} showCongressionalCard />);
+
+    // Then
+    expect(screen.getByTestId('district-map')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_DISTRICTS_LABEL })).not.toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(api.requests()).toHaveLength(0);
   });
 });

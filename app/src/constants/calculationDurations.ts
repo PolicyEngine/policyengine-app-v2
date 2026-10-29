@@ -44,6 +44,15 @@ export const UK_SOCIETY_WIDE_DURATION_MS = 3 * 60 * 1000; // 3 minutes
 export const US_STATE_SOCIETY_WIDE_DURATION_MS = 190 * 1000;
 
 /**
+ * How long one state's run for a nationwide report's congressional
+ * districts may compute, from its first request, before the app stops
+ * polling it and offers Retry: above the slowest on-demand state load
+ * measured (1,635 s, a year without a pre-built state file), with room
+ * for a queue when two reports compute at once.
+ */
+export const US_STATE_DISTRICT_RUN_TIME_LIMIT_MS = 30 * 60 * 1000;
+
+/**
  * Region estimate for US congressional district society-wide calculations
  * Only one observed sample (200 s), so treat it as a rough value.
  */

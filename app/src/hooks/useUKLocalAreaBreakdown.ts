@@ -3,25 +3,19 @@ import { hashKey, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchLocalAreaBreakdown,
   isLocalAreaBreakdown,
-  type LocalAreaBreakdownResponse,
+  type SocietyWideReportOutput,
 } from '@/api/societyWideCalculation';
-import { clockProgress, runProgressValue } from '@/components/flagship/report/RunProgress';
 import {
   UK_LOCAL_AREA_BREAKDOWN_DURATION_MS,
   UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS,
 } from '@/constants/calculationDurations';
-import type { RunStage } from '@/types/calculation';
+import { pollRun, type PolledRun, type PollRunOptions } from '@/libs/calculations/polledRun';
 import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
+
+export { MAX_FAILED_POLLS } from '@/libs/calculations/polledRun';
 
 /** How often a run that is still computing is polled. */
 const POLL_INTERVAL_MS = 2000;
-
-/**
- * Failed polls in a row (for example a 502 from a gateway) that a computing
- * run outlasts. The job may still run on the server, so the run keeps
- * polling and fails only on the next failure after these.
- */
-export const MAX_FAILED_POLLS = 3;
 
 const TIME_LIMIT_MESSAGE =
   'The local-area breakdown is taking much longer than expected. It may still finish on the server: retry to check it again.';
@@ -60,18 +54,7 @@ export interface UKLocalAreaBreakdownState {
 }
 
 /** A run's state as the query cache holds it, shared by every view of the report. */
-interface BreakdownRun {
-  status: 'computing' | 'complete' | 'error';
-  /** When this run was first sent (epoch ms), for the time estimate. */
-  startedAt: number;
-  breakdown: LocalAreaBreakdown | null;
-  progress?: number;
-  stage?: string;
-  queuePosition?: number;
-  error?: string;
-  /** Failed polls in a row while computing, up to MAX_FAILED_POLLS. */
-  failedPolls?: number;
-}
+type BreakdownRun = PolledRun<LocalAreaBreakdown>;
 
 /**
  * The breakdown's react-query key: one run per country, reform, baseline,
@@ -95,53 +78,18 @@ export function ukLocalAreaBreakdownQueryKey({
   ] as const;
 }
 
-/** The API's stage fields as a RunStage, as SocietyWideCalcStrategy reads them. */
-function runStageOf(response: LocalAreaBreakdownResponse): RunStage | undefined {
-  if (typeof response.progress !== 'number' || typeof response.progress_max !== 'number') {
-    return undefined;
-  }
-  return {
-    floor: response.progress,
-    max: Math.max(response.progress, response.progress_max),
-  };
-}
-
-function toRun(
-  response: LocalAreaBreakdownResponse,
-  startedAt: number,
-  previous: BreakdownRun | undefined
-): BreakdownRun {
-  if (response.status === 'computing') {
-    if (Date.now() - startedAt > UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS) {
-      return { status: 'error', startedAt, breakdown: null, error: TIME_LIMIT_MESSAGE };
-    }
-    const estimate = clockProgress(Date.now() - startedAt, UK_LOCAL_AREA_BREAKDOWN_DURATION_MS);
-    const progress = runProgressValue(estimate, runStageOf(response));
-    return {
-      status: 'computing',
-      startedAt,
-      breakdown: null,
-      // The bar never moves backwards between polls.
-      progress:
-        previous?.status === 'computing' ? Math.max(previous.progress ?? 0, progress) : progress,
-      stage: typeof response.stage === 'string' ? response.stage : undefined,
-      queuePosition: response.queue_position,
-    };
-  }
-  if (response.status === 'ok' && response.result) {
-    // A deployment that ignores breakdown=local_areas answers with national results.
-    if (!isLocalAreaBreakdown(response.result)) {
-      return { status: 'error', startedAt, breakdown: null, error: NOT_A_BREAKDOWN_MESSAGE };
-    }
-    return { status: 'complete', startedAt, breakdown: response.result };
-  }
-  return {
-    status: 'error',
-    startedAt,
-    breakdown: null,
-    error: response.error || 'The local-area breakdown failed',
-  };
-}
+const BREAKDOWN_POLL_OPTIONS: PollRunOptions<
+  LocalAreaBreakdown | SocietyWideReportOutput,
+  LocalAreaBreakdown
+> = {
+  expectedMs: UK_LOCAL_AREA_BREAKDOWN_DURATION_MS,
+  timeLimitMs: UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS,
+  timeLimitMessage: TIME_LIMIT_MESSAGE,
+  failureMessage: 'The local-area breakdown failed',
+  // A deployment that ignores breakdown=local_areas answers with national results.
+  readResult: (result) =>
+    isLocalAreaBreakdown(result) ? { result } : { error: NOT_A_BREAKDOWN_MESSAGE },
+};
 
 /**
  * A UK report's constituency and local authority impacts, calculated on
@@ -175,31 +123,16 @@ export function useUKLocalAreaBreakdown(
 
   const query = useQuery({
     queryKey,
-    queryFn: async (): Promise<BreakdownRun> => {
-      const previous = queryClient.getQueryData<BreakdownRun>(queryKey);
-      const startedAt = previous?.status === 'computing' ? previous.startedAt : Date.now();
-      try {
-        const response = await fetchLocalAreaBreakdown(
-          countryId,
-          reformPolicyId!,
-          baselinePolicyId!,
-          { region: region || countryId, time_period: year! }
-        );
-        return toRun(response, startedAt, previous);
-      } catch (error) {
-        // A computing run outlasts a few failed polls: its job may still run.
-        const failedPolls = (previous?.failedPolls ?? 0) + 1;
-        if (previous?.status === 'computing' && failedPolls <= MAX_FAILED_POLLS) {
-          return { ...previous, failedPolls };
-        }
-        return {
-          status: 'error',
-          startedAt,
-          breakdown: null,
-          error: error instanceof Error ? error.message : 'The local-area breakdown failed',
-        };
-      }
-    },
+    queryFn: (): Promise<BreakdownRun> =>
+      pollRun(
+        () =>
+          fetchLocalAreaBreakdown(countryId, reformPolicyId!, baselinePolicyId!, {
+            region: region || countryId,
+            time_period: year!,
+          }),
+        queryClient.getQueryData<BreakdownRun>(queryKey),
+        BREAKDOWN_POLL_OPTIONS
+      ),
     enabled: canStart && (started || runExists),
     refetchInterval: (current) =>
       current.state.data?.status === 'computing' ? POLL_INTERVAL_MS : false,
@@ -219,7 +152,7 @@ export function useUKLocalAreaBreakdown(
 
   return {
     status,
-    breakdown: run?.status === 'complete' ? run.breakdown : null,
+    breakdown: run?.status === 'complete' ? run.result : null,
     progress: run?.status === 'computing' ? run.progress : undefined,
     stage: run?.status === 'computing' ? run.stage : undefined,
     queuePosition: run?.status === 'computing' ? run.queuePosition : undefined,

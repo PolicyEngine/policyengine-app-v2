@@ -1,7 +1,8 @@
 /**
  * Congressional District Data Context
  *
- * Provides congressional district label lookup and an optional manual fetch path.
+ * Gives a report's congressional district views their labels, state code,
+ * policies, year and district scope.
  */
 
 export {
@@ -10,20 +11,10 @@ export {
 } from './CongressionalDistrictDataContext';
 
 export type {
-  StateDistrictData,
-  FetchState,
-  FetchAction,
   CongressionalDistrictDataContextValue,
   CongressionalDistrictDataProviderProps,
 } from './types';
 
-export { POLL_INTERVAL_MS, MAX_POLL_ATTEMPTS } from './types';
+export type { CongressionalDistrictScope } from './utils';
 
-export {
-  isStateLevelRegion,
-  extractStateCode,
-  getStateCodesToFetch,
-  calculateTotalDistrictsLoaded,
-  computeFetchStatus,
-  validateAllStatesLoaded,
-} from './utils';
+export { congressionalDistrictScope, isStateLevelRegion, extractStateCode } from './utils';

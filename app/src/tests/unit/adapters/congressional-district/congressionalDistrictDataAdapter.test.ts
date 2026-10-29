@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import {
   buildDistrictLabelLookup,
+  districtErrorSummary,
+  districtsOf,
+  mergeStateDistricts,
   normalizeDistrictId,
   transformDistrictAbsoluteChange,
   transformDistrictData,
@@ -12,12 +15,19 @@ import {
   DISTRICT_DATA_WITH_UNKNOWN,
   EMPTY_DISTRICT_DATA,
   EXPECTED_ABSOLUTE_CHANGE_DATA,
+  EXPECTED_DISTRICT_IDS,
   EXPECTED_RELATIVE_CHANGE_DATA,
   MOCK_DISTRICT_DATA,
   MOCK_MIXED_REGIONS,
   MOCK_REGIONS,
   SINGLE_DISTRICT_DATA,
+  TEXAS_REGION,
+  UTAH_DISTRICTS,
+  WYOMING_DISTRICTS,
+  WYOMING_DISTRICTS_NORMALIZED,
+  WYOMING_REGION,
 } from '@/tests/fixtures/adapters/congressional-district/congressionalDistrictMocks';
+import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 describe('congressionalDistrictDataAdapter', () => {
   describe('buildDistrictLabelLookup', () => {
@@ -332,6 +342,93 @@ describe('congressionalDistrictDataAdapter', () => {
       expect(result[0].geoId).toBe('DC-01');
       expect(result[0].label).toBe("District of Columbia's at-large congressional district");
       expect(result[0].value).toBe(250.0);
+    });
+  });
+
+  describe('districtsOf', () => {
+    test('given an output with districts then it gives them with normalised IDs', () => {
+      // Given
+      const output = createMockSocietyWideOutput({
+        congressional_district_impact: { districts: WYOMING_DISTRICTS },
+      });
+
+      // When
+      const districts = districtsOf(output);
+
+      // Then
+      expect(districts).toEqual(WYOMING_DISTRICTS_NORMALIZED);
+    });
+
+    test.each([
+      ['no output', null],
+      [
+        'an output whose districts are null',
+        createMockSocietyWideOutput({ congressional_district_impact: null }),
+      ],
+      ['an output without the field', { budget: { budgetary_impact: 0 } }],
+    ])('given %s then there are none', (_label, output) => {
+      expect(districtsOf(output as never)).toBeNull();
+    });
+  });
+
+  describe('mergeStateDistricts', () => {
+    test('given the districts of each state then it gives them as one list', () => {
+      expect(mergeStateDistricts([UTAH_DISTRICTS, WYOMING_DISTRICTS_NORMALIZED])).toEqual([
+        ...UTAH_DISTRICTS,
+        ...WYOMING_DISTRICTS_NORMALIZED,
+      ]);
+    });
+
+    test('given states with no districts yet then it skips them', () => {
+      expect(mergeStateDistricts([null, UTAH_DISTRICTS, undefined])).toEqual(UTAH_DISTRICTS);
+    });
+  });
+
+  describe('districtErrorSummary', () => {
+    test('given no coverage then every expected district that is not saved is missing, and its state painted', () => {
+      // When
+      const summary = districtErrorSummary(UTAH_DISTRICTS, EXPECTED_DISTRICT_IDS);
+
+      // Then
+      expect(summary).toEqual({ errorDistrictCount: 3, errorStateAbbrs: ['WY', 'TX'] });
+    });
+
+    test('given no saved districts then nothing is missing', () => {
+      expect(districtErrorSummary(null, EXPECTED_DISTRICT_IDS)).toEqual({
+        errorDistrictCount: 0,
+        errorStateAbbrs: [],
+      });
+    });
+
+    test('given states still pending then their districts are neither counted nor painted', () => {
+      // When
+      const summary = districtErrorSummary(UTAH_DISTRICTS, EXPECTED_DISTRICT_IDS, {
+        pendingStates: [WYOMING_REGION, TEXAS_REGION],
+      });
+
+      // Then
+      expect(summary).toEqual({ errorDistrictCount: 0, errorStateAbbrs: [] });
+    });
+
+    test('given a failed state then its districts are counted and it is painted', () => {
+      // When
+      const summary = districtErrorSummary(UTAH_DISTRICTS, EXPECTED_DISTRICT_IDS, {
+        pendingStates: [WYOMING_REGION],
+        failedStates: [TEXAS_REGION],
+      });
+
+      // Then
+      expect(summary).toEqual({ errorDistrictCount: 2, errorStateAbbrs: ['TX'] });
+    });
+
+    test('given a failed state with no districts listed then it is still painted', () => {
+      // When
+      const summary = districtErrorSummary(UTAH_DISTRICTS, ['UT-01', 'UT-02'], {
+        failedStates: [TEXAS_REGION],
+      });
+
+      // Then
+      expect(summary).toEqual({ errorDistrictCount: 0, errorStateAbbrs: ['TX'] });
     });
   });
 });
