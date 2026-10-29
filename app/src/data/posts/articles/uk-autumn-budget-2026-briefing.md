@@ -25,7 +25,7 @@ _[Use PolicyEngine's Autumn Budget 2026 dashboard](https://www.policyengine.org/
 | Trading allowance        | Rises from £1,000 to £3,000                                                                                                                                                         | From 6 April 2027            |
 | Carer's Allowance taper  | Above the weekly earnings limit, the allowance falls £1 for each £1 of earnings instead of ending all at once, in England and Wales                                                 | During 2030-31               |
 
-Sources: [Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) , the [policy costings](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) and, for people reaching State Pension age during the tax year, HM Treasury's [Pension Tax Allowance explainer](https://www.gov.uk/government/publications/pension-tax-allowance-explainer/pension-tax-allowance-explainer).
+Sources: [Budget 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html), the [policy costings](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) and, for people reaching State Pension age during the tax year, HM Treasury's [Pension Tax Allowance explainer](https://www.gov.uk/government/publications/pension-tax-allowance-explainer/pension-tax-allowance-explainer).
 
 The Budget makes other changes that reach households, which our dashboard does not model:
 
