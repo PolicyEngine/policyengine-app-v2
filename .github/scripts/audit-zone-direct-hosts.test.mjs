@@ -3,10 +3,12 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, test } from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
 
 import {
   canonicalUrls,
   compileSource,
+  decodeHtml,
   DIRECT_HOST_REDIRECTS,
   findIframedHosts,
   isProductionVercelHost,
@@ -89,7 +91,8 @@ const BALLOT_HOST = "https://ballot-measures-2026.vercel.app";
 
 /**
  * A fetch that answers from a table of `url -> response`; anything else 404s.
- * A response is `{ status, location, body }`, `{ throws }`, or a list of these
+ * A response is `{ status, location, body }` (or `bytes` and `contentType`
+ * for the body), `{ throws }`, or a list of these
  * answered in turn (the last repeats).
  */
 function fakeFetch(table) {
@@ -106,10 +109,15 @@ function fakeFetch(table) {
       entry = entry[Math.min(seen[url], entry.length) - 1];
     }
     if (entry.throws) throw new TypeError(entry.throws);
+    const headers = {
+      location: entry.location,
+      "content-type": entry.contentType,
+    };
     return {
       status: entry.status,
-      headers: { get: (name) => (name === "location" ? entry.location : null) },
-      text: async () => entry.body ?? "",
+      headers: { get: (name) => headers[name] ?? null },
+      arrayBuffer: async () =>
+        entry.bytes ?? new TextEncoder().encode(entry.body ?? ""),
     };
   };
   return Object.assign(impl, { calls });
@@ -710,6 +718,22 @@ describe("canonicalUrls", () => {
     );
   });
 
+  test("ignores a data: or javascript: <base>, as the HTML standard does", () => {
+    for (const href of [
+      "javascript:void(0)",
+      "data:text/plain,x",
+      "JavaScript:x",
+    ]) {
+      assert.deepEqual(
+        canonicalUrls(
+          `<base href="${href}"><link rel="canonical" href="//a.vercel.app/x"><meta property="og:url" content="//b.vercel.app/y">`,
+        ).map(({ url }) => url),
+        ["https://a.vercel.app/x", "https://b.vercel.app/y"],
+        href,
+      );
+    }
+  });
+
   test("reads a deeply nested page without overflowing the stack", () => {
     const deep = (depth, inner) =>
       `${"<div>".repeat(depth)}${inner}${"</div>".repeat(depth)}`;
@@ -828,6 +852,48 @@ describe("redirectKeepsPage over every zone in appZoneRoutes.ts", async () => {
   });
 });
 
+describe("decodeHtml", () => {
+  const html = `<link rel="canonical" href="https://a.vercel.app/x">`;
+  const utf16 = (text, littleEndian) => {
+    const bytes = new Uint8Array(text.length * 2);
+    const view = new DataView(bytes.buffer);
+    for (let i = 0; i < text.length; i += 1) {
+      view.setUint16(i * 2, text.charCodeAt(i), littleEndian);
+    }
+    return bytes;
+  };
+  const withBom = (bom, bytes) => new Uint8Array([...bom, ...bytes]);
+
+  test("follows a byte-order mark, then the Content-Type charset, then UTF-8", () => {
+    const cases = [
+      [new TextEncoder().encode(html), null],
+      [new TextEncoder().encode(html), "text/html; charset=utf-8"],
+      [withBom([0xef, 0xbb, 0xbf], new TextEncoder().encode(html)), null],
+      [utf16(html, true), "text/html; charset=utf-16le"],
+      [utf16(html, true), 'text/html;charset="UTF-16LE"'],
+      [utf16(html, false), "text/html; charset=utf-16be"],
+      [withBom([0xff, 0xfe], utf16(html, true)), "text/html"],
+      [withBom([0xfe, 0xff], utf16(html, false)), "text/html"],
+      // The BOM wins over a charset that says otherwise.
+      [withBom([0xff, 0xfe], utf16(html, true)), "text/html; charset=utf-8"],
+      // A label TextDecoder doesn't know leaves UTF-8.
+      [new TextEncoder().encode(html), "text/html; charset=no-such-thing"],
+    ];
+    for (const [bytes, contentType] of cases) {
+      assert.equal(decodeHtml(bytes, contentType), html, String(contentType));
+    }
+  });
+
+  test("keeps ASCII markup in a legacy single-byte page", () => {
+    const latin1 = new Uint8Array([...new TextEncoder().encode(html), 0xe9]);
+    assert.equal(
+      decodeHtml(latin1, "text/html; charset=windows-1252"),
+      `${html}é`,
+    );
+    assert.ok(decodeHtml(latin1, null).startsWith(html));
+  });
+});
+
 describe("readCanonicalUrls", () => {
   test("answers what canonicalUrls does, from a worker", async () => {
     for (const html of [
@@ -839,6 +905,22 @@ describe("readCanonicalUrls", () => {
         urls: canonicalUrls(html, PUBLIC_ORIGIN),
       });
     }
+  });
+
+  test("answers only once its worker has stopped", async () => {
+    // A worker still stopping holds a MessagePort open. Let any from earlier
+    // tests close first.
+    const ports = () =>
+      process.getActiveResourcesInfo().filter((type) => type === "MessagePort")
+        .length;
+    await delay(200);
+    const before = ports();
+    await readCanonicalUrls("<div>".repeat(50_000), PUBLIC_ORIGIN, {
+      timeout: 100,
+    });
+    assert.equal(ports(), before, "after a parse it stopped");
+    await readCanonicalUrls("<p>", PUBLIC_ORIGIN);
+    assert.equal(ports(), before, "after a parse that finished");
   });
 
   test("stops a parse that runs past its time", async () => {
@@ -1262,6 +1344,27 @@ describe("probeDirectHost", () => {
     assert.match(result.reason, /sends .* on to .*\/us\/research/);
   });
 
+  test("reads a UTF-16 page's links, by charset or byte-order mark", async () => {
+    const html = `<link rel="canonical" href="${DIRECT}">`;
+    const bytes = new Uint8Array(html.length * 2);
+    for (let i = 0; i < html.length; i += 1) bytes[i * 2] = html.charCodeAt(i);
+    for (const response of [
+      { status: 200, bytes, contentType: "text/html; charset=utf-16le" },
+      {
+        status: 200,
+        bytes: new Uint8Array([0xff, 0xfe, ...bytes]),
+        contentType: "text/html",
+      },
+    ]) {
+      const result = await probe({
+        [DIRECT]: permanent(PUBLIC),
+        [PUBLIC]: response,
+      });
+      assert.equal(result.state, "wrong", result.reason);
+      assert.match(result.reason, /names .*vercel\.app.* as its canonical/);
+    }
+  });
+
   test("reads a deep page, and reports one it can't parse in time as unreachable", async () => {
     const deep = (depth, inner) =>
       `${"<div>".repeat(depth)}${inner}${"</div>".repeat(depth)}`;
@@ -1333,15 +1436,47 @@ describe("probeDirectHost", () => {
     }
   });
 
-  test("fails loops on policyengine.org, through the zone host, and on the zone host", async () => {
+  test("fails loops on policyengine.org and on the zone host", async () => {
     for (const [table, requirePage] of [
       [{ [DIRECT]: permanent(PUBLIC), [PUBLIC]: permanent(PUBLIC) }, true],
-      [{ [DIRECT]: permanent(PUBLIC), [PUBLIC]: permanent(DIRECT) }, false],
       [{ [DIRECT]: permanent(DIRECT) }, true],
     ]) {
       const result = await probe(table, { requirePage });
       assert.equal(result.state, "wrong");
       assert.match(result.reason, /loops/);
+    }
+    // A loop through the zone host stops at its first hop back there.
+    const back = await probe(
+      { [DIRECT]: permanent(PUBLIC), [PUBLIC]: permanent(DIRECT) },
+      { requirePage: false },
+    );
+    assert.equal(back.state, "wrong");
+    assert.match(back.reason, /back to ballot-measures-2026\.vercel\.app/);
+  });
+
+  test("fails a hop off policyengine.org, even one that comes back, and never follows it", async () => {
+    const offSite = [
+      "http://example.com/bridge",
+      "https://example.com/bridge",
+      `http://www.policyengine.org/us/ballot-measures-2026?${PROBE_PARAM}=1`,
+      `https://www.policyengine.org:8443/us/ballot-measures-2026?${PROBE_PARAM}=1`,
+      "https://other-zone.vercel.app/x",
+      `${BALLOT_HOST}/us/ballot-measures-2026/bridge`,
+    ];
+    for (const bridge of offSite) {
+      const apex = `https://policyengine.org/us/ballot-measures-2026?${PROBE_PARAM}=1`;
+      const fetchImpl = fakeFetch({
+        [DIRECT]: permanent(apex),
+        [apex]: permanent(bridge),
+        [bridge]: permanent(PUBLIC),
+        [PUBLIC]: page,
+      });
+      const result = await probeDirectHost(REWRITES, DIRECT, {
+        fetchImpl,
+        ...noWait,
+      });
+      assert.equal(result.state, "wrong", `${bridge}: ${result.reason}`);
+      assert.ok(!fetchImpl.calls.includes(bridge), `fetched ${bridge}`);
     }
   });
 
@@ -1640,10 +1775,14 @@ describe("main", () => {
       status: 200,
       body: `${"<div>".repeat(50_000)}${"</div>".repeat(50_000)}`,
     };
+    const started = Date.now();
     const { code, output } = await run(
       { ...redirecting, [toPublic(ROOT)]: slowPage },
       { ...listed, parseTimeout: 200 },
     );
+    // Well under the 10 s default: main passes its parse limit on.
+    const took = Date.now() - started;
+    assert.ok(took < 5000, `took ${took} ms with a 200 ms parse limit`);
     assert.equal(code, 0);
     assert.match(output, /UNREACHABLE \/us\/ballot-measures-2026/);
     assert.match(output, /couldn't read the canonical links/);

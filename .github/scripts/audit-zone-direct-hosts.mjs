@@ -455,8 +455,12 @@ export function canonicalUrls(html, pageUrl = PUBLIC_ORIGIN) {
     .filter(({ tagName }) => tagName === "base")
     .map((element) => attribute(element, "href"))
     .find((href) => href !== undefined);
+  // The HTML standard's frozen base URL: a base that doesn't parse, or is a
+  // data: or javascript: URL, leaves the page's URL. (Parsing has already
+  // lowercased the scheme.)
+  const baseUrl = baseHref === undefined ? null : resolveUrl(baseHref, pageUrl);
   const base =
-    (baseHref === undefined ? null : resolveUrl(baseHref, pageUrl)) ?? pageUrl;
+    baseUrl && !/^(data|javascript):/.test(baseUrl) ? baseUrl : pageUrl;
   const tokens = (value) => value.toLowerCase().split(/[\t\n\f\r ]+/);
   const urls = [];
   for (const element of elements) {
@@ -494,17 +498,23 @@ export function readCanonicalUrls(
 ) {
   return new Promise((done) => {
     let settled = false;
-    const worker = new Worker(new URL(import.meta.url), {
-      workerData: { [CANONICAL_WORKER]: { html, pageUrl } },
-      execArgv: [],
-      resourceLimits: { maxOldGenerationSizeMb: PARSE_MEMORY_MB },
-    });
+    let worker;
+    try {
+      worker = new Worker(new URL(import.meta.url), {
+        workerData: { [CANONICAL_WORKER]: { html, pageUrl } },
+        execArgv: [],
+        resourceLimits: { maxOldGenerationSizeMb: PARSE_MEMORY_MB },
+      });
+    } catch (error) {
+      done({ error: error?.message ?? String(error) });
+      return;
+    }
+    // Answers once the worker has stopped, so at most one per probe runs.
     const settle = (answer) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      worker.terminate();
-      done(answer);
+      worker.terminate().finally(() => done(answer));
     };
     const timer = setTimeout(
       () => settle({ error: `parsing took over ${timeout} ms` }),
@@ -518,6 +528,36 @@ export function readCanonicalUrls(
       settle({ error: `the parser exited with code ${code}` }),
     );
   });
+}
+
+/**
+ * A response body as a browser decodes HTML (the HTML standard's encoding
+ * sniffing, in the parts that matter here): a byte-order mark first, then the
+ * Content-Type charset, then UTF-8. A <meta charset> can't name UTF-16 (the
+ * standard reads that as UTF-8), and every other encoding keeps ASCII as
+ * ASCII, so UTF-8 still reads the tags and URLs of a page in one. A charset
+ * label TextDecoder doesn't know falls back to UTF-8.
+ */
+export function decodeHtml(bytes, contentType) {
+  const bom =
+    bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf
+      ? "utf-8"
+      : bytes[0] === 0xfe && bytes[1] === 0xff
+        ? "utf-16be"
+        : bytes[0] === 0xff && bytes[1] === 0xfe
+          ? "utf-16le"
+          : null;
+  const charset = /;\s*charset\s*=\s*"?([^";\s]+)/i.exec(
+    contentType ?? "",
+  )?.[1];
+  for (const label of [bom, charset, "utf-8"]) {
+    if (!label) continue;
+    try {
+      return new TextDecoder(label).decode(bytes);
+    } catch {
+      // Not a label TextDecoder knows: try the next.
+    }
+  }
 }
 
 async function request(fetchImpl, url, options) {
@@ -536,8 +576,11 @@ async function request(fetchImpl, url, options) {
         status: response.status,
         location: response.headers.get("location"),
       };
-      if (readBody && response.status === 200 && response.text) {
-        result.body = await response.text();
+      if (readBody && response.status === 200) {
+        result.body = decodeHtml(
+          new Uint8Array(await response.arrayBuffer()),
+          response.headers.get("content-type"),
+        );
       }
     } catch (error) {
       result = { error: error?.message ?? String(error) };
@@ -704,10 +747,14 @@ export async function probeDirectHost(
     }
   }
 
-  const landed = await walk(fetchImpl, direct.location, {
-    ...options,
-    readBody: requirePage,
-  });
+  // Each hop must stay on policyengine.org: the walk stops before following
+  // one that leaves it, even one that would come back.
+  const landed = await walk(
+    fetchImpl,
+    direct.location,
+    { ...options, readBody: requirePage },
+    (next) => !isPublicUrl(new URL(next), publicOrigin),
+  );
   if (landed.loop) {
     return result("wrong", { reason: `loops: ${landed.visited.join(" -> ")}` });
   }
@@ -716,9 +763,12 @@ export async function probeDirectHost(
       reason: `${landed.url}: request failed: ${landed.error}`,
     });
   }
-  if (new URL(landed.url).host === host) {
+  if (landed.location !== undefined) {
     return result("wrong", {
-      reason: `${direct.location} sends readers back to ${host}`,
+      reason:
+        new URL(landed.location).host === host
+          ? `${landed.url} sends readers back to ${host}`
+          : `policyengine.org sends ${landed.url} off the site, to ${landed.location}`,
     });
   }
   // Another public URL for the same zone page is only an extra hop.
