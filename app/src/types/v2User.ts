@@ -112,6 +112,12 @@ export interface UserReportItem extends AssociationItemBase {
   last_run_at: string | null;
 }
 
+/** A household saved to the user: a v2 household, a v1 one, or both. */
+export interface UserHouseholdItem extends AssociationItemBase {
+  household_id: string | null;
+  legacy_household_id: number | null;
+}
+
 /**
  * A saved report as anyone holding its link reads it (`/v2/shared-reports`):
  * the owner and the owner's saved-reform IDs are left out, and the reform it
@@ -164,6 +170,13 @@ export interface UserReportCreateBody {
   validation?: unknown | null;
   budget_window_years?: number | null;
   last_run_at?: string | null;
+}
+
+export interface UserHouseholdCreateBody {
+  country_id: AssociationCountryId;
+  legacy_household_id: number;
+  name?: string | null;
+  description?: string | null;
 }
 
 /* /v2/me/export */

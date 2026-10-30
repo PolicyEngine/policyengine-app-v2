@@ -31,6 +31,14 @@ vi.mock('@/api/householdCalculation', () => ({
   fetchHouseholdCalculation: (...args: unknown[]) => mockFetchHouseholdCalculation(...args),
 }));
 
+// Saving a calculated household to the user is tested on its own: here only
+// what each household passes to it is checked.
+const mockSaveCalculatedHousehold = vi.fn();
+vi.mock('@/hooks/useFlagshipHousehold', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/hooks/useFlagshipHousehold')>()),
+  useSaveCalculatedHousehold: (household: unknown) => mockSaveCalculatedHousehold(household),
+}));
+
 // The household builder is the v2 builder, tested on its own: here a stand-in
 // makes the same calls it makes, so the section's own work is what is tested.
 vi.mock('@/components/household/HouseholdBuilderForm', () => ({
@@ -269,6 +277,25 @@ describe('HouseholdImpactSection', () => {
     expect(headline).toHaveTextContent('+$1,000');
     expect(headline).toHaveTextContent('$72,000 → $73,000 (+1.4%)');
     expect(result).toHaveTextContent('Single · no children · 2026');
+  });
+
+  test('given a calculated household then it is passed on to be saved to the user', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    expect(mockSaveCalculatedHousehold).toHaveBeenLastCalledWith({
+      countryId: 'us',
+      householdId: undefined,
+      name: undefined,
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
+
+    expect(mockSaveCalculatedHousehold).toHaveBeenLastCalledWith({
+      countryId: 'us',
+      householdId: String(CREATED_HOUSEHOLD_ID),
+      name: 'Single · no children',
+    });
   });
 
   test('given a result then its taxes, benefits and credits that change are listed', async () => {
