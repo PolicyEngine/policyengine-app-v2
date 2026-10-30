@@ -1085,6 +1085,15 @@ describe("unreadableHeaders", () => {
       { link: '</x?rel=canonical;y=1>; rel="preload"; as="style"' },
       { link: '</a.css>; rel=preload; title="canonical"' },
       { link: '</a.css>; rel="preload canonicalish"' },
+      // Parameters, not text, say what a link is.
+      { link: '</a.css>; rel=preload; title="rel=canonical"' },
+      { link: "</a.css>; rel=preload; x-rel=canonical" },
+      { link: '</a.css>; title="<"; rel=preload; x=">"' },
+      { link: '</a.css>; rel="pre\\load", </b.css>; rel=preload,' },
+      { link: "nonsense" },
+      { link: "" },
+      { link: '</a.css>; title="preload' },
+      { link: "</a.css>; rel=preload, </canonical.css>; rel=preload" },
     ]) {
       assert.equal(
         unreadableHeaders({ ...plain, ...headers }),
@@ -1133,6 +1142,83 @@ describe("unreadableHeaders", () => {
       ],
       [
         { link: '<https://a.vercel.app/x>; REL = "alternate canonical"' },
+        /canonical in a Link header/,
+      ],
+      // The ninth review's cases: a quoted pair, and a rel between
+      // quoted angle brackets.
+      [
+        { link: '<https://a.vercel.app/x>; rel="canoni\\cal"' },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: '<https://a.vercel.app/x>; title="<"; rel=canonical; x=">"' },
+        /canonical in a Link header/,
+      ],
+      [
+        {
+          link: '</a.css>; rel=preload, <https://a.vercel.app/x>; rel="canoni\\cal"',
+        },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: '<https://a.vercel.app/x>; title="a, b; c"; rel=canonical' },
+        /canonical in a Link header/,
+      ],
+      // A later rel, which RFC 8288 says to ignore, still counts.
+      [
+        { link: "<https://a.vercel.app/x>; rel=preload; rel=canonical" },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: "<https://a.vercel.app/x>; rel*=UTF-8''canonical" },
+        /canonical in a Link header/,
+      ],
+      // Spaces around the separators, and a parameter before the rel.
+      [
+        { link: '<https://a.vercel.app/x> ; rel="canoni\\cal"' },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: '<https://a.vercel.app/x>; rel = "canoni\\cal"' },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: '<https://a.vercel.app/x>; rel= "canonical"' },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: '<https://a.vercel.app/x>; title="a"; rel="canoni\\cal"' },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: "<https://a.vercel.app/x>; rel*=UTF-8''%63anonical" },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: '<https://a.vercel.app/x>; rel="alternate\fcanonical"' },
+        /canonical in a Link header/,
+      ],
+      // A field it can't parse counts if "canonical" is anywhere in it.
+      [{ link: "REL=CANONICAL" }, /canonical in a Link header/],
+      [
+        { link: "<https://a.vercel.app/x> rel=canonical" },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: "<https://a.vercel.app/canonical>; x=1, nonsense" },
+        /canonical in a Link header/,
+      ],
+      [{ link: "rel=canonical" }, /canonical in a Link header/],
+      [
+        { link: '<https://a.vercel.app/x>; rel="canonical"x' },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: "<https://a.vercel.app/x; rel=canonical" },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: '<https://a.vercel.app/x>; title="a; rel=canonical' },
         /canonical in a Link header/,
       ],
     ]) {

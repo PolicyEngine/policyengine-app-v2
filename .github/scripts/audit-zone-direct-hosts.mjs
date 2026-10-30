@@ -591,15 +591,75 @@ function policyChangesPage(policy) {
   });
 }
 
-/** Whether a Link header names a link whose rel includes "canonical". */
-function linkNamesCanonical(link) {
-  // Only a link's parameters say what it is, not its <URI>.
-  const parameters = link.replace(/<[^>]*>/g, "");
-  for (const [, value] of parameters.matchAll(
-    /\brel[\t ]*=[\t ]*("[^"]*"|[^\t ;,]*)/gi,
-  )) {
-    const rels = value.replace(/"/g, "").split(/[\t ]+/);
-    if (rels.some((rel) => asciiLower(rel) === "canonical")) return true;
+/**
+ * Whether a Link header names a link whose relations include "canonical",
+ * read as RFC 8288 (Appendix B) parses it: `<target>`, then `;`-separated
+ * parameters, whose names are lower-cased and whose quoted values are
+ * unescaped and may hold `<`, `>`, `;` or `,`; links are separated by `,`.
+ * Every `rel` parameter counts, not only a link's first, and so does any
+ * `rel*`, since the audit doesn't decode RFC 8187 values. A field that doesn't
+ * parse, an unclosed quote included, counts when it holds "canonical"
+ * anywhere, since a browser may read it another way.
+ */
+function linkNamesCanonical(field) {
+  const unparsed = () => /canonical/i.test(field);
+  let position = 0;
+  const skipSpace = () => {
+    while (field[position] === " " || field[position] === "\t") position += 1;
+  };
+  const consumeUntil = (stops) => {
+    const start = position;
+    while (position < field.length && !stops.includes(field[position])) {
+      position += 1;
+    }
+    return field.slice(start, position);
+  };
+  const quotedString = () => {
+    let value = "";
+    for (position += 1; position < field.length; position += 1) {
+      if (field[position] === '"') {
+        position += 1;
+        return value;
+      }
+      if (field[position] === "\\") position += 1;
+      value += field[position] ?? "";
+    }
+    return null;
+  };
+  while (position < field.length) {
+    skipSpace();
+    if (field[position] !== "<") return unparsed();
+    position = field.indexOf(">", position);
+    if (position === -1) return unparsed();
+    position += 1;
+    for (;;) {
+      skipSpace();
+      if (field[position] !== ";") break;
+      position += 1;
+      skipSpace();
+      const name = asciiLower(consumeUntil(" \t=;,"));
+      skipSpace();
+      let value = "";
+      if (field[position] === "=") {
+        position += 1;
+        skipSpace();
+        value = field[position] === '"' ? quotedString() : consumeUntil(";,");
+        if (value === null) return unparsed();
+      }
+      if (
+        name === "rel" &&
+        value
+          .split(/[\t\n\f\r ]+/)
+          .some((rel) => asciiLower(rel) === "canonical")
+      ) {
+        return true;
+      }
+      if (name === "rel*") return true;
+    }
+    skipSpace();
+    if (position >= field.length) return false;
+    if (field[position] !== ",") return unparsed();
+    position += 1;
   }
   return false;
 }
