@@ -20,11 +20,13 @@
  * - policyengine.org serves that URL itself, without redirecting it to
  *   another page or back to the zone's host, and at the root answers 200;
  * - that page doesn't name a `*.vercel.app` URL as its canonical or og:url,
- *   parsed as a browser does. It reads only a text/html page whose encoding
- *   browsers can't disagree on (pageEncoding); any other is unreachable.
+ *   parsed as a browser does. It reads only a page that browsers can't read
+ *   another way (pageEncoding, unreadableHeaders, readPage); any other is
+ *   unreachable.
  *
- * Every hop on the way stays on policyengine.org, and every Location is one
- * URL.
+ * Only Fetch's redirect statuses are hops. Every hop on the way stays on
+ * policyengine.org, and every Location is one URL; one that may be several
+ * makes the route unreachable.
  *
  * It fails only on evidence: a redirect that goes wrong, or a listed zone
  * that serves a page or a 404 without redirecting. A request that fails, that
@@ -32,8 +34,8 @@
  * Vercel's SSO answers (on the zone's host or on the way through
  * policyengine.org), makes the route unreachable: reported, never failed.
  * So does the run's deadline: no request, retry or parse outlasts it, and a
- * page the audit won't read or can't parse in time is reported the same way. Zones with no
- * redirect yet are reported too.
+ * page the audit won't read or can't parse in time is reported the same way.
+ * Zones with no redirect yet are reported too.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -99,6 +101,16 @@ export const PROBE_PARAM = "pe_direct_host_audit";
 export const DEEP_PROBE_SEGMENT = "direct-host-audit";
 export const USER_AGENT = "PolicyEngine zone direct-host audit";
 const PERMANENT_STATUSES = new Set([301, 308]);
+// Fetch's redirect statuses, which Chromium follows too (the eighth review).
+// A browser shows any other response, 3xx or not, where it is.
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+// The headers of a landed page that the audit reads.
+const PAGE_HEADERS = [
+  "content-type",
+  "content-security-policy",
+  "refresh",
+  "link",
+];
 
 /**
  * Sources whose production host redirects direct visits to policyengine.org.
@@ -515,53 +527,34 @@ function splitHeader(input) {
 }
 
 /**
- * Fetch's "extract a MIME type" for a Content-Type header: the last valid
- * value's essence and charset label (carried from an earlier value of the
- * same type when it has none), or null. node:util's MIMEType parses each
- * value as the MIME Sniffing standard does, quoted strings and backslash
- * escapes included.
- */
-export function extractMimeType(contentType) {
-  if (contentType === null || contentType === undefined) return null;
-  let mimeType = null;
-  let carried = null;
-  for (const value of splitHeader(contentType)) {
-    let type;
-    try {
-      type = new MIMEType(value);
-    } catch {
-      continue;
-    }
-    if (type.essence === "*/*") continue;
-    const own = type.params.get("charset");
-    if (type.essence !== mimeType?.essence) {
-      // A new MIME type drops the charset of the one before.
-      carried = own;
-      mimeType = { essence: type.essence, charset: own };
-    } else {
-      mimeType = { essence: type.essence, charset: own ?? carried };
-    }
-  }
-  return mimeType;
-}
-
-/**
  * The encoding to read a landed page in, when the audit can read it as every
- * browser does: `{ encoding }` for a text/html page whose encoding a
- * byte-order mark or the Content-Type charset fixes (the HTML standard's
- * first two sources, which browsers follow), in an encoding Node decodes as
- * browsers do. Otherwise `{ unreadable }`, saying why. Browsers read other
- * types differently or guess them, and when the response fixes no encoding
- * they find one in the page or guess, and don't agree.
+ * browser does: `{ encoding }` for a page whose Content-Type is one text/html
+ * value and whose byte-order mark, else that value's charset, names an
+ * encoding (the HTML standard's first two sources, which it then holds
+ * certain) that Node decodes as browsers do. Otherwise `{ unreadable }`,
+ * saying why. Browsers read other types differently or guess them; when the
+ * response fixes no encoding they find one in the page or guess, and don't
+ * agree; and Fetch reads several Content-Type values unlike Chromium and
+ * Firefox, which keep the last charset (the eighth review).
  */
 export function pageEncoding(bytes, contentType) {
-  const mimeType = extractMimeType(contentType);
-  if (mimeType === null) {
+  if (contentType === null || contentType === undefined) {
+    return { unreadable: "it has no Content-Type" };
+  }
+  const values = splitHeader(contentType);
+  if (values.length !== 1) {
+    return { unreadable: `its Content-Type has ${values.length} values` };
+  }
+  let mimeType;
+  try {
+    mimeType = new MIMEType(values[0]);
+  } catch {
     return { unreadable: "its Content-Type names no MIME type" };
   }
   if (mimeType.essence !== "text/html") {
     return { unreadable: `it's ${mimeType.essence}, not text/html` };
   }
+  const charset = mimeType.params.get("charset");
   const bom =
     bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf
       ? "utf-8"
@@ -570,8 +563,7 @@ export function pageEncoding(bytes, contentType) {
         : bytes[0] === 0xff && bytes[1] === 0xfe
           ? "utf-16le"
           : null;
-  const encoding =
-    bom ?? (mimeType.charset === null ? null : encodingFor(mimeType.charset));
+  const encoding = bom ?? (charset === null ? null : encodingFor(charset));
   if (encoding === null) {
     return {
       unreadable:
@@ -582,6 +574,55 @@ export function pageEncoding(bytes, contentType) {
     return { unreadable: `Node doesn't decode ${encoding} as browsers do` };
   }
   return { encoding };
+}
+
+/**
+ * Whether a Content-Security-Policy (a header's policies, or a `<meta>`'s)
+ * has a directive that changes what a page's links say: `sandbox` turns
+ * scripting off, so `<noscript>` holds elements, and `base-uri` can block a
+ * `<base>`. Others, such as the `frame-ancestors` that /us/qbi-calculator
+ * sends, don't. Directives are split on ";" and policies on ",", and a
+ * directive's name runs to its first ASCII whitespace (CSP3's parsing).
+ */
+function policyChangesPage(policy) {
+  return policy.split(/[;,]/).some((directive) => {
+    const name = asciiLower(directive.trim().split(/[\t\n\f\r ]/)[0]);
+    return name === "sandbox" || name === "base-uri";
+  });
+}
+
+/** Whether a Link header names a link whose rel includes "canonical". */
+function linkNamesCanonical(link) {
+  // Only a link's parameters say what it is, not its <URI>.
+  const parameters = link.replace(/<[^>]*>/g, "");
+  for (const [, value] of parameters.matchAll(
+    /\brel[\t ]*=[\t ]*("[^"]*"|[^\t ;,]*)/gi,
+  )) {
+    const rels = value.replace(/"/g, "").split(/[\t ]+/);
+    if (rels.some((rel) => asciiLower(rel) === "canonical")) return true;
+  }
+  return false;
+}
+
+/**
+ * Why a landed page's headers stop the audit reading it as browsers do, or
+ * null: a Content-Security-Policy that changes its links (policyChangesPage),
+ * a Refresh, which sends the reader on, or a Link header that names a
+ * canonical of its own. The audit models none of these. On 2026-10-30 no
+ * zone route on policyengine.org sent any of them.
+ */
+export function unreadableHeaders(headers) {
+  const policy = headers["content-security-policy"];
+  if (policy !== null && policyChangesPage(policy)) {
+    return "its Content-Security-Policy sets sandbox or base-uri, which can change how browsers parse it and resolve its links";
+  }
+  if (headers.refresh !== null) {
+    return "it sends a Refresh header, which sends readers on";
+  }
+  if (headers.link !== null && linkNamesCanonical(headers.link)) {
+    return "it names a canonical in a Link header";
+  }
+  return null;
 }
 
 /** A parsed document's HTML elements, in tree order. */
@@ -662,8 +703,37 @@ export function canonicalUrls(html, pageUrl = PUBLIC_ORIGIN) {
 }
 
 /**
- * canonicalUrls of a page's bytes in an encoding (pageEncoding), in a worker
- * thread stopped after `timeout` ms. Resolves `{ urls }`, or `{ error }` when
+ * A page's canonicalUrls as `{ urls }`, or `{ unreadable }` when an HTML
+ * `<meta>` that a browser would act on sets a Content-Security-Policy that
+ * changes its links (policyChangesPage; a `<meta>` can't sandbox, but the
+ * audit doesn't count on that) or refreshes the page. Metas in
+ * templates and `<noscript>` don't act, and the parse leaves them out.
+ */
+export function readPage(html, pageUrl = PUBLIC_ORIGIN) {
+  const document = parse(html, { scriptingEnabled: true });
+  for (const element of htmlElements(document)) {
+    if (element.tagName !== "meta") continue;
+    const pragma = asciiLower((attribute(element, "http-equiv") ?? "").trim());
+    if (
+      pragma === "content-security-policy" &&
+      policyChangesPage(attribute(element, "content") ?? "")
+    ) {
+      return {
+        unreadable:
+          "a <meta> sets a Content-Security-Policy with sandbox or base-uri",
+      };
+    }
+    if (pragma === "refresh") {
+      return { unreadable: "a <meta> refreshes it, which sends readers on" };
+    }
+  }
+  return { urls: canonicalUrlsIn(document, pageUrl) };
+}
+
+/**
+ * readPage of a page's bytes in an encoding (pageEncoding), in a worker
+ * thread stopped after `timeout` ms. Resolves `{ urls }` or `{ unreadable }`,
+ * or `{ error }` when
  * decoding or parsing runs out of time or memory or throws, so a page the
  * audit can't read is reported, never passed, and can't stop the run.
  */
@@ -697,7 +767,7 @@ export function readCanonicalUrls(
       () => settle({ error: `parsing took over ${timeout} ms` }),
       timeout,
     );
-    worker.once("message", (urls) => settle({ urls }));
+    worker.once("message", (page) => settle(page));
     worker.once("error", (error) =>
       settle({ error: error?.message ?? String(error) }),
     );
@@ -725,7 +795,9 @@ async function request(fetchImpl, url, options) {
       };
       if (readBody && response.status === 200) {
         result.body = new Uint8Array(await response.arrayBuffer());
-        result.contentType = response.headers.get("content-type");
+        result.headers = Object.fromEntries(
+          PAGE_HEADERS.map((name) => [name, response.headers.get(name)]),
+        );
       }
     } catch (error) {
       result = { error: error?.message ?? String(error) };
@@ -741,8 +813,9 @@ async function request(fetchImpl, url, options) {
 /**
  * Follows `url` hop by hop. `stop(url)` ends the walk early (for example on
  * leaving the starting host); a revisited URL or more than MAX_HOPS is a loop.
- * A Location that isn't one URL ends it too (one that doesn't parse, an empty
- * one, or copies that differ): browsers don't get anywhere with it.
+ * Only a redirect status with a Location is a hop. A Location that is empty
+ * or doesn't parse ends the walk (browsers don't get anywhere with it), and
+ * so does one that may be several joined.
  */
 async function walk(fetchImpl, url, options, stop = () => false) {
   const visited = [];
@@ -754,23 +827,23 @@ async function walk(fetchImpl, url, options, stop = () => false) {
     if (response.error !== undefined) {
       return { error: response.error, url: current, visited };
     }
-    const { status, location, body, contentType } = response;
-    if (status < 300 || status >= 400 || location === null) {
-      return { status, url: current, body, contentType, visited };
+    const { status, location, body, headers } = response;
+    if (!REDIRECT_STATUSES.has(status) || location === null) {
+      return { status, url: current, body, headers, visited };
     }
-    // headers.get joins repeated headers with ", ". Browsers follow copies of
-    // one URL. A redirect of a probe's URL, which holds no ", ", can only hold
-    // one if the zone adds it.
-    const copies = location.split(", ");
-    let next = null;
-    if (location !== "" && copies.every((copy) => copy === copies[0])) {
-      try {
-        next = new URL(copies[0], current).toString();
-      } catch {
-        // Not a URL.
-      }
+    // headers.get joins repeated Location headers with ", ", and browsers
+    // read each apart, so a value that holds one may be one URL or several.
+    // A probe's URL holds none, so a redirect of it holds one only if the
+    // zone adds it.
+    if (location.includes(", ")) {
+      return { status, url: current, ambiguousLocation: location, visited };
     }
-    if (next === null) {
+    let next;
+    try {
+      // An empty Location goes nowhere: browsers show the response or loop.
+      if (location === "") throw new TypeError("empty");
+      next = new URL(location, current).toString();
+    } catch {
       return { status, url: current, badLocation: location, visited };
     }
     if (stop(next)) return { status, url: current, location: next, visited };
@@ -792,7 +865,8 @@ function isVercelLogin(status, location) {
 
 /**
  * A walk's failure that isn't about where it lands (a loop, an error, a
- * Location that isn't a URL), as the state and fields of a result, or null.
+ * Location that isn't a URL or may be several), as the state and fields of a
+ * result, or null.
  */
 function walkFailure(walked, describeLoop) {
   if (walked.loop) {
@@ -808,7 +882,15 @@ function walkFailure(walked, describeLoop) {
     return [
       "wrong",
       {
-        reason: `${walked.url} answers ${walked.status} with a Location that isn't one URL: ${JSON.stringify(walked.badLocation)}`,
+        reason: `${walked.url} answers ${walked.status} with a Location that isn't a URL: ${JSON.stringify(walked.badLocation)}`,
+      },
+    ];
+  }
+  if (walked.ambiguousLocation !== undefined) {
+    return [
+      "unreachable",
+      {
+        reason: `${walked.url} answers ${walked.status} with a Location that may be one URL or several joined: ${JSON.stringify(walked.ambiguousLocation)}`,
       },
     ];
   }
@@ -859,8 +941,8 @@ export async function probeDirectHost(
   );
   if (directFailure) return result(...directFailure);
   if (!direct.location) {
-    return isUnreachableStatus(direct.status) ||
-      (direct.status >= 300 && direct.status < 400)
+    // A 3xx that isn't a redirect, or has no Location, is served like a page.
+    return isUnreachableStatus(direct.status)
       ? result("unreachable", {
           reason: `${direct.url} answers ${direct.status}`,
         })
@@ -991,10 +1073,11 @@ export async function probeDirectHost(
   }
   let named = [];
   if (landed.body) {
-    const reading = pageEncoding(landed.body, landed.contentType);
-    if (reading.unreadable !== undefined) {
+    const reading = pageEncoding(landed.body, landed.headers["content-type"]);
+    const unreadable = reading.unreadable ?? unreadableHeaders(landed.headers);
+    if (unreadable) {
       return result("unreachable", {
-        reason: `can't read ${landed.url} as browsers do: ${reading.unreadable}`,
+        reason: `can't read ${landed.url} as browsers do: ${unreadable}`,
       });
     }
     const left = Math.min(parseTimeout, deadline - now());
@@ -1012,6 +1095,11 @@ export async function probeDirectHost(
     if (read.error !== undefined) {
       return result("unreachable", {
         reason: `couldn't read the canonical links of ${landed.url}: ${read.error}`,
+      });
+    }
+    if (read.unreadable !== undefined) {
+      return result("unreachable", {
+        reason: `can't read ${landed.url} as browsers do: ${read.unreadable}`,
       });
     }
     named = read.urls;
@@ -1291,7 +1379,7 @@ export async function main(
 
 if (!isMainThread && workerData?.[CANONICAL_WORKER]) {
   const { bytes, encoding, pageUrl } = workerData[CANONICAL_WORKER];
-  parentPort.postMessage(canonicalUrls(decodeAs(bytes, encoding), pageUrl));
+  parentPort.postMessage(readPage(decodeAs(bytes, encoding), pageUrl));
 } else if (isMainThread && process.argv[1] === fileURLToPath(import.meta.url)) {
   main().then(
     (code) => {

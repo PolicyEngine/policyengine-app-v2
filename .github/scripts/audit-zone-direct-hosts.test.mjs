@@ -11,7 +11,6 @@ import {
   decodeAs,
   DIRECT_HOST_REDIRECTS,
   encodingFor,
-  extractMimeType,
   findIframedHosts,
   isProductionVercelHost,
   isUnreachableStatus,
@@ -25,8 +24,10 @@ import {
   PUBLIC_ORIGIN,
   publicUrlFor,
   readCanonicalUrls,
+  readPage,
   redirectKeepsPage,
   summarizeRoute,
+  unreadableHeaders,
   USER_AGENT,
   zoneRoutes,
 } from "./audit-zone-direct-hosts.mjs";
@@ -94,9 +95,9 @@ const BALLOT_HOST = "https://ballot-measures-2026.vercel.app";
 
 /**
  * A fetch that answers from a table of `url -> response`; anything else 404s.
- * A response is `{ status, location, body }` (or `bytes` for the body, and
- * `contentType`, by default text/html in UTF-8; null sends none),
- * `{ throws }`, or a list of these
+ * A response is `{ status, location, body }` (or `bytes` for the body,
+ * `contentType`, by default text/html in UTF-8 (null sends none), and other
+ * `headers` by lower-case name), `{ throws }`, or a list of these
  * answered in turn (the last repeats).
  */
 function fakeFetch(table) {
@@ -119,6 +120,7 @@ function fakeFetch(table) {
         entry.contentType === undefined
           ? "text/html; charset=utf-8"
           : entry.contentType,
+      ...entry.headers,
     };
     return {
       status: entry.status,
@@ -954,59 +956,6 @@ describe("encodingFor", () => {
   });
 });
 
-describe("extractMimeType", () => {
-  test("reads the type and charset as Fetch does, quoted strings and all", () => {
-    const cases = [
-      [null, null],
-      ["nonsense", null],
-      ["*/*", null],
-      ["text/html", ["text/html", null]],
-      ["Text/HTML; charset=UTF-8", ["text/html", "UTF-8"]],
-      [
-        'text/html;profile=";charset=utf-16le";charset=koi8-r',
-        ["text/html", "koi8-r"],
-      ],
-      ['text/html;charset="utf\\-16le"', ["text/html", "utf-16le"]],
-      // An unclosed quote runs to the end.
-      ['text/html;charset="koi8-r', ["text/html", "koi8-r"]],
-      ["text/html;charset=koi8-r;charset=utf-8", ["text/html", "koi8-r"]],
-    ];
-    for (const [contentType, expected] of cases) {
-      assert.deepEqual(
-        extractMimeType(contentType),
-        expected && { essence: expected[0], charset: expected[1] },
-        contentType,
-      );
-    }
-  });
-
-  test("reads several Content-Type values as Fetch does", () => {
-    const cases = [
-      ['text/html;x="a,b";charset=koi8-r', ["text/html", "koi8-r"]],
-      // An escaped quote doesn't end the quoted string.
-      ['text/html;x="a\\",b";charset=koi8-r', ["text/html", "koi8-r"]],
-      ["text/html;charset=koi8-r, text/html", ["text/html", "koi8-r"]],
-      ["text/html, text/html;charset=koi8-r", ["text/html", "koi8-r"]],
-      ["text/plain;charset=koi8-r, text/html", ["text/html", null]],
-      ["text/html;charset=utf-8, text/plain", ["text/plain", null]],
-      ["text/html;charset=koi8-r, */*", ["text/html", "koi8-r"]],
-      ["text/html;charset=koi8-r, nonsense", ["text/html", "koi8-r"]],
-      // A value without a charset takes the first type's, not the last one's.
-      [
-        "text/html;charset=koi8-r, text/html;charset=utf-8, text/html",
-        ["text/html", "koi8-r"],
-      ],
-    ];
-    for (const [contentType, [essence, charset]] of cases) {
-      assert.deepEqual(
-        extractMimeType(contentType),
-        { essence, charset },
-        contentType,
-      );
-    }
-  });
-});
-
 describe("pageEncoding", () => {
   const html = bytesOf(VERCEL_CANONICAL);
 
@@ -1019,7 +968,12 @@ describe("pageEncoding", () => {
       [html, "text/html;charset=iso-2022-kr", "replacement"],
       [html, 'text/html;profile=";charset=utf-16le";charset=utf-8', "utf-8"],
       [html, 'text/html;charset="utf\\-16le"', "utf-16le"],
-      [html, "text/html;charset=koi8-r, text/html", "koi8-r"],
+      // One value, read as the MIME Sniffing standard says.
+      [html, "Text/HTML; Charset=KOI8-R", "koi8-r"],
+      [html, 'text/html;charset="koi8-r', "koi8-r"],
+      [html, "text/html;charset=koi8-r;charset=utf-8", "koi8-r"],
+      [html, 'text/html;x="a,b";charset=koi8-r', "koi8-r"],
+      [html, 'text/html;x="a\\",b";charset=koi8-r', "koi8-r"],
       // A byte-order mark wins over the charset, and needs none.
       [bytesOf([0xef, 0xbb, 0xbf]), "text/html", "utf-8"],
       [bytesOf([0xff, 0xfe]), "text/html;charset=utf-8", "utf-16le"],
@@ -1060,16 +1014,28 @@ describe("pageEncoding", () => {
     const cases = [
       // No type, or a type that isn't text/html: browsers guess, read XML or
       // show text.
-      [html, null, /names no MIME type/],
+      [html, null, /has no Content-Type/],
+      [html, "", /names no MIME type/],
       [html, "nonsense", /names no MIME type/],
-      [html, "*/*", /names no MIME type/],
+      [html, "*/*", /it's \*\/\*, not text\/html/],
       [
         html,
         "application/xhtml+xml; charset=utf-8",
         /application\/xhtml\+xml, not text\/html/,
       ],
       [html, "text/plain; charset=utf-8", /text\/plain, not text\/html/],
-      [html, "text/html; charset=utf-8, text/plain", /text\/plain/],
+      // Several values: Fetch keeps the first charset since the type last
+      // changed, Chromium and Firefox the last one given.
+      [html, "text/html; charset=utf-8, text/plain", /has 2 values/],
+      [html, "text/html;charset=koi8-r, text/html", /has 2 values/],
+      [html, "text/html, text/html;charset=koi8-r", /has 2 values/],
+      [
+        html,
+        "text/html; charset=utf-8, text/html; charset=utf-16le, text/html",
+        /has 3 values/,
+      ],
+      [html, "text/html;charset=koi8-r, */*", /has 2 values/],
+      [html, "text/html; charset=utf-8, ", /has 2 values/],
       [bytesOf([0xef, 0xbb, 0xbf]), "text/plain", /text\/plain/],
       // No encoding fixed: browsers find one in the page or guess.
       [html, "text/html", /neither a byte-order mark nor/],
@@ -1087,6 +1053,148 @@ describe("pageEncoding", () => {
       const reading = pageEncoding(bytes, contentType);
       assert.equal(reading.encoding, undefined, String(contentType));
       assert.match(reading.unreadable, reason, String(contentType));
+    }
+  });
+});
+
+describe("unreadableHeaders", () => {
+  const plain = {
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy": null,
+    refresh: null,
+    link: null,
+  };
+
+  test("reads a page whose headers don't change how browsers read it", () => {
+    for (const headers of [
+      {},
+      // /us/qbi-calculator's policy (2026-10-30).
+      {
+        "content-security-policy":
+          "frame-ancestors 'self' https://policyengine.org https://*.policyengine.org",
+      },
+      // Blocking scripts leaves scripting on, so the parse is the same.
+      { "content-security-policy": "script-src 'none'" },
+      { "content-security-policy": "sandboxed; base-urls" },
+      { "content-security-policy": "default-src 'self' sandbox" },
+      // The 2025 year in review's preload link.
+      {
+        link: '<https://raw.githubusercontent.com/x/white.png>; rel=preload; as="image"',
+      },
+      { link: '</canonical.css>; rel="preload"; as="style"' },
+      { link: '</x?rel=canonical;y=1>; rel="preload"; as="style"' },
+      { link: '</a.css>; rel=preload; title="canonical"' },
+      { link: '</a.css>; rel="preload canonicalish"' },
+    ]) {
+      assert.equal(
+        unreadableHeaders({ ...plain, ...headers }),
+        null,
+        JSON.stringify(headers),
+      );
+    }
+  });
+
+  test("won't read a page whose headers change how browsers read it", () => {
+    for (const [headers, reason] of [
+      // A sandbox turns scripting off, so <noscript> holds elements.
+      [{ "content-security-policy": "sandbox" }, /sets sandbox or base-uri/],
+      [
+        {
+          "content-security-policy": "default-src 'self'; Sandbox allow-forms",
+        },
+        /sets sandbox or base-uri/,
+      ],
+      // A blocked <base> leaves the page's URL as the base.
+      [
+        { "content-security-policy": "base-uri 'none'" },
+        /sets sandbox or base-uri/,
+      ],
+      [
+        { "content-security-policy": "  BASE-URI\t'self';" },
+        /sets sandbox or base-uri/,
+      ],
+      // Two policies, as headers.get joins two headers.
+      [
+        {
+          "content-security-policy": "frame-ancestors 'self', base-uri 'none'",
+        },
+        /sets sandbox or base-uri/,
+      ],
+      [{ refresh: "0; url=https://a.vercel.app/x" }, /Refresh/],
+      [
+        { link: '<https://a.vercel.app/x>; rel="canonical"' },
+        /canonical in a Link header/,
+      ],
+      [
+        {
+          link: "</a.css>; rel=preload, <https://a.vercel.app/x>; rel=CANONICAL",
+        },
+        /canonical in a Link header/,
+      ],
+      [
+        { link: '<https://a.vercel.app/x>; REL = "alternate canonical"' },
+        /canonical in a Link header/,
+      ],
+    ]) {
+      assert.match(
+        unreadableHeaders({ ...plain, ...headers }),
+        reason,
+        JSON.stringify(headers),
+      );
+    }
+  });
+});
+
+describe("readPage", () => {
+  test("answers a page's canonicalUrls", () => {
+    for (const html of [
+      VERCEL_CANONICAL,
+      `<meta property="og:url" content="/us/x">`,
+      "",
+    ]) {
+      assert.deepEqual(readPage(html), { urls: canonicalUrls(html) }, html);
+    }
+  });
+
+  test("won't read a page whose <meta> sets a policy or refreshes it", () => {
+    for (const [html, reason] of [
+      [
+        `<meta http-equiv="Content-Security-Policy" content="base-uri 'none'"><base href="https://a.vercel.app/"><link rel="canonical" href="/us/x">`,
+        /Content-Security-Policy/,
+      ],
+      [
+        `<meta http-equiv=" content-security-policy " content="sandbox">`,
+        /Content-Security-Policy/,
+      ],
+      [
+        `<body><meta http-equiv=CONTENT-SECURITY-POLICY content="sandbox">`,
+        /Content-Security-Policy/,
+      ],
+      [
+        `<meta http-equiv="refresh" content="0; url=https://a.vercel.app/x">`,
+        /refreshes it/,
+      ],
+      // A <meta> ends SVG, so this one is HTML and acts.
+      [`<svg><meta http-equiv="refresh" content="0"></svg>`, /refreshes it/],
+    ]) {
+      const page = readPage(html);
+      assert.equal(page.urls, undefined, html);
+      assert.match(page.unreadable, reason, html);
+    }
+  });
+
+  test("reads past metas that don't act", () => {
+    for (const html of [
+      `<template><meta http-equiv="refresh" content="0"></template>`,
+      `<head><noscript><meta http-equiv="refresh" content="0"></noscript></head>`,
+      `<!-- <meta http-equiv="refresh" content="0"> -->`,
+      `<script>"<meta http-equiv=refresh content=0>"</script>`,
+      `<meta name="refresh" content="0">`,
+      `<div http-equiv="refresh" content="0"></div>`,
+      `<meta http-equiv="content-type" content="text/html; charset=utf-8">`,
+      `<meta http-equiv="content-security-policy" content="default-src 'self'">`,
+    ]) {
+      assert.deepEqual(readPage(html), { urls: [] }, html);
     }
   });
 });
@@ -1175,6 +1283,17 @@ describe("readCanonicalUrls", () => {
     const took = Date.now() - started;
     assert.match(read.error, /took over 200 ms/);
     assert.ok(took < 2000, `took ${took} ms with a 200 ms limit`);
+  });
+
+  test("answers why it won't read a page whose <meta> acts", async () => {
+    const read = await readCanonicalUrls(
+      bytesOf(`<meta http-equiv="refresh" content="0">${VERCEL_CANONICAL}`),
+      "utf-8",
+      PUBLIC_ORIGIN,
+    );
+    assert.deepEqual(read, {
+      unreadable: "a <meta> refreshes it, which sends readers on",
+    });
   });
 
   test("answers an error when it can't start the worker", async () => {
@@ -1323,7 +1442,7 @@ describe("probeDirectHost", () => {
         { publicUrl: publicUnknown },
       );
       assert.equal(result.state, "wrong");
-      assert.match(result.reason, /Location that isn't one URL/);
+      assert.match(result.reason, /Location that isn't a URL/);
     });
 
     test("reports a challenge or an error on the public URL as unreachable", async () => {
@@ -1554,12 +1673,42 @@ describe("probeDirectHost", () => {
     }
   });
 
-  test("reports a redirect status without a location as unreachable", async () => {
-    for (const status of [300, 304]) {
-      const result = await probe({ [DIRECT]: { status } });
-      assert.equal(result.state, "unreachable", String(status));
-      assert.match(result.reason, new RegExp(`answers ${status}`));
+  test("reports a 3xx that isn't a redirect, or has no Location, as missing", async () => {
+    // Fetch and Chromium redirect on 301, 302, 303, 307 and 308 only; a browser
+    // shows any other response where it is.
+    for (const entry of [
+      { status: 300 },
+      { status: 304 },
+      { status: 308 },
+      { status: 300, location: PUBLIC },
+      { status: 304, location: PUBLIC },
+      { status: 305, location: PUBLIC },
+      { status: 306, location: PUBLIC },
+      { status: 399, location: PUBLIC },
+    ]) {
+      const fetchImpl = fakeFetch({ [DIRECT]: entry, [PUBLIC]: page });
+      const result = await probeDirectHost(REWRITES, DIRECT, {
+        fetchImpl,
+        ...noWait,
+      });
+      const label = JSON.stringify(entry);
+      assert.deepEqual(
+        result,
+        { state: "missing", directUrl: DIRECT, status: entry.status },
+        label,
+      );
+      assert.deepEqual(fetchImpl.calls, [DIRECT], label);
     }
+  });
+
+  test("doesn't follow a 3xx that isn't a redirect on policyengine.org", async () => {
+    const result = await probe({
+      [DIRECT]: permanent(PUBLIC),
+      [PUBLIC]: { status: 300, location: "https://www.policyengine.org/" },
+      "https://www.policyengine.org/": page,
+    });
+    assert.equal(result.state, "wrong", result.reason);
+    assert.match(result.reason, /answers 300$/);
   });
 
   test("retries a failed request, a 429 or a 5xx, but not a challenge", async () => {
@@ -1713,7 +1862,7 @@ describe("probeDirectHost", () => {
         /not text\/html/,
       ],
       [bytesOf("just text"), "text/plain", /not text\/html/],
-      [bytesOf("just text"), null, /names no MIME type/],
+      [bytesOf("just text"), null, /has no Content-Type/],
     ]) {
       const result = await probe({
         [DIRECT]: permanent(PUBLIC),
@@ -1780,13 +1929,8 @@ describe("probeDirectHost", () => {
     }
   });
 
-  test("fails a Location that isn't one URL, on either host", async () => {
-    for (const location of [
-      "http://[",
-      "",
-      `${PUBLIC}, https://www.policyengine.org/elsewhere`,
-      `, ${PUBLIC}`,
-    ]) {
+  test("fails a Location that is empty or isn't a URL, on either host", async () => {
+    for (const location of ["http://[", ""]) {
       const bad = { status: 308, location };
       for (const table of [
         { [DIRECT]: bad },
@@ -1798,7 +1942,7 @@ describe("probeDirectHost", () => {
         assert.match(
           result.reason,
           new RegExp(
-            `answers 308 with a Location that isn't one URL: ${escapeRegExp(JSON.stringify(location))}`,
+            `answers 308 with a Location that isn't a URL: ${escapeRegExp(JSON.stringify(location))}$`,
           ),
           label,
         );
@@ -1806,13 +1950,137 @@ describe("probeDirectHost", () => {
     }
   });
 
-  test("follows a Location sent twice with the same URL, as browsers do", async () => {
-    // headers.get joins the copies with ", ".
-    const result = await probe({
-      [DIRECT]: permanent(`${PUBLIC}, ${PUBLIC}`),
-      [PUBLIC]: page,
+  test("reports a Location that may be several joined as unreachable, on either host", async () => {
+    // headers.get joins repeated Location headers with ", ", so each of these
+    // could be one header or several, which browsers read differently: one
+    // whole URL, or each copy apart.
+    for (const location of [
+      `${PUBLIC}, ${PUBLIC}`,
+      `${PUBLIC}, ${PUBLIC}, ${PUBLIC}`,
+      `${PUBLIC}, https://www.policyengine.org/elsewhere`,
+      `, ${PUBLIC}`,
+      `${PUBLIC}#a, b`,
+    ]) {
+      const joined = { status: 308, location };
+      for (const table of [
+        { [DIRECT]: joined, [PUBLIC]: page },
+        { [DIRECT]: permanent(PUBLIC), [PUBLIC]: joined },
+      ]) {
+        const fetchImpl = fakeFetch(table);
+        const result = await probeDirectHost(REWRITES, DIRECT, {
+          fetchImpl,
+          ...noWait,
+        });
+        const label = `${Object.keys(table).length} ${JSON.stringify(location)}`;
+        assert.equal(result.state, "unreachable", `${label}: ${result.reason}`);
+        assert.match(
+          result.reason,
+          new RegExp(
+            `answers 308 with a Location that may be one URL or several joined: ${escapeRegExp(JSON.stringify(location))}$`,
+          ),
+          label,
+        );
+        assert.deepEqual(
+          fetchImpl.calls,
+          table[DIRECT] === joined ? [DIRECT] : [DIRECT, PUBLIC],
+          label,
+        );
+      }
+    }
+  });
+
+  test("follows a Location with a comma but no space: one header holds it", async () => {
+    // headers.get joins with ", ", so "," alone can't come from two headers.
+    const elsewhere = "https://www.policyengine.org/us/a,b";
+    const fetchImpl = fakeFetch({
+      [DIRECT]: permanent(PUBLIC),
+      [PUBLIC]: permanent(elsewhere),
+      [elsewhere]: page,
     });
-    assert.equal(result.state, "ok", result.reason);
+    const result = await probeDirectHost(REWRITES, DIRECT, {
+      fetchImpl,
+      ...noWait,
+    });
+    assert.equal(result.state, "wrong", result.reason);
+    assert.match(
+      result.reason,
+      /sends .* on to https:\/\/www\.policyengine\.org\/us\/a,b$/,
+    );
+    assert.deepEqual(fetchImpl.calls, [DIRECT, PUBLIC, elsewhere]);
+  });
+
+  test("reports a page whose headers or metas change how browsers read it as unreachable", async () => {
+    const noscript = `<head><noscript>${VERCEL_CANONICAL}</noscript></head>`;
+    const based = `<base href="https://a.vercel.app/"><link rel="canonical" href="/us/x">`;
+    for (const [entry, reason] of [
+      [
+        { body: noscript, headers: { "content-security-policy": "sandbox" } },
+        /Content-Security-Policy sets sandbox or base-uri/,
+      ],
+      [
+        {
+          body: based,
+          headers: { "content-security-policy": "base-uri 'none'" },
+        },
+        /Content-Security-Policy sets sandbox or base-uri/,
+      ],
+      [
+        {
+          body: `<meta http-equiv="content-security-policy" content="base-uri 'none'">${based}`,
+        },
+        /a <meta> sets a Content-Security-Policy/,
+      ],
+      [
+        {
+          body: page.body,
+          headers: { refresh: "0; url=https://a.vercel.app/" },
+        },
+        /Refresh header/,
+      ],
+      [
+        {
+          body: `<meta http-equiv="refresh" content="0; url=https://a.vercel.app/">`,
+        },
+        /a <meta> refreshes it/,
+      ],
+      [
+        {
+          body: page.body,
+          headers: { link: '<https://a.vercel.app/x>; rel="canonical"' },
+        },
+        /canonical in a Link header/,
+      ],
+    ]) {
+      const result = await probe({
+        [DIRECT]: permanent(PUBLIC),
+        [PUBLIC]: { status: 200, ...entry },
+      });
+      const label = JSON.stringify(entry);
+      assert.equal(result.state, "unreachable", `${label}: ${result.reason}`);
+      assert.match(result.reason, /can't read .* as browsers do/, label);
+      assert.match(result.reason, reason, label);
+    }
+  });
+
+  test("still reads a page whose headers don't change it", async () => {
+    // A report-only policy enforces nothing; a preload link names no
+    // canonical. The Vercel canonical in each still fails.
+    for (const headers of [
+      { "content-security-policy-report-only": "sandbox" },
+      { "content-security-policy": "frame-ancestors 'self'" },
+      { link: '</app.css>; rel="preload"; as="style"' },
+    ]) {
+      const result = await probe({
+        [DIRECT]: permanent(PUBLIC),
+        [PUBLIC]: { status: 200, body: VERCEL_CANONICAL, headers },
+      });
+      assert.equal(
+        result.state,
+        "wrong",
+        `${JSON.stringify(headers)}: ${result.reason}`,
+      );
+      assert.match(result.reason, /names https:\/\/a\.vercel\.app\/x/);
+    }
   });
 
   test("reads a deep page, and reports one it can't parse in time as unreachable", async () => {
@@ -2149,6 +2417,12 @@ describe("main", () => {
 
   test("fails a listed zone that stopped redirecting at either path", async () => {
     assert.equal((await run({ [ROOT]: page }, listed)).code, 1);
+    // A 300 with a Location isn't a redirect: the reader stays on it.
+    const multiple = {
+      ...redirecting,
+      [ROOT]: { status: 300, location: redirecting[ROOT].location },
+    };
+    assert.equal((await run(multiple, listed)).code, 1);
     const deepOnly = { ...redirecting, [DEEP]: { status: 404 } };
     const result = await run(deepOnly, listed);
     assert.equal(result.code, 1);
@@ -2244,7 +2518,7 @@ describe("main", () => {
       [DEEP]: { status: 308, location: "http://[" },
     });
     assert.equal(code, 1);
-    assert.match(output, /Location that isn't one URL/);
+    assert.match(output, /Location that isn't a URL/);
   });
 
   test("ends near the deadline when every request hangs", async () => {
