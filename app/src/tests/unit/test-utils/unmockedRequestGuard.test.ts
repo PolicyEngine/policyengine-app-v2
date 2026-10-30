@@ -1,12 +1,14 @@
 import {
   failOnUnmockedRequests,
+  fetchRespondingTo,
   takeUnmockedRequests,
   unmockedFetch,
   UnmockedRequestError,
 } from '@test-utils';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  MOCKED_ECONOMY_BODY,
+  MOCKED_METADATA_URL,
+  MOCKED_RESPONSE_BODY,
   UNMOCKED_ECONOMY_URL,
 } from '@/tests/fixtures/test-utils/unmockedRequestGuardMocks';
 
@@ -52,7 +54,7 @@ describe('unmockedRequestGuard', () => {
 
   test('given a test mocks fetch then its mock answers, and unstubbing it brings the guard back', async () => {
     // Given
-    const mockFetch = vi.fn().mockResolvedValue(Response.json(MOCKED_ECONOMY_BODY));
+    const mockFetch = vi.fn().mockResolvedValue(Response.json(MOCKED_RESPONSE_BODY));
     vi.stubGlobal('fetch', mockFetch);
 
     // When
@@ -60,8 +62,25 @@ describe('unmockedRequestGuard', () => {
     vi.unstubAllGlobals();
 
     // Then
-    expect(await response.json()).toEqual(MOCKED_ECONOMY_BODY);
+    expect(await response.json()).toEqual(MOCKED_RESPONSE_BODY);
     expect(takeUnmockedRequests()).toEqual([]);
     expect(globalThis.fetch).toBe(unmockedFetch);
+  });
+
+  test('given a mock of the requests a test expects then it answers those and refuses the rest', async () => {
+    // Given
+    vi.stubGlobal(
+      'fetch',
+      fetchRespondingTo({ [MOCKED_METADATA_URL]: () => Response.json(MOCKED_RESPONSE_BODY) })
+    );
+
+    // When
+    const expectedResponse = await fetch(MOCKED_METADATA_URL);
+    const unexpectedRequest = fetch(UNMOCKED_ECONOMY_URL);
+
+    // Then
+    expect(await expectedResponse.json()).toEqual(MOCKED_RESPONSE_BODY);
+    await expect(unexpectedRequest).rejects.toThrow(`GET ${UNMOCKED_ECONOMY_URL}`);
+    expect(takeUnmockedRequests()).toEqual([`GET ${UNMOCKED_ECONOMY_URL}`]);
   });
 });

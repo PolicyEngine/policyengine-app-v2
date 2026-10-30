@@ -5,6 +5,7 @@ export { render } from './render';
 export { renderWithCountry } from './renderWithCountry';
 export {
   failOnUnmockedRequests,
+  fetchRespondingTo,
   takeUnmockedRequests,
   UnmockedRequestError,
   unmockedFetch,

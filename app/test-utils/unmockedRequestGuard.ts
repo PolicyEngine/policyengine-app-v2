@@ -29,19 +29,34 @@ function refuseRequest(requestDescription: string): UnmockedRequestError {
   );
 }
 
-function describeFetchRequest(input: RequestInfo | URL, init?: RequestInit): string {
+function fetchRequestUrl(input: RequestInfo | URL): string {
   if (typeof input === 'string') {
-    return `${(init?.method ?? 'GET').toUpperCase()} ${input}`;
+    return input;
   }
-  if (input instanceof URL) {
-    return `${(init?.method ?? 'GET').toUpperCase()} ${input.href}`;
-  }
-  return `${(init?.method ?? input.method).toUpperCase()} ${input.url}`;
+  return input instanceof URL ? input.href : input.url;
+}
+
+function describeFetchRequest(input: RequestInfo | URL, init?: RequestInit): string {
+  const requestMethod = init?.method ?? (input instanceof Request ? input.method : 'GET');
+  return `${requestMethod.toUpperCase()} ${fetchRequestUrl(input)}`;
 }
 
 /** The global `fetch` while no test has mocked it: rejects at once, naming the request. */
 export function unmockedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   return Promise.reject(refuseRequest(describeFetchRequest(input, init)));
+}
+
+/**
+ * A `fetch` mock that answers each listed URL with a new response from its
+ * factory, and refuses every other request as the guard does, so a test can
+ * mock the requests it expects without letting any other one through.
+ */
+export function fetchRespondingTo(responsesByUrl: Record<string, () => Response>) {
+  const responseFactories = new Map(Object.entries(responsesByUrl));
+  return (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const createResponse = responseFactories.get(fetchRequestUrl(input));
+    return createResponse ? Promise.resolve(createResponse()) : unmockedFetch(input, init);
+  };
 }
 
 function guardXMLHttpRequest(requestPrototype: XMLHttpRequest): void {
