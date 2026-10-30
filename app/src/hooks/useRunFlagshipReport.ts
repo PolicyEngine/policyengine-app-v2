@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { CURRENT_YEAR } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
@@ -11,6 +12,8 @@ import {
   RunReportBaseline,
   RunReportProvision,
 } from '@/libs/flagship/runReport';
+import { windowSizeWithin } from '@/libs/flagship/supportedYears';
+import { getLastSupportedYear } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 
 /**
@@ -25,6 +28,7 @@ export function useRunFlagshipReport() {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const reportStore = useFlagshipReportStore();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const lastSupportedYear = useSelector(getLastSupportedYear);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,6 +73,10 @@ export function useRunFlagshipReport() {
     }
     setIsRunning(true);
     setError(null);
+    // No run asks for a year after the last one the model and data cover:
+    // a window that would (a report re-run from before, say) ends on it.
+    const runWindowYears =
+      windowYears && windowSizeWithin(windowYears, year ?? Number(CURRENT_YEAR), lastSupportedYear);
     try {
       const userReportId = await runFlagshipReport({
         countryId,
@@ -80,7 +88,7 @@ export function useRunFlagshipReport() {
         reformId,
         year,
         region,
-        windowYears,
+        windowYears: runWindowYears,
         baseline,
         // With accounts, the run's record goes through the API (the account,
         // or this browser's unauthenticated user); otherwise this browser's.

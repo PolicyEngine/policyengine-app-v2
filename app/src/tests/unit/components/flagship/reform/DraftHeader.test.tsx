@@ -12,6 +12,7 @@ import {
   loadReformIntoDraft,
   setDraftBaseline,
   setDraftLabel,
+  setDraftWindowYears,
   startDraftReform,
   updateDraftProvisionValue,
   useDraftReform,
@@ -20,8 +21,16 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   seedDeductionMetadata,
+  seedModelYears,
+  UK_REGIONS,
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { UK_PERSONAL_ALLOWANCE_PROVISION } from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
+import {
+  UK_FIRST_SUPPORTED_YEAR,
+  UK_LAST_SUPPORTED_YEAR,
+} from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
+import { US_LAST_SUPPORTED_YEAR } from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockCreate = vi.fn();
@@ -51,12 +60,13 @@ function HeaderHarness() {
   ) : null;
 }
 
-function renderHeader() {
+function renderHeader(countryId = 'us') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
       <HeaderHarness />
-    </QueryClientProvider>
+    </QueryClientProvider>,
+    countryId
   );
 }
 
@@ -167,7 +177,8 @@ describe('DraftHeader', () => {
   test('given a budget window is chosen then the draft and its run take it', async () => {
     Element.prototype.scrollIntoView ??= vi.fn();
     Element.prototype.hasPointerCapture ??= vi.fn(() => false);
-    seedDeductionMetadata();
+    // The US model's years as its metadata lists them: a ten-year window from 2026 fits.
+    seedDeductionMetadata({ lastYear: US_LAST_SUPPORTED_YEAR });
     const user = userEvent.setup();
     // A change to run.
     addDraftProvision('us', {
@@ -889,5 +900,59 @@ describe('DraftHeader', () => {
 
     expect(getDraftReform()).toBeNull();
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+  describe('given a UK draft and the years the UK model covers', () => {
+    beforeEach(() => {
+      // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+      clearDraftReform();
+      startDraftReform('uk', 'manual');
+      addDraftProvision('uk', UK_PERSONAL_ALLOWANCE_PROVISION);
+      seedModelYears({
+        countryId: 'uk',
+        firstYear: UK_FIRST_SUPPORTED_YEAR,
+        lastYear: UK_LAST_SUPPORTED_YEAR,
+        regions: UK_REGIONS,
+      });
+    });
+
+    test('given the budget choices then none runs past the last year the model covers', async () => {
+      // Given
+      const user = userEvent.setup();
+      renderHeader('uk');
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Year: 2026' }));
+
+      // Then
+      const budgetChoices = (await screen.findAllByRole('tab')).map((tab) => tab.textContent);
+      expect(budgetChoices).toEqual(['1 year', '3 years', '5 years', '7 years']);
+    });
+
+    test('given a ten-year window kept in the draft then the bar shows it ending on the last year', () => {
+      // Given
+      setDraftWindowYears(10);
+
+      // When
+      renderHeader('uk');
+
+      // Then
+      expect(screen.getByRole('button', { name: 'Years: 2026–2032' })).toBeInTheDocument();
+    });
+
+    test('given a ten-year window kept in the draft then the run scores only the years up to the last one', async () => {
+      // Given
+      setDraftWindowYears(10);
+      const user = userEvent.setup();
+      renderHeader('uk');
+
+      // When
+      await user.click(screen.getByRole('button', { name: /^save and run/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][5]).toMatchObject({ windowYears: 7 });
+    });
   });
 });

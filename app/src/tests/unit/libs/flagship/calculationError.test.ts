@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import { describeCalculationError } from '@/libs/flagship/calculationError';
+import {
+  DATASET_YEAR_UNAVAILABLE_BODY,
+  DATASET_YEAR_UNAVAILABLE_MESSAGE,
+  societyWideFailure,
+} from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
 
 const SERVER_FAILURE =
   'Society-wide calculation failed (502): {"status": "error", "message": "Simulation entrypoint execution failed: Simulation failed (correlation_id=311da50645a847c59ed077ca60f15279)", "result": null}';
@@ -47,6 +52,24 @@ describe('describeCalculationError', () => {
     expect(summary.retryable).toBe(true);
     expect(summary.title).toBe('The API could not run this right now');
     expect(summary.body).not.toContain('Edit the reform');
+  });
+
+  test('given a 400 because the year is outside the model data then the body is the API message as it came', () => {
+    const summary = describeCalculationError(
+      societyWideFailure(400, DATASET_YEAR_UNAVAILABLE_BODY),
+      'UK-wide'
+    );
+
+    expect(summary.body).toBe(DATASET_YEAR_UNAVAILABLE_MESSAGE);
+  });
+
+  test('given a 400 because the year is outside the model data then running it again is not offered', () => {
+    const summary = describeCalculationError(
+      societyWideFailure(400, DATASET_YEAR_UNAVAILABLE_BODY),
+      'UK-wide'
+    );
+
+    expect(summary.retryable).toBe(false);
   });
 
   test('given a timeout then it suggests a second try', () => {

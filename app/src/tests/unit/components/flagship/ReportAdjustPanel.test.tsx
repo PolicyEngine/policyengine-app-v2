@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import {
@@ -12,6 +12,8 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   seedDeductionMetadata,
+  seedModelYears,
+  UK_REGIONS,
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import {
@@ -22,7 +24,19 @@ import {
   PHASED_CTC_PROVISION,
   PHASED_CTC_REFORM,
   PHASED_REPORT_YEAR,
+  TEN_YEAR_WINDOW_FROM_2026,
+  UK_PERSONAL_ALLOWANCE_PROVISION,
+  UK_WINDOW_CHOICES_TO_2032,
 } from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
+import {
+  UK_FIRST_SUPPORTED_YEAR,
+  UK_LAST_SUPPORTED_YEAR,
+  UK_REPORT_START_YEAR,
+} from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
+import {
+  US_FIRST_SUPPORTED_YEAR,
+  US_LAST_SUPPORTED_YEAR,
+} from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
 
 const mockRun = vi.fn();
 const mockFindMine = vi.fn();
@@ -703,6 +717,110 @@ describe('ReportAdjustPanel', () => {
       expect(mockCreate).not.toHaveBeenCalled();
       expect(mockRun.mock.calls[0][3]).toBe(PHASED_CTC_REFORM.id);
       store.dispatch(clearMetadata());
+    });
+  });
+  describe('given a UK report and the years the UK model covers', () => {
+    beforeEach(() => {
+      // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+      seedModelYears({
+        countryId: 'uk',
+        firstYear: UK_FIRST_SUPPORTED_YEAR,
+        lastYear: UK_LAST_SUPPORTED_YEAR,
+        regions: UK_REGIONS,
+      });
+    });
+
+    afterEach(() => {
+      store.dispatch(clearMetadata());
+    });
+
+    async function renderUkPanel(budgetWindow?: { startYear: number; windowSize: number }) {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ReportAdjustPanel
+            title="Higher personal allowance"
+            sourceNote=""
+            provisions={[UK_PERSONAL_ALLOWANCE_PROVISION]}
+            year={String(UK_REPORT_START_YEAR)}
+            budgetWindow={budgetWindow}
+          />
+        </QueryClientProvider>,
+        'uk'
+      );
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+      return user;
+    }
+
+    test('given the years choice then no window runs past the last year the model covers', async () => {
+      // Given
+      const user = await renderUkPanel();
+
+      // When
+      await user.click(screen.getByRole('combobox', { name: 'Years' }));
+
+      // Then
+      const offeredWindows = (await screen.findAllByRole('option')).map(
+        (option) => option.textContent
+      );
+      expect(offeredWindows).toEqual(UK_WINDOW_CHOICES_TO_2032);
+    });
+
+    test('given a report window past the last year then the panel offers it ending on that year', async () => {
+      // When
+      await renderUkPanel(TEN_YEAR_WINDOW_FROM_2026);
+
+      // Then
+      expect(screen.getByRole('combobox', { name: 'Years' })).toHaveTextContent(
+        '2026–2032 · 7 years'
+      );
+    });
+
+    test('given a report window past the last year then a recompute scores only the years up to it', async () => {
+      // Given
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'Higher personal allowance (adjusted)' });
+      const user = await renderUkPanel(TEN_YEAR_WINDOW_FROM_2026);
+
+      // When
+      const input = screen.getByLabelText(/new value for/i);
+      await user.clear(input);
+      await user.type(input, '14000');
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockRun.mock.calls[0][5]).toMatchObject({ windowYears: 7 });
+    });
+  });
+
+  describe('given a US report and the years the US model covers', () => {
+    afterEach(() => {
+      store.dispatch(clearMetadata());
+    });
+
+    test('given a report from 2026 then the ten-year window is still offered', async () => {
+      // Given: the US model's years run to 2035
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+      seedModelYears({
+        countryId: 'us',
+        firstYear: US_FIRST_SUPPORTED_YEAR,
+        lastYear: US_LAST_SUPPORTED_YEAR,
+        regions: US_REGIONS,
+      });
+      const user = userEvent.setup();
+      await renderPanel({ year: '2026' });
+
+      // When
+      await user.click(screen.getByRole('combobox', { name: 'Years' }));
+
+      // Then
+      expect(
+        await screen.findByRole('option', { name: '2026–2035 · 10 years' })
+      ).toBeInTheDocument();
     });
   });
 });

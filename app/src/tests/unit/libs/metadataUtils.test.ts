@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   getFieldLabel,
   getFieldOptions,
+  getLastSupportedYear,
   isDropdownField,
   selectSearchableParameters,
   transformMetadataPayload,
 } from '@/libs/metadataUtils';
 import type { RootState } from '@/store';
+import { US_LAST_SUPPORTED_YEAR } from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
 import {
   EXPECTED_LABELS,
   INELIGIBLE_SEARCH_PARAMETERS,
@@ -17,7 +19,9 @@ import {
   SEARCH_VISIBILITY_CASES,
   searchVisibilityState,
   SORTED_SEARCH_PARAMETERS,
+  stateWithTimePeriods,
   TEST_FIELD_NAMES,
+  US_TIME_PERIODS_NEWEST_FIRST,
   VISIBLE_SEARCH_PARAMETER,
 } from '@/tests/fixtures/libs/metadataUtilsMocks';
 
@@ -317,5 +321,17 @@ describe('selectSearchableParameters visibility', () => {
       { value: 'gov.tax.alpha', label: 'Alpha rate' },
       { value: 'gov.tax.zulu', label: 'Zulu rate' },
     ]);
+  });
+});
+
+describe('getLastSupportedYear', () => {
+  it('given the time periods in any order then it is the latest year', () => {
+    expect(getLastSupportedYear(stateWithTimePeriods(US_TIME_PERIODS_NEWEST_FIRST))).toBe(
+      US_LAST_SUPPORTED_YEAR
+    );
+  });
+
+  it('given no time periods yet then no last year is known', () => {
+    expect(getLastSupportedYear(stateWithTimePeriods([]))).toBeNull();
   });
 });
