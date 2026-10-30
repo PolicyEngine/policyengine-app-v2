@@ -4,11 +4,10 @@ import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { countryIds } from '@/libs/countries';
+import { getCountryDisplayName } from '@/models/geography';
 
-const countries = [
-  { id: 'us', label: 'United States' },
-  { id: 'uk', label: 'United Kingdom' },
-];
+const countries = countryIds.map((id) => ({ id, label: getCountryDisplayName(id) }));
 
 export default function CountrySelector() {
   const countryId = useCurrentCountry();

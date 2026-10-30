@@ -1,8 +1,26 @@
 import fc from 'fast-check';
 import { describe, expect, test } from 'vitest';
-import { countryIds, isCountryId } from '@/libs/countries';
+import { countryIds, DEFAULT_COUNTRY, isCountryId } from '@/libs/countries';
+import { REMOVED_COUNTRY_IDS } from '@/tests/fixtures/libs/countriesMocks';
+
+describe('countryIds', () => {
+  test('given the country list then it is the US and the UK', () => {
+    expect(countryIds).toEqual(['us', 'uk']);
+  });
+
+  test('given no country in the URL then the default is a listed country', () => {
+    expect(countryIds).toContain(DEFAULT_COUNTRY);
+  });
+});
 
 describe('isCountryId', () => {
+  test.each(REMOVED_COUNTRY_IDS)(
+    'given %s, a country the app no longer offers, then it is not a country ID',
+    (removedCountryId) => {
+      expect(isCountryId(removedCountryId)).toBe(false);
+    }
+  );
+
   test.each(countryIds)('given the supported country %s then it is a country ID', (countryId) => {
     expect(isCountryId(countryId)).toBe(true);
   });

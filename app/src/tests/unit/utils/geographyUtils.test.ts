@@ -41,12 +41,12 @@ describe('geographyUtils', () => {
       expect(result).toBe(EXPECTED_COUNTRY_LABELS.UK);
     });
 
-    it('given CA code then returns Canada', () => {
+    it('given the code of Canada, which the app no longer offers, then returns Unknown country', () => {
       // When
       const result = getCountryLabel(TEST_COUNTRY_CODES.CA);
 
       // Then
-      expect(result).toBe(EXPECTED_COUNTRY_LABELS.CA);
+      expect(result).toBe(EXPECTED_COUNTRY_LABELS.UNKNOWN);
     });
 
     it('given unknown code then returns Unknown Country', () => {

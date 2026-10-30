@@ -2,14 +2,13 @@
  * Maps ISO country codes to PolicyEngine route codes
  */
 
+import type { CountryId } from '@/libs/countries';
+
 // Mapping from ISO 3166-1 alpha-2 codes to PolicyEngine routes
-const ISO_TO_ROUTE_MAP: Record<string, string> = {
+const ISO_TO_ROUTE_MAP: Record<string, CountryId> = {
   US: 'us', // United States
   GB: 'uk', // United Kingdom (Great Britain)
   UK: 'uk', // Alternative code sometimes used
-  CA: 'ca', // Canada
-  NG: 'ng', // Nigeria
-  IL: 'il', // Israel
 };
 
 /**
@@ -17,7 +16,7 @@ const ISO_TO_ROUTE_MAP: Record<string, string> = {
  * @param isoCode - ISO 3166-1 alpha-2 country code (e.g., 'US', 'GB')
  * @returns PolicyEngine route code (e.g., 'us', 'uk') or null if not supported
  */
-export function mapIsoToRoute(isoCode: string): string | null {
+export function mapIsoToRoute(isoCode: string): CountryId | null {
   const upperCode = isoCode?.toUpperCase();
   return ISO_TO_ROUTE_MAP[upperCode] || null;
 }
