@@ -128,7 +128,7 @@ Vercel's [rewrites docs](https://vercel.com/docs/rewrites) describe `x-forwarded
 
 So the rule matches the zone's production host, never "anything but policyengine.org": that form would redirect this website's previews, which proxy to the same production host, and the zone's own previews.
 
-A Next.js zone adds three rules to `next.config.js`. If it already returns redirects, add these after its own:
+A Next.js zone adds three rules to `next.config.js`. If it already returns redirects, add these after its own. In a `next.config.ts` typed `NextConfig`, write `type: "header" as const`: without it TypeScript widens the condition's `type` to `string`, which Next 16's `NextConfig` type rejects (TS2322, checked on Next 16.2.6).
 
 ```js
 const PUBLIC_URL = "https://www.policyengine.org/us/<slug>";
