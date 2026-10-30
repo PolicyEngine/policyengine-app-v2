@@ -448,7 +448,6 @@ describe('UK calibration matching', () => {
     expect(geographyForRegion('country/england', 'uk')).toBe('England');
     expect(geographyForRegion('country/scotland', 'uk')).toBe('Scotland');
     expect(geographyForRegion('country/northern_ireland', 'uk')).toBe('Northern Ireland');
-    expect(geographyForRegion('country/ni', 'uk')).toBe('Northern Ireland');
     expect(geographyForRegion('wales', 'uk')).toBe('Wales');
   });
 

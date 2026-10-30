@@ -1,3 +1,4 @@
+import { canonicalRegionCode } from '@/models/region';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 /**
@@ -26,11 +27,13 @@ export class UserGeographicAdapter {
    * Note: API endpoint doesn't exist yet
    */
   static fromApiResponse(apiData: any): UserGeographyPopulation {
+    // A geography saved for "country/ni" reads as "country/northern_ireland".
+    const geographyId = canonicalRegionCode(String(apiData.geography_id));
     return {
       type: 'geography' as const,
-      id: String(apiData.geography_id),
+      id: geographyId,
       userId: String(apiData.user_id),
-      geographyId: String(apiData.geography_id),
+      geographyId,
       countryId: apiData.country_id,
       scope: apiData.scope || 'national',
       label: apiData.label,

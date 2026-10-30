@@ -17,15 +17,25 @@
  *   const recentIds = policyUsageStore.getRecentIds(5);
  */
 
+import { canonicalRegionCode } from '@/models/region';
+
 /** ISO timestamp string */
 export type UsageData = Record<string, string>;
+
+/** The ID as a store keeps it; most stores keep every ID as it is. */
+type CanonicalId = (id: string) => string;
+
+const keepId: CanonicalId = (id) => id;
 
 /**
  * Generic store for tracking usage of items by ID.
  * Each ingredient type gets its own store instance with a unique storage key.
  */
 export class UsageTrackingStore {
-  constructor(private readonly storageKey: string) {}
+  constructor(
+    private readonly storageKey: string,
+    private readonly canonicalId: CanonicalId = keepId
+  ) {}
 
   /**
    * Record that an item was used/accessed.
@@ -34,22 +44,36 @@ export class UsageTrackingStore {
   recordUsage(id: string): string {
     const usage = this.getAll();
     const timestamp = new Date().toISOString();
-    usage[id] = timestamp;
+    usage[this.canonicalId(id)] = timestamp;
     localStorage.setItem(this.storageKey, JSON.stringify(usage));
     return timestamp;
   }
 
   /**
-   * Get all usage records (id -> lastUsedAt timestamp).
+   * Get all usage records (id -> lastUsedAt timestamp), each under its
+   * canonical ID. Two stored IDs with one canonical ID become one record
+   * with the later of their timestamps, the last time either was used.
    */
   getAll(): UsageData {
+    let stored: unknown;
     try {
-      const stored = localStorage.getItem(this.storageKey);
-      return stored ? JSON.parse(stored) : {};
+      const storedText = localStorage.getItem(this.storageKey);
+      stored = storedText ? JSON.parse(storedText) : {};
     } catch {
       console.error(`[UsageTrackingStore] Failed to parse ${this.storageKey}`);
       return {};
     }
+    if (!stored || typeof stored !== 'object') {
+      return {};
+    }
+
+    const usage: UsageData = {};
+    for (const [storedId, lastUsedAt] of Object.entries(stored as UsageData)) {
+      const id = this.canonicalId(storedId);
+      const otherLastUsedAt = usage[id];
+      usage[id] = otherLastUsedAt && otherLastUsedAt > lastUsedAt ? otherLastUsedAt : lastUsedAt;
+    }
+    return usage;
   }
 
   /**
@@ -68,14 +92,14 @@ export class UsageTrackingStore {
    * Get the last used timestamp for a specific ID.
    */
   getLastUsed(id: string): string | null {
-    return this.getAll()[id] || null;
+    return this.getAll()[this.canonicalId(id)] || null;
   }
 
   /**
    * Check if an item has any usage recorded.
    */
   hasUsage(id: string): boolean {
-    return !!this.getAll()[id];
+    return !!this.getAll()[this.canonicalId(id)];
   }
 
   /**
@@ -83,7 +107,7 @@ export class UsageTrackingStore {
    */
   removeUsage(id: string): void {
     const usage = this.getAll();
-    delete usage[id];
+    delete usage[this.canonicalId(id)];
     localStorage.setItem(this.storageKey, JSON.stringify(usage));
   }
 
@@ -98,6 +122,7 @@ export class UsageTrackingStore {
 // Pre-configured stores for each ingredient type
 export const policyUsageStore = new UsageTrackingStore('policy-usage');
 export const householdUsageStore = new UsageTrackingStore('household-usage');
-export const geographyUsageStore = new UsageTrackingStore('geography-usage');
+// Geographies are region codes: one kept for "country/ni" reads as "country/northern_ireland".
+export const geographyUsageStore = new UsageTrackingStore('geography-usage', canonicalRegionCode);
 export const simulationUsageStore = new UsageTrackingStore('simulation-usage');
 export const reportUsageStore = new UsageTrackingStore('report-usage');

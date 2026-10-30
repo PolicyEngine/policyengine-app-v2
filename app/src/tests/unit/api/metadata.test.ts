@@ -12,12 +12,18 @@ import {
   mockInvalidJSONResponse,
   mockJSONParseError,
   mockMetadataResponse,
+  mockMetadataResponseWithRegions,
+  mockMetadataSuccessResponse,
   mockNetworkError,
   mockSuccessResponse,
   mockUSCountryId,
   TEST_PARAMETER_KEY,
   TEST_PARAMETER_VALUE,
 } from '@/tests/fixtures/api/metadataMocks';
+import {
+  CURRENT_UK_METADATA_REGIONS,
+  UK_METADATA_REGION_SPELLINGS,
+} from '@/tests/fixtures/models/regionMocks';
 
 describe('fetchMetadata', () => {
   beforeEach(() => {
@@ -111,4 +117,27 @@ describe('fetchMetadata', () => {
       TEST_PARAMETER_VALUE
     );
   });
+});
+
+describe('fetchMetadata Northern Ireland region', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
+  test.each(UK_METADATA_REGION_SPELLINGS)(
+    'given metadata listing Northern Ireland as %s then it lists country/northern_ireland',
+    async (_spelling, metadataRegions) => {
+      // Given
+      vi.mocked(global.fetch).mockResolvedValueOnce(
+        mockMetadataSuccessResponse(mockMetadataResponseWithRegions(metadataRegions))
+      );
+
+      // When
+      const result = await fetchMetadata(mockCountryId);
+
+      // Then
+      expect(result.result.economy_options.region).toEqual(CURRENT_UK_METADATA_REGIONS);
+    }
+  );
 });

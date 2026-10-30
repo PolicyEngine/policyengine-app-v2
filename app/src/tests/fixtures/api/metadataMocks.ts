@@ -1,5 +1,5 @@
 import { CURRENT_YEAR } from '@/constants';
-import { MetadataApiPayload } from '@/types/metadata';
+import { MetadataApiPayload, MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
 
 export const mockMetadataResponse: MetadataApiPayload = {
@@ -190,3 +190,21 @@ export const mockCustomSuccessResponse = {
 // Expected error messages
 export const getExpectedFetchError = (countryId: string) =>
   `Failed to fetch metadata for ${countryId}`;
+
+/** The metadata response, listing these regions. */
+export const mockMetadataResponseWithRegions = (
+  regions: MetadataRegionEntry[]
+): MetadataApiPayload => ({
+  ...mockMetadataResponse,
+  result: {
+    ...mockMetadataResponse.result,
+    economy_options: { ...mockMetadataResponse.result.economy_options, region: regions },
+  },
+});
+
+/** A successful fetch answering with this metadata. */
+export const mockMetadataSuccessResponse = (payload: MetadataApiPayload) =>
+  ({
+    ok: true,
+    json: async () => payload,
+  }) as Response;

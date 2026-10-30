@@ -14,6 +14,7 @@
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId, countryIds } from '@/libs/countries';
 import type { SavedGeographySelection } from '@/models/geography';
+import { canonicalRegionCode } from '@/models/region';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
@@ -70,7 +71,17 @@ export function decodeShareData(encoded: string): ReportIngredientsInput | null 
       return null;
     }
 
-    return data;
+    // A link shared for "country/ni" opens on "country/northern_ireland".
+    return {
+      ...data,
+      userGeographies: data.userGeographies.map((geography) => ({
+        ...geography,
+        geographyId:
+          typeof geography.geographyId === 'string'
+            ? canonicalRegionCode(geography.geographyId)
+            : geography.geographyId,
+      })),
+    };
   } catch (error) {
     console.error('[decodeShareData] Unexpected error:', error);
     return null;

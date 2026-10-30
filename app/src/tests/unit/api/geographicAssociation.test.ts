@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import {
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_LABEL,
+  NORTHERN_IRELAND_REGION_CODE,
+} from '@/tests/fixtures/models/regionMocks';
 import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 // Mock fetch
@@ -475,5 +480,81 @@ describe('LocalStorageGeographicStore', () => {
         'Failed to store geographic populations in local storage'
       );
     });
+  });
+});
+
+describe('LocalStorageGeographicStore Northern Ireland region', () => {
+  const STORAGE_KEY = 'user-geographic-associations';
+  const USER_ID = 'user-123';
+  let storedValues: Record<string, string>;
+  let store: LocalStorageGeographicStore;
+
+  /** A geography this browser saved while the Public API listed Northern Ireland as "country/ni". */
+  const legacyNorthernIrelandGeography: UserGeographyPopulation = {
+    id: 'uk-ni',
+    userId: USER_ID,
+    geographyId: LEGACY_NORTHERN_IRELAND_REGION_CODE,
+    countryId: 'uk',
+    label: NORTHERN_IRELAND_LABEL,
+    type: 'geography',
+    scope: 'subnational',
+    createdAt: '2025-01-01T00:00:00Z',
+    isCreated: true,
+  };
+
+  beforeEach(() => {
+    storedValues = {
+      [STORAGE_KEY]: JSON.stringify([legacyNorthernIrelandGeography]),
+    };
+    global.localStorage = {
+      getItem: vi.fn((key: string) => storedValues[key] ?? null),
+      setItem: vi.fn((key: string, value: string) => {
+        storedValues[key] = value;
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete storedValues[key];
+      }),
+      clear: vi.fn(() => {
+        storedValues = {};
+      }),
+      length: 0,
+      key: vi.fn(),
+    };
+    store = new LocalStorageGeographicStore();
+  });
+
+  it('given a saved country/ni geography then the user geographies read country/northern_ireland', async () => {
+    // When
+    const geographies = await store.findByUser(USER_ID);
+
+    // Then
+    expect(geographies.map((geography) => geography.geographyId)).toEqual([
+      NORTHERN_IRELAND_REGION_CODE,
+    ]);
+  });
+
+  it.each([LEGACY_NORTHERN_IRELAND_REGION_CODE, NORTHERN_IRELAND_REGION_CODE])(
+    'given a saved country/ni geography then finding %s returns country/northern_ireland',
+    async (requestedGeographyId) => {
+      // When
+      const geography = await store.findById(USER_ID, requestedGeographyId);
+
+      // Then
+      expect(geography?.geographyId).toBe(NORTHERN_IRELAND_REGION_CODE);
+    }
+  );
+
+  it('given a saved country/ni geography then renaming it stores country/northern_ireland', async () => {
+    // When
+    const renamed = await store.update(USER_ID, LEGACY_NORTHERN_IRELAND_REGION_CODE, {
+      label: 'Belfast and beyond',
+    });
+
+    // Then
+    expect(renamed.geographyId).toBe(NORTHERN_IRELAND_REGION_CODE);
+    const storedGeographies = JSON.parse(storedValues[STORAGE_KEY]) as UserGeographyPopulation[];
+    expect(storedGeographies.map((geography) => geography.geographyId)).toEqual([
+      NORTHERN_IRELAND_REGION_CODE,
+    ]);
   });
 });

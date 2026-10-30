@@ -1,5 +1,6 @@
 import { normalizeSocietyWideOutput } from '@/adapters/societyWideOutputNormalizer';
 import { BASE_URL } from '@/constants';
+import { canonicalRegionCode } from '@/models/region';
 import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
@@ -197,8 +198,13 @@ async function fetchEconomyCalculation<Result extends ResultProvenance>(
 ): Promise<EconomyCalculationResponse<Result>> {
   const queryParams = new URLSearchParams();
 
+  // The region the app uses: a report saved for "country/ni" asks for "country/northern_ireland".
+  const requestParams =
+    typeof params.region === 'string'
+      ? { ...params, region: canonicalRegionCode(params.region) }
+      : params;
   SOCIETY_WIDE_QUERY_KEYS.forEach((key) => {
-    const value = params[key];
+    const value = requestParams[key];
     if (value !== undefined) {
       queryParams.append(key, String(value));
     }

@@ -78,7 +78,11 @@ const mockUKMetadataRegions: MetadataRegionEntry[] = [
   { name: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
   { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
   { name: 'country/wales', label: 'Wales', type: UK_REGION_TYPES.COUNTRY },
-  { name: 'country/ni', label: 'Northern Ireland', type: UK_REGION_TYPES.COUNTRY },
+  {
+    name: 'country/northern_ireland',
+    label: 'Northern Ireland',
+    type: UK_REGION_TYPES.COUNTRY,
+  },
   {
     name: 'constituency/Sheffield Central',
     label: 'Sheffield Central',
@@ -330,7 +334,11 @@ export const expectedUKCountries = [
   { value: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
   { value: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
   { value: 'country/wales', label: 'Wales', type: UK_REGION_TYPES.COUNTRY },
-  { value: 'country/ni', label: 'Northern Ireland', type: UK_REGION_TYPES.COUNTRY },
+  {
+    value: 'country/northern_ireland',
+    label: 'Northern Ireland',
+    type: UK_REGION_TYPES.COUNTRY,
+  },
 ];
 
 export const expectedUKConstituencies = [
