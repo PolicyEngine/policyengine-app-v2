@@ -1261,6 +1261,8 @@ describe("unreadableHeaders", () => {
         /Link header names a canonical/,
       ],
       [{ link: "<https://a.vercel.app/x>; =canonical" }, /won't parse/],
+      [{ link: '<https://a.vercel.app/x>; r\\el="canonical"' }, /won't parse/],
+      [{ link: '<https://a.vercel.app/x>; r"el=canonical' }, /won't parse/],
       [{ link: "</a.css>; rel=preload x" }, /won't parse/],
       [{ link: ", <https://a.vercel.app/x>; rel=preload" }, /won't parse/],
       [{ link: "REL=CANONICAL" }, /Link header names a canonical/],
