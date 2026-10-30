@@ -28,8 +28,8 @@ export const LEGACY_IDS = {
   HOUSEHOLD: 54321,
 } as const;
 
-/** A calculated household's summary, which names its saved row. */
-export const HOUSEHOLD_SUMMARY = 'Single · no children · $50,000 earnings · California';
+/** A calculated household's summary, as the Household tab writes it, which names its saved row. */
+export const HOUSEHOLD_SUMMARY = 'Married · 2 children · California';
 
 export const TIMESTAMPS = {
   CREATED: '2026-10-12T10:00:00+00:00',

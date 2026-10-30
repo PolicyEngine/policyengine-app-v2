@@ -50,8 +50,10 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function wrapperFor(auth: AuthContextValue, pageCountryId: 'us' | 'uk' = 'us') {
+/** A page's providers; `setAuth` changes the session for the next render. */
+function wrapperFor(initialAuth: AuthContextValue, pageCountryId: 'us' | 'uk' = 'us') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  let auth = initialAuth;
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <CountryProvider value={pageCountryId}>
@@ -59,13 +61,23 @@ function wrapperFor(auth: AuthContextValue, pageCountryId: 'us' | 'uk' = 'us') {
       </CountryProvider>
     </QueryClientProvider>
   );
-  return { wrapper, queryClient };
+  const setAuth = (nextAuth: AuthContextValue) => {
+    auth = nextAuth;
+  };
+  return { wrapper, queryClient, setAuth };
 }
 
 /** Lets the hook's effect and its requests run. */
 const settle = () => act(async () => {});
 
+/** Longer than a cache entry without readers is kept by default. */
+const SIX_MINUTES_MS = 6 * 60 * 1000;
+
 describe('useSaveCalculatedHousehold', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test('given the same calculated household twice on a page then it is looked up and saved once', async () => {
     // Given
     const { wrapper } = wrapperFor(signedInAuthValue());
@@ -85,6 +97,42 @@ describe('useSaveCalculatedHousehold', () => {
     });
     expect(requestsWithMethod('GET')).toHaveLength(1);
     expect(requestsWithMethod('POST')).toHaveLength(1);
+  });
+
+  test('given the same household shown again after six minutes then it is not looked up again', async () => {
+    // Given
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { wrapper } = wrapperFor(signedInAuthValue());
+    renderHook(() => useSaveCalculatedHousehold(CALCULATED_HOUSEHOLD), { wrapper });
+    await waitFor(() => expect(requestsWithMethod('POST')).toHaveLength(1));
+
+    // When
+    await act(async () => {
+      vi.advanceTimersByTime(SIX_MINUTES_MS);
+    });
+    renderHook(() => useSaveCalculatedHousehold(CALCULATED_HOUSEHOLD), { wrapper });
+    await settle();
+
+    // Then
+    expect(requestsWithMethod('GET')).toHaveLength(1);
+  });
+
+  test("given the session ends on the page then the household on screen is not saved again as this browser's user", async () => {
+    // Given
+    localStorage.clear();
+    const { wrapper, setAuth } = wrapperFor(signedInAuthValue());
+    const { rerender } = renderHook(() => useSaveCalculatedHousehold(CALCULATED_HOUSEHOLD), {
+      wrapper,
+    });
+    await waitFor(() => expect(requestsWithMethod('POST')).toHaveLength(1));
+
+    // When
+    setAuth(makeAuthValue({ sessionEnded: true }));
+    rerender();
+    await settle();
+
+    // Then: only the signed-in lookup and save were sent.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   test("given signed out then the household is saved as this browser's unauthenticated user", async () => {
