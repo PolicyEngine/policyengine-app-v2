@@ -6,36 +6,42 @@
  * policyengine.org proxies each route in appZoneRoutes.ts to a `*.vercel.app`
  * host, so that host serves the same page outside the site. A zone redirects
  * direct visits back to policyengine.org (docs/engineering/skills/
- * repository-guidance.md → The direct-host redirect). This audit probes each
- * zone's host the way a reader with an old link would and checks that:
+ * repository-guidance.md → The direct-host redirect). This audit requests each
+ * zone's host the way a reader with an old link would, at the route's root
+ * and at a path under it, and checks that:
  *
- * - every source in DIRECT_HOST_REDIRECTS still redirects;
- * - every redirect, listed or not, is permanent, names a policyengine.org URL
- *   that policyengine.org proxies back to the page asked for (path and query
- *   kept), and that URL answers 200 without looping back;
- * - no research article iframes a host that redirects.
+ * - every source in DIRECT_HOST_REDIRECTS still redirects, at both paths;
+ * - every redirect, listed or not, is permanent and names an https
+ *   policyengine.org URL that the website's zone rewrites (appZoneRewrites,
+ *   in order) proxy back to the URL asked for, path and query alike;
+ * - policyengine.org serves that URL itself, without redirecting it to
+ *   another page or back to the zone's host, and at the root answers 200;
+ * - that page doesn't name a `*.vercel.app` URL as its canonical or og:url.
  *
- * Zones with no redirect yet are reported, not failed.
+ * It fails only on evidence: a redirect that goes wrong, or a listed zone
+ * that serves a page or a 404 without redirecting. A request that fails, or
+ * that keeps answering 401, 403, 408, 425, 429 or 5xx after retries, makes the
+ * route unreachable: reported, never failed. Zones with no redirect yet are
+ * reported too.
  */
 import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, resolve } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import {
-  extractRoutes,
-  parseArgs,
-  resolveDestinationForSource,
-} from "./audit-app-zone-shell.mjs";
+import { parseArgs } from "./audit-app-zone-shell.mjs";
 
 const DEFAULT_ROUTES_FILE = "website/src/data/appZoneRoutes.ts";
 const DEFAULT_ARTICLES_DIR = "app/src/data/posts/articles";
 const DEFAULT_CONCURRENCY = 8;
 const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_RETRY_DELAYS_MS = [1000, 4000];
 const MAX_HOPS = 5;
 
 export const PUBLIC_ORIGIN = "https://www.policyengine.org";
 export const PROBE_PARAM = "pe_direct_host_audit";
 export const DEEP_PROBE_SEGMENT = "direct-host-audit";
+export const USER_AGENT = "PolicyEngine zone direct-host audit";
 const PERMANENT_STATUSES = new Set([301, 308]);
 
 /**
@@ -45,37 +51,117 @@ const PERMANENT_STATUSES = new Set([301, 308]);
  */
 export const DIRECT_HOST_REDIRECTS = [];
 
+/**
+ * Statuses that say nothing about the redirect: an SSO or bot challenge, a
+ * rate limit, a timeout or a server error. The audit retries them, then
+ * reports the route as unreachable.
+ */
+export function isUnreachableStatus(status) {
+  return [401, 403, 408, 425, 429].includes(status) || status >= 500;
+}
+
+function isRetryable(result) {
+  return (
+    result.error !== undefined ||
+    (result.status !== 401 &&
+      result.status !== 403 &&
+      isUnreachableStatus(result.status))
+  );
+}
+
 /** The site's hosts: its own, and the apex domain for a www origin (the apex 307s to www). */
 function publicHosts(publicOrigin) {
   const { hostname } = new URL(publicOrigin);
   return new Set([hostname, hostname.replace(/^www\./, "")]);
 }
 
+/** Whether `url` is an https URL on the site, on the default port. */
+function isPublicUrl(url, publicOrigin) {
+  return (
+    url.protocol === "https:" &&
+    url.port === "" &&
+    publicHosts(publicOrigin).has(url.hostname)
+  );
+}
+
 function trimTrailingPath(path) {
   return path.replace(/\/+$/, "") || "/";
 }
 
-/** Whether policyengine.org proxies the route to a `*.vercel.app` host (some destinations are its own static files). */
+/** Whether the rewrite sends requests to a `*.vercel.app` host (some destinations are the website's own files). */
 export function isProductionVercelHost(destination) {
   return URL.canParse(destination)
     ? new URL(destination).hostname.endsWith(".vercel.app")
     : false;
 }
 
-/**
- * The distinct key=value pairs of a query. A rewrite whose destination
- * carries a query (`?country=uk`) can repeat a pair the visitor sent too,
- * which changes nothing a page reads.
- */
-function queryPairs(searchParams) {
-  return [
-    ...new Set(Array.from(searchParams, ([key, value]) => `${key}=${value}`)),
-  ].sort();
+/** The website's zone rewrites, in the order `website/next.config.ts` applies them. */
+export async function loadRewrites(routesFile = DEFAULT_ROUTES_FILE) {
+  const { appZoneRewrites } = await import(
+    pathToFileURL(resolve(routesFile)).href
+  );
+  if (!Array.isArray(appZoneRewrites)) {
+    throw new Error(`${routesFile} doesn't export appZoneRewrites`);
+  }
+  return appZoneRewrites;
 }
 
-function sameParams(a, b) {
-  const left = queryPairs(a.searchParams);
-  const right = queryPairs(b.searchParams);
+/** The zones: rewrites of a plain path (no parameters) to a `*.vercel.app` host. */
+export function zoneRoutes(rewrites) {
+  return rewrites.filter(
+    (rule) =>
+      !rule.source.includes(":") && isProductionVercelHost(rule.destination),
+  );
+}
+
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Compiles a rewrite source the way Next does for the forms appZoneRewrites
+ * uses: literal segments, `:name` (one segment) and `:name*` (zero or more),
+ * with an optional trailing slash. Matching is case-sensitive: www serves
+ * /US/GIVECALC its own 404 (2026-10-29).
+ */
+export function compileSource(source) {
+  const names = [];
+  const pattern = source
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => {
+      const param = segment.match(/^:(\w+)(\*)?$/);
+      if (!param) return `\\/${escapeRegExp(segment)}`;
+      names.push({ name: param[1], repeated: Boolean(param[2]) });
+      return param[2]
+        ? "(?:\\/((?:[^\\/#?]+?)(?:\\/(?:[^\\/#?]+?))*))?"
+        : "\\/([^\\/#?]+?)";
+    })
+    .join("");
+  const regex = new RegExp(`^${pattern}(?:\\/)?$`);
+  return (pathname) => {
+    const match = regex.exec(pathname);
+    if (!match) return null;
+    return Object.fromEntries(
+      names.map(({ name }, index) => [name, match[index + 1] ?? ""]),
+    );
+  };
+}
+
+function fillParams(template, params, { path }) {
+  return template.replace(/(\/?):(\w+)(\*)?/g, (whole, slash, name, star) => {
+    if (!(name in params)) return whole;
+    const value = params[name];
+    if (star && path) return value ? `${slash}${value}` : "";
+    return `${slash}${value}`;
+  });
+}
+
+function queryPairs(searchParams) {
+  return Array.from(searchParams, ([key, value]) => `${key}=${value}`).sort();
+}
+
+function samePairs(left, right) {
   return (
     left.length === right.length &&
     left.every((pair, index) => pair === right[index])
@@ -83,102 +169,202 @@ function sameParams(a, b) {
 }
 
 /**
- * The two URLs a reader could hold for a route: its root, which must serve a
- * page, and a path under it, which no zone serves. The second checks that the
- * redirect keeps the path; its target answers whatever the zone answers for
- * an unknown page, typically 404.
+ * The zone URL policyengine.org fetches for `publicUrl`: the first rewrite
+ * whose source matches its path, with the path parameters filled in. As in
+ * Next, a query key the destination sets replaces the visitor's values for it,
+ * and every other key passes through. Null when no zone rewrite matches.
  */
-export function probePaths(route) {
-  const deep =
-    route.source === "/"
-      ? `/${DEEP_PROBE_SEGMENT}`
-      : `${route.source}/${DEEP_PROBE_SEGMENT}`;
-  return [
-    { path: `${route.source}?${PROBE_PARAM}=1`, requirePage: true },
-    { path: `${deep}?${PROBE_PARAM}=1`, requirePage: false },
-  ];
-}
-
-/** The route policyengine.org would serve `pathname` from: the longest source that contains it. */
-export function routeForPublicPath(routes, pathname) {
-  const path = trimTrailingPath(pathname);
-  let best = null;
-  for (const route of routes) {
-    const base = trimTrailingPath(route.source);
-    const contains =
-      base === "/" || path === base || path.startsWith(`${base}/`);
-    if (contains && (!best || base.length > best.source.length)) best = route;
+export function proxiedUrl(rewrites, publicUrl) {
+  const visitor = new URL(publicUrl);
+  for (const rule of rewrites) {
+    const params = compileSource(rule.source)(visitor.pathname);
+    if (!params) continue;
+    const [base, query = ""] = rule.destination.split("?");
+    // A relative destination is one of the website's own files.
+    const target = new URL(fillParams(base, params, { path: true }), visitor);
+    const destinationQuery = new URLSearchParams(
+      fillParams(query, params, { path: false }),
+    );
+    for (const [key, value] of visitor.searchParams) {
+      if (!destinationQuery.has(key)) target.searchParams.append(key, value);
+    }
+    for (const [key, value] of destinationQuery) {
+      target.searchParams.append(key, value);
+    }
+    return { url: target.toString(), rule };
   }
-  return best;
+  return null;
 }
 
 /**
- * Whether a redirect from `directUrl` to `location` keeps the reader on the
- * same page: policyengine.org proxies `location` back to `directUrl`, path
- * and query alike.
+ * The two URLs a reader could hold on a zone's host: its root, which must
+ * serve a page, and a path under it, which no zone serves. The second checks
+ * that the redirect keeps the path; its target answers whatever the zone
+ * answers for an unknown page, typically 404.
+ */
+export function probeUrls(zone) {
+  const root = new URL(zone.destination);
+  root.searchParams.append(PROBE_PARAM, "1");
+  const deep = new URL(root);
+  deep.pathname = `${trimTrailingPath(root.pathname).replace(/\/$/, "")}/${DEEP_PROBE_SEGMENT}`;
+  return [
+    { url: root.toString(), requirePage: true },
+    { url: deep.toString(), requirePage: false },
+  ];
+}
+
+/** Whether `path` is `base` or a path under it. */
+function isUnder(path, base) {
+  const trimmed = trimTrailingPath(base);
+  return (
+    trimmed === "/" ||
+    trimTrailingPath(path) === trimmed ||
+    path.startsWith(`${trimmed}/`)
+  );
+}
+
+/**
+ * A zone on the same host whose rewrite adds query pairs that `fromUrl`
+ * carries and the matched rewrite doesn't: the route that serves the page
+ * under its own name, such as /uk/marriage for `/us/marriage?country=uk`.
+ */
+function moreSpecificZone(zones, fromUrl, rule) {
+  const from = new URL(fromUrl);
+  const fromPairs = new Set(queryPairs(from.searchParams));
+  const matchedPairs = queryPairs(
+    new URLSearchParams(rule.destination.split("?")[1] ?? ""),
+  );
+  return zones.find((zone) => {
+    const destination = new URL(zone.destination);
+    const pairs = queryPairs(destination.searchParams);
+    return (
+      destination.host === from.host &&
+      pairs.length > matchedPairs.length &&
+      pairs.every((pair) => fromPairs.has(pair)) &&
+      isUnder(from.pathname, destination.pathname)
+    );
+  });
+}
+
+/**
+ * Whether a redirect from `fromUrl` to `location` keeps the reader on the
+ * same page: an https policyengine.org URL that the zone rewrites proxy back
+ * to `fromUrl`, path and query alike.
  */
 export function redirectKeepsPage(
-  routes,
-  directUrl,
+  rewrites,
+  fromUrl,
   location,
   publicOrigin = PUBLIC_ORIGIN,
 ) {
-  const direct = new URL(directUrl);
-  const target = new URL(location, direct);
-  if (!publicHosts(publicOrigin).has(target.hostname)) {
+  const from = new URL(fromUrl);
+  const target = new URL(location, from);
+  if (!isPublicUrl(target, publicOrigin)) {
     return { ok: false, reason: `redirects off ${publicOrigin} to ${target}` };
   }
 
-  const route = routeForPublicPath(routes, target.pathname);
-  if (!route) {
-    return { ok: false, reason: `no zone route serves ${target.pathname}` };
-  }
-
-  const proxied = new URL(
-    resolveDestinationForSource(
-      route,
-      `${trimTrailingPath(target.pathname)}${target.search}`,
-      publicOrigin,
-    ),
-  );
-  if (
-    proxied.host !== direct.host ||
-    trimTrailingPath(proxied.pathname) !== trimTrailingPath(direct.pathname) ||
-    !sameParams(proxied, direct)
-  ) {
+  const proxied = proxiedUrl(rewrites, target);
+  if (!proxied) {
     return {
       ok: false,
-      reason: `${target} serves ${proxied}, not ${direct}`,
+      reason: `policyengine.org doesn't proxy ${target.pathname} to a zone`,
     };
   }
-  return { ok: true, apex: target.hostname !== new URL(publicOrigin).hostname };
+  const back = new URL(proxied.url);
+  if (
+    back.host !== from.host ||
+    trimTrailingPath(back.pathname) !== trimTrailingPath(from.pathname) ||
+    !samePairs(queryPairs(back.searchParams), queryPairs(from.searchParams))
+  ) {
+    return { ok: false, reason: `${target} serves ${back}, not ${from}` };
+  }
+
+  const better = moreSpecificZone(zoneRoutes(rewrites), from, proxied.rule);
+  return { ok: true, ...(better ? { betterSource: better.source } : {}) };
 }
 
-async function request(fetchImpl, url, timeout) {
-  const response = await fetchImpl(url, {
-    redirect: "manual",
-    signal: AbortSignal.timeout(timeout),
-    headers: { "user-agent": "PolicyEngine zone direct-host audit" },
-  });
-  return {
-    status: response.status,
-    location: response.headers.get("location"),
-  };
+/** Whether two URLs name the same page on the site: path (trailing slash aside) and query. */
+function samePublicPage(a, b, publicOrigin) {
+  const left = new URL(a);
+  const right = new URL(b);
+  return (
+    isPublicUrl(left, publicOrigin) &&
+    isPublicUrl(right, publicOrigin) &&
+    trimTrailingPath(left.pathname) === trimTrailingPath(right.pathname) &&
+    samePairs(queryPairs(left.searchParams), queryPairs(right.searchParams))
+  );
+}
+
+function attributes(tag) {
+  const found = {};
+  for (const match of tag.matchAll(
+    /([^\s=<>"']+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g,
+  )) {
+    found[match[1].toLowerCase()] = match[2] ?? match[3] ?? match[4];
+  }
+  return found;
+}
+
+/** The URLs a page names as itself: its canonical link and its og:url. */
+export function canonicalUrls(html) {
+  const urls = [];
+  for (const [tag] of html.matchAll(/<link\b[^>]*>/gi)) {
+    const attrs = attributes(tag);
+    if (attrs.rel?.toLowerCase().split(/\s+/).includes("canonical")) {
+      urls.push({ kind: "canonical", url: attrs.href });
+    }
+  }
+  for (const [tag] of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const attrs = attributes(tag);
+    if (attrs.property === "og:url") {
+      urls.push({ kind: "og:url", url: attrs.content });
+    }
+  }
+  return urls.filter(({ url }) => url);
+}
+
+async function request(fetchImpl, url, options) {
+  const { timeout, retryDelays, sleep, readBody } = options;
+  for (let attempt = 0; ; attempt += 1) {
+    let result;
+    try {
+      const response = await fetchImpl(url, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(timeout),
+        headers: { "user-agent": USER_AGENT },
+      });
+      result = {
+        status: response.status,
+        location: response.headers.get("location"),
+      };
+      if (readBody && response.status === 200 && response.text) {
+        result.body = await response.text();
+      }
+    } catch (error) {
+      result = { error: error?.message ?? String(error) };
+    }
+    if (!isRetryable(result) || attempt >= retryDelays.length) return result;
+    await sleep(retryDelays[attempt]);
+  }
 }
 
 /**
  * Follows `url` hop by hop. `stop(url)` ends the walk early (for example on
  * leaving the starting host); a revisited URL or more than MAX_HOPS is a loop.
  */
-async function walk(fetchImpl, url, timeout, stop = () => false) {
+async function walk(fetchImpl, url, options, stop = () => false) {
   const visited = [];
   let current = url;
   for (let hop = 0; hop <= MAX_HOPS; hop += 1) {
     if (visited.includes(current)) return { loop: true, visited };
     visited.push(current);
-    const { status, location } = await request(fetchImpl, current, timeout);
+    const response = await request(fetchImpl, current, options);
+    if (response.error !== undefined) {
+      return { error: response.error, url: current, visited };
+    }
+    const { status, location, body } = response;
     if (status < 300 || status >= 400 || !location) {
-      return { status, url: current, visited };
+      return { status, url: current, body, visited };
     }
     const next = new URL(location, current).toString();
     if (stop(next)) return { status, url: current, location: next, visited };
@@ -188,105 +374,130 @@ async function walk(fetchImpl, url, timeout, stop = () => false) {
 }
 
 /**
- * Probes one public path: the direct visit (following same-host hops such as
- * a trailing-slash redirect) and, when it redirects, the URL it names. With
- * `requirePage`, that URL must answer 200.
+ * Probes one URL on a zone's host: the direct visit (following same-host hops
+ * such as a trailing-slash redirect) and, when it redirects, the URL it names.
+ * With `requirePage`, that URL must answer 200.
  */
 export async function probeDirectHost(
-  routes,
-  route,
-  publicPath,
+  rewrites,
+  directUrl,
   {
     fetchImpl = fetch,
     timeout = DEFAULT_TIMEOUT_MS,
     publicOrigin = PUBLIC_ORIGIN,
     requirePage = true,
+    retryDelays = DEFAULT_RETRY_DELAYS_MS,
+    sleep = delay,
   } = {},
 ) {
-  const directUrl = resolveDestinationForSource(
-    route,
-    publicPath,
-    publicOrigin,
-  );
+  const options = { timeout, retryDelays, sleep, readBody: false };
   const host = new URL(directUrl).host;
+  const result = (state, fields) => ({ state, directUrl, ...fields });
+
   const direct = await walk(
     fetchImpl,
     directUrl,
-    timeout,
+    options,
     (next) => new URL(next).host !== host,
   );
-
   if (direct.loop) {
-    return {
-      state: "wrong",
-      directUrl,
+    return result("wrong", {
       reason: `loops on its own host: ${direct.visited.join(" -> ")}`,
-    };
+    });
+  }
+  if (direct.error !== undefined) {
+    return result("unreachable", {
+      reason: `${direct.url}: request failed: ${direct.error}`,
+    });
   }
   if (!direct.location) {
-    return { state: "missing", directUrl, status: direct.status };
+    return isUnreachableStatus(direct.status) ||
+      (direct.status >= 300 && direct.status < 400)
+      ? result("unreachable", {
+          reason: `${direct.url} answers ${direct.status}`,
+        })
+      : result("missing", { status: direct.status });
   }
 
+  const target = new URL(direct.location);
   if (!PERMANENT_STATUSES.has(direct.status)) {
-    return {
-      state: "wrong",
-      directUrl,
-      reason: `answers ${direct.status}, not a permanent (308) redirect`,
-    };
+    // A temporary redirect off the site is Vercel's SSO or a challenge page.
+    return isPublicUrl(target, publicOrigin)
+      ? result("wrong", {
+          reason: `answers ${direct.status}, not a permanent (308) redirect`,
+        })
+      : result("unreachable", {
+          reason: `answers ${direct.status} to ${target.host}`,
+        });
   }
 
+  // Compared with the last URL on the zone's host: a reader who comes through
+  // policyengine.org takes the same same-host hops.
   const kept = redirectKeepsPage(
-    routes,
-    directUrl,
+    rewrites,
+    direct.url,
     direct.location,
     publicOrigin,
   );
-  if (!kept.ok) return { state: "wrong", directUrl, reason: kept.reason };
+  if (!kept.ok) return result("wrong", { reason: kept.reason });
 
-  const landed = await walk(fetchImpl, direct.location, timeout);
+  const landed = await walk(fetchImpl, direct.location, {
+    ...options,
+    readBody: requirePage,
+  });
   if (landed.loop) {
-    return {
-      state: "wrong",
-      directUrl,
-      reason: `loops: ${landed.visited.join(" -> ")}`,
-    };
+    return result("wrong", { reason: `loops: ${landed.visited.join(" -> ")}` });
   }
-  if (requirePage && landed.status !== 200) {
-    return {
-      state: "wrong",
-      directUrl,
-      reason: `${direct.location} answers ${landed.status}`,
-    };
+  if (landed.error !== undefined) {
+    return result("unreachable", {
+      reason: `${landed.url}: request failed: ${landed.error}`,
+    });
   }
   if (new URL(landed.url).host === host) {
-    return {
-      state: "wrong",
-      directUrl,
+    return result("wrong", {
       reason: `${direct.location} sends readers back to ${host}`,
-    };
+    });
+  }
+  if (!samePublicPage(landed.url, direct.location, publicOrigin)) {
+    return result("wrong", {
+      reason: `policyengine.org sends ${direct.location} on to ${landed.url}`,
+    });
+  }
+  if (isUnreachableStatus(landed.status)) {
+    return result("unreachable", {
+      reason: `${landed.url} answers ${landed.status}`,
+    });
+  }
+  if (requirePage && landed.status !== 200) {
+    return result("wrong", {
+      reason: `${direct.location} answers ${landed.status}`,
+    });
+  }
+  for (const { kind, url } of canonicalUrls(landed.body ?? "")) {
+    if (URL.canParse(url) && new URL(url).hostname.endsWith(".vercel.app")) {
+      return result("wrong", {
+        reason: `${landed.url} names ${url} as its ${kind}; use the policyengine.org URL`,
+      });
+    }
   }
 
-  return {
-    state: "ok",
-    directUrl,
+  return result("ok", {
     location: direct.location,
     sameHostHops: direct.visited.length - 1,
-    apex: kept.apex,
-  };
+    // Hops policyengine.org adds on top: the apex's 307 to www, a trailing slash.
+    publicHops: landed.visited.slice(1),
+    ...(kept.betterSource ? { betterSource: kept.betterSource } : {}),
+  });
 }
 
-/** The production hosts each article's iframes load, keyed by article file. */
-export function findIframedHosts(markdownByFile, hosts) {
+/** The zone hosts each article's iframes load, keyed by article file. */
+export function findIframedHosts(textByFile, hosts) {
   const found = [];
   const iframeSrc = /<iframe\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/gi;
-  for (const [file, markdown] of Object.entries(markdownByFile)) {
-    for (const match of markdown.matchAll(iframeSrc)) {
-      let hostname;
-      try {
-        hostname = new URL(match[1]).hostname;
-      } catch {
-        continue;
-      }
+  for (const [file, text] of Object.entries(textByFile)) {
+    for (const match of text.matchAll(iframeSrc)) {
+      if (!URL.canParse(match[1])) continue;
+      const { hostname } = new URL(match[1]);
       if (hosts.has(hostname)) found.push({ file, host: hostname });
     }
   }
@@ -296,31 +507,44 @@ export function findIframedHosts(markdownByFile, hosts) {
 /**
  * Folds a route's probe results (root first, then a page under it) into one
  * verdict. A redirect that lands anywhere but the same page fails, listed or
- * not; a listed route fails once its root stops redirecting. A host that
- * redirects only some paths ("partial") is reported, not failed: readers on
- * the others still get the page, as before.
+ * not; a listed route fails once either path stops redirecting. An unlisted
+ * host that redirects only some paths ("partial") is reported, not failed:
+ * readers on the others still get the page, as before.
  */
 export function summarizeRoute(route, probes, listed) {
-  const wrong = probes.filter((probe) => probe.state === "wrong");
-  const ok = probes.filter((probe) => probe.state === "ok");
+  const count = (state) => probes.filter((probe) => probe.state === state);
   let state;
-  if (wrong.length > 0) state = "wrong";
-  else if (ok.length === probes.length) state = "ok";
-  else if (ok.length === 0) state = "missing";
+  if (count("wrong").length > 0) state = "wrong";
+  else if (count("unreachable").length > 0) state = "unreachable";
+  else if (count("ok").length === probes.length) state = "ok";
+  else if (count("ok").length === 0) state = "missing";
   else state = "partial";
 
-  const fails = state === "wrong" || (listed && probes[0]?.state !== "ok");
+  const fails = state === "wrong" || (listed && count("missing").length > 0);
   return { ...route, state, listed, fails, probes };
 }
 
+/** Each article's text: markdown as is, and a notebook's cells joined. */
 function readArticles(dir) {
-  const markdownByFile = {};
+  const textByFile = {};
   for (const name of readdirSync(dir)) {
+    const file = join(dir, name);
     if (name.endsWith(".md")) {
-      markdownByFile[join(dir, name)] = readFileSync(join(dir, name), "utf8");
+      textByFile[file] = readFileSync(file, "utf8");
+    } else if (name.endsWith(".ipynb")) {
+      const notebook = JSON.parse(readFileSync(file, "utf8"));
+      textByFile[file] = (notebook.cells ?? [])
+        .flatMap((cell) => [
+          ...[cell.source].flat(),
+          ...(cell.outputs ?? []).flatMap((output) =>
+            Object.values(output.data ?? {}).flat(),
+          ),
+        ])
+        .filter((part) => typeof part === "string")
+        .join("");
     }
   }
-  return markdownByFile;
+  return textByFile;
 }
 
 async function runWithConcurrency(items, concurrency, worker) {
@@ -345,7 +569,12 @@ async function runWithConcurrency(items, concurrency, worker) {
 
 export async function main(
   argv = process.argv.slice(2),
-  { fetchImpl = fetch, directHostRedirects = DIRECT_HOST_REDIRECTS } = {},
+  {
+    fetchImpl = fetch,
+    directHostRedirects = DIRECT_HOST_REDIRECTS,
+    retryDelays = DEFAULT_RETRY_DELAYS_MS,
+    sleep = delay,
+  } = {},
 ) {
   const args = parseArgs(argv);
   const routesFile = args["routes-file"] ?? DEFAULT_ROUTES_FILE;
@@ -355,91 +584,91 @@ export async function main(
   // Lets a test deployment that mirrors policyengine.org stand in for it.
   const publicOrigin = args["public-origin"] ?? PUBLIC_ORIGIN;
 
-  const routes = extractRoutes(readFileSync(routesFile, "utf8"));
-  const zones = routes.filter((route) =>
-    isProductionVercelHost(route.destination),
-  );
+  const rewrites = await loadRewrites(routesFile);
+  const zones = zoneRoutes(rewrites);
   const unknown = directHostRedirects.filter(
-    (source) => !zones.some((route) => route.source === source),
+    (source) => !zones.some((zone) => zone.source === source),
   );
 
   console.log(
     `Probing the production Vercel hosts of ${zones.length} app-zone route(s) directly.\n`,
   );
 
-  const results = await runWithConcurrency(
-    zones,
-    concurrency,
-    async (route) => {
-      const probes = [];
-      for (const { path, requirePage } of probePaths(route)) {
-        try {
-          probes.push(
-            await probeDirectHost(routes, route, path, {
-              fetchImpl,
-              timeout,
-              publicOrigin,
-              requirePage,
-            }),
-          );
-        } catch (error) {
-          probes.push({
-            state: "wrong",
-            directUrl: path,
-            reason: `request failed: ${error.message}`,
-          });
-        }
-      }
-      return summarizeRoute(
-        route,
-        probes,
-        directHostRedirects.includes(route.source),
+  const results = await runWithConcurrency(zones, concurrency, async (zone) => {
+    const probes = [];
+    for (const { url, requirePage } of probeUrls(zone)) {
+      probes.push(
+        await probeDirectHost(rewrites, url, {
+          fetchImpl,
+          timeout,
+          publicOrigin,
+          requirePage,
+          retryDelays,
+          sleep,
+        }),
       );
-    },
-  );
+    }
+    return summarizeRoute(
+      zone,
+      probes,
+      directHostRedirects.includes(zone.source),
+    );
+  });
 
-  const marks = { ok: "OK", partial: "PARTIAL", missing: "MISSING" };
+  const marks = {
+    ok: "OK",
+    partial: "PARTIAL",
+    missing: "MISSING",
+    unreachable: "UNREACHABLE",
+  };
   for (const result of results) {
     const mark = result.fails ? "FAIL" : marks[result.state];
     console.log(
       `${mark} ${result.source} (${new URL(result.destination).host})`,
     );
     for (const probe of result.probes) {
-      if (probe.state === "wrong") {
+      if (probe.state === "wrong" || probe.state === "unreachable") {
         console.log(`    ${probe.directUrl}: ${probe.reason}`);
-      } else if (probe.state === "ok" && probe.apex) {
+      } else if (probe.state === "missing" && result.state !== "missing") {
         console.log(
-          `    ${probe.directUrl}: redirects to the apex domain, which costs readers a hop to www`,
+          `    ${probe.directUrl}: answers ${probe.status}, no redirect`,
         );
-      }
-    }
-    if (result.state === "partial") {
-      for (const probe of result.probes) {
-        if (probe.state === "missing") {
-          console.log(`    ${probe.directUrl}: no redirect`);
+      } else if (probe.state === "ok") {
+        if (probe.publicHops.length > 0) {
+          console.log(
+            `    ${probe.directUrl}: costs readers ${probe.publicHops.length} more hop(s) on policyengine.org, to ${probe.publicHops.join(" -> ")}. Redirect straight there.`,
+          );
+        }
+        if (probe.betterSource) {
+          console.log(
+            `    ${probe.directUrl}: lands on ${probe.location}, though ${probe.betterSource} serves this page under its own name`,
+          );
         }
       }
     }
-    if (result.listed && result.probes[0]?.state === "missing") {
+    if (result.listed && result.probes.some((p) => p.state === "missing")) {
       console.log(
         "    listed in DIRECT_HOST_REDIRECTS but no longer redirects",
       );
     }
   }
 
-  const redirectingHosts = new Set(
-    results
-      .filter((result) => result.state !== "missing" || result.listed)
-      .map((result) => new URL(result.destination).hostname),
+  const iframed = findIframedHosts(
+    readArticles(articlesDir),
+    new Set(zones.map((zone) => new URL(zone.destination).hostname)),
   );
-  const iframed = findIframedHosts(readArticles(articlesDir), redirectingHosts);
 
   const ok = results.filter((result) => result.state === "ok");
   const missing = results.filter((result) => result.state === "missing");
+  const unreachable = results.filter(
+    (result) => result.state === "unreachable",
+  );
   const failures = results.filter((result) => result.fails);
   const unlisted = results.filter(
     (result) =>
-      !result.listed && !result.fails && result.probes[0]?.state === "ok",
+      !result.listed &&
+      !result.fails &&
+      result.probes.every((probe) => probe.state === "ok"),
   );
 
   console.log(
@@ -450,8 +679,17 @@ export async function main(
       `\n${missing.length} zone host(s) still serve direct visits themselves. Each zone adds the redirect in its own repository (repository-guidance.md → The direct-host redirect):`,
     );
     for (const result of missing) {
-      console.log(`  - ${result.source} (${new URL(result.destination).host})`);
+      const statuses = result.probes.map((probe) => probe.status).join(", ");
+      console.log(
+        `  - ${result.source} (${new URL(result.destination).host}): ${statuses}`,
+      );
     }
+  }
+  if (unreachable.length > 0) {
+    console.log(
+      `\nThe audit couldn't check ${unreachable.length} zone host(s) after retries; each line above says why:`,
+    );
+    for (const result of unreachable) console.log(`  - ${result.source}`);
   }
   if (unlisted.length > 0) {
     console.log(
@@ -459,17 +697,17 @@ export async function main(
     );
     for (const result of unlisted) console.log(`  - "${result.source}",`);
   }
+  if (iframed.length > 0) {
+    console.log(
+      "\nThese articles iframe a zone's Vercel host. Point each iframe at the zone's policyengine.org route, which serves the same page:",
+    );
+    for (const { file, host } of iframed) console.log(`  - ${file}: ${host}`);
+  }
 
   if (unknown.length > 0) {
     console.error(
       `\nDIRECT_HOST_REDIRECTS lists source(s) with no zone route on a Vercel host: ${unknown.join(", ")}`,
     );
-  }
-  if (iframed.length > 0) {
-    console.error(
-      "\nThese articles iframe a host that redirects, so the iframe loads policyengine.org instead of the tool. Point the iframe at the policyengine.org route or remove the redirect:",
-    );
-    for (const { file, host } of iframed) console.error(`  - ${file}: ${host}`);
   }
   if (failures.length > 0) {
     console.error(
@@ -480,9 +718,7 @@ export async function main(
     }
   }
 
-  return failures.length > 0 || iframed.length > 0 || unknown.length > 0
-    ? 1
-    : 0;
+  return failures.length > 0 || unknown.length > 0 ? 1 : 0;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

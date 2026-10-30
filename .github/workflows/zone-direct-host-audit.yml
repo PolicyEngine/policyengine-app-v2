@@ -4,7 +4,8 @@ on:
   pull_request:
     paths:
       - "website/src/data/appZoneRoutes.ts"
-      - "app/src/data/posts/articles/**"
+      - "website/next.config.ts"
+      - "website/src/middleware.ts"
       - ".github/scripts/audit-zone-direct-hosts.mjs"
       - ".github/scripts/audit-zone-direct-hosts.test.mjs"
       - ".github/scripts/audit-app-zone-shell.mjs"
@@ -13,44 +14,62 @@ on:
   schedule:
     - cron: "47 9 * * *"
 
+permissions:
+  contents: read
+
 jobs:
   audit:
     name: Audit direct visits to zone hosts
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
       # Like the app-zone shell audit, this connects to production sites over
       # HTTPS, so it uses a Node 24 release without the compromised eMudhra
-      # (emSign) CAs.
+      # (emSign) CAs. Node 24 also runs appZoneRoutes.ts as is, types
+      # stripped; the flag hides its warning that website/ has no "type".
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
           check-latest: true
 
       - name: Run direct-host audit unit tests
-        run: node --test .github/scripts/audit-zone-direct-hosts.test.mjs
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test .github/scripts/audit-zone-direct-hosts.test.mjs
 
       - name: Run direct-host audit
-        run: node .github/scripts/audit-zone-direct-hosts.mjs
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .github/scripts/audit-zone-direct-hosts.mjs
 
-      - name: File or bump an issue when the scheduled audit fails
-        if: failure() && github.event_name == 'schedule'
+  report:
+    name: File, bump or close the audit issue
+    needs: audit
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Update the issue for this run
         env:
           GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.audit.result }}
         run: |
           title="Zone direct-host audit is failing"
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
             --search "in:title \"$title\"" --json number --jq '.[0].number')
-          if [ -n "$existing" ]; then
+          if [ "$RESULT" = "success" ]; then
+            if [ -n "$existing" ]; then
+              gh issue close "$existing" --repo "$GITHUB_REPOSITORY" \
+                --comment "Passing again: $run_url"
+            fi
+          elif [ "$RESULT" != "failure" ]; then
+            echo "The audit job ended $RESULT; leaving the issue as it is."
+          elif [ -n "$existing" ]; then
             gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" \
               --body "Still failing: $run_url"
           else
             gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "The scheduled zone direct-host audit failed: $run_url
 
-          A zone's production Vercel host stopped redirecting direct visits to policyengine.org, or its redirect now sends readers to the wrong page, a 404 or a loop, or an article iframes a host that redirects. The run log names the route. Fix it in the zone's repository (docs/engineering/skills/repository-guidance.md → Embedded sites → The direct-host redirect)."
+          The run log says which step failed. When it's the audit itself, the log names each zone whose direct visits no longer reach the same page on policyengine.org, or that DIRECT_HOST_REDIRECTS lists but that stopped redirecting. Fix it in that zone's repository (docs/engineering/skills/repository-guidance.md → Embedded sites → The direct-host redirect)."
           fi
