@@ -20,12 +20,16 @@
  * - policyengine.org serves that URL itself, without redirecting it to
  *   another page or back to the zone's host, and at the root answers 200;
  * - that page doesn't name a `*.vercel.app` URL as its canonical or og:url,
- *   read as a browser parses the page.
+ *   decoded and parsed as a browser does.
+ *
+ * Every hop on the way stays on policyengine.org, and every Location is a
+ * URL.
  *
  * It fails only on evidence: a redirect that goes wrong, or a listed zone
  * that serves a page or a 404 without redirecting. A request that fails, that
  * keeps answering 401, 403, 408, 425, 429 or 5xx after retries, or that
- * Vercel's SSO answers, makes the route unreachable: reported, never failed.
+ * Vercel's SSO answers (on the zone's host or on the way through
+ * policyengine.org), makes the route unreachable: reported, never failed.
  * So does the run's deadline: no request, retry or parse outlasts it, and a
  * page the audit can't parse in time is reported the same way. Zones with no
  * redirect yet are reported too.
@@ -34,6 +38,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { MIMEType } from "node:util";
 import {
   isMainThread,
   parentPort,
@@ -65,6 +70,20 @@ const DEFAULT_PARSE_TIMEOUT_MS = 10_000;
 const PARSE_MEMORY_MB = 512;
 const CANONICAL_WORKER = "zoneDirectHostAuditCanonicalUrls";
 const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+// The Encoding Standard's labels for its replacement encoding, which
+// TextDecoder won't construct. TextDecoder resolves every other label itself
+// in a Node built with full ICU, as the official builds are.
+const REPLACEMENT_LABELS = new Set([
+  "csiso2022kr",
+  "hz-gb-2312",
+  "iso-2022-cn",
+  "iso-2022-cn-ext",
+  "iso-2022-kr",
+  "replacement",
+]);
+// How much of a page the prescan reads, as the HTML standard suggests.
+const PRESCAN_BYTES = 1024;
+const OUT_OF_BYTES = Symbol("the prescan ran out of bytes");
 
 export const PUBLIC_ORIGIN = "https://www.policyengine.org";
 export const PROBE_PARAM = "pe_direct_host_audit";
@@ -420,30 +439,397 @@ function samePublicPage(a, b, publicOrigin) {
   );
 }
 
+const asciiLower = (text) =>
+  text.replace(/[A-Z]/g, (letter) => letter.toLowerCase());
+const isAsciiSpace = (char) =>
+  char === "\t" ||
+  char === "\n" ||
+  char === "\f" ||
+  char === "\r" ||
+  char === " ";
+const isSpaceByte = (byte) =>
+  byte === 0x09 ||
+  byte === 0x0a ||
+  byte === 0x0c ||
+  byte === 0x0d ||
+  byte === 0x20;
+const isLetterByte = (byte) => (byte | 0x20) >= 0x61 && (byte | 0x20) <= 0x7a;
+const lowerByte = (byte) =>
+  String.fromCharCode(byte >= 0x41 && byte <= 0x5a ? byte + 0x20 : byte);
+const attribute = (element, name) =>
+  element.attrs.find((attr) => attr.name === name)?.value;
+
 /**
- * The URLs a page names as itself, its canonical links and og:url, read as a
- * browser reads them: parse5 (the parser jsdom wraps) builds the tree with
- * scripting on, as in a browser, so `<noscript>` holds text, not elements.
- * Only HTML `<link>` and `<meta>` elements count, not SVG or MathML ones, and
- * not what template contents, comments, scripts or attribute values hold.
- * Character references are decoded, and URLs resolve against the page's URL
- * and its first `<base href>`. Values that aren't URLs are skipped. Parsing
- * runs no script and loads nothing; deep nesting makes it slow, so the audit
- * runs it in a worker it can stop (readCanonicalUrls).
+ * The Encoding Standard's "get an encoding": the name of the encoding a label
+ * names, or null. Every label is ASCII letters, digits and `-._:`.
  */
-export function canonicalUrls(html, pageUrl = PUBLIC_ORIGIN) {
+export function encodingFor(label) {
+  const name = asciiLower(label.replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/g, ""));
+  if (!/^[a-z0-9._:-]+$/.test(name)) return null;
+  if (REPLACEMENT_LABELS.has(name)) return "replacement";
+  try {
+    return new TextDecoder(name).encoding;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Bytes in a known encoding as text. The replacement encoding reads as one
+ * U+FFFD.
+ */
+function decodeAs(bytes, encoding) {
+  if (encoding === "replacement") return bytes.length > 0 ? "\uFFFD" : "";
+  return new TextDecoder(encoding).decode(bytes);
+}
+
+/**
+ * Fetch's "get, decode, and split": a header's values, split on commas
+ * outside quoted strings.
+ */
+function splitHeader(input) {
+  const values = [];
+  let value = "";
+  let position = 0;
+  for (;;) {
+    while (
+      position < input.length &&
+      input[position] !== '"' &&
+      input[position] !== ","
+    ) {
+      value += input[position];
+      position += 1;
+    }
+    if (input[position] === '"') {
+      // An HTTP quoted string, kept as written: a backslash escapes the next
+      // character.
+      const start = position;
+      position += 1;
+      while (position < input.length) {
+        const char = input[position];
+        position += char === "\\" ? 2 : 1;
+        if (char === '"') break;
+      }
+      value += input.slice(start, position);
+      if (position < input.length) continue;
+    }
+    values.push(value.replace(/^[\t ]+|[\t ]+$/g, ""));
+    value = "";
+    if (position >= input.length) return values;
+    position += 1;
+  }
+}
+
+/**
+ * The encoding a Content-Type header names, as Fetch reads it ("extract a
+ * MIME type", then "legacy extract an encoding"), or null. node:util's
+ * MIMEType parses each value as the MIME Sniffing standard does, quoted
+ * strings and backslash escapes included.
+ */
+export function transportEncoding(contentType) {
+  if (contentType === null || contentType === undefined) return null;
+  let essence = null;
+  let carried = null;
+  let charset = null;
+  for (const value of splitHeader(contentType)) {
+    let type;
+    try {
+      type = new MIMEType(value);
+    } catch {
+      continue;
+    }
+    if (type.essence === "*/*") continue;
+    const own = type.params.get("charset");
+    if (type.essence !== essence) {
+      // A new MIME type drops the charset of the one before.
+      essence = type.essence;
+      carried = own;
+      charset = own;
+    } else {
+      charset = own ?? carried;
+    }
+  }
+  return charset === null ? null : encodingFor(charset);
+}
+
+/**
+ * The HTML standard's "extracting a character encoding from a meta element",
+ * for a content attribute such as `text/html; charset=koi8-r`: an encoding's
+ * name, or null.
+ */
+export function extractMetaEncoding(content) {
+  const lower = asciiLower(content);
+  for (let position = 0; ; ) {
+    let index = lower.indexOf("charset", position);
+    if (index === -1) return null;
+    index += "charset".length;
+    while (isAsciiSpace(content[index])) index += 1;
+    if (content[index] !== "=") {
+      position = index;
+      continue;
+    }
+    index += 1;
+    while (isAsciiSpace(content[index])) index += 1;
+    const next = content[index];
+    if (next === undefined) return null;
+    if (next === '"' || next === "'") {
+      const close = content.indexOf(next, index + 1);
+      return close === -1 ? null : encodingFor(content.slice(index + 1, close));
+    }
+    let end = index;
+    while (
+      end < content.length &&
+      !isAsciiSpace(content[end]) &&
+      content[end] !== ";"
+    ) {
+      end += 1;
+    }
+    return encodingFor(content.slice(index, end));
+  }
+}
+
+/**
+ * The HTML standard's "get an XML encoding", for a prescan that runs out of
+ * bytes.
+ */
+function xmlEncoding(input) {
+  const bytes = Buffer.from(input.buffer, input.byteOffset, input.byteLength);
+  if (!bytes.subarray(0, 5).equals(Buffer.from("<?xml"))) return null;
+  const end = bytes.indexOf(0x3e);
+  if (end === -1) return null;
+  let position = bytes.subarray(0, end).indexOf("encoding");
+  if (position === -1) return null;
+  position += "encoding".length;
+  while (bytes[position] <= 0x20) position += 1;
+  if (bytes[position] !== 0x3d) return null;
+  position += 1;
+  while (bytes[position] <= 0x20) position += 1;
+  const quote = bytes[position];
+  if (quote !== 0x22 && quote !== 0x27) return null;
+  position += 1;
+  const close = bytes.indexOf(quote, position);
+  if (close === -1) return null;
+  const label = bytes.subarray(position, close);
+  if (label.some((byte) => byte <= 0x20)) return null;
+  const encoding = encodingFor(label.toString("latin1"));
+  return encoding === "utf-16be" || encoding === "utf-16le"
+    ? "utf-8"
+    : encoding;
+}
+
+/**
+ * The HTML standard's prescan of a page's first 1024 bytes for an encoding
+ * declaration: a `<meta charset>`, a `<meta http-equiv=content-type>` with a
+ * content charset, or an XML declaration. It skips comments and reads past
+ * other tags' attributes. An encoding's name, or null.
+ */
+export function prescanEncoding(bytes) {
+  const input = bytes.subarray(0, PRESCAN_BYTES);
+  try {
+    return prescan(input);
+  } catch (error) {
+    if (error !== OUT_OF_BYTES) throw error;
+    return xmlEncoding(input);
+  }
+}
+
+function prescan(input) {
+  let position = 0;
+  // Running out of bytes anywhere ends the prescan (prescanEncoding).
+  const at = (index) => {
+    if (index >= input.length) throw OUT_OF_BYTES;
+    return input[index];
+  };
+  const startsWith = (...bytes) =>
+    bytes.every((byte, offset) => input[position + offset] === byte);
+  const getAttribute = () => {
+    while (isSpaceByte(at(position)) || at(position) === 0x2f) position += 1;
+    if (at(position) === 0x3e) return null;
+    let name = "";
+    let value = "";
+    for (;;) {
+      const byte = at(position);
+      if (byte === 0x3d && name !== "") break;
+      if (isSpaceByte(byte)) {
+        while (isSpaceByte(at(position))) position += 1;
+        if (at(position) !== 0x3d) return { name, value };
+        break;
+      }
+      if (byte === 0x2f || byte === 0x3e) return { name, value };
+      name += lowerByte(byte);
+      position += 1;
+    }
+    position += 1;
+    while (isSpaceByte(at(position))) position += 1;
+    const quote = at(position);
+    if (quote === 0x22 || quote === 0x27) {
+      for (position += 1; at(position) !== quote; position += 1) {
+        value += lowerByte(at(position));
+      }
+      position += 1;
+      return { name, value };
+    }
+    if (quote === 0x3e) return { name, value };
+    for (; !isSpaceByte(at(position)) && at(position) !== 0x3e; position += 1) {
+      value += lowerByte(at(position));
+    }
+    return { name, value };
+  };
+
+  if (startsWith(0x3c, 0x00, 0x3f, 0x00, 0x78, 0x00)) return "utf-16le";
+  if (startsWith(0x00, 0x3c, 0x00, 0x3f, 0x00, 0x78)) return "utf-16be";
+  for (; ; position += 1) {
+    const byte = at(position);
+    const next = input[position + 1];
+    if (startsWith(0x3c, 0x21, 0x2d, 0x2d)) {
+      // To the first ">" after two dashes, which can be the comment's own.
+      position += 4;
+      while (
+        at(position) !== 0x3e ||
+        input[position - 1] !== 0x2d ||
+        input[position - 2] !== 0x2d
+      ) {
+        position += 1;
+      }
+    } else if (
+      byte === 0x3c &&
+      asciiLower(
+        String.fromCharCode(...input.subarray(position + 1, position + 5)),
+      ) === "meta" &&
+      (isSpaceByte(input[position + 5]) || input[position + 5] === 0x2f)
+    ) {
+      position += 5;
+      const names = new Set();
+      let gotPragma = false;
+      let needPragma = null;
+      // undefined: none yet; null: a label that names no encoding.
+      let charset;
+      for (let attr = getAttribute(); attr; attr = getAttribute()) {
+        if (names.has(attr.name)) continue;
+        names.add(attr.name);
+        if (attr.name === "http-equiv") {
+          if (attr.value === "content-type") gotPragma = true;
+        } else if (attr.name === "content") {
+          const encoding = extractMetaEncoding(attr.value);
+          if (encoding !== null && charset === undefined) {
+            charset = encoding;
+            needPragma = true;
+          }
+        } else if (attr.name === "charset") {
+          charset = encodingFor(attr.value);
+          needPragma = false;
+        }
+      }
+      if (
+        needPragma !== null &&
+        (gotPragma || !needPragma) &&
+        charset !== null
+      ) {
+        if (charset === "utf-16be" || charset === "utf-16le") return "utf-8";
+        if (charset === "x-user-defined") return "windows-1252";
+        return charset;
+      }
+    } else if (
+      byte === 0x3c &&
+      (isLetterByte(next) ||
+        (next === 0x2f && isLetterByte(input[position + 2])))
+    ) {
+      while (!isSpaceByte(at(position)) && at(position) !== 0x3e) position += 1;
+      while (getAttribute());
+    } else if (
+      byte === 0x3c &&
+      (next === 0x21 || next === 0x2f || next === 0x3f)
+    ) {
+      position += 1;
+      while (at(position) !== 0x3e) position += 1;
+    }
+  }
+}
+
+/**
+ * The HTML standard's encoding sniffing, as a browser with an English locale
+ * runs it: a byte-order mark, then the Content-Type charset (both certain),
+ * then the prescan, then windows-1252 (both tentative: a `<meta>` the parser
+ * meets can change them).
+ */
+export function sniffEncoding(bytes, contentType) {
+  const bom =
+    bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf
+      ? "utf-8"
+      : bytes[0] === 0xfe && bytes[1] === 0xff
+        ? "utf-16be"
+        : bytes[0] === 0xff && bytes[1] === 0xfe
+          ? "utf-16le"
+          : null;
+  if (bom !== null) return { encoding: bom, certain: true };
+  const transport = transportEncoding(contentType);
+  if (transport !== null) return { encoding: transport, certain: true };
+  return {
+    encoding: prescanEncoding(bytes) ?? "windows-1252",
+    certain: false,
+  };
+}
+
+/**
+ * A parsed document's HTML elements in tree order; with `templates`, template
+ * contents too.
+ */
+function htmlElements(document, { templates = false } = {}) {
   const elements = [];
-  // Tree order, without recursion: a deep page can't overflow the stack.
-  const stack = [parse(html, { scriptingEnabled: true })];
+  // Without recursion: a deep page can't overflow the stack.
+  const stack = [document];
   while (stack.length > 0) {
     const node = stack.pop();
     if (node.namespaceURI === HTML_NAMESPACE) elements.push(node);
-    for (let i = (node.childNodes?.length ?? 0) - 1; i >= 0; i -= 1) {
-      stack.push(node.childNodes[i]);
+    const children =
+      templates && node.content ? node.content.childNodes : node.childNodes;
+    for (let i = (children?.length ?? 0) - 1; i >= 0; i -= 1) {
+      stack.push(children[i]);
     }
   }
-  const attribute = (element, name) =>
-    element.attrs.find((attr) => attr.name === name)?.value;
+  return elements;
+}
+
+/**
+ * The encoding the first `<meta>` the parser meets declares, read as the HTML
+ * standard's "change the encoding" reads it (UTF-16 as UTF-8, x-user-defined
+ * as windows-1252), or null. The parser meets elements in source order,
+ * template contents included; `<noscript>` holds text.
+ */
+function declaredEncoding(document) {
+  const metas = htmlElements(document, { templates: true })
+    .filter(({ tagName }) => tagName === "meta")
+    .sort(
+      (a, b) =>
+        a.sourceCodeLocation.startOffset - b.sourceCodeLocation.startOffset,
+    );
+  for (const meta of metas) {
+    const charset = attribute(meta, "charset");
+    let encoding = charset === undefined ? null : encodingFor(charset);
+    const content = attribute(meta, "content");
+    if (
+      encoding === null &&
+      content !== undefined &&
+      asciiLower(attribute(meta, "http-equiv") ?? "") === "content-type"
+    ) {
+      encoding = extractMetaEncoding(content);
+    }
+    if (encoding === "utf-16be" || encoding === "utf-16le") return "utf-8";
+    if (encoding === "x-user-defined") return "windows-1252";
+    if (encoding !== null) return encoding;
+  }
+  return null;
+}
+
+/**
+ * The URLs a parsed page names as itself, its canonical links and og:url.
+ * Only HTML `<link>` and `<meta>` elements count, not SVG or MathML ones, and
+ * not what template contents, comments, scripts or attribute values hold.
+ * URLs resolve against the page's URL and its first `<base href>`. Values
+ * that aren't URLs are skipped.
+ */
+function canonicalUrlsIn(document, pageUrl) {
+  const elements = htmlElements(document);
   const resolveUrl = (value, base) => {
     try {
       return new URL(value, base).toString();
@@ -486,13 +872,48 @@ export function canonicalUrls(html, pageUrl = PUBLIC_ORIGIN) {
 }
 
 /**
- * canonicalUrls in a worker thread, stopped after `timeout` ms. Resolves
- * `{ urls }`, or `{ error }` when the parse runs out of time or memory or
- * throws, so a page the audit can't read is reported, never passed, and
- * can't stop the run.
+ * The URLs a page's markup names as itself (canonicalUrlsIn), read as a
+ * browser reads them: parse5 (the parser jsdom wraps) builds the tree with
+ * scripting on, as in a browser, so `<noscript>` holds text, not elements.
+ * Character references are decoded. Parsing runs no script and loads
+ * nothing; deep nesting makes it slow, so the audit runs it in a worker it
+ * can stop (readCanonicalUrls).
+ */
+export function canonicalUrls(html, pageUrl = PUBLIC_ORIGIN) {
+  return canonicalUrlsIn(parse(html, { scriptingEnabled: true }), pageUrl);
+}
+
+/**
+ * canonicalUrls for a page's bytes, decoded as a browser decodes them
+ * (sniffEncoding). When the encoding is tentative and the first `<meta>` the
+ * parser meets declares another, the page is decoded again in that one and
+ * parsed again, as a browser does.
+ */
+export function pageCanonicalUrls(bytes, contentType, pageUrl = PUBLIC_ORIGIN) {
+  const { encoding, certain } = sniffEncoding(bytes, contentType);
+  let document = parse(decodeAs(bytes, encoding), {
+    scriptingEnabled: true,
+    sourceCodeLocationInfo: !certain,
+  });
+  // A page read as UTF-16 keeps it whatever a <meta> says.
+  if (!certain && encoding !== "utf-16be" && encoding !== "utf-16le") {
+    const declared = declaredEncoding(document);
+    if (declared !== null && declared !== encoding) {
+      document = parse(decodeAs(bytes, declared), { scriptingEnabled: true });
+    }
+  }
+  return canonicalUrlsIn(document, pageUrl);
+}
+
+/**
+ * pageCanonicalUrls in a worker thread, stopped after `timeout` ms. Resolves
+ * `{ urls }`, or `{ error }` when decoding or parsing runs out of time or
+ * memory or throws, so a page the audit can't read is reported, never
+ * passed, and can't stop the run.
  */
 export function readCanonicalUrls(
-  html,
+  bytes,
+  contentType,
   pageUrl,
   { timeout = DEFAULT_PARSE_TIMEOUT_MS } = {},
 ) {
@@ -501,7 +922,7 @@ export function readCanonicalUrls(
     let worker;
     try {
       worker = new Worker(new URL(import.meta.url), {
-        workerData: { [CANONICAL_WORKER]: { html, pageUrl } },
+        workerData: { [CANONICAL_WORKER]: { bytes, contentType, pageUrl } },
         execArgv: [],
         resourceLimits: { maxOldGenerationSizeMb: PARSE_MEMORY_MB },
       });
@@ -530,36 +951,6 @@ export function readCanonicalUrls(
   });
 }
 
-/**
- * A response body as a browser decodes HTML (the HTML standard's encoding
- * sniffing, in the parts that matter here): a byte-order mark first, then the
- * Content-Type charset, then UTF-8. A <meta charset> can't name UTF-16 (the
- * standard reads that as UTF-8), and every other encoding keeps ASCII as
- * ASCII, so UTF-8 still reads the tags and URLs of a page in one. A charset
- * label TextDecoder doesn't know falls back to UTF-8.
- */
-export function decodeHtml(bytes, contentType) {
-  const bom =
-    bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf
-      ? "utf-8"
-      : bytes[0] === 0xfe && bytes[1] === 0xff
-        ? "utf-16be"
-        : bytes[0] === 0xff && bytes[1] === 0xfe
-          ? "utf-16le"
-          : null;
-  const charset = /;\s*charset\s*=\s*"?([^";\s]+)/i.exec(
-    contentType ?? "",
-  )?.[1];
-  for (const label of [bom, charset, "utf-8"]) {
-    if (!label) continue;
-    try {
-      return new TextDecoder(label).decode(bytes);
-    } catch {
-      // Not a label TextDecoder knows: try the next.
-    }
-  }
-}
-
 async function request(fetchImpl, url, options) {
   const { timeout, retryDelays, sleep, readBody, deadline, now } = options;
   for (let attempt = 0; ; attempt += 1) {
@@ -577,10 +968,8 @@ async function request(fetchImpl, url, options) {
         location: response.headers.get("location"),
       };
       if (readBody && response.status === 200) {
-        result.body = decodeHtml(
-          new Uint8Array(await response.arrayBuffer()),
-          response.headers.get("content-type"),
-        );
+        result.body = new Uint8Array(await response.arrayBuffer());
+        result.contentType = response.headers.get("content-type");
       }
     } catch (error) {
       result = { error: error?.message ?? String(error) };
@@ -596,6 +985,7 @@ async function request(fetchImpl, url, options) {
 /**
  * Follows `url` hop by hop. `stop(url)` ends the walk early (for example on
  * leaving the starting host); a revisited URL or more than MAX_HOPS is a loop.
+ * A Location that isn't a URL ends it too: a browser shows a network error.
  */
 async function walk(fetchImpl, url, options, stop = () => false) {
   const visited = [];
@@ -607,15 +997,56 @@ async function walk(fetchImpl, url, options, stop = () => false) {
     if (response.error !== undefined) {
       return { error: response.error, url: current, visited };
     }
-    const { status, location, body } = response;
+    const { status, location, body, contentType } = response;
     if (status < 300 || status >= 400 || !location) {
-      return { status, url: current, body, visited };
+      return { status, url: current, body, contentType, visited };
     }
-    const next = new URL(location, current).toString();
+    let next;
+    try {
+      next = new URL(location, current).toString();
+    } catch {
+      return { status, url: current, badLocation: location, visited };
+    }
     if (stop(next)) return { status, url: current, location: next, visited };
     current = next;
   }
   return { loop: true, visited };
+}
+
+/**
+ * Vercel's SSO answers a protected host with a temporary redirect to
+ * vercel.com, which says nothing about where a reader lands.
+ */
+function isVercelLogin(status, location) {
+  return (
+    !PERMANENT_STATUSES.has(status) &&
+    /(^|\.)vercel\.com$/.test(new URL(location).hostname)
+  );
+}
+
+/**
+ * A walk's failure that isn't about where it lands (a loop, an error, a
+ * Location that isn't a URL), as the state and fields of a result, or null.
+ */
+function walkFailure(walked, describeLoop) {
+  if (walked.loop) {
+    return ["wrong", { reason: describeLoop(walked.visited) }];
+  }
+  if (walked.error !== undefined) {
+    return [
+      "unreachable",
+      { reason: `${walked.url}: request failed: ${walked.error}` },
+    ];
+  }
+  if (walked.badLocation !== undefined) {
+    return [
+      "wrong",
+      {
+        reason: `${walked.url} answers ${walked.status} with a Location that isn't a URL: ${walked.badLocation}`,
+      },
+    ];
+  }
+  return null;
 }
 
 /**
@@ -656,16 +1087,11 @@ export async function probeDirectHost(
     options,
     (next) => new URL(next).host !== host,
   );
-  if (direct.loop) {
-    return result("wrong", {
-      reason: `loops on its own host: ${direct.visited.join(" -> ")}`,
-    });
-  }
-  if (direct.error !== undefined) {
-    return result("unreachable", {
-      reason: `${direct.url}: request failed: ${direct.error}`,
-    });
-  }
+  const directFailure = walkFailure(
+    direct,
+    (visited) => `loops on its own host: ${visited.join(" -> ")}`,
+  );
+  if (directFailure) return result(...directFailure);
   if (!direct.location) {
     return isUnreachableStatus(direct.status) ||
       (direct.status >= 300 && direct.status < 400)
@@ -677,9 +1103,8 @@ export async function probeDirectHost(
 
   const target = new URL(direct.location);
   if (!PERMANENT_STATUSES.has(direct.status)) {
-    // Vercel's SSO answers a protected host with a temporary redirect to
-    // vercel.com. Any other temporary redirect is the zone's own.
-    return /(^|\.)vercel\.com$/.test(target.hostname)
+    // Any temporary redirect but Vercel's SSO is the zone's own.
+    return isVercelLogin(direct.status, direct.location)
       ? result("unreachable", {
           reason: `answers ${direct.status} to ${target.host}`,
         })
@@ -719,20 +1144,21 @@ export async function probeDirectHost(
         options,
         (next) => !isPublicUrl(new URL(next), publicOrigin),
       );
-      if (reader.loop) {
-        return result("wrong", {
-          reason: `loops: ${reader.visited.join(" -> ")}`,
-        });
-      }
-      if (reader.error !== undefined) {
-        return result("unreachable", {
-          reason: `${reader.url}: request failed: ${reader.error}`,
-        });
-      }
-      // A challenge or an error says nothing about where the reader lands.
+      const readerFailure = walkFailure(
+        reader,
+        (visited) => `loops: ${visited.join(" -> ")}`,
+      );
+      if (readerFailure) return result(...readerFailure);
+      // A challenge, an error or an SSO login says nothing about where the
+      // reader lands.
       if (!reader.location && isUnreachableStatus(reader.status)) {
         return result("unreachable", {
           reason: `${reader.url} answers ${reader.status}`,
+        });
+      }
+      if (reader.location && isVercelLogin(reader.status, reader.location)) {
+        return result("unreachable", {
+          reason: `${reader.url} answers ${reader.status} to ${new URL(reader.location).host}`,
         });
       }
       const readerLands = reader.location ?? reader.url;
@@ -755,12 +1181,19 @@ export async function probeDirectHost(
     { ...options, readBody: requirePage },
     (next) => !isPublicUrl(new URL(next), publicOrigin),
   );
-  if (landed.loop) {
-    return result("wrong", { reason: `loops: ${landed.visited.join(" -> ")}` });
-  }
-  if (landed.error !== undefined) {
+  const landedFailure = walkFailure(
+    landed,
+    (visited) => `loops: ${visited.join(" -> ")}`,
+  );
+  if (landedFailure) return result(...landedFailure);
+  // The walk stops before an SSO login too (a test mirror behind Vercel's
+  // SSO, given as --public-origin), without following it.
+  if (
+    landed.location !== undefined &&
+    isVercelLogin(landed.status, landed.location)
+  ) {
     return result("unreachable", {
-      reason: `${landed.url}: request failed: ${landed.error}`,
+      reason: `${landed.url} answers ${landed.status} to ${new URL(landed.location).host}`,
     });
   }
   if (landed.location !== undefined) {
@@ -798,9 +1231,12 @@ export async function probeDirectHost(
         reason: `${landed.url}: ${DEADLINE_ERROR}`,
       });
     }
-    const read = await readCanonicalUrls(landed.body, landed.url, {
-      timeout: left,
-    });
+    const read = await readCanonicalUrls(
+      landed.body,
+      landed.contentType,
+      landed.url,
+      { timeout: left },
+    );
     if (read.error !== undefined) {
       return result("unreachable", {
         reason: `couldn't read the canonical links of ${landed.url}: ${read.error}`,
@@ -1082,8 +1518,8 @@ export async function main(
 }
 
 if (!isMainThread && workerData?.[CANONICAL_WORKER]) {
-  const { html, pageUrl } = workerData[CANONICAL_WORKER];
-  parentPort.postMessage(canonicalUrls(html, pageUrl));
+  const { bytes, contentType, pageUrl } = workerData[CANONICAL_WORKER];
+  parentPort.postMessage(pageCanonicalUrls(bytes, contentType, pageUrl));
 } else if (isMainThread && process.argv[1] === fileURLToPath(import.meta.url)) {
   main().then(
     (code) => {

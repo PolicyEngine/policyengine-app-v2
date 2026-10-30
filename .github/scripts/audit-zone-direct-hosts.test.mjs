@@ -8,13 +8,16 @@ import { setTimeout as delay } from "node:timers/promises";
 import {
   canonicalUrls,
   compileSource,
-  decodeHtml,
   DIRECT_HOST_REDIRECTS,
+  encodingFor,
+  extractMetaEncoding,
   findIframedHosts,
   isProductionVercelHost,
   isUnreachableStatus,
   loadRewrites,
   main,
+  pageCanonicalUrls,
+  prescanEncoding,
   PROBE_PARAM,
   probeDirectHost,
   probeUrls,
@@ -23,7 +26,9 @@ import {
   publicUrlFor,
   readCanonicalUrls,
   redirectKeepsPage,
+  sniffEncoding,
   summarizeRoute,
+  transportEncoding,
   USER_AGENT,
   zoneRoutes,
 } from "./audit-zone-direct-hosts.mjs";
@@ -852,58 +857,443 @@ describe("redirectKeepsPage over every zone in appZoneRoutes.ts", async () => {
   });
 });
 
-describe("decodeHtml", () => {
-  const html = `<link rel="canonical" href="https://a.vercel.app/x">`;
-  const utf16 = (text, littleEndian) => {
-    const bytes = new Uint8Array(text.length * 2);
-    const view = new DataView(bytes.buffer);
-    for (let i = 0; i < text.length; i += 1) {
-      view.setUint16(i * 2, text.charCodeAt(i), littleEndian);
-    }
-    return bytes;
-  };
-  const withBom = (bom, bytes) => new Uint8Array([...bom, ...bytes]);
+/** Bytes from ASCII text and byte lists, in order. */
+const bytesOf = (...parts) =>
+  new Uint8Array(
+    parts.flatMap((part) =>
+      typeof part === "string" ? [...new TextEncoder().encode(part)] : part,
+    ),
+  );
+const utf16 = (text, littleEndian) => {
+  const bytes = new Uint8Array(text.length * 2);
+  const view = new DataView(bytes.buffer);
+  for (let i = 0; i < text.length; i += 1) {
+    view.setUint16(i * 2, text.charCodeAt(i), littleEndian);
+  }
+  return bytes;
+};
+// Between these escapes ISO-2022-JP reads the bytes of "<!--" as two kanji;
+// every other encoding reads a comment that hides the rest of the page.
+const JIS_X_0208 = [0x1b, 0x24, 0x42];
+const BACK_TO_ASCII = [0x1b, 0x28, 0x42];
+const VERCEL_CANONICAL = `<link rel="canonical" href="https://a.vercel.app/x">`;
+const SEEN = [{ kind: "canonical", url: "https://a.vercel.app/x" }];
+const jisOnly = (...before) =>
+  bytesOf(...before, JIS_X_0208, "<!--", BACK_TO_ASCII, VERCEL_CANONICAL);
 
-  test("follows a byte-order mark, then the Content-Type charset, then UTF-8", () => {
+// Every encoding in the Encoding Standard, by name.
+const ENCODINGS = [
+  "utf-8",
+  "ibm866",
+  "iso-8859-2",
+  "iso-8859-3",
+  "iso-8859-4",
+  "iso-8859-5",
+  "iso-8859-6",
+  "iso-8859-7",
+  "iso-8859-8",
+  "iso-8859-8-i",
+  "iso-8859-10",
+  "iso-8859-13",
+  "iso-8859-14",
+  "iso-8859-15",
+  "iso-8859-16",
+  "koi8-r",
+  "koi8-u",
+  "macintosh",
+  "windows-874",
+  "windows-1250",
+  "windows-1251",
+  "windows-1252",
+  "windows-1253",
+  "windows-1254",
+  "windows-1255",
+  "windows-1256",
+  "windows-1257",
+  "windows-1258",
+  "x-mac-cyrillic",
+  "gbk",
+  "gb18030",
+  "big5",
+  "euc-jp",
+  "iso-2022-jp",
+  "shift_jis",
+  "euc-kr",
+  "replacement",
+  "utf-16be",
+  "utf-16le",
+  "x-user-defined",
+];
+
+describe("encodingFor", () => {
+  test("knows every encoding in the Encoding Standard by its name", () => {
+    // This Node needs full ICU, as the official builds have.
+    for (const name of ENCODINGS) assert.equal(encodingFor(name), name);
+  });
+
+  test("resolves a label as the standard does, and nothing else", () => {
     const cases = [
-      [new TextEncoder().encode(html), null],
-      [new TextEncoder().encode(html), "text/html; charset=utf-8"],
-      [withBom([0xef, 0xbb, 0xbf], new TextEncoder().encode(html)), null],
-      [utf16(html, true), "text/html; charset=utf-16le"],
-      [utf16(html, true), 'text/html;charset="UTF-16LE"'],
-      [utf16(html, false), "text/html; charset=utf-16be"],
-      [withBom([0xff, 0xfe], utf16(html, true)), "text/html"],
-      [withBom([0xfe, 0xff], utf16(html, false)), "text/html"],
-      // The BOM wins over a charset that says otherwise.
-      [withBom([0xff, 0xfe], utf16(html, true)), "text/html; charset=utf-8"],
-      // A label TextDecoder doesn't know leaves UTF-8.
-      [new TextEncoder().encode(html), "text/html; charset=no-such-thing"],
+      [" Latin1\n", "windows-1252"],
+      ["ISO-8859-1", "windows-1252"],
+      ["utf8", "utf-8"],
+      ["unicode", "utf-16le"],
+      ["csiso2022kr", "replacement"],
+      ["ISO-2022-KR", "replacement"],
+      ["hz-gb-2312", "replacement"],
+      ["no-such-thing", null],
+      ["", null],
+      ["utf 8", null],
+      // Only ASCII whitespace trims, and only ASCII letters fold.
+      ["\vutf-8", null],
+      ["utf-8 ", null],
+      ["Koi8-r", null],
     ];
-    for (const [bytes, contentType] of cases) {
-      assert.equal(decodeHtml(bytes, contentType), html, String(contentType));
+    for (const [label, encoding] of cases) {
+      assert.equal(encodingFor(label), encoding, JSON.stringify(label));
+    }
+  });
+});
+
+describe("transportEncoding", () => {
+  test("reads the charset as Fetch does, quoted strings and all", () => {
+    const cases = [
+      [null, null],
+      ["text/html", null],
+      ["text/html; charset=UTF-8", "utf-8"],
+      ['text/html;profile=";charset=utf-16le";charset=koi8-r', "koi8-r"],
+      ['text/html;charset="utf\\-16le"', "utf-16le"],
+      // An unclosed quote runs to the end.
+      ['text/html;charset="koi8-r', "koi8-r"],
+      ["text/html;charset=no-such-thing", null],
+      ["text/html;charset=iso-2022-kr", "replacement"],
+      ["text/html;charset=koi8-r;charset=utf-8", "koi8-r"],
+      ["nonsense", null],
+    ];
+    for (const [contentType, encoding] of cases) {
+      assert.equal(transportEncoding(contentType), encoding, contentType);
     }
   });
 
-  test("keeps ASCII markup in a legacy single-byte page", () => {
-    const latin1 = new Uint8Array([...new TextEncoder().encode(html), 0xe9]);
-    assert.equal(
-      decodeHtml(latin1, "text/html; charset=windows-1252"),
-      `${html}é`,
+  test("reads several Content-Type values as Fetch does", () => {
+    const cases = [
+      ['text/html;x="a,b";charset=koi8-r', "koi8-r"],
+      ["text/html;charset=koi8-r, text/html", "koi8-r"],
+      ["text/html, text/html;charset=koi8-r", "koi8-r"],
+      ["text/plain;charset=koi8-r, text/html", null],
+      ["text/html;charset=koi8-r, */*", "koi8-r"],
+      ["text/html;charset=koi8-r, nonsense", "koi8-r"],
+      // An escaped quote doesn't end the quoted string.
+      ['text/html;x="a\\",b";charset=koi8-r', "koi8-r"],
+      // A value without a charset takes the first type's, not the last one's.
+      [
+        "text/html;charset=koi8-r, text/html;charset=utf-8, text/html",
+        "koi8-r",
+      ],
+    ];
+    for (const [contentType, encoding] of cases) {
+      assert.equal(transportEncoding(contentType), encoding, contentType);
+    }
+  });
+});
+
+describe("extractMetaEncoding", () => {
+  test("reads a content attribute's charset as the HTML standard does", () => {
+    const cases = [
+      ["text/html; charset=koi8-r", "koi8-r"],
+      ["text/html;CHARSET = 'KOI8-R'", "koi8-r"],
+      ['charset="koi8-r"', "koi8-r"],
+      ['charset="koi8-r', null],
+      ["charset=koi8-r;x", "koi8-r"],
+      ["charset=koi8-r x", "koi8-r"],
+      ["charsetcharset=koi8-r", "koi8-r"],
+      ["charset;charset=koi8-r", "koi8-r"],
+      ["charset=", null],
+      ["charset", null],
+      ["text/html", null],
+      ["charset=no-such-thing", null],
+      ["charset=utf-16le", "utf-16le"],
+    ];
+    for (const [content, encoding] of cases) {
+      assert.equal(extractMetaEncoding(content), encoding, content);
+    }
+  });
+});
+
+describe("prescanEncoding", () => {
+  test("finds a declaration in the first 1024 bytes as the HTML standard does", () => {
+    const cases = [
+      ['<meta charset="koi8-r">', "koi8-r"],
+      ["<META CHARSET=KOI8-R>", "koi8-r"],
+      ["<meta charset='koi8-r'>", "koi8-r"],
+      ["<meta/charset=koi8-r>", "koi8-r"],
+      ['<!doctype html><html lang="en"><head><meta charset=koi8-r>', "koi8-r"],
+      [
+        '<meta http-equiv="Content-Type" content="text/html; charset=koi8-r">',
+        "koi8-r",
+      ],
+      [
+        '<meta content="text/html; charset=koi8-r" http-equiv=content-type>',
+        "koi8-r",
+      ],
+      ['<meta content="text/html; charset=koi8-r">', null],
+      ['<meta http-equiv=refresh content="text/html; charset=koi8-r">', null],
+      ["<meta charset=koi8-r charset=windows-1251>", "koi8-r"],
+      [
+        '<meta content="charset=koi8-r" http-equiv=content-type charset=windows-1251>',
+        "windows-1251",
+      ],
+      ["<meta charset=no-such-thing><meta charset=koi8-r>", "koi8-r"],
+      ["<meta name=viewport><meta charset=koi8-r>", "koi8-r"],
+      [
+        '<meta charset=koi8-r content="charset=windows-1251" http-equiv=content-type>',
+        "koi8-r",
+      ],
+      ["<meta charset=utf-16le>", "utf-8"],
+      ["<meta charset=x-user-defined>", "windows-1252"],
+      ["<meta charset=iso-2022-kr>", "replacement"],
+      ["<metal charset=koi8-r>", null],
+      [`${" ".repeat(1000)}<meta charset=koi8-r>`, "koi8-r"],
+      [`${" ".repeat(1010)}<meta charset=koi8-r>`, null],
+      ["", null],
+    ];
+    for (const [text, encoding] of cases) {
+      assert.equal(prescanEncoding(bytesOf(text)), encoding, text);
+    }
+  });
+
+  test("skips comments and other tags as the standard does, not as a parser does", () => {
+    const cases = [
+      ["<!-- <meta charset=koi8-r> -->", null],
+      ["<!--><meta charset=koi8-r>", "koi8-r"],
+      ["<!---><meta charset=koi8-r>-->", "koi8-r"],
+      ["<!-- a > <meta charset=koi8-r> -->", null],
+      ["<!-- -> <meta charset=koi8-r> -->", null],
+      ['<a title="<meta charset=koi8-r>">', null],
+      ["<a title=x><meta charset=koi8-r>", "koi8-r"],
+      ["</a title=<meta charset=koi8-r>", null],
+      ['</a title=">" <meta charset=koi8-r>', null],
+      ["<!x <meta charset=koi8-r>", null],
+      ["<?php <meta charset=koi8-r> ?>", null],
+      // The prescan knows nothing of scripts; the parser does (pageCanonicalUrls).
+      ["<script>'<meta charset=koi8-r>'</script>", "koi8-r"],
+    ];
+    for (const [text, encoding] of cases) {
+      assert.equal(prescanEncoding(bytesOf(text)), encoding, text);
+    }
+  });
+
+  test("falls back on an XML declaration", () => {
+    const cases = [
+      ['<?xml version="1.0" encoding="koi8-r"?>', "koi8-r"],
+      ["<?xml version='1.0' encoding = 'utf-16'?>", "utf-8"],
+      ['<?xml encoding="koi8-r"?><meta charset=windows-1251>', "windows-1251"],
+      ['<?xml version="1.0"?>', null],
+      ['<?xml encoding="koi 8"?>', null],
+      ['<?xml encoding=" koi8-r"?>', null],
+    ];
+    for (const [text, encoding] of cases) {
+      assert.equal(prescanEncoding(bytesOf(text)), encoding, text);
+    }
+    const declaration = '<?xml version="1.0"?>';
+    assert.equal(prescanEncoding(utf16(declaration, true)), "utf-16le");
+    assert.equal(prescanEncoding(utf16(declaration, false)), "utf-16be");
+  });
+});
+
+describe("sniffEncoding", () => {
+  test("takes a byte-order mark, the Content-Type charset, the prescan, then windows-1252", () => {
+    const meta = "<meta charset=koi8-r>";
+    const cases = [
+      [
+        bytesOf([0xef, 0xbb, 0xbf], meta),
+        "text/html;charset=windows-1251",
+        "utf-8",
+        true,
+      ],
+      [bytesOf([0xff, 0xfe]), "text/html;charset=utf-8", "utf-16le", true],
+      [bytesOf([0xfe, 0xff]), null, "utf-16be", true],
+      [bytesOf(meta), "text/html;charset=windows-1251", "windows-1251", true],
+      [bytesOf(meta), "text/html;charset=iso-2022-kr", "replacement", true],
+      // A label that names nothing leaves the prescan to decide.
+      [bytesOf(meta), "text/html;charset=no-such-thing", "koi8-r", false],
+      [bytesOf(meta), "text/html", "koi8-r", false],
+      [bytesOf("<p>"), null, "windows-1252", false],
+    ];
+    for (const [bytes, contentType, encoding, certain] of cases) {
+      assert.deepEqual(
+        sniffEncoding(bytes, contentType),
+        { encoding, certain },
+        `${contentType}: ${new TextDecoder().decode(bytes)}`,
+      );
+    }
+  });
+});
+
+describe("pageCanonicalUrls", () => {
+  test("decodes a page in the encoding a browser picks", () => {
+    const cases = [
+      // A <meta> names ISO-2022-JP, which shows the link.
+      [jisOnly("<meta charset=iso-2022-jp>"), null, SEEN],
+      [jisOnly("<meta charset=iso-2022-jp>"), "text/html;charset=nope", SEEN],
+      [jisOnly(), "text/html;charset=iso-2022-jp", SEEN],
+      // Anything else hides it.
+      [jisOnly(), null, []],
+      [jisOnly("<meta charset=iso-2022-jp>"), "text/html;charset=utf-8", []],
+      // An ISO-2022-KR label names the replacement encoding: one U+FFFD.
+      [bytesOf(VERCEL_CANONICAL), "text/html;charset=iso-2022-kr", []],
+      [bytesOf("<meta charset=iso-2022-kr>", VERCEL_CANONICAL), null, []],
+      // A quoted parameter that mentions a charset isn't one.
+      [
+        bytesOf(VERCEL_CANONICAL),
+        'text/html;profile=";charset=utf-16le";charset=utf-8',
+        SEEN,
+      ],
+      [utf16(VERCEL_CANONICAL, true), 'text/html;charset="utf\\-16le"', SEEN],
+    ];
+    for (const [bytes, contentType, urls] of cases) {
+      assert.deepEqual(
+        pageCanonicalUrls(bytes, contentType),
+        urls,
+        `${contentType}: ${new TextDecoder().decode(bytes)}`,
+      );
+    }
+  });
+
+  test("reads an undeclared page as windows-1252, not UTF-8", () => {
+    // UTF-8 would read U+FFFD, which no host can hold, and skip the link.
+    const bytes = bytesOf(
+      '<link rel="canonical" href="https://caf',
+      [0xe9],
+      '.vercel.app/x">',
     );
-    assert.ok(decodeHtml(latin1, null).startsWith(html));
+    assert.deepEqual(pageCanonicalUrls(bytes, null), [
+      { kind: "canonical", url: "https://xn--caf-dma.vercel.app/x" },
+    ]);
+    assert.deepEqual(pageCanonicalUrls(bytes, "text/html;charset=utf-8"), []);
+  });
+
+  test("decodes again when the first <meta> the parser meets names another encoding", () => {
+    const pad = `<!--${" ".repeat(1024)}-->`;
+    const cases = [
+      // Past the prescan's 1024 bytes, the parser still meets the <meta>.
+      [jisOnly(pad, "<meta charset=iso-2022-jp>"), SEEN],
+      [
+        jisOnly(
+          pad,
+          '<meta http-equiv="content-type" content="text/html;charset=iso-2022-jp">',
+        ),
+        SEEN,
+      ],
+      [jisOnly(pad, "<template><meta charset=iso-2022-jp></template>"), SEEN],
+      [
+        jisOnly(
+          pad,
+          "<template><meta charset=iso-2022-jp></template><meta charset=utf-8>",
+        ),
+        SEEN,
+      ],
+      [jisOnly(pad, "<svg><meta charset=iso-2022-jp></svg>"), SEEN],
+      // Scripting is on, so a <noscript> holds text.
+      [jisOnly(pad, "<noscript><meta charset=iso-2022-jp></noscript>"), []],
+      // The first <meta> in the source decides, though the second one, moved
+      // out of the table, comes first in the tree.
+      [
+        jisOnly(
+          pad,
+          "<table><tr><td><meta charset=iso-2022-jp></td></tr><meta charset=utf-8></table>",
+        ),
+        SEEN,
+      ],
+      [jisOnly(pad, "<meta charset=utf-8><meta charset=iso-2022-jp>"), []],
+      // A content charset counts only with http-equiv="content-type".
+      [jisOnly(pad, '<meta content="text/html;charset=iso-2022-jp">'), []],
+      [
+        jisOnly(pad, "<meta charset=no-such-thing><meta charset=iso-2022-jp>"),
+        SEEN,
+      ],
+      // The prescan reads a <meta> inside a script; the parser meets the
+      // next one and decodes the page again, which hides the link.
+      [
+        jisOnly(
+          "<script>'<meta charset=iso-2022-jp>'</script><meta charset=utf-8>",
+        ),
+        [],
+      ],
+      // A <meta> naming UTF-16 means UTF-8.
+      [jisOnly(pad, "<meta charset=utf-16le><meta charset=iso-2022-jp>"), []],
+    ];
+    for (const [bytes, urls] of cases) {
+      assert.deepEqual(
+        pageCanonicalUrls(bytes, null),
+        urls,
+        new TextDecoder().decode(bytes).trim(),
+      );
+    }
+  });
+
+  test("reads a late <meta> naming UTF-16 as UTF-8, and x-user-defined as windows-1252", () => {
+    const pad = `<!--${" ".repeat(1024)}-->`;
+    // "café", in the bytes of the encoding the page should be read in.
+    const cafe = (meta, eAcute) =>
+      bytesOf(
+        pad,
+        meta,
+        '<link rel="canonical" href="https://caf',
+        eAcute,
+        '.vercel.app/x">',
+      );
+    const seen = [
+      { kind: "canonical", url: "https://xn--caf-dma.vercel.app/x" },
+    ];
+    assert.deepEqual(
+      pageCanonicalUrls(cafe("<meta charset=utf-16le>", [0xc3, 0xa9]), null),
+      seen,
+    );
+    assert.deepEqual(
+      pageCanonicalUrls(cafe("<meta charset=x-user-defined>", [0xe9]), null),
+      seen,
+    );
+  });
+
+  test("keeps UTF-16 from an XML declaration whatever a <meta> says", () => {
+    const html = `<?xml version="1.0"?><meta charset=utf-8>${VERCEL_CANONICAL}`;
+    assert.deepEqual(pageCanonicalUrls(utf16(html, true), null), SEEN);
+    assert.deepEqual(pageCanonicalUrls(utf16(html, false), null), SEEN);
+  });
+
+  test("reads what canonicalUrls does from UTF-8 bytes", () => {
+    const html = `<link rel="canonical" href="https://a.vercel.app/x"><meta property="og:url" content="/y">`;
+    assert.deepEqual(
+      pageCanonicalUrls(bytesOf(html), "text/html; charset=utf-8"),
+      canonicalUrls(html),
+    );
   });
 });
 
 describe("readCanonicalUrls", () => {
-  test("answers what canonicalUrls does, from a worker", async () => {
-    for (const html of [
-      `<link rel="canonical" href="https://a.vercel.app/x"><meta property="og:url" content="/y">`,
-      `<noscript><link rel="canonical" href="https://a.vercel.app/x"></noscript>`,
-      "",
+  const utf8 = "text/html; charset=utf-8";
+
+  test("answers what pageCanonicalUrls does, from a worker", async () => {
+    for (const [bytes, contentType] of [
+      [
+        bytesOf(
+          `<link rel="canonical" href="https://a.vercel.app/x"><meta property="og:url" content="/y">`,
+        ),
+        utf8,
+      ],
+      [
+        bytesOf(
+          `<noscript><link rel="canonical" href="https://a.vercel.app/x"></noscript>`,
+        ),
+        utf8,
+      ],
+      [jisOnly("<meta charset=iso-2022-jp>"), null],
+      [bytesOf(""), null],
     ]) {
-      assert.deepEqual(await readCanonicalUrls(html, PUBLIC_ORIGIN), {
-        urls: canonicalUrls(html, PUBLIC_ORIGIN),
-      });
+      assert.deepEqual(
+        await readCanonicalUrls(bytes, contentType, PUBLIC_ORIGIN),
+        { urls: pageCanonicalUrls(bytes, contentType, PUBLIC_ORIGIN) },
+      );
     }
   });
 
@@ -915,22 +1305,37 @@ describe("readCanonicalUrls", () => {
         .length;
     await delay(200);
     const before = ports();
-    await readCanonicalUrls("<div>".repeat(50_000), PUBLIC_ORIGIN, {
-      timeout: 100,
-    });
+    await readCanonicalUrls(
+      bytesOf("<div>".repeat(50_000)),
+      utf8,
+      PUBLIC_ORIGIN,
+      {
+        timeout: 100,
+      },
+    );
     assert.equal(ports(), before, "after a parse it stopped");
-    await readCanonicalUrls("<p>", PUBLIC_ORIGIN);
+    await readCanonicalUrls(bytesOf("<p>"), utf8, PUBLIC_ORIGIN);
     assert.equal(ports(), before, "after a parse that finished");
   });
 
   test("stops a parse that runs past its time", async () => {
     // parse5 slows with depth: this takes seconds.
-    const html = `${"<div>".repeat(50_000)}${"</div>".repeat(50_000)}`;
+    const bytes = bytesOf(
+      `${"<div>".repeat(50_000)}${"</div>".repeat(50_000)}`,
+    );
     const started = Date.now();
-    const read = await readCanonicalUrls(html, PUBLIC_ORIGIN, { timeout: 200 });
+    const read = await readCanonicalUrls(bytes, utf8, PUBLIC_ORIGIN, {
+      timeout: 200,
+    });
     const took = Date.now() - started;
     assert.match(read.error, /took over 200 ms/);
     assert.ok(took < 2000, `took ${took} ms with a 200 ms limit`);
+  });
+
+  test("answers an error when it can't start the worker", async () => {
+    // A function can't be copied to a worker.
+    const read = await readCanonicalUrls(() => {}, utf8, PUBLIC_ORIGIN);
+    assert.match(read.error, /could not be cloned/);
   });
 });
 
@@ -1031,6 +1436,49 @@ describe("probeDirectHost", () => {
         { publicUrl: publicUnknown },
       );
       assert.equal(result.state, "unreachable");
+    });
+
+    test("reports the public URL behind Vercel's SSO as unreachable", async () => {
+      for (const status of [302, 307]) {
+        const login = "https://vercel.com/sso-api?url=x";
+        const fetchImpl = fakeFetch({
+          ...zoneTable,
+          [publicUnknown]: { status, location: login },
+        });
+        const result = await probeDirectHost(REWRITES, unknown, {
+          fetchImpl,
+          ...noWait,
+          publicUrl: publicUnknown,
+        });
+        assert.equal(
+          result.state,
+          "unreachable",
+          `${status}: ${result.reason}`,
+        );
+        assert.match(
+          result.reason,
+          new RegExp(`answers ${status} to vercel\\.com`),
+        );
+        assert.ok(!fetchImpl.calls.includes(login), `fetched ${login}`);
+      }
+      // Not a permanent redirect there, though.
+      const permanentLogin = await run(
+        { ...zoneTable, [publicUnknown]: permanent("https://vercel.com/x") },
+        { publicUrl: publicUnknown },
+      );
+      assert.equal(permanentLogin.state, "wrong");
+    });
+
+    test("fails a public URL whose Location isn't a URL", async () => {
+      const result = await run(
+        {
+          ...zoneTable,
+          [publicUnknown]: { status: 308, location: "http://[" },
+        },
+        { publicUrl: publicUnknown },
+      );
+      assert.equal(result.state, "wrong");
+      assert.match(result.reason, /Location that isn't a URL/);
     });
 
     test("reports a challenge or an error on the public URL as unreachable", async () => {
@@ -1362,6 +1810,92 @@ describe("probeDirectHost", () => {
       });
       assert.equal(result.state, "wrong", result.reason);
       assert.match(result.reason, /names .*vercel\.app.* as its canonical/);
+    }
+  });
+
+  test("reads a page in the encoding a browser picks", async () => {
+    // UTF-8 would read a comment here, which hides the link.
+    const html = `<link rel="canonical" href="${DIRECT}">`;
+    const result = await probe({
+      [DIRECT]: permanent(PUBLIC),
+      [PUBLIC]: {
+        status: 200,
+        bytes: bytesOf(
+          "<meta charset=iso-2022-jp>",
+          JIS_X_0208,
+          "<!--",
+          BACK_TO_ASCII,
+          html,
+        ),
+        contentType: "text/html",
+      },
+    });
+    assert.equal(result.state, "wrong", result.reason);
+    assert.match(result.reason, /names .*vercel\.app.* as its canonical/);
+  });
+
+  test("reports a public URL behind Vercel's SSO as unreachable, without following it", async () => {
+    // As with a test mirror of the website, given as --public-origin.
+    const mirror = "https://website-mirror.vercel.app";
+    const mirrored = PUBLIC.replace(PUBLIC_ORIGIN, mirror);
+    for (const [publicOrigin, target] of [
+      [mirror, mirrored],
+      [PUBLIC_ORIGIN, PUBLIC],
+    ]) {
+      for (const login of [
+        "https://vercel.com/sso-api?url=x",
+        "https://sso.vercel.com/login",
+      ]) {
+        for (const status of [302, 303, 307]) {
+          const fetchImpl = fakeFetch({
+            [DIRECT]: permanent(target),
+            [target]: { status, location: login },
+          });
+          const result = await probeDirectHost(REWRITES, DIRECT, {
+            fetchImpl,
+            publicOrigin,
+            ...noWait,
+          });
+          const label = `${publicOrigin} ${status} ${login}`;
+          assert.equal(
+            result.state,
+            "unreachable",
+            `${label}: ${result.reason}`,
+          );
+          assert.match(result.reason, /vercel\.com/, label);
+          assert.ok(!fetchImpl.calls.includes(login), `fetched ${login}`);
+        }
+      }
+    }
+  });
+
+  test("fails a permanent redirect to vercel.com, or a temporary one elsewhere", async () => {
+    for (const answer of [
+      permanent("https://vercel.com/sso-api?url=x"),
+      { status: 302, location: "https://vercel.com.example.com/sso-api" },
+      { status: 302, location: "https://example.com/login" },
+    ]) {
+      const result = await probe({
+        [DIRECT]: permanent(PUBLIC),
+        [PUBLIC]: answer,
+      });
+      assert.equal(result.state, "wrong", JSON.stringify(answer));
+      assert.match(result.reason, /off the site/);
+    }
+  });
+
+  test("fails a Location that isn't a URL, on either host", async () => {
+    const bad = { status: 308, location: "http://[" };
+    for (const table of [
+      { [DIRECT]: bad },
+      { [DIRECT]: permanent(PUBLIC), [PUBLIC]: bad },
+    ]) {
+      const result = await probe(table);
+      assert.equal(result.state, "wrong", result.reason);
+      assert.match(
+        result.reason,
+        /answers 308 with a Location that isn't a URL: http:\/\/\[/,
+      );
     }
   });
 
@@ -1786,6 +2320,15 @@ describe("main", () => {
     assert.equal(code, 0);
     assert.match(output, /UNREACHABLE \/us\/ballot-measures-2026/);
     assert.match(output, /couldn't read the canonical links/);
+  });
+
+  test("fails a zone whose Location isn't a URL, and finishes the run", async () => {
+    const { code, output } = await run({
+      ...redirecting,
+      [DEEP]: { status: 308, location: "http://[" },
+    });
+    assert.equal(code, 1);
+    assert.match(output, /Location that isn't a URL/);
   });
 
   test("ends near the deadline when every request hangs", async () => {
