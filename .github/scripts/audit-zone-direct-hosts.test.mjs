@@ -18,6 +18,7 @@ import {
   probeUrls,
   proxiedUrl,
   PUBLIC_ORIGIN,
+  publicUrlFor,
   redirectKeepsPage,
   summarizeRoute,
   USER_AGENT,
@@ -263,8 +264,104 @@ describe("probeUrls", () => {
         `${PUBLIC_ORIGIN}/us/pe84/direct-host-audit?${PROBE_PARAM}=1`,
       ],
     ]);
-    // The year in review has no deep rewrite, so its second probe has no public URL.
-    assert.equal(named("/us/2025-year-in-review")[1][1], undefined);
+    // The UK view's own route names it, though the US route also proxies there.
+    assert.deepEqual(
+      named("/uk/marriage").map(([, publicUrl]) => publicUrl),
+      [
+        `${PUBLIC_ORIGIN}/uk/marriage?${PROBE_PARAM}=1`,
+        `${PUBLIC_ORIGIN}/uk/marriage/direct-host-audit?${PROBE_PARAM}=1`,
+      ],
+    );
+    // The year in review has no deep rewrite under its route, so its second
+    // probe's public URL comes from the asset route that serves it.
+    assert.deepEqual(named("/us/2025-year-in-review"), [
+      [
+        `https://policyengine-2025-year-in-review.vercel.app/2025-year-in-review/us?${PROBE_PARAM}=1`,
+        `${PUBLIC_ORIGIN}/us/2025-year-in-review?${PROBE_PARAM}=1`,
+      ],
+      [
+        `https://policyengine-2025-year-in-review.vercel.app/2025-year-in-review/us/direct-host-audit?${PROBE_PARAM}=1`,
+        `${PUBLIC_ORIGIN}/2025-year-in-review/us/direct-host-audit?${PROBE_PARAM}=1`,
+      ],
+    ]);
+  });
+});
+
+describe("publicUrlFor", () => {
+  test("runs each rewrite backwards and keeps a URL that proxies back", () => {
+    const cases = [
+      [
+        `${BALLOT_HOST}/us/ballot-measures-2026/x?a=1`,
+        `${PUBLIC_ORIGIN}/us/ballot-measures-2026/x?a=1`,
+      ],
+      [
+        "https://cliff-watch.vercel.app/benefits",
+        `${PUBLIC_ORIGIN}/us/cliffwatch/benefits`,
+      ],
+      [
+        "https://april-fools-2026-two.vercel.app/us/pe84/calculator",
+        `${PUBLIC_ORIGIN}/us/pe84`,
+      ],
+      [
+        "https://policyengine-2025-year-in-review.vercel.app/2025-year-in-review/us/x",
+        `${PUBLIC_ORIGIN}/2025-year-in-review/us/x`,
+      ],
+      // The shared host's US rule serves its UK view too, query and all.
+      [
+        "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
+        `${PUBLIC_ORIGIN}/us/marriage?country=uk`,
+      ],
+    ];
+    for (const [zoneUrl, expected] of cases) {
+      assert.equal(publicUrlFor(REWRITES, zoneUrl), expected, zoneUrl);
+    }
+  });
+
+  test("skips a URL that an earlier rewrite sends elsewhere", () => {
+    const shadowed = [
+      { source: "/a/special", destination: "https://other.vercel.app/x" },
+      { source: "/a/:path*", destination: "https://z.vercel.app/:path*" },
+    ];
+    assert.equal(publicUrlFor(shadowed, "https://z.vercel.app/special"), null);
+    assert.equal(
+      publicUrlFor(shadowed, "https://z.vercel.app/plain"),
+      `${PUBLIC_ORIGIN}/a/plain`,
+    );
+  });
+
+  test("finds nothing for a host or path no rewrite serves", () => {
+    assert.equal(publicUrlFor(REWRITES, "https://other.vercel.app/x"), null);
+    assert.equal(publicUrlFor(REWRITES, `${BALLOT_HOST}/somewhere-else`), null);
+  });
+
+  test("names a URL that proxies to the zone URL, for every zone URL it names one for", () => {
+    const random = mulberry32(20261031);
+    for (const zone of zoneRoutes(REWRITES)) {
+      for (let i = 0; i < 50; i += 1) {
+        const { suffix, search } = randomSuffixAndQuery(random);
+        const zoneUrl = new URL(zone.destination);
+        zoneUrl.pathname =
+          `${zoneUrl.pathname.replace(/\/$/, "")}${suffix}` || "/";
+        for (const [key, value] of new URLSearchParams(search)) {
+          zoneUrl.searchParams.append(key, value);
+        }
+        const found = publicUrlFor(REWRITES, zoneUrl.toString());
+        const label = `seed 20261031 ${zone.source} case ${i}: ${zoneUrl}`;
+        assert.ok(found, label);
+        const back = new URL(proxiedUrl(REWRITES, found).url);
+        assert.equal(back.host, zoneUrl.host, label);
+        assert.equal(
+          back.pathname.replace(/\/$/, ""),
+          zoneUrl.pathname.replace(/\/$/, ""),
+          label,
+        );
+        assert.deepEqual(
+          [...back.searchParams].map(String).sort(),
+          [...zoneUrl.searchParams].map(String).sort(),
+          label,
+        );
+      }
+    }
   });
 });
 
@@ -487,6 +584,65 @@ describe("canonicalUrls", () => {
     }
     assert.equal(canonicalUrls(`<!-- old --> ${old}`).length, 1);
   });
+
+  test("reads markup as HTML does, not as text", () => {
+    const old = `<link rel="canonical" href="https://a.vercel.app/x">`;
+    // Comment- and script-like text inside an attribute doesn't hide what follows.
+    for (const before of [
+      `<div title="<!--"></div>`,
+      `<div title="<script>"></div>`,
+    ]) {
+      assert.deepEqual(
+        canonicalUrls(`${before}${old}`).map(({ url }) => url),
+        ["https://a.vercel.app/x"],
+        before,
+      );
+    }
+    // Inside nested templates, or as an attribute's text, it isn't a link.
+    for (const html of [
+      `<template><template></template>${old}</template>`,
+      `<div data-x='${old}'></div>`,
+    ]) {
+      assert.deepEqual(canonicalUrls(html), [], html);
+    }
+  });
+
+  test("matches rel and property in any case", () => {
+    assert.deepEqual(
+      canonicalUrls(
+        `<link rel="Canonical" href="https://a.vercel.app/x"><meta property="OG:URL" content="https://b.vercel.app/y">`,
+      ).map(({ kind, url }) => [kind, url]),
+      [
+        ["canonical", "https://a.vercel.app/x"],
+        ["og:url", "https://b.vercel.app/y"],
+      ],
+    );
+  });
+
+  test("skips a value that isn't a URL and reads the rest", () => {
+    assert.deepEqual(
+      canonicalUrls(
+        `<link rel="canonical" href="https://[bad"><meta property="og:url" content="https://a.vercel.app/x">`,
+      ).map(({ url }) => url),
+      ["https://a.vercel.app/x"],
+    );
+  });
+
+  test("decodes every character reference, and survives invalid ones", () => {
+    // URL parsing drops the tab that &Tab; decodes to.
+    assert.deepEqual(
+      canonicalUrls(
+        `<link rel="canonical" href="https&Tab;://ballot-measures-2026.vercel.app/us/x">`,
+      ).map(({ url }) => url),
+      ["https://ballot-measures-2026.vercel.app/us/x"],
+    );
+    assert.deepEqual(
+      canonicalUrls(
+        `<link rel="canonical" title="&#1114112;" href="${PUBLIC_ORIGIN}/us/x">`,
+      ).map(({ url }) => url),
+      [`${PUBLIC_ORIGIN}/us/x`],
+    );
+  });
 });
 
 // Seeded so a failure reproduces; the message names the seed and the case.
@@ -676,6 +832,149 @@ describe("probeDirectHost", () => {
         { publicUrl: publicUnknown },
       );
       assert.equal(result.state, "unreachable");
+    });
+
+    test("reports a challenge or an error on the public URL as unreachable", async () => {
+      for (const status of [401, 403, 429, 503]) {
+        const result = await run(
+          { ...zoneTable, [publicUnknown]: { status } },
+          { publicUrl: publicUnknown },
+        );
+        assert.equal(
+          result.state,
+          "unreachable",
+          `${status}: ${result.reason}`,
+        );
+        assert.match(result.reason, new RegExp(`answers ${status}`));
+      }
+    });
+
+    test("passes when the reader lands on another public URL for the same zone page", async () => {
+      // The year in review: its deep page normalizes to its root on the zone
+      // host. The direct visit is sent to the route, /us/2025-year-in-review;
+      // a reader of the asset path lands on /2025-year-in-review/us. Both
+      // proxy to the same zone URL.
+      const year = "https://policyengine-2025-year-in-review.vercel.app";
+      const deep = `${year}/2025-year-in-review/us/direct-host-audit?${PROBE_PARAM}=1`;
+      const publicDeep = `${PUBLIC_ORIGIN}/2025-year-in-review/us/direct-host-audit?${PROBE_PARAM}=1`;
+      const route = `${PUBLIC_ORIGIN}/us/2025-year-in-review?${PROBE_PARAM}=1`;
+      const result = await probeDirectHost(REWRITES, deep, {
+        fetchImpl: fakeFetch({
+          [deep]: permanent(`/2025-year-in-review/us?${PROBE_PARAM}=1`),
+          [`${year}/2025-year-in-review/us?${PROBE_PARAM}=1`]: permanent(route),
+          [publicDeep]: permanent(`/2025-year-in-review/us?${PROBE_PARAM}=1`),
+          [`${PUBLIC_ORIGIN}/2025-year-in-review/us?${PROBE_PARAM}=1`]: page,
+          [route]: page,
+        }),
+        ...noWait,
+        requirePage: false,
+        publicUrl: publicDeep,
+      });
+      assert.equal(result.state, "ok", result.reason);
+    });
+
+    test("fails when the reader lands on a public URL for another zone page", async () => {
+      const year = "https://policyengine-2025-year-in-review.vercel.app";
+      const deep = `${year}/2025-year-in-review/us/direct-host-audit?${PROBE_PARAM}=1`;
+      const publicDeep = `${PUBLIC_ORIGIN}/2025-year-in-review/us/direct-host-audit?${PROBE_PARAM}=1`;
+      const route = `${PUBLIC_ORIGIN}/us/2025-year-in-review?${PROBE_PARAM}=1`;
+      const other = `${PUBLIC_ORIGIN}/2025-year-in-review/us/other?${PROBE_PARAM}=1`;
+      const result = await probeDirectHost(REWRITES, deep, {
+        fetchImpl: fakeFetch({
+          [deep]: permanent(`/2025-year-in-review/us?${PROBE_PARAM}=1`),
+          [`${year}/2025-year-in-review/us?${PROBE_PARAM}=1`]: permanent(route),
+          [publicDeep]: permanent(other),
+          [other]: page,
+          [route]: page,
+        }),
+        ...noWait,
+        requirePage: false,
+        publicUrl: publicDeep,
+      });
+      assert.equal(result.state, "wrong", result.reason);
+      assert.match(result.reason, /lands on .*\/us\/other/);
+    });
+  });
+
+  describe("the deadline", () => {
+    // A clock the fake fetch moves forward: each request takes `cost` ms.
+    function clocked(table, cost) {
+      let time = 0;
+      const fetchImpl = fakeFetch(table);
+      const starts = [];
+      const impl = async (url, init) => {
+        starts.push(time);
+        time += cost;
+        return fetchImpl(url, init);
+      };
+      const sleeps = [];
+      return {
+        impl,
+        starts,
+        sleeps,
+        now: () => time,
+        sleep: async (ms) => {
+          sleeps.push(time);
+          time += ms;
+        },
+      };
+    }
+
+    test("starts no request and no retry after it", async () => {
+      // Every request answers 503 after 400 ms; retries wait 1 and 4 s.
+      const clock = clocked({ [DIRECT]: { status: 503 } }, 400);
+      const result = await probeDirectHost(REWRITES, DIRECT, {
+        fetchImpl: clock.impl,
+        retryDelays: [1000, 4000],
+        sleep: clock.sleep,
+        now: clock.now,
+        deadline: 2000,
+      });
+      assert.equal(result.state, "unreachable", result.reason);
+      // 0: first try; 400: wait 1 s; 1400: second try; 1800 + 4000 > 2000, so no third.
+      assert.deepEqual(clock.starts, [0, 1400]);
+      assert.deepEqual(clock.sleeps, [400]);
+    });
+
+    test("reports a probe cut off by it as unreachable", async () => {
+      // The direct request ends at 1200 ms, past the 1000 ms deadline, so the
+      // public URL is never fetched.
+      const clock = clocked(
+        {
+          [DIRECT]: permanent(PUBLIC),
+          [PUBLIC]: page,
+        },
+        1200,
+      );
+      const result = await probeDirectHost(REWRITES, DIRECT, {
+        fetchImpl: clock.impl,
+        ...noWait,
+        now: clock.now,
+        deadline: 1000,
+      });
+      assert.equal(result.state, "unreachable");
+      assert.match(result.reason, /reached its deadline/);
+      assert.deepEqual(clock.starts, [0]);
+    });
+
+    test("cuts each request's timeout to the time left", async () => {
+      // Real time, scaled down: every request hangs until its signal aborts.
+      const hang = async (url, init) =>
+        new Promise((_, reject) => {
+          init.signal.addEventListener("abort", () =>
+            reject(new Error("timed out")),
+          );
+        });
+      const started = Date.now();
+      const result = await probeDirectHost(REWRITES, DIRECT, {
+        fetchImpl: hang,
+        timeout: 10_000,
+        retryDelays: [10, 10],
+        deadline: started + 300,
+      });
+      const took = Date.now() - started;
+      assert.equal(result.state, "unreachable");
+      assert.ok(took < 1000, `took ${took} ms with a 300 ms deadline`);
     });
   });
 
@@ -1109,6 +1408,35 @@ describe("main", () => {
     assert.equal(result.code, 0);
     assert.match(result.output, /not probed: the audit reached its deadline/);
     assert.match(result.output, /UNREACHABLE \/us\/ballot-measures-2026/);
+    // The probe under way stops too: it never fetches the public URL.
+    assert.deepEqual(result.calls, [ROOT]);
+  });
+
+  test("ends near the deadline when every request hangs", async () => {
+    const { dir, argv } = fixture();
+    // Each request hangs until its timeout signal aborts it.
+    const hang = async (url, init) =>
+      new Promise((_, reject) => {
+        init.signal.addEventListener("abort", () =>
+          reject(new Error("timed out")),
+        );
+      });
+    const started = Date.now();
+    try {
+      const result = await quietly(() =>
+        main([...argv, "--deadline-ms", "300", "--timeout", "5000"], {
+          ...noWait,
+          ...listed,
+          fetchImpl: hang,
+        }),
+      );
+      assert.equal(result.code, 0);
+      assert.match(result.output, /UNREACHABLE \/us\/ballot-measures-2026/);
+    } finally {
+      rmSync(dir, { recursive: true });
+    }
+    const took = Date.now() - started;
+    assert.ok(took < 2000, `took ${took} ms with a 300 ms deadline`);
   });
 
   test("warns about an iframe of a zone host whether or not the zone redirects", async () => {

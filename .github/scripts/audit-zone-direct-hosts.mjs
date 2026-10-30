@@ -19,19 +19,22 @@
  *   is one a reader of the public URL gets too: they land on the same page;
  * - policyengine.org serves that URL itself, without redirecting it to
  *   another page or back to the zone's host, and at the root answers 200;
- * - that page doesn't name a `*.vercel.app` URL as its canonical or og:url.
+ * - that page doesn't name a `*.vercel.app` URL as its canonical or og:url,
+ *   read from the page as jsdom parses it.
  *
  * It fails only on evidence: a redirect that goes wrong, or a listed zone
  * that serves a page or a 404 without redirecting. A request that fails, that
  * keeps answering 401, 403, 408, 425, 429 or 5xx after retries, or that
- * Vercel's SSO answers, makes the route unreachable: reported, never failed,
- * as are the zones still unprobed when the run reaches its deadline. Zones
- * with no redirect yet are reported too.
+ * Vercel's SSO answers, makes the route unreachable: reported, never failed.
+ * So does the run's deadline: no request or retry outlasts it. Zones with no
+ * redirect yet are reported too.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { JSDOM } from "jsdom";
 
 import { parseArgs } from "./audit-app-zone-shell.mjs";
 
@@ -43,9 +46,11 @@ const DEFAULT_CONCURRENCY = 8;
 const DEFAULT_TIMEOUT_MS = 15000;
 const DEFAULT_RETRY_DELAYS_MS = [1000, 4000];
 const MAX_HOPS = 5;
-// The workflow's job allows 20 minutes. A zone takes at most two probes of
-// three 15-second tries each, plus 5 seconds of backoff: 100 seconds.
+// The workflow's job allows 20 minutes. No request or retry runs past this
+// deadline (each request's timeout is cut to the time left), so the probes
+// end by it, and what's left is reported unreachable.
 const DEFAULT_DEADLINE_MS = 12 * 60 * 1000;
+const DEADLINE_ERROR = "the audit reached its deadline";
 
 export const PUBLIC_ORIGIN = "https://www.policyengine.org";
 export const PROBE_PARAM = "pe_direct_host_audit";
@@ -238,10 +243,13 @@ function sameUrlButSlash(a, b) {
  * that the redirect keeps the path; its target answers whatever the zone
  * answers for an unknown page, typically 404.
  *
- * Given the rewrites, each probe also names `publicUrl`, the policyengine.org
- * URL that proxies to it, when the rewrites have one: the zone's source for
- * the root, and the deep rewrite's path under it for the second (for /us/pe84,
- * whose root rewrite goes to /us/pe84/calculator, that's /us/pe84/<page>).
+ * Given the rewrites, the deep probe is the zone URL that the route's own
+ * path under its source proxies to, when that's on the zone's host (for
+ * /us/pe84, whose root rewrite goes to /us/pe84/calculator, that's
+ * /us/pe84/<page>). Each probe also names `publicUrl`, a policyengine.org URL
+ * that proxies to it, when the rewrites have one: preferably the route's own
+ * path, otherwise the first rewrite that serves the probe (publicUrlFor),
+ * such as the 2025 year in review's /2025-year-in-review/... asset route.
  */
 export function probeUrls(zone, rewrites, publicOrigin = PUBLIC_ORIGIN) {
   const root = new URL(zone.destination);
@@ -262,13 +270,45 @@ export function probeUrls(zone, rewrites, publicOrigin = PUBLIC_ORIGIN) {
       ? { publicUrl: url.toString(), url: proxied.url }
       : null;
   };
-  const publicRoot = publicFor(zone.source);
-  if (publicRoot && sameUrlButSlash(publicRoot.url, probes[0].url)) {
-    probes[0].publicUrl = publicRoot.publicUrl;
-  }
   const publicDeep = publicFor(`${zone.source}/${DEEP_PROBE_SEGMENT}`);
-  if (publicDeep) Object.assign(probes[1], publicDeep);
+  if (publicDeep) probes[1].url = publicDeep.url;
+  const own = [publicFor(zone.source), publicDeep];
+  probes.forEach((probe, index) => {
+    const publicUrl =
+      own[index] && sameUrlButSlash(own[index].url, probe.url)
+        ? own[index].publicUrl
+        : publicUrlFor(rewrites, probe.url, publicOrigin);
+    if (publicUrl) probe.publicUrl = publicUrl;
+  });
   return probes;
+}
+
+/**
+ * A policyengine.org URL that the rewrites proxy to `zoneUrl`, found by
+ * running each rewrite backwards: match the zone URL's path against the
+ * rewrite's destination, fill its source with the same parameters, and keep
+ * the result only if the rewrites, run forwards in order, proxy it back to
+ * `zoneUrl`. The query rides along. Null when no rewrite serves it.
+ */
+export function publicUrlFor(rewrites, zoneUrl, publicOrigin = PUBLIC_ORIGIN) {
+  const zone = new URL(zoneUrl);
+  for (const rule of rewrites) {
+    if (!URL.canParse(rule.destination)) continue;
+    const destination = new URL(rule.destination);
+    if (destination.host !== zone.host) continue;
+    const params = compileSource(destination.pathname)(zone.pathname);
+    if (!params) continue;
+    const candidate = new URL(
+      fillParams(rule.source, params, { path: true }) || "/",
+      publicOrigin,
+    );
+    candidate.search = zone.search;
+    const proxied = proxiedUrl(rewrites, candidate);
+    if (proxied && sameUrlButSlash(proxied.url, zoneUrl)) {
+      return candidate.toString();
+    }
+  }
+  return null;
 }
 
 /** Whether `path` is `base` or a path under it. */
@@ -341,6 +381,19 @@ export function redirectKeepsPage(
   return { ok: true, ...(better ? { betterSource: better.source } : {}) };
 }
 
+/**
+ * Whether two policyengine.org URLs serve the same zone page: the rewrites
+ * proxy both to one zone URL (trailing slash aside), such as a route and an
+ * asset path that reach the same page.
+ */
+function sameZonePage(rewrites, a, b, publicOrigin) {
+  if (!isPublicUrl(new URL(a), publicOrigin)) return false;
+  if (!isPublicUrl(new URL(b), publicOrigin)) return false;
+  const left = proxiedUrl(rewrites, a);
+  const right = proxiedUrl(rewrites, b);
+  return Boolean(left && right && sameUrlButSlash(left.url, right.url));
+}
+
 /** Whether two URLs name the same page on the site: path (trailing slash aside) and query. */
 function samePublicPage(a, b, publicOrigin) {
   const left = new URL(a);
@@ -353,104 +406,56 @@ function samePublicPage(a, b, publicOrigin) {
   );
 }
 
-const NAMED_ENTITIES = {
-  amp: "&",
-  apos: "'",
-  colon: ":",
-  gt: ">",
-  lt: "<",
-  nbsp: "\u00a0",
-  period: ".",
-  quot: '"',
-  sol: "/",
-};
-
-/** Decodes the character references an attribute value can hold. */
-function decodeEntities(text) {
-  return text.replace(
-    /&(?:#(\d+)|#[xX]([0-9a-fA-F]+)|([a-zA-Z]+));?/g,
-    (whole, decimal, hex, name) => {
-      if (decimal) return String.fromCodePoint(Number(decimal));
-      if (hex) return String.fromCodePoint(parseInt(hex, 16));
-      return NAMED_ENTITIES[name.toLowerCase()] ?? whole;
-    },
-  );
-}
-
-/** A tag's attributes, lower-cased names to decoded values; the first of a repeated name wins, as in HTML. */
-function attributes(tag) {
-  const found = {};
-  const body = tag.replace(/^<[a-zA-Z]+/, "").replace(/\/?>$/, "");
-  for (const match of body.matchAll(
-    /([^\s=<>"'\/]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"'=<`]+)))?/g,
-  )) {
-    const name = match[1].toLowerCase();
-    if (!(name in found)) {
-      found[name] = decodeEntities(match[2] ?? match[3] ?? match[4] ?? "");
-    }
-  }
-  return found;
-}
-
-// A tag whose quoted attribute values may hold a ">".
-const tagPattern = (name) =>
-  new RegExp(`<${name}\\b(?:[^>"']|"[^"]*"|'[^']*')*>`, "gi");
-
 /**
- * The URLs a page names as itself, its canonical links and og:url, resolved
- * against the page's URL and its <base>. Markup that isn't parsed as tags,
- * such as comments and script, style, template, title or textarea contents,
- * is skipped.
+ * The URLs a page names as itself, its canonical links and og:url, read from
+ * the page as jsdom parses it (the parser the website's tests use): character
+ * references decoded, relative URLs resolved against the page's URL and its
+ * <base>, and nothing taken from comments, script or style text, or template
+ * contents. jsdom runs no script and loads nothing. Values that aren't URLs
+ * are skipped.
  */
 export function canonicalUrls(html, pageUrl = PUBLIC_ORIGIN) {
-  const active = html
-    .replace(/<!--[\s\S]*?(?:-->|$)/g, "")
-    .replace(
-      /<(script|style|template|title|textarea)\b[\s\S]*?(?:<\/\1\s*>|$)/gi,
-      "",
-    );
-  const resolveUrl = (href, base) => {
+  const { window } = new JSDOM(html, { url: pageUrl });
+  const { document } = window;
+  const resolveUrl = (value) => {
     try {
-      return new URL(href.trim(), base).toString();
+      return new URL(value, document.baseURI).toString();
     } catch {
       return null;
     }
   };
-  let base = pageUrl;
-  for (const [tag] of active.matchAll(tagPattern("base"))) {
-    const { href } = attributes(tag);
-    if (href !== undefined) {
-      base = resolveUrl(href, pageUrl) ?? pageUrl;
-      break;
-    }
-  }
+  const tokens = (value) => value.toLowerCase().split(/[\t\n\f\r ]+/);
   const urls = [];
-  for (const [tag] of active.matchAll(tagPattern("link"))) {
-    const attrs = attributes(tag);
-    if (
-      attrs.href &&
-      attrs.rel?.toLowerCase().split(/\s+/).includes("canonical")
-    ) {
-      urls.push({ kind: "canonical", url: resolveUrl(attrs.href, base) });
+  for (const link of document.querySelectorAll("link[rel][href]")) {
+    if (tokens(link.getAttribute("rel")).includes("canonical")) {
+      urls.push({
+        kind: "canonical",
+        url: resolveUrl(link.getAttribute("href")),
+      });
     }
   }
-  for (const [tag] of active.matchAll(tagPattern("meta"))) {
-    const attrs = attributes(tag);
-    if (attrs.content && attrs.property?.toLowerCase() === "og:url") {
-      urls.push({ kind: "og:url", url: resolveUrl(attrs.content, base) });
+  for (const meta of document.querySelectorAll("meta[property][content]")) {
+    if (meta.getAttribute("property").trim().toLowerCase() === "og:url") {
+      urls.push({
+        kind: "og:url",
+        url: resolveUrl(meta.getAttribute("content")),
+      });
     }
   }
+  window.close();
   return urls.filter(({ url }) => url);
 }
 
 async function request(fetchImpl, url, options) {
-  const { timeout, retryDelays, sleep, readBody } = options;
+  const { timeout, retryDelays, sleep, readBody, deadline, now } = options;
   for (let attempt = 0; ; attempt += 1) {
+    const left = deadline - now();
+    if (left <= 0) return { error: DEADLINE_ERROR };
     let result;
     try {
       const response = await fetchImpl(url, {
         redirect: "manual",
-        signal: AbortSignal.timeout(timeout),
+        signal: AbortSignal.timeout(Math.min(timeout, left)),
         headers: { "user-agent": USER_AGENT },
       });
       result = {
@@ -464,6 +469,9 @@ async function request(fetchImpl, url, options) {
       result = { error: error?.message ?? String(error) };
     }
     if (!isRetryable(result) || attempt >= retryDelays.length) return result;
+    // A retry that would start after the deadline doesn't; the last answer
+    // already reads as unreachable.
+    if (now() + retryDelays[attempt] >= deadline) return result;
     await sleep(retryDelays[attempt]);
   }
 }
@@ -509,9 +517,18 @@ export async function probeDirectHost(
     publicUrl,
     retryDelays = DEFAULT_RETRY_DELAYS_MS,
     sleep = delay,
+    deadline = Infinity,
+    now = Date.now,
   } = {},
 ) {
-  const options = { timeout, retryDelays, sleep, readBody: false };
+  const options = {
+    timeout,
+    retryDelays,
+    sleep,
+    readBody: false,
+    deadline,
+    now,
+  };
   const host = new URL(directUrl).host;
   const result = (state, fields) => ({ state, directUrl, ...fields });
 
@@ -594,8 +611,17 @@ export async function probeDirectHost(
           reason: `${reader.url}: request failed: ${reader.error}`,
         });
       }
+      // A challenge or an error says nothing about where the reader lands.
+      if (!reader.location && isUnreachableStatus(reader.status)) {
+        return result("unreachable", {
+          reason: `${reader.url} answers ${reader.status}`,
+        });
+      }
       const readerLands = reader.location ?? reader.url;
-      if (!samePublicPage(readerLands, direct.location, publicOrigin)) {
+      if (
+        !samePublicPage(readerLands, direct.location, publicOrigin) &&
+        !sameZonePage(rewrites, readerLands, direct.location, publicOrigin)
+      ) {
         return result("wrong", {
           reason: `redirects on its own host to ${direct.url}, then to ${direct.location}, but a reader of ${publicUrl} lands on ${readerLands}`,
         });
@@ -746,8 +772,9 @@ export async function main(
   const articlesDir = args["articles-dir"] ?? DEFAULT_ARTICLES_DIR;
   const concurrency = Number(args.concurrency ?? DEFAULT_CONCURRENCY);
   const timeout = Number(args.timeout ?? DEFAULT_TIMEOUT_MS);
-  // Zones still unprobed at the deadline are reported as unreachable, so a
-  // wide outage ends the run inconclusive before the job's own time limit.
+  // Requests stop at the deadline and the probes left are reported as
+  // unreachable, so a wide outage ends the run inconclusive before the job's
+  // own time limit.
   const deadline = now() + Number(args["deadline-ms"] ?? DEFAULT_DEADLINE_MS);
   // Lets a test deployment that mirrors policyengine.org stand in for it.
   const publicOrigin = args["public-origin"] ?? PUBLIC_ORIGIN;
@@ -787,6 +814,8 @@ export async function main(
               publicUrl,
               retryDelays,
               sleep,
+              deadline,
+              now,
             }),
       );
     }
