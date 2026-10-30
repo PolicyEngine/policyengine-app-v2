@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "website/src/data/appZoneRoutes.ts"
+      - "website/src/data/policyEngineIconRewrites.ts"
       - "website/next.config.ts"
       - "website/src/middleware.ts"
       - ".github/scripts/audit-zone-direct-hosts.mjs"
@@ -21,7 +22,9 @@ jobs:
   audit:
     name: Audit direct visits to zone hosts
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The audit stops probing at 12 minutes (DEFAULT_DEADLINE_MS) and calls
+    # the rest unreachable; this leaves room for the probes in flight then.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 

@@ -213,13 +213,14 @@ In the same change, make sure the page's `<link rel="canonical">` and `og:url` n
 **Check it.** After the zone deploys, run `node .github/scripts/audit-zone-direct-hosts.mjs`. For each zone it requests the zone's host directly, at the route's root and at a path under it, the way a reader with an old link would. It then checks that the redirect:
 
 - is permanent;
-- names an https policyengine.org URL that the website's zone rewrites (`appZoneRewrites`, in order) proxy back to the same path and query;
+- names an https policyengine.org URL that the website's rewrites (its icon rewrites in `policyEngineIconRewrites.ts`, then `appZoneRewrites`, in that order) proxy back to the same path and query;
+- if it first redirects on the zone's own host to another path, sends a reader of the page's policyengine.org URL to the same place. A rule conditioned on the host can redirect direct visits only, so the audit requests that URL too. Dropping a trailing slash needs no check: policyengine.org drops it as well;
 - isn't sent on to another page by policyengine.org's own redirects, never loops, and at the root ends on a page that answers 200;
-- lands on a page whose canonical link and `og:url` name no `*.vercel.app` URL.
+- lands on a page whose canonical link and `og:url` name no `*.vercel.app` URL. The audit reads them as a browser does: against the page's URL and any `<base>`, with entities decoded, and not inside comments, scripts or templates.
 
-It also warns when policyengine.org adds hops on the way, such as the apex's or a trailing slash's. When it passes, add the source to `DIRECT_HOST_REDIRECTS` in that script. The `zone-direct-host-audit` workflow runs it daily and on route changes. It fails if a listed zone stops redirecting at either path, or if any zone's redirect goes wrong. It retries a request that fails or answers 429 or 5xx, and reports a zone it still can't reach, or that answers an SSO or bot challenge, without failing it. It reports zones without the redirect, and their statuses, without failing them either.
+It also warns when policyengine.org adds hops on the way, such as the apex's or a trailing slash's. When it passes, add the source to `DIRECT_HOST_REDIRECTS` in that script. The `zone-direct-host-audit` workflow runs it daily and on route changes. It fails if a listed zone stops redirecting at either path, or if any zone's redirect goes wrong, including a temporary redirect to anywhere but vercel.com. It retries a request that fails or answers 408, 425, 429 or 5xx. It reports a zone without failing it when the audit still can't reach the zone after retries, or the zone answers 401 or 403 or a temporary redirect to vercel.com. A protected preview deployment answers 302 to `https://vercel.com/sso-api` (2026-10-29). After 12 minutes it starts no more probes and reports the zones left the same way, so an outage ends the run before the job's 20-minute limit. It reports zones without the redirect, and their statuses, without failing them either.
 
-`website/src/__tests__/config/zone-direct-host-model.test.ts` checks the audit's model of the zone rewrites against Next's own routing of `website/next.config.ts`.
+`website/src/__tests__/config/zone-direct-host-model.test.ts` compares the audit's model of the website's rewrites with Next's testing helper (`next/experimental/testing/server`) on `website/next.config.ts`, over about 2,000 seeded URLs: suffixes, icon paths, trailing slashes, other letter case and queries. It follows the website's trailing-slash redirect first, as Next does. It matches letter case like the helper and the deployed site, which serves `/US/GIVECALC` its own 404 (2026-10-29), though Next's server matcher ignores case.
 
 Pitfalls:
 

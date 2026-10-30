@@ -235,6 +235,37 @@ describe("probeUrls", () => {
       ],
     );
   });
+
+  test("with the rewrites, names the public URL that proxies to each probe", () => {
+    const named = (source) =>
+      probeUrls(ZONES[source], REWRITES).map(({ url, publicUrl }) => [
+        url,
+        publicUrl,
+      ]);
+    assert.deepEqual(named("/us/ballot-measures-2026"), [
+      [
+        `${BALLOT_HOST}/us/ballot-measures-2026?${PROBE_PARAM}=1`,
+        `${PUBLIC_ORIGIN}/us/ballot-measures-2026?${PROBE_PARAM}=1`,
+      ],
+      [
+        `${BALLOT_HOST}/us/ballot-measures-2026/direct-host-audit?${PROBE_PARAM}=1`,
+        `${PUBLIC_ORIGIN}/us/ballot-measures-2026/direct-host-audit?${PROBE_PARAM}=1`,
+      ],
+    ]);
+    // /us/pe84 proxies to /us/pe84/calculator, and /us/pe84/:path* to /us/pe84/:path*.
+    assert.deepEqual(named("/us/pe84"), [
+      [
+        `https://april-fools-2026-two.vercel.app/us/pe84/calculator?${PROBE_PARAM}=1`,
+        `${PUBLIC_ORIGIN}/us/pe84?${PROBE_PARAM}=1`,
+      ],
+      [
+        `https://april-fools-2026-two.vercel.app/us/pe84/direct-host-audit?${PROBE_PARAM}=1`,
+        `${PUBLIC_ORIGIN}/us/pe84/direct-host-audit?${PROBE_PARAM}=1`,
+      ],
+    ]);
+    // The year in review has no deep rewrite, so its second probe has no public URL.
+    assert.equal(named("/us/2025-year-in-review")[1][1], undefined);
+  });
 });
 
 describe("redirectKeepsPage", () => {
@@ -256,6 +287,31 @@ describe("redirectKeepsPage", () => {
       ).ok,
       true,
     );
+  });
+
+  test("tells apart queries whose decoded keys and values join the same way", () => {
+    assert.equal(
+      keeps(
+        `${BALLOT_HOST}/us/ballot-measures-2026?a=b%3Dc`,
+        `${PUBLIC_ORIGIN}/us/ballot-measures-2026?a%3Db=c`,
+      ).ok,
+      false,
+    );
+  });
+
+  test("rejects a zone path that policyengine.org serves from its own icons", async () => {
+    const withIcons = await loadRewrites(undefined, undefined);
+    const givecalc = zoneRoutes(withIcons).find(
+      (zone) => zone.source === "/us/givecalc",
+    );
+    const host = new URL(givecalc.destination).origin;
+    const result = redirectKeepsPage(
+      withIcons,
+      `${host}/us/givecalc/favicon.ico`,
+      `${PUBLIC_ORIGIN}/us/givecalc/favicon.ico`,
+    );
+    assert.equal(result.ok, false);
+    assert.match(result.reason, /teal-square\.png/);
   });
 
   test("rejects http, another port, another site or a look-alike host", () => {
@@ -371,10 +427,65 @@ describe("canonicalUrls", () => {
       ),
       [
         { kind: "canonical", url: "https://a.vercel.app/x" },
-        { kind: "canonical", url: "/y" },
+        { kind: "canonical", url: `${PUBLIC_ORIGIN}/y` },
         { kind: "og:url", url: "https://b.vercel.app/" },
       ],
     );
+  });
+
+  test("resolves protocol-relative, encoded and <base>-relative URLs against the page", () => {
+    const page = `${PUBLIC_ORIGIN}/us/ballot-measures-2026`;
+    const named = (html) =>
+      canonicalUrls(html, page).map(({ kind, url }) => [kind, url]);
+    assert.deepEqual(
+      named(
+        `<link rel="canonical" href="//ballot-measures-2026.vercel.app/us/x">`,
+      ),
+      [["canonical", "https://ballot-measures-2026.vercel.app/us/x"]],
+    );
+    assert.deepEqual(
+      named(
+        `<meta property="og:url" content="https&colon;//ballot-measures-2026.vercel.app/us/x">`,
+      ),
+      [["og:url", "https://ballot-measures-2026.vercel.app/us/x"]],
+    );
+    assert.deepEqual(
+      named(`<link rel="canonical" href="https&#58;&#x2F;/a.vercel.app/x">`),
+      [["canonical", "https://a.vercel.app/x"]],
+    );
+    assert.deepEqual(
+      named(
+        `<base href="https://ballot-measures-2026.vercel.app/us/"><link rel="canonical" href="x">`,
+      ),
+      [["canonical", "https://ballot-measures-2026.vercel.app/us/x"]],
+    );
+    assert.deepEqual(named(`<link title="a > b" rel=canonical href=/us/x>`), [
+      ["canonical", `${PUBLIC_ORIGIN}/us/x`],
+    ]);
+    assert.deepEqual(
+      named(
+        `<link rel="canonical" href="/us/first" href="https://a.vercel.app/x"><META PROPERTY="OG:URL" CONTENT="/us/y">`,
+      ),
+      [
+        ["canonical", `${PUBLIC_ORIGIN}/us/first`],
+        ["og:url", `${PUBLIC_ORIGIN}/us/y`],
+      ],
+    );
+  });
+
+  test("skips comments, scripts and other text that isn't markup", () => {
+    const old = `<link rel="canonical" href="https://a.vercel.app/x">`;
+    for (const html of [
+      `<!-- ${old} -->`,
+      `<script>document.write('${old}')</script>`,
+      `<template>${old}</template>`,
+      `<title>${old}</title>`,
+      `<textarea>${old}</textarea>`,
+      `<style>/* ${old} */</style>`,
+    ]) {
+      assert.deepEqual(canonicalUrls(html), [], html);
+    }
+    assert.equal(canonicalUrls(`<!-- old --> ${old}`).length, 1);
   });
 });
 
@@ -498,12 +609,11 @@ describe("probeDirectHost", () => {
     }
   });
 
-  test("compares the target with the last URL on the zone's host", async () => {
-    // An unknown page that the zone sends to its home first, then to www.
-    const unknown = `${BALLOT_HOST}/us/ballot-measures-2026/gone?${PROBE_PARAM}=1`;
-    const result = await probeDirectHost(REWRITES, unknown, {
+  test("compares the target with the last URL on the zone's host after a trailing-slash hop", async () => {
+    const slashed = `${BALLOT_HOST}/us/ballot-measures-2026/?${PROBE_PARAM}=1`;
+    const result = await probeDirectHost(REWRITES, slashed, {
       fetchImpl: fakeFetch({
-        [unknown]: permanent(`/us/ballot-measures-2026?${PROBE_PARAM}=1`),
+        [slashed]: permanent(`/us/ballot-measures-2026?${PROBE_PARAM}=1`),
         [DIRECT]: permanent(PUBLIC),
         [PUBLIC]: page,
       }),
@@ -511,6 +621,62 @@ describe("probeDirectHost", () => {
     });
     assert.equal(result.state, "ok", result.reason);
     assert.equal(result.sameHostHops, 1);
+  });
+
+  describe("a same-host redirect that changes the path", () => {
+    // An unknown page that the zone sends to its home first, then to www.
+    const unknown = `${BALLOT_HOST}/us/ballot-measures-2026/gone?${PROBE_PARAM}=1`;
+    const publicUnknown = `${PUBLIC_ORIGIN}/us/ballot-measures-2026/gone?${PROBE_PARAM}=1`;
+    const zoneTable = {
+      [unknown]: permanent(`/us/ballot-measures-2026?${PROBE_PARAM}=1`),
+      [DIRECT]: permanent(PUBLIC),
+      [PUBLIC]: page,
+    };
+    const run = (table, options) =>
+      probeDirectHost(REWRITES, unknown, {
+        fetchImpl: fakeFetch(table),
+        ...noWait,
+        ...options,
+      });
+
+    test("passes when a reader of the public URL gets it too", async () => {
+      // Proxied, the zone's redirect is relative, so it stays on www.
+      const result = await run(
+        {
+          ...zoneTable,
+          [publicUnknown]: permanent(
+            `/us/ballot-measures-2026?${PROBE_PARAM}=1`,
+          ),
+        },
+        { publicUrl: publicUnknown },
+      );
+      assert.equal(result.state, "ok", result.reason);
+      assert.equal(result.sameHostHops, 1);
+    });
+
+    test("fails when only direct visits get it, so the deep page is lost", async () => {
+      // The public URL serves the page (here a 404) without redirecting.
+      const result = await run(
+        { ...zoneTable, [publicUnknown]: { status: 404 } },
+        { publicUrl: publicUnknown },
+      );
+      assert.equal(result.state, "wrong");
+      assert.match(result.reason, /a reader of .*gone.* lands on .*gone/);
+    });
+
+    test("without a public URL, compares with the URL the reader asked for", async () => {
+      const result = await run(zoneTable, {});
+      assert.equal(result.state, "wrong");
+      assert.match(result.reason, /redirects on its own host to/);
+    });
+
+    test("reports the public URL's failed request as unreachable", async () => {
+      const result = await run(
+        { ...zoneTable, [publicUnknown]: { throws: "fetch failed" } },
+        { publicUrl: publicUnknown },
+      );
+      assert.equal(result.state, "unreachable");
+    });
   });
 
   test("counts the hops policyengine.org adds, such as the apex's or a trailing slash's", async () => {
@@ -526,18 +692,30 @@ describe("probeDirectHost", () => {
     assert.deepEqual(result.publicHops, [slashed, PUBLIC]);
   });
 
-  test("fails a temporary redirect to www", async () => {
-    const result = await probe({
-      [DIRECT]: { status: 307, location: PUBLIC },
-      [PUBLIC]: page,
-    });
-    assert.equal(result.state, "wrong");
-    assert.match(result.reason, /307/);
+  test("fails a temporary redirect to www, or to anywhere but Vercel's SSO", async () => {
+    for (const location of [
+      PUBLIC,
+      PUBLIC.replace("https:", "http:"),
+      PUBLIC.replace("www.policyengine.org", "www.policyengine.org:8443"),
+      "https://example.com/",
+      "https://givecalc.vercel.app/us/givecalc",
+      "https://vercel.com.example.com/sso-api",
+    ]) {
+      for (const status of [302, 307]) {
+        const result = await probe({
+          [DIRECT]: { status, location },
+          [PUBLIC]: page,
+        });
+        assert.equal(result.state, "wrong", `${status} ${location}`);
+        assert.match(result.reason, new RegExp(String(status)));
+      }
+    }
   });
 
   test("reports Vercel's SSO redirect, a challenge or a server error as unreachable", async () => {
     for (const answer of [
       { status: 302, location: "https://vercel.com/sso-api?url=x" },
+      { status: 307, location: "https://vercel.com/login?next=x" },
       { status: 401 },
       { status: 403 },
       { status: 429 },
@@ -805,12 +983,29 @@ describe("main", () => {
     return { dir, argv: ["--routes-file", routesFile, "--articles-dir", dir] };
   }
 
-  async function run(table, options = {}, articles = {}) {
+  async function run(
+    table,
+    options = {},
+    articles = {},
+    onFetch = () => {},
+    extraArgs = [],
+  ) {
     const { dir, argv } = fixture(articles);
-    const fetchImpl = fakeFetch(table);
+    const fake = fakeFetch(table);
+    const fetchImpl = Object.assign(
+      async (url, init) => {
+        onFetch(url);
+        return fake(url, init);
+      },
+      { calls: fake.calls },
+    );
     try {
       const result = await quietly(() =>
-        main(argv, { fetchImpl, ...noWait, ...options }),
+        main([...argv, ...extraArgs], {
+          ...noWait,
+          ...options,
+          fetchImpl,
+        }),
       );
       return { ...result, calls: fetchImpl.calls };
     } finally {
@@ -871,6 +1066,21 @@ describe("main", () => {
     }
   });
 
+  test("fails a direct-only redirect that sends a deep link to the root", async () => {
+    // Direct: deep -> root on the zone's host -> www's root. Proxied, the
+    // deep page answers without redirecting, so its readers keep the page.
+    const lossy = {
+      ...redirecting,
+      [DEEP]: permanent(new URL(ROOT).pathname + new URL(ROOT).search),
+      [toPublic(DEEP)]: { status: 404 },
+    };
+    for (const options of [{}, listed]) {
+      const result = await run(lossy, options);
+      assert.equal(result.code, 1);
+      assert.match(result.output, /a reader of .*direct-host-audit.* lands on/);
+    }
+  });
+
   test("fails a redirect to a 404", async () => {
     const result = await run({
       ...redirecting,
@@ -878,6 +1088,36 @@ describe("main", () => {
     });
     assert.equal(result.code, 1);
     assert.match(result.output, /FAIL \/us\/ballot-measures-2026/);
+  });
+
+  test("reports zones left unprobed at the deadline as unreachable, without failing", async () => {
+    let clock = 0;
+    const result = await run(
+      redirecting,
+      {
+        ...listed,
+        // Each request moves the clock past the deadline.
+        fetchImpl: undefined,
+        now: () => clock,
+      },
+      {},
+      () => {
+        clock += 1000;
+      },
+      ["--deadline-ms", "500"],
+    );
+    assert.equal(result.code, 0);
+    assert.match(result.output, /not probed: the audit reached its deadline/);
+    assert.match(result.output, /UNREACHABLE \/us\/ballot-measures-2026/);
+  });
+
+  test("warns about an iframe of a zone host whether or not the zone redirects", async () => {
+    const iframe = `<iframe src="${BALLOT.destination}"></iframe>`;
+    for (const table of [{ [ROOT]: page }, { [ROOT]: { status: 503 } }]) {
+      const result = await run(table, {}, { "post.md": iframe });
+      assert.equal(result.code, 0);
+      assert.match(result.output, /post\.md: ballot-measures-2026/);
+    }
   });
 
   test("warns, without failing, about an article or notebook that iframes a zone host", async () => {
