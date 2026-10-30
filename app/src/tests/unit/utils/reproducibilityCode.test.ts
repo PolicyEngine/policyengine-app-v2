@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { POPULACE_US_DEFAULT_DATASET_URI } from '@/constants';
 import { TEST_COUNTRIES } from '@/tests/fixtures/constants';
+import { DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS } from '@/tests/fixtures/pages/report-output/reproduce-in-python/reproducibilityMocks';
 import {
   BASELINE_AND_REFORM_POLICY,
   COMPLEX_HOUSEHOLD,
@@ -25,6 +26,7 @@ import {
 import {
   convertPoliciesToV1Format,
   getColabLink,
+  getHouseholdReproducibilityCode,
   getReproducibilityCodeBlock,
   sanitizeStringToPython,
 } from '@/utils/reproducibilityCode';
@@ -893,5 +895,49 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('"2024-01-01.2100-12-31": -np.inf');
       });
     });
+  });
+});
+
+describe('getHouseholdReproducibilityCode with a pandas DataFrame (issue #1095)', () => {
+  const reproduction = DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS.simulations[0];
+  const year = Number(DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS.year);
+
+  test('given a point calculation then a DataFrame of the household results follows the code', () => {
+    const code = getHouseholdReproducibilityCode(TEST_COUNTRIES.US, reproduction, year, {
+      includeDataFrame: true,
+    }).join('\n');
+
+    expect(code).toContain('import pandas as pd');
+    expect(code).toContain(
+      'variables = ["household_net_income", "household_market_income", "household_tax", "household_benefits"]'
+    );
+    expect(code).toContain(
+      `"value": [float(simulation.calculate(variable, ${year}).sum()) for variable in variables],`
+    );
+    expect(code.trimEnd().endsWith('print(df)')).toBe(true);
+  });
+
+  test('given an earnings variation then the DataFrame has one row per earnings level, ready to chart', () => {
+    const code = getHouseholdReproducibilityCode(TEST_COUNTRIES.US, reproduction, year, {
+      earningVariation: true,
+      includeDataFrame: true,
+    }).join('\n');
+
+    expect(code).toContain('axes');
+    expect(code).toContain(
+      `"employment_income": simulation.calculate("employment_income", ${year}, map_to="household"),`
+    );
+    expect(code).toContain(
+      `"household_net_income": simulation.calculate("household_net_income", ${year}),`
+    );
+  });
+
+  test('given no DataFrame asked for then the code is as before', () => {
+    const code = getHouseholdReproducibilityCode(TEST_COUNTRIES.US, reproduction, year, {
+      earningVariation: true,
+    }).join('\n');
+
+    expect(code).toContain('# Reform earning variation');
+    expect(code).not.toContain('pandas');
   });
 });
