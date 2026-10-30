@@ -1090,10 +1090,15 @@ describe("unreadableHeaders", () => {
       { link: "</a.css>; rel=preload; x-rel=canonical" },
       { link: '</a.css>; title="<"; rel=preload; x=">"' },
       { link: '</a.css>; rel="pre\\load", </b.css>; rel=preload,' },
-      { link: "nonsense" },
       { link: "" },
-      { link: '</a.css>; title="preload' },
       { link: "</a.css>; rel=preload, </canonical.css>; rel=preload" },
+      { link: "</a.css> ; rel=preload ; as=style , </b.css>;rel=preload" },
+      { link: '</a.css>; rel = preload; as= "style"; title ="x"' },
+      { link: '</a.css>; rel= "preload"' },
+      // /us/marriage's font preload.
+      {
+        link: '</a.woff2?dpl=dpl_x>; rel=preload; as="font"; crossorigin=""; type="font/woff2"',
+      },
     ]) {
       assert.equal(
         unreadableHeaders({ ...plain, ...headers }),
@@ -1132,94 +1137,134 @@ describe("unreadableHeaders", () => {
       [{ refresh: "0; url=https://a.vercel.app/x" }, /Refresh/],
       [
         { link: '<https://a.vercel.app/x>; rel="canonical"' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         {
           link: "</a.css>; rel=preload, <https://a.vercel.app/x>; rel=CANONICAL",
         },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: '<https://a.vercel.app/x>; REL = "alternate canonical"' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       // The ninth review's cases: a quoted pair, and a rel between
       // quoted angle brackets.
       [
         { link: '<https://a.vercel.app/x>; rel="canoni\\cal"' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: '<https://a.vercel.app/x>; title="<"; rel=canonical; x=">"' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         {
           link: '</a.css>; rel=preload, <https://a.vercel.app/x>; rel="canoni\\cal"',
         },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: '<https://a.vercel.app/x>; title="a, b; c"; rel=canonical' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       // A later rel, which RFC 8288 says to ignore, still counts.
       [
         { link: "<https://a.vercel.app/x>; rel=preload; rel=canonical" },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: "<https://a.vercel.app/x>; rel*=UTF-8''canonical" },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       // Spaces around the separators, and a parameter before the rel.
       [
         { link: '<https://a.vercel.app/x> ; rel="canoni\\cal"' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: '<https://a.vercel.app/x>; rel = "canoni\\cal"' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: '<https://a.vercel.app/x>; rel= "canonical"' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: '<https://a.vercel.app/x>; title="a"; rel="canoni\\cal"' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: "<https://a.vercel.app/x>; rel*=UTF-8''%63anonical" },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: '<https://a.vercel.app/x>; rel="alternate\fcanonical"' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
-      // A field it can't parse counts if "canonical" is anywhere in it.
-      [{ link: "REL=CANONICAL" }, /canonical in a Link header/],
+      // A field it can't parse counts however it's spelled, since a valid
+      // link can follow the broken one and browsers recover differently.
+      [{ link: "nonsense" }, /won't parse/],
+      [{ link: '</a.css>; title="preload' }, /won't parse/],
+      [
+        { link: 'nonsense, <https://a.vercel.app/x>; rel="canoni\\cal"' },
+        /won't parse/,
+      ],
+      [
+        {
+          link: '</a.css>; title="x"junk, <https://a.vercel.app/x>; rel="canoni\\cal"',
+        },
+        /won't parse/,
+      ],
+      [
+        { link: "nonsense, <https://a.vercel.app/x>; rel*=UTF-8''%63anonical" },
+        /won't parse/,
+      ],
+      [
+        {
+          link: '</a.css>; title="x, <https://a.vercel.app/x>; rel="canoni\\cal"',
+        },
+        /won't parse/,
+      ],
+      [{ link: '<https://a.vercel.app/x>; r el="canoni\\cal"' }, /won't parse/],
+      [
+        { link: '<https://a.vercel.app/x>; r\fel="canoni\\cal"' },
+        /won't parse/,
+      ],
+      [
+        { link: '<https://a.vercel.app/x>; \u00a0rel="canoni\\cal"' },
+        /won't parse/,
+      ],
+      [{ link: '<https://a.vercel.app/x>; rel="canoni\\cal' }, /won't parse/],
+      [{ link: '<https://a.vercel.app/x>; rel="canoni\\cal\\' }, /won't parse/],
+      [{ link: "<https://a.vercel.app/x>; rel=canoni\\cal" }, /won't parse/],
+      [{ link: '<https://a.vercel.app/x>; rel=can"on"ical' }, /won't parse/],
+      [{ link: "<https://a.vercel.app/x>; rel=" }, /won't parse/],
+      [{ link: "<https://a.vercel.app/x>; ; rel=preload" }, /won't parse/],
+      [{ link: "</a.css>; rel=preload x" }, /won't parse/],
+      [{ link: ", <https://a.vercel.app/x>; rel=preload" }, /won't parse/],
+      [{ link: "REL=CANONICAL" }, /Link header names a canonical/],
       [
         { link: "<https://a.vercel.app/x> rel=canonical" },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: "<https://a.vercel.app/canonical>; x=1, nonsense" },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
-      [{ link: "rel=canonical" }, /canonical in a Link header/],
+      [{ link: "rel=canonical" }, /Link header names a canonical/],
       [
         { link: '<https://a.vercel.app/x>; rel="canonical"x' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: "<https://a.vercel.app/x; rel=canonical" },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
       [
         { link: '<https://a.vercel.app/x>; title="a; rel=canonical' },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
     ]) {
       assert.match(
@@ -1227,6 +1272,43 @@ describe("unreadableHeaders", () => {
         reason,
         JSON.stringify(headers),
       );
+    }
+  });
+});
+
+describe("unreadableHeaders with a broken link first", () => {
+  const plain = {
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy": null,
+    refresh: null,
+    link: null,
+  };
+
+  test("won't read any field that fails to parse, whatever follows", () => {
+    for (const broken of [
+      "nonsense",
+      "<https://a.vercel.app/x",
+      "<https://a.vercel.app/x y>",
+      "<https://a.vercel.app/x<y>",
+      '</a.css>; title="x"junk',
+      "</a.css> junk",
+      '</a.css>; title="x',
+      "</a.css>; r el=preload",
+    ]) {
+      for (const rest of [
+        "",
+        ", </b.css>; rel=preload",
+        ", <https://a.vercel.app/x>; rel=canonical",
+        ', <https://a.vercel.app/x>; rel="canoni\\cal"',
+        ", <https://a.vercel.app/x>; rel*=UTF-8''%63anonical",
+      ]) {
+        const link = `${broken}${rest}`;
+        assert.match(
+          unreadableHeaders({ ...plain, link }),
+          /Link header names a canonical or won't parse/,
+          link,
+        );
+      }
     }
   });
 });
@@ -2134,7 +2216,7 @@ describe("probeDirectHost", () => {
           body: page.body,
           headers: { link: '<https://a.vercel.app/x>; rel="canonical"' },
         },
-        /canonical in a Link header/,
+        /Link header names a canonical/,
       ],
     ]) {
       const result = await probe({

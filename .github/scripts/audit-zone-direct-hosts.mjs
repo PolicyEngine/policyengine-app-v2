@@ -591,18 +591,21 @@ function policyChangesPage(policy) {
   });
 }
 
+/** An HTTP token: what a Link parameter's name and unquoted value must be. */
+const HTTP_TOKEN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
+
 /**
- * Whether a Link header names a link whose relations include "canonical",
- * read as RFC 8288 (Appendix B) parses it: `<target>`, then `;`-separated
- * parameters, whose names are lower-cased and whose quoted values are
- * unescaped and may hold `<`, `>`, `;` or `,`; links are separated by `,`.
- * Every `rel` parameter counts, not only a link's first, and so does any
- * `rel*`, since the audit doesn't decode RFC 8187 values. A field that doesn't
- * parse, an unclosed quote included, counts when it holds "canonical"
- * anywhere, since a browser may read it another way.
+ * Whether a Link header may name a link whose relations include "canonical".
+ * It parses the header as RFC 8288 writes it: a `<target>` free of spaces and
+ * `<`, then `;`-separated parameters, whose names and unquoted values are tokens and whose quoted
+ * values are unescaped and may hold `<`, `>`, `;` or `,`; links are separated
+ * by `,`. Names are lower-cased. Every `rel` parameter counts, not only a
+ * link's first, and so does any `rel*`, since the audit doesn't decode RFC 8187
+ * values. A header that doesn't parse counts however it's spelled: `fetch` joins
+ * repeated headers, so a valid link can follow a broken one, and browsers
+ * recover from a broken one differently.
  */
-function linkNamesCanonical(field) {
-  const unparsed = () => /canonical/i.test(field);
+function linkMayNameCanonical(field) {
   let position = 0;
   const skipSpace = () => {
     while (field[position] === " " || field[position] === "\t") position += 1;
@@ -628,23 +631,30 @@ function linkNamesCanonical(field) {
   };
   while (position < field.length) {
     skipSpace();
-    if (field[position] !== "<") return unparsed();
-    position = field.indexOf(">", position);
-    if (position === -1) return unparsed();
-    position += 1;
+    if (field[position] !== "<") return true;
+    const targetEnd = field.indexOf(">", position);
+    if (targetEnd === -1) return true;
+    if (/[\t\n\f\r <]/.test(field.slice(position + 1, targetEnd))) return true;
+    position = targetEnd + 1;
     for (;;) {
       skipSpace();
       if (field[position] !== ";") break;
       position += 1;
       skipSpace();
       const name = asciiLower(consumeUntil(" \t=;,"));
+      if (!HTTP_TOKEN.test(name)) return true;
       skipSpace();
       let value = "";
       if (field[position] === "=") {
         position += 1;
         skipSpace();
-        value = field[position] === '"' ? quotedString() : consumeUntil(";,");
-        if (value === null) return unparsed();
+        if (field[position] === '"') {
+          value = quotedString();
+          if (value === null) return true;
+        } else {
+          value = consumeUntil(" \t;,");
+          if (!HTTP_TOKEN.test(value)) return true;
+        }
       }
       if (
         name === "rel" &&
@@ -658,7 +668,7 @@ function linkNamesCanonical(field) {
     }
     skipSpace();
     if (position >= field.length) return false;
-    if (field[position] !== ",") return unparsed();
+    if (field[position] !== ",") return true;
     position += 1;
   }
   return false;
@@ -668,8 +678,8 @@ function linkNamesCanonical(field) {
  * Why a landed page's headers stop the audit reading it as browsers do, or
  * null: a Content-Security-Policy that changes its links (policyChangesPage),
  * a Refresh, which sends the reader on, or a Link header that names a
- * canonical of its own. The audit models none of these. On 2026-10-30 no
- * zone route on policyengine.org sent any of them.
+ * canonical of its own or won't parse. The audit models none of these. On
+ * 2026-10-30 no zone route on policyengine.org sent any of them.
  */
 export function unreadableHeaders(headers) {
   const policy = headers["content-security-policy"];
@@ -679,8 +689,8 @@ export function unreadableHeaders(headers) {
   if (headers.refresh !== null) {
     return "it sends a Refresh header, which sends readers on";
   }
-  if (headers.link !== null && linkNamesCanonical(headers.link)) {
-    return "it names a canonical in a Link header";
+  if (headers.link !== null && linkMayNameCanonical(headers.link)) {
+    return "a Link header names a canonical or won't parse";
   }
   return null;
 }
