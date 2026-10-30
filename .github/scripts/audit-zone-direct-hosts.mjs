@@ -591,19 +591,29 @@ function policyChangesPage(policy) {
   });
 }
 
-/** An HTTP token: what a Link parameter's name and unquoted value must be. */
+/** An HTTP token: what a Link parameter's name must be. */
 const HTTP_TOKEN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
 
 /**
+ * What an unquoted Link parameter value may hold: RFC 5988's ptoken, since
+ * hand-written headers send `type=font/woff2`. It has no quotes or backslashes,
+ * which browsers can read differently.
+ */
+const LINK_PTOKEN = /^[!#$%&'()*+\-./0-9:<=>?@A-Z[\]^_`a-z{|}~]+$/;
+
+/**
  * Whether a Link header may name a link whose relations include "canonical".
- * It parses the header as RFC 8288 writes it: a `<target>` free of spaces and
- * `<`, then `;`-separated parameters, whose names and unquoted values are tokens and whose quoted
- * values are unescaped and may hold `<`, `>`, `;` or `,`; links are separated
- * by `,`. Names are lower-cased. Every `rel` parameter counts, not only a
- * link's first, and so does any `rel*`, since the audit doesn't decode RFC 8187
- * values. A header that doesn't parse counts however it's spelled: `fetch` joins
- * repeated headers, so a valid link can follow a broken one, and browsers
- * recover from a broken one differently.
+ * It parses the header as RFC 8288 writes it, with two allowances for what
+ * sites send. A link is a `<target>`, then `;`-separated parameters; links are
+ * separated by `,`. A target may hold spaces, since Next.js copies a filename's
+ * into its image preloads, but not `<`. A parameter's name must be a token and
+ * its value a ptoken or a quoted string, which is unescaped and may hold `<`,
+ * `>`, `;` or `,`. A parameter may be empty, as a trailing `;` makes one. Names
+ * are lower-cased. Every `rel` parameter counts, not only a link's first, and
+ * so does any `rel*`, since the audit doesn't decode RFC 8187 values. A header
+ * that doesn't parse counts however it's spelled: `fetch` joins repeated
+ * headers, so a valid link can follow a broken one, and browsers recover from
+ * a broken one differently.
  */
 function linkMayNameCanonical(field) {
   let position = 0;
@@ -634,7 +644,7 @@ function linkMayNameCanonical(field) {
     if (field[position] !== "<") return true;
     const targetEnd = field.indexOf(">", position);
     if (targetEnd === -1) return true;
-    if (/[\t\n\f\r <]/.test(field.slice(position + 1, targetEnd))) return true;
+    if (field.slice(position + 1, targetEnd).includes("<")) return true;
     position = targetEnd + 1;
     for (;;) {
       skipSpace();
@@ -642,8 +652,9 @@ function linkMayNameCanonical(field) {
       position += 1;
       skipSpace();
       const name = asciiLower(consumeUntil(" \t=;,"));
-      if (!HTTP_TOKEN.test(name)) return true;
       skipSpace();
+      if (name === "" && field[position] !== "=") continue;
+      if (!HTTP_TOKEN.test(name)) return true;
       let value = "";
       if (field[position] === "=") {
         position += 1;
@@ -653,7 +664,7 @@ function linkMayNameCanonical(field) {
           if (value === null) return true;
         } else {
           value = consumeUntil(" \t;,");
-          if (!HTTP_TOKEN.test(value)) return true;
+          if (!LINK_PTOKEN.test(value)) return true;
         }
       }
       if (

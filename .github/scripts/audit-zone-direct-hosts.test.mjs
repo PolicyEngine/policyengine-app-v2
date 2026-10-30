@@ -1095,6 +1095,21 @@ describe("unreadableHeaders", () => {
       { link: "</a.css> ; rel=preload ; as=style , </b.css>;rel=preload" },
       { link: '</a.css>; rel = preload; as= "style"; title ="x"' },
       { link: '</a.css>; rel= "preload"' },
+      // Next's own header for a high-priority image: a filename's spaces stay.
+      {
+        link: '</assets/ballot measures 2026.png>; rel=preload; as="image"; fetchpriority="high"',
+      },
+      {
+        link: '</a.png>; rel=preload; as="image"; imagesrcset="/a.png 1x, /b.png 2x"; imagesizes="(max-width: 600px) 100vw, 50vw"',
+      },
+      // Hand-written headers leave these unquoted, or end in a semicolon.
+      {
+        link: "</a.woff2>; rel=preload; as=font; type=font/woff2; crossorigin",
+      },
+      { link: "</a.css>; rel=preload; integrity=sha384-ab+/=" },
+      { link: "</a.css>; rel=preload;" },
+      { link: "</a.css>; rel=preload; ; as=style" },
+      { link: "</a.css>;, </b.css>; rel=preload" },
       // /us/marriage's font preload.
       {
         link: '</a.woff2?dpl=dpl_x>; rel=preload; as="font"; crossorigin=""; type="font/woff2"',
@@ -1241,7 +1256,11 @@ describe("unreadableHeaders", () => {
       [{ link: "<https://a.vercel.app/x>; rel=canoni\\cal" }, /won't parse/],
       [{ link: '<https://a.vercel.app/x>; rel=can"on"ical' }, /won't parse/],
       [{ link: "<https://a.vercel.app/x>; rel=" }, /won't parse/],
-      [{ link: "<https://a.vercel.app/x>; ; rel=preload" }, /won't parse/],
+      [
+        { link: "<https://a.vercel.app/x y>; ; rel=canonical" },
+        /Link header names a canonical/,
+      ],
+      [{ link: "<https://a.vercel.app/x>; =canonical" }, /won't parse/],
       [{ link: "</a.css>; rel=preload x" }, /won't parse/],
       [{ link: ", <https://a.vercel.app/x>; rel=preload" }, /won't parse/],
       [{ link: "REL=CANONICAL" }, /Link header names a canonical/],
@@ -1288,7 +1307,6 @@ describe("unreadableHeaders with a broken link first", () => {
     for (const broken of [
       "nonsense",
       "<https://a.vercel.app/x",
-      "<https://a.vercel.app/x y>",
       "<https://a.vercel.app/x<y>",
       '</a.css>; title="x"junk',
       "</a.css> junk",
@@ -2597,6 +2615,26 @@ describe("main", () => {
     }
     // run() passes a routes file that lists no zone's redirect.
     assert.equal((await run({ [ROOT]: page })).code, 0);
+  });
+
+  test("reads a page past Next's preload of an image with spaces in its name", async () => {
+    const landing = (body) => ({
+      ...redirecting,
+      [toPublic(ROOT)]: {
+        status: 200,
+        body,
+        headers: {
+          link: '</assets/ballot measures 2026.png>; rel=preload; as="image"; fetchpriority="high"',
+        },
+      },
+    });
+    const good = `<link rel="canonical" href="${BALLOT.source}">`;
+    const passed = await run(landing(good), listed);
+    assert.equal(passed.code, 0);
+    assert.match(passed.output, /OK \/us\/ballot-measures-2026/);
+    const failed = await run(landing(VERCEL_CANONICAL), listed);
+    assert.equal(failed.code, 1);
+    assert.match(failed.output, /a\.vercel\.app/);
   });
 
   test("fails a listed zone that stopped redirecting at either path", async () => {
