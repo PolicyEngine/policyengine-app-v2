@@ -34,8 +34,9 @@ export interface V3SavedWork {
   /**
    * Scopes cached saved work to whose it is: the Auth0 subject when signed
    * in, this browser's unauthenticated user when signed out, 'browser'
-   * otherwise. A session that ends without a reload moves every query to
-   * new keys.
+   * otherwise. A session that ends without a reload moves every query keyed
+   * by it to new keys. (A calculated household's save is not keyed by it:
+   * see useSaveCalculatedHousehold.)
    */
   scope: string;
 }

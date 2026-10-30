@@ -209,4 +209,22 @@ describe('useSaveCalculatedHousehold', () => {
       .map((query) => query.state.status);
     expect(states).toEqual(['error']);
   });
+
+  test("given a failed save then it is tried again when the household's result shows again", async () => {
+    // Given
+    fetchMock.mockImplementationOnce(async () => errorResponse(503, 'Service unavailable'));
+    const { wrapper } = wrapperFor(signedInAuthValue());
+    const firstResult = renderHook(() => useSaveCalculatedHousehold(CALCULATED_HOUSEHOLD), {
+      wrapper,
+    });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    await settle();
+    firstResult.unmount();
+
+    // When
+    renderHook(() => useSaveCalculatedHousehold(CALCULATED_HOUSEHOLD), { wrapper });
+
+    // Then
+    await waitFor(() => expect(requestsWithMethod('POST')).toHaveLength(1));
+  });
 });
