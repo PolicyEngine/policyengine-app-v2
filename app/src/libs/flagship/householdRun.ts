@@ -1,126 +1,24 @@
-import { STATE_NAMES } from '@/api/billFeed';
 import { createHousehold } from '@/api/household';
-import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import {
+  fetchHouseholdCalculationWithBundle,
+  type HouseholdCalculationResult,
+} from '@/api/householdCalculation';
+import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import type { CountryId } from '@/libs/countries';
-import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
-import { formatCurrency } from '@/utils/formatters';
+import type { SPMProvenance, SPMSelection } from '@/types/spm';
 
 /**
- * A household run for the flagship report: one family, described in a
- * few fields, run under the report's baseline and reform policies for
- * the report's year through the same v1 household endpoints the v2
- * household flow uses — create the household, then calculate it under
- * each policy.
+ * A household run for the flagship report: a household built in the
+ * household builder, run under the report's baseline and reform policies
+ * for the report's year, in the household's own country, through the
+ * Public API's v1 household routes, as the older household flow uses
+ * them: create the household, then calculate it under each policy.
  */
 
-/** The household as the report's form describes it. US only for now. */
-export interface FlagshipHouseholdInput {
-  /** Two-letter state code, e.g. "CA". */
-  state: string;
-  married: boolean;
-  /** One age per child, each 0–17. */
-  childAges: number[];
-  /** The head's annual employment income. */
-  earnings: number;
-  /** The partner's annual employment income; read only when married. */
-  partnerEarnings: number;
-}
-
-export const MAX_CHILDREN = 6;
-export const MAX_CHILD_AGE = 17;
-export const DEFAULT_CHILD_AGE = 10;
-const DEFAULT_STATE = 'CA';
-const DEFAULT_EARNINGS = 50000;
-/** A change smaller than a dollar reads as no change. */
+/** A change smaller than a dollar (or a pound) reads as no change. */
 const NEGLIGIBLE = 1;
-
-/**
- * The form's starting household: single, no children, $50,000 a year, in
- * the report's state — a state or district report's own state, else
- * California, the model's default.
- */
-export function defaultHouseholdInput(region?: string): FlagshipHouseholdInput {
-  return {
-    state: stateFromRegion(region) ?? DEFAULT_STATE,
-    married: false,
-    childAges: [],
-    earnings: DEFAULT_EARNINGS,
-    partnerEarnings: 0,
-  };
-}
-
-/** "state/ny" → "NY", "congressional_district/TX-07" → "TX"; nothing for the country. */
-export function stateFromRegion(region?: string): string | undefined {
-  const match = region?.match(/^(?:state\/([a-z]{2})|congressional_district\/([a-z]{2})-)/i);
-  const code = (match?.[1] ?? match?.[2])?.toUpperCase();
-  return code && STATE_NAMES[code] ? code : undefined;
-}
-
-const isAmount = (value: number) => Number.isFinite(value) && value >= 0;
-const isChildAge = (age: number) => Number.isInteger(age) && age >= 0 && age <= MAX_CHILD_AGE;
-
-/** Whether the household can run: a known state, amounts of zero or more, children's ages. */
-export function isValidHouseholdInput(input: FlagshipHouseholdInput): boolean {
-  return (
-    !!STATE_NAMES[input.state] &&
-    isAmount(input.earnings) &&
-    (!input.married || isAmount(input.partnerEarnings)) &&
-    input.childAges.length <= MAX_CHILDREN &&
-    input.childAges.every(isChildAge)
-  );
-}
-
-/**
- * The v1 household for the input, built with the v2 builder's own model
- * so the API reads it as it reads a v2 household: the head is "you", and
- * the API takes the year to calculate from "you"'s age.
- */
-export function buildHouseholdPayload(
-  input: FlagshipHouseholdInput,
-  year: string
-): V1HouseholdCreateEnvelope {
-  let household = Household.starter('us', year)
-    .withBuilderMaritalStatus(year, input.married ? 'married' : 'single')
-    .withBuilderChildCount(year, input.childAges.length);
-  const { primaryPersonKey, partnerKey, childKeys } = household.deriveBuilderComposition(year);
-  if (primaryPersonKey) {
-    household = household.setPersonVariableAtYear(
-      primaryPersonKey,
-      'employment_income',
-      year,
-      input.earnings
-    );
-  }
-  if (partnerKey) {
-    household = household.setPersonVariableAtYear(
-      partnerKey,
-      'employment_income',
-      year,
-      input.partnerEarnings
-    );
-  }
-  childKeys.forEach((childKey, index) => {
-    household = household.setPersonVariableAtYear(
-      childKey,
-      'age',
-      year,
-      input.childAges[index] ?? DEFAULT_CHILD_AGE
-    );
-  });
-  const householdKey = Object.keys(household.householdData.households ?? {})[0];
-  if (householdKey) {
-    household = household.setGroupVariableAtYear(
-      'households',
-      householdKey,
-      'state_name',
-      year,
-      input.state
-    );
-  }
-  return household.toV1CreationPayload();
-}
 
 type EntityPlural = 'people' | 'households' | 'tax_units' | 'spm_units' | 'benunits';
 
@@ -306,7 +204,7 @@ function benefitLine(variable: string, label: string, entity: EntityPlural): Lin
   return { id: variable, label, sign: 1, sources: [{ entity, variable }] };
 }
 
-/** Each country's parts of net income and programs; a country without its own reads the US's. */
+/** Each country's parts of net income and programs: the countries v3 runs households for. */
 const LINES: Partial<
   Record<CountryId, { components: LineDefinition[]; programs: LineDefinition[] }>
 > = {
@@ -314,8 +212,17 @@ const LINES: Partial<
   uk: { components: UK_COMPONENTS, programs: UK_PROGRAMS },
 };
 
+/**
+ * The rows a country's result lists (its `LINES` entry: parts of net
+ * income and programs). A country without an entry has none, and is never
+ * read as the US.
+ */
 function linesFor(countryId: string) {
-  return LINES[countryId as CountryId] ?? LINES.us!;
+  const lines = LINES[countryId as CountryId];
+  if (!lines) {
+    throw new Error(`Household results are not available for ${countryId}.`);
+  }
+  return lines;
 }
 
 export interface HouseholdLineChange {
@@ -382,7 +289,7 @@ export function compareHouseholds(
   baseline: HouseholdCalculationData,
   reform: HouseholdCalculationData,
   year: string,
-  countryId: string = 'us'
+  countryId: string
 ): FlagshipHouseholdImpact {
   const lines = linesFor(countryId);
   const before = readHouseholdTotal(baseline, 'households', 'household_net_income', year);
@@ -414,13 +321,6 @@ export function compareHouseholds(
   };
 }
 
-export interface RunFlagshipHouseholdArgs {
-  year: string;
-  input: FlagshipHouseholdInput;
-  baselinePolicyId: string;
-  reformPolicyId: string;
-}
-
 export interface FlagshipHouseholdRun extends FlagshipHouseholdImpact {
   householdId: string;
   /**
@@ -429,6 +329,31 @@ export interface FlagshipHouseholdRun extends FlagshipHouseholdImpact {
    */
   baseline: HouseholdCalculationData;
   reform: HouseholdCalculationData;
+  /**
+   * How each policy's calculation was made, as its response says. The
+   * SPM methodology footnote reads the SPM settings and receipt; the .py
+   * bundle is kept so Reproduce in Python can name the versions that
+   * calculated the result, which v3 does not offer yet.
+   */
+  provenance: { baseline: HouseholdCalculationProvenance; reform: HouseholdCalculationProvenance };
+}
+
+/** What one calculation response says about how it was made. */
+export interface HouseholdCalculationProvenance {
+  /** The .py bundle that calculated it; null when the response names none. */
+  policyengineBundle: PolicyEngineBundle | null;
+  /** The SPM settings the calculation used (US households only). */
+  spmConfig?: SPMSelection;
+  /** The SPM forecast and thresholds the calculation read (US households only). */
+  spmProvenance?: SPMProvenance;
+}
+
+function provenanceOf(response: HouseholdCalculationResult): HouseholdCalculationProvenance {
+  return {
+    policyengineBundle: response.policyengine_bundle ?? null,
+    ...(response.spm_config ? { spmConfig: response.spm_config } : {}),
+    ...(response.spm_provenance ? { spmProvenance: response.spm_provenance } : {}),
+  };
 }
 
 /**
@@ -452,12 +377,16 @@ export function plainHouseholdError(error: unknown): Error {
  * the API keeps calculating and caches the result, so the second ask
  * usually returns it at once.
  */
-async function calculateOnce(countryId: string, householdId: string, policyId: string) {
+async function calculateOnce(
+  countryId: string,
+  householdId: string,
+  policyId: string
+): Promise<HouseholdCalculationResult> {
   try {
-    return await fetchHouseholdCalculation(countryId, householdId, policyId);
+    return await fetchHouseholdCalculationWithBundle(countryId, householdId, policyId);
   } catch (error) {
     if (error instanceof Error && /timed out/i.test(error.message)) {
-      return fetchHouseholdCalculation(countryId, householdId, policyId);
+      return fetchHouseholdCalculationWithBundle(countryId, householdId, policyId);
     }
     throw error;
   }
@@ -486,26 +415,9 @@ async function calculateHousehold(
 }
 
 /**
- * Creates the household (the API dedupes identical ones) and calculates
- * it under the baseline and the reform at once.
- */
-export async function runFlagshipHousehold({
-  year,
-  input,
-  baselinePolicyId,
-  reformPolicyId,
-}: RunFlagshipHouseholdArgs): Promise<FlagshipHouseholdRun> {
-  return runFlagshipHouseholdPayload({
-    year,
-    payload: buildHouseholdPayload(input, year),
-    baselinePolicyId,
-    reformPolicyId,
-  });
-}
-
-/**
- * The same run for a household built in full (the household builder's
- * own model, any of its inputs), sent as the builder sends it.
+ * Creates the household (the API dedupes identical ones), as the
+ * household builder sends it, and calculates it under the baseline and
+ * the reform at once, in the payload's own country.
  */
 export async function runFlagshipHouseholdPayload({
   year,
@@ -525,25 +437,9 @@ export async function runFlagshipHouseholdPayload({
   );
   return {
     householdId,
-    baseline,
-    reform,
-    ...compareHouseholds(baseline, reform, year, payload.country_id),
+    baseline: baseline.result,
+    reform: reform.result,
+    provenance: { baseline: provenanceOf(baseline), reform: provenanceOf(reform) },
+    ...compareHouseholds(baseline.result, reform.result, year, payload.country_id),
   };
-}
-
-/** "Single · 2 children · $50,000 · California": the household a result is for. */
-export function describeHouseholdInput(
-  input: FlagshipHouseholdInput,
-  countryId: CountryId = 'us'
-): string {
-  const money = (value: number) => formatCurrency(value, countryId, { maximumFractionDigits: 0 });
-  const children = input.childAges.length;
-  return [
-    input.married ? 'Married' : 'Single',
-    children === 0 ? 'no children' : children === 1 ? '1 child' : `${children} children`,
-    input.married
-      ? `${money(input.earnings)} and ${money(input.partnerEarnings)} earnings`
-      : `${money(input.earnings)} earnings`,
-    STATE_NAMES[input.state] ?? input.state,
-  ].join(' · ');
 }

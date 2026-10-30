@@ -10,16 +10,19 @@ import HouseholdImpactSection from '@/components/flagship/report/household/House
 import {
   BASELINE_POLICY_ID,
   BASELINE_RESULT,
+  calculationResponse,
   CREATED_HOUSEHOLD_ID,
   HOUSEHOLD_YEAR,
   LOW_EARNER_BASELINE_RESULT,
   LOW_EARNER_REFORM_RESULT,
+  NATIONAL_SPM_CONFIG,
   REFORM_POLICY_ID,
   REFORM_RESULT,
   REFORM_RESULT_LOSS,
   UK_BASELINE_RESULT,
   UK_REFORM_RESULT,
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
+import { SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 
 const mockCreateHousehold = vi.fn();
 const mockFetchHouseholdCalculation = vi.fn();
@@ -27,25 +30,52 @@ const mockFetchHouseholdCalculation = vi.fn();
 vi.mock('@/api/household', () => ({
   createHousehold: (...args: unknown[]) => mockCreateHousehold(...args),
 }));
+/** How each policy's calculation was made, as its response says it: nothing unless a test sets it. */
+const mockCalculationProvenance = vi.fn();
 vi.mock('@/api/householdCalculation', () => ({
-  fetchHouseholdCalculation: (...args: unknown[]) => mockFetchHouseholdCalculation(...args),
+  fetchHouseholdCalculationWithBundle: async (...args: unknown[]) =>
+    calculationResponse(
+      await mockFetchHouseholdCalculation(...args),
+      mockCalculationProvenance(...args)
+    ),
 }));
 
 // The household builder is the v2 builder, tested on its own: here a stand-in
 // makes the same calls it makes, so the section's own work is what is tested.
-vi.mock('@/components/household/HouseholdBuilderForm', () => ({
-  default: ({
-    household,
-    year,
-    maritalStatus,
-    numChildren,
-    onChange,
-    onMaritalStatusChange,
-    onNumChildrenChange,
-    variablePickerCommon,
-    personDisplayNameOf,
-    labelInputs,
-  }: any) => (
+vi.mock('@/components/household/HouseholdBuilderForm', async () => {
+  const { default: SPMGeographyChoice } = await import('@/components/household/SPMGeographyChoice');
+  const { RESOLVED_CANONICAL_METADATA } = await import('@/tests/fixtures/spm/spmMocks');
+  return {
+    default: (props: any) => (
+      <HouseholdBuilderStandIn
+        {...props}
+        SPMGeographyChoice={SPMGeographyChoice}
+        // Model information loaded for the household's country, with SPM available.
+        spmMetadata={{
+          ...RESOLVED_CANONICAL_METADATA,
+          currentCountry: props.household.countryId,
+        }}
+      />
+    ),
+  };
+});
+
+/** The builder's stand-in: the real SPM choice, as the builder shows it, and the builder's own calls. */
+function HouseholdBuilderStandIn({
+  household,
+  year,
+  maritalStatus,
+  numChildren,
+  onChange,
+  onMaritalStatusChange,
+  onNumChildrenChange,
+  variablePickerCommon,
+  personDisplayNameOf,
+  labelInputs,
+  SPMGeographyChoice,
+  spmMetadata,
+}: any) {
+  return (
     <div
       aria-label="Household builder"
       data-featured={variablePickerCommon.map((input: any) => input.name).join(' ')}
@@ -59,6 +89,12 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
         )
         .join(' ')}
     >
+      <SPMGeographyChoice
+        household={household}
+        year={year}
+        metadata={spmMetadata}
+        onChange={onChange}
+      />
       <span>{`${maritalStatus} · ${numChildren}`}</span>
       <span data-testid="state">
         {String(
@@ -82,8 +118,8 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
         Partner earns 20000
       </button>
     </div>
-  ),
-}));
+  );
+}
 // The v2 breakdowns, tested on their own: a stand-in shows what each is given.
 vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (importOriginal) => ({
   ...(await importOriginal<
@@ -111,7 +147,8 @@ function renderSection({
   region,
   countryId = 'us',
   added = true,
-}: { region?: string; countryId?: string; added?: boolean } = {}) {
+  reformPolicyId = REFORM_POLICY_ID,
+}: { region?: string; countryId?: string; added?: boolean; reformPolicyId?: string } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const view = render(
     <QueryClientProvider client={queryClient}>
@@ -120,7 +157,7 @@ function renderSection({
         year={HOUSEHOLD_YEAR}
         region={region}
         baselinePolicyId={BASELINE_POLICY_ID}
-        reformPolicyId={REFORM_POLICY_ID}
+        reformPolicyId={reformPolicyId}
       />
     </QueryClientProvider>
   );
@@ -142,6 +179,7 @@ function calculateWith(reformResult: typeof REFORM_RESULT) {
 describe('HouseholdImpactSection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCalculationProvenance.mockReset();
     mockCreateHousehold.mockResolvedValue({ result: { household_id: CREATED_HOUSEHOLD_ID } });
     calculateWith(REFORM_RESULT);
     // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
@@ -237,6 +275,81 @@ describe('HouseholdImpactSection', () => {
     const sent = mockCreateHousehold.mock.calls[0][0];
     expect(sent.data.people.you.employment_income).toEqual({ [HOUSEHOLD_YEAR]: 0 });
     expect(JSON.stringify(sent)).toContain('national');
+  });
+
+  test('given a US household then the SPM geography choice shows, on national thresholds', () => {
+    renderSection();
+
+    expect(
+      screen.getByRole('combobox', { name: 'Supplemental Poverty Measure geography' })
+    ).toHaveValue('national');
+  });
+
+  test('given local thresholds and a county then the household is sent with them', async () => {
+    const user = userEvent.setup();
+    renderSection();
+
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Supplemental Poverty Measure geography' }),
+      'county'
+    );
+    await user.type(screen.getByRole('textbox', { name: /County FIPS code/ }), '06037');
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(1));
+    const sent = mockCreateHousehold.mock.calls[0][0];
+    expect(sent.spm).toEqual({ geography_kind: 'county' });
+    expect(sent.data.households['your household'].county_fips).toEqual({
+      [HOUSEHOLD_YEAR]: '06037',
+    });
+  });
+
+  test('given a calculation with SPM provenance then its methodology shows under the result', async () => {
+    const user = userEvent.setup();
+    mockCalculationProvenance.mockReturnValue({
+      spm_config: NATIONAL_SPM_CONFIG,
+      spm_provenance: SPM_RECEIPT,
+    });
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    const result = await screen.findByRole('region', { name: 'Household impact' });
+    const methodology = within(result).getByRole('region', {
+      name: 'SPM point calculation methodology',
+    });
+    expect(methodology).toHaveTextContent('Baseline · Point calculation · National thresholds');
+    expect(methodology).toHaveTextContent('Reform · Point calculation · National thresholds');
+  });
+
+  test('given the same policy as baseline and reform then its one calculation shows its methodology once', async () => {
+    const user = userEvent.setup();
+    mockCalculationProvenance.mockReturnValue({
+      spm_config: NATIONAL_SPM_CONFIG,
+      spm_provenance: SPM_RECEIPT,
+    });
+    renderSection({ reformPolicyId: BASELINE_POLICY_ID });
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    const result = await screen.findByRole('region', { name: 'Household impact' });
+    const methodology = within(result).getByRole('region', {
+      name: 'SPM point calculation methodology',
+    });
+    expect(methodology).toHaveTextContent('Baseline · Point calculation · National thresholds');
+    expect(methodology).not.toHaveTextContent('Reform ·');
+  });
+
+  test('given a calculation without SPM provenance then no methodology shows', async () => {
+    const user = userEvent.setup();
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    const result = await screen.findByRole('region', { name: 'Household impact' });
+    expect(
+      within(result).queryByRole('region', { name: 'SPM point calculation methodology' })
+    ).not.toBeInTheDocument();
   });
 
   test('given Calculate then the run shows its progress, then the change in net income', async () => {
@@ -563,6 +676,14 @@ describe('HouseholdImpactSection', () => {
         '£3,486£2,986−£500'
       );
       expect(result).not.toHaveTextContent('$');
+    });
+
+    test('then no SPM geography choice shows', () => {
+      renderSection({ countryId: 'uk' });
+
+      expect(
+        screen.queryByRole('combobox', { name: 'Supplemental Poverty Measure geography' })
+      ).not.toBeInTheDocument();
     });
 
     test("then the picker features the UK's inputs", () => {

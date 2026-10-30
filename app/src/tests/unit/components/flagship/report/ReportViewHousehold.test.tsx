@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportView from '@/components/flagship/report/ReportView';
 import {
   BASELINE_RESULT,
+  calculationResponse,
   CREATED_HOUSEHOLD_ID,
   CUSTOM_BASELINE_POLICY_ID,
   HOUSEHOLD_YEAR,
@@ -21,7 +22,8 @@ vi.mock('@/api/household', () => ({
   createHousehold: (...args: unknown[]) => mockCreateHousehold(...args),
 }));
 vi.mock('@/api/householdCalculation', () => ({
-  fetchHouseholdCalculation: (...args: unknown[]) => mockFetchHouseholdCalculation(...args),
+  fetchHouseholdCalculationWithBundle: async (...args: unknown[]) =>
+    calculationResponse(await mockFetchHouseholdCalculation(...args)),
 }));
 // The v2 household builder, tested on its own, stands in by its state.
 vi.mock('@/components/household/HouseholdBuilderForm', () => ({
