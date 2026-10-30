@@ -284,8 +284,7 @@ describe('HouseholdImpactSection', () => {
     renderSection();
     expect(mockSaveCalculatedHousehold).toHaveBeenLastCalledWith({
       countryId: 'us',
-      householdId: undefined,
-      name: undefined,
+      household: undefined,
     });
 
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
@@ -293,8 +292,7 @@ describe('HouseholdImpactSection', () => {
 
     expect(mockSaveCalculatedHousehold).toHaveBeenLastCalledWith({
       countryId: 'us',
-      householdId: String(CREATED_HOUSEHOLD_ID),
-      name: 'Single · no children',
+      household: { id: String(CREATED_HOUSEHOLD_ID), name: 'Single · no children' },
     });
   });
 

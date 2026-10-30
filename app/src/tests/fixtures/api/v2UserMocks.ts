@@ -28,6 +28,9 @@ export const LEGACY_IDS = {
   HOUSEHOLD: 54321,
 } as const;
 
+/** A calculated household's summary, which names its saved row. */
+export const HOUSEHOLD_SUMMARY = 'Single · no children · $50,000 earnings · California';
+
 export const TIMESTAMPS = {
   CREATED: '2026-10-12T10:00:00+00:00',
   UPDATED: '2026-10-12T11:00:00+00:00',

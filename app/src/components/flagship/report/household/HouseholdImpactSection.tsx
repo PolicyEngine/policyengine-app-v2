@@ -446,8 +446,8 @@ function HouseholdCard({
   // here shows it.
   useSaveCalculatedHousehold({
     countryId,
-    householdId: result?.householdId,
-    name: result ? requested?.summary : undefined,
+    household:
+      result && requested ? { id: result.householdId, name: requested.summary } : undefined,
   });
   // Once a household runs, its result leads: the inputs fold to one line
   // until the reader edits them again.

@@ -5,13 +5,13 @@ import {
   ASSOCIATION_IDS,
   createTestApiContext,
   fetchCall,
+  HOUSEHOLD_SUMMARY,
   householdItem,
   itemResponse,
   LEGACY_IDS,
   pageResponse,
 } from '@/tests/fixtures/api/v2UserMocks';
 
-const HOUSEHOLD_SUMMARY = 'Single · no children · $50,000 earnings · California';
 const CALCULATED_HOUSEHOLD_ID = String(LEGACY_IDS.HOUSEHOLD);
 
 describe('ApiFlagshipHouseholdStore', () => {

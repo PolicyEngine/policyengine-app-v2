@@ -6,6 +6,7 @@ import { fetchPolicyById } from '@/api/policy';
 import { useV3SavedWork } from '@/hooks/useFlagshipStores';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useParallelQueries } from '@/hooks/utils/queryUtils';
+import type { CountryId } from '@/libs/countries';
 import { runFlagshipHouseholdPayload } from '@/libs/flagship/householdRun';
 import { policyKeys } from '@/libs/queryKeys';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
@@ -87,24 +88,26 @@ export function useFlagshipHouseholdPolicies({
 
 /**
  * Saves each household the report calculates to the session's user, in the
- * background: a `/v2/user-households` row for its v1 household, made once
- * per household and session. Only where saved work goes to the account (see
- * useV3SavedWork), and in the account's country. Nothing shows the row, so
- * a save that fails changes nothing on the page.
+ * background: a `/v2/user-households` row for its v1 household, looked up
+ * and made once per household and session. Only where saved work goes to the
+ * account (see useV3SavedWork), and in the account's country. Nothing shows
+ * the row, so a save that fails changes nothing on the page.
  */
 export function useSaveCalculatedHousehold({
   countryId,
-  householdId,
-  name,
+  household,
 }: {
-  countryId: string;
-  /** The calculated v1 household; nothing is saved while there is none. */
-  householdId: string | undefined;
-  /** The household's summary, which names the row. */
-  name: string | undefined;
+  countryId: CountryId;
+  /**
+   * The calculated v1 household and its summary, which names the row;
+   * nothing is saved while there is none.
+   */
+  household: { id: string; name: string } | undefined;
 }) {
   const { account, scope } = useV3SavedWork();
   const queryClient = useQueryClient();
+  const householdId = household?.id;
+  const name = household?.name;
   useEffect(() => {
     if (!account || account.countryId !== countryId || !householdId || name === undefined) {
       return;
@@ -115,6 +118,8 @@ export function useSaveCalculatedHousehold({
         queryKey: ['flagship-household-saved', scope, countryId, householdId],
         queryFn: () => store.saveCalculated({ householdId, name }),
         staleTime: Infinity,
+        // Kept for the session, so the same household is not looked up again.
+        gcTime: Infinity,
         retry: false,
       })
       .catch(() => {
