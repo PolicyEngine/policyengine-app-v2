@@ -117,7 +117,7 @@ const PAGE_HEADERS = [
  * Only add to this list: the audit fails if any of these stops redirecting,
  * so a zone can't silently go back to serving its pages off the site.
  */
-export const DIRECT_HOST_REDIRECTS = [];
+export const DIRECT_HOST_REDIRECTS = ["/us/ballot-measures-2026"];
 
 /**
  * Statuses that say nothing about the redirect: an SSO or bot challenge, a
@@ -1272,7 +1272,7 @@ export async function main(
   argv = process.argv.slice(2),
   {
     fetchImpl = fetch,
-    directHostRedirects = DIRECT_HOST_REDIRECTS,
+    directHostRedirects,
     retryDelays = DEFAULT_RETRY_DELAYS_MS,
     sleep = delay,
     now = Date.now,
@@ -1281,6 +1281,9 @@ export async function main(
 ) {
   const args = parseArgs(argv);
   const routesFile = args["routes-file"] ?? DEFAULT_ROUTES_FILE;
+  // The shipped list describes the shipped routes, not a test's.
+  const listed =
+    directHostRedirects ?? (args["routes-file"] ? [] : DIRECT_HOST_REDIRECTS);
   const iconRewritesFile =
     args["icon-rewrites-file"] ?? DEFAULT_ICON_REWRITES_FILE;
   const articlesDir = args["articles-dir"] ?? DEFAULT_ARTICLES_DIR;
@@ -1298,7 +1301,7 @@ export async function main(
     iconRewritesFile === "none" ? "" : iconRewritesFile,
   );
   const zones = zoneRoutes(rewrites);
-  const unknown = directHostRedirects.filter(
+  const unknown = listed.filter(
     (source) => !zones.some((zone) => zone.source === source),
   );
 
@@ -1334,11 +1337,7 @@ export async function main(
             }),
       );
     }
-    return summarizeRoute(
-      zone,
-      probes,
-      directHostRedirects.includes(zone.source),
-    );
+    return summarizeRoute(zone, probes, listed.includes(zone.source));
   });
 
   const marks = {

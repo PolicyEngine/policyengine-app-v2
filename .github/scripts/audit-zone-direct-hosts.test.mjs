@@ -2583,6 +2583,22 @@ describe("main", () => {
     assert.equal((await run(redirecting, listed)).code, 0);
   });
 
+  test("holds the shipped routes to the shipped list, but not a routes file", async () => {
+    const { dir, argv } = fixture();
+    try {
+      const shipped = await quietly(() =>
+        main(argv.slice(2), { ...noWait, fetchImpl: fakeFetch({}) }),
+      );
+      assert.equal(shipped.code, 1);
+      assert.match(shipped.output, /no longer redirects/);
+      assert.match(shipped.output, /\/us\/ballot-measures-2026: /);
+    } finally {
+      rmSync(dir, { recursive: true });
+    }
+    // run() passes a routes file that lists no zone's redirect.
+    assert.equal((await run({ [ROOT]: page })).code, 0);
+  });
+
   test("fails a listed zone that stopped redirecting at either path", async () => {
     assert.equal((await run({ [ROOT]: page }, listed)).code, 1);
     // A 300 with a Location isn't a redirect: the reader stays on it.
