@@ -20,21 +20,28 @@
  * - policyengine.org serves that URL itself, without redirecting it to
  *   another page or back to the zone's host, and at the root answers 200;
  * - that page doesn't name a `*.vercel.app` URL as its canonical or og:url,
- *   read from the page as jsdom parses it.
+ *   read as a browser parses the page.
  *
  * It fails only on evidence: a redirect that goes wrong, or a listed zone
  * that serves a page or a 404 without redirecting. A request that fails, that
  * keeps answering 401, 403, 408, 425, 429 or 5xx after retries, or that
  * Vercel's SSO answers, makes the route unreachable: reported, never failed.
- * So does the run's deadline: no request or retry outlasts it. Zones with no
+ * So does the run's deadline: no request, retry or parse outlasts it, and a
+ * page the audit can't parse in time is reported the same way. Zones with no
  * redirect yet are reported too.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import {
+  isMainThread,
+  parentPort,
+  Worker,
+  workerData,
+} from "node:worker_threads";
 
-import { JSDOM } from "jsdom";
+import { parse } from "parse5";
 
 import { parseArgs } from "./audit-app-zone-shell.mjs";
 
@@ -51,6 +58,13 @@ const MAX_HOPS = 5;
 // end by it, and what's left is reported unreachable.
 const DEFAULT_DEADLINE_MS = 12 * 60 * 1000;
 const DEADLINE_ERROR = "the audit reached its deadline";
+// A page's canonical links are read in a worker that gets this long (or what
+// the deadline leaves) and this much heap. A typical page parses in
+// milliseconds; parse5 takes about 6 s at 50,000 nested elements.
+const DEFAULT_PARSE_TIMEOUT_MS = 10_000;
+const PARSE_MEMORY_MB = 512;
+const CANONICAL_WORKER = "zoneDirectHostAuditCanonicalUrls";
+const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 
 export const PUBLIC_ORIGIN = "https://www.policyengine.org";
 export const PROBE_PARAM = "pe_direct_host_audit";
@@ -407,43 +421,103 @@ function samePublicPage(a, b, publicOrigin) {
 }
 
 /**
- * The URLs a page names as itself, its canonical links and og:url, read from
- * the page as jsdom parses it (the parser the website's tests use): character
- * references decoded, relative URLs resolved against the page's URL and its
- * <base>, and nothing taken from comments, script or style text, or template
- * contents. jsdom runs no script and loads nothing. Values that aren't URLs
- * are skipped.
+ * The URLs a page names as itself, its canonical links and og:url, read as a
+ * browser reads them: parse5 (the parser jsdom wraps) builds the tree with
+ * scripting on, as in a browser, so `<noscript>` holds text, not elements.
+ * Only HTML `<link>` and `<meta>` elements count, not SVG or MathML ones, and
+ * not what template contents, comments, scripts or attribute values hold.
+ * Character references are decoded, and URLs resolve against the page's URL
+ * and its first `<base href>`. Values that aren't URLs are skipped. Parsing
+ * runs no script and loads nothing; deep nesting makes it slow, so the audit
+ * runs it in a worker it can stop (readCanonicalUrls).
  */
 export function canonicalUrls(html, pageUrl = PUBLIC_ORIGIN) {
-  const { window } = new JSDOM(html, { url: pageUrl });
-  const { document } = window;
-  const resolveUrl = (value) => {
+  const elements = [];
+  // Tree order, without recursion: a deep page can't overflow the stack.
+  const stack = [parse(html, { scriptingEnabled: true })];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (node.namespaceURI === HTML_NAMESPACE) elements.push(node);
+    for (let i = (node.childNodes?.length ?? 0) - 1; i >= 0; i -= 1) {
+      stack.push(node.childNodes[i]);
+    }
+  }
+  const attribute = (element, name) =>
+    element.attrs.find((attr) => attr.name === name)?.value;
+  const resolveUrl = (value, base) => {
     try {
-      return new URL(value, document.baseURI).toString();
+      return new URL(value, base).toString();
     } catch {
       return null;
     }
   };
+  const baseHref = elements
+    .filter(({ tagName }) => tagName === "base")
+    .map((element) => attribute(element, "href"))
+    .find((href) => href !== undefined);
+  const base =
+    (baseHref === undefined ? null : resolveUrl(baseHref, pageUrl)) ?? pageUrl;
   const tokens = (value) => value.toLowerCase().split(/[\t\n\f\r ]+/);
   const urls = [];
-  for (const link of document.querySelectorAll("link[rel][href]")) {
-    if (tokens(link.getAttribute("rel")).includes("canonical")) {
-      urls.push({
-        kind: "canonical",
-        url: resolveUrl(link.getAttribute("href")),
-      });
+  for (const element of elements) {
+    if (element.tagName === "link") {
+      const rel = attribute(element, "rel");
+      const href = attribute(element, "href");
+      if (rel !== undefined && href !== undefined) {
+        if (tokens(rel).includes("canonical")) {
+          urls.push({ kind: "canonical", url: resolveUrl(href, base) });
+        }
+      }
+    } else if (element.tagName === "meta") {
+      const property = attribute(element, "property");
+      const content = attribute(element, "content");
+      if (property !== undefined && content !== undefined) {
+        if (property.trim().toLowerCase() === "og:url") {
+          urls.push({ kind: "og:url", url: resolveUrl(content, base) });
+        }
+      }
     }
   }
-  for (const meta of document.querySelectorAll("meta[property][content]")) {
-    if (meta.getAttribute("property").trim().toLowerCase() === "og:url") {
-      urls.push({
-        kind: "og:url",
-        url: resolveUrl(meta.getAttribute("content")),
-      });
-    }
-  }
-  window.close();
   return urls.filter(({ url }) => url);
+}
+
+/**
+ * canonicalUrls in a worker thread, stopped after `timeout` ms. Resolves
+ * `{ urls }`, or `{ error }` when the parse runs out of time or memory or
+ * throws, so a page the audit can't read is reported, never passed, and
+ * can't stop the run.
+ */
+export function readCanonicalUrls(
+  html,
+  pageUrl,
+  { timeout = DEFAULT_PARSE_TIMEOUT_MS } = {},
+) {
+  return new Promise((done) => {
+    let settled = false;
+    const worker = new Worker(new URL(import.meta.url), {
+      workerData: { [CANONICAL_WORKER]: { html, pageUrl } },
+      execArgv: [],
+      resourceLimits: { maxOldGenerationSizeMb: PARSE_MEMORY_MB },
+    });
+    const settle = (answer) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      worker.terminate();
+      done(answer);
+    };
+    const timer = setTimeout(
+      () => settle({ error: `parsing took over ${timeout} ms` }),
+      timeout,
+    );
+    worker.once("message", (urls) => settle({ urls }));
+    worker.once("error", (error) =>
+      settle({ error: error?.message ?? String(error) }),
+    );
+    worker.once("exit", (code) =>
+      settle({ error: `the parser exited with code ${code}` }),
+    );
+  });
 }
 
 async function request(fetchImpl, url, options) {
@@ -519,6 +593,7 @@ export async function probeDirectHost(
     sleep = delay,
     deadline = Infinity,
     now = Date.now,
+    parseTimeout = DEFAULT_PARSE_TIMEOUT_MS,
   } = {},
 ) {
   const options = {
@@ -646,7 +721,11 @@ export async function probeDirectHost(
       reason: `${direct.location} sends readers back to ${host}`,
     });
   }
-  if (!samePublicPage(landed.url, direct.location, publicOrigin)) {
+  // Another public URL for the same zone page is only an extra hop.
+  if (
+    !samePublicPage(landed.url, direct.location, publicOrigin) &&
+    !sameZonePage(rewrites, landed.url, direct.location, publicOrigin)
+  ) {
     return result("wrong", {
       reason: `policyengine.org sends ${direct.location} on to ${landed.url}`,
     });
@@ -661,7 +740,25 @@ export async function probeDirectHost(
       reason: `${direct.location} answers ${landed.status}`,
     });
   }
-  for (const { kind, url } of canonicalUrls(landed.body ?? "", landed.url)) {
+  let named = [];
+  if (landed.body) {
+    const left = Math.min(parseTimeout, deadline - now());
+    if (left <= 0) {
+      return result("unreachable", {
+        reason: `${landed.url}: ${DEADLINE_ERROR}`,
+      });
+    }
+    const read = await readCanonicalUrls(landed.body, landed.url, {
+      timeout: left,
+    });
+    if (read.error !== undefined) {
+      return result("unreachable", {
+        reason: `couldn't read the canonical links of ${landed.url}: ${read.error}`,
+      });
+    }
+    named = read.urls;
+  }
+  for (const { kind, url } of named) {
     if (new URL(url).hostname.endsWith(".vercel.app")) {
       return result("wrong", {
         reason: `${landed.url} names ${url} as its ${kind}; use the policyengine.org URL`,
@@ -763,6 +860,7 @@ export async function main(
     retryDelays = DEFAULT_RETRY_DELAYS_MS,
     sleep = delay,
     now = Date.now,
+    parseTimeout = DEFAULT_PARSE_TIMEOUT_MS,
   } = {},
 ) {
   const args = parseArgs(argv);
@@ -816,6 +914,7 @@ export async function main(
               sleep,
               deadline,
               now,
+              parseTimeout,
             }),
       );
     }
@@ -932,7 +1031,10 @@ export async function main(
   return failures.length > 0 || unknown.length > 0 ? 1 : 0;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (!isMainThread && workerData?.[CANONICAL_WORKER]) {
+  const { html, pageUrl } = workerData[CANONICAL_WORKER];
+  parentPort.postMessage(canonicalUrls(html, pageUrl));
+} else if (isMainThread && process.argv[1] === fileURLToPath(import.meta.url)) {
   main().then(
     (code) => {
       process.exitCode = code;

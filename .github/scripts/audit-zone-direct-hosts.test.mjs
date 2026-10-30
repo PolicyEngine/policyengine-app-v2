@@ -19,6 +19,7 @@ import {
   proxiedUrl,
   PUBLIC_ORIGIN,
   publicUrlFor,
+  readCanonicalUrls,
   redirectKeepsPage,
   summarizeRoute,
   USER_AGENT,
@@ -628,6 +629,98 @@ describe("canonicalUrls", () => {
     );
   });
 
+  test("reads <noscript> as a browser with scripting on does: as text", () => {
+    const urls = (html) => canonicalUrls(html).map(({ url }) => url);
+    // Inside it, link-shaped text is inert, and a <base> doesn't count.
+    assert.deepEqual(
+      urls(
+        `<head><noscript><link rel="canonical" href="https://a.vercel.app/x"></noscript></head>`,
+      ),
+      [],
+    );
+    assert.deepEqual(
+      urls(
+        `<head><noscript><base href="https://a.vercel.app/"></noscript><link rel="canonical" href="/x"></head>`,
+      ),
+      [`${PUBLIC_ORIGIN}/x`],
+    );
+    // A <style> inside it doesn't hide what follows.
+    assert.deepEqual(
+      urls(
+        `<head><noscript><style></noscript><link rel="canonical" href="https://b.vercel.app/y"></head>`,
+      ),
+      ["https://b.vercel.app/y"],
+    );
+    // Nor in the body.
+    assert.deepEqual(
+      urls(
+        `<body><noscript><link rel="canonical" href="https://a.vercel.app/x"></noscript></body>`,
+      ),
+      [],
+    );
+  });
+
+  test("counts only HTML elements, not SVG or MathML ones", () => {
+    for (const wrapper of ["svg", "math"]) {
+      assert.deepEqual(
+        canonicalUrls(
+          `<${wrapper}><link rel="canonical" href="https://a.vercel.app/x" /><base href="https://a.vercel.app/" /></${wrapper}><link rel="canonical" href="/y">`,
+        ).map(({ url }) => url),
+        [`${PUBLIC_ORIGIN}/y`],
+        wrapper,
+      );
+      // A <meta> start tag ends SVG or MathML content, so it's HTML, as in a
+      // browser.
+      assert.deepEqual(
+        canonicalUrls(
+          `<${wrapper}><meta property="og:url" content="https://a.vercel.app/x"></${wrapper}>`,
+        ).map(({ url }) => url),
+        ["https://a.vercel.app/x"],
+        wrapper,
+      );
+    }
+    // HTML inside SVG's foreignObject is HTML again.
+    assert.deepEqual(
+      canonicalUrls(
+        `<svg><foreignObject><link rel="canonical" href="https://a.vercel.app/x"></foreignObject></svg>`,
+      ).map(({ url }) => url),
+      ["https://a.vercel.app/x"],
+    );
+  });
+
+  test("resolves against the first <base> with an href, or the page's URL", () => {
+    const urls = (html) => canonicalUrls(html).map(({ url }) => url);
+    assert.deepEqual(
+      urls(
+        `<base target="_top"><base href="https://a.vercel.app/dir/"><base href="https://b.example/"><link rel="canonical" href="x">`,
+      ),
+      ["https://a.vercel.app/dir/x"],
+    );
+    // A <base> later in the page still counts, and one that isn't a URL
+    // leaves the page's URL.
+    assert.deepEqual(
+      urls(
+        `<link rel="canonical" href="x"><body><base href="https://a.vercel.app/">`,
+      ),
+      ["https://a.vercel.app/x"],
+    );
+    assert.deepEqual(
+      urls(`<base href="https://[bad"><link rel="canonical" href="x">`),
+      [`${PUBLIC_ORIGIN}/x`],
+    );
+  });
+
+  test("reads a deeply nested page without overflowing the stack", () => {
+    const deep = (depth, inner) =>
+      `${"<div>".repeat(depth)}${inner}${"</div>".repeat(depth)}`;
+    assert.deepEqual(
+      canonicalUrls(
+        deep(5000, `<link rel="canonical" href="https://a.vercel.app/x">`),
+      ).map(({ url }) => url),
+      ["https://a.vercel.app/x"],
+    );
+  });
+
   test("decodes every character reference, and survives invalid ones", () => {
     // URL parsing drops the tab that &Tab; decodes to.
     assert.deepEqual(
@@ -732,6 +825,30 @@ describe("redirectKeepsPage over every zone in appZoneRoutes.ts", async () => {
         }
       }
     }
+  });
+});
+
+describe("readCanonicalUrls", () => {
+  test("answers what canonicalUrls does, from a worker", async () => {
+    for (const html of [
+      `<link rel="canonical" href="https://a.vercel.app/x"><meta property="og:url" content="/y">`,
+      `<noscript><link rel="canonical" href="https://a.vercel.app/x"></noscript>`,
+      "",
+    ]) {
+      assert.deepEqual(await readCanonicalUrls(html, PUBLIC_ORIGIN), {
+        urls: canonicalUrls(html, PUBLIC_ORIGIN),
+      });
+    }
+  });
+
+  test("stops a parse that runs past its time", async () => {
+    // parse5 slows with depth: this takes seconds.
+    const html = `${"<div>".repeat(50_000)}${"</div>".repeat(50_000)}`;
+    const started = Date.now();
+    const read = await readCanonicalUrls(html, PUBLIC_ORIGIN, { timeout: 200 });
+    const took = Date.now() - started;
+    assert.match(read.error, /took over 200 ms/);
+    assert.ok(took < 2000, `took ${took} ms with a 200 ms limit`);
   });
 });
 
@@ -957,6 +1074,41 @@ describe("probeDirectHost", () => {
       assert.deepEqual(clock.starts, [0]);
     });
 
+    test("parses nothing after it", async () => {
+      // The page arrives at 1200 ms, past the 1000 ms deadline.
+      const clock = clocked(
+        { [DIRECT]: permanent(PUBLIC), [PUBLIC]: page },
+        600,
+      );
+      const result = await probeDirectHost(REWRITES, DIRECT, {
+        fetchImpl: clock.impl,
+        ...noWait,
+        now: clock.now,
+        deadline: 1000,
+      });
+      assert.equal(result.state, "unreachable");
+      assert.match(result.reason, /reached its deadline/);
+      assert.deepEqual(clock.starts, [0, 600]);
+    });
+
+    test("cuts the parse's time to the time left", async () => {
+      const started = Date.now();
+      const result = await probeDirectHost(REWRITES, DIRECT, {
+        fetchImpl: fakeFetch({
+          [DIRECT]: permanent(PUBLIC),
+          [PUBLIC]: {
+            status: 200,
+            body: `${"<div>".repeat(50_000)}${"</div>".repeat(50_000)}`,
+          },
+        }),
+        ...noWait,
+        deadline: started + 300,
+      });
+      const took = Date.now() - started;
+      assert.equal(result.state, "unreachable");
+      assert.ok(took < 2000, `took ${took} ms with a 300 ms deadline`);
+    });
+
     test("cuts each request's timeout to the time left", async () => {
       // Real time, scaled down: every request hangs until its signal aborts.
       const hang = async (url, init) =>
@@ -1108,6 +1260,77 @@ describe("probeDirectHost", () => {
     });
     assert.equal(result.state, "wrong");
     assert.match(result.reason, /sends .* on to .*\/us\/research/);
+  });
+
+  test("reads a deep page, and reports one it can't parse in time as unreachable", async () => {
+    const deep = (depth, inner) =>
+      `${"<div>".repeat(depth)}${inner}${"</div>".repeat(depth)}`;
+    const ok = await probe({
+      [DIRECT]: permanent(PUBLIC),
+      [PUBLIC]: {
+        status: 200,
+        body: deep(5000, `<link rel="canonical" href="${PUBLIC}">`),
+      },
+    });
+    assert.equal(ok.state, "ok", ok.reason);
+    const vercel = await probe({
+      [DIRECT]: permanent(PUBLIC),
+      [PUBLIC]: {
+        status: 200,
+        body: deep(5000, `<link rel="canonical" href="${DIRECT}">`),
+      },
+    });
+    assert.equal(vercel.state, "wrong", vercel.reason);
+    const slow = await probe(
+      {
+        [DIRECT]: permanent(PUBLIC),
+        [PUBLIC]: { status: 200, body: deep(50_000, "") },
+      },
+      { parseTimeout: 200 },
+    );
+    assert.equal(slow.state, "unreachable");
+    assert.match(
+      slow.reason,
+      /couldn't read the canonical links .*took over 200 ms/,
+    );
+  });
+
+  test("passes when policyengine.org sends the target on to another URL for the same zone page", async () => {
+    const q = `${PROBE_PARAM}=1`;
+    const year = "https://policyengine-2025-year-in-review.vercel.app";
+    const april = "https://april-fools-2026-two.vercel.app";
+    const marriage = "https://marriage-zeta-beryl.vercel.app";
+    // A zone URL, the public URL its host names, and where policyengine.org
+    // sends that: each pair proxies to the zone URL.
+    const chains = [
+      [
+        `${year}/2025-year-in-review/us?${q}`,
+        `${PUBLIC_ORIGIN}/2025-year-in-review/us?${q}`,
+        `${PUBLIC_ORIGIN}/us/2025-year-in-review?${q}`,
+      ],
+      [
+        `${april}/us/pe84/calculator?${q}`,
+        `${PUBLIC_ORIGIN}/us/pe84/calculator?${q}`,
+        `${PUBLIC_ORIGIN}/us/pe84?${q}`,
+      ],
+      [
+        `${marriage}/us/marriage?country=uk&${q}`,
+        `${PUBLIC_ORIGIN}/us/marriage?country=uk&${q}`,
+        `${PUBLIC_ORIGIN}/uk/marriage?${q}`,
+      ],
+    ];
+    for (const [zoneUrl, named, route] of chains) {
+      const result = await probeDirectHost(REWRITES, zoneUrl, {
+        fetchImpl: fakeFetch({
+          [zoneUrl]: permanent(named),
+          [named]: permanent(route),
+          [route]: page,
+        }),
+        ...noWait,
+      });
+      assert.equal(result.state, "ok", `${zoneUrl}: ${result.reason}`);
+      assert.deepEqual(result.publicHops, [route]);
+    }
   });
 
   test("fails loops on policyengine.org, through the zone host, and on the zone host", async () => {
@@ -1410,6 +1633,20 @@ describe("main", () => {
     assert.match(result.output, /UNREACHABLE \/us\/ballot-measures-2026/);
     // The probe under way stops too: it never fetches the public URL.
     assert.deepEqual(result.calls, [ROOT]);
+  });
+
+  test("reports a page it can't parse, and finishes the run", async () => {
+    const slowPage = {
+      status: 200,
+      body: `${"<div>".repeat(50_000)}${"</div>".repeat(50_000)}`,
+    };
+    const { code, output } = await run(
+      { ...redirecting, [toPublic(ROOT)]: slowPage },
+      { ...listed, parseTimeout: 200 },
+    );
+    assert.equal(code, 0);
+    assert.match(output, /UNREACHABLE \/us\/ballot-measures-2026/);
+    assert.match(output, /couldn't read the canonical links/);
   });
 
   test("ends near the deadline when every request hangs", async () => {

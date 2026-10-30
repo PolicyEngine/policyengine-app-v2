@@ -24,8 +24,8 @@ jobs:
   audit:
     name: Audit direct visits to zone hosts
     runs-on: ubuntu-latest
-    # No request or retry runs past 12 minutes (DEFAULT_DEADLINE_MS); what's
-    # left then is called unreachable. This leaves room for the install.
+    # No request, retry or parse runs past 12 minutes (DEFAULT_DEADLINE_MS);
+    # what's left then is called unreachable. This leaves room for the install.
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
           node-version: "24"
           check-latest: true
 
-      # The audit reads canonical links with jsdom, a root devDependency.
+      # The audit reads canonical links with parse5, a root devDependency.
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
