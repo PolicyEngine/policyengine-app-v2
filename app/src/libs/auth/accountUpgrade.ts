@@ -45,11 +45,12 @@ export function useAccountUpgradeNotice(): AccountUpgradeNotice | null {
   );
 }
 
-export const UPGRADE_SUCCESS_MESSAGE =
-  'The reforms and reports you saved on this browser are now in your account.';
+// The upgrade moves everything this browser saved, which can be only the
+// households it calculated, so the notices name no kind of saved work.
+export const UPGRADE_SUCCESS_MESSAGE = 'The work you saved on this browser is now in your account.';
 
 export const UPGRADE_FAILURE_MESSAGE =
-  'The reforms and reports you saved on this browser could not be added to your account. They will be added the next time you sign in.';
+  'The work you saved on this browser could not be added to your account. It will be added the next time you sign in.';
 
 export interface RunAccountUpgradeOptions {
   /** A client for the signed-in session. */

@@ -1,8 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
+import { ApiFlagshipHouseholdStore } from '@/api/flagshipHouseholdStore';
 import { fetchPolicyById } from '@/api/policy';
+import { useV3SavedWork } from '@/hooks/useFlagshipStores';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useParallelQueries } from '@/hooks/utils/queryUtils';
+import type { CountryId } from '@/libs/countries';
 import { runFlagshipHouseholdPayload } from '@/libs/flagship/householdRun';
 import { policyKeys } from '@/libs/queryKeys';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
@@ -80,4 +84,51 @@ export function useFlagshipHouseholdPolicies({
     error,
     retry: () => Promise.all(results.queries.map((query) => query.refetch())),
   };
+}
+
+/**
+ * Saves each household the report calculates to the session's user, in the
+ * background: a `/v2/user-households` row for its v1 household. Only where
+ * saved work goes to the account (see useV3SavedWork), and in the account's
+ * country. Once saved, a household is not looked up or saved again on the
+ * page, even when the session ends on it; a failed save is tried again the
+ * next time the household's result shows. Nothing shows the row, so a
+ * failure changes nothing on the page.
+ */
+export function useSaveCalculatedHousehold({
+  countryId,
+  household,
+}: {
+  countryId: CountryId;
+  /**
+   * The calculated v1 household and its summary, which names the row;
+   * nothing is saved while there is none.
+   */
+  household: { id: string; name: string } | undefined;
+}) {
+  const { account } = useV3SavedWork();
+  const queryClient = useQueryClient();
+  const householdId = household?.id;
+  const name = household?.name;
+  useEffect(() => {
+    if (!account || account.countryId !== countryId || !householdId || name === undefined) {
+      return;
+    }
+    const store = new ApiFlagshipHouseholdStore(account);
+    queryClient
+      .fetchQuery({
+        // Not keyed by the session's user: a session that ends on the page
+        // must not save the household on screen again as this browser's
+        // user, which signing in would then merge into the account twice.
+        queryKey: ['flagship-household-saved', countryId, householdId],
+        queryFn: () => store.saveCalculated({ householdId, name }),
+        staleTime: Infinity,
+        // Kept for the page's life, so a saved household is not looked up again.
+        gcTime: Infinity,
+        retry: false,
+      })
+      .catch(() => {
+        // Nothing on the page reads the row, so a failed save is left alone.
+      });
+  }, [account, countryId, householdId, name, queryClient]);
 }
