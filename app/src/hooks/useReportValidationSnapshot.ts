@@ -27,9 +27,25 @@ export interface ReportValidationState {
 export function useReportValidationSnapshot(
   userReportId: string | undefined,
   live: LiveValidation,
-  sharedSnapshot: ReportValidationSnapshot | null = null
+  sharedSnapshot: ReportValidationSnapshot | null = null,
+  /**
+   * The v1 report the link shows. A saved report moved onto a new run
+   * keeps its link, so its record is read again when this changes.
+   */
+  runId?: string
 ): ReportValidationState {
   const { store } = useFlagshipReportStore();
+  // The record is read again only when one known run is replaced by
+  // another, not when the page first learns which run it shows: a
+  // second read would let a record with no pin be pinned twice.
+  const [knownRunId, setKnownRunId] = useState(runId);
+  const [runsReplaced, setRunsReplaced] = useState(0);
+  if (runId !== undefined && runId !== knownRunId) {
+    setKnownRunId(runId);
+    if (knownRunId !== undefined) {
+      setRunsReplaced((count) => count + 1);
+    }
+  }
   const [snapshot, setSnapshot] = useState<ReportValidationSnapshot | null>(null);
   const [recordId, setRecordId] = useState<string | null>(null);
   const pinned = useRef(false);
@@ -59,7 +75,7 @@ export function useReportValidationSnapshot(
     return () => {
       cancelled = true;
     };
-  }, [store, userReportId]);
+  }, [store, userReportId, runsReplaced]);
 
   const settled = isLiveValidationSettled(live);
   useEffect(() => {

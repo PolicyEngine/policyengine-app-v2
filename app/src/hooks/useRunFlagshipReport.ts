@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
+import { savedReportQueryKeys, useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import { markDraftRun } from '@/libs/draftReform';
 import {
   flagshipReportQueryKeys,
@@ -16,7 +16,8 @@ import { RootState } from '@/store';
 /**
  * Runs the flagship report pipeline for a set of provisions and
  * navigates to the report page, exposing pending/error state for the
- * triggering button.
+ * triggering button. A run answers the report's link, or null when it
+ * did not start.
  */
 export function useRunFlagshipReport() {
   const nav = useAppNavigate();
@@ -49,6 +50,8 @@ export function useRunFlagshipReport() {
       region,
       windowYears,
       baseline,
+      savedReportId,
+      currentLink,
     }: {
       /** A run from the draft hands the draft over: its report clears it. */
       fromDraft?: boolean;
@@ -58,14 +61,18 @@ export function useRunFlagshipReport() {
       windowYears?: number;
       /** A saved reform to compare with; current law when unset. */
       baseline?: RunReportBaseline;
+      /** A saved report to move onto this run, instead of saving a new one. */
+      savedReportId?: string;
+      /** The report link the page shows: a run that answers it stays on the page. */
+      currentLink?: string;
     } = {}
-  ) => {
+  ): Promise<string | null> => {
     if (isRunning) {
-      return;
+      return null;
     }
     if (!currentLawId) {
       setError('Model metadata is still loading — try again in a moment.');
-      return;
+      return null;
     }
     setIsRunning(true);
     setError(null);
@@ -85,6 +92,7 @@ export function useRunFlagshipReport() {
         // With accounts, the run's record goes through the API (the account,
         // or this browser's unauthenticated user); otherwise this browser's.
         accountReportStore: reportStore.isAccount ? reportStore.store : null,
+        savedReportId,
       });
       if (fromDraft) {
         markDraftRun(userReportId);
@@ -92,10 +100,26 @@ export function useRunFlagshipReport() {
       // Your reforms lists the new report at once, not when its cache goes stale.
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.all });
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.statuses });
-      nav.push(`/${countryId}/report/${userReportId}`);
+      if (savedReportId) {
+        // The saved report now points at this run. Its page, open now or
+        // cached from earlier, reads it afresh rather than show the old run
+        // (and offer its transfer again) until a refetch returns. It keeps
+        // its link, so the page may stay mounted, and its next run must not
+        // wait on this one.
+        void queryClient.resetQueries({ queryKey: savedReportQueryKeys.shared });
+        void queryClient.resetQueries({ queryKey: savedReportQueryKeys.record });
+        setIsRunning(false);
+      }
+      // Opened again, the page the run started from would add a second
+      // history entry for itself.
+      if (userReportId !== currentLink) {
+        nav.push(`/${countryId}/report/${userReportId}`);
+      }
+      return userReportId;
     } catch {
       setError('Could not start the report. Try again.');
       setIsRunning(false);
+      return null;
     }
   };
 

@@ -48,8 +48,11 @@ const PROVISIONS: RunReportProvision[] = [
 /** The scope a session with sign-in off keeps its saved work under. */
 const BROWSER_SCOPE = 'browser';
 
-function renderRunWithAuth(auth: AuthContextValue, push = vi.fn()) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderRunWithAuth(
+  auth: AuthContextValue,
+  push = vi.fn(),
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+) {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <ReduxProvider store={store}>
@@ -126,6 +129,104 @@ describe('useRunFlagshipReport', () => {
 
       // Then
       expect(push).toHaveBeenCalledWith(`/us/report/${reportRowId}`);
+    });
+  });
+
+  describe('a saved report moved onto the run', () => {
+    /** The saved report's row: the link it keeps. */
+    const SAVED_REPORT_ROW_ID = '44444444-4444-4444-8444-444444444444';
+
+    test('given a saved report then the run repoints it and answers its link', async () => {
+      // Given
+      mockRunFlagshipReport.mockResolvedValue(SAVED_REPORT_ROW_ID);
+      const push = vi.fn();
+      const { result } = renderRunWithAuth(signedInAuthValue(), push);
+
+      // When
+      let link: string | null = null;
+      await act(async () => {
+        link = await result.current.run(
+          'CTC expansion',
+          'Hand-built draft',
+          PROVISIONS,
+          null,
+          2026,
+          {
+            savedReportId: SAVED_REPORT_ROW_ID,
+          }
+        );
+      });
+
+      // Then: the page it may already be on can run again
+      expect(runArguments().savedReportId).toBe(SAVED_REPORT_ROW_ID);
+      expect(link).toBe(SAVED_REPORT_ROW_ID);
+      expect(push).toHaveBeenCalledWith(`/us/report/${SAVED_REPORT_ROW_ID}`);
+      expect(result.current.isRunning).toBe(false);
+    });
+
+    test("given a saved report moved onto the run then its page's cached record and shared report are dropped", async () => {
+      // Given: its report page was open earlier, so their old run is cached
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      const sharedReportKey = ['shared-report', 'us', SAVED_REPORT_ROW_ID];
+      const recordKey = ['flagship-report-record', 'account:owner', SAVED_REPORT_ROW_ID];
+      queryClient.setQueryData(sharedReportKey, { record: { apiReportId: '55' } });
+      queryClient.setQueryData(recordKey, { id: SAVED_REPORT_ROW_ID, apiReportId: '55' });
+      mockRunFlagshipReport.mockResolvedValue(SAVED_REPORT_ROW_ID);
+      const { result } = renderRunWithAuth(signedInAuthValue(), vi.fn(), queryClient);
+
+      // When
+      await act(async () => {
+        await result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS, null, 2026, {
+          savedReportId: SAVED_REPORT_ROW_ID,
+        });
+      });
+
+      // Then: the page it opens reads the saved report afresh, not the old run
+      expect(queryClient.getQueryData(sharedReportKey)).toBeUndefined();
+      expect(queryClient.getQueryData(recordKey)).toBeUndefined();
+    });
+
+    test('given the run answers the link the page already shows then it stays there, adding no history entry', async () => {
+      // Given: the saved report's own page, an account row's link that the run keeps
+      mockRunFlagshipReport.mockResolvedValue(SAVED_REPORT_ROW_ID);
+      const push = vi.fn();
+      const { result } = renderRunWithAuth(signedInAuthValue(), push);
+
+      // When
+      await act(async () => {
+        await result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS, null, 2026, {
+          savedReportId: SAVED_REPORT_ROW_ID,
+          currentLink: SAVED_REPORT_ROW_ID,
+        });
+      });
+
+      // Then
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    test('given the run fails then it answers no link', async () => {
+      // Given
+      mockRunFlagshipReport.mockRejectedValue(new Error('Saved work is temporarily unavailable.'));
+      const { result } = renderRunWithAuth(signedInAuthValue());
+
+      // When
+      let link: string | null = 'unset';
+      await act(async () => {
+        link = await result.current.run(
+          'CTC expansion',
+          'Hand-built draft',
+          PROVISIONS,
+          null,
+          2026,
+          {
+            savedReportId: SAVED_REPORT_ROW_ID,
+          }
+        );
+      });
+
+      // Then
+      expect(link).toBeNull();
+      expect(result.current.error).toBe('Could not start the report. Try again.');
     });
   });
 

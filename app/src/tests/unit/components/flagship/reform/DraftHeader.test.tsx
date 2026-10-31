@@ -22,6 +22,7 @@ import {
   seedDeductionMetadata,
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockCreate = vi.fn();
@@ -509,6 +510,43 @@ describe('DraftHeader', () => {
 
       expect(await screen.findByRole('option', { name: 'Plan B' })).toBeInTheDocument();
       expect(screen.queryByRole('option', { name: 'Empty' })).not.toBeInTheDocument();
+    });
+
+    test('then a saved reform that sets parameters the model no longer has cannot be chosen, and says why', async () => {
+      const user = userEvent.setup();
+      mockFindMine.mockResolvedValue([
+        PLAN_B,
+        {
+          ...PLAN_B,
+          id: 'rf-removed',
+          label: 'Old plan',
+          missingParameters: [REMOVED_US_PARAMETER],
+        },
+      ]);
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: 'Compared with: Current law' }));
+      const option = await screen.findByRole('option', { name: /Old plan/ });
+      expect(option).toHaveAttribute('aria-disabled', 'true');
+      expect(option).toHaveTextContent(
+        `Uses parameters the model no longer has: ${REMOVED_US_PARAMETER}`
+      );
+      await user.click(option);
+
+      expect(getDraftReform()?.baselineReformId).toBeUndefined();
+    });
+
+    test('then a chosen comparison that sets parameters the model no longer has stops the run, and names them', async () => {
+      mockFindMine.mockResolvedValue([{ ...PLAN_B, missingParameters: [REMOVED_US_PARAMETER] }]);
+      addDraftProvision('us', CHANGED);
+      setDraftBaseline('rf-plan-b');
+      renderHeader();
+
+      const notice = await screen.findByRole('alert');
+      expect(notice).toHaveTextContent(/Plan B.*cannot be run/);
+      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
     });
 
     test('then a chosen comparison holds the run until the saved reforms load', async () => {

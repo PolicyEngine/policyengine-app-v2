@@ -222,11 +222,18 @@ export interface RunFlagshipReportArgs {
    * With accounts (US/UK): the report store for this session's user, the
    * account or this browser's unauthenticated user. The run then writes
    * exactly one `/v2/user-reports` row — with the title, source note,
-   * provisions and reform links — instead of the browser record.
+   * provisions and reform links — instead of the browser record, or, with
+   * `savedReportId`, repoints that row instead.
    */
   accountReportStore?: FlagshipReportStore | null;
   /** The model's parameters, to check and type each value as v2 does. */
   parameters?: ParameterMetadataCollection;
+  /**
+   * A saved report this run replaces: its record is repointed at the new
+   * v1 report, with the provisions run, instead of a new record saved.
+   * An account record keeps its ID, so its link opens the new results.
+   */
+  savedReportId?: string;
 }
 
 /**
@@ -308,6 +315,7 @@ export async function runFlagshipReport({
   baseline: requestedBaseline,
   accountReportStore,
   parameters,
+  savedReportId,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -343,10 +351,11 @@ export async function runFlagshipReport({
     year: String(year),
   };
 
-  // The v1 report comes first. Then exactly one record of it: through the
-  // API with accounts, whose ID is the report's link (anyone can open it),
-  // otherwise this browser's flagship record, with the v1 report's ID as
-  // the link (v3 never writes the legacy report keys).
+  // The v1 report comes first. Then exactly one record of it, new or (with
+  // savedReportId) the saved report repointed at it: through the API with
+  // accounts, whose ID is the report's link (anyone can open it), otherwise
+  // this browser's flagship record, with the v1 report's ID as the link
+  // (v3 never writes the legacy report keys).
   const reportMetadata = await createReport(countryId, payload);
   const reportId = String(reportMetadata.id);
   const budgetWindow =
@@ -379,11 +388,19 @@ export async function runFlagshipReport({
     baselineReformId: comparison?.reformId ?? null,
   };
 
+  // A saved report moved onto this run keeps its record and its links.
+  const repointed = { apiReportId: reportId, provisions, year: String(year) };
   let link = reportId;
   if (accountReportStore) {
     // A failure fails the run, so a report that opens is one that was saved.
-    link = (await accountReportStore.create(record)).id;
+    link = savedReportId
+      ? (await accountReportStore.update(savedReportId, repointed)).id
+      : (await accountReportStore.create(record)).id;
     rememberAccountReportMeta(link, meta);
+  } else if (savedReportId) {
+    // The saved report must move, or it would still point at the old run.
+    await new LocalStorageFlagshipReportStore().update(savedReportId, repointed);
+    saveReportMeta(reportId, meta);
   } else {
     saveReportMeta(reportId, meta);
     // Best-effort: the run already succeeded, and the link opens without it.

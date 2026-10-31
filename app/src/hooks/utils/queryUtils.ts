@@ -11,6 +11,8 @@ export interface FetchConfig<T> {
   staleTime?: number;
   gcTime?: number;
   structuralSharing?: boolean;
+  /** Retries after a failure; the client's default when unset. */
+  retry?: boolean | number;
 }
 
 /**
@@ -47,6 +49,7 @@ export function useParallelQueries<T>(
       ...(config.structuralSharing !== undefined && {
         structuralSharing: config.structuralSharing,
       }),
+      ...(config.retry !== undefined && { retry: config.retry }),
     })),
   });
 

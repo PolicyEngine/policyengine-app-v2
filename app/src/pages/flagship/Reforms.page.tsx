@@ -18,8 +18,11 @@ import { fetchSimulationById } from '@/api/simulation';
 import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
+import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
+import MissingParametersTransferDialog from '@/components/flagship/MissingParametersTransferDialog';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReformReports, { LatestReportBadge } from '@/components/flagship/ReformReports';
+import SavedReportTransferDialog from '@/components/flagship/SavedReportTransferDialog';
 import {
   CARD_GRID_STYLE,
   CardGridSkeleton,
@@ -38,6 +41,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { billRegion } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
+import { useSavedReformTransfer } from '@/hooks/useMissingParameterTransfers';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import {
@@ -55,6 +59,9 @@ import {
 } from '@/libs/flagship/billProvisions';
 import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
+import { reformMissingParameters } from '@/libs/flagship/missingParameters';
+import { parametersWithout } from '@/libs/flagship/missingParameterTransfer';
+import { readV1Policy, reportMissingParameters } from '@/libs/flagship/policyChecks';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -319,10 +326,14 @@ export default function ReformsPage() {
 
   const runReport = useRunFlagshipReport();
   const reformStore = useReformStore();
-  const { store: reportStore } = useFlagshipReportStore();
+  const { store: reportStore, isAccount } = useFlagshipReportStore();
   const { scope } = useV3SavedWork();
   // A re-run whose settings could not be read; the run's own errors are runReport's.
   const [rerunError, setRerunError] = useState<string | null>(null);
+  // The parameters a report tried for Re-run uses that the model no longer has.
+  const [rerunMissingParameters, setRerunMissingParameters] = useState<string[]>([]);
+  // A Re-run is checking the report's policies: another click waits for it.
+  const [rerunChecking, setRerunChecking] = useState(false);
   const {
     bills,
     isConfigured: billsConfigured,
@@ -502,10 +513,26 @@ export default function ReformsPage() {
     ? (reforms ?? []).find((reform) => reform.id === selectedId)
     : null;
 
+  // A saved reform whose policy sets parameters the model no longer has
+  // offers to transfer the rest to a new policy as it opens, as the old
+  // app's policy page did, until "Not now" puts it off for that reform.
+  const reformTransfer = useSavedReformTransfer();
+  const [reformTransferPutOffFor, setReformTransferPutOffFor] = useState<string | null>(null);
+  // A saved report whose Re-run found such parameters offers the same.
+  const [reportToTransfer, setReportToTransfer] = useState<{
+    report: FlagshipReportRecord;
+    missingParameters: string[];
+  } | null>(null);
+
   const openReform = (reform: Reform) => {
     // A failed delete or re-run belongs to the reform it was tried on.
     deleteMutation.reset();
     setRerunError(null);
+    setRerunMissingParameters([]);
+    // Opened again, a reform that cannot run offers its transfer again.
+    reformTransfer.reset();
+    setReformTransferPutOffFor(null);
+    setReportToTransfer(null);
     setSelectedId(reform.id!);
   };
 
@@ -732,6 +759,8 @@ export default function ReformsPage() {
       countryId
     );
     const changesNothing = !selectedReform.parametersUnavailable && runProvisions.length === 0;
+    // Its policy sets parameters the model no longer has: nothing may run it.
+    const missingParameters = reformMissingParameters(selectedReform);
     return (
       <WorkspaceLayout>
         <Stack style={{ gap: spacing.xl }}>
@@ -751,6 +780,23 @@ export default function ReformsPage() {
                 : ''}
             </Text>
           </Stack>
+          {missingParameters.length > 0 && (
+            <MissingParametersNotice subject="This reform" parameterPaths={missingParameters} />
+          )}
+          <MissingParametersTransferDialog
+            open={missingParameters.length > 0 && reformTransferPutOffFor !== selectedReform.id}
+            onOpenChange={(open) => !open && setReformTransferPutOffFor(selectedReform.id!)}
+            subject="reform"
+            parameterPaths={missingParameters}
+            transferLabel="Transfer to a new policy"
+            transferNote="Transferring saves the reform’s other changes as a new policy. It keeps its name and baseline, and the reports already run from it keep their results."
+            nothingLeft={
+              parametersWithout(selectedReform.parameters, missingParameters).length === 0
+            }
+            transferring={reformTransfer.isPending}
+            error={reformTransfer.error?.message ?? null}
+            onTransfer={() => reformTransfer.mutate(selectedReform)}
+          />
           {selectedReform.parametersUnavailable && (
             <Stack role="alert" style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
               <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
@@ -925,7 +971,10 @@ export default function ReformsPage() {
                 );
               }}
               disabled={
-                runReport.isRunning || selectedReform.parametersUnavailable || changesNothing
+                runReport.isRunning ||
+                selectedReform.parametersUnavailable ||
+                missingParameters.length > 0 ||
+                changesNothing
               }
               title={
                 changesNothing
@@ -951,6 +1000,30 @@ export default function ReformsPage() {
               report.
             </Text>
           )}
+          {rerunMissingParameters.length > 0 && (
+            <MissingParametersNotice
+              subject="This report"
+              parameterPaths={rerunMissingParameters}
+            />
+          )}
+          {reportToTransfer && (
+            <SavedReportTransferDialog
+              // A report opened for transfer starts with no earlier transfer's error.
+              key={reportToTransfer.report.id}
+              open
+              onOpenChange={(open) => !open && setReportToTransfer(null)}
+              report={reportToTransfer.report}
+              missingParameters={reportToTransfer.missingParameters}
+              keepsLink={isAccount}
+              findReform={savedReform}
+              title={reportToTransfer.report.title || selectedReform.label || 'Untitled reform'}
+              sourceNote={
+                reportToTransfer.report.sourceNote ||
+                SOURCE_LABELS[selectedReform.provenance.source]
+              }
+              onTransferred={() => setReportToTransfer(null)}
+            />
+          )}
           {(runReport.error || rerunError) && (
             <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
               {runReport.error || rerunError}
@@ -965,13 +1038,36 @@ export default function ReformsPage() {
           <ReformReports
             countryId={countryId}
             reports={reportsFor(selectedReform.id)}
-            rerunning={runReport.isRunning}
+            rerunning={runReport.isRunning || rerunChecking}
             reformName={(reformId) => {
               const reform = savedReform(reformId);
               return reform ? reform.label || 'Untitled reform' : undefined;
             }}
             onRerun={async (report) => {
               setRerunError(null);
+              setRerunMissingParameters([]);
+              // Its own policies, as it ran them: a re-run runs the same
+              // changes against the same baseline, whatever the saved reforms
+              // say now. A check that cannot be made leaves the re-run as it was.
+              setRerunChecking(true);
+              const missing = await reportMissingParameters(
+                countryId,
+                report.apiReportId,
+                (policyCountryId, policyId) => readV1Policy(queryClient, policyCountryId, policyId)
+              )
+                // Without the report, the re-run compares with the saved
+                // comparison reform's own policy (see rerunSettings): check that.
+                .catch(() =>
+                  report.baselineReformId
+                    ? reformMissingParameters(savedReform(report.baselineReformId))
+                    : []
+                )
+                .finally(() => setRerunChecking(false));
+              if (missing.length > 0) {
+                setRerunMissingParameters(missing);
+                setReportToTransfer({ report, missingParameters: missing });
+                return;
+              }
               // The same report on today's model: its reform as it ran, its
               // year, population, budget window and comparison, linked to the
               // same saved reform.
@@ -1194,7 +1290,9 @@ export default function ReformsPage() {
                 eyebrow={
                   reform.parametersUnavailable
                     ? 'Changes could not be loaded'
-                    : `${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`
+                    : reformMissingParameters(reform).length > 0
+                      ? 'Uses parameters the model no longer has'
+                      : `${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`
                 }
                 badge={(() => {
                   const latest = latestReport(reform.id);

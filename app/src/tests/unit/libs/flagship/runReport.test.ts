@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { FlagshipReportRecord, FlagshipReportStore } from '@/api/flagshipReportStore';
+import {
+  LocalStorageFlagshipReportStore,
+  type FlagshipReportRecord,
+  type FlagshipReportStore,
+} from '@/api/flagshipReportStore';
 import {
   forgetAccountReportMeta,
   readReportMeta,
@@ -568,6 +572,108 @@ describe('runFlagshipReport', () => {
         accountReportStore: accountStore,
       })
     ).rejects.toThrow('Saved work is temporarily unavailable.');
+  });
+
+  describe('given a saved report to move onto the new run', () => {
+    test('then the account row is repointed, not created, and keeps its link', async () => {
+      // Given
+      const accountStore = {
+        create: vi.fn(),
+        update: vi.fn().mockResolvedValue({ id: REPORT_ROW_ID }),
+      } as unknown as FlagshipReportStore;
+
+      // When
+      const link = await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: 'Hand-built',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        reformId: REFORM_ROW_ID,
+        year: 2027,
+        accountReportStore: accountStore,
+        savedReportId: REPORT_ROW_ID,
+      });
+
+      // Then
+      expect(link).toBe(REPORT_ROW_ID);
+      expect(accountStore.create).not.toHaveBeenCalled();
+      expect(accountStore.update).toHaveBeenCalledWith(REPORT_ROW_ID, {
+        apiReportId: '55',
+        provisions: [PROVISION],
+        year: '2027',
+      });
+      expect(readReportMeta(REPORT_ROW_ID)?.provisions).toEqual([PROVISION]);
+    });
+
+    test('then a failed account update fails the run', async () => {
+      // Given
+      const accountStore = {
+        create: vi.fn(),
+        update: vi.fn().mockRejectedValue(new Error('Saved work is temporarily unavailable.')),
+      } as unknown as FlagshipReportStore;
+
+      // When / Then
+      await expect(
+        runFlagshipReport({
+          countryId: 'us',
+          title: 'CTC expansion',
+          sourceNote: '',
+          provisions: [PROVISION],
+          currentLawId: 2,
+          accountReportStore: accountStore,
+          savedReportId: REPORT_ROW_ID,
+        })
+      ).rejects.toThrow('Saved work is temporarily unavailable.');
+      expect(accountStore.create).not.toHaveBeenCalled();
+    });
+
+    test('then the browser record is repointed, and the link is the new v1 report', async () => {
+      // Given
+      const saved = await new LocalStorageFlagshipReportStore().create({
+        countryId: 'us',
+        apiReportId: '40',
+        title: 'CTC expansion',
+        sourceNote: 'Hand-built',
+        provisions: [PROVISION],
+        year: '2026',
+        reformId: 'rf-local1',
+      });
+
+      // When
+      const link = await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: 'Hand-built',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        reformId: 'rf-local1',
+        year: 2026,
+        savedReportId: saved.id,
+      });
+
+      // Then
+      expect(link).toBe('55');
+      const records = await new LocalStorageFlagshipReportStore().findMine();
+      // The same record, dated by the new run and with no pin from the old one.
+      expect(records).toEqual([
+        { ...saved, apiReportId: '55', createdAt: expect.any(String), validation: null },
+      ]);
+      expect(records[0].createdAt >= saved.createdAt).toBe(true);
+    });
+
+    test('then a browser record that is gone fails the run', async () => {
+      await expect(
+        runFlagshipReport({
+          countryId: 'us',
+          title: 'CTC expansion',
+          sourceNote: '',
+          provisions: [PROVISION],
+          currentLawId: 2,
+          savedReportId: 'lfr-missing',
+        })
+      ).rejects.toThrow('Report not found');
+    });
   });
 });
 

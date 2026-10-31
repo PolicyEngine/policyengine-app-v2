@@ -8,7 +8,7 @@ import {
   type FlagshipReportRecord,
   type FlagshipReportStore,
 } from '@/api/flagshipReportStore';
-import { fetchV1PolicyJson, getReformStore, type ReformStore } from '@/api/reformStore';
+import { getReformStore, type ReformStore } from '@/api/reformStore';
 import { fetchSharedReport } from '@/api/sharedReport';
 import { isAccountId, type ApiStoreContext } from '@/api/v2Associations';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -16,6 +16,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
+import { readV1Policy } from '@/libs/flagship/policyChecks';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
@@ -61,13 +62,6 @@ export function useV3SavedWork(): V3SavedWork {
   }, [status, subject, browserUserId, countryId, client]);
 }
 
-/** A v1 policy's raw parameter map (`policy_json`), per country. */
-const v1PolicyJsonKey = (countryId: string, policyId: string) =>
-  ['v1-policy-json', countryId, policyId] as const;
-
-/** How long a fetched v1 policy stays cached without a reader. */
-const V1_POLICY_JSON_GC_TIME = 30 * 60 * 1000;
-
 export function useReformStore(): ReformStore {
   const { account } = useV3SavedWork();
   const parameters = useSelector((state: RootState) => state.metadata?.parameters);
@@ -82,21 +76,26 @@ export function useReformStore(): ReformStore {
         getParameterMetadata: () => parametersRef.current,
         // v1 policies never change, so each is fetched once per session
         // rather than on every list of the account's reforms.
-        fetchPolicyJson: (countryId, policyId) =>
-          queryClient.fetchQuery({
-            queryKey: v1PolicyJsonKey(countryId, policyId),
-            queryFn: () => fetchV1PolicyJson(countryId, policyId),
-            staleTime: Infinity,
-            gcTime: V1_POLICY_JSON_GC_TIME,
-          }),
+        fetchPolicy: (countryId, policyId) => readV1Policy(queryClient, countryId, policyId),
       }),
     [account, queryClient]
   );
 }
 
+/** The query keys a saved report's page reads it under, without the session and link. */
+export const savedReportQueryKeys = {
+  /** This session's record a report link names. */
+  record: ['flagship-report-record'] as const,
+  /** A saved report as anyone holding its link reads it. */
+  shared: ['shared-report'] as const,
+};
+
 export interface FlagshipReportStoreSelection {
   store: FlagshipReportStore;
-  /** True when records go to the account (one `/v2/user-reports` row per run). */
+  /**
+   * True when records go to the account: one `/v2/user-reports` row per
+   * saved report, which a transfer repoints at its new run.
+   */
   isAccount: boolean;
   /** The session scope for cached records (see V3SavedWork). */
   scope: string;
@@ -123,7 +122,7 @@ export function useFlagshipReportStore(): FlagshipReportStoreSelection {
 export function useReportRecord(link: string | undefined) {
   const { store, scope } = useFlagshipReportStore();
   const { data } = useQuery({
-    queryKey: ['flagship-report-record', scope, link ?? ''],
+    queryKey: [...savedReportQueryKeys.record, scope, link ?? ''],
     queryFn: () => findReportRecordByLink(store, link!),
     enabled: !!link,
     staleTime: 5 * 60 * 1000,
@@ -149,7 +148,7 @@ export interface SharedReport {
 export function useSharedReport(link: string | undefined) {
   const countryId = useCurrentCountry();
   return useQuery({
-    queryKey: ['shared-report', countryId, link ?? ''],
+    queryKey: [...savedReportQueryKeys.shared, countryId, link ?? ''],
     queryFn: async (): Promise<SharedReport | null> => {
       const item = await fetchSharedReport(countryId, link!);
       return item
