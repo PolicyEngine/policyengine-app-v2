@@ -27,7 +27,6 @@ import { Stack, Title } from '@/components/ui';
 import { getDurationForRegion } from '@/constants/calculationDurations';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
-import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import {
   useFlagshipReportStore,
@@ -39,6 +38,7 @@ import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot
 import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
+import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
 import {
   isUntitledReform,
@@ -53,6 +53,7 @@ import {
 } from '@/libs/flagship/reportBaseline';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta, reportMetaFromRecord } from '@/libs/flagship/runReport';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { isUKLocalLevelRegion } from '@/utils/geographyUtils';
@@ -148,6 +149,22 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const reformPolicyId = simulations?.[1]?.policyId;
   const reformPolicy = policies.find((policy) => policy.id === reformPolicyId);
   const baselinePolicyId = simulations?.[0]?.policyId;
+  const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
+  // Names and current law for what the report changes (and what it is
+  // compared with): with the whole metadata on the v1 routes; on the v2
+  // routes they load in one request once the report's policies are in.
+  const storedMeta = readReportMeta(userReportId);
+  const reportParameterNames = useMemo(
+    () => [
+      ...new Set([
+        ...(storedMeta?.provisions.map((provision) => provision.path) ?? []),
+        ...(reformPolicy?.parameters?.map((parameter) => parameter.name) ?? []),
+        ...(baselinePolicy?.parameters?.map((parameter) => parameter.name) ?? []),
+      ]),
+    ],
+    [storedMeta, reformPolicy, baselinePolicy]
+  );
+  const reportParameters = useEnsureV3Parameters(reportParameterNames);
   // The saved report names the reform it was compared with; only its owner
   // links to that reform.
   const sharedBaseline =
@@ -159,10 +176,11 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         }
       : undefined;
   const meta =
-    readReportMeta(userReportId) ??
+    storedMeta ??
     reportMetaFromRecord(shared?.record, report?.year, sharedBaseline) ??
     provenanceFromPolicy(
-      reformPolicy,
+      // Rebuilt from the policy once its parameters' names and current law are in.
+      reportParameters.status === 'ready' ? reformPolicy : undefined,
       parameters,
       report?.label,
       report?.year || undefined,
@@ -173,16 +191,17 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // Stored provenance that can't be read: readReportMeta answers none for it.
   const unreadableMeta = useUnreadableReportMeta(userReportId);
   // The reform's provisions are rebuilt from metadata; without it they cannot show.
-  const metadata = useFlagshipMetadataStatus();
+  const metadata = reportParameters;
   // Rebuilt, the provisions are on their way until the reform policy loads
   // (it waits for the parameter metadata, so names and current law come
   // with it): the report waits for them rather than show an empty reform
   // to adjust. A policy or metadata that failed lets it show without them.
+  const reformPolicyFailed = !!reformPolicyId && failedPolicyIds.includes(reformPolicyId);
   const awaitingProvisions =
     !meta &&
     !unresolvable &&
     !!reformPolicyId &&
-    !failedPolicyIds.includes(reformPolicyId) &&
+    !reformPolicyFailed &&
     metadata.status !== 'error';
 
   // A household report is the classic calculator's: this page shows
@@ -248,7 +267,6 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   const output = calcStatus.isComplete ? (calcStatus.result as SocietyWideOutput) : null;
 
-  const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
   // A baseline policy that failed to load is unknown, not current law.
   const baselineUnknown = reportBaselineUnknown(meta, baselinePolicyId, {
     currentLawId,
@@ -551,6 +569,17 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           {!meta && metadata.status === 'error' && (
             <LeadError>
               <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
+            </LeadError>
+          )}
+          {/* On the v1 routes the report shows without its changes, as before. */}
+          {!meta && reformPolicyFailed && V3_API_ROUTES === 'v2' && (
+            <LeadError>
+              <ErrorState
+                compact
+                title="Could not load the reform policy"
+                description="The results show, but the changes it makes are missing."
+                onRetry={retry}
+              />
             </LeadError>
           )}
           {baselineUnknown && (

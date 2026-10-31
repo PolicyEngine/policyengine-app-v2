@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { ReformNotFoundError } from '@/api/reformStore';
 import { BrowserOnlyIdError } from '@/api/v2Associations';
 import { isV2ApiError } from '@/api/v2UserClient';
+import { ErrorState } from '@/components/flagship/states';
 import {
   Button,
   Popover,
@@ -275,7 +276,18 @@ interface DraftRunRequest {
   runBaseline: RunReportBaseline | undefined;
 }
 
-export function DraftRunBar({ draft }: { draft: DraftReform }) {
+export function DraftRunBar({
+  draft,
+  currentLawUnavailable = false,
+}: {
+  draft: DraftReform;
+  /**
+   * The draft's current-law values are still loading, or failed to (on the
+   * v2 routes). Saving keeps only the values that differ from current law,
+   * so neither save can run until they are in.
+   */
+  currentLawUnavailable?: boolean;
+}) {
   const nav = useAppNavigate();
   const queryClient = useQueryClient();
   const runReport = useRunFlagshipReport();
@@ -502,7 +514,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           <Button
             variant="outline"
             onClick={() => saveMutation.mutate()}
-            disabled={nothingToSave || saveMutation.isPending || starting}
+            disabled={nothingToSave || saveMutation.isPending || starting || currentLawUnavailable}
           >
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
@@ -525,7 +537,9 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
               starting ||
               saveMutation.isPending ||
               baseline.pending ||
-              baseline.matchesDraft
+              baseline.failed ||
+              baseline.matchesDraft ||
+              currentLawUnavailable
             }
             title={
               !empty && adjusted.length === 0
@@ -569,6 +583,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         </p>
       )}
 
+      {baseline.failed && (
+        <ErrorState
+          compact
+          title="Could not load current law for the comparison"
+          onRetry={baseline.retry}
+        />
+      )}
       {(runReport.error || saveError) && (
         <p
           role="alert"

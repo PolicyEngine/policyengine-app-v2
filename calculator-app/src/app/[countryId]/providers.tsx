@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { useSelectedLayoutSegments } from "next/navigation";
 import { QueryNormalizerProvider } from "@normy/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider, useDispatch } from "react-redux";
@@ -10,6 +11,7 @@ import { AppProvider } from "@/contexts/AppContext";
 import { CalcOrchestratorProvider } from "@/contexts/CalcOrchestratorContext";
 import { useCurrentCountry } from "@/hooks/useCurrentCountry";
 import { useFetchMetadata } from "@/hooks/useMetadata";
+import { metadataRoutesForPage } from "@/libs/flagship/v3ApiRoutes";
 import { setCurrentCountry } from "@/reducers/metadataReducer";
 import { AppDispatch, store } from "@/store";
 import { cacheMonitor } from "@/utils/cacheMonitor";
@@ -87,16 +89,20 @@ export function CalculatorProviders({
 
 /**
  * Syncs the country to Redux and triggers a non-blocking metadata fetch.
+ * The v3 workspace route group loads from the routes V3_API_ROUTES names;
+ * the older report builder always loads from v1; after the switch, a page
+ * that only redirects into v3 loads nothing (see metadataRoutesForPage).
  */
 function MetadataBootstrap({ children }: { children: React.ReactNode }) {
   const countryId = useCurrentCountry();
   const dispatch = useDispatch<AppDispatch>();
+  const routes = metadataRoutesForPage(useSelectedLayoutSegments());
 
   useEffect(() => {
     dispatch(setCurrentCountry(countryId));
   }, [countryId, dispatch]);
 
-  useFetchMetadata(countryId);
+  useFetchMetadata(countryId, routes);
 
   return <>{children}</>;
 }

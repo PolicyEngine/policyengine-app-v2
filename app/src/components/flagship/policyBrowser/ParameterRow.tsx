@@ -1,10 +1,13 @@
 import { IconCheck, IconPlus } from '@tabler/icons-react';
+import { SkeletonLine } from '@/components/flagship/states';
 import { colors, spacing, typography } from '@/designTokens';
 import { ParameterTreeNode } from '@/types/metadata';
 
 interface ParameterRowProps {
   node: ParameterTreeNode;
   value: string | null;
+  /** The value is still loading: a placeholder stands for it. */
+  valueLoading?: boolean;
   inDraft: boolean;
   divided: boolean;
   onAdd: () => void;
@@ -16,7 +19,14 @@ interface ParameterRowProps {
  * Either way a click opens it for editing. The description waits in the
  * tooltip, so the list reads as names.
  */
-export default function ParameterRow({ node, value, inDraft, divided, onAdd }: ParameterRowProps) {
+export default function ParameterRow({
+  node,
+  value,
+  valueLoading = false,
+  inDraft,
+  divided,
+  onAdd,
+}: ParameterRowProps) {
   return (
     <button
       type="button"
@@ -49,6 +59,7 @@ export default function ParameterRow({ node, value, inDraft, divided, onAdd }: P
       >
         {node.label}
       </span>
+      {!value && valueLoading && <SkeletonLine width={64} />}
       {value && (
         <span
           title={value}
