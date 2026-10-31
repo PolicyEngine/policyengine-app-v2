@@ -7,6 +7,10 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { catalogParametersResult } from '@/tests/fixtures/api/publicApi/catalogParametersMocks';
 import {
+  catalogVariablesEnvelope,
+  VARIABLES_PATH,
+} from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
+import {
   jsonResponse,
   requestsTo,
   stubPublicApiFetch,
@@ -34,6 +38,20 @@ vi.mock('@/hooks/useFlagshipReport', () => ({
 vi.mock('@/hooks/useCalculationStatus', () => ({
   useCalculationStatus: () => mockCalcStatus(),
 }));
+
+const mockUseV3VariablesInBackground = vi.fn();
+
+/** The real variables hooks, with the page's background load observed. */
+vi.mock('@/hooks/useV3Variables', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useV3Variables')>();
+  return {
+    ...actual,
+    useV3VariablesInBackground: () => {
+      mockUseV3VariablesInBackground();
+      actual.useV3VariablesInBackground();
+    },
+  };
+});
 
 /** v3 after the switch: V3_API_ROUTES is 'v2'. */
 vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
@@ -156,5 +174,51 @@ describe('FlagshipReportPage with v3 on the v2 routes', () => {
     await waitFor(() =>
       expect(screen.queryByText('Could not load the parameters')).not.toBeInTheDocument()
     );
+  });
+
+  test('given the variables still loading then the household tab waits for them', async () => {
+    // Given
+    const user = userEvent.setup();
+    let answerVariables: () => void = () => {};
+    stubPublicApiFetch({
+      [PARAMETERS_PATH]: answerParameters,
+      [VARIABLES_PATH]: () =>
+        new Promise<Response>((resolve) => {
+          answerVariables = () => resolve(jsonResponse(catalogVariablesEnvelope()));
+        }),
+    });
+    await seedV2ModelCatalog();
+    renderPage(EXISTING_REPORT_ID);
+
+    // When
+    await user.click(await screen.findByRole('tab', { name: 'Household' }));
+
+    // Then
+    expect(
+      await screen.findByRole('status', { name: 'Loading the household builder' })
+    ).toBeInTheDocument();
+    answerVariables();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('status', { name: 'Loading the household builder' })
+      ).not.toBeInTheDocument()
+    );
+    expect(store.getState().metadata.variables.employment_income.label).toBe('Employment income');
+  });
+
+  test('given the page renders then it starts loading the variables in the background', async () => {
+    // Given
+    const fetchStub = stubPublicApiFetch({
+      [VARIABLES_PATH]: () => jsonResponse(catalogVariablesEnvelope()),
+      [PARAMETERS_PATH]: answerParameters,
+    });
+    await seedV2ModelCatalog();
+
+    // When
+    renderPage(EXISTING_REPORT_ID);
+
+    // Then
+    expect(mockUseV3VariablesInBackground).toHaveBeenCalled();
+    await waitFor(() => expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1));
   });
 });

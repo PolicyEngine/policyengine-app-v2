@@ -1,10 +1,12 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 // Import the API functions
 import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
+import type { V1ShapedVariable } from '@/api/publicApi/catalogVariables';
 import { fetchV2ModelCatalogMetadata } from '@/api/publicApi/modelCatalog';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { MetadataRoutes, MetadataState, V2CatalogReference } from '@/types/metadata';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import type { ValuesList } from '@/types/subIngredients/valueInterval';
 
 /**
  * What to load: a country alone reads `GET /{country}/metadata` (v1), as
@@ -132,6 +134,37 @@ const metadataSlice = createSlice({
         ];
       }
     },
+    /**
+     * Every variable of a catalog version, loaded once in the background on
+     * the v2 routes, joins the store in v1's shape, with the dated values of
+     * the parameters their adds or subtracts name. A response for an earlier
+     * model catalog load, country or version is dropped.
+     */
+    catalogVariablesLoaded(
+      state,
+      action: PayloadAction<{
+        countryId: string;
+        policyengineVersion: string;
+        /** The model catalog load the variables were asked for under. */
+        loadId: string;
+        variables: Record<string, V1ShapedVariable>;
+        partParameterValues: Record<string, ValuesList>;
+      }>
+    ) {
+      const { countryId, policyengineVersion, loadId, variables, partParameterValues } =
+        action.payload;
+      if (
+        state.routes !== 'v2' ||
+        state.v2LoadId !== loadId ||
+        state.currentCountry !== countryId ||
+        state.v2Catalog?.policyengineVersion !== policyengineVersion
+      ) {
+        return;
+      }
+      state.variables = variables;
+      state.v2PartParameterValues = partParameterValues;
+      state.v2VariablesLoadId = loadId;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -205,7 +238,8 @@ const metadataSlice = createSlice({
   },
 });
 
-export const { setCurrentCountry, clearMetadata, catalogParametersLoaded } = metadataSlice.actions;
+export const { setCurrentCountry, clearMetadata, catalogParametersLoaded, catalogVariablesLoaded } =
+  metadataSlice.actions;
 
 /** The v2 catalog version and model the store holds, once its model catalog is in; null otherwise. */
 export function selectV2Catalog(state: { metadata: MetadataState }): V2CatalogReference | null {

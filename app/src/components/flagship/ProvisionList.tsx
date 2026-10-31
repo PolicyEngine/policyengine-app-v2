@@ -1,6 +1,8 @@
 import { useSelector } from 'react-redux';
+import { VariableNamesFailed, VariableNamesLoading } from '@/components/flagship/V3VariablesGate';
 import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { useV3Variables } from '@/hooks/useV3Variables';
 import { describeChange } from '@/libs/flagship/draftLabels';
 import { RootState } from '@/store';
 import { formatCurrentLaw, formatValue } from '@/utils/parameterValues';
@@ -31,6 +33,8 @@ export default function ProvisionList({
 }) {
   const variables = useSelector((state: RootState) => state.metadata.variables);
   const variableLabel = (name: string) => variables?.[name]?.label ?? name;
+  // On v2 the variables load in the background: a list of them waits for their labels.
+  const variablesStatus = useV3Variables();
   return (
     <div
       style={{
@@ -99,7 +103,11 @@ export default function ProvisionList({
                 textAlign: 'right',
               }}
             >
-              {listChange ? (
+              {listChange && variablesStatus.status === 'loading' ? (
+                <VariableNamesLoading />
+              ) : listChange && variablesStatus.status === 'error' ? (
+                <VariableNamesFailed onRetry={variablesStatus.retry} />
+              ) : listChange ? (
                 <span
                   style={{ color: colors.primary[700], fontWeight: typography.fontWeight.semibold }}
                 >
