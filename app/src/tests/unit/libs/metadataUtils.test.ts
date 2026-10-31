@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getDateRange,
   getFieldLabel,
   getFieldOptions,
   isDropdownField,
@@ -8,16 +9,20 @@ import {
 } from '@/libs/metadataUtils';
 import type { RootState } from '@/store';
 import {
+  EXPECTED_DATE_RANGES,
   EXPECTED_LABELS,
   INELIGIBLE_SEARCH_PARAMETERS,
   mockMetadataPayload,
   mockMinimalPayload,
+  mockStateWhileMetadataLoads,
   mockStateWithMetadata,
+  mockStateWithTimePeriods,
   SAME_LABEL_SEARCH_PARAMETERS,
   SEARCH_VISIBILITY_CASES,
   searchVisibilityState,
   SORTED_SEARCH_PARAMETERS,
   TEST_FIELD_NAMES,
+  TEST_TIME_PERIOD_YEARS,
   VISIBLE_SEARCH_PARAMETER,
 } from '@/tests/fixtures/libs/metadataUtilsMocks';
 
@@ -270,6 +275,63 @@ describe('metadataUtils', () => {
 
       // Then
       expect(result.parameterTree).toBeNull();
+    });
+  });
+
+  describe('getDateRange', () => {
+    it('given years through 2036 in metadata then the range runs from the first to the last year', () => {
+      // Given
+      const state = mockStateWithTimePeriods(TEST_TIME_PERIOD_YEARS.THROUGH_2036) as RootState;
+
+      // When
+      const result = getDateRange(state);
+
+      // Then
+      expect(result).toEqual(EXPECTED_DATE_RANGES.THROUGH_2036);
+    });
+
+    it('given metadata that ends in 2035 then the range ends in 2035, not the fallback', () => {
+      // Given
+      const state = mockStateWithTimePeriods(TEST_TIME_PERIOD_YEARS.US_THROUGH_2035) as RootState;
+
+      // When
+      const result = getDateRange(state);
+
+      // Then
+      expect(result).toEqual(EXPECTED_DATE_RANGES.US_THROUGH_2035);
+    });
+
+    it('given metadata from 2024 to 2030 then the range starts in 2024 and ends in 2030', () => {
+      // Given
+      const state = mockStateWithTimePeriods(TEST_TIME_PERIOD_YEARS.UK_2024_TO_2030) as RootState;
+
+      // When
+      const result = getDateRange(state);
+
+      // Then
+      expect(result).toEqual(EXPECTED_DATE_RANGES.UK_2024_TO_2030);
+    });
+
+    it('given no time periods yet then falls back to 2022 through 2036', () => {
+      // Given
+      const state = mockStateWithTimePeriods(TEST_TIME_PERIOD_YEARS.NONE) as RootState;
+
+      // When
+      const result = getDateRange(state);
+
+      // Then
+      expect(result).toEqual(EXPECTED_DATE_RANGES.FALLBACK);
+    });
+
+    it('given the metadata request is still in flight then falls back to 2022 through 2036', () => {
+      // Given
+      const state = mockStateWhileMetadataLoads() as RootState;
+
+      // When
+      const result = getDateRange(state);
+
+      // Then
+      expect(result).toEqual(EXPECTED_DATE_RANGES.FALLBACK);
     });
   });
 });

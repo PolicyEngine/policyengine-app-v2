@@ -1,10 +1,12 @@
 import { transformMetadataPayload } from '@/libs/metadataUtils';
+import metadataReducer, { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
 import type { MetadataApiPayload } from '@/types/metadata';
 import type {
   ParameterMetadata,
   ParameterMetadataCollection,
 } from '@/types/metadata/parameterMetadata';
+import { US_REGION_TYPES } from '@/types/regionTypes';
 
 export const TEST_FIELD_NAMES = {
   STATE_NAME: 'state_name',
@@ -24,6 +26,22 @@ export const EXPECTED_LABELS = {
   BRMA: 'Broad Rental Market Area',
   LOCAL_AUTHORITY: 'Local authority',
   HOUSEHOLD_INCOME: 'Household income',
+} as const;
+
+export const TEST_TIME_PERIOD_YEARS = {
+  THROUGH_2036: [2036, 2035, 2022],
+  // The US API's years today: 2022 to 2035, newest first
+  US_THROUGH_2035: [2035, 2034, 2022],
+  // The UK API's years today: 2024 to 2030
+  UK_2024_TO_2030: [2024, 2025, 2030],
+  NONE: [],
+} as const;
+
+export const EXPECTED_DATE_RANGES = {
+  THROUGH_2036: { minDate: '2022-01-01', maxDate: '2036-12-31' },
+  US_THROUGH_2035: { minDate: '2022-01-01', maxDate: '2035-12-31' },
+  UK_2024_TO_2030: { minDate: '2024-01-01', maxDate: '2030-12-31' },
+  FALLBACK: { minDate: '2022-01-01', maxDate: '2036-12-31' },
 } as const;
 
 export const mockMetadataPayload = (overrides?: any): MetadataApiPayload => ({
@@ -93,7 +111,7 @@ export const mockMinimalPayload = (): MetadataApiPayload => ({
 
 // Helper to create a mock RootState with metadata for testing
 export const mockStateWithMetadata = (
-  overrides?: Partial<MetadataApiPayload>
+  overrides?: Partial<MetadataApiPayload['result']>
 ): Partial<RootState> => {
   const payload = mockMetadataPayload(overrides);
   const metadata = transformMetadataPayload(payload, 'us');
@@ -149,3 +167,18 @@ export function searchVisibilityState(
 ): RootState {
   return { metadata: { parameters } } as RootState;
 }
+
+// Helper to create a mock RootState whose metadata offers the given years
+export const mockStateWithTimePeriods = (years: readonly number[]): Partial<RootState> =>
+  mockStateWithMetadata({
+    economy_options: {
+      region: [{ name: 'us', label: 'United States', type: US_REGION_TYPES.NATIONAL }],
+      time_period: years.map((year) => ({ name: year, label: year.toString() })),
+      datasets: [],
+    },
+  });
+
+// Helper to create the RootState that the app has while the metadata request is in flight
+export const mockStateWhileMetadataLoads = (): Partial<RootState> => ({
+  metadata: metadataReducer(undefined, fetchMetadataThunk.pending('request', 'us')),
+});
