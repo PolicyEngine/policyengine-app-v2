@@ -139,6 +139,13 @@ function calculateWith(reformResult: typeof REFORM_RESULT) {
   );
 }
 
+/** Opens a household, or the comparison, from the row of tiles. */
+async function openTile(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
+  await user.click(
+    within(screen.getByRole('tablist', { name: 'Households' })).getByRole('tab', { name })
+  );
+}
+
 describe('HouseholdImpactSection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -176,30 +183,96 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('region', { name: 'Household impact' })).not.toBeInTheDocument();
   });
 
-  test('given another household then each has its own builder and result', async () => {
+  test('given another household then it opens, and each has its own builder and result', async () => {
     const user = userEvent.setup();
     renderSection();
 
     await user.click(screen.getByRole('button', { name: 'Add another household' }));
-    const first = screen.getByRole('region', { name: 'Household 1' });
+
+    // The new household opens; the first waits behind its tile.
+    expect(screen.queryByRole('region', { name: 'Household 1' })).not.toBeInTheDocument();
     const second = screen.getByRole('region', { name: 'Household 2' });
     await user.click(within(second).getByRole('button', { name: 'Married' }));
-
-    // The second household's inputs are its own.
-    expect(within(first).getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
-      'single · 0'
-    );
-    expect(within(second).getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
-      'married · 0'
-    );
-
     await user.click(within(second).getByRole('button', { name: 'Calculate' }));
     expect(
       await within(second).findByRole('region', { name: 'Household impact' })
     ).toBeInTheDocument();
     expect(
+      within(screen.getByRole('tablist', { name: 'Households' })).getByRole('tab', {
+        name: /^Household 2/,
+      })
+    ).toHaveTextContent('+$1,000 a year');
+
+    await openTile(user, /^Household 1/);
+
+    // The first household's inputs are its own, with nothing run.
+    const first = screen.getByRole('region', { name: 'Household 1' });
+    expect(within(first).getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
+      'single · 0'
+    );
+    expect(
       within(first).queryByRole('region', { name: 'Household impact' })
     ).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Household 2' })).not.toBeInTheDocument();
+  });
+
+  test('given a household renamed then its tile and panel take the name', async () => {
+    const user = userEvent.setup();
+    renderSection();
+
+    const name = screen.getByRole('textbox', { name: 'Household name' });
+    await user.clear(name);
+    await user.type(name, 'Family of four{Enter}');
+
+    expect(screen.getByRole('region', { name: 'Family of four' })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('tablist', { name: 'Households' })).getByRole('tab', {
+        name: /^Family of four/,
+      })
+    ).toBeInTheDocument();
+
+    // An emptied name goes back to the household's own.
+    await user.clear(name);
+    await user.tab();
+    expect(screen.getByRole('region', { name: 'Household 1' })).toBeInTheDocument();
+  });
+
+  test('given two households then Compare all lists each one, calculated or not', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+
+    await openTile(user, /^Compare all/);
+
+    const table = screen.getByRole('table', { name: 'Households compared' });
+    expect(within(table).getByRole('row', { name: /Household 1/ })).toHaveTextContent(
+      '$72,000$73,000+$1,000'
+    );
+    expect(within(table).getByRole('row', { name: /Household 2/ })).toHaveTextContent(
+      'Not calculated yet'
+    );
+
+    // A household's name opens it.
+    await user.click(within(table).getByRole('button', { name: 'Household 2' }));
+    expect(screen.getByRole('region', { name: 'Household 2' })).toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Households compared' })).not.toBeInTheDocument();
+  });
+
+  test('given inputs changed after a result then the result says so and offers to calculate again', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
+
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+    await user.click(screen.getByRole('button', { name: 'Married' }));
+    await user.click(screen.getByRole('tab', { name: 'Results' }));
+
+    expect(screen.getByText('The inputs changed after this result was calculated.')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Calculate again' }));
+    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(2));
   });
 
   test('given Remove then that household goes, and the others keep their inputs', async () => {
@@ -211,18 +284,19 @@ describe('HouseholdImpactSection', () => {
         name: 'Married',
       })
     );
+    await openTile(user, /^Household 1/);
 
-    await user.click(screen.getByRole('button', { name: 'Remove household 1' }));
+    await user.click(screen.getByRole('button', { name: 'Remove Household 1' }));
 
-    // The married household is now the first, with its inputs.
-    expect(screen.queryByRole('region', { name: 'Household 2' })).not.toBeInTheDocument();
+    // The married household remains, opened, with its name and inputs.
+    expect(screen.queryByRole('tab', { name: /^Household 1/ })).not.toBeInTheDocument();
     expect(
-      within(screen.getByRole('region', { name: 'Household 1' })).getByRole('generic', {
+      within(screen.getByRole('region', { name: 'Household 2' })).getByRole('generic', {
         name: 'Household builder',
       })
     ).toHaveTextContent('married · 0');
 
-    await user.click(screen.getByRole('button', { name: 'Remove household 1' }));
+    await user.click(screen.getByRole('button', { name: 'Remove Household 2' }));
 
     expect(screen.getByRole('button', { name: 'Add a household' })).toBeInTheDocument();
   });
@@ -258,9 +332,10 @@ describe('HouseholdImpactSection', () => {
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
 
     expect(await screen.findByRole('status')).toHaveTextContent('Calculating this household');
-    // While it runs, the inputs fold to one line, with editing held until it ends.
+    // While it runs, its results lead, and its tile says it is calculating.
+    expect(screen.getByRole('tab', { name: 'Results' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Edit household' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: /^Household 1/ })).toHaveTextContent('Calculating…');
 
     finish();
 
@@ -288,10 +363,11 @@ describe('HouseholdImpactSection', () => {
     expect(within(credits).getByRole('row', { name: /Child Tax Credit/ })).toHaveTextContent(
       '+$1,000'
     );
-    // The result leads; the inputs open again on Edit household, with nothing to run again.
-    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Edit household' }));
-    expect(screen.getByRole('button', { name: 'Calculate' })).toBeDisabled();
+    // The result leads; the inputs open on their tab, with nothing to run again.
+    expect(screen.queryByRole('button', { name: 'Calculate again' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+    expect(screen.getByRole('button', { name: 'Calculate again' })).toBeDisabled();
+    expect(screen.getByText(/These inputs are calculated/)).toBeInTheDocument();
   });
 
   test('given a loss then it reads with a minus sign', async () => {
@@ -366,17 +442,18 @@ describe('HouseholdImpactSection', () => {
   test('given two households then each switches its own breakdowns', async () => {
     const user = userEvent.setup();
     renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
     await user.click(screen.getByRole('button', { name: 'Add another household' }));
-    const first = screen.getByRole('region', { name: 'Household 1' });
     const second = screen.getByRole('region', { name: 'Household 2' });
-    await user.click(within(first).getByRole('button', { name: 'Calculate' }));
     await user.click(within(second).getByRole('button', { name: 'Calculate' }));
-    await within(first).findByRole('region', { name: 'Household impact' });
     await within(second).findByRole('region', { name: 'Household impact' });
 
     await user.click(within(second).getByRole('tab', { name: 'Net income' }));
-
     expect(within(second).getByLabelText('Breakdown')).toHaveTextContent(/^net-income/);
+
+    await openTile(user, /^Household 1/);
+    const first = screen.getByRole('region', { name: 'Household 1' });
     expect(within(first).queryByLabelText('Breakdown')).not.toBeInTheDocument();
     expect(within(first).getByRole('table', { name: 'Taxes and benefits' })).toBeInTheDocument();
   });
@@ -436,11 +513,13 @@ describe('HouseholdImpactSection', () => {
     renderSection();
 
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
-    const alert = await screen.findByRole('alert');
+    await screen.findByRole('alert');
 
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
     await user.click(screen.getByRole('button', { name: 'Married' }));
     await user.click(screen.getByRole('button', { name: 'Partner earns 20000' }));
-    await user.click(within(alert).getByRole('button', { name: 'Try again' }));
+    await user.click(screen.getByRole('tab', { name: 'Results' }));
+    await user.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Try again' }));
 
     await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(2));
     const people = mockCreateHousehold.mock.calls[1][0].data.people;

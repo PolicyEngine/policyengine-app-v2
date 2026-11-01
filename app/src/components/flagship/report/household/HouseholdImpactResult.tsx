@@ -4,33 +4,16 @@ import HouseholdBreakdowns, {
   type HouseholdBreakdownSource,
   type HouseholdBreakdownView,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
-import { Stack, Text, Title } from '@/components/ui';
+import {
+  effectColor,
+  money,
+  signedMoney,
+} from '@/components/flagship/report/household/householdMoney';
+import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
 import type { FlagshipHouseholdImpact, HouseholdLineChange } from '@/libs/flagship/householdRun';
 import { trackHouseholdOutputViewed, type HouseholdOutputTab } from '@/utils/analytics';
-import { formatCurrency } from '@/utils/formatters';
-
-/** Whole dollars (or pounds), with a true minus sign: "−$1,200", "−£1,200". */
-function money(value: number, countryId: CountryId): string {
-  const rounded = Math.round(value);
-  const text = formatCurrency(Math.abs(rounded), countryId, { maximumFractionDigits: 0 });
-  return rounded < 0 ? `−${text}` : text;
-}
-
-/** A change, always signed: "+$1,200", "−$300", "$0". */
-function signedMoney(value: number, countryId: CountryId): string {
-  const rounded = Math.round(value);
-  return rounded > 0 ? `+${money(rounded, countryId)}` : money(rounded, countryId);
-}
-
-/** Gains read in the brand teal, losses in red. */
-const effectColor = (effect: number) =>
-  Math.round(effect) > 0
-    ? colors.primary[700]
-    : Math.round(effect) < 0
-      ? colors.error
-      : colors.text.primary;
 
 const headerCell: CSSProperties = {
   padding: `0 ${spacing.md} ${spacing.sm}`,
@@ -218,26 +201,15 @@ export default function HouseholdImpactResult({
     .slice(0, 3);
 
   return (
+    // No frame or title of its own: the household's panel names it, and the
+    // result, its tables and its charts take the panel's full width.
     <section
-      aria-labelledby={`${id}-heading`}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: spacing.lg,
-        padding: spacing.lg,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.container,
-        background: colors.background.primary,
-      }}
+      aria-label="Household impact"
+      style={{ display: 'flex', flexDirection: 'column', gap: spacing.lg, minWidth: 0 }}
     >
-      <Stack style={{ gap: 2 }}>
-        <Title id={`${id}-heading`} order={3} style={{ margin: 0 }}>
-          Household impact
-        </Title>
-        <Text style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          {summary}
-        </Text>
-      </Stack>
+      <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+        {summary}
+      </Text>
 
       {/* The headline beside what drives it, so the result reads at a glance. */}
       <div
