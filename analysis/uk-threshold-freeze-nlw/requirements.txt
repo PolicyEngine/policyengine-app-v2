@@ -1,0 +1,4 @@
+policyengine-uk @ git+https://github.com/PolicyEngine/policyengine-uk@2da212abcf2086337fc088a4a1236f4ae7b6af63
+policyengine-core==3.34.2
+hypothesis
+pytest
