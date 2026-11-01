@@ -2,7 +2,8 @@
 
     pytest analysis/uk-threshold-freeze-nlw
 
-Needs results.csv and meta.json from nlw_freeze.py, and no model code.
+Needs results.csv and meta.json from nlw_freeze.py. The live model test skips
+when PolicyEngine UK is missing, and every other test runs without model code.
 """
 
 import csv
@@ -17,16 +18,20 @@ from hypothesis import strategies as st
 from thresholds import (
     ACTUAL_PA,
     ACTUAL_PT_WEEK,
+    CHART_KINKS,
     CPI_SEP,
     NLW,
+    PT_JUL22_WEEK,
     S57_PA,
     hand,
     rounded_weekly_path,
     s57_allowance,
+    scenarios,
 )
 
 HERE = Path(__file__).resolve().parent
 POST = HERE.parents[1] / "app/src/data/posts/articles/uk-threshold-freeze-national-living-wage.md"
+POSTS = HERE.parents[1] / "app/src/data/posts/posts.json"
 ROWS = list(csv.DictReader((HERE / "results.csv").open()))
 META = json.loads((HERE / "meta.json").read_text())
 TEXT = POST.read_text()
@@ -66,9 +71,9 @@ def cells(markdown_row: str) -> list:
     return [c.strip() for c in markdown_row.strip().strip("|").split("|")]
 
 
-def table_rows() -> list:
+def table_rows(text: str = TEXT) -> list:
     return [
-        cells(line) for line in TEXT.splitlines()
+        cells(line) for line in text.splitlines()
         if line.startswith("|") and not line.startswith("| ---")
     ]
 
@@ -187,7 +192,8 @@ def test_no_uc_for_the_single_renter_and_no_ctr_for_the_lone_parent():
 
 @pytest.mark.parametrize("year,pay", [("2026-27", "£23,132"), ("2027-28", "£24,042")])
 def test_full_time_tables_match_results(year, pay):
-    assert f"**{year}, on pay of {pay}**" in TEXT
+    heading = f"**{year}, on pay of {pay}**"
+    assert heading in TEXT
     labels = [
         "kept the NI threshold equal to the allowance",
         "raised £242 a week by each September's CPI from April 2023",
@@ -195,7 +201,7 @@ def test_full_time_tables_match_results(year, pay):
         "left the NI threshold at £12,570",
         "skipped the July 2022 rise and raised £184 a week by each September's CPI",
     ]
-    tables = table_rows()
+    tables = table_rows(TEXT.split(heading, 1)[1].split("**", 1)[0])
     for scenario, label in zip(SCENARIOS, labels):
         r = row(year, scenario=scenario)
         expected = [
@@ -219,7 +225,10 @@ def test_part_time_table_matches_results():
 
 def test_chart_matches_results():
     spec = json.loads(re.search(r"```chart\n(.*?)\n```", TEXT, re.S).group(1))
-    assert [p["hours"] for p in spec["data"]] == [h / 2 for h in range(30, 81)]
+    assert [p["hours"] for p in spec["data"]] == sorted(
+        [h / 2 for h in range(30, 81)] + list(CHART_KINKS)
+    )
+    assert [m["x"] for m in spec["markers"]] == [CHART_KINKS[0], CHART_KINKS[2]]
     for point in spec["data"]:
         hours = float(point["hours"])
         assert point["aligned"] == pytest.approx(float(row(hours=hours)["freeze_tax_and_ni"]), abs=0.01)
@@ -227,8 +236,16 @@ def test_chart_matches_results():
         assert point["septemberCpi"] == pytest.approx(float(cpi["freeze_tax_and_ni"]), abs=0.01)
 
 
+def test_chart_kinks_fall_where_pay_reaches_each_threshold():
+    thresholds = (ACTUAL_PA, PT_JUL22_WEEK[2026] * 52, S57_PA[2026])
+    for hours, threshold in zip(CHART_KINKS, thresholds):
+        assert hours == round(threshold / (NLW[2026] * 52), 2)
+
+
 def test_prose_figures_match_results():
     a26, a27 = row("2026-27"), row("2027-28")
+    couple26 = row("2026-27", "couple_two_children")
+    couple27 = row("2027-28", "couple_two_children")
     expected = [
         f"pays {gbp(float(a26['freeze_income_tax']))} more income tax in 2026-27",
         f"{gbp(float(a27['freeze_income_tax']))} more in 2027-28",
@@ -243,8 +260,10 @@ def test_prose_figures_match_results():
         f"they receive {gbp(float(row(household='lone_parent')['uc_base']))} of UC",
         f"pay {gbp(float(META['ni_2021_rules']['2026']['rules_2021']))} of NI in 2026-27",
         f"against {gbp(float(META['ni_2021_rules']['2026']['actual']))} now",
-        f"would pay {gbp(float(row('2026-27', path='unrounded')['freeze_tax_and_ni']))}"
-        f" and {gbp(float(row('2027-28', path='unrounded')['freeze_tax_and_ni']))} more",
+        f"would pay {gbp(float(row('2026-27', path='alternative')['freeze_tax_and_ni']))}"
+        f" and {gbp(float(row('2027-28', path='alternative')['freeze_tax_and_ni']))} more",
+        f"pay {gbp(float(couple26['freeze_income_tax']))} more income tax in 2026-27 and "
+        f"{gbp(float(couple27['freeze_income_tax']))} more in 2027-28",
         f"the £{S57_PA[2026] - ACTUAL_PA:,} and £{S57_PA[2027] - ACTUAL_PA:,} of pay",
         f"£{S57_PA[2026]:,} in 2026-27 and £{S57_PA[2027]:,} in 2027-28",
     ]
@@ -255,6 +274,12 @@ def test_prose_figures_match_results():
     assert round(100 * (242 / 190 - 1)) == 27
 
 
+def test_post_metadata_matches_results():
+    entry = next(p for p in json.loads(POSTS.read_text()) if p["filename"] == POST.name)
+    assert f"pays {gbp(float(row()['freeze_income_tax']))} more income tax in 2026-27" in entry["description"]
+    assert f"they pay {spread('2026-27', 'freeze_tax_and_ni')} more income tax" in entry["description"]
+
+
 def test_cpi_list_in_the_post_matches_the_script():
     listed = ", ".join(f"{100 * rate:.1f}%" for rate in list(CPI_SEP.values())[:-1])
     assert f"{listed} and {100 * CPI_SEP[2026]:.1f}%" in TEXT
@@ -263,3 +288,22 @@ def test_cpi_list_in_the_post_matches_the_script():
 def test_post_states_the_recorded_model_version():
     assert f"PolicyEngine UK {META['policyengine_uk']}" in TEXT
     assert META["policyengine_uk_commit"] in TEXT
+
+
+# The live model
+
+
+@pytest.mark.parametrize("scenario", ["ni_tracks_allowance", "ni_sep_cpi_from_2021"])
+def test_reform_keys_reproduce_the_recorded_rows(scenario):
+    pytest.importorskip("policyengine_uk")
+    from nlw_freeze import reform_for, run, situation
+
+    sit = situation(2026, [("single", 35.0, "NORTH_WEST")])
+    base = run(sit, 2026, None)
+    allowance, threshold = scenarios(2026, S57_PA)[scenario]
+    reformed = run(sit, 2026, reform_for(2026, allowance, threshold))
+    recorded = row(scenario=scenario)
+    tax = float(base["income_tax"][0] - reformed["income_tax"][0])
+    ni = float(base["ni"][0] - reformed["ni"][0])
+    assert tax == pytest.approx(float(recorded["freeze_income_tax"]), abs=0.01)
+    assert ni == pytest.approx(float(recorded["freeze_ni"]), abs=0.01)

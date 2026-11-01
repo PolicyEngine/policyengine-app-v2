@@ -16,8 +16,12 @@ NLW = {2026: 12.71, 2027: 13.21}
 ACTUAL_PA = 12_570
 ACTUAL_PT_WEEK = 241.73  # 12,570 / 52, as the model stores it
 
-# Allowance indexed by CPI, stopping short of the s57 round-up.
-UNROUNDED_PA = {2026: 16_070, 2027: 16_632}
+# Alternative assumed allowances for the sensitivity sentence in the post.
+ALTERNATIVE_PA = {2026: 16_070, 2027: 16_632}
+
+# Weekly hours at which pay reaches £12,570, £15,600 and £16,080 at £12.71 an
+# hour, so the chart's straight segments meet at its kinks.
+CHART_KINKS = (19.02, 23.6, 24.33)
 
 
 def s57_allowance(cpi_sep: dict = CPI_SEP) -> dict:

@@ -21,19 +21,17 @@ from policyengine_uk import Simulation
 from thresholds import (
     ACTUAL_PA,
     ACTUAL_PT_WEEK,
+    ALTERNATIVE_PA,
+    CHART_KINKS,
     NLW,
     PT_2021_WEEK,
     PT_JUL22_WEEK,
     PT_P2P_WEEK,
     S57_PA,
-    UNROUNDED_PA,
     YEARS,
     hand,
     scenarios,
 )
-
-OUT = Path(sys.argv[1])
-OUT.mkdir(parents=True, exist_ok=True)
 
 
 def reform_for(year: int, pa: float, pt_annual: float) -> dict:
@@ -49,7 +47,7 @@ def reform_for(year: int, pa: float, pt_annual: float) -> dict:
 def workers(year: int) -> list:
     """One row per example worker: kind, weekly hours, region."""
     hours = [h / 2 for h in range(0, 97)]  # 0 to 48 hours, in half hours
-    out = [("single", h, "NORTH_WEST") for h in hours]
+    out = [("single", h, "NORTH_WEST") for h in sorted(hours + list(CHART_KINKS))]
     out += [("single", 35, "SCOTLAND")]
     out += [
         (k, 35, "NORTH_WEST")
@@ -123,12 +121,14 @@ def ni_under_2021_rules(year: int) -> dict:
 
 
 def main():
+    out_dir = Path(sys.argv[1])
+    out_dir.mkdir(parents=True, exist_ok=True)
     rows_out = []
     for year in YEARS:
         rows = workers(year)
         sit = situation(year, rows)
         base = run(sit, year, None)
-        for path, pa in (("s57", S57_PA), ("unrounded", UNROUNDED_PA)):
+        for path, pa in (("s57", S57_PA), ("alternative", ALTERNATIVE_PA)):
             for name, (a, pt) in scenarios(year, pa).items():
                 res = run(sit, year, reform_for(year, a, pt))
                 for i, (kind, hours, region) in enumerate(rows):
@@ -163,8 +163,8 @@ def main():
                     if kind in ("lone_parent", "lone_parent_council_tax", "couple_two_children") and uc_after > 0:
                         # Taper: UC moves by 55% of the tax and NI change.
                         assert abs(float(res["uc"][i] - base["uc"][i]) + 0.55 * (tax + ni)) < 1.0, (year, kind, name)
-    with open(OUT / "results.csv", "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows_out[0]))
+    with open(out_dir / "results.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows_out[0]), lineterminator="\n")
         w.writeheader()
         w.writerows(rows_out)
     meta = {
@@ -177,7 +177,7 @@ def main():
         "pt_p2p_week": PT_P2P_WEEK,
         "ni_2021_rules": {year: ni_under_2021_rules(year) for year in YEARS},
     }
-    (OUT / "meta.json").write_text(json.dumps(meta, indent=2))
+    (out_dir / "meta.json").write_text(json.dumps(meta, indent=2))
     print(json.dumps(meta, indent=1))
 
 

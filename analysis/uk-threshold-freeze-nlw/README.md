@@ -13,7 +13,7 @@ analysis/uk-threshold-freeze-nlw/.venv/bin/python analysis/uk-threshold-freeze-n
 analysis/uk-threshold-freeze-nlw/.venv/bin/python -m pytest analysis/uk-threshold-freeze-nlw
 ```
 
-`nlw_freeze.py` runs PolicyEngine UK on hypothetical households and writes `results.csv` and `meta.json`. It uses no microdata. `thresholds.py` holds the CPI series and threshold paths and needs no model code. `test_freeze.py` checks the invariants below and compares every table, the chart and the key prose figures in the post with `results.csv`.
+`nlw_freeze.py` runs PolicyEngine UK on hypothetical households and writes `results.csv` and `meta.json`. It uses no microdata. `thresholds.py` holds the CPI series and threshold paths and needs no model code. `test_freeze.py` checks the invariants below, compares every table, the chart, the key prose figures and the post's metadata with `results.csv`, and reruns two rows on the live model when PolicyEngine UK is installed.
 
 The run used PolicyEngine UK 2.170.0 at commit [`2da212ab`](https://github.com/PolicyEngine/policyengine-uk/tree/2da212abcf2086337fc088a4a1236f4ae7b6af63) and policyengine-core 3.34.2. That commit carries the Budget baseline from [policyengine-uk#2719](https://github.com/PolicyEngine/policyengine-uk/pull/2719). PyPI does not yet carry 2.170.0, so `requirements.txt` pins the commit.
 
@@ -29,14 +29,16 @@ Each scenario overrides the Personal Allowance and the Class 1 primary threshold
 | `allowance_only` | As it stands |
 | `ni_sep_cpi_from_2021` | £184 a week from 2021-22, uprated by September CPI to the nearest £1 a week, with no July 2022 rise |
 
-`allowance_path` takes two values. `s57` applies Income Tax Act 2007 section 57 each April from 2022, rounding each increase up to £10, which gives £16,080 and £16,650. `unrounded` uses £16,070 and £16,632, which leaves out that round-up.
+`allowance_path` takes two values. `s57` applies Income Tax Act 2007 section 57 each April from 2022, rounding each increase up to £10, which gives £16,080 and £16,650. `alternative` uses assumed allowances of £16,070 and £16,632.
 
 ## Decisions
 
-- **Allowance basis.** The post uses the section 57 path. Both section 57 and the government's Budget 2026 policy costings (Annex A) set the Personal Allowance default as CPI rounded up to the nearest £10. The `unrounded` rows support the post's reconciliation sentence.
+- **Allowance basis.** The post uses the section 57 path. Both section 57 and the government's Budget 2026 policy costings (Annex A) set the Personal Allowance default as CPI rounded up to the nearest £10. The `alternative` rows support the post's sensitivity sentence.
 - **NI rounding.** The rows from £242 a week round to the nearest £1 a week, the Primary Threshold default in the same annex.
 - **No national microsimulation.** In the Microcosm UK 2024-25 national file (`a6299504`), implied hourly pay (employment income divided by hours, adults aged 21 or over) shows no spike at the data year's £11.44 wage floor, and about 23% of 28.5 million employees sit more than 5% below it. The Low Pay Commission puts coverage at about 6% of jobs. A count of workers in each case would therefore reflect noise in reported hours and pay, so the post shows example workers and quotes no national figure from our microdata.
-- **Council Tax Reduction.** `council_tax_benefit` returns £0 for the lone parent with £1,800 of council tax, so the post leaves it out and says so.
+- **Council Tax Reduction.** The hypothetical households name no local scheme, so `council_tax_benefit` falls back to a reported £0. The post leaves Council Tax Reduction out and says that a household receiving it could lose less.
+- **Marriage Allowance.** The post's figures cover a single worker. The `couple_two_children` rows give the one-earner couple's income tax figures, which the post states separately.
+- **Chart points.** The chart adds 19.02, 23.6 and 24.33 hours to its half-hour grid, where pay reaches £12,570, £15,600 and £16,080, so its straight segments meet at the kinks.
 
 ## Invariants
 
