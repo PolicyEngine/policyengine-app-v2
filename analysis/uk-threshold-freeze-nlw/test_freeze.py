@@ -9,10 +9,11 @@ when PolicyEngine UK is missing, and every other test runs without model code.
 import csv
 import json
 import re
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from hypothesis import given
+from hypothesis import example, given
 from hypothesis import strategies as st
 
 from thresholds import (
@@ -87,13 +88,17 @@ def spread(year: str, field: str, household: str = "single", sign: float = 1) ->
 
 
 @given(cpi_rates)
+@example({year: 0.0 for year in range(2021, 2027)})
+# £12,570 + £30 = £12,600, and 10% of £12,600 lands on a multiple of £10.
+@example({2021: 0.002, 2022: 0.1, 2023: 0.0, 2024: 0.0, 2025: 0.0, 2026: 0.0})
 def test_s57_steps_round_up_to_ten_pounds(rates):
     path = s57_allowance(rates)
     previous = ACTUAL_PA
     for year, allowance in path.items():
-        exact = previous * rates[year - 1]
-        assert (allowance - previous) % 10 == 0
-        assert exact - 1e-6 <= allowance - previous < exact + 10 + 1e-6
+        step = allowance - previous
+        exact = Decimal(previous) * Decimal(str(rates[year - 1]))
+        assert step % 10 == 0
+        assert exact <= step < exact + 10
         previous = allowance
 
 

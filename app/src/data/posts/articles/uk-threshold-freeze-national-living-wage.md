@@ -385,7 +385,7 @@ A worker who pays into a net pay pension scheme pays income tax on less of their
 
 In Great Britain, the Department for Work and Pensions counts [earnings after income tax and NI](https://www.legislation.gov.uk/uksi/2013/376/regulation/55) when it works out UC, then [reduces the award by 55p](https://www.legislation.gov.uk/uksi/2013/376/regulation/22) for each £1 of those earnings above any work allowance. A worker on UC who pays £1 more income tax or NI therefore gets 55p more UC and ends up 45p down, as long as UC stays in payment. They still pay the whole amount to HMRC.
 
-Take a lone parent with two children aged 4 and 7, who works 35 hours on the National Living Wage and pays £110 a week in social rent. We estimate they receive £9,835 of UC in 2026-27. Across the five paths, they pay £678 to £983 more income tax and NI, receive £373 to £541 more UC, and have £305 to £442 less net income. In 2027-28, those figures rise to £816 to £1,142, £449 to £628, and £367 to £514.
+For UC, we assume employers pay workers the same amount each month. Take a lone parent with two children aged 4 and 7, who works 35 hours on the National Living Wage and pays £110 a week in social rent. We estimate they receive £9,835 of UC in 2026-27. Across the five paths, they pay £678 to £983 more income tax and NI, receive £373 to £541 more UC, and have £305 to £442 less net income. In 2027-28, those figures rise to £816 to £1,142, £449 to £628, and £367 to £514.
 
 A single worker with no children and the same rent receives no UC at 35 hours, so they pay the full amount with no offset. We leave out Council Tax Reduction, so a household that receives it could lose less.
 
