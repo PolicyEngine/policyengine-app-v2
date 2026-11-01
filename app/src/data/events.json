@@ -5,8 +5,11 @@
     "type": "webinar",
     "location": "Virtual",
     "host": "PolicyEngine",
-    "description": "Max Ghenis and David Trimmer walk through PolicyEngine's open calculator for Prop 40, the 2026 Billionaire Tax Act. The calculator applies the Berkeley and Hoover assumptions in one model and splits the gap between them by assumption. Fernando Hoces de la Guardia presents his Open Policy Analysis reconciliation of the two analyses. They then take questions. The session runs at noon Pacific on Friday, October 30.",
+    "description": "Max Ghenis and David Trimmer walk through PolicyEngine's open calculator for Prop 40, the 2026 Billionaire Tax Act. The calculator applies the Berkeley and Hoover assumptions in one model and splits the gap between them by assumption. Fernando Hoces de la Guardia presents his Open Policy Analysis reconciliation of the two analyses. They then take questions.",
     "registrationUrl": "https://us06web.zoom.us/meeting/register/Y3jIHS9BQmmBVndpOGTt4g",
+    "recordingUrl": "https://www.youtube.com/watch?v=KLTDkpxKHLs",
+    "slidesUrl": "https://policyengine.org/slides/prop40-webinar-2026",
+    "image": "KLTDkpxKHLs.jpg",
     "url": "https://www.policyengine.org/us/california-wealth-tax",
     "tags": ["us"],
     "featured": true
