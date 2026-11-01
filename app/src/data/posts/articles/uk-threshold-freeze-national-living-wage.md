@@ -91,7 +91,7 @@ Minimum wage workers ["tend to work part-time"](https://assets.publishing.servic
     {
       "key": "septemberCpi",
       "name": "£242 a week raised by each September's CPI",
-      "color": "secondary"
+      "color": "quinary"
     }
   ],
   "markers": [

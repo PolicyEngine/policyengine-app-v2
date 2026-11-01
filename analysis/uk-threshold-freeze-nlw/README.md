@@ -51,7 +51,7 @@ These hold for every input, and `test_freeze.py` checks them:
 - UC rises by 55% of the extra tax and NI wherever UC stays in payment.
 - At 35 hours, 37.5 hours, 40 hours, in Scotland and with minimum auto-enrolment contributions, extra income tax and NI stay equal.
 
-The last row in each table goes negative in 2026-27 by design: £12,570 exceeds the £12,272 that path reaches.
+Extra NI on the last row turns negative in 2026-27 by design: £12,570 exceeds the £12,272 that path reaches.
 
 ## Sources
 
