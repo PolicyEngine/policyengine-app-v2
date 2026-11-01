@@ -11,7 +11,7 @@ For a single worker under State Pension age on the National Living Wage, with no
 
 When the consumer prices index (CPI) rises in the year to September, the Treasury must raise the Personal Allowance by that percentage from the next April under [section 57 of the Income Tax Act 2007](https://www.legislation.gov.uk/ukpga/2007/3/section/57). It rounds the increase up to a multiple of £10. Parliament switched that rule off in [Finance Act 2021](https://www.legislation.gov.uk/ukpga/2021/26/section/5/enacted), fixing the allowance at £12,570 up to 2025-26, and extended the freeze to 2027-28 in [Finance Act 2023](https://www.legislation.gov.uk/ukpga/2023/1/section/5) and to 2030-31 in [Finance Act 2026](https://www.legislation.gov.uk/ukpga/2026/11/section/10).
 
-No statute indexes the NI primary threshold, and the [Treasury sets it](https://www.legislation.gov.uk/ukpga/1992/4/section/5) in regulations for each tax year. In July 2022, [Parliament raised it](https://www.legislation.gov.uk/ukpga/2022/16/section/1/enacted) from £190 to £242 a week to match the Personal Allowance at £12,570 a year, and the [Treasury said](https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1062486/Spring_Statement_2022_Web_Accessible.pdf) the two thresholds "will remain aligned". The government has [since said](https://www.legislation.gov.uk/uksi/2026/231/pdfs/uksiem_20260231_en_001.pdf) it will hold the primary threshold there until 2030-31 and uprate it by September CPI after that.
+Parliament has not indexed the NI primary threshold, and the [Treasury sets it](https://www.legislation.gov.uk/ukpga/1992/4/section/5) in regulations for each tax year. In July 2022, [Parliament raised it](https://www.legislation.gov.uk/ukpga/2022/16/section/1/enacted) from £190 to £242 a week to match the Personal Allowance at £12,570 a year, and the [Treasury said](https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1062486/Spring_Statement_2022_Web_Accessible.pdf) the two thresholds "will remain aligned". The government has [since said](https://www.legislation.gov.uk/uksi/2026/231/pdfs/uksiem_20260231_en_001.pdf) it will hold the primary threshold there until 2030-31 and uprate it by September CPI after that.
 
 | From         | Personal Allowance | NI primary threshold  |
 | ------------ | ------------------ | --------------------- |
@@ -23,13 +23,13 @@ No statute indexes the NI primary threshold, and the [Treasury sets it](https://
 
 Had the Treasury applied section 57 each April from 2022, the allowance would reach £16,080 in 2026-27 and £16,650 in 2027-28. The government uses the same rule as its default in its [Budget 2026 policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=110). A full-time worker on the National Living Wage pays the 20% basic rate on the £3,510 and £4,080 of pay between those levels and £12,570, which comes to £702 and £816.
 
-In July 2022, Parliament raised the NI threshold above where CPI alone would have put it, and no law sets the path it would otherwise have followed. We compare five paths, each with the allowance at those higher levels.
+In July 2022, Parliament raised the NI threshold above the level the Treasury would have reached by uprating it with CPI alone. Parliament set no path for the threshold without that rise, so we compare five paths, each with the allowance at those higher levels.
 
 **2026-27, on pay of £23,132**
 
 | If the government had                                                     | NI threshold | Extra income tax | Extra NI | Total |
 | ------------------------------------------------------------------------- | ------------ | ---------------- | -------- | ----- |
-| kept the NI threshold equal to the allowance                              | £16,080      | £702             | £281     | £983  |
+| raised the NI threshold with the allowance                                | £16,080      | £702             | £281     | £983  |
 | raised £242 a week by each September's CPI from April 2023                | £15,600      | £702             | £242     | £944  |
 | raised £242 a week by CPI since July 2022                                 | £14,300      | £702             | £138     | £840  |
 | left the NI threshold at £12,570                                          | £12,570      | £702             | £0       | £702  |
@@ -39,13 +39,13 @@ In July 2022, Parliament raised the NI threshold above where CPI alone would hav
 
 | If the government had                                                     | NI threshold | Extra income tax | Extra NI | Total  |
 | ------------------------------------------------------------------------- | ------------ | ---------------- | -------- | ------ |
-| kept the NI threshold equal to the allowance                              | £16,650      | £816             | £326     | £1,142 |
+| raised the NI threshold with the allowance                                | £16,650      | £816             | £326     | £1,142 |
 | raised £242 a week by each September's CPI from April 2023                | £16,172      | £816             | £288     | £1,104 |
 | raised £242 a week by CPI since July 2022                                 | £14,820      | £816             | £180     | £996   |
 | left the NI threshold at £12,570                                          | £12,570      | £816             | £0       | £816   |
 | skipped the July 2022 rise and raised £184 a week by each September's CPI | £12,688      | £816             | £9       | £825   |
 
-If the Treasury had held to its 2022 statement, it would have kept the NI threshold equal to the higher allowance. If it had instead uprated £242 a week from April 2023, it would have applied the [default in the government's costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=111), CPI rounded to the nearest £1 a week. Its first uprating would have used the 10.1% rise to September 2022, which includes inflation from before July 2022. We also calculate what the worker would pay if the Treasury had counted inflation from July 2022 to the September before each tax year, or had raised the allowance alone.
+If the Treasury had raised the allowance and followed its 2022 statement, it would have raised the NI threshold with it. If it had instead uprated £242 a week by each September's CPI from April 2023 and rounded to the nearest £1 a week, it would have followed the [default in the government's costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=111). It would first have applied the 10.1% rise to September 2022, which includes inflation from before July 2022. We also calculate what the worker would pay if the Treasury had counted inflation from July 2022 to the September before each tax year, or had raised the allowance alone.
 
 We then undo the July 2022 rise, which goes beyond the freeze. If Parliament had omitted that rise and the Treasury had uprated £184 a week by each September's CPI, the threshold would reach £12,272 in 2026-27. The actual £12,570 exceeds that, so the worker pays £24 less NI than they would have.
 
@@ -57,13 +57,13 @@ Minimum wage workers ["tend to work part-time"](https://assets.publishing.servic
 
 **Extra income tax and NI in 2026-27, at £12.71 an hour**
 
-| Hours a week | Annual pay | If the government had kept the NI threshold equal to the allowance | If the government had raised £242 a week by each September's CPI |
-| ------------ | ---------- | ------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| 16           | £10,575    | £0                                                                 | £0                                                               |
-| 20           | £13,218    | £182                                                               | £182                                                             |
-| 24           | £15,862    | £922                                                               | £901                                                             |
-| 25           | £16,523    | £983                                                               | £944                                                             |
-| 35           | £23,132    | £983                                                               | £944                                                             |
+| Hours a week | Annual pay | If the government had raised the NI threshold with the allowance | If the government had raised £242 a week by each September's CPI |
+| ------------ | ---------- | ---------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 16           | £10,575    | £0                                                               | £0                                                               |
+| 20           | £13,218    | £182                                                             | £182                                                             |
+| 24           | £15,862    | £922                                                             | £901                                                             |
+| 25           | £16,523    | £983                                                             | £944                                                             |
+| 35           | £23,132    | £983                                                             | £944                                                             |
 
 ```chart
 {
@@ -85,7 +85,7 @@ Minimum wage workers ["tend to work part-time"](https://assets.publishing.servic
   "series": [
     {
       "key": "aligned",
-      "name": "If the government had kept the NI threshold equal to the allowance",
+      "name": "If the government had raised the NI threshold with the allowance",
       "color": "primary"
     },
     {
@@ -385,14 +385,14 @@ A worker who pays into a net pay pension scheme pays income tax on less of their
 
 In Great Britain, the Department for Work and Pensions counts [earnings after income tax and NI](https://www.legislation.gov.uk/uksi/2013/376/regulation/55) when it works out UC, then [reduces the award by 55p](https://www.legislation.gov.uk/uksi/2013/376/regulation/22) for each £1 of those earnings above any work allowance. A worker on UC who pays £1 more income tax or NI therefore gets 55p more UC and ends up 45p down, as long as UC stays in payment. They still pay the whole amount to HMRC.
 
-For UC, we assume employers pay workers the same amount each month. Take a lone parent with two children aged 4 and 7, who works 35 hours on the National Living Wage and pays £110 a week in social rent. We estimate they receive £9,835 of UC in 2026-27. Across the five paths, they pay £678 to £983 more income tax and NI, receive £373 to £541 more UC, and have £305 to £442 less net income. In 2027-28, those figures rise to £816 to £1,142, £449 to £628, and £367 to £514.
+For UC, we assume employers pay workers the same amount each month. Take a lone parent with two children aged 4 and 7, who works 35 hours on the National Living Wage, has no childcare costs and pays £110 a week in social rent. We estimate they receive £9,835 of UC in 2026-27. Across the five paths, they pay £678 to £983 more income tax and NI, receive £373 to £541 more UC, and have £305 to £442 less net income. In 2027-28, those figures rise to £816 to £1,142, £449 to £628, and £367 to £514.
 
 A single worker with no children and the same rent receives no UC at 35 hours, so they pay the full amount with no offset. We leave out Council Tax Reduction, so a household that receives it could lose less.
 
 ## What the estimates cover
 
 - We model a single worker aged 30, with no other income, on £12.71 an hour in 2026-27 and £13.21 in 2027-28. Working 35 hours for 52 weeks gives pay of £23,132 and £24,042. The government puts the full-time gain from the 50p rise at [£910](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#additional-support-for-households), which implies 35 hours, and 37.5 or 40 hours give the same results.
-- We use the [ONS's September CPI rates](https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g7/mm23) of 3.1%, 10.1%, 6.7%, 1.7%, 3.8% and 3.5% for 2021 to 2026, and its [CPI index](https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23) for the path that counts inflation from July 2022.
+- We use the [ONS's September CPI rates](https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g7/mm23) of 3.1%, 10.1%, 6.7%, 1.7%, 3.8% and 3.5% for 2021 to 2026, and its [CPI index](https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23) to uprate £242 a week from July 2022.
 - We keep today's 20% basic rate and 8% main NI rate on every path. Parliament cut the main rate from 12% in 2021 to [8% in April 2024](https://www.legislation.gov.uk/ukpga/2024/5/section/1), and we leave that cut out of these comparisons. At 12%, and with the threshold at £12,272 if Parliament had omitted the July 2022 rise, the full-time worker would pay £1,303 of NI in 2026-27, against £845 now.
 - We apply thresholds annually, and applying £242 a week instead moves the NI figures by about £1.
 - A Scottish taxpayer at 35 hours pays the same extra amounts.

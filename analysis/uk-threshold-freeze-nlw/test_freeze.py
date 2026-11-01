@@ -200,7 +200,7 @@ def test_full_time_tables_match_results(year, pay):
     heading = f"**{year}, on pay of {pay}**"
     assert heading in TEXT
     labels = [
-        "kept the NI threshold equal to the allowance",
+        "raised the NI threshold with the allowance",
         "raised £242 a week by each September's CPI from April 2023",
         "raised £242 a week by CPI since July 2022",
         "left the NI threshold at £12,570",
