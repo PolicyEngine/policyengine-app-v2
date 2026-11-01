@@ -1,4 +1,4 @@
-Parliament has fixed the Personal Allowance at £12,570 until April 2031, and the government plans to hold the National Insurance (NI) primary threshold at the same level. A worker whose pay rises while those thresholds stand still pays income tax and NI on more of their pay, an effect economists call fiscal drag. In the [Budget on 28 October 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#additional-support-for-households), the government announced a National Living Wage of £13.21 an hour from April 2027. We estimate how much more income tax and NI a worker on that wage pays than if the Treasury had uprated both thresholds with inflation.
+Parliament has fixed the Personal Allowance at £12,570 until April 2031, and the government plans to hold the National Insurance (NI) primary threshold at the same level. A worker whose pay rises while those thresholds stand still pays income tax and NI on more of their pay, an effect economists call fiscal drag. In the [Budget on 28 October 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#additional-support-for-households), the government announced a National Living Wage of £13.21 an hour from April 2027. We estimate how much more income tax and NI workers on the National Living Wage pay than if the Treasury had uprated both thresholds with inflation.
 
 For a worker on the National Living Wage, we find:
 
@@ -47,7 +47,7 @@ Parliament's July 2022 rise took the NI threshold past where CPI alone would hav
 
 On the first row, the Treasury holds to its 2022 statement that the two thresholds stay aligned. On the second, it keeps the July 2022 rise and then applies the [default in the government's costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=111), CPI rounded to the nearest £1 a week. Its first uprating, in April 2023, would use the 10.1% rise to September 2022, which includes inflation from before July 2022. On the third row, it counts CPI only from July 2022 to the September before each tax year, and on the fourth row, it raises the allowance alone.
 
-On the last row, the Treasury skips the July 2022 rise as well, so that comparison reaches beyond the freeze. The threshold reaches £12,272 in 2026-27 on that path, and the actual £12,570 exceeds it, so the worker pays £24 less NI than they would have.
+On the last row, the government also skips the July 2022 rise, so that comparison reaches beyond the freeze. The threshold reaches £12,272 in 2026-27 on that path, and the actual £12,570 exceeds it, so the worker pays £24 less NI than they would have.
 
 Without section 57's round-up, the allowance would reach about £16,070 and £16,632, and the worker on the first row would pay £980 and £1,137 more.
 
