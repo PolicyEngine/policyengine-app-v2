@@ -10,7 +10,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
 
 const headerCell: CSSProperties = {
-  padding: `0 ${spacing.md} ${spacing.sm}`,
+  padding: `0 0 ${spacing.sm}`,
   textAlign: 'right',
   fontSize: typography.fontSize.xs,
   fontWeight: typography.fontWeight.medium,
@@ -18,8 +18,11 @@ const headerCell: CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+/** A number column's gap from the column before: narrow on a phone, so all four columns fit. */
+const NUMBER_CELL = 'tw:pl-3 tw:md:pl-8';
+
 const bodyCell: CSSProperties = {
-  padding: `${spacing.sm} ${spacing.md}`,
+  padding: `${spacing.sm} 0`,
   textAlign: 'right',
   fontVariantNumeric: 'tabular-nums',
   whiteSpace: 'nowrap',
@@ -85,13 +88,13 @@ export default function HouseholdComparison({
               <th scope="col" style={{ ...headerCell, textAlign: 'left', paddingLeft: 0 }}>
                 Household
               </th>
-              <th scope="col" style={headerCell}>
+              <th scope="col" className={NUMBER_CELL} style={headerCell}>
                 Baseline
               </th>
-              <th scope="col" style={headerCell}>
+              <th scope="col" className={NUMBER_CELL} style={headerCell}>
                 Reform
               </th>
-              <th scope="col" style={headerCell}>
+              <th scope="col" className={NUMBER_CELL} style={headerCell}>
                 Change
               </th>
             </tr>
@@ -142,9 +145,14 @@ export default function HouseholdComparison({
                   </th>
                   {net ? (
                     <>
-                      <td style={bodyCell}>{money(net.baseline, countryId)}</td>
-                      <td style={bodyCell}>{money(net.reform, countryId)}</td>
+                      <td className={NUMBER_CELL} style={bodyCell}>
+                        {money(net.baseline, countryId)}
+                      </td>
+                      <td className={NUMBER_CELL} style={bodyCell}>
+                        {money(net.reform, countryId)}
+                      </td>
                       <td
+                        className={NUMBER_CELL}
                         style={{
                           ...bodyCell,
                           fontWeight: typography.fontWeight.semibold,
@@ -157,6 +165,7 @@ export default function HouseholdComparison({
                   ) : (
                     <td
                       colSpan={3}
+                      className={NUMBER_CELL}
                       style={{
                         ...bodyCell,
                         color: status?.state === 'failed' ? colors.error : colors.text.secondary,

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { IconPlus, IconTable } from '@tabler/icons-react';
 import { effectColor, signedMoney } from '@/components/flagship/report/household/householdMoney';
 import { Button } from '@/components/ui';
@@ -91,6 +92,13 @@ export default function HouseholdSwitcher({
   onAdd: () => void;
 }) {
   const compares = households.length > 1;
+  // On a narrow screen the row scrolls: keep the open tile in view, e.g. a household just added.
+  const tablist = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    tablist.current
+      ?.querySelector<HTMLElement>('[aria-selected="true"]')
+      ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }, [selected]);
   return (
     <div
       style={{
@@ -101,7 +109,12 @@ export default function HouseholdSwitcher({
         paddingBottom: spacing.xs,
       }}
     >
-      <div role="tablist" aria-label="Households" style={{ display: 'flex', gap: spacing.sm }}>
+      <div
+        ref={tablist}
+        role="tablist"
+        aria-label="Households"
+        style={{ display: 'flex', gap: spacing.sm }}
+      >
         {compares && (
           <button
             type="button"
