@@ -195,7 +195,9 @@ export default function FlagshipTopBar() {
           </button>
         )}
 
-        <CountrySelector />
+        {/* As tall as the sections and the more menu (34px); on a phone,
+            as large as the menu button beside it (40px). */}
+        <CountrySelector triggerClassName="tw:size-[34px] tw:max-sm:size-10" />
 
         {/* A phone's one menu: the sections, then the website links. */}
         <DropdownMenu>

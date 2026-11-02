@@ -20,9 +20,18 @@ const TRIGGER_COLORS: Record<CountrySelectorVariant, { icon: string; hoverBackgr
 
 interface CountrySelectorProps {
   variant?: CountrySelectorVariant;
+  /**
+   * Classes that size the globe button, for example to a bar's other buttons;
+   * without them, the button fits its icon. The button's inline styles
+   * (padding, corner radius, colors, layout) take precedence over classes.
+   */
+  triggerClassName?: string;
 }
 
-export default function CountrySelector({ variant = 'default' }: CountrySelectorProps) {
+export default function CountrySelector({
+  variant = 'default',
+  triggerClassName,
+}: CountrySelectorProps) {
   const triggerColors = TRIGGER_COLORS[variant];
   const countryId = useCurrentCountry();
   const nav = useAppNavigate();
@@ -92,6 +101,7 @@ export default function CountrySelector({ variant = 'default' }: CountrySelector
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Country selector"
         aria-expanded={open}
+        className={triggerClassName}
         style={{
           background: 'transparent',
           border: 'none',
@@ -102,6 +112,7 @@ export default function CountrySelector({ variant = 'default' }: CountrySelector
           lineHeight: 1,
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'center',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.backgroundColor = triggerColors.hoverBackground;

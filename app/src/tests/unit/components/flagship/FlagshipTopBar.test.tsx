@@ -191,4 +191,19 @@ describe('FlagshipTopBar', () => {
       .querySelector('svg');
     expect(globeIcon).toHaveAttribute('stroke', colors.gray[700]);
   });
+
+  test("given the bar renders then the country selector's button carries the bar's button sizes", () => {
+    // When
+    renderTopBar();
+
+    // Then — the sections and the more menu are 34px tall; a phone's
+    // menu button, the bar's other button there, is 40px square
+    expect(screen.getByRole('button', { name: /more policyengine links/i }).style.height).toBe(
+      '34px'
+    );
+    expect(screen.getByRole('button', { name: /country selector/i })).toHaveClass(
+      'tw:size-[34px]',
+      'tw:max-sm:size-10'
+    );
+  });
 });
