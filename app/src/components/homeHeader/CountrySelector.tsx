@@ -9,7 +9,19 @@ import { getCountryDisplayName } from '@/models/geography';
 
 const countries = countryIds.map((id) => ({ id, label: getCountryDisplayName(id) }));
 
-export default function CountrySelector() {
+/** The globe button's icon and hover colors, by the bar it sits on. */
+const TRIGGER_COLORS = {
+  default: { icon: colors.gray[700], hoverBackground: colors.gray[100] },
+  inverse: { icon: colors.text.inverse, hoverBackground: 'rgba(255, 255, 255, 0.12)' },
+};
+
+interface CountrySelectorProps {
+  /** 'inverse' for the teal calculator header; 'default' for light bars. */
+  variant?: 'default' | 'inverse';
+}
+
+export default function CountrySelector({ variant = 'default' }: CountrySelectorProps) {
+  const triggerColors = TRIGGER_COLORS[variant];
   const countryId = useCurrentCountry();
   const nav = useAppNavigate();
   const location = useAppLocation();
@@ -84,13 +96,13 @@ export default function CountrySelector() {
           alignItems: 'center',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
+          e.currentTarget.style.backgroundColor = triggerColors.hoverBackground;
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
         }}
       >
-        <IconWorld size={18} color={colors.text.inverse} />
+        <IconWorld size={18} color={triggerColors.icon} />
       </button>
 
       {(open || contentHeight > 0) && (

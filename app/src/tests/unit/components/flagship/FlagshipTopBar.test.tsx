@@ -1,7 +1,9 @@
 import { renderWithCountry, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
+import { colors } from '@/designTokens';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
+import { MOCK_COUNTRIES } from '@/tests/fixtures/components/homeHeader/CountrySelectorMocks';
 
 const mockNavigate = vi.fn();
 
@@ -128,5 +130,65 @@ describe('FlagshipTopBar', () => {
 
     // Then
     expect(mockNavigate).toHaveBeenCalledWith('/us/reforms');
+  });
+
+  test("given the bar renders then the country selector follows the sections and comes just before a phone's menu", () => {
+    // Given
+    renderTopBar();
+
+    // When
+    const selector = screen.getByRole('button', { name: /country selector/i });
+
+    // Then — as in the legacy header: after its sections on a wide screen,
+    // and just before the menu button on a phone
+    const primary = screen.getByRole('navigation', { name: 'Primary' });
+    expect(primary).not.toContainElement(selector);
+    expect(primary.compareDocumentPosition(selector)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(selector.compareDocumentPosition(screen.getByRole('button', { name: 'Menu' }))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+  });
+
+  test('given the country selector is opened then it offers exactly the US and the UK', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderTopBar();
+    const buttonsBeforeOpening = screen.getAllByRole('button');
+
+    // When
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
+
+    // Then
+    const countryOptions = screen
+      .getAllByRole('button')
+      .filter((button) => !buttonsBeforeOpening.includes(button));
+    expect(countryOptions).toHaveLength(MOCK_COUNTRIES.length);
+    MOCK_COUNTRIES.forEach((country, index) => {
+      expect(countryOptions[index]).toHaveTextContent(country.label);
+    });
+  });
+
+  test('given the UK is chosen from the country selector then the same page opens for the UK', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderTopBar();
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
+
+    // When
+    await user.click(screen.getByRole('button', { name: /united kingdom/i }));
+
+    // Then — the mocked location is /us/build
+    expect(mockNavigate).toHaveBeenCalledWith('/uk/build');
+  });
+
+  test("given the bar's white background then the country selector's globe icon is dark", () => {
+    // When
+    renderTopBar();
+
+    // Then
+    const globeIcon = screen
+      .getByRole('button', { name: /country selector/i })
+      .querySelector('svg');
+    expect(globeIcon).toHaveAttribute('stroke', colors.gray[700]);
   });
 });
