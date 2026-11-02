@@ -45,6 +45,10 @@ SCENARIOS = (
     "ni_sep_cpi_from_2021",
 )
 PARENT_KINDS = ("lone_parent", "lone_parent_council_tax", "couple_two_children")
+PART_TIME_LABELS = [
+    "If the government had raised the NI threshold with the allowance",
+    "If the government had raised the NI threshold from £242 a week by each September's CPI",
+]
 HOUSEHOLD_YEARS = {"2026-27": 2026, "2027-28": 2027}
 
 cpi_rates = st.fixed_dictionaries(
@@ -218,6 +222,7 @@ def test_full_time_tables_match_results(year, pay):
 
 def test_part_time_table_matches_results():
     tables = table_rows()
+    assert ["Hours a week", "Annual pay", *PART_TIME_LABELS] in tables
     for hours in (16.0, 20.0, 24.0, 25.0, 35.0):
         aligned = row(hours=hours)
         cpi = row(hours=hours, scenario="ni_sep_cpi_from_jul22")
@@ -234,6 +239,7 @@ def test_chart_matches_results():
         [h / 2 for h in range(30, 81)] + list(CHART_KINKS)
     )
     assert [m["x"] for m in spec["markers"]] == [CHART_KINKS[0], CHART_KINKS[2]]
+    assert [s["name"] for s in spec["series"]] == PART_TIME_LABELS
     for point in spec["data"]:
         hours = float(point["hours"])
         assert point["aligned"] == pytest.approx(float(row(hours=hours)["freeze_tax_and_ni"]), abs=0.01)
