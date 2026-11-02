@@ -1,13 +1,51 @@
 import { describe, expect, test } from 'vitest';
 import {
   combinedMissingParameters,
+  pathsMissingFromModel,
   policyMissingParameters,
   reformMissingParameters,
 } from '@/libs/flagship/missingParameters';
+import { DEDUCTION_PARAMETERS } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import {
   REMOVED_UK_PARAMETER,
   REMOVED_US_PARAMETER,
 } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+
+describe('pathsMissingFromModel', () => {
+  const MODEL_PARAMETERS = DEDUCTION_PARAMETERS as unknown as ParameterMetadataCollection;
+
+  test("given paths the model's parameters lack then each is listed once, in order", () => {
+    expect(
+      pathsMissingFromModel(
+        [
+          REMOVED_US_PARAMETER,
+          'gov.irs.credits.ctc.amount.base',
+          REMOVED_UK_PARAMETER,
+          REMOVED_US_PARAMETER,
+        ],
+        MODEL_PARAMETERS
+      )
+    ).toEqual([REMOVED_UK_PARAMETER, REMOVED_US_PARAMETER]);
+  });
+
+  test("given only paths the model's parameters have then nothing is missing", () => {
+    expect(pathsMissingFromModel(['gov.irs.credits.ctc.amount.base'], MODEL_PARAMETERS)).toEqual(
+      []
+    );
+  });
+
+  test.each([
+    ['no parameters', undefined],
+    ['parameters still loading', {}],
+  ])('given %s then nothing is missing', (_description, parameters) => {
+    expect(pathsMissingFromModel([REMOVED_US_PARAMETER], parameters)).toEqual([]);
+  });
+
+  test('given a path named like an object property then it is still missing', () => {
+    expect(pathsMissingFromModel(['constructor'], MODEL_PARAMETERS)).toEqual(['constructor']);
+  });
+});
 
 describe('policyMissingParameters', () => {
   test('given the API lists parameters then they are returned', () => {

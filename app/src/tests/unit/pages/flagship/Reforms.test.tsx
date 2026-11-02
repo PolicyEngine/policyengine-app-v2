@@ -1353,6 +1353,60 @@ describe('ReformsPage', () => {
       expect(mockRun).not.toHaveBeenCalled();
     });
 
+    test('given the report cannot be read and its own saved reform sets removed parameters then Re-run opens its transfer dialog and runs nothing', async () => {
+      // Given: the report is unreadable, and the reform it ran (rf-1) is the affected one
+      mockFindMine.mockResolvedValue([
+        { ...CHAT_REFORM, missingParameters: [REMOVED_US_PARAMETER] },
+        PLAN_B_REFORM,
+      ]);
+      mockFindReports.mockResolvedValue([BROWSER_REPORT]);
+      mockFetchReportByIdOverride.current = () => Promise.reject(new Error('Not found'));
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+      await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+      const reformDialog = await screen.findByRole('dialog', { name: REFORM_DIALOG_NAME });
+      await user.click(within(reformDialog).getByRole('button', { name: 'Not now' }));
+
+      // When
+      await user.click(screen.getByRole('button', { name: /re-run/i }));
+
+      // Then
+      const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
+      expect(within(dialog).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      expect(mockRun).not.toHaveBeenCalled();
+    });
+
+    test('given the report cannot be read and a change it ran is to a parameter the model no longer lists then Re-run opens its transfer dialog and runs nothing', async () => {
+      // Given: the saved reforms are fine, but the report's own changes include a removed parameter
+      seedDeductionMetadata();
+      try {
+        mockFetchReportByIdOverride.current = () => Promise.reject(new Error('Not found'));
+        const user = await openReform([
+          {
+            ...BROWSER_REPORT,
+            provisions: [
+              { ...RUN_PROVISION, path: 'gov.irs.credits.ctc.amount.base' },
+              REMOVED_PROVISION,
+            ],
+          },
+        ]);
+
+        // When
+        await user.click(screen.getByRole('button', { name: /re-run/i }));
+
+        // Then: only the parameter the model no longer lists is named
+        const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
+        expect(
+          within(dialog)
+            .getAllByRole('listitem')
+            .map((item) => item.textContent)
+        ).toEqual([REMOVED_US_PARAMETER]);
+        expect(mockRun).not.toHaveBeenCalled();
+      } finally {
+        store.dispatch(clearMetadata());
+      }
+    });
+
     test("given the report's policies cannot be checked then Re-run runs as before", async () => {
       // Given
       mockFetchPolicyById.mockRejectedValue(new Error('Failed to fetch policy 88'));
@@ -1509,6 +1563,19 @@ describe('ReformsPage', () => {
           },
           savedReportId: ACCOUNT_REPORT_ROW_ID,
         });
+      });
+
+      test('then once Transfer and run again is done the notice is gone', async () => {
+        // Given
+        mockRun.mockResolvedValue(ACCOUNT_REPORT_ROW_ID);
+        const { user, dialog } = await openTransferDialog(REPORT_WITH_REMOVED_PARAMETER);
+
+        // When
+        await user.click(within(dialog).getByRole('button', { name: 'Transfer and run again' }));
+
+        // Then
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+        expect(screen.queryByText(/this report cannot be run/i)).not.toBeInTheDocument();
       });
 
       test('then a report kept in this browser is said to open the new results, not to keep its link', async () => {
