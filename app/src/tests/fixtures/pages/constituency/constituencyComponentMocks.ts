@@ -8,20 +8,14 @@ export const MOCK_UK_REPORT_OUTPUT: ReportOutputSocietyWideUK = {
   constituency_impact: {
     by_constituency: {
       'Westminster North': {
-        x: 0,
-        y: 0,
         average_household_income_change: 1234.56,
         relative_household_income_change: 0.025,
       },
       'Edinburgh Central': {
-        x: 1,
-        y: 0,
         average_household_income_change: -567.89,
         relative_household_income_change: -0.015,
       },
       'Cardiff South': {
-        x: 0,
-        y: 1,
         average_household_income_change: 0,
         relative_household_income_change: 0,
       },

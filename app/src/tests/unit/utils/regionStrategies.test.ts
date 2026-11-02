@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'vitest';
+import { fromMetadataRegionEntry } from '@/models/region';
+import { UK_METADATA_REGION_SPELLINGS } from '@/tests/fixtures/models/regionMocks';
 import {
   EXPECTED_PLACE_REGION_STRINGS,
   expectedCaliforniaDistricts,
@@ -292,6 +294,20 @@ describe('regionStrategies', () => {
       expect(result).toEqual(expectedUKCountries);
       expect(result.every((r) => r.value.startsWith('country/'))).toBe(true);
     });
+
+    test.each(UK_METADATA_REGION_SPELLINGS)(
+      'given metadata listing Northern Ireland as %s then its option is country/northern_ireland',
+      (_spelling, metadataRegions) => {
+        // Given
+        const regions = metadataRegions.map((region) => fromMetadataRegionEntry('uk', region));
+
+        // When
+        const result = getUKCountries(regions);
+
+        // Then
+        expect(result).toEqual(expectedUKCountries);
+      }
+    );
 
     test('given regions with no countries then returns empty array', () => {
       // Given

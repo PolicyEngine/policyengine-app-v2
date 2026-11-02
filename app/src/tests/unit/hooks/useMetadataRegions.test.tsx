@@ -5,6 +5,12 @@ import { Provider } from 'react-redux';
 import { describe, expect, test } from 'vitest';
 import { useMetadataRegions } from '@/hooks/useMetadataRegions';
 import metadataReducer from '@/reducers/metadataReducer';
+import {
+  NORTHERN_IRELAND_LABEL,
+  NORTHERN_IRELAND_REGION_CODE,
+  UK_METADATA_REGION_SPELLINGS,
+} from '@/tests/fixtures/models/regionMocks';
+import type { MetadataRegionEntry } from '@/types/metadata';
 import { US_REGION_TYPES } from '@/types/regionTypes';
 
 describe('useMetadataRegions', () => {
@@ -72,4 +78,52 @@ describe('useMetadataRegions', () => {
       }),
     ]);
   });
+
+  test.each(UK_METADATA_REGION_SPELLINGS)(
+    'given UK metadata listing Northern Ireland as %s then its region record is country/northern_ireland',
+    (_spelling, metadataRegions) => {
+      // Given
+      const wrapper = metadataWrapper('uk', metadataRegions);
+
+      // When
+      const { result } = renderHook(() => useMetadataRegions('uk'), { wrapper });
+
+      // Then
+      const northernIreland = result.current.data?.find(
+        (region) => region.label === NORTHERN_IRELAND_LABEL
+      );
+      expect(northernIreland?.code).toBe(NORTHERN_IRELAND_REGION_CODE);
+    }
+  );
 });
+
+/** A store holding a country's metadata with these regions. */
+function metadataWrapper(countryId: string, metadataRegions: MetadataRegionEntry[]) {
+  const store = configureStore({
+    reducer: {
+      metadata: metadataReducer,
+    },
+    preloadedState: {
+      metadata: {
+        currentCountry: countryId,
+        loading: false,
+        error: null,
+        progress: 100,
+        variables: {},
+        parameters: {},
+        entities: {},
+        variableModules: {},
+        economyOptions: { region: metadataRegions, time_period: [], datasets: [] },
+        currentLawId: 0,
+        basicInputs: [],
+        modelledPolicies: { core: {}, filtered: {} },
+        version: null,
+        parameterTree: null,
+      },
+    },
+  });
+
+  return function MetadataWrapper({ children }: { children: React.ReactNode }) {
+    return <Provider store={store}>{children}</Provider>;
+  };
+}

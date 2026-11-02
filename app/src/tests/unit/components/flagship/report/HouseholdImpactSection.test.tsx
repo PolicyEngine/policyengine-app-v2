@@ -584,7 +584,7 @@ describe('HouseholdImpactSection', () => {
     test.each([
       ['country/scotland', 'SCOTLAND CITY_OF_EDINBURGH LOTHIAN'],
       ['country/wales', 'WALES CARDIFF CARDIFF'],
-      ['country/ni', 'NORTHERN_IRELAND BELFAST BELFAST'],
+      ['country/northern_ireland', 'NORTHERN_IRELAND BELFAST BELFAST'],
     ])("given the report's region %s then the household starts there", (region, place) => {
       renderSection({ countryId: 'uk', region });
       expect(screen.getByRole('generic', { name: 'Household builder' })).toHaveAttribute(

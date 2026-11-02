@@ -7,7 +7,6 @@ import {
   type UKBreakdownWithheldAreas,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import { useRegions } from '@/hooks/useRegions';
 import {
   useUKLocalAreaBreakdown,
   type UKLocalAreaBreakdownState,
@@ -30,9 +29,9 @@ export interface UKLocalAreaOutput {
    */
   areaOutput: SocietyWideReportOutput | null;
   /**
-   * The areas withheld at each level the breakdown supplied, counted
-   * against the UK region metadata, or a nation's areas, where the lists
-   * allow (countWithheldUKAreas). Saved levels get none.
+   * The areas withheld at each level the breakdown supplied, counted by
+   * ONS code against the hex layout's areas of the report's region, as the
+   * hex map draws them (countWithheldUKAreas). Saved levels get none.
    */
   withheld: UKBreakdownWithheldAreas | undefined;
 }
@@ -50,7 +49,6 @@ export function useUKLocalAreaOutput(
   const canCompute = !!request && outputServesLocalAreaBreakdowns(output);
   // An older release's result sends no request, even with a cached run.
   const breakdown = useUKLocalAreaBreakdown({ countryId: 'uk', ...(canCompute ? request : null) });
-  const { data: regions } = useRegions('uk');
   const region = request?.region;
   const areaOutput = useMemo(
     () => localAreaOutput(output, breakdown.breakdown),
@@ -59,12 +57,9 @@ export function useUKLocalAreaOutput(
   const withheld = useMemo(
     () =>
       breakdown.breakdown
-        ? breakdownLevelsWithheld(
-            output,
-            withheldUKAreasOf(breakdown.breakdown, region, regions ?? [])
-          )
+        ? breakdownLevelsWithheld(output, withheldUKAreasOf(breakdown.breakdown, region))
         : undefined,
-    [output, breakdown.breakdown, region, regions]
+    [output, breakdown.breakdown, region]
   );
   return { canCompute: canCompute && breakdown.canStart, breakdown, areaOutput, withheld };
 }

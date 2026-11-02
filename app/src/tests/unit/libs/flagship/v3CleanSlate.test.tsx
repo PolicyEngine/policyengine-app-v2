@@ -27,6 +27,11 @@ vi.mock('@/api/report', () => ({
   createReport: vi.fn().mockResolvedValue({ id: 615 }),
   fetchReportById: vi.fn(),
 }));
+// The run starts the report's calculation without waiting for it.
+vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
+  fetchSocietyWideCalculation: vi.fn(() => new Promise(() => {})),
+}));
 
 const LEGACY_KEYS = [
   'user-policy-associations',

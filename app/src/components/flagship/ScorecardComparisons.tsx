@@ -11,6 +11,7 @@ import {
 import {
   claimPeriod,
   claimValue,
+  focusRelatedReformClaims,
   type RelatedScorecardClaim,
   type ScorecardComparisonsResult,
 } from '@/libs/flagship/scorecardComparisons';
@@ -399,6 +400,11 @@ export interface ClaimPresentation {
 export interface ScorecardClaimEntry {
   row: RelatedScorecardClaim;
   presentation?: ClaimPresentation;
+  /**
+   * A related reform's score: a different policy, so its own baseline says
+   * nothing about this report, and no baseline note runs under it.
+   */
+  related?: boolean;
 }
 
 function claimTitle(row: RelatedScorecardClaim, presentation?: ClaimPresentation): string {
@@ -558,13 +564,17 @@ export function claimGap(row: RelatedScorecardClaim): string {
 }
 
 /** One claim as a table row: what is compared, both values, and the gap. */
-function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
+function ScorecardClaimRow({ row, presentation, related = false }: ScorecardClaimEntry) {
   const sourceUrl = safeUrl(row.url);
   const smallLink = { ...linkStyle, fontSize: typography.fontSize.xs };
   // Only a period that is recorded; "not recorded" under every value says nothing.
   const publishedNote = presentation?.externalPeriod ?? claimPeriod(row);
   const peNote = presentation?.modelPeriod ?? modelPeriod(row);
-  const notes = differenceNotes(row, presentation?.externalPeriod, presentation?.modelPeriod);
+  const notes = differenceNotes(
+    row,
+    presentation?.externalPeriod,
+    presentation?.modelPeriod
+  ).filter((note) => !(related && note.startsWith('Different baselines')));
   return (
     <>
       <tr style={rowStyle}>
@@ -644,6 +654,7 @@ export function ScorecardClaimTable({
           key={entry.row.claim_id}
           row={entry.row}
           presentation={entry.presentation}
+          related={entry.related}
         />
       ))}
     </EvidenceTable>
@@ -653,16 +664,36 @@ export function ScorecardClaimTable({
 /** Related reforms shown before the reader asks for all of them. */
 export const RELATED_REFORM_PREVIEW = 10;
 
-/** Published scorecard estimates of other policies that change the same rules. */
+/**
+ * A related reform's title: the measure as the source describes it, up to
+ * its first comma ("Universal Credit Child Element: Remove the two child
+ * limit from April 2026"), when the claim records one; else the claim's.
+ */
+function relatedReformPresentation(row: RelatedScorecardClaim): ClaimPresentation | undefined {
+  const hint = row.conditions?.reform_hint?.split(',')[0]?.trim();
+  return hint ? { title: hint } : undefined;
+}
+
+/**
+ * Published scorecard estimates of other policies that change the same
+ * rules: closed until the reader opens them, since they do not score this
+ * reform. One score per measure and year (focusRelatedReformClaims).
+ */
 export function RelatedReformEstimates({ rows }: { rows: RelatedScorecardClaim[] }) {
+  const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const focused = focusRelatedReformClaims(rows);
   // A broad measure, such as a threshold freeze, has hundreds of published
   // scores. Show the ones with a PolicyEngine value first.
   const ordered = [
-    ...rows.filter((row) => typeof row.latest?.value === 'number'),
-    ...rows.filter((row) => typeof row.latest?.value !== 'number'),
+    ...focused.filter((row) => typeof row.latest?.value === 'number'),
+    ...focused.filter((row) => typeof row.latest?.value !== 'number'),
   ];
+  if (ordered.length === 0) {
+    return null;
+  }
   const visible = showAll ? ordered : ordered.slice(0, RELATED_REFORM_PREVIEW);
+  const toggleStyle = { ...rowButtonStyle, alignSelf: 'flex-start' };
   return (
     <Stack style={{ gap: spacing.sm }}>
       <ValidationSubheading>Related reforms</ValidationSubheading>
@@ -670,18 +701,39 @@ export function RelatedReformEstimates({ rows }: { rows: RelatedScorecardClaim[]
         Published scores of policies that change the same rules. They do not score this exact
         reform.
       </ValidationNote>
-      <ScorecardClaimTable label="Related reforms" entries={visible.map((row) => ({ row }))} />
-      {ordered.length > RELATED_REFORM_PREVIEW && (
-        <button
-          type="button"
-          style={{ ...rowButtonStyle, alignSelf: 'flex-start' }}
-          aria-expanded={showAll}
-          onClick={() => setShowAll((value) => !value)}
-        >
-          {showAll
-            ? `Show the first ${RELATED_REFORM_PREVIEW} related reforms`
-            : `Show all ${ordered.length} related reforms`}
-        </button>
+      <button
+        type="button"
+        style={toggleStyle}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        {open
+          ? 'Hide related reforms'
+          : `Show ${ordered.length} related reform ${ordered.length === 1 ? 'score' : 'scores'}`}
+      </button>
+      {open && (
+        <>
+          <ScorecardClaimTable
+            label="Related reforms"
+            entries={visible.map((row) => ({
+              row,
+              presentation: relatedReformPresentation(row),
+              related: true,
+            }))}
+          />
+          {ordered.length > RELATED_REFORM_PREVIEW && (
+            <button
+              type="button"
+              style={toggleStyle}
+              aria-expanded={showAll}
+              onClick={() => setShowAll((value) => !value)}
+            >
+              {showAll
+                ? `Show the first ${RELATED_REFORM_PREVIEW} related reforms`
+                : `Show all ${ordered.length} related reforms`}
+            </button>
+          )}
+        </>
       )}
     </Stack>
   );

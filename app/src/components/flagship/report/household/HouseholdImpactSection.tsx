@@ -61,7 +61,6 @@ const EXPECTED_MS = 3 * 60 * 1000;
 const UK_NATION_PLACES: Record<string, Record<string, string>> = {
   scotland: { region: 'SCOTLAND', local_authority: 'CITY_OF_EDINBURGH', brma: 'LOTHIAN' },
   wales: { region: 'WALES', local_authority: 'CARDIFF', brma: 'CARDIFF' },
-  ni: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
   northern_ireland: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
 };
 

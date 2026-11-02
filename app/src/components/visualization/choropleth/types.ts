@@ -113,7 +113,11 @@ export type UKBoundaryLevel = 'constituency' | 'local_authority';
 /** A UK nation, which a nation's report shows on its own. */
 export type UKNation = 'england' | 'wales' | 'scotland' | 'northern_ireland';
 
-/** One UK area's result, for the geographic map. */
+/**
+ * One UK area's result, for the geographic map and, placed by
+ * placeOnUKHexLayout, the hex map: what the v2 adapters and v3's local-area
+ * map build from each area.
+ */
 export interface UKAreaChoroplethDataPoint {
   /** The caller's identifier for the area, e.g. its name: what selection and clicks use. */
   id: string;
@@ -151,7 +155,7 @@ export interface UKAreaChoroplethMapProps {
   /** Optional ref for image export: the map's frame with the boundaries' licence credit under it */
   exportRef?: React.Ref<HTMLDivElement>;
   /**
-   * What an area with no result reads in its tooltip, e.g. "Not published"
+   * What an area with no result reads in its tooltip, e.g. "Not reported"
    * for one disclosure control withheld. Defaults to "No data".
    */
   missingAreaText?: string;

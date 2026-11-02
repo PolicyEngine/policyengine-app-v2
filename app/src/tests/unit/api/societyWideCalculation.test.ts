@@ -47,6 +47,10 @@ import {
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
 } from '@/tests/fixtures/api/societyWideMocks';
+import {
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_REGION_CODE,
+} from '@/tests/fixtures/models/regionMocks';
 import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 
 global.fetch = vi.fn();
@@ -701,5 +705,47 @@ describe('societyWide API', () => {
         `Local-area breakdown failed (500): ${PLAIN_TEXT_ERROR_BODY}`
       );
     });
+  });
+});
+
+describe('societyWide API Northern Ireland region', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('given a national request for country/ni then it asks for country/northern_ireland', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockSuccessResponse(mockPendingResponse) as any);
+
+    // When
+    await fetchSocietyWideCalculation(
+      TEST_COUNTRIES.UK,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR }
+    );
+
+    // Then
+    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  test('given a local-area breakdown for country/ni then it asks for country/northern_ireland', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockSuccessResponse(mockPendingResponse) as any);
+
+    // When
+    await fetchLocalAreaBreakdown(
+      TEST_COUNTRIES.UK,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR }
+    );
+
+    // Then
+    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 });

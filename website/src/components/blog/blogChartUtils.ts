@@ -11,6 +11,8 @@ export interface BlogChartFormat {
   prefix?: string;
   suffix?: string;
   signed?: boolean;
+  /** Group thousands with commas, as in £13,036. */
+  separator?: boolean;
 }
 
 export type BlogChartRow = Record<string, string | number>;
@@ -30,24 +32,36 @@ export function formatChartValue(
   value: number,
   format: BlogChartFormat = {},
 ): string {
-  const { decimals = 1, prefix = "", suffix = "", signed = false } = format;
+  const {
+    decimals = 1,
+    prefix = "",
+    suffix = "",
+    signed = false,
+    separator = false,
+  } = format;
   const digits = Math.min(MAX_DECIMALS, Math.max(0, Math.round(decimals)));
-  const magnitude = Math.abs(value).toFixed(digits);
-  const isZero = Number(magnitude) === 0;
+  const fixed = Math.abs(value).toFixed(digits);
+  const magnitude = separator
+    ? fixed.replace(/^\d+/, (whole) => whole.replace(/\B(?=(\d{3})+$)/g, ","))
+    : fixed;
+  const isZero = Number(fixed) === 0;
   const sign = value < 0 && !isZero ? "−" : signed && !isZero ? "+" : "";
   return `${sign}${prefix}${magnitude}${suffix}`;
 }
 
 /**
  * Round the value range out to a step of 1, 2, 2.5 or 5 times a power of ten,
- * including zero, so tick labels land on round numbers.
+ * including zero unless `includeZero` is false, so tick labels land on round
+ * numbers.
  */
 export function niceTicks(
   values: number[],
   target = 4,
+  includeZero = true,
 ): { domain: [number, number]; ticks: number[]; decimals: number } {
-  const lo = values.reduce((a, b) => Math.min(a, b), 0);
-  const hi = values.reduce((a, b) => Math.max(a, b), 0);
+  const seed = includeZero || values.length === 0 ? 0 : values[0];
+  const lo = values.reduce((a, b) => Math.min(a, b), seed);
+  const hi = values.reduce((a, b) => Math.max(a, b), seed);
   // A span under 1e-9 gets a unit axis: a smaller step underflows, or needs
   // more decimals than toFixed allows.
   const span = hi - lo >= 1e-9 ? hi - lo : 1;
@@ -90,10 +104,16 @@ export function validSharedFields(s: Record<string, unknown>): boolean {
   if (s.height !== undefined && !(isFiniteNumber(s.height) && s.height > 0)) {
     return false;
   }
-  const { format } = s;
+  return validFormat(s.format);
+}
+
+/** An optional BlogChartFormat with every field of the right type. */
+export function validFormat(format: unknown): boolean {
+  const optionalString = (v: unknown) =>
+    v === undefined || typeof v === "string";
   if (format === undefined) return true;
   if (!isRecord(format)) return false;
-  const { decimals, prefix, suffix, signed } = format;
+  const { decimals, prefix, suffix, signed, separator } = format;
   return (
     (decimals === undefined ||
       (Number.isInteger(decimals) &&
@@ -101,7 +121,8 @@ export function validSharedFields(s: Record<string, unknown>): boolean {
         (decimals as number) <= MAX_DECIMALS)) &&
     optionalString(prefix) &&
     optionalString(suffix) &&
-    (signed === undefined || typeof signed === "boolean")
+    (signed === undefined || typeof signed === "boolean") &&
+    (separator === undefined || typeof separator === "boolean")
   );
 }
 

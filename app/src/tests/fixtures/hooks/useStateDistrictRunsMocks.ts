@@ -5,6 +5,10 @@ import type {
 } from '@/api/societyWideCalculation';
 import { BASE_URL } from '@/constants';
 import type { Region } from '@/models/region';
+import {
+  CONGRESSIONAL_DISTRICTS_GEOJSON_PATH,
+  MOCK_GEOJSON_FEATURE_COLLECTION,
+} from '@/tests/fixtures/components/visualization/usDistrictChoroplethMapMocks';
 import { ALL_US_STATE_CODES } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 import type { ReportMetadata } from '@/types/metadata/reportMetadata';
@@ -270,8 +274,9 @@ function ok(result: unknown): Response {
 /**
  * The Public API as the state district runs use it: simulations and base reports
  * created or reused per state, the economy endpoint per state, and base
- * report writes. Each request settles a few ticks after it is sent, so the
- * requests in flight can be counted.
+ * report writes. It also serves the district map's boundaries, from the map
+ * test's GeoJSON fixture. Each request settles a few ticks after it is sent, so
+ * the requests in flight can be counted.
  */
 export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeStateApi {
   const requests: RecordedRequest[] = [];
@@ -334,6 +339,9 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
         throw response;
       }
       return Response.json(response);
+    }
+    if (url === CONGRESSIONAL_DISTRICTS_GEOJSON_PATH) {
+      return Response.json(MOCK_GEOJSON_FEATURE_COLLECTION);
     }
     return new Response('Not found', { status: 404 });
   };

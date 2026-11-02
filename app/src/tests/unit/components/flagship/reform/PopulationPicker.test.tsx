@@ -5,6 +5,11 @@ import PopulationPicker, {
   populationLabel,
 } from '@/components/flagship/reform/PopulationPicker';
 import { UK_REGIONS } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import {
+  CURRENT_UK_METADATA_REGIONS,
+  NORTHERN_IRELAND_LABEL,
+  NORTHERN_IRELAND_REGION_CODE,
+} from '@/tests/fixtures/models/regionMocks';
 
 const REGIONS = [
   { name: 'state/ar', label: 'Arkansas' },
@@ -48,7 +53,7 @@ describe('populationLabel for the UK', () => {
   });
 
   test('given metadata still loading then UK regions read by name, never by their prefix', () => {
-    expect(populationLabel('country/ni', [])).toBe('Northern Ireland');
+    expect(populationLabel(NORTHERN_IRELAND_REGION_CODE, [])).toBe(NORTHERN_IRELAND_LABEL);
     expect(populationLabel('constituency/Aberdeen North', [])).toBe(
       'Aberdeen North (constituency)'
     );
@@ -100,5 +105,34 @@ describe('PopulationPicker', () => {
     await user.click(screen.getByRole('option', { name: 'UK-wide' }));
 
     expect(onChange).toHaveBeenCalledWith(undefined);
+  });
+
+  test('given metadata listing country/northern_ireland then choosing Northern Ireland picks country/northern_ireland', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <PopulationPicker value="" onChange={onChange} regions={CURRENT_UK_METADATA_REGIONS} />,
+      'uk'
+    );
+    await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+
+    await user.click(screen.getByRole('option', { name: NORTHERN_IRELAND_LABEL }));
+
+    expect(onChange).toHaveBeenCalledWith(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  test('given Northern Ireland chosen then the trigger names it', () => {
+    render(
+      <PopulationPicker
+        value={NORTHERN_IRELAND_REGION_CODE}
+        onChange={vi.fn()}
+        regions={CURRENT_UK_METADATA_REGIONS}
+      />,
+      'uk'
+    );
+
+    expect(
+      screen.getByRole('button', { name: `Population: ${NORTHERN_IRELAND_LABEL}` })
+    ).toBeInTheDocument();
   });
 });

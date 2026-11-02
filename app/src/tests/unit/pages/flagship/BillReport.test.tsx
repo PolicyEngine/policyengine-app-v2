@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, within } from '@test-utils';
+import { fetchRespondingTo, render, screen, userEvent, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { BillEconomy } from '@/hooks/useBillEconomy';
 import BillReportPage from '@/pages/flagship/BillReport.page';
@@ -7,6 +7,7 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
+import { CALCULATOR_ROUTES_NOT_SERVED } from '@/tests/fixtures/libs/flagship/calculatorRouteMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL, UNLISTED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -100,6 +101,8 @@ describe('BillReportPage', () => {
     mockUseBillEconomy.mockReturnValue(economy());
     mockIsAlreadyCurrentLaw.mockReturnValue(undefined);
     mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
+    // The calculator's own routes are not served here, so its checks read as unavailable.
+    vi.stubGlobal('fetch', fetchRespondingTo(CALCULATOR_ROUTES_NOT_SERVED));
     // Tests that seed metadata must not leave it loaded for the next one.
     store.dispatch(clearMetadata());
   });

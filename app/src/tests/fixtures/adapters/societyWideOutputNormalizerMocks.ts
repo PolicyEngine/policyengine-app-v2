@@ -56,22 +56,16 @@ export const LIST_SHAPE_LOCAL_AUTHORITY_IMPACT = [
 /** The same areas keyed by name, as the app's types and maps read them. */
 export const EXPECTED_BY_CONSTITUENCY = {
   Aldershot: {
-    x: 56,
-    y: -40,
     average_household_income_change: 571.146162,
     relative_household_income_change: 0.015443,
     code: 'E14001063',
   },
   'Aldridge-Brownhills': {
-    x: 56,
-    y: -30,
     average_household_income_change: 730.315911,
     relative_household_income_change: 0.015095,
     code: 'E14001064',
   },
   'Altrincham and Sale West': {
-    x: 52,
-    y: -25,
     average_household_income_change: 966.61352,
     relative_household_income_change: 0.014919,
     code: 'E14001065',
@@ -80,15 +74,11 @@ export const EXPECTED_BY_CONSTITUENCY = {
 
 export const EXPECTED_BY_LOCAL_AUTHORITY = {
   Hartlepool: {
-    x: 8,
-    y: 19,
     average_household_income_change: 503.954362,
     relative_household_income_change: 0.013174,
     code: 'E06000001',
   },
   Middlesbrough: {
-    x: 9,
-    y: 18,
     average_household_income_change: 552.184089,
     relative_household_income_change: 0.012633,
     code: 'E06000002',
@@ -107,11 +97,31 @@ export const LIST_SHAPE_UK_RESULT = {
   local_authority_impact: LIST_SHAPE_LOCAL_AUTHORITY_IMPACT,
 };
 
+/**
+ * A saved result in the older keyed shape: no ONS codes, and each area's x
+ * and y hex position, which the app no longer reads.
+ */
 export const KEYED_SHAPE_UK_RESULT = {
   ...UK_RESULT_OTHER_FIELDS,
   constituency_impact: {
-    by_constituency: EXPECTED_BY_CONSTITUENCY,
+    by_constituency: {
+      Aldershot: {
+        x: 56,
+        y: -40,
+        average_household_income_change: 571.146162,
+        relative_household_income_change: 0.015443,
+      },
+    },
     outcomes_by_region: {},
   },
-  local_authority_impact: { by_local_authority: EXPECTED_BY_LOCAL_AUTHORITY },
+  local_authority_impact: {
+    by_local_authority: {
+      Hartlepool: {
+        x: 8,
+        y: 19,
+        average_household_income_change: 503.954362,
+        relative_household_income_change: 0.013174,
+      },
+    },
+  },
 };

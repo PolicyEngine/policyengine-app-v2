@@ -16,7 +16,7 @@ import {
   MOCK_UK_CONSTITUENCY_POINTS_WITHOUT_CODES,
   mockUKBoundaryFetch,
   MONMOUTHSHIRE_CODE,
-  NOT_PUBLISHED_TEXT,
+  NOT_REPORTED_TEXT,
   POWYS_CODE,
   RENAMED_AREA_POINT,
   UK_CONSTITUENCY_BOUNDARY_PATH,
@@ -96,13 +96,13 @@ describe('UKAreaChoroplethMap', () => {
     expect(await boundary(CLWYD_EAST_CODE)).toHaveAttribute('fill', NO_DATA_FILL);
   });
 
-  test('given a withheld area then its boundary is grey and reads not published', async () => {
+  test('given a withheld area then its boundary is grey and reads not reported', async () => {
     // Given
     render(
       <UKAreaChoroplethMap
         data={MOCK_UK_CONSTITUENCY_POINTS}
         level="constituency"
-        missingAreaText={NOT_PUBLISHED_TEXT}
+        missingAreaText={NOT_REPORTED_TEXT}
       />
     );
     const cardiffEast = await boundary(CARDIFF_EAST_CODE);
@@ -112,7 +112,7 @@ describe('UKAreaChoroplethMap', () => {
 
     // Then: the boundary file names it, as the result does not.
     expect(cardiffEast).toHaveAttribute('fill', NO_DATA_FILL);
-    expect(tooltipLines()).toEqual(['Cardiff East', NOT_PUBLISHED_TEXT]);
+    expect(tooltipLines()).toEqual(['Cardiff East', NOT_REPORTED_TEXT]);
   });
 
   test('given an approximate area with a 90% range then its tooltip gives both', async () => {

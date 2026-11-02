@@ -175,6 +175,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://futa-wage-base-dashboard.vercel.app/us/futa-wage-base-dashboard",
   },
   {
+    source: "/us/ballot-measures-2026",
+    destination:
+      "https://ballot-measures-2026.vercel.app/us/ballot-measures-2026",
+  },
+  {
     source: "/ai-beliefs",
     destination: "https://ai-beliefs.vercel.app/ai-beliefs",
   },
@@ -237,6 +242,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
     source: "/uk/autumn-budget-2025",
     destination:
       "https://uk-autumn-budget-dashboard.vercel.app/uk/autumn-budget-2025",
+  },
+  {
+    source: "/uk/autumn-budget-2026",
+    destination:
+      "https://uk-autumn-budget-2026.vercel.app/uk/autumn-budget-2026",
   },
   {
     source: "/uk/public-services-spending",
