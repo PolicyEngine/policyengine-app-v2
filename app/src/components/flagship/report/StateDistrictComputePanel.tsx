@@ -14,7 +14,8 @@ const DISTRICT_COPY: Omit<BreakdownComputeCopy, 'intro'> = {
   computeLabel: 'Compute district impacts',
   computingMessage: 'Computing district impacts…',
   progressLabel: 'Computing district impacts',
-  errorMessage: 'District impacts could not be calculated.',
+  // Neutral, as the reasons below it may say a run may still finish.
+  errorMessage: 'District impacts are not in.',
 };
 
 /** The most failed states the panel names before counting the rest. */

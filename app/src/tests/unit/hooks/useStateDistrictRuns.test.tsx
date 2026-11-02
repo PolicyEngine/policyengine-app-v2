@@ -23,8 +23,8 @@ import {
   STATE_COMPUTING,
   STATE_COUNT,
   STATE_ERROR,
-  STATE_ERROR_MESSAGE,
   STATE_EXPECTED_MS,
+  STATE_FAILURE_REASON,
   STATE_POLL_INTERVAL_MS,
   STATE_REPORT_ERROR,
   STATE_REPORT_PENDING,
@@ -35,8 +35,10 @@ import {
   STATE_TIME_LIMIT_MESSAGE,
   STATE_TIME_LIMIT_MS,
   stateEconomyUrl,
+  stateFailure,
   stateOk,
   stateOkWithoutDistricts,
+  stateOkWithUnreadableDistricts,
   stateReportComplete,
   stateReportCompleteWithoutDistricts,
   TEXAS,
@@ -575,7 +577,7 @@ describe('useStateDistrictRuns compute', () => {
     const { result } = await computeAll();
     await waitFor(() => expect(result.current.status).toBe('partial'));
     expect(result.current.calculationFailures).toEqual([
-      { label: 'Texas', error: STATE_ERROR_MESSAGE },
+      { label: 'Texas', error: STATE_FAILURE_REASON },
     ]);
     expect(result.current.noDistrictStateLabels).toEqual(['Ohio']);
     const requestsBefore = api.economyRequests().length;
@@ -613,6 +615,47 @@ describe('useStateDistrictRuns compute', () => {
     expect(api.economyRequestsFor(OHIO)).toEqual([stateEconomyUrl(OHIO)]);
   });
 
+  test('given a failed calculation answered with 502 then the state fails at that answer, with the reason states that failed alike share', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) => (request === 0 ? STATE_COMPUTING : STATE_ERROR),
+        [OHIO]: () =>
+          stateFailure(
+            'Simulation entrypoint execution failed: Simulation failed (correlation_id=state-run-2)'
+          ),
+      }),
+    });
+    const { result } = await computeAll();
+    await waitFor(() => expect(api.economyRequestsFor(TEXAS)).toHaveLength(1));
+
+    // When
+    await poll();
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(api.economyRequestsFor(TEXAS)).toHaveLength(2);
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Ohio', error: STATE_FAILURE_REASON },
+      { label: 'Texas', error: STATE_FAILURE_REASON },
+    ]);
+  });
+
+  test('given a result whose districts cannot be read then the state fails, unwritten, and is not polled again', async () => {
+    // Given
+    serveApi({ economy: economyWhere({ [OHIO]: () => stateOkWithUnreadableDistricts(OHIO) }) });
+
+    // When
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    await poll();
+
+    // Then
+    expect(result.current.failedStates).toEqual([OHIO]);
+    expect(api.economyRequestsFor(OHIO)).toHaveLength(1);
+    expect(api.reportWrites().map((write) => write.body.id)).not.toContain(api.reportIdFor(OHIO));
+  });
+
   test('given a result whose districts are null then the state is settled as failed, not pending', async () => {
     // Given
     serveApi({ economy: economyWhere({ [OHIO]: () => stateOkWithoutDistricts(OHIO) }) });
@@ -641,7 +684,7 @@ describe('useStateDistrictRuns compute', () => {
     await waitFor(() => expect(result.current.status).toBe('partial'));
     expect(result.current.completedCount).toBe(STATE_COUNT - 2);
     expect(new Set(result.current.failedStates)).toEqual(new Set([TEXAS, UTAH]));
-    expect(result.current.error).toBe(STATE_ERROR_MESSAGE);
+    expect(result.current.error).toBe(STATE_FAILURE_REASON);
     expect(result.current.progress).toBe(100);
   });
 

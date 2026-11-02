@@ -4,7 +4,7 @@ import type { StateDistrictRuns } from '@/hooks/useStateDistrictRuns';
 export const COMPUTE_DISTRICTS_LABEL = 'Compute district impacts';
 export const COMPUTING_DISTRICTS_MESSAGE = 'Computing district impacts…';
 export const CHECKING_DISTRICTS_LABEL = 'Checking for saved state results';
-export const DISTRICTS_ERROR_MESSAGE = 'District impacts could not be calculated.';
+export const DISTRICTS_ERROR_MESSAGE = 'District impacts are not in.';
 export const NONE_COMPUTED_INTRO =
   'Congressional district impacts come from a separate run for each state and DC, on its own state data. They take a few minutes.';
 export const RUN_FAILURE = 'The simulation ran out of memory';

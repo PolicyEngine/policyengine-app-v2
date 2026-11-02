@@ -192,7 +192,10 @@ export const STATE_REPORT_PENDING: StoredStateReport = { status: 'pending' };
 export const STATE_REPORT_ERROR: StoredStateReport = { status: 'error' };
 
 /** A state's economy response for one poll. */
-export type StateEconomyResponse = EconomyCalculationResponse<SocietyWideReportOutput> | Error;
+export type StateEconomyResponse =
+  | EconomyCalculationResponse<SocietyWideReportOutput>
+  | Error
+  | Response;
 
 export const STATE_COMPUTING: StateEconomyResponse = {
   status: 'computing',
@@ -210,12 +213,29 @@ export const stateOkWithoutDistricts = (region: string): StateEconomyResponse =>
   result: stateResult(region, null),
 });
 
-export const STATE_ERROR_MESSAGE = 'The simulation ran out of memory';
-export const STATE_ERROR: StateEconomyResponse = {
-  status: 'error',
-  result: null,
-  error: STATE_ERROR_MESSAGE,
-};
+/** The Public API's message for a state whose calculation failed, as its 502 body gives it. */
+export const STATE_ERROR_MESSAGE =
+  'Simulation entrypoint execution failed: Simulation failed (correlation_id=state-run-1)';
+/** The reason the app gives for such a failure, the same for every state that failed alike. */
+export const STATE_FAILURE_REASON = 'The simulation did not finish';
+
+/** The Public API's answer for a calculation that failed: 502 with an error body. */
+export function stateFailure(message: string = STATE_ERROR_MESSAGE): Response {
+  return new Response(JSON.stringify({ status: 'error', message, result: null }), {
+    status: 502,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+export const STATE_ERROR: StateEconomyResponse = stateFailure();
+
+/** A state's result whose districts are not a list, so they cannot be read. */
+export const stateOkWithUnreadableDistricts = (region: string): StateEconomyResponse => ({
+  status: 'ok',
+  result: {
+    ...stateResult(region),
+    congressional_district_impact: { districts: 'unreadable' },
+  } as unknown as SocietyWideReportOutput,
+});
 
 export const POLL_FAILURE = new Error('Society-wide calculation failed (502): Bad Gateway');
 
@@ -337,6 +357,9 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
       const response = options.economy?.(region, call) ?? STATE_COMPUTING;
       if (response instanceof Error) {
         throw response;
+      }
+      if (response instanceof Response) {
+        return response.clone();
       }
       return Response.json(response);
     }

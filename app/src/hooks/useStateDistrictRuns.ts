@@ -7,6 +7,7 @@ import {
 import { ReportAdapter } from '@/adapters/ReportAdapter';
 import {
   fetchSocietyWideCalculation,
+  type EconomyCalculationResponse,
   type SocietyWideReportOutput,
 } from '@/api/societyWideCalculation';
 import {
@@ -16,6 +17,7 @@ import {
 import { useRegions } from '@/hooks/useRegions';
 import { pollRun, type PolledRun, type PollRunOptions } from '@/libs/calculations/polledRun';
 import { ResultPersister } from '@/libs/calculations/ResultPersister';
+import { describeCalculationError } from '@/libs/flagship/calculationError';
 import { createReportRecords } from '@/libs/flagship/runReport';
 import { reportKeys } from '@/libs/queryKeys';
 import type { EconomyOutput, Report } from '@/types/ingredients/Report';
@@ -39,6 +41,8 @@ const TIME_LIMIT_MESSAGE =
   'Taking much longer than expected. The run may still finish on the server: retry to check it again.';
 
 const NO_DISTRICTS_MESSAGE = 'The result has no congressional districts.';
+
+const UNREADABLE_RESULT_MESSAGE = 'The result could not be read';
 
 type District = USCongressionalDistrictBreakdownItem;
 
@@ -276,11 +280,55 @@ async function saveStateResult(
   }
 }
 
+/** Whether a failed request is the Public API's 502 for a calculation that failed. */
+function isFailedCalculation(message: string): boolean {
+  const body = message.match(/^Society-wide calculation failed \(502\): (\{[\s\S]*\})$/)?.[1];
+  if (!body) {
+    return false;
+  }
+  try {
+    return (JSON.parse(body) as { status?: unknown }).status === 'error';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Asks for a state's economy result. The Public API answers a calculation
+ * that failed with 502 and an error body, which the fetch throws: that is the
+ * state's answer, not a failed poll, so it becomes the state's error at once,
+ * as a short reason that is the same for states that failed alike (the
+ * message itself carries a correlation ID). Any other failure, such as a 502
+ * from a proxy with no such body, is still a failed poll.
+ */
+async function fetchStateRun(
+  { reformPolicyId, baselinePolicyId, year }: Required<StateDistrictRunsRequest>,
+  region: string
+): Promise<EconomyCalculationResponse<SocietyWideReportOutput>> {
+  try {
+    // Only the region and year: the Public API picks the state's dataset.
+    return await fetchSocietyWideCalculation('us', reformPolicyId, baselinePolicyId, {
+      region,
+      time_period: year,
+    });
+  } catch (error) {
+    if (error instanceof Error && isFailedCalculation(error.message)) {
+      return {
+        status: 'error',
+        result: null,
+        error: describeCalculationError(error.message).title,
+      };
+    }
+    throw error;
+  }
+}
+
 /**
  * Sends one poll of a state's run through the tab's request limit, and
  * writes its result to the state's base report when that report does not
  * hold one yet. A poll still queued when the view closes is dropped; one
- * already sent still writes its result.
+ * already sent still writes its result. A result whose districts cannot be
+ * read fails the state, and is not written.
  */
 async function pollStateRun(
   queryClient: QueryClient,
@@ -294,22 +342,23 @@ async function pollStateRun(
     // Read when the request is sent, so the clock starts then, not in the queue.
     const previous = queryClient.getQueryData<StateRun>(runKey);
     return pollRun(
-      () =>
-        // Only the region and year: the Public API picks the state's dataset.
-        fetchSocietyWideCalculation('us', reformPolicyId, baselinePolicyId, {
-          region,
-          time_period: year,
-        }),
+      () => fetchStateRun({ reformPolicyId, baselinePolicyId, year }, region),
       previous && { ...previous, result: null },
       STATE_RUN_POLL_OPTIONS
     );
   }, signal);
+  if (run.status !== 'complete') {
+    return { ...run, result: null };
+  }
+  let districts: District[] | null;
+  try {
+    districts = districtsOf(run.result);
+  } catch (error) {
+    console.error('[useStateDistrictRuns] Could not read a state result:', error);
+    return { ...run, status: 'error', result: null, error: UNREADABLE_RESULT_MESSAGE };
+  }
   const written = writtenReportsFor(queryClient);
-  if (
-    run.status === 'complete' &&
-    records.reportStatus !== 'complete' &&
-    !written.has(records.reportId)
-  ) {
+  if (records.reportStatus !== 'complete' && !written.has(records.reportId)) {
     written.add(records.reportId);
     // The write waits for a place in the same limit, with no signal, so it is
     // counted in flight and still sent when the view closes.
@@ -317,12 +366,15 @@ async function pollStateRun(
       .run(() => saveStateResult(queryClient, records, run, year))
       .then((saved) => {
         if (!saved) {
-          // A later poll may try the write again.
+          // Only a poll whose result a closing view dropped asks for this
+          // state again in this tab, and may then try the write again;
+          // otherwise the failure is only logged, and a later page load
+          // computes the state again.
           written.delete(records.reportId);
         }
       });
   }
-  return { ...run, result: run.status === 'complete' ? districtsOf(run.result) : null };
+  return { ...run, result: districts };
 }
 
 /**
