@@ -37,7 +37,7 @@ export function MissingParameterList({ parameterPaths }: { parameterPaths: strin
 }
 
 /**
- * Says that something cannot be run because its policy sets parameters the
+ * Says that something cannot be run because it changes parameters the
  * current model no longer has, and names them. They have no labels in the
  * model any more, so each is shown by its path.
  */

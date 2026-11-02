@@ -1056,7 +1056,8 @@ export default function ReformsPage() {
               setRerunMissingParameters([]);
               // Its own policies, as it ran them: a re-run runs the same
               // changes against the same baseline, whatever the saved reforms
-              // say now. A check that cannot be made leaves the re-run as it was.
+              // say now. An API check that cannot be made leaves the re-run to
+              // the parameter list's check of those changes below.
               setRerunChecking(true);
               const changedPaths = report.provisions.map((provision) => provision.path);
               const reportedMissing = await reportMissingParameters(

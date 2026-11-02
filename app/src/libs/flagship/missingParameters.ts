@@ -5,8 +5,9 @@ import type { V1PolicyContent } from '@/types/metadata/policyMetadata';
 /**
  * The parameters a v1 policy sets that the current model no longer has, as
  * the API reports them. Empty when there are none, and when the API did not
- * check (an older API, or a check it could not run): only a list the API
- * returns blocks a run.
+ * check (an older API, or a check it could not run): the API's answer blocks
+ * a run only with a list. The browser's own check of a draft's or a
+ * report's changes (`pathsMissingFromModel`) stands apart from it.
  */
 export function policyMissingParameters(
   policy: Pick<V1PolicyContent, 'missing_parameters'> | null | undefined
@@ -39,10 +40,12 @@ export function combinedMissingParameters(
  * have, once each, in order: changes a draft kept, or a report ran, from
  * before the model dropped them. A check in the browser beside the API's,
  * for changes the API has not checked: a draft's, or a report's when its
- * policies cannot be read. The list holds only parameters under `gov`, as
- * the API's metadata sends them, so a path outside it is not judged. Empty
- * until the model's parameters have loaded, so nothing is blocked before
- * it can be checked.
+ * policies cannot be read. As the API's own check does, it counts only
+ * leaf parameters: a path the list holds as a node (one that holds other
+ * parameters) is missing too, since no policy can set it. The list holds
+ * only parameters under `gov`, as the API's metadata sends them, so a path
+ * outside it is not judged. Empty until the model's parameters have
+ * loaded, so nothing is blocked before it can be checked.
  */
 export function pathsMissingFromModel(
   paths: string[],
@@ -51,7 +54,9 @@ export function pathsMissingFromModel(
   if (!parameters || Object.keys(parameters).length === 0) {
     return [];
   }
+  const isLeafParameter = (path: string) =>
+    Object.hasOwn(parameters, path) && parameters[path].type === 'parameter';
   return mergedParameterPaths(
-    paths.filter((path) => path.startsWith('gov') && !Object.hasOwn(parameters, path))
+    paths.filter((path) => path.startsWith('gov') && !isLeafParameter(path))
   );
 }
