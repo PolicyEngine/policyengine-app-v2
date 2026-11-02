@@ -22,6 +22,10 @@ function withDeepRoute(route: AppZoneRoute): AppZoneRoute[] {
 
 export const appZoneRoutes: AppZoneRoute[] = [
   {
+    source: "/uk/cgt-reform",
+    destination: "https://uk-cgt-reform.vercel.app/uk/cgt-reform",
+  },
+  {
     source: "/uk/energy-autumn-budget",
     destination:
       "https://uk-energy-autumn-budget.vercel.app/uk/energy-autumn-budget",
