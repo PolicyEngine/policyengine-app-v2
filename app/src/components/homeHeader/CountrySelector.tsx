@@ -9,15 +9,17 @@ import { getCountryDisplayName } from '@/models/geography';
 
 const countries = countryIds.map((id) => ({ id, label: getCountryDisplayName(id) }));
 
+/** 'inverse' for the teal calculator header; 'default' for light bars. */
+type CountrySelectorVariant = 'default' | 'inverse';
+
 /** The globe button's icon and hover colors, by the bar it sits on. */
-const TRIGGER_COLORS = {
+const TRIGGER_COLORS: Record<CountrySelectorVariant, { icon: string; hoverBackground: string }> = {
   default: { icon: colors.gray[700], hoverBackground: colors.gray[100] },
   inverse: { icon: colors.text.inverse, hoverBackground: 'rgba(255, 255, 255, 0.12)' },
 };
 
 interface CountrySelectorProps {
-  /** 'inverse' for the teal calculator header; 'default' for light bars. */
-  variant?: 'default' | 'inverse';
+  variant?: CountrySelectorVariant;
 }
 
 export default function CountrySelector({ variant = 'default' }: CountrySelectorProps) {
@@ -34,6 +36,9 @@ export default function CountrySelector({ variant = 'default' }: CountrySelector
   const handleCountryChange = useCallback(
     (newCountryId: string) => {
       setOpen(false);
+      if (newCountryId === countryId) {
+        return;
+      }
       const pathParts = location.pathname.split('/').filter(Boolean);
       // A v3 report (/us/report/…, /us/report/bill/…) is one country's, so
       // switching from it opens the other country's landing page instead.
@@ -44,7 +49,7 @@ export default function CountrySelector({ variant = 'default' }: CountrySelector
         nav.push(`/${newCountryId}`);
       }
     },
-    [location.pathname, nav]
+    [countryId, location.pathname, nav]
   );
 
   useEffect(() => {

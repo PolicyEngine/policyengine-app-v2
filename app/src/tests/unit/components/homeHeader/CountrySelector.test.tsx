@@ -138,4 +138,22 @@ describe('CountrySelector', () => {
     // Then — the bill tracker holds US bills only
     expect(mockNavigate).toHaveBeenCalledWith(MOCK_PATHS.UK_HOME);
   });
+
+  test('given user selects the current country on a report then stays on the report', async () => {
+    // Given
+    const { userEvent } = await import('@test-utils');
+    const user = userEvent.setup();
+
+    // When
+    renderWithCountry(<CountrySelector />, 'us', MOCK_PATHS.US_REPORT);
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
+    await user.click(screen.getByText('United States'));
+
+    // Then
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /country selector/i })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+  });
 });
