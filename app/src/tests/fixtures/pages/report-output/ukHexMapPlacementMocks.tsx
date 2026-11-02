@@ -95,3 +95,9 @@ export async function v3HexagonArrangement(
 export function v2Hexagons(container: HTMLElement): Element[] {
   return [...container.querySelectorAll('svg polygon')];
 }
+
+/**
+ * The wording of a note saying a UK hex map leaves areas out. The maps show
+ * no such note, so no text on them matches.
+ */
+export const HEX_MAP_OMISSION_NOTE_PATTERN = /not on the hex map|has no position for/i;

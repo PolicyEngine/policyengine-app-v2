@@ -50,11 +50,9 @@ if (typeof window.PointerEvent === 'undefined') {
 }
 
 describe('HexagonalMap', () => {
-  test('given a tiled grid then hexagons are pointy-topped and rows sit √3/2 of a column apart', () => {
-    // When
-    const { container } = render(
-      <HexagonalMap data={MOCK_TILED_HEX_DATA} config={{ tiled: true }} onSelect={vi.fn()} />
-    );
+  test('given data then hexagons are pointy-topped and rows sit √3/2 of a column apart', () => {
+    // When: the map's only layout, the tiled odd-r grid
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
 
     // Then
     const [west, east, north] = ['west', 'east', 'north'].map(
@@ -68,20 +66,19 @@ describe('HexagonalMap', () => {
     expect(points[1][0]).toBeCloseTo(points[4][0], 5);
   });
 
-  test('given the default grid then hexagons stay flat-topped on square rows', () => {
+  test('given data then neighbouring hexagons in a row touch', () => {
     // When
     const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
 
-    // Then
-    const [west, east, north] = ['west', 'east', 'north'].map(
+    // Then: the gap between west's right edge and east's left edge is a hairline
+    const [west, east] = ['west', 'east'].map(
       (id) => container.querySelector(`[data-area-id="${id}"]`)!
     );
+    const westRight = Math.max(...vertices(west).map(([vertexX]) => vertexX));
+    const eastLeft = Math.min(...vertices(east).map(([vertexX]) => vertexX));
     const column = centre(east)[0] - centre(west)[0];
-    const row = centre(west)[1] - centre(north)[1];
-    expect(row / column).toBeCloseTo(1, 5);
-    const points = vertices(west);
-    // A flat-top hexagon's left and right vertices share a y.
-    expect(points[0][1]).toBeCloseTo(points[3][1], 5);
+    expect((eastLeft - westRight) / column).toBeGreaterThan(0);
+    expect((eastLeft - westRight) / column).toBeLessThan(0.1);
   });
 
   test('given minimal data then renders SVG with one hexagon', () => {
@@ -271,18 +268,6 @@ describe('HexagonalMap', () => {
     expect(polygons).toHaveLength(3);
   });
 
-  test('given custom hex size then renders hexagons', () => {
-    // Given
-    const data = MOCK_HEX_MAP_DATA;
-    const config = { hexSize: 20 };
-
-    // When
-    const { container } = render(<HexagonalMap data={data} config={config} />);
-
-    // Then
-    const polygons = container.querySelectorAll('polygon');
-    expect(polygons).toHaveLength(4);
-  });
   test('given no selection props then hexagons carry no selection attributes', () => {
     const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} />);
 
@@ -494,18 +479,16 @@ describe('HexagonalMap default view', () => {
     const { container } = render(<HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} />);
 
     const extent = hexagonExtent(container);
-    // The hexagons start one padding (2 x hex size = 16) in from the left and top.
-    expect(extent.minX).toBeLessThan(16);
-    expect(extent.minY).toBeLessThan(16);
+    // The hexagons' edges start one margin (16) in from the left and top.
+    expect(extent.minX).toBeCloseTo(16, 5);
+    expect(extent.minY).toBeCloseTo(16, 5);
   });
 });
 
-describe('HexagonalMap tiled frame', () => {
-  test('given a tiled map of a few areas then every hexagon stays inside the frame', () => {
+describe('HexagonalMap frame', () => {
+  test('given a map of a few areas then every hexagon stays inside the frame', () => {
     // When: three areas, so each hexagon is drawn large
-    const { container } = render(
-      <HexagonalMap data={MOCK_TILED_HEX_DATA} config={{ tiled: true }} onSelect={vi.fn()} />
-    );
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
 
     // Then
     const extent = hexagonExtent(container);
@@ -514,10 +497,10 @@ describe('HexagonalMap tiled frame', () => {
     expect(extent.minX).toBeGreaterThanOrEqual(0);
   });
 
-  test('given a tiled UK-shaped map then every hexagon stays inside the frame', () => {
+  test('given a UK-shaped map then every hexagon stays inside the frame', () => {
     // When
     const { container } = render(
-      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} config={{ tiled: true }} onSelect={vi.fn()} />
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} onSelect={vi.fn()} />
     );
 
     // Then
@@ -566,9 +549,6 @@ describe('HexagonalMap fillWidth', () => {
 });
 
 describe('HexagonalMap missing areas', () => {
-  /** The tiled grid, on which the UK hex maps draw the areas they have no value for. */
-  const TILED_CONFIG = { tiled: true };
-
   /** A missing area's hexagon, by its id. */
   function missingHexagon(container: HTMLElement, id: string): Element | null {
     return container.querySelector(`[data-missing-area-id="${id}"]`);
@@ -577,11 +557,7 @@ describe('HexagonalMap missing areas', () => {
   test('given a missing area then it is drawn in its place, hatched rather than a colour on the scale', () => {
     // When
     const { container } = render(
-      <HexagonalMap
-        data={MOCK_TILED_HEX_DATA}
-        config={TILED_CONFIG}
-        missingAreas={[MISSING_NORTH_EAST]}
-      />
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_NORTH_EAST]} />
     );
 
     // Then
@@ -597,7 +573,6 @@ describe('HexagonalMap missing areas', () => {
     const { container } = render(
       <HexagonalMap
         data={MOCK_TILED_HEX_DATA}
-        config={TILED_CONFIG}
         missingAreas={[MISSING_NORTH_EAST]}
         onSelect={vi.fn()}
       />
@@ -621,7 +596,6 @@ describe('HexagonalMap missing areas', () => {
     const { container } = render(
       <HexagonalMap
         data={MOCK_TILED_HEX_DATA}
-        config={TILED_CONFIG}
         missingAreas={[MISSING_NORTH_EAST]}
         missingAreaText={NOT_REPORTED_TEXT}
       />
@@ -638,11 +612,7 @@ describe('HexagonalMap missing areas', () => {
     // Given
     const user = userEvent.setup();
     const { container } = render(
-      <HexagonalMap
-        data={MOCK_TILED_HEX_DATA}
-        config={TILED_CONFIG}
-        missingAreas={[MISSING_NORTH_EAST]}
-      />
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_NORTH_EAST]} />
     );
 
     // When
@@ -659,7 +629,6 @@ describe('HexagonalMap missing areas', () => {
     const { container } = render(
       <HexagonalMap
         data={MOCK_TILED_HEX_DATA}
-        config={TILED_CONFIG}
         missingAreas={[MISSING_NORTH_EAST]}
         onSelect={onSelect}
       />
@@ -677,11 +646,7 @@ describe('HexagonalMap missing areas', () => {
   test('given a missing area far from the valued ones then the map fits it in its frame too', () => {
     // When
     const { container } = render(
-      <HexagonalMap
-        data={MOCK_TILED_HEX_DATA}
-        config={TILED_CONFIG}
-        missingAreas={[MISSING_FAR_EAST]}
-      />
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_FAR_EAST]} />
     );
 
     // Then
@@ -699,11 +664,7 @@ describe('HexagonalMap missing areas', () => {
   test('given a map as dense as the UK constituency map then the hatching’s stripes are at least 4 pixels apart', () => {
     // When: hexagons about 4.7 pixels across their radius, whose stripes would otherwise blend into a grey on the scale
     const { container } = render(
-      <HexagonalMap
-        data={MOCK_UK_SHAPED_HEX_DATA}
-        config={TILED_CONFIG}
-        missingAreas={[MISSING_UK_SHAPED_AREA]}
-      />
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} missingAreas={[MISSING_UK_SHAPED_AREA]} />
     );
 
     // Then
@@ -718,7 +679,6 @@ describe('HexagonalMap missing areas', () => {
     const { container } = render(
       <HexagonalMap
         data={MOCK_TILED_HEX_DATA}
-        config={TILED_CONFIG}
         missingAreas={[MISSING_NORTH_EAST]}
         onSelect={vi.fn()}
       />
@@ -738,11 +698,7 @@ describe('HexagonalMap missing areas', () => {
     try {
       // When
       const { container } = render(
-        <HexagonalMap
-          data={MOCK_UK_SHAPED_HEX_DATA}
-          config={TILED_CONFIG}
-          missingAreas={[MISSING_UK_SHAPED_AREA]}
-        />
+        <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} missingAreas={[MISSING_UK_SHAPED_AREA]} />
       );
 
       // Then
@@ -760,7 +716,6 @@ describe('HexagonalMap missing areas', () => {
     const { container } = render(
       <HexagonalMap
         data={MOCK_UK_SHAPED_HEX_DATA}
-        config={TILED_CONFIG}
         missingAreas={[MISSING_UK_SHAPED_AREA]}
         zoomable
       />
@@ -781,7 +736,7 @@ describe('HexagonalMap missing areas', () => {
 
   test('given no missing areas then the map draws no hatching', () => {
     // When
-    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} config={TILED_CONFIG} />);
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} />);
 
     // Then
     expect(container.querySelector('pattern')).not.toBeInTheDocument();
