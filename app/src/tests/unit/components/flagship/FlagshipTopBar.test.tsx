@@ -1,7 +1,7 @@
 import { renderWithCountry, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
-import { colors } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
 import { MOCK_COUNTRIES } from '@/tests/fixtures/components/homeHeader/CountrySelectorMocks';
 
@@ -204,6 +204,18 @@ describe('FlagshipTopBar', () => {
     expect(screen.getByRole('button', { name: /country selector/i })).toHaveClass(
       'tw:size-[34px]',
       'tw:max-sm:size-10'
+    );
+  });
+
+  test("given the bar renders then the country selector's hover square has the bar's button corners", () => {
+    // When
+    renderTopBar();
+
+    // Then
+    const moreButton = screen.getByRole('button', { name: /more policyengine links/i });
+    expect(moreButton.style.borderRadius).toBe(spacing.radius.container);
+    expect(screen.getByRole('button', { name: /country selector/i }).style.borderRadius).toBe(
+      moreButton.style.borderRadius
     );
   });
 });

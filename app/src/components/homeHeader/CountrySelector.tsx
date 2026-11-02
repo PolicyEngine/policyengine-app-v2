@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconWorld } from '@tabler/icons-react';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
-import { colors, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { countryIds } from '@/libs/countries';
 import { getCountryDisplayName } from '@/models/geography';
@@ -12,10 +12,24 @@ const countries = countryIds.map((id) => ({ id, label: getCountryDisplayName(id)
 /** 'inverse' for the teal calculator header; 'default' for light bars. */
 type CountrySelectorVariant = 'default' | 'inverse';
 
-/** The globe button's icon and hover colors, by the bar it sits on. */
-const TRIGGER_COLORS: Record<CountrySelectorVariant, { icon: string; hoverBackground: string }> = {
-  default: { icon: colors.gray[700], hoverBackground: colors.gray[100] },
-  inverse: { icon: colors.text.inverse, hoverBackground: 'rgba(255, 255, 255, 0.12)' },
+/**
+ * The globe button's icon and hover colors and its corners, by the bar it
+ * sits on: a light bar's buttons have container corners.
+ */
+const TRIGGER_STYLES: Record<
+  CountrySelectorVariant,
+  { icon: string; hoverBackground: string; borderRadius: string }
+> = {
+  default: {
+    icon: colors.gray[700],
+    hoverBackground: colors.gray[100],
+    borderRadius: spacing.radius.container,
+  },
+  inverse: {
+    icon: colors.text.inverse,
+    hoverBackground: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: '6px',
+  },
 };
 
 interface CountrySelectorProps {
@@ -32,7 +46,7 @@ export default function CountrySelector({
   variant = 'default',
   triggerClassName,
 }: CountrySelectorProps) {
-  const triggerColors = TRIGGER_COLORS[variant];
+  const triggerStyle = TRIGGER_STYLES[variant];
   const countryId = useCurrentCountry();
   const nav = useAppNavigate();
   const location = useAppLocation();
@@ -107,7 +121,7 @@ export default function CountrySelector({
           border: 'none',
           cursor: 'pointer',
           padding: '6px',
-          borderRadius: '6px',
+          borderRadius: triggerStyle.borderRadius,
           transition: 'background-color 0.15s ease',
           lineHeight: 1,
           display: 'flex',
@@ -115,13 +129,13 @@ export default function CountrySelector({
           justifyContent: 'center',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = triggerColors.hoverBackground;
+          e.currentTarget.style.backgroundColor = triggerStyle.hoverBackground;
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
         }}
       >
-        <IconWorld size={18} color={triggerColors.icon} />
+        <IconWorld size={18} color={triggerStyle.icon} />
       </button>
 
       {(open || contentHeight > 0) && (

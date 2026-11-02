@@ -26,6 +26,16 @@ describe('CountrySelector', () => {
     expect(screen.getByRole('button', { name: /country selector/i })).toBeInTheDocument();
   });
 
+  test("given the teal header's variant then the hover square keeps its 6px corners", () => {
+    // When
+    renderWithCountry(<CountrySelector variant="inverse" />, 'us');
+
+    // Then
+    expect(screen.getByRole('button', { name: /country selector/i }).style.borderRadius).toBe(
+      '6px'
+    );
+  });
+
   test('given user clicks selector then the button reports the list as expanded', async () => {
     // Given
     const { userEvent } = await import('@test-utils');
