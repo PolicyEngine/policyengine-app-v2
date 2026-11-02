@@ -66,8 +66,6 @@ export const EXPECTED_BREAKDOWN = {
   constituency_impact: {
     by_constituency: {
       'East Kilbride and Strathaven': {
-        x: 30,
-        y: 20,
         average_household_income_change: 120,
         relative_household_income_change: 0.004,
         code: 'S14000021',
@@ -82,8 +80,6 @@ export const EXPECTED_BREAKDOWN = {
   local_authority_impact: {
     by_local_authority: {
       Hartlepool: {
-        x: 8,
-        y: 19,
         average_household_income_change: 503.954362,
         relative_household_income_change: 0.013174,
         code: 'E06000001',

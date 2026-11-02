@@ -111,7 +111,6 @@ export function AbsoluteChangeByConstituency({
           missingAreaText={UK_WITHHELD_AREA_TEXT}
           noDataAreas={hexMap.noDataAreas}
           config={{
-            tiled: hexMap.tiled,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,
               tickFormat: '£,.0f',

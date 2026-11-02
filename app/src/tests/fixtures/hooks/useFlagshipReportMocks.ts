@@ -77,3 +77,23 @@ export const EXISTING_SIMULATIONS: Simulation[] = [
   nationwideSimulation(BASELINE_SIMULATION_ID, '2'),
   nationwideSimulation(REFORM_SIMULATION_ID, '98557'),
 ];
+
+/** UK current law, a UK report's baseline. */
+export const UK_CURRENT_LAW_POLICY_ID = '1';
+/** A UK reform. */
+export const UK_REFORM_POLICY_ID = '98746';
+
+/** The same report, run for the whole of the UK. */
+export const UK_REPORT: Report = { ...EXISTING_REPORT, countryId: 'uk' };
+
+const ukWideSimulation = (id: string, policyId: string): Simulation => ({
+  ...nationwideSimulation(id, policyId),
+  countryId: 'uk',
+  populationId: 'uk',
+});
+
+/** Its baseline and reform simulations, on UK policies. */
+export const UK_SIMULATIONS: Simulation[] = [
+  ukWideSimulation(BASELINE_SIMULATION_ID, UK_CURRENT_LAW_POLICY_ID),
+  ukWideSimulation(REFORM_SIMULATION_ID, UK_REFORM_POLICY_ID),
+];

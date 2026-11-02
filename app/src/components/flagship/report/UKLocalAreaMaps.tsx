@@ -256,8 +256,6 @@ export default function UKLocalAreaMaps({
           id: name,
           label: name,
           value: area[field],
-          x: area.x,
-          y: area.y,
           ...(area.code && { code: area.code }),
           ...areaEstimateFields(area, field),
         };
@@ -271,9 +269,8 @@ export default function UKLocalAreaMaps({
   const levelWithheld = withheld?.[level] !== undefined;
   const listedWithheldCodes = withheld?.[level]?.listedCodes;
   // The hex map places each area by its code in the app's layout, tiled,
-  // and draws the withheld ones as not reported and any others the result
-  // leaves out as having no data. A result with any area the layout cannot
-  // place keeps all the API's positions, on their square grid.
+  // leaves off any it cannot place, and draws the withheld ones as not
+  // reported and any others the result leaves out as having no data.
   const hexMap = useMemo(
     () =>
       placeUKHexMap(level, mapData, {
@@ -426,7 +423,6 @@ export default function UKLocalAreaMaps({
                   ...mapConfig,
                   // The legend reads in the rankings' units: pounds or percentages.
                   formatColorBarTick: formatValue,
-                  tiled: hexMap.tiled,
                 }}
                 exportRef={mapRef}
                 selectedId={selectedArea ? selectedName : null}

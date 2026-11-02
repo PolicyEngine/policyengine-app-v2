@@ -122,3 +122,9 @@ export function noDataHexagons(container: HTMLElement): Element[] {
 export function noDataHexagon(container: HTMLElement, code: string): Element | null {
   return container.querySelector(`[data-no-data-area-id="${code}"]`);
 }
+
+/**
+ * The wording of a note saying a UK hex map leaves areas out. The maps show
+ * no such note, so no text on them matches.
+ */
+export const HEX_MAP_OMISSION_NOTE_PATTERN = /not on the hex map|has no position for/i;

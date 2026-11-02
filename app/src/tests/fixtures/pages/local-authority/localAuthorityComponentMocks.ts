@@ -8,8 +8,6 @@ export const MOCK_UK_REPORT_OUTPUT_WITH_LA: ReportOutputSocietyWideUK = {
   constituency_impact: {
     by_constituency: {
       'Westminster North': {
-        x: 0,
-        y: 0,
         average_household_income_change: 1234.56,
         relative_household_income_change: 0.025,
       },
@@ -55,20 +53,14 @@ export const MOCK_UK_REPORT_OUTPUT_WITH_LA: ReportOutputSocietyWideUK = {
   local_authority_impact: {
     by_local_authority: {
       Maidstone: {
-        x: 0,
-        y: 0,
         average_household_income_change: 1234.56,
         relative_household_income_change: 0.025,
       },
       Westminster: {
-        x: 1,
-        y: 0,
         average_household_income_change: -567.89,
         relative_household_income_change: -0.015,
       },
       Edinburgh: {
-        x: 0,
-        y: 1,
         average_household_income_change: 0,
         relative_household_income_change: 0,
       },
@@ -214,11 +206,12 @@ export const NORTH_YORKSHIRE_CODE = 'E06000065';
 export const DARLINGTON_CODE = 'E06000005';
 
 /**
- * Five local authorities at the positions the Public API gives them
- * (`local_authorities_2021.csv`). It puts the three created in 2023,
- * Cumberland, Westmorland and Furness, and North Yorkshire, all at (0, 0).
+ * Five local authorities, as a saved result holds them, with the x and y
+ * positions the Public API gives them (`local_authorities_2021.csv`), which
+ * the app does not read. It puts the three created in 2023, Cumberland,
+ * Westmorland and Furness, and North Yorkshire, all at (0, 0).
  */
-export const MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA: ReportOutputSocietyWideUK = {
+export const MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA = {
   ...MOCK_UK_REPORT_OUTPUT_WITH_LA,
   local_authority_impact: {
     by_local_authority: {
@@ -259,7 +252,7 @@ export const MOCK_UK_REPORT_OUTPUT_WITH_STACKED_LA: ReportOutputSocietyWideUK = 
       },
     },
   },
-};
+} as unknown as ReportOutputSocietyWideUK;
 
 /**
  * Codes of districts abolished in April 2023: Allerdale, Craven and Mendip.
@@ -273,60 +266,38 @@ export const PRE_2023_LOCAL_AUTHORITY_CODES = {
 
 /**
  * A saved result from before April 2023: Hartlepool and Darlington on
- * current codes at the Public API's positions, and three districts on
- * pre-2023 codes at made-up positions on the same grid.
+ * current codes, and three districts on pre-2023 codes, which the layout
+ * has no position for.
  */
 export const MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA: ReportOutputSocietyWideUK = {
   ...MOCK_UK_REPORT_OUTPUT_WITH_LA,
   local_authority_impact: {
     by_local_authority: {
       Hartlepool: {
-        x: 8,
-        y: 19,
         average_household_income_change: -210.4,
         relative_household_income_change: -0.0081,
         code: HARTLEPOOL_CODE,
       },
       Darlington: {
-        x: 7,
-        y: 18,
         average_household_income_change: -185.3,
         relative_household_income_change: -0.0072,
         code: DARLINGTON_CODE,
       },
       Allerdale: {
-        x: 3,
-        y: 19,
         average_household_income_change: -140.6,
         relative_household_income_change: -0.0049,
         code: PRE_2023_LOCAL_AUTHORITY_CODES.ALLERDALE,
       },
       Craven: {
-        x: 6,
-        y: 17,
         average_household_income_change: -101.2,
         relative_household_income_change: -0.0033,
         code: PRE_2023_LOCAL_AUTHORITY_CODES.CRAVEN,
       },
       Mendip: {
-        x: 0,
-        y: 1,
         average_household_income_change: -88.7,
         relative_household_income_change: -0.0029,
         code: PRE_2023_LOCAL_AUTHORITY_CODES.MENDIP,
       },
     },
-  },
-};
-
-/** The same result with its codes taken away, so the hex map draws it at its results' positions. */
-export const MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED: ReportOutputSocietyWideUK = {
-  ...MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
-  local_authority_impact: {
-    by_local_authority: Object.fromEntries(
-      Object.entries(
-        MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA.local_authority_impact!.by_local_authority
-      ).map(([name, { code: _code, ...area }]) => [name, area])
-    ),
   },
 };

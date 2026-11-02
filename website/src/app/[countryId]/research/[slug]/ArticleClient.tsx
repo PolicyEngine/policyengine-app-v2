@@ -356,7 +356,7 @@ function PostBody({
             <MoreOn post={post} countryId={countryId} />
           </div>
         </div>
-        <div style={{ flex: 3 }}>
+        <div style={{ flex: 3, minWidth: 0 }}>
           {bodyContent}
           <AuthorSection post={post} countryId={countryId} />
         </div>

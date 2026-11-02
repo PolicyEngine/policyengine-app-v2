@@ -13,7 +13,10 @@ import { ErrorState } from '@/components/flagship/states';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Button, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { useFlagshipHouseholdPayload } from '@/hooks/useFlagshipHousehold';
+import {
+  useFlagshipHouseholdPayload,
+  useSaveCalculatedHousehold,
+} from '@/hooks/useFlagshipHousehold';
 import type { CountryId } from '@/libs/countries';
 import { describeHousehold, householdState } from '@/libs/flagship/householdDescription';
 import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
@@ -61,7 +64,6 @@ const EXPECTED_MS = 3 * 60 * 1000;
 const UK_NATION_PLACES: Record<string, Record<string, string>> = {
   scotland: { region: 'SCOTLAND', local_authority: 'CITY_OF_EDINBURGH', brma: 'LOTHIAN' },
   wales: { region: 'WALES', local_authority: 'CARDIFF', brma: 'CARDIFF' },
-  ni: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
   northern_ireland: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
 };
 
@@ -440,6 +442,13 @@ function HouseholdCard({
   const running = !!requested && run.isFetching;
   const failed = !!requested && !running && run.isError;
   const result = requested && !running ? run.data : undefined;
+  // A calculated household is saved to the user in the background; nothing
+  // here shows it.
+  useSaveCalculatedHousehold({
+    countryId,
+    household:
+      result && requested ? { id: result.householdId, name: requested.summary } : undefined,
+  });
   // Once a household runs, its result leads: the inputs fold to one line
   // until the reader edits them again.
   const [editing, setEditing] = useState(true);

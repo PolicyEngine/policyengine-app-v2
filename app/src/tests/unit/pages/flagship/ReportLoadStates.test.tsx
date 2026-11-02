@@ -13,6 +13,8 @@ import {
   MISSING_REPORT_ID,
   REPORT_NOT_FOUND_ERROR,
   SIMULATION_UNAVAILABLE_ERROR,
+  UK_REPORT,
+  UK_SIMULATIONS,
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
 import { HOUSEHOLD_SIMULATIONS } from '@/tests/fixtures/pages/flagship/sharedReportMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -23,6 +25,7 @@ const mockRetry = vi.fn();
 const mockCalcStatus = vi.fn();
 const mockFetchMetadata = vi.fn();
 const mockStartCalculationOnLoad = vi.fn();
+const mockFetchLocalAreaBreakdown = vi.fn();
 
 vi.mock('@/hooks/useFlagshipReport', () => ({
   isApiReportId: () => true,
@@ -36,6 +39,12 @@ vi.mock('@/hooks/useCalculationStatus', () => ({
 vi.mock('@/api/metadata', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/metadata')>()),
   fetchMetadata: (...args: unknown[]) => mockFetchMetadata(...args),
+}));
+
+// A UK report starts its local-area breakdown alongside its national run.
+vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
+  fetchLocalAreaBreakdown: (...args: unknown[]) => mockFetchLocalAreaBreakdown(...args),
 }));
 
 const IDLE_STATUS = { status: 'idle', isComplete: false, isError: false, result: null };
@@ -91,6 +100,8 @@ describe('FlagshipReportPage load states', () => {
     mockCalcStatus.mockReturnValue(IDLE_STATUS);
     // A retried metadata fetch stays in flight.
     mockFetchMetadata.mockReturnValue(new Promise(() => {}));
+    // So does a UK report's local-area breakdown.
+    mockFetchLocalAreaBreakdown.mockReturnValue(new Promise(() => {}));
   });
 
   test('given the report is loading then a spinner holds the wait', () => {
@@ -121,15 +132,7 @@ describe('FlagshipReportPage load states', () => {
   test('given a UK report is calculating then the run card says UK-wide', () => {
     mockCalcStatus.mockReturnValue(PENDING_STATUS);
     mockUseFlagshipReport.mockReturnValue(
-      reportData({
-        report: { ...EXISTING_REPORT, countryId: 'uk' } as typeof EXISTING_REPORT,
-        // The whole of the UK, as its simulations name it.
-        simulations: EXISTING_SIMULATIONS.map((simulation) => ({
-          ...simulation,
-          countryId: 'uk',
-          populationId: 'uk',
-        })) as typeof EXISTING_SIMULATIONS,
-      })
+      reportData({ report: UK_REPORT, simulations: UK_SIMULATIONS })
     );
 
     renderPage(EXISTING_REPORT_ID);

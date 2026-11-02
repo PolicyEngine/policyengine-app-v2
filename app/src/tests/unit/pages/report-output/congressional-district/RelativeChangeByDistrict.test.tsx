@@ -1,6 +1,10 @@
-import { render, screen } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { fetchRespondingTo, render, screen } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { RelativeChangeByDistrict } from '@/pages/report-output/congressional-district/RelativeChangeByDistrict';
+import {
+  CONGRESSIONAL_DISTRICTS_GEOJSON_PATH,
+  MOCK_GEOJSON_FEATURE_COLLECTION,
+} from '@/tests/fixtures/components/visualization/usDistrictChoroplethMapMocks';
 import { MOCK_NATIONAL_COMPLETE_CONTEXT } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 import {
   MOCK_CONGRESSIONAL_DISTRICT_REGIONS,
@@ -29,6 +33,21 @@ vi.mock('@/contexts/CongressionalDistrictDataContext', () => ({
 }));
 
 describe('RelativeChangeByDistrict', () => {
+  beforeEach(() => {
+    // The district map loads its boundaries.
+    vi.stubGlobal(
+      'fetch',
+      fetchRespondingTo({
+        [CONGRESSIONAL_DISTRICTS_GEOJSON_PATH]: () =>
+          Response.json(MOCK_GEOJSON_FEATURE_COLLECTION),
+      })
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   test('given district data then renders component', () => {
     // Given
     const output = MOCK_US_REPORT_OUTPUT;

@@ -118,8 +118,6 @@ export function RelativeChangeByLocalAuthority({
           missingAreaText={UK_WITHHELD_AREA_TEXT}
           noDataAreas={hexMap.noDataAreas}
           config={{
-            tiled: hexMap.tiled,
-            hexSize: 11,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,
               tickFormat: '.1%',
