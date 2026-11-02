@@ -34,10 +34,11 @@ export const STATE_DISTRICT_REQUEST_CONCURRENCY = 4;
 /** How often a state that is still computing is polled: 51 states make about 10 requests a second. */
 export const STATE_DISTRICT_POLL_INTERVAL_MS = 5000;
 
+// The panel puts one or several states' names before these, so they name no state.
 const TIME_LIMIT_MESSAGE =
-  'This state is taking much longer than expected. It may still finish on the server: retry to check it again.';
+  'Taking much longer than expected. The run may still finish on the server: retry to check it again.';
 
-const NO_DISTRICTS_MESSAGE = "This state's result has no congressional districts.";
+const NO_DISTRICTS_MESSAGE = 'The result has no congressional districts.';
 
 type District = USCongressionalDistrictBreakdownItem;
 
@@ -172,6 +173,23 @@ function requestLimitFor(queryClient: QueryClient): ConcurrencyLimit {
 }
 
 /**
+ * The base reports whose result write has been queued, sent or done, per
+ * query client. A view that closes drops its runs' results, so another
+ * view polls those states again, possibly before the first writes finish:
+ * this lets each result be written once.
+ */
+const writtenReports = new WeakMap<QueryClient, Set<string>>();
+
+function writtenReportsFor(queryClient: QueryClient): Set<string> {
+  let reportIds = writtenReports.get(queryClient);
+  if (!reportIds) {
+    reportIds = new Set();
+    writtenReports.set(queryClient, reportIds);
+  }
+  return reportIds;
+}
+
+/**
  * Creates, or reuses, a state's two simulations and base report, through
  * the tab's request limit; a request still queued when the view closes is
  * dropped.
@@ -213,7 +231,7 @@ const STATE_RUN_POLL_OPTIONS: PollRunOptions<SocietyWideReportOutput, SocietyWid
   expectedMs: US_STATE_SOCIETY_WIDE_DURATION_MS,
   timeLimitMs: US_STATE_DISTRICT_RUN_TIME_LIMIT_MS,
   timeLimitMessage: TIME_LIMIT_MESSAGE,
-  failureMessage: "The state's calculation failed",
+  failureMessage: 'The calculation failed',
   readResult: (result) => ({ result }),
 };
 
@@ -286,20 +304,21 @@ async function pollStateRun(
       STATE_RUN_POLL_OPTIONS
     );
   }, signal);
-  if (run.status === 'complete' && records.reportStatus !== 'complete') {
+  const written = writtenReportsFor(queryClient);
+  if (
+    run.status === 'complete' &&
+    records.reportStatus !== 'complete' &&
+    !written.has(records.reportId)
+  ) {
+    written.add(records.reportId);
     // The write waits for a place in the same limit, with no signal, so it is
     // counted in flight and still sent when the view closes.
     void requestLimitFor(queryClient)
       .run(() => saveStateResult(queryClient, records, run, year))
       .then((saved) => {
-        if (saved) {
-          // A later poll of this state, such as a reopened view's after this
-          // run's result was dropped on close, finds the report complete and
-          // does not write it again.
-          queryClient.setQueryData<StateDistrictRecords>(
-            stateDistrictRecordsQueryKey({ reformPolicyId, baselinePolicyId, year }, region),
-            (cached) => cached && { ...cached, reportStatus: 'complete' }
-          );
+        if (!saved) {
+          // A later poll may try the write again.
+          written.delete(records.reportId);
         }
       });
   }

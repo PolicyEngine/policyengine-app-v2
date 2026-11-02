@@ -420,7 +420,7 @@ export const STATE_TIME_LIMIT_MS = 30 * 60 * 1000;
 
 /** The message once a state computes past its time limit. */
 export const STATE_TIME_LIMIT_MESSAGE =
-  'This state is taking much longer than expected. It may still finish on the server: retry to check it again.';
+  'Taking much longer than expected. The run may still finish on the server: retry to check it again.';
 
 /** A typical state run, for the clock. */
 export const STATE_EXPECTED_MS = 190 * 1000;

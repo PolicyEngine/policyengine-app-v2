@@ -746,6 +746,27 @@ describe('useStateDistrictRuns compute', () => {
     expect(new Set(writtenReportIds).size).toBe(STATE_COUNT);
   });
 
+  test('given the view replaced before its in-flight results are written then each state is written once', async () => {
+    // Given
+    serveApi({ economy: (region) => stateOk(region), holdEconomy: true });
+    const queryClient = createQueryClient();
+    const first = await computeAll(STATE_RUNS_REQUEST, queryClient);
+    await waitFor(() => expect(api.economyRequests()).toHaveLength(MAX_REQUESTS_IN_FLIGHT));
+
+    // When
+    first.unmount();
+    const replacement = renderRuns(STATE_RUNS_REQUEST, queryClient);
+    api.releaseEconomy();
+    await waitFor(() => expect(replacement.result.current.status).toBe('complete'));
+    await poll();
+    await poll();
+
+    // Then
+    const writtenReportIds = api.reportWrites().map((write) => write.body.id);
+    expect(writtenReportIds).toHaveLength(STATE_COUNT);
+    expect(new Set(writtenReportIds).size).toBe(STATE_COUNT);
+  });
+
   test('given the view reopened then each state keeps its clock', async () => {
     // Given
     serveApi({ economy: () => STATE_COMPUTING });

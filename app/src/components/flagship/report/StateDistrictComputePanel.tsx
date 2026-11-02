@@ -49,19 +49,28 @@ function asSentence(text: string): string {
   return /[.!?]$/.test(text) ? text : `${text}.`;
 }
 
+/** The most failure reasons the panel gives before naming the other states together. */
+const NAMED_REASONS = 3;
+
 /**
- * Which states are missing from a partial set, and why: one sentence for
- * each error, naming the states that failed with it, then one for the
- * states whose result has no districts.
+ * Which states failed, and why: one sentence for each reason, naming the
+ * states that failed with it (the first three reasons; the other states are
+ * named together), then one for the states whose result has no districts.
+ * Empty when no state failed.
  */
-function partialFailureReason(runs: StateDistrictRuns): string {
+function failureReason(runs: StateDistrictRuns): string {
   const labelsByError = new Map<string, string[]>();
   for (const { label, error } of runs.calculationFailures) {
     labelsByError.set(error, [...(labelsByError.get(error) ?? []), label]);
   }
-  const sentences = [...labelsByError].map(([error, labels]) =>
-    asSentence(`${listStates(labels)} could not be calculated: ${error}`)
-  );
+  const reasons = [...labelsByError];
+  const sentences = reasons
+    .slice(0, NAMED_REASONS)
+    .map(([error, labels]) => asSentence(`${listStates(labels)}: ${error}`));
+  const otherLabels = reasons.slice(NAMED_REASONS).flatMap(([, labels]) => labels);
+  if (otherLabels.length > 0) {
+    sentences.push(`${listStates(otherLabels)} failed for other reasons.`);
+  }
   const noDistrictLabels = runs.noDistrictStateLabels;
   if (noDistrictLabels.length > 0) {
     const several = noDistrictLabels.length > 1;
@@ -77,7 +86,10 @@ function intro(runs: StateDistrictRuns): string {
     return NONE_COMPUTED_INTRO;
   }
   const rest = runs.totalStates - runs.completedCount;
-  return `${runs.completedCount} of ${runs.totalStates} states are saved. Compute the other ${rest} to fill in the map; they take a few minutes.`;
+  const saved = `${runs.completedCount} of ${runs.totalStates} states are saved.`;
+  return rest === 1
+    ? `${saved} Compute the last one to fill in the map; it takes a few minutes.`
+    : `${saved} Compute the other ${rest} to fill in the map; they take a few minutes.`;
 }
 
 /**
@@ -100,7 +112,7 @@ export default function StateDistrictComputePanel({
   }
 
   const partial = runs.status === 'partial';
-  const failedReason = partial ? partialFailureReason(runs) : '';
+  const failedReason = partial || runs.status === 'error' ? failureReason(runs) : '';
   return (
     <BreakdownComputePanel
       status={runs.status}
