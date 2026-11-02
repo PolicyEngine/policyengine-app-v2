@@ -370,6 +370,19 @@ describe('useStateDistrictRuns compute', () => {
     );
   });
 
+  test('given every state finishing at once then their result writes stay within four requests in flight', async () => {
+    // Given
+    serveApi({ economy: (region) => stateOk(region) });
+
+    // When
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    await waitFor(() => expect(api.reportWrites()).toHaveLength(STATE_COUNT));
+
+    // Then
+    expect(api.maxInFlight()).toBe(MAX_REQUESTS_IN_FLIGHT);
+  });
+
   test('given a state result written then the report cache holds the whole base report, with its simulations', async () => {
     // Given
     serveApi({ economy: economyWhere({ [UTAH]: () => stateOk(UTAH) }, () => STATE_COMPUTING) });
@@ -561,6 +574,10 @@ describe('useStateDistrictRuns compute', () => {
     });
     const { result } = await computeAll();
     await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Texas', error: STATE_ERROR_MESSAGE },
+    ]);
+    expect(result.current.noDistrictStateLabels).toEqual(['Ohio']);
     const requestsBefore = api.economyRequests().length;
 
     // When
@@ -571,6 +588,8 @@ describe('useStateDistrictRuns compute', () => {
     expect(api.economyRequests().slice(requestsBefore)).toEqual([stateEconomyUrl(TEXAS)]);
     expect(result.current.status).toBe('partial');
     expect(result.current.canRetry).toBe(false);
+    expect(result.current.calculationFailures).toEqual([]);
+    expect(result.current.noDistrictStateLabels).toEqual(['Ohio']);
   });
 
   test('given a state whose records failed then Retry asks for them again, the state waits meanwhile, and then it runs', async () => {
@@ -704,6 +723,27 @@ describe('useStateDistrictRuns compute', () => {
     // Then
     expect(api.economyRequests()).toHaveLength(MAX_REQUESTS_IN_FLIGHT);
     await waitFor(() => expect(api.reportWrites()).toHaveLength(MAX_REQUESTS_IN_FLIGHT));
+  });
+
+  test('given results written after the view closed then the reopened view does not write them again', async () => {
+    // Given
+    serveApi({ economy: (region) => stateOk(region), holdEconomy: true });
+    const queryClient = createQueryClient();
+    const first = await computeAll(STATE_RUNS_REQUEST, queryClient);
+    await waitFor(() => expect(api.economyRequests()).toHaveLength(MAX_REQUESTS_IN_FLIGHT));
+    first.unmount();
+    api.releaseEconomy();
+    await waitFor(() => expect(api.reportWrites()).toHaveLength(MAX_REQUESTS_IN_FLIGHT));
+
+    // When
+    const reopened = renderRuns(STATE_RUNS_REQUEST, queryClient);
+    await waitFor(() => expect(reopened.result.current.status).toBe('complete'));
+    await poll();
+
+    // Then
+    const writtenReportIds = api.reportWrites().map((write) => write.body.id);
+    expect(writtenReportIds).toHaveLength(STATE_COUNT);
+    expect(new Set(writtenReportIds).size).toBe(STATE_COUNT);
   });
 
   test('given the view reopened then each state keeps its clock', async () => {

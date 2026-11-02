@@ -25,7 +25,7 @@ import { getUSStates } from '@/utils/regionStrategies';
 
 /**
  * Requests the state district runs keep in flight per browser tab, counting
- * record requests, run starts and polls. The Public API's production
+ * record requests, run starts, polls and result writes. The Public API's production
  * service has about 12 warm request slots (2 instances of 6), and a new
  * instance takes about 6 minutes to start.
  */
@@ -85,6 +85,13 @@ export interface StateDistrictRuns {
   failedStates: string[];
   /** The failed states' names, in the same order. */
   failedStateLabels: string[];
+  /**
+   * The failed states whose records or run failed, by name, each with its
+   * own error, in the same order; Retry asks for them again.
+   */
+  calculationFailures: Array<{ label: string; error: string }>;
+  /** The failed states whose result has no districts, by name; Retry does not ask for them. */
+  noDistrictStateLabels: string[];
   /** Why the first failed state failed. */
   error?: string;
   /** States whose districts are in. */
@@ -214,14 +221,14 @@ const STATE_RUN_POLL_OPTIONS: PollRunOptions<SocietyWideReportOutput, SocietyWid
  * Writes a state's result, as received, to its base report, so that it is
  * not calculated again. Like the records, the write is deliberately not
  * associated with the user. A failed write is logged; the districts still
- * show. Errors are never written.
+ * show. Errors are never written. Answers whether the write succeeded.
  */
 async function saveStateResult(
   queryClient: QueryClient,
   records: StateDistrictRecords,
   run: PolledRun<SocietyWideReportOutput>,
   year: string
-): Promise<void> {
+): Promise<boolean> {
   const reportId = records.reportId;
   // The write starts from the cached report and caches the result under the
   // base report's ID, where a report page opening it reads: start from the
@@ -244,8 +251,10 @@ async function saveStateResult(
       'us',
       year
     );
+    return true;
   } catch (error) {
     console.error('[useStateDistrictRuns] Failed to save a state result:', error);
+    return false;
   }
 }
 
@@ -278,7 +287,21 @@ async function pollStateRun(
     );
   }, signal);
   if (run.status === 'complete' && records.reportStatus !== 'complete') {
-    void saveStateResult(queryClient, records, run, year);
+    // The write waits for a place in the same limit, with no signal, so it is
+    // counted in flight and still sent when the view closes.
+    void requestLimitFor(queryClient)
+      .run(() => saveStateResult(queryClient, records, run, year))
+      .then((saved) => {
+        if (saved) {
+          // A later poll of this state, such as a reopened view's after this
+          // run's result was dropped on close, finds the report complete and
+          // does not write it again.
+          queryClient.setQueryData<StateDistrictRecords>(
+            stateDistrictRecordsQueryKey({ reformPolicyId, baselinePolicyId, year }, region),
+            (cached) => cached && { ...cached, reportStatus: 'complete' }
+          );
+        }
+      });
   }
   return { ...run, result: run.status === 'complete' ? districtsOf(run.result) : null };
 }
@@ -415,7 +438,8 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
   const pendingStates: string[] = [];
   const failedStates: string[] = [];
   const failedStateLabels: string[] = [];
-  const retryableErrors: string[] = [];
+  const calculationFailures: Array<{ label: string; error: string }> = [];
+  const noDistrictStateLabels: string[] = [];
   const stateDistricts: Array<District[] | null> = [];
   let settledShare = 0;
   let anyChecking = false;
@@ -430,12 +454,13 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
         return;
       case 'records-failed':
       case 'failed':
-        retryableErrors.push(standing.error);
+        calculationFailures.push({ label: state.label, error: standing.error });
         failedStates.push(state.value);
         failedStateLabels.push(state.label);
         settledShare += 1;
         return;
       case 'no-districts':
+        noDistrictStateLabels.push(state.label);
         failedStates.push(state.value);
         failedStateLabels.push(state.label);
         settledShare += 1;
@@ -461,7 +486,6 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
   const totalStates = states.length;
   const average = totalStates > 0 ? (settledShare / totalStates) * 100 : 0;
   const progress = anyUnsettled ? Math.min(average, 99) : 100;
-  const hasNoDistrictsFailure = failedStates.length > retryableErrors.length;
 
   const status: StateDistrictRunsStatus = !canStart
     ? 'idle'
@@ -494,12 +518,16 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
     pendingStates,
     failedStates,
     failedStateLabels,
-    error: retryableErrors[0] ?? (hasNoDistrictsFailure ? NO_DISTRICTS_MESSAGE : undefined),
+    calculationFailures,
+    noDistrictStateLabels,
+    error:
+      calculationFailures[0]?.error ??
+      (noDistrictStateLabels.length > 0 ? NO_DISTRICTS_MESSAGE : undefined),
     completedCount,
     totalStates,
     progress,
     canStart,
-    canRetry: retryableErrors.length > 0,
+    canRetry: calculationFailures.length > 0,
     start: () => {
       if (!canStart) {
         return;

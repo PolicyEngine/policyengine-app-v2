@@ -8,6 +8,7 @@ export const DISTRICTS_ERROR_MESSAGE = 'District impacts could not be calculated
 export const NONE_COMPUTED_INTRO =
   'Congressional district impacts come from a separate run for each state and DC, on its own state data. They take a few minutes.';
 export const RUN_FAILURE = 'The simulation ran out of memory';
+export const OTHER_RUN_FAILURE = "The state's calculation failed";
 
 /** The state runs with spies for start and retry. */
 export function stateRuns(overrides: Partial<StateDistrictRuns> = {}): StateDistrictRuns {
@@ -17,6 +18,8 @@ export function stateRuns(overrides: Partial<StateDistrictRuns> = {}): StateDist
     pendingStates: [],
     failedStates: [],
     failedStateLabels: [],
+    calculationFailures: [],
+    noDistrictStateLabels: [],
     completedCount: 0,
     totalStates: 51,
     progress: 0,
@@ -40,6 +43,10 @@ export const FAILED_STATES_RUNS = () =>
     completedCount: 49,
     failedStates: ['state/tx', 'state/ut'],
     failedStateLabels: ['Texas', 'Utah'],
+    calculationFailures: [
+      { label: 'Texas', error: RUN_FAILURE },
+      { label: 'Utah', error: RUN_FAILURE },
+    ],
     error: RUN_FAILURE,
     canRetry: true,
   });
@@ -49,6 +56,7 @@ export const NO_DISTRICTS_RUNS = () =>
     completedCount: 50,
     failedStates: ['state/oh'],
     failedStateLabels: ['Ohio'],
+    noDistrictStateLabels: ['Ohio'],
     error: "This state's result has no congressional districts.",
     canRetry: false,
   });
@@ -58,6 +66,30 @@ export const MANY_FAILED_RUNS = () =>
     completedCount: 44,
     failedStates: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
     failedStateLabels: ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'Colorado', 'Delaware', 'Iowa'],
+    calculationFailures: [
+      'Alabama',
+      'Alaska',
+      'Arizona',
+      'Arkansas',
+      'Colorado',
+      'Delaware',
+      'Iowa',
+    ].map((label) => ({ label, error: RUN_FAILURE })),
+    error: RUN_FAILURE,
+    canRetry: true,
+  });
+/** Two states failed for different reasons, and one state's result has no districts. */
+export const MIXED_FAILURES_RUNS = () =>
+  stateRuns({
+    status: 'partial',
+    completedCount: 48,
+    failedStates: ['state/tx', 'state/fl', 'state/oh'],
+    failedStateLabels: ['Texas', 'Florida', 'Ohio'],
+    calculationFailures: [
+      { label: 'Texas', error: RUN_FAILURE },
+      { label: 'Florida', error: OTHER_RUN_FAILURE },
+    ],
+    noDistrictStateLabels: ['Ohio'],
     error: RUN_FAILURE,
     canRetry: true,
   });

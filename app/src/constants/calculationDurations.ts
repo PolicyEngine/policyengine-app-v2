@@ -47,8 +47,10 @@ export const US_STATE_SOCIETY_WIDE_DURATION_MS = 190 * 1000;
  * How long one state's run for a nationwide report's congressional
  * districts may compute, from its first request, before the app stops
  * polling it and offers Retry: above the slowest on-demand state load
- * measured (1,635 s, a year without a pre-built state file), with room
- * for a queue when two reports compute at once.
+ * measured (1,635 s, a year without a pre-built state file). For years with
+ * pre-built state files (2025–2027) that leaves room for a queue when two
+ * reports compute at once; for other years it leaves under 3 minutes, so a
+ * queued state may pass the limit, and Retry then checks the same run.
  */
 export const US_STATE_DISTRICT_RUN_TIME_LIMIT_MS = 30 * 60 * 1000;
 

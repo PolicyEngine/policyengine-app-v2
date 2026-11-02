@@ -11,10 +11,12 @@ import {
   DISTRICTS_ERROR_MESSAGE,
   FAILED_STATES_RUNS,
   MANY_FAILED_RUNS,
+  MIXED_FAILURES_RUNS,
   NO_DISTRICTS_RUNS,
   NONE_COMPUTED_INTRO,
   NONE_COMPUTED_RUNS,
   NOT_READY_RUNS,
+  OTHER_RUN_FAILURE,
   RUN_FAILURE,
   RUNNING_RUNS,
   SOME_SAVED_RUNS,
@@ -89,7 +91,7 @@ describe('StateDistrictComputePanel', () => {
     // Then
     expect(screen.getByText('49 of 51 states are in.')).toBeInTheDocument();
     expect(
-      screen.getByText(`Texas and Utah could not be calculated: ${RUN_FAILURE}`)
+      screen.getByText(`Texas and Utah could not be calculated: ${RUN_FAILURE}.`)
     ).toBeInTheDocument();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(runs.retry).toHaveBeenCalledTimes(1);
@@ -100,7 +102,9 @@ describe('StateDistrictComputePanel', () => {
     render(<StateDistrictComputePanel runs={NO_DISTRICTS_RUNS()} />);
 
     // Then
-    expect(screen.getByText(/^Ohio could not be calculated/)).toBeInTheDocument();
+    expect(
+      screen.getByText('The result for Ohio has no congressional districts.')
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
@@ -111,7 +115,19 @@ describe('StateDistrictComputePanel', () => {
     // Then
     expect(
       screen.getByText(
-        `Alabama, Alaska, Arizona, Arkansas, Colorado and 2 other states could not be calculated: ${RUN_FAILURE}`
+        `Alabama, Alaska, Arizona, Arkansas, Colorado and 2 other states could not be calculated: ${RUN_FAILURE}.`
+      )
+    ).toBeInTheDocument();
+  });
+
+  test('given states failed for different reasons and one with no districts then each reason names its own states', () => {
+    // When
+    render(<StateDistrictComputePanel runs={MIXED_FAILURES_RUNS()} />);
+
+    // Then
+    expect(
+      screen.getByText(
+        `Texas could not be calculated: ${RUN_FAILURE}. Florida could not be calculated: ${OTHER_RUN_FAILURE}. The result for Ohio has no congressional districts.`
       )
     ).toBeInTheDocument();
   });

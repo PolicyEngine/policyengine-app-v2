@@ -44,6 +44,34 @@ export function StateDistrictComputeButton({ runs }: { runs: StateDistrictRuns }
   );
 }
 
+/** Ends `text` with a full stop unless it already ends a sentence. */
+function asSentence(text: string): string {
+  return /[.!?]$/.test(text) ? text : `${text}.`;
+}
+
+/**
+ * Which states are missing from a partial set, and why: one sentence for
+ * each error, naming the states that failed with it, then one for the
+ * states whose result has no districts.
+ */
+function partialFailureReason(runs: StateDistrictRuns): string {
+  const labelsByError = new Map<string, string[]>();
+  for (const { label, error } of runs.calculationFailures) {
+    labelsByError.set(error, [...(labelsByError.get(error) ?? []), label]);
+  }
+  const sentences = [...labelsByError].map(([error, labels]) =>
+    asSentence(`${listStates(labels)} could not be calculated: ${error}`)
+  );
+  const noDistrictLabels = runs.noDistrictStateLabels;
+  if (noDistrictLabels.length > 0) {
+    const several = noDistrictLabels.length > 1;
+    sentences.push(
+      `The ${several ? 'results' : 'result'} for ${listStates(noDistrictLabels)} ${several ? 'have' : 'has'} no congressional districts.`
+    );
+  }
+  return sentences.join(' ');
+}
+
 function intro(runs: StateDistrictRuns): string {
   if (runs.completedCount === 0) {
     return NONE_COMPUTED_INTRO;
@@ -72,7 +100,7 @@ export default function StateDistrictComputePanel({
   }
 
   const partial = runs.status === 'partial';
-  const failedNames = listStates(runs.failedStateLabels);
+  const failedReason = partial ? partialFailureReason(runs) : '';
   return (
     <BreakdownComputePanel
       status={runs.status}
@@ -83,11 +111,7 @@ export default function StateDistrictComputePanel({
       progress={runs.progress}
       detail={`${runs.completedCount} of ${runs.totalStates} states`}
       summary={partial ? `${runs.completedCount} of ${runs.totalStates} states are in.` : undefined}
-      reason={
-        partial && failedNames
-          ? `${failedNames} could not be calculated${runs.error ? `: ${runs.error}` : '.'}`
-          : runs.error
-      }
+      reason={failedReason || runs.error}
       showStartButton={showStartButton}
     />
   );
