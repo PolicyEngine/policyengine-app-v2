@@ -42,6 +42,12 @@ describe('pathsMissingFromModel', () => {
     ).toEqual([]);
   });
 
+  test('given a path the metadata lists only as a node then it is missing, as no policy can set it', () => {
+    expect(pathsMissingFromModel(['gov.irs.deductions.standard.amount'], MODEL_PARAMETERS)).toEqual(
+      ['gov.irs.deductions.standard.amount']
+    );
+  });
+
   test.each([
     ['no parameters', undefined],
     ['parameters still loading', {}],
