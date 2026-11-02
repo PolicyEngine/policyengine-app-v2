@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { ReformNotFoundError } from '@/api/reformStore';
 import { BrowserOnlyIdError } from '@/api/v2Associations';
 import { isV2ApiError } from '@/api/v2UserClient';
+import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import {
   Button,
   Popover,
@@ -36,6 +37,7 @@ import {
   setDraftYear,
 } from '@/libs/draftReform';
 import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
+import { pathsMissingFromModel } from '@/libs/flagship/missingParameters';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
 import { getTaxYears } from '@/libs/metadataUtils';
@@ -390,6 +392,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   // has nothing to save. A saved reform being edited can still go back to
   // current law.
   const nothingToSave = empty || (!draft.editingReformId && adjusted.length === 0);
+  // A draft kept across a model update can change a parameter the model
+  // has since dropped. Saving and running would both send it, and the API
+  // refuses a policy that sets it, so it stops both.
+  const draftMissingParameters = pathsMissingFromModel(
+    adjusted.map((provision) => provision.path),
+    parameters
+  );
 
   return (
     <section
@@ -502,7 +511,12 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           <Button
             variant="outline"
             onClick={() => saveMutation.mutate()}
-            disabled={nothingToSave || saveMutation.isPending || starting}
+            disabled={
+              nothingToSave ||
+              saveMutation.isPending ||
+              starting ||
+              draftMissingParameters.length > 0
+            }
           >
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
@@ -525,7 +539,9 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
               starting ||
               saveMutation.isPending ||
               baseline.pending ||
-              baseline.matchesDraft
+              baseline.matchesDraft ||
+              baseline.missingParameters.length > 0 ||
+              draftMissingParameters.length > 0
             }
             title={
               !empty && adjusted.length === 0
@@ -567,6 +583,20 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           This reform matches {savedReformName(baseline.reform)}. Change a value or compare with
           something else.
         </p>
+      )}
+
+      {draftMissingParameters.length > 0 && (
+        <MissingParametersNotice subject="This reform" parameterPaths={draftMissingParameters}>
+          Remove {draftMissingParameters.length === 1 ? 'it' : 'them'} from the reform to save or
+          run it.
+        </MissingParametersNotice>
+      )}
+
+      {baseline.reform && baseline.missingParameters.length > 0 && (
+        <MissingParametersNotice
+          subject={`The reform it is compared with, ${savedReformName(baseline.reform)},`}
+          parameterPaths={baseline.missingParameters}
+        />
       )}
 
       {(runReport.error || saveError) && (

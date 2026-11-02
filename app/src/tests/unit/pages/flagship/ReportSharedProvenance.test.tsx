@@ -134,6 +134,8 @@ function sharedReport(year: string): FlagshipReportData {
     error: null,
     notFound: false,
     failedPolicyIds: [],
+    policiesChecked: true,
+    missingParameters: [],
     retry: vi.fn(),
   };
 }

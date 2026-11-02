@@ -63,6 +63,11 @@ interface ReportAdjustPanelProps {
    * compare with current law instead, so it is off.
    */
   baselineUnknown?: boolean;
+  /**
+   * The report's policies set parameters the model no longer has: it can be
+   * neither recomputed nor taken to Build.
+   */
+  runsBlocked?: boolean;
 }
 
 /**
@@ -102,6 +107,7 @@ function AdjustPanel({
   year,
   baseline,
   baselineUnknown = false,
+  runsBlocked = false,
   budgetWindow,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
@@ -580,7 +586,13 @@ function AdjustPanel({
             {reconcileError || runReport.error}
           </Text>
         )}
-        {baselineUnknown && (
+        {runsBlocked && (
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            This report uses parameters the model no longer has, so it cannot be recomputed or
+            edited in Build.
+          </Text>
+        )}
+        {!runsBlocked && baselineUnknown && (
           <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
             The baseline policy could not be loaded, so a recompute cannot compare with it.
           </Text>
@@ -590,11 +602,18 @@ function AdjustPanel({
             Nothing differs from current law. Change a value to recompute.
           </Text>
         )}
-        <Button onClick={recompute} disabled={baselineUnknown || !isDirty || busy || !changesLaw}>
+        <Button
+          onClick={recompute}
+          disabled={runsBlocked || baselineUnknown || !isDirty || busy || !changesLaw}
+        >
           <IconChartBar size={16} />
           {busy ? 'Recomputing…' : 'Recompute'}
         </Button>
-        <Button variant="outline" onClick={editInBuild} disabled={busy || active.length === 0}>
+        <Button
+          variant="outline"
+          onClick={editInBuild}
+          disabled={runsBlocked || busy || active.length === 0}
+        >
           <IconPencil size={16} />
           Edit in Build
         </Button>

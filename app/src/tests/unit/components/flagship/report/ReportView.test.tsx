@@ -393,8 +393,11 @@ describe('ReportView UK local areas', () => {
 
   const renderUKReport = (
     output: Parameters<typeof ReportView>[0]['output'],
-    fetchImpl: () => Promise<Response> = async () =>
-      Response.json({ status: 'computing', queue_position: 1, result: null })
+    {
+      fetchImpl = async () =>
+        Response.json({ status: 'computing', queue_position: 1, result: null }),
+      runsBlocked = false,
+    }: { fetchImpl?: () => Promise<Response>; runsBlocked?: boolean } = {}
   ) => {
     vi.stubGlobal('fetch', vi.fn(fetchImpl));
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -409,6 +412,7 @@ describe('ReportView UK local areas', () => {
           reformPolicyId={UK_SECTION_PROPS.reformPolicyId}
           baselinePolicyId={UK_SECTION_PROPS.baselinePolicyId}
           output={output}
+          runsBlocked={runsBlocked}
           calibration={null}
           trackRecord={null}
         />
@@ -462,8 +466,10 @@ describe('ReportView UK local areas', () => {
   test('given the background run failed then the tab offers Retry and no second request goes by itself', async () => {
     // Given
     const user = userEvent.setup();
-    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS, async () => {
-      throw new Error('Network down');
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS, {
+      fetchImpl: async () => {
+        throw new Error('Network down');
+      },
     });
     await user.click(screen.getByRole('tab', { name: 'Local areas' }));
 
@@ -499,6 +505,30 @@ describe('ReportView UK local areas', () => {
 
     // Then
     expect(await screen.findByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('given runs are blocked then the local areas tab says why, offers no compute and sends nothing', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS, { runsBlocked: true });
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(
+      screen.getByText(/local-area results cannot be calculated for this report/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(economyRequests()).toEqual([]);
+  });
+
+  test('given runs are blocked then the overview card does not say local areas calculate in the background', () => {
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS, { runsBlocked: true });
+
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).not.toHaveTextContent(
+      /calculate in the background/i
+    );
   });
 
   test('given the report switched to another year then the breakdown request for that year goes too', async () => {
