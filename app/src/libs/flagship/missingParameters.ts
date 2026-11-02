@@ -22,19 +22,26 @@ export function reformMissingParameters(
   return reform?.missingParameters ?? [];
 }
 
+/** Every path in several lists, once each, in order. */
+export function mergedParameterPaths(...pathLists: string[][]): string[] {
+  return [...new Set(pathLists.flat())].sort();
+}
+
 /** Every missing parameter of several policies, once each, in order. */
 export function combinedMissingParameters(
   policies: Array<Pick<V1PolicyContent, 'missing_parameters'> | null | undefined>
 ): string[] {
-  return [...new Set(policies.flatMap((policy) => policyMissingParameters(policy)))].sort();
+  return mergedParameterPaths(...policies.map((policy) => policyMissingParameters(policy)));
 }
 
 /**
  * The parameter paths that the current model's parameter list does not
  * have, once each, in order: changes a draft kept, or a report ran, from
  * before the model dropped them. A check in the browser beside the API's,
- * for changes no saved policy holds yet. Empty until the model's
- * parameters have loaded, so nothing is blocked before it can be checked.
+ * for changes no saved policy holds yet. The list holds only parameters
+ * under `gov`, as the API's metadata sends them, so a path outside it is
+ * not judged. Empty until the model's parameters have loaded, so nothing
+ * is blocked before it can be checked.
  */
 export function pathsMissingFromModel(
   paths: string[],
@@ -43,5 +50,7 @@ export function pathsMissingFromModel(
   if (!parameters || Object.keys(parameters).length === 0) {
     return [];
   }
-  return [...new Set(paths.filter((path) => !Object.hasOwn(parameters, path)))].sort();
+  return mergedParameterPaths(
+    paths.filter((path) => path.startsWith('gov') && !Object.hasOwn(parameters, path))
+  );
 }

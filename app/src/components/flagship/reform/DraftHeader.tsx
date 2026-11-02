@@ -388,16 +388,17 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const adjusted = draft.provisions.filter((provision) =>
     provisionAdjusts(provision, parameters?.[provision.path]?.values)
   );
-  // A draft kept across a model update can change a parameter the model
-  // has since dropped; the run would send it, so it stops the run.
-  const draftMissingParameters = pathsMissingFromModel(
-    adjusted.map((provision) => provision.path),
-    parameters
-  );
   // Saving keeps only those values, so a new reform that changes nothing
   // has nothing to save. A saved reform being edited can still go back to
   // current law.
   const nothingToSave = empty || (!draft.editingReformId && adjusted.length === 0);
+  // A draft kept across a model update can change a parameter the model
+  // has since dropped. Saving and running would both send it, and the API
+  // refuses a policy that sets it, so it stops both.
+  const draftMissingParameters = pathsMissingFromModel(
+    adjusted.map((provision) => provision.path),
+    parameters
+  );
 
   return (
     <section
@@ -510,7 +511,12 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           <Button
             variant="outline"
             onClick={() => saveMutation.mutate()}
-            disabled={nothingToSave || saveMutation.isPending || starting}
+            disabled={
+              nothingToSave ||
+              saveMutation.isPending ||
+              starting ||
+              draftMissingParameters.length > 0
+            }
           >
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
@@ -580,7 +586,10 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
       )}
 
       {draftMissingParameters.length > 0 && (
-        <MissingParametersNotice subject="This reform" parameterPaths={draftMissingParameters} />
+        <MissingParametersNotice subject="This reform" parameterPaths={draftMissingParameters}>
+          Remove {draftMissingParameters.length === 1 ? 'it' : 'them'} from the reform to save or
+          run it.
+        </MissingParametersNotice>
       )}
 
       {baseline.reform && baseline.missingParameters.length > 0 && (

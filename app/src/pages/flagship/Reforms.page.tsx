@@ -59,7 +59,11 @@ import {
 } from '@/libs/flagship/billProvisions';
 import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
-import { pathsMissingFromModel, reformMissingParameters } from '@/libs/flagship/missingParameters';
+import {
+  mergedParameterPaths,
+  pathsMissingFromModel,
+  reformMissingParameters,
+} from '@/libs/flagship/missingParameters';
 import { parametersWithout } from '@/libs/flagship/missingParameterTransfer';
 import { readV1Policy, reportMissingParameters } from '@/libs/flagship/policyChecks';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
@@ -1054,31 +1058,33 @@ export default function ReformsPage() {
               // changes against the same baseline, whatever the saved reforms
               // say now. A check that cannot be made leaves the re-run as it was.
               setRerunChecking(true);
-              const missing = await reportMissingParameters(
+              const reportedMissing = await reportMissingParameters(
                 countryId,
                 report.apiReportId,
                 (policyCountryId, policyId) => readV1Policy(queryClient, policyCountryId, policyId)
               )
                 // Without the report, the re-run compares with the saved
-                // comparison reform's own policy (see rerunSettings), and runs
-                // the changes the report keeps: check both, and the saved
-                // reform those changes came from.
+                // comparison reform's own policy (see rerunSettings): check
+                // that, and the saved reform the report's changes came from.
                 .catch(() => {
                   const ranReformId = report.reformId ?? selectedReform.id;
-                  return [
-                    ...new Set([
-                      ...(report.baselineReformId
-                        ? reformMissingParameters(savedReform(report.baselineReformId))
-                        : []),
-                      ...(ranReformId ? reformMissingParameters(savedReform(ranReformId)) : []),
-                      ...pathsMissingFromModel(
-                        report.provisions.map((provision) => provision.path),
-                        parameters
-                      ),
-                    ]),
-                  ].sort();
+                  return mergedParameterPaths(
+                    report.baselineReformId
+                      ? reformMissingParameters(savedReform(report.baselineReformId))
+                      : [],
+                    ranReformId ? reformMissingParameters(savedReform(ranReformId)) : []
+                  );
                 })
                 .finally(() => setRerunChecking(false));
+              // It runs the changes the report keeps: one to a parameter the
+              // model no longer lists stops it too, whatever the API could say.
+              const missing = mergedParameterPaths(
+                reportedMissing,
+                pathsMissingFromModel(
+                  report.provisions.map((provision) => provision.path),
+                  parameters
+                )
+              );
               if (missing.length > 0) {
                 setRerunMissingParameters(missing);
                 setReportToTransfer({ report, missingParameters: missing });
