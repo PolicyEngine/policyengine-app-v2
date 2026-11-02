@@ -141,12 +141,12 @@ describe('FlagshipTopBar', () => {
 
     // Then — as in the legacy header: after its sections on a wide screen,
     // and just before the menu button on a phone
-    const primary = screen.getByRole('navigation', { name: 'Primary' });
-    expect(primary).not.toContainElement(selector);
-    expect(primary.compareDocumentPosition(selector)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(selector.compareDocumentPosition(screen.getByRole('button', { name: 'Menu' }))).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
+    const buttonsInOrder = screen.getAllByRole('button');
+    const selectorPosition = buttonsInOrder.indexOf(selector);
+    const moreLinksButton = screen.getByRole('button', { name: /more policyengine links/i });
+    expect(screen.getByRole('navigation', { name: 'Primary' })).not.toContainElement(selector);
+    expect(buttonsInOrder.indexOf(moreLinksButton)).toBeLessThan(selectorPosition);
+    expect(buttonsInOrder[selectorPosition + 1]).toBe(screen.getByRole('button', { name: 'Menu' }));
   });
 
   test('given the country selector is opened then it offers exactly the US and the UK', async () => {
@@ -168,7 +168,7 @@ describe('FlagshipTopBar', () => {
     });
   });
 
-  test('given the UK is chosen from the country selector then the same page opens for the UK', async () => {
+  test('given the UK is chosen from the country selector then it navigates to the same path under the UK', async () => {
     // Given
     const user = userEvent.setup();
     renderTopBar();

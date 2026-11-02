@@ -26,6 +26,21 @@ describe('CountrySelector', () => {
     expect(screen.getByRole('button', { name: /country selector/i })).toBeInTheDocument();
   });
 
+  test('given user clicks selector then the button reports the list as expanded', async () => {
+    // Given
+    const { userEvent } = await import('@test-utils');
+    const user = userEvent.setup();
+    renderWithCountry(<CountrySelector />, 'us');
+    const selector = screen.getByRole('button', { name: /country selector/i });
+    expect(selector).toHaveAttribute('aria-expanded', 'false');
+
+    // When
+    await user.click(selector);
+
+    // Then
+    expect(selector).toHaveAttribute('aria-expanded', 'true');
+  });
+
   test('given user clicks selector then shows country dropdown', async () => {
     // Given
     const { userEvent } = await import('@test-utils');
@@ -94,5 +109,33 @@ describe('CountrySelector', () => {
 
     // Then
     expect(mockNavigate).toHaveBeenCalledWith('/us/policy/456');
+  });
+
+  test("given user selects UK on a US report then navigates to the UK's landing page", async () => {
+    // Given
+    const { userEvent } = await import('@test-utils');
+    const user = userEvent.setup();
+
+    // When
+    renderWithCountry(<CountrySelector />, 'us', MOCK_PATHS.US_REPORT);
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
+    await user.click(screen.getByText('United Kingdom'));
+
+    // Then — the report's ID belongs to the US
+    expect(mockNavigate).toHaveBeenCalledWith(MOCK_PATHS.UK_HOME);
+  });
+
+  test("given user selects UK on a US bill report then navigates to the UK's landing page", async () => {
+    // Given
+    const { userEvent } = await import('@test-utils');
+    const user = userEvent.setup();
+
+    // When
+    renderWithCountry(<CountrySelector />, 'us', MOCK_PATHS.US_BILL_REPORT);
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
+    await user.click(screen.getByText('United Kingdom'));
+
+    // Then — the bill tracker holds US bills only
+    expect(mockNavigate).toHaveBeenCalledWith(MOCK_PATHS.UK_HOME);
   });
 });

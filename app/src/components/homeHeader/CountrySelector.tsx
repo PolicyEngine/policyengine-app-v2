@@ -35,7 +35,9 @@ export default function CountrySelector({ variant = 'default' }: CountrySelector
     (newCountryId: string) => {
       setOpen(false);
       const pathParts = location.pathname.split('/').filter(Boolean);
-      if (pathParts.length > 0) {
+      // A v3 report (/us/report/…, /us/report/bill/…) is one country's, so
+      // switching from it opens the other country's landing page instead.
+      if (pathParts.length > 0 && pathParts[1] !== 'report') {
         pathParts[0] = newCountryId;
         nav.push(`/${pathParts.join('/')}`);
       } else {
@@ -84,6 +86,7 @@ export default function CountrySelector({ variant = 'default' }: CountrySelector
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Country selector"
+        aria-expanded={open}
         style={{
           background: 'transparent',
           border: 'none',
