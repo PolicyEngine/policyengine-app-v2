@@ -20,7 +20,10 @@ import { ErrorState } from '@/components/flagship/states';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Button, SegmentedControl, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { useFlagshipHouseholdPayload } from '@/hooks/useFlagshipHousehold';
+import {
+  useFlagshipHouseholdPayload,
+  useSaveCalculatedHousehold,
+} from '@/hooks/useFlagshipHousehold';
 import type { CountryId } from '@/libs/countries';
 import {
   describeHousehold,
@@ -568,6 +571,13 @@ function HouseholdCard({
   const running = !!requested && run.isFetching;
   const failed = !!requested && !running && run.isError;
   const result = requested && !running ? run.data : undefined;
+  // A calculated household is saved to the user in the background; nothing
+  // here shows it.
+  useSaveCalculatedHousehold({
+    countryId,
+    household:
+      result && requested ? { id: result.householdId, name: requested.summary } : undefined,
+  });
 
   // A run's end, sent once: a failure only after the run was seen running
   // (an earlier failure's error can show for a moment on a retry); a

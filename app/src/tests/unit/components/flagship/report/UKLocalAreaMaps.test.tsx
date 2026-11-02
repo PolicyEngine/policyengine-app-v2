@@ -10,7 +10,6 @@ import {
   UK_LOCAL_AREAS_OUTPUT,
   UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
   UK_LOCAL_AREAS_OUTPUT_NO_CODES,
-  UK_LOCAL_AREAS_OUTPUT_WITHOUT_API_POSITIONS,
   UK_WIDE_REGION,
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
@@ -48,13 +47,10 @@ import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
   MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA,
-  MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
-  areaNames,
-  hexagonArrangement,
+  HEX_MAP_OMISSION_NOTE_PATTERN,
   isPointyTopped,
-  v3HexagonArrangement,
 } from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
 
 function hexagon(container: HTMLElement, name: string): Element {
@@ -250,13 +246,10 @@ describe('UKLocalAreaMaps', () => {
 
   test('given a Wales report without codes then the details name Wales from the region', async () => {
     const user = userEvent.setup();
-    const { container } = render(
-      <UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_NO_CODES} region={WALES_REGION} />,
-      'uk'
-    );
-    await showHexMap(user);
+    render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_NO_CODES} region={WALES_REGION} />, 'uk');
 
-    await user.click(hexagon(container, 'Gower'));
+    // Without codes the hex map draws no hexagons, so choose the area from the rankings.
+    await user.click(screen.getByRole('button', { name: 'Show details for Gower' }));
 
     const details = screen.getByRole('region', { name: 'Gower details' });
     expect(within(details).getByText('Wales')).toBeInTheDocument();
@@ -299,16 +292,13 @@ describe('UKLocalAreaMaps geographic map', () => {
   test('given areas with codes then the hex map places them from the app’s layout, tiled', async () => {
     // Given
     const user = userEvent.setup();
-    const { container } = render(
-      <UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_WITHOUT_API_POSITIONS} />,
-      'uk'
-    );
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
     await boundary(CLWYD_EAST_CODE);
 
     // When
     await showHexMap(user);
 
-    // Then: the API put all three at the origin, the layout apart
+    // Then: each at its own layout position
     const hexagons = ['Clwyd East', 'Monmouthshire', 'Gower'].map((name) =>
       hexagon(container, name)
     );
@@ -319,7 +309,7 @@ describe('UKLocalAreaMaps geographic map', () => {
     expect(points[1][0]).toBeCloseTo(points[4][0], 5);
   });
 
-  test('given areas without codes then the hex map keeps the API positions on its square grid', async () => {
+  test('given areas without codes then the hex map draws none of them', async () => {
     // Given
     const user = userEvent.setup();
     const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_NO_CODES} />, 'uk');
@@ -328,33 +318,77 @@ describe('UKLocalAreaMaps geographic map', () => {
     await showHexMap(user);
 
     // Then
-    const points = vertices(hexagon(container, 'Gower'));
-    // Flat-topped hexagons: the left and right vertices share a y.
-    expect(points[0][1]).toBeCloseTo(points[3][1], 5);
+    expect(container.querySelectorAll('[data-area-id]')).toHaveLength(0);
   });
 
-  test('given a saved result with pre-2023 local authority codes then every authority keeps its result’s position, untiled', async () => {
-    // Given: the same result without codes, which the map draws at its results' positions
-    const resultsArrangement = await v3HexagonArrangement(
-      MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA_UNCODED,
-      'local_authority'
+  test('given one area without a code then the hex map draws the others, tiled', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED} />,
+      'uk'
     );
+    await boundary(CLWYD_EAST_CODE);
 
     // When
+    await showHexMap(user);
+
+    // Then
+    const drawn = [...container.querySelectorAll('[data-area-id]')];
+    expect(drawn.map((polygon) => polygon.getAttribute('data-area-id'))).toEqual([
+      'Clwyd East',
+      'Monmouthshire',
+    ]);
+    const points = vertices(drawn[0]);
+    // Tiled hexagons are pointy-topped: the top and bottom vertices share an x.
+    expect(points[1][0]).toBeCloseTo(points[4][0], 5);
+  });
+
+  test('given one area without a code then no note says the hex map leaves it out', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED} />, 'uk');
+    await boundary(CLWYD_EAST_CODE);
+
+    // When
+    await showHexMap(user);
+
+    // Then
+    expect(screen.queryByText(HEX_MAP_OMISSION_NOTE_PATTERN)).not.toBeInTheDocument();
+  });
+
+  test('given a saved result with pre-2023 local authority codes then the hex map leaves those authorities out and draws the others, tiled', async () => {
+    // Given
     const user = userEvent.setup();
     const { container } = render(
       <UKLocalAreaMaps output={MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA} />,
       'uk'
     );
     await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // When
     await showHexMap(user);
 
-    // Then: one grid for every authority, not layout positions mixed with the results'
-    const hexagons = areaNames(MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA, 'local_authority').map(
-      (name) => hexagon(container, name)
-    );
-    expect(hexagonArrangement(hexagons)).toEqual(resultsArrangement);
-    expect(hexagons.some(isPointyTopped)).toBe(false);
+    // Then
+    const drawn = [...container.querySelectorAll('[data-area-id]')];
+    expect(drawn.map((polygon) => polygon.getAttribute('data-area-id'))).toEqual([
+      'Hartlepool',
+      'Darlington',
+    ]);
+    expect(drawn.every(isPointyTopped)).toBe(true);
+  });
+
+  test('given a saved result with pre-2023 local authority codes then no note says the hex map leaves them out', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<UKLocalAreaMaps output={MOCK_UK_REPORT_OUTPUT_WITH_PRE_2023_LA} />, 'uk');
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // When
+    await showHexMap(user);
+
+    // Then
+    expect(screen.queryByText(HEX_MAP_OMISSION_NOTE_PATTERN)).not.toBeInTheDocument();
   });
 
   test('given the hex map chosen then switching the area kind keeps it', async () => {
@@ -509,8 +543,6 @@ describe('UKLocalAreaMaps geographic map', () => {
             constituency_impact: {
               by_constituency: {
                 Gower: {
-                  x: 44,
-                  y: -37,
                   average_household_income_change: 120,
                   relative_household_income_change: 0.004,
                   average_household_income_change_lower: 40,
@@ -618,8 +650,6 @@ describe('UKLocalAreaMaps map controls and legend', () => {
 
 describe('areaNation', () => {
   const area = {
-    x: 0,
-    y: 0,
     average_household_income_change: 0,
     relative_household_income_change: 0,
   };
@@ -641,8 +671,6 @@ describe('areaNation', () => {
 describe('ukAreaDetailFigures', () => {
   test('given a change that rounds to zero then it reads zero with no minus', () => {
     const figures = ukAreaDetailFigures({
-      x: 0,
-      y: 0,
       average_household_income_change: -0.4,
       relative_household_income_change: -0,
     });
@@ -950,7 +978,7 @@ describe('UKLocalAreaMaps withheld areas on the hex map', () => {
     expect(withheldHexagons(container).length).toBe(WELSH_LOCAL_AUTHORITY_COUNT - 2);
   });
 
-  test('given a breakdown area without a code then the hex map keeps the result’s positions, untiled, and draws no withheld areas', async () => {
+  test('given a breakdown area without a code then the hex map leaves it off, draws the others tiled, and draws no withheld areas', async () => {
     // When
     const { container } = await renderHexMap({
       output: UK_LOCAL_AREAS_OUTPUT_GOWER_UNCODED,
@@ -958,8 +986,13 @@ describe('UKLocalAreaMaps withheld areas on the hex map', () => {
       withheld: breakdownWithheld,
     });
 
-    // Then
-    expect([...container.querySelectorAll('[data-area-id]')].some(isPointyTopped)).toBe(false);
+    // Then: Gower might be any of the Welsh constituencies the result lacks, so none reads as withheld
+    const drawn = [...container.querySelectorAll('[data-area-id]')];
+    expect(drawn.map((polygon) => polygon.getAttribute('data-area-id'))).toEqual([
+      'Clwyd East',
+      'Monmouthshire',
+    ]);
+    expect(drawn.every(isPointyTopped)).toBe(true);
     expect(withheldHexagons(container).length).toBe(0);
   });
 });

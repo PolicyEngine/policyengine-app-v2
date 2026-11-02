@@ -107,8 +107,6 @@ export function AbsoluteChangeByLocalAuthority({
           missingAreas={hexMap.withheldAreas}
           missingAreaText={UK_WITHHELD_AREA_TEXT}
           config={{
-            tiled: hexMap.tiled,
-            hexSize: 11,
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,
               tickFormat: '£,.0f',
