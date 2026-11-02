@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import AuthMenu from '@/components/auth/AuthMenu';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import HeaderActionButtons from '@/components/homeHeader/HeaderActionButtons';
@@ -10,6 +10,16 @@ import {
   signedInAuthValue,
   TEST_PROFILE,
 } from '@/tests/fixtures/libs/auth/authMocks';
+import { accountStorage } from '@/tests/fixtures/types/v2UserMocks';
+
+vi.mock('@/types/v2User', async (importOriginal) => {
+  const { withSwitchableAccountStorage } = await import('@/tests/fixtures/types/v2UserMocks');
+  return withSwitchableAccountStorage(await importOriginal());
+});
+
+afterEach(() => {
+  accountStorage.withoutAccountStorage = false;
+});
 
 function renderMenu(auth: AuthContextValue, countryId = 'us') {
   return render(
@@ -50,9 +60,15 @@ describe('AuthMenu', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  test('given a country without accounts then nothing is shown, signed in or out', () => {
+  test.each([
+    ['signed out', makeAuthValue()],
+    ['signed in', signedInAuthValue()],
+  ])('given a country without account storage then nothing is shown, %s', (_, auth) => {
+    // Given
+    accountStorage.withoutAccountStorage = true;
+
     // When
-    renderMenu(makeAuthValue(), 'ca');
+    renderMenu(auth);
 
     // Then
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
