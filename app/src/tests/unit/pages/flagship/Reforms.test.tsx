@@ -1407,6 +1407,37 @@ describe('ReformsPage', () => {
       }
     });
 
+    test("given the report's policies cannot be read and a change it ran is to a parameter the model no longer lists then Re-run opens its transfer dialog and runs nothing", async () => {
+      // Given: the report reads, but none of its policies does, so the API says nothing
+      seedDeductionMetadata();
+      try {
+        mockFetchPolicyById.mockRejectedValue(new Error('Failed to fetch policy 88'));
+        const user = await openReform([
+          {
+            ...BROWSER_REPORT,
+            provisions: [
+              { ...RUN_PROVISION, path: 'gov.irs.credits.ctc.amount.base' },
+              REMOVED_PROVISION,
+            ],
+          },
+        ]);
+
+        // When
+        await user.click(screen.getByRole('button', { name: /re-run/i }));
+
+        // Then
+        const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
+        expect(
+          within(dialog)
+            .getAllByRole('listitem')
+            .map((item) => item.textContent)
+        ).toEqual([REMOVED_US_PARAMETER]);
+        expect(mockRun).not.toHaveBeenCalled();
+      } finally {
+        store.dispatch(clearMetadata());
+      }
+    });
+
     test("given the report's policies cannot be checked then Re-run runs as before", async () => {
       // Given
       mockFetchPolicyById.mockRejectedValue(new Error('Failed to fetch policy 88'));

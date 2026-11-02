@@ -195,7 +195,7 @@ describe('DraftHeader', () => {
     expect(mockRun.mock.calls[0][5]).toMatchObject({ fromDraft: true, windowYears: 10 });
   });
 
-  test('given a change to a parameter the model no longer has then the run is off, and the notice names it', async () => {
+  test('given a change to a parameter the model no longer has then saving and running are off, and the notice names it', async () => {
     // Given: a draft kept from before the model dropped the parameter
     seedDeductionMetadata();
     addDraftProvision('us', SEEDED_CHANGE);
@@ -218,7 +218,29 @@ describe('DraftHeader', () => {
         .getAllByRole('listitem')
         .map((item) => item.textContent)
     ).toEqual([REMOVED_US_PARAMETER]);
+    expect(notice).toHaveTextContent(/remove it from the reform to save or run it/i);
     expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+  });
+
+  test('given a parameter the model no longer has left at its earlier value then nothing is checked, and the run goes ahead', () => {
+    // Given: the run leaves an unchanged parameter out, so it sends nothing for it
+    seedDeductionMetadata();
+    addDraftProvision('us', SEEDED_CHANGE);
+    addDraftProvision('us', {
+      path: REMOVED_US_PARAMETER,
+      breadcrumb: REMOVED_US_PARAMETER,
+      unit: 'currency-USD',
+      baselineValue: 1000,
+      value: 1000,
+    });
+
+    // When
+    renderHeader();
+
+    // Then
+    expect(screen.queryByText(/cannot be run/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeEnabled();
   });
 
   test("given the model's parameters have not loaded then a draft's changes are not checked", () => {

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   combinedMissingParameters,
+  mergedParameterPaths,
   pathsMissingFromModel,
   policyMissingParameters,
   reformMissingParameters,
@@ -42,8 +43,16 @@ describe('pathsMissingFromModel', () => {
     expect(pathsMissingFromModel([REMOVED_US_PARAMETER], parameters)).toEqual([]);
   });
 
-  test('given a path named like an object property then it is still missing', () => {
-    expect(pathsMissingFromModel(['constructor'], MODEL_PARAMETERS)).toEqual(['constructor']);
+  test('given a path outside gov, which the metadata never lists, then it is not judged', () => {
+    expect(pathsMissingFromModel(['household.example_setting'], MODEL_PARAMETERS)).toEqual([]);
+  });
+});
+
+describe('mergedParameterPaths', () => {
+  test('given several lists then each path is listed once, in order', () => {
+    expect(
+      mergedParameterPaths([REMOVED_US_PARAMETER], [], [REMOVED_UK_PARAMETER, REMOVED_US_PARAMETER])
+    ).toEqual([REMOVED_UK_PARAMETER, REMOVED_US_PARAMETER]);
   });
 });
 
