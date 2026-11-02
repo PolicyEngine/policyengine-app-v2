@@ -39,8 +39,9 @@ export function combinedMissingParameters(
  * The parameter paths that the current model's parameter list does not
  * have, once each, in order: changes a draft kept, or a report ran, from
  * before the model dropped them. A check in the browser beside the API's,
- * for changes the API has not checked: a draft's, or a report's when its
- * policies cannot be read. As the API's own check does, it counts only
+ * for changes the API has not checked: a draft's, and the changes a saved
+ * report keeps, which Re-run sends whatever the API could read of the
+ * report's policies. As the API's own check does, it counts only
  * leaf parameters: a path the list holds as a node (one that holds other
  * parameters) is missing too, since no policy can set it. The list holds
  * only parameters under `gov`, as the API's metadata sends them, so a path
