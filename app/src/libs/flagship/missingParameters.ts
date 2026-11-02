@@ -1,4 +1,5 @@
 import type { Reform } from '@/types/ingredients/Reform';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { V1PolicyContent } from '@/types/metadata/policyMetadata';
 
 /**
@@ -26,4 +27,21 @@ export function combinedMissingParameters(
   policies: Array<Pick<V1PolicyContent, 'missing_parameters'> | null | undefined>
 ): string[] {
   return [...new Set(policies.flatMap((policy) => policyMissingParameters(policy)))].sort();
+}
+
+/**
+ * The parameter paths that the current model's parameter list does not
+ * have, once each, in order: changes a draft kept, or a report ran, from
+ * before the model dropped them. A check in the browser beside the API's,
+ * for changes no saved policy holds yet. Empty until the model's
+ * parameters have loaded, so nothing is blocked before it can be checked.
+ */
+export function pathsMissingFromModel(
+  paths: string[],
+  parameters: ParameterMetadataCollection | null | undefined
+): string[] {
+  if (!parameters || Object.keys(parameters).length === 0) {
+    return [];
+  }
+  return [...new Set(paths.filter((path) => !Object.hasOwn(parameters, path)))].sort();
 }

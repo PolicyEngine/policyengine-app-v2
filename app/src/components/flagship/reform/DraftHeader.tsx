@@ -37,6 +37,7 @@ import {
   setDraftYear,
 } from '@/libs/draftReform';
 import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
+import { pathsMissingFromModel } from '@/libs/flagship/missingParameters';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
 import { getTaxYears } from '@/libs/metadataUtils';
@@ -387,6 +388,12 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const adjusted = draft.provisions.filter((provision) =>
     provisionAdjusts(provision, parameters?.[provision.path]?.values)
   );
+  // A draft kept across a model update can change a parameter the model
+  // has since dropped; the run would send it, so it stops the run.
+  const draftMissingParameters = pathsMissingFromModel(
+    adjusted.map((provision) => provision.path),
+    parameters
+  );
   // Saving keeps only those values, so a new reform that changes nothing
   // has nothing to save. A saved reform being edited can still go back to
   // current law.
@@ -527,7 +534,8 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
               saveMutation.isPending ||
               baseline.pending ||
               baseline.matchesDraft ||
-              baseline.missingParameters.length > 0
+              baseline.missingParameters.length > 0 ||
+              draftMissingParameters.length > 0
             }
             title={
               !empty && adjusted.length === 0
@@ -569,6 +577,10 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           This reform matches {savedReformName(baseline.reform)}. Change a value or compare with
           something else.
         </p>
+      )}
+
+      {draftMissingParameters.length > 0 && (
+        <MissingParametersNotice subject="This reform" parameterPaths={draftMissingParameters} />
       )}
 
       {baseline.reform && baseline.missingParameters.length > 0 && (

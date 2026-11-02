@@ -59,7 +59,7 @@ import {
 } from '@/libs/flagship/billProvisions';
 import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
-import { reformMissingParameters } from '@/libs/flagship/missingParameters';
+import { pathsMissingFromModel, reformMissingParameters } from '@/libs/flagship/missingParameters';
 import { parametersWithout } from '@/libs/flagship/missingParameterTransfer';
 import { readV1Policy, reportMissingParameters } from '@/libs/flagship/policyChecks';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
@@ -1021,7 +1021,11 @@ export default function ReformsPage() {
                 reportToTransfer.report.sourceNote ||
                 SOURCE_LABELS[selectedReform.provenance.source]
               }
-              onTransferred={() => setReportToTransfer(null)}
+              onTransferred={() => {
+                setReportToTransfer(null);
+                // The new run sets none of them, so the notice goes with the dialog.
+                setRerunMissingParameters([]);
+              }}
             />
           )}
           {(runReport.error || rerunError) && (
@@ -1056,12 +1060,24 @@ export default function ReformsPage() {
                 (policyCountryId, policyId) => readV1Policy(queryClient, policyCountryId, policyId)
               )
                 // Without the report, the re-run compares with the saved
-                // comparison reform's own policy (see rerunSettings): check that.
-                .catch(() =>
-                  report.baselineReformId
-                    ? reformMissingParameters(savedReform(report.baselineReformId))
-                    : []
-                )
+                // comparison reform's own policy (see rerunSettings), and runs
+                // the changes the report keeps: check both, and the saved
+                // reform those changes came from.
+                .catch(() => {
+                  const ranReformId = report.reformId ?? selectedReform.id;
+                  return [
+                    ...new Set([
+                      ...(report.baselineReformId
+                        ? reformMissingParameters(savedReform(report.baselineReformId))
+                        : []),
+                      ...(ranReformId ? reformMissingParameters(savedReform(ranReformId)) : []),
+                      ...pathsMissingFromModel(
+                        report.provisions.map((provision) => provision.path),
+                        parameters
+                      ),
+                    ]),
+                  ].sort();
+                })
                 .finally(() => setRerunChecking(false));
               if (missing.length > 0) {
                 setRerunMissingParameters(missing);
