@@ -1058,6 +1058,7 @@ export default function ReformsPage() {
               // changes against the same baseline, whatever the saved reforms
               // say now. A check that cannot be made leaves the re-run as it was.
               setRerunChecking(true);
+              const changedPaths = report.provisions.map((provision) => provision.path);
               const reportedMissing = await reportMissingParameters(
                 countryId,
                 report.apiReportId,
@@ -1065,25 +1066,27 @@ export default function ReformsPage() {
               )
                 // Without the report, the re-run compares with the saved
                 // comparison reform's own policy (see rerunSettings): check
-                // that, and the saved reform the report's changes came from.
-                .catch(() => {
-                  const ranReformId = report.reformId ?? selectedReform.id;
-                  return mergedParameterPaths(
+                // that. The saved reform the report came from may have been
+                // edited since it ran, so only its parameters the report
+                // changes count.
+                .catch(() =>
+                  mergedParameterPaths(
                     report.baselineReformId
                       ? reformMissingParameters(savedReform(report.baselineReformId))
                       : [],
-                    ranReformId ? reformMissingParameters(savedReform(ranReformId)) : []
-                  );
-                })
+                    report.reformId
+                      ? reformMissingParameters(savedReform(report.reformId)).filter((path) =>
+                          changedPaths.includes(path)
+                        )
+                      : []
+                  )
+                )
                 .finally(() => setRerunChecking(false));
               // It runs the changes the report keeps: one to a parameter the
               // model no longer lists stops it too, whatever the API could say.
               const missing = mergedParameterPaths(
                 reportedMissing,
-                pathsMissingFromModel(
-                  report.provisions.map((provision) => provision.path),
-                  parameters
-                )
+                pathsMissingFromModel(changedPaths, parameters)
               );
               if (missing.length > 0) {
                 setRerunMissingParameters(missing);

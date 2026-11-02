@@ -5,7 +5,7 @@ import { colors, spacing, typography } from '@/designTokens';
 interface MissingParametersNoticeProps {
   /** What cannot be run, as the sentence starts: "This reform", "This report". */
   subject: string;
-  /** The parameter paths the model no longer has, as the API reports them. */
+  /** The parameter paths the model no longer has, as the API or its parameter list shows them. */
   parameterPaths: string[];
   /** A sentence after the list, e.g. what still shows. */
   children?: ReactNode;
