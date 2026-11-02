@@ -100,9 +100,6 @@ export const HOUSEHOLD_GROUP_DEFINITIONS_BY_COUNTRY: Record<
   uk: GROUP_DEFINITIONS.filter(
     (definition) => definition.appKey === 'households' || definition.appKey === 'benunits'
   ),
-  ca: DEFAULT_COUNTRY_GROUP_DEFINITIONS,
-  ng: DEFAULT_COUNTRY_GROUP_DEFINITIONS,
-  il: DEFAULT_COUNTRY_GROUP_DEFINITIONS,
 };
 
 export const V2_GROUP_DEFINITIONS_BY_COUNTRY: Record<

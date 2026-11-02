@@ -8,6 +8,7 @@ import fc from 'fast-check';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { countryIds } from '@/libs/countries';
+import { REMOVED_COUNTRY_IDS } from '@/tests/fixtures/libs/countriesMocks';
 import CountryLayout from '../../../../../calculator-app/src/app/[countryId]/layout';
 
 // Next.js's notFound() throws to stop rendering; the mock throws a marker so
@@ -90,6 +91,14 @@ describe('calculator country layout', () => {
     await expect(renderLayout(segment)).rejects.toBe(NOT_FOUND);
     expect(notFound).toHaveBeenCalledTimes(1);
   });
+
+  test.each(REMOVED_COUNTRY_IDS)(
+    'given %s, a country the calculator no longer offers, then the layout is a 404',
+    async (removedCountryId) => {
+      await expect(renderLayout(removedCountryId)).rejects.toBe(NOT_FOUND);
+      expect(notFound).toHaveBeenCalledTimes(1);
+    }
+  );
 
   test('given any first path segment then the layout is a 404 exactly when it is not a supported country', async () => {
     const country = fc.constantFrom(...countryIds);
