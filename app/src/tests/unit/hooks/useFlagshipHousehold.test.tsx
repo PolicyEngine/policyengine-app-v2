@@ -76,6 +76,7 @@ const SIX_MINUTES_MS = 6 * 60 * 1000;
 describe('useSaveCalculatedHousehold', () => {
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   test('given the same calculated household twice on a page then it is looked up and saved once', async () => {
@@ -191,8 +192,47 @@ describe('useSaveCalculatedHousehold', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  test('given two different calculated households on a page then each is saved', async () => {
+    // Given
+    const { wrapper } = wrapperFor(signedInAuthValue());
+    const otherHousehold = {
+      countryId: 'us',
+      household: { id: String(LEGACY_IDS.OTHER_HOUSEHOLD), name: HOUSEHOLD_SUMMARY },
+    } as const;
+
+    // When
+    renderHook(() => useSaveCalculatedHousehold(CALCULATED_HOUSEHOLD), { wrapper });
+    renderHook(() => useSaveCalculatedHousehold(otherHousehold), { wrapper });
+
+    // Then
+    await waitFor(() => expect(requestsWithMethod('POST')).toHaveLength(2));
+    const savedHouseholdIds = requestsWithMethod('POST').map(
+      ([, init]) => JSON.parse(String((init as RequestInit).body)).legacy_household_id
+    );
+    expect(savedHouseholdIds.sort()).toEqual([LEGACY_IDS.HOUSEHOLD, LEGACY_IDS.OTHER_HOUSEHOLD]);
+  });
+
+  test('given the save fails then the failure is logged to the console', async () => {
+    // Given
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    fetchMock.mockImplementation(async () => errorResponse(503, 'Service unavailable'));
+    const { wrapper } = wrapperFor(signedInAuthValue());
+
+    // When
+    renderHook(() => useSaveCalculatedHousehold(CALCULATED_HOUSEHOLD), { wrapper });
+
+    // Then
+    await waitFor(() =>
+      expect(consoleError).toHaveBeenCalledWith(
+        '[useSaveCalculatedHousehold] Save failed:',
+        expect.any(Error)
+      )
+    );
+  });
+
   test('given the save fails then the failure is kept to the save', async () => {
     // Given
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     fetchMock.mockImplementation(async () => errorResponse(503, 'Service unavailable'));
     const { wrapper, queryClient } = wrapperFor(signedInAuthValue());
 
@@ -212,6 +252,7 @@ describe('useSaveCalculatedHousehold', () => {
 
   test("given a failed save then it is tried again when the household's result shows again", async () => {
     // Given
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     fetchMock.mockImplementationOnce(async () => errorResponse(503, 'Service unavailable'));
     const { wrapper } = wrapperFor(signedInAuthValue());
     const firstResult = renderHook(() => useSaveCalculatedHousehold(CALCULATED_HOUSEHOLD), {

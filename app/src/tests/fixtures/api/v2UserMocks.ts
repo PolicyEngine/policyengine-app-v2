@@ -26,6 +26,8 @@ export const LEGACY_IDS = {
   POLICY: 95762,
   REPORT: 615,
   HOUSEHOLD: 54321,
+  /** Another household the same page calculates. */
+  OTHER_HOUSEHOLD: 54322,
 } as const;
 
 /** A calculated household's summary, as the Household tab writes it, which names its saved row. */

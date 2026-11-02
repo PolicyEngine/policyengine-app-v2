@@ -486,8 +486,9 @@ async function calculateHousehold(
 }
 
 /**
- * Creates the household (the API dedupes identical ones) and calculates
- * it under the baseline and the reform at once.
+ * Creates the household and calculates it under the baseline and the
+ * reform at once. The API stores a new household on every call, even for
+ * identical inputs, so each run gets its own household ID.
  */
 export async function runFlagshipHousehold({
   year,

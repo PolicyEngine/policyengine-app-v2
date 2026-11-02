@@ -91,9 +91,10 @@ export function useFlagshipHouseholdPolicies({
  * background: a `/v2/user-households` row for its v1 household. Only where
  * saved work goes to the account (see useV3SavedWork), and in the account's
  * country. Once saved, a household is not looked up or saved again on the
- * page, even when the session ends on it; a failed save is tried again the
- * next time the household's result shows. Nothing shows the row, so a
- * failure changes nothing on the page.
+ * page, even when the session ends on it. A failed save is logged to the
+ * console and tried again the next time the household's result shows, or
+ * when the session's user changes while it shows. Nothing shows the row, so
+ * a failure changes nothing on the page.
  */
 export function useSaveCalculatedHousehold({
   countryId,
@@ -127,8 +128,9 @@ export function useSaveCalculatedHousehold({
         gcTime: Infinity,
         retry: false,
       })
-      .catch(() => {
-        // Nothing on the page reads the row, so a failed save is left alone.
+      .catch((error: unknown) => {
+        // Nothing on the page reads the row, so a failure is only logged.
+        console.error('[useSaveCalculatedHousehold] Save failed:', error);
       });
   }, [account, countryId, householdId, name, queryClient]);
 }
