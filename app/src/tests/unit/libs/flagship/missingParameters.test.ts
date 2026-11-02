@@ -36,6 +36,12 @@ describe('pathsMissingFromModel', () => {
     );
   });
 
+  test("given a bracket's own parameter, which the metadata lists by its path, then it is not missing", () => {
+    expect(
+      pathsMissingFromModel(['gov.irs.credits.eitc.phase_in_rate[1].amount'], MODEL_PARAMETERS)
+    ).toEqual([]);
+  });
+
   test.each([
     ['no parameters', undefined],
     ['parameters still loading', {}],

@@ -223,8 +223,8 @@ describe('DraftHeader', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
   });
 
-  test('given a parameter the model no longer has left at its earlier value then nothing is checked, and the run goes ahead', () => {
-    // Given: the run leaves an unchanged parameter out, so it sends nothing for it
+  test('given a parameter the model no longer has left at its earlier value then nothing is checked, and saving and running go ahead', () => {
+    // Given: saving and running leave an unchanged parameter out, so they send nothing for it
     seedDeductionMetadata();
     addDraftProvision('us', SEEDED_CHANGE);
     addDraftProvision('us', {
@@ -241,6 +241,7 @@ describe('DraftHeader', () => {
     // Then
     expect(screen.queryByText(/cannot be run/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
   });
 
   test("given the model's parameters have not loaded then a draft's changes are not checked", () => {

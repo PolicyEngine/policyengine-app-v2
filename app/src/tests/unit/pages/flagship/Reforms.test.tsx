@@ -1353,19 +1353,31 @@ describe('ReformsPage', () => {
       expect(mockRun).not.toHaveBeenCalled();
     });
 
-    test('given the report cannot be read and its own saved reform sets removed parameters then Re-run opens its transfer dialog and runs nothing', async () => {
-      // Given: the report is unreadable, and the reform it ran (rf-1) is the affected one
+    /**
+     * Opens rf-1, whose saved reform sets the removed parameter, past its
+     * own transfer dialog, with its report unreadable and no metadata loaded.
+     */
+    async function openUnreadableReportOfAffectedReform(report: object) {
       mockFindMine.mockResolvedValue([
         { ...CHAT_REFORM, missingParameters: [REMOVED_US_PARAMETER] },
         PLAN_B_REFORM,
       ]);
-      mockFindReports.mockResolvedValue([BROWSER_REPORT]);
+      mockFindReports.mockResolvedValue([report]);
       mockFetchReportByIdOverride.current = () => Promise.reject(new Error('Not found'));
       const user = userEvent.setup();
       renderReforms('/us/reforms?filter=yours');
       await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
       const reformDialog = await screen.findByRole('dialog', { name: REFORM_DIALOG_NAME });
       await user.click(within(reformDialog).getByRole('button', { name: 'Not now' }));
+      return user;
+    }
+
+    test('given the report cannot be read and its own saved reform sets removed parameters it changes then Re-run opens its transfer dialog and runs nothing', async () => {
+      // Given: the report changes the removed parameter that rf-1 still sets
+      const user = await openUnreadableReportOfAffectedReform({
+        ...BROWSER_REPORT,
+        provisions: [RUN_PROVISION, REMOVED_PROVISION],
+      });
 
       // When
       await user.click(screen.getByRole('button', { name: /re-run/i }));
@@ -1374,6 +1386,18 @@ describe('ReformsPage', () => {
       const dialog = await screen.findByRole('dialog', { name: REPORT_DIALOG_NAME });
       expect(within(dialog).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
       expect(mockRun).not.toHaveBeenCalled();
+    });
+
+    test('given the report cannot be read and its own saved reform sets a removed parameter the report does not change then Re-run runs', async () => {
+      // Given: rf-1 was edited after the report ran, so the report never set it
+      const user = await openUnreadableReportOfAffectedReform(BROWSER_REPORT);
+
+      // When
+      await user.click(screen.getByRole('button', { name: /re-run/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(screen.queryByRole('dialog', { name: REPORT_DIALOG_NAME })).not.toBeInTheDocument();
     });
 
     test('given the report cannot be read and a change it ran is to a parameter the model no longer lists then Re-run opens its transfer dialog and runs nothing', async () => {
