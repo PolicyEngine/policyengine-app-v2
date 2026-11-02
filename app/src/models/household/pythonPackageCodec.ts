@@ -1,4 +1,4 @@
-import { isCountryId, type CountryId } from '@/libs/countries';
+import type { CountryId } from '@/libs/countries';
 import { cloneAppHouseholdInputData } from './appCodec';
 import type {
   AppHouseholdInputData,
@@ -112,24 +112,13 @@ export function buildPythonPackageHouseholdDataFromAppInput(args: {
 }
 
 /**
- * The lowest upper end of the earnings variation range, in each country's
- * currency. Every country the app offers uses 200,000; a country whose
- * currency needs another floor (Nigeria's was 1,200,000) gets its own entry.
+ * The lowest upper end of the earnings variation range, in the household's
+ * currency. Every country the app offers uses the same floor.
  */
-const VARIATION_EARNINGS_FLOOR: Record<CountryId, number> = {
-  us: 200_000,
-  uk: 200_000,
-};
-const DEFAULT_VARIATION_EARNINGS_FLOOR = 200_000;
+const VARIATION_EARNINGS_FLOOR = 200_000;
 
-export function getPythonPackageHouseholdVariationMaxEarnings(
-  currentEarnings: number,
-  countryId: string
-): number {
-  const floor = isCountryId(countryId)
-    ? VARIATION_EARNINGS_FLOOR[countryId]
-    : DEFAULT_VARIATION_EARNINGS_FLOOR;
-  return Math.max(floor, 2 * currentEarnings);
+export function getPythonPackageHouseholdVariationMaxEarnings(currentEarnings: number): number {
+  return Math.max(VARIATION_EARNINGS_FLOOR, 2 * currentEarnings);
 }
 
 function getPythonPackageVariationPersonKey(
@@ -169,7 +158,6 @@ function getPythonPackageEarningsForYear(
 export function addVariationAxesToPythonPackageHouseholdData(
   householdInput: PythonPackageHouseholdData,
   year: string,
-  countryId: string,
   personName?: string | null
 ): PythonPackageHouseholdWithAxes {
   if (Object.keys(householdInput.people).length === 0) {
@@ -187,7 +175,7 @@ export function addVariationAxesToPythonPackageHouseholdData(
     targetPersonKey,
     year
   );
-  const maxEarnings = getPythonPackageHouseholdVariationMaxEarnings(currentEarnings, countryId);
+  const maxEarnings = getPythonPackageHouseholdVariationMaxEarnings(currentEarnings);
   const existingEmploymentIncome = isYearValueMap(targetPerson.employment_income)
     ? targetPerson.employment_income
     : {};

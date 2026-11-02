@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest';
 import { Household } from '@/models/Household';
-import { REMOVED_COUNTRY_IDS } from '@/tests/fixtures/libs/countriesMocks';
 import {
   buildHouseholdVariationAxes,
   getHouseholdVariationIndexForEarnings,
@@ -46,14 +45,11 @@ describe('getHouseholdVariationIndexForEarnings', () => {
 });
 
 describe('getHouseholdVariationMaxEarnings', () => {
-  test.each(['us', 'uk', ...REMOVED_COUNTRY_IDS])(
-    'given low earnings in %s then the range reaches the 200,000 floor',
-    (countryId) => {
-      expect(getHouseholdVariationMaxEarnings(50_000, countryId)).toBe(200_000);
-    }
-  );
+  test('given low earnings then the range reaches the 200,000 floor', () => {
+    expect(getHouseholdVariationMaxEarnings(50_000)).toBe(200_000);
+  });
 
   test('given earnings above half the floor then the range reaches twice the earnings', () => {
-    expect(getHouseholdVariationMaxEarnings(150_000, 'uk')).toBe(300_000);
+    expect(getHouseholdVariationMaxEarnings(150_000)).toBe(300_000);
   });
 });
