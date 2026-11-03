@@ -114,6 +114,35 @@ describe('householdProgrammeChanges', () => {
     ]);
   });
 
+  test("given parts a parameter names, held as the v2 catalog's part values, then the parts are named", () => {
+    // Given: on the v2 routes the parameter is not in the parameter list;
+    // the variables response carries its dated values instead.
+    const partsParameter = 'gov.ofgem.energy_bills_rebate.parts';
+    const variables = METADATA.variables as unknown as Record<string, object>;
+    const v2Metadata = {
+      ...METADATA,
+      parameters: {},
+      v2PartParameterValues: {
+        [partsParameter]: { '2022-01-01': ['ebr_council_tax_rebate', 'ebr_energy_bills_credit'] },
+      },
+      variables: {
+        ...variables,
+        energy_bills_rebate: { ...variables.energy_bills_rebate, adds: partsParameter },
+      },
+    } as unknown as MetadataState;
+
+    // When
+    const changes = householdProgrammeChanges(
+      household({}),
+      household({ rebate: 100 }),
+      v2Metadata,
+      YEAR
+    );
+
+    // Then
+    expect(changes.map((change) => change.variable)).toEqual(['ebr_council_tax_rebate']);
+  });
+
   test('given nothing changes then nothing is named', () => {
     expect(householdProgrammeChanges(household({}), household({}), METADATA, YEAR)).toEqual([]);
   });
