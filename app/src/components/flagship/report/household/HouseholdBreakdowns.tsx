@@ -43,6 +43,11 @@ export interface HouseholdBreakdownSource {
   reform: HouseholdCalculationData;
   /** Whether the reform raises the household's net income: the breakdown's accent. */
   gains: boolean;
+  /**
+   * The household's own amount inputs, which the earnings variation offers
+   * beside its calculated variables (issue #1096); none unless given.
+   */
+  householdInputs?: string[];
 }
 
 /**
@@ -184,7 +189,7 @@ export default function HouseholdBreakdowns({
     };
     content =
       view === 'earnings-variation' ? (
-        <EarningsVariationSubPage {...outputProps} />
+        <EarningsVariationSubPage {...outputProps} alsoOfferInputs={source.householdInputs} />
       ) : (
         <MarginalTaxRatesSubPage {...outputProps} currencyAwareText />
       );
