@@ -2,6 +2,7 @@ import { renderWithCountry, screen, userEvent, within } from '@test-utils';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import HeaderNavigation from '@/components/shared/HomeHeader';
 import appsData from '@/data/apps/apps.json';
+import { colors } from '@/designTokens';
 import { EXPECTED_HEADER_TEXT } from '@/tests/fixtures/components/homeHeader/HeaderMocks';
 import { getToolsMenuEntries } from '@/utils/toolsMenu';
 
@@ -76,6 +77,18 @@ describe('HeaderNavigation', () => {
       // Country selector button is present
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);
+    });
+
+    test("given the teal header then its country selectors' globe icons are white", () => {
+      // When
+      renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US);
+
+      // Then — the wide-screen selector and the one beside the mobile menu button
+      const selectors = screen.getAllByRole('button', { name: /country selector/i });
+      expect(selectors).toHaveLength(2);
+      selectors.forEach((selector) => {
+        expect(selector.querySelector('svg')).toHaveAttribute('stroke', colors.text.inverse);
+      });
     });
 
     test('given component renders then displays header element', () => {
