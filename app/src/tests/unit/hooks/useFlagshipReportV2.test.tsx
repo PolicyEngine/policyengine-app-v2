@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useFlagshipHouseholdPolicies } from '@/hooks/useFlagshipHousehold';
@@ -24,6 +25,7 @@ import {
   EXISTING_REPORT_ID,
   EXISTING_REPORT_METADATA,
   nationwideSimulationMetadata,
+  POLICY_UNAVAILABLE_ERROR,
   REFORM_SIMULATION_ID,
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
 import { seedV2ModelCatalog, v3Wrapper } from '@/tests/fixtures/hooks/v3MetadataWrapper';
@@ -40,6 +42,7 @@ const POLICIES = new Map(
   )
 );
 const baselinePolicyId = vi.hoisted(() => ({ value: '2' }));
+const mockFetchPolicyById = vi.hoisted(() => vi.fn());
 
 vi.mock('@/api/report', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/report')>()),
@@ -54,7 +57,7 @@ vi.mock('@/api/simulation', async (importOriginal) => ({
 }));
 vi.mock('@/api/policy', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/policy')>()),
-  fetchPolicyById: async (_country: string, policyId: string) => POLICIES.get(policyId),
+  fetchPolicyById: (...args: unknown[]) => mockFetchPolicyById(...args),
 }));
 
 const PARAMETERS_PATH = '/v2/model-catalog/parameters';
@@ -84,6 +87,10 @@ describe('useFlagshipReport with v3 on the v2 routes', () => {
   let fetchStub: ReturnType<typeof stubPublicApiFetch>;
 
   beforeEach(async () => {
+    mockFetchPolicyById.mockReset();
+    mockFetchPolicyById.mockImplementation(async (_country: string, policyId: string) =>
+      POLICIES.get(policyId)
+    );
     fetchStub = stubPublicApiFetch({ [PARAMETERS_PATH]: answerParameters });
     await seedV2ModelCatalog();
   });
@@ -115,6 +122,32 @@ describe('useFlagshipReport with v3 on the v2 routes', () => {
     expect(
       requestsTo(fetchStub, PARAMETERS_PATH).flatMap((url) => url.searchParams.getAll('name'))
     ).toEqual([STANDARD_DEDUCTION_SINGLE]);
+  });
+
+  test('given the parameters its policies name are in then each policy is asked for once', async () => {
+    // When
+    const { result } = renderHook(() => useFlagshipReport(EXISTING_REPORT_ID), {
+      wrapper: v3Wrapper(),
+    });
+
+    // Then: the policy read and the missing-parameter check share one request
+    await waitFor(() => expect(result.current.policies).toHaveLength(2));
+    expect(result.current.policiesChecked).toBe(true);
+    expect(mockFetchPolicyById).toHaveBeenCalledTimes(2);
+  });
+
+  test('given a policy that cannot be read then the check settles without waiting for retries', async () => {
+    // Given: the calculator's client, which retries failed queries by default
+    mockFetchPolicyById.mockRejectedValue(POLICY_UNAVAILABLE_ERROR);
+
+    // When
+    const { result } = renderHook(() => useFlagshipReport(EXISTING_REPORT_ID), {
+      wrapper: v3Wrapper(new QueryClient()),
+    });
+
+    // Then: settled well before the default back-off (1 s, 2 s, 4 s) would allow
+    await waitFor(() => expect(result.current.policiesChecked).toBe(true), { timeout: 500 });
+    expect(result.current.missingParameters).toEqual([]);
   });
 
   test('given a report compared with a saved reform then both policies load and parse', async () => {
