@@ -19,6 +19,7 @@ import { SegmentedControl, Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useV3Variables } from '@/hooks/useV3Variables';
+import { SHOW_BUDGET_BY_PROGRAMME } from '@/libs/flagship/reportCards';
 import {
   getBudgetCsvRows,
   getDetailedBudgetCsvRows,
@@ -61,12 +62,6 @@ function getBreakdownOptions(
   }
   return options;
 }
-
-/**
- * The UK's budget by programme card is hidden for now: its bars do not yet
- * read clearly. Its chart and CSV rows stay, to show it again.
- */
-const SHOW_BUDGET_BY_PROGRAMME = false;
 
 type DecileMode = 'absolute' | 'relative';
 const DECILE_MODE_OPTIONS = [
