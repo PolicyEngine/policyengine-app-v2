@@ -199,6 +199,8 @@ describe('FlagshipReportPage with v3 on the v2 routes', () => {
     expect(
       await screen.findByRole('status', { name: 'Loading the household builder' })
     ).toBeInTheDocument();
+    // The section draws its own heading once it shows; until then the tab keeps it.
+    expect(screen.getByRole('heading', { name: 'Household' })).toBeVisible();
     answerVariables();
     await waitFor(() =>
       expect(

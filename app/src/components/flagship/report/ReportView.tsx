@@ -309,6 +309,8 @@ export default function ReportView({
       })
     : (storedMetrics ?? []);
 
+  // One heading for the household tab, whichever of its states draws it.
+  const householdHeading = <SectionHeading id="household" title="Household" />;
   const tabPanel = (id: string, content: ReactNode) => (
     <TabsContent
       value={id}
@@ -569,11 +571,11 @@ export default function ReportView({
                       // then the gate shows it, above the placeholder or a failure.
                       <V3VariablesGate
                         label="Loading the household builder"
-                        heading={<SectionHeading id="household" title="Household" />}
+                        heading={householdHeading}
                       >
                         <HouseholdImpactSection
                           // The section sets its heading's line, with "Compare all" at the right.
-                          heading={<SectionHeading id="household" title="Household" />}
+                          heading={householdHeading}
                           // New policies, year or region start a new form, with nothing run.
                           key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
                           countryId={countryId}
@@ -587,7 +589,7 @@ export default function ReportView({
                       </V3VariablesGate>
                     ) : (
                       <>
-                        <SectionHeading id="household" title="Household" />
+                        {householdHeading}
                         <Text
                           style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
                         >
