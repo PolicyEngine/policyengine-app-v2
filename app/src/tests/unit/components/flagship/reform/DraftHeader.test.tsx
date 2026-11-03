@@ -23,6 +23,7 @@ import {
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import { timePeriodsFrom } from '@/tests/fixtures/libs/yearListMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockCreate = vi.fn();
@@ -172,6 +173,23 @@ describe('DraftHeader', () => {
 
     expect(getDraftReform()?.year).toBe(2027);
     expect(screen.getByRole('button', { name: /run 2027 report/i })).toBeInTheDocument();
+  });
+
+  test('given household years beyond the society-wide years then the year menu offers only the society-wide years', async () => {
+    // Given: society-wide years 2025 to 2027, household years 2022 to 2030
+    Element.prototype.scrollIntoView ??= vi.fn();
+    Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+    seedDeductionMetadata({ householdYears: timePeriodsFrom(2022, 2030) });
+    const user = userEvent.setup();
+    renderHeader();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Year: 2026' }));
+    await user.click(await screen.findByRole('combobox', { name: 'Report year' }));
+
+    // Then
+    const offered = (await screen.findAllByRole('option')).map((option) => option.textContent);
+    expect(offered).toEqual(['2025', '2026', '2027']);
   });
 
   test('given a budget window is chosen then the draft and its run take it', async () => {

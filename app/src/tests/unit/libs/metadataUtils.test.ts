@@ -2,10 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
   getFieldLabel,
   getFieldOptions,
+  getHouseholdDateRange,
+  getHouseholdYearOptions,
+  getSocietyWideYearOptions,
   isDropdownField,
   selectSearchableParameters,
   transformMetadataPayload,
 } from '@/libs/metadataUtils';
+import metadataReducer from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
 import {
   EXPECTED_LABELS,
@@ -20,6 +24,12 @@ import {
   TEST_FIELD_NAMES,
   VISIBLE_SEARCH_PARAMETER,
 } from '@/tests/fixtures/libs/metadataUtilsMocks';
+import {
+  metadataPayloadWithYearLists,
+  stateWithYearLists,
+  YEAR_LISTS,
+  yearValues,
+} from '@/tests/fixtures/libs/yearListMocks';
 
 describe('metadataUtils', () => {
   describe('isDropdownField', () => {
@@ -317,5 +327,112 @@ describe('selectSearchableParameters visibility', () => {
       { value: 'gov.tax.alpha', label: 'Alpha rate' },
       { value: 'gov.tax.zulu', label: 'Zulu rate' },
     ]);
+  });
+});
+
+describe('household and society-wide year lists', () => {
+  describe('getHouseholdYearOptions', () => {
+    it('given household_options then offers the household years, earliest first', () => {
+      // Given
+      const state = stateWithYearLists({
+        societyWideYears: YEAR_LISTS.US_SOCIETY_WIDE_FROM_2024,
+        householdYears: [...YEAR_LISTS.US_HOUSEHOLD].reverse(),
+      });
+
+      // When
+      const result = getHouseholdYearOptions(state);
+
+      // Then
+      expect(result.map((option) => option.value)).toEqual(yearValues(YEAR_LISTS.US_HOUSEHOLD));
+    });
+
+    it('given an empty household list then offers no years, not the society-wide years', () => {
+      // Given
+      const state = stateWithYearLists({
+        societyWideYears: YEAR_LISTS.UK_SOCIETY_WIDE_TODAY,
+        householdYears: [],
+      });
+
+      // When
+      const result = getHouseholdYearOptions(state);
+
+      // Then
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getSocietyWideYearOptions', () => {
+    it('given both lists then offers only the society-wide years', () => {
+      // Given
+      const state = stateWithYearLists({
+        societyWideYears: YEAR_LISTS.US_SOCIETY_WIDE_FROM_2024,
+        householdYears: YEAR_LISTS.US_HOUSEHOLD,
+      });
+
+      // When
+      const result = getSocietyWideYearOptions(state);
+
+      // Then
+      expect(result.map((option) => option.value)).toEqual(
+        yearValues(YEAR_LISTS.US_SOCIETY_WIDE_FROM_2024)
+      );
+    });
+  });
+
+  describe('getHouseholdDateRange', () => {
+    it('given household_options then spans the household years', () => {
+      // Given
+      const state = stateWithYearLists({
+        societyWideYears: YEAR_LISTS.UK_SOCIETY_WIDE_TODAY,
+        householdYears: YEAR_LISTS.UK_HOUSEHOLD,
+      });
+
+      // When
+      const result = getHouseholdDateRange(state);
+
+      // Then
+      expect(result).toEqual({ minDate: '2024-01-01', maxDate: '2032-12-31' });
+    });
+
+    it('given an empty household list then the range is 2022 through 2035, not the society-wide years', () => {
+      // Given
+      const state = stateWithYearLists({
+        societyWideYears: YEAR_LISTS.UK_SOCIETY_WIDE_TODAY,
+        householdYears: [],
+      });
+
+      // When
+      const result = getHouseholdDateRange(state);
+
+      // Then
+      expect(result).toEqual({ minDate: '2022-01-01', maxDate: '2035-12-31' });
+    });
+
+    it('given the metadata has not loaded then the range is 2022 through 2035', () => {
+      // Given
+      const state = { metadata: metadataReducer(undefined, { type: 'init' }) } as RootState;
+
+      // When
+      const result = getHouseholdDateRange(state);
+
+      // Then
+      expect(result).toEqual({ minDate: '2022-01-01', maxDate: '2035-12-31' });
+    });
+  });
+
+  describe('transformMetadataPayload', () => {
+    it('given household_options then keeps the household years', () => {
+      // Given
+      const payload = metadataPayloadWithYearLists({
+        societyWideYears: YEAR_LISTS.US_SOCIETY_WIDE_FROM_2024,
+        householdYears: YEAR_LISTS.US_HOUSEHOLD,
+      });
+
+      // When
+      const result = transformMetadataPayload(payload, 'us');
+
+      // Then
+      expect(result.householdOptions).toEqual({ time_period: YEAR_LISTS.US_HOUSEHOLD });
+    });
   });
 });

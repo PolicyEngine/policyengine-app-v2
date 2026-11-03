@@ -22,6 +22,7 @@ import {
   MOCK_BASIC_INPUTS,
   MOCK_ECONOMY_OPTIONS,
   MOCK_ENTITIES,
+  MOCK_HOUSEHOLD_OPTIONS,
   MOCK_LOADING_STATE,
   MOCK_MODELLED_POLICIES,
   MOCK_PARAMETER_TREE,
@@ -216,6 +217,41 @@ describe('metadataReducer', () => {
       expect(state.modelledPolicies).toEqual(MOCK_MODELLED_POLICIES);
       expectVersion(state, TEST_VERSION);
       expectParameterTree(state, true);
+    });
+
+    test('given fulfilled action with household_options then stores the household years', () => {
+      // Given
+      const initialState = metadataReducer(
+        MOCK_LOADING_STATE,
+        fetchMetadataThunk.pending('metadata-request', TEST_COUNTRY_US)
+      );
+      const apiPayload = createMockApiPayload({ household_options: MOCK_HOUSEHOLD_OPTIONS });
+      const action = {
+        type: fetchMetadataThunk.fulfilled.type,
+        meta: { requestId: 'metadata-request', arg: TEST_COUNTRY_US },
+        payload: { data: apiPayload, country: TEST_COUNTRY_US },
+      };
+
+      // When
+      const state = metadataReducer(initialState, action);
+
+      // Then
+      expect(state.householdOptions).toEqual(MOCK_HOUSEHOLD_OPTIONS);
+      expect(state.economyOptions).toEqual(MOCK_ECONOMY_OPTIONS);
+    });
+
+    test('given another country is requested then the earlier household years are cleared', () => {
+      // Given
+      const loadedState = createMockStateWithData({ householdOptions: MOCK_HOUSEHOLD_OPTIONS });
+
+      // When
+      const state = metadataReducer(
+        loadedState,
+        fetchMetadataThunk.pending('metadata-request', TEST_COUNTRY_UK)
+      );
+
+      // Then
+      expect(state.householdOptions).toEqual(EXPECTED_INITIAL_STATE.householdOptions);
     });
 
     test('given fulfilled action when buildParameterTree returns undefined then sets null tree', () => {

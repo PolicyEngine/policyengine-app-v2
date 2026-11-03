@@ -58,6 +58,7 @@ describe('useSaveSharedReport', () => {
       currentCountry: 'us',
       currentLawId,
       economyOptions: { region: [], time_period: [], datasets: [] },
+      householdOptions: { time_period: [] },
     });
 
     return configureStore({

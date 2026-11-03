@@ -114,6 +114,7 @@ export function createTestStore(currentLawId: number = CURRENT_LAW_ID) {
         entities: {},
         variableModules: {},
         economyOptions: { region: [], time_period: [], datasets: [] },
+        householdOptions: { time_period: [] },
         currentLawId,
         basicInputs: [],
         modelledPolicies: { core: {}, filtered: {} },

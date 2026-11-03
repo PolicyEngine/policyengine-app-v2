@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Button, Separator } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
-import { getDateRange } from '@/libs/metadataUtils';
+import { getHouseholdDateRange } from '@/libs/metadataUtils';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -31,8 +31,9 @@ export default function PolicyParameterSelectorValueSetter({
 }: PolicyParameterSelectorValueSetterProps) {
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
 
-  // Get date ranges from metadata using utility selector
-  const { minDate, maxDate } = useSelector(getDateRange);
+  // The household years' date range: a policy can be used in a household
+  // calculation for any household year
+  const { minDate, maxDate } = useSelector(getHouseholdDateRange);
 
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 

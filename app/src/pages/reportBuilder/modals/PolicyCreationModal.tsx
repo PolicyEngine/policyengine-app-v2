@@ -29,7 +29,7 @@ import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePolicyAssociation, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
-import { getDateRange, selectSearchableParameters } from '@/libs/metadataUtils';
+import { getHouseholdDateRange, selectSearchableParameters } from '@/libs/metadataUtils';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
 import { RootState } from '@/store';
@@ -98,7 +98,8 @@ export function PolicyCreationModal({
   // Get metadata from Redux state
   const metadata = useSelector((state: RootState) => state.metadata);
   const { parameterTree, parameters: parameterMetadata, loading: metadataLoading } = metadata;
-  const { minDate, maxDate } = useSelector(getDateRange);
+  // A policy can be used in a household calculation for any household year.
+  const { minDate, maxDate } = useSelector(getHouseholdDateRange);
 
   // Local policy state
   const [policyLabel, setPolicyLabel] = useState<string>('');

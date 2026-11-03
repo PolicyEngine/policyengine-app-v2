@@ -1,6 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/store';
-import { MetadataApiPayload, MetadataState } from '@/types/metadata';
+import { MetadataApiPayload, MetadataState, MetadataTimePeriod } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 
 /** Parameter paths containing these substrings are excluded from search */
@@ -11,43 +11,74 @@ export interface SearchableParameter {
   label: string; // Leaf label (e.g., "Maximum amount")
 }
 
-// Memoized selectors to prevent unnecessary re-renders
-export const getTaxYears = createSelector(
-  (state: RootState) => state.metadata.economyOptions.time_period,
-  (timePeriods) => {
-    if (!timePeriods) {
-      return [];
-    }
+/**
+ * The years a society-wide (population-wide) calculation can use, from the
+ * metadata's economy_options.time_period.
+ */
+const selectSocietyWideTimePeriods = (state: RootState) =>
+  state.metadata.economyOptions.time_period;
 
-    // Sort by year in ascending order (2025, 2026, 2027, etc.)
-    return timePeriods
-      .map((tp) => ({
-        value: tp.name.toString(),
-        label: tp.label,
-      }))
-      .sort((a, b) => parseInt(a.value, 10) - parseInt(b.value, 10));
+/**
+ * The years a household calculation can use, from the metadata's
+ * household_options.time_period.
+ */
+const selectHouseholdTimePeriods = (state: RootState) =>
+  state.metadata.householdOptions.time_period;
+
+/** Menu options for a year list, earliest year first. */
+function toYearOptions(timePeriods: MetadataTimePeriod[] | undefined) {
+  if (!timePeriods) {
+    return [];
   }
-);
 
-export const getDateRange = createSelector(
-  (state: RootState) => state.metadata.economyOptions.time_period,
-  (timePeriods) => {
-    if (!timePeriods || timePeriods.length === 0) {
-      return {
-        minDate: '2022-01-01',
-        maxDate: '2035-12-31',
-      };
-    }
+  return timePeriods
+    .map((timePeriod) => ({
+      value: timePeriod.name.toString(),
+      label: timePeriod.label,
+    }))
+    .sort((first, second) => parseInt(first.value, 10) - parseInt(second.value, 10));
+}
 
-    // Calculate min/max dates from metadata.economy_options.time_period (following V1 approach)
-    const possibleYears = timePeriods.map((period) => period.name).sort();
-
+/** 1 January of a year list's first year to 31 December of its last. */
+function toDateRange(timePeriods: MetadataTimePeriod[] | undefined) {
+  if (!timePeriods || timePeriods.length === 0) {
     return {
-      minDate: `${possibleYears[0]}-01-01`,
-      maxDate: `${possibleYears[possibleYears.length - 1]}-12-31`,
+      minDate: '2022-01-01',
+      maxDate: '2035-12-31',
     };
   }
+
+  const possibleYears = timePeriods
+    .map((period) => period.name)
+    .sort((first, second) => first - second);
+
+  return {
+    minDate: `${possibleYears[0]}-01-01`,
+    maxDate: `${possibleYears[possibleYears.length - 1]}-12-31`,
+  };
+}
+
+/**
+ * Year menu options for a society-wide report: only the years the Public
+ * API runs society-wide calculations for.
+ */
+export const getSocietyWideYearOptions = createSelector(
+  selectSocietyWideTimePeriods,
+  toYearOptions
 );
+
+/**
+ * Year menu options for a household report, and for policy editors: a
+ * policy can be used in a household calculation for any household year.
+ */
+export const getHouseholdYearOptions = createSelector(selectHouseholdTimePeriods, toYearOptions);
+
+/**
+ * The dates a policy editor can set values for: the household year list's
+ * first to last year, or 2022 to 2035 while the list is empty (before the
+ * metadata loads).
+ */
+export const getHouseholdDateRange = createSelector(selectHouseholdTimePeriods, toDateRange);
 
 export const getRegions = createSelector(
   (state: RootState) => state.metadata.economyOptions.region,
@@ -225,6 +256,7 @@ export function transformMetadataPayload(
     entities: data.entities ?? {},
     variableModules: data.variableModules ?? {},
     economyOptions: data.economy_options ?? { region: [], time_period: [], datasets: [] },
+    householdOptions: data.household_options,
     currentLawId: data.current_law_id ?? 0,
     basicInputs: data.basicInputs ?? [],
     modelledPolicies: data.modelled_policies ?? { core: {}, filtered: {} },

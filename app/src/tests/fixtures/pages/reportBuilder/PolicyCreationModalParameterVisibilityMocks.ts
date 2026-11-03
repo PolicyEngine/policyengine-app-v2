@@ -1,5 +1,16 @@
 import type { MetadataApiPayload } from '@/types/metadata';
 
+/** The years the candidate metadata lists, for society-wide and household calculations alike. */
+const CANDIDATE_TIME_PERIODS = [
+  { name: 2024, label: '2024' },
+  { name: 2025, label: '2025' },
+  { name: 2026, label: '2026' },
+  { name: 2027, label: '2027' },
+  { name: 2028, label: '2028' },
+  { name: 2029, label: '2029' },
+  { name: 2030, label: '2030' },
+];
+
 export const CANDIDATE_METADATA = {
   status: 'ok',
   message: null,
@@ -566,38 +577,10 @@ export const CANDIDATE_METADATA = {
           type: 'national',
         },
       ],
-      time_period: [
-        {
-          name: 2024,
-          label: '2024',
-        },
-        {
-          name: 2025,
-          label: '2025',
-        },
-        {
-          name: 2026,
-          label: '2026',
-        },
-        {
-          name: 2027,
-          label: '2027',
-        },
-        {
-          name: 2028,
-          label: '2028',
-        },
-        {
-          name: 2029,
-          label: '2029',
-        },
-        {
-          name: 2030,
-          label: '2030',
-        },
-      ],
+      time_period: CANDIDATE_TIME_PERIODS,
       datasets: [],
     },
+    household_options: { time_period: CANDIDATE_TIME_PERIODS },
     current_law_id: 1,
     basicInputs: [],
     modelled_policies: {

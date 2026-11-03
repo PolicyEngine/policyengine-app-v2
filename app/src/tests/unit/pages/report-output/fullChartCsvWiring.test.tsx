@@ -23,6 +23,7 @@ const { chartContainerProps, mockMetadata } = vi.hoisted(() => ({
       child_benefit: { label: 'Child benefit' },
     },
     economyOptions: { region: [{ name: 'us', label: 'the US' }] },
+    householdOptions: { time_period: [] },
   },
 }));
 

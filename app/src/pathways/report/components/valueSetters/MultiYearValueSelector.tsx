@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Stack } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { getTaxYears } from '@/libs/metadataUtils';
+import { getHouseholdYearOptions } from '@/libs/metadataUtils';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
@@ -12,8 +12,9 @@ import { ValueSetterProps } from './ValueSetterProps';
 export function MultiYearValueSelector(props: ValueSetterProps) {
   const { param, policy, setIntervals } = props;
 
-  // Get available years from metadata
-  const availableYears = useSelector(getTaxYears);
+  // The household years from metadata: a policy can be used in a household
+  // calculation for any of them
+  const availableYears = useSelector(getHouseholdYearOptions);
   const countryId = useCurrentCountry();
 
   // Country-specific max years configuration

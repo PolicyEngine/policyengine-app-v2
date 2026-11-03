@@ -70,6 +70,7 @@ export const mockMetadataPayload = (overrides?: any): MetadataApiPayload => ({
       time_period: [{ name: 2024, label: '2024' }],
       datasets: [],
     },
+    household_options: { time_period: [{ name: 2024, label: '2024' }] },
     current_law_id: 1,
     basicInputs: ['age', 'employment_income'],
     modelled_policies: {

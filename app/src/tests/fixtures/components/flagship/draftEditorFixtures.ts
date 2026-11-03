@@ -1,5 +1,6 @@
 import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { store } from '@/store';
+import type { MetadataTimePeriod } from '@/types/metadata';
 
 const deduction = (segment: string, label: string, base: number) => ({
   [`gov.irs.deductions.standard.amount.${segment}`]: {
@@ -139,11 +140,18 @@ export const UK_REGIONS = [
 export function seedDeductionMetadata({
   regions = [],
   lastYear = 2027,
+  householdYears,
 }: {
   regions?: Array<{ name: string; label: string; type: string }>;
   /** The model's last year (economy_options.time_period runs 2025 to it). */
   lastYear?: number;
+  /** household_options.time_period; omitted, the same years as economy_options.time_period. */
+  householdYears?: MetadataTimePeriod[];
 } = {}) {
+  const societyWideYears = Array.from({ length: lastYear - 2024 }, (_, index) => ({
+    name: 2025 + index,
+    label: String(2025 + index),
+  }));
   const meta = { arg: 'us', requestId: 'draft-editor-test', requestStatus: 'pending' };
   store.dispatch({ type: fetchMetadataThunk.pending.type, meta });
   store.dispatch({
@@ -159,12 +167,10 @@ export function seedDeductionMetadata({
           variableModules: {},
           economy_options: {
             region: regions,
-            time_period: Array.from({ length: lastYear - 2024 }, (_, index) => ({
-              name: 2025 + index,
-              label: String(2025 + index),
-            })),
+            time_period: societyWideYears,
             datasets: [],
           },
+          household_options: { time_period: householdYears ?? societyWideYears },
           current_law_id: 2,
           basicInputs: [],
           modelled_policies: { core: {}, filtered: {} },

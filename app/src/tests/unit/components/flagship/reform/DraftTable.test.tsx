@@ -24,6 +24,7 @@ import {
   seedDeductionMetadata,
   SINGLE_PATH,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { YEAR_LISTS, yearValues } from '@/tests/fixtures/libs/yearListMocks';
 
 const CTC = {
   path: CTC_PATH,
@@ -782,5 +783,45 @@ describe('DraftTable', () => {
 
     expect(offered).toContain(CTC_PATH);
     expect(offered).not.toContain(LIST_PATH);
+  });
+
+  describe('given household years beyond the society-wide years', () => {
+    // Society-wide years 2025 to 2027 (the seed's default), household years 2022 to 2035:
+    // a policy can be used in a household calculation for any household year.
+    beforeEach(() => {
+      seedDeductionMetadata({ householdYears: YEAR_LISTS.US_HOUSEHOLD });
+      // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+    });
+
+    test('then the by-year grid adds years up to the last household year', async () => {
+      // Given
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Standard deduction amount' }));
+      await user.click(screen.getByRole('tab', { name: 'By year' }));
+
+      // When
+      await user.click(screen.getByRole('button', { name: /^Add \d+ years$/ }));
+
+      // Then
+      expect(screen.getByLabelText('Single, 2035')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Add \d+ years$/ })).not.toBeInTheDocument();
+    });
+
+    test('then a new value can start in any household year', async () => {
+      // Given
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+
+      // When
+      await user.click(screen.getByRole('combobox', { name: 'Applies from' }));
+
+      // Then
+      const offered = (await screen.findAllByRole('option')).map((option) => option.textContent);
+      expect(offered).toEqual(yearValues(YEAR_LISTS.US_HOUSEHOLD));
+    });
   });
 });

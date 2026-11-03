@@ -19,7 +19,7 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { getTaxYears } from '@/libs/metadataUtils';
+import { getHouseholdYearOptions, getSocietyWideYearOptions } from '@/libs/metadataUtils';
 import { FONT_SIZES } from '../constants';
 import type { ReportBuilderState } from '../types';
 import { changeReportYear, householdMatchesReportYear } from '../utils/changeReportYear';
@@ -43,11 +43,15 @@ interface ReportMetaPanelProps {
 }
 
 export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: ReportMetaPanelProps) {
-  const yearOptions = useSelector(getTaxYears);
+  const householdYearOptions = useSelector(getHouseholdYearOptions);
+  const societyWideYearOptions = useSelector(getSocietyWideYearOptions);
   const [yearError, setYearError] = useState<string | null>(null);
   const hasHousehold = reportState.simulations.some(
     (simulation) => simulation.population.household
   );
+  // The menu follows the report's population: a household report offers the
+  // household years, a society-wide report only the society-wide years.
+  const yearOptions = hasHousehold ? householdYearOptions : societyWideYearOptions;
   const needsHouseholdYearCopy = reportState.simulations.some(
     ({ population }) =>
       population.household && !householdMatchesReportYear(population.household, reportState.year)

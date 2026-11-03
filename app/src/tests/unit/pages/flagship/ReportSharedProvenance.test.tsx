@@ -83,6 +83,7 @@ function seedMarylandMetadata() {
           entities: {},
           variableModules: {},
           economy_options: { region: [], time_period: [], datasets: [] },
+          household_options: { time_period: [] },
           current_law_id: 2,
           basicInputs: [],
           modelled_policies: { core: {}, filtered: {} },

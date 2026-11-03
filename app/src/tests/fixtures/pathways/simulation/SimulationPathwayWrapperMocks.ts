@@ -19,6 +19,7 @@ export const mockMetadata = {
   economyOptions: {
     region: [],
   },
+  householdOptions: { time_period: [] },
 };
 
 export const mockUseCreateSimulation = {

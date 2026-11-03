@@ -15,6 +15,7 @@ const initialState: MetadataState = {
   entities: {},
   variableModules: {},
   economyOptions: { region: [], time_period: [], datasets: [] },
+  householdOptions: { time_period: [] },
   currentLawId: 0,
   basicInputs: [],
   modelledPolicies: { core: {}, filtered: {} },
@@ -101,6 +102,7 @@ const metadataSlice = createSlice({
         state.entities = body.entities;
         state.variableModules = body.variableModules;
         state.economyOptions = body.economy_options;
+        state.householdOptions = body.household_options;
         state.currentLawId = body.current_law_id;
         state.basicInputs = body.basicInputs;
         state.modelledPolicies = body.modelled_policies;

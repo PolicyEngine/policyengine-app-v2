@@ -102,6 +102,7 @@ export function createDefaultMetadataState(country: string = TEST_COUNTRIES.US) 
     entities: {},
     variableModules: {},
     economyOptions: { region: [], time_period: [], datasets: [] },
+    householdOptions: { time_period: [] },
     currentLawId: 0,
     basicInputs: [],
     modelledPolicies: { core: {}, filtered: {} },

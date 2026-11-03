@@ -70,6 +70,7 @@ export function createMockStore() {
           entities: {},
           variableModules: {},
           economyOptions: { region: [], time_period: [], datasets: [] },
+          householdOptions: { time_period: [] },
           currentLawId: 0,
           basicInputs: [],
           modelledPolicies: { core: {}, filtered: {} },

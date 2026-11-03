@@ -19,7 +19,7 @@ import { useProvisionFocus } from '@/libs/flagship/draftEditorFocus';
 import { provisionName, summarizeIntervals } from '@/libs/flagship/draftLabels';
 import { ParameterGroup, parameterGroup } from '@/libs/flagship/parameterGroups';
 import { growthOf, growthPhrase, setValueFromYear } from '@/libs/flagship/uprating';
-import { getDateRange } from '@/libs/metadataUtils';
+import { getHouseholdDateRange } from '@/libs/metadataUtils';
 import { selectAddableParameterPaths } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 import { formatCurrentLaw, formatValue } from '@/utils/parameterValues';
@@ -171,7 +171,9 @@ export default function DraftTable({
 }) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const draftable = useSelector(selectAddableParameterPaths);
-  const lastYear = Number(useSelector(getDateRange).maxDate.slice(0, 4));
+  // The household list's last year: a policy can be used in a household
+  // calculation for any household year.
+  const lastYear = Number(useSelector(getHouseholdDateRange).maxDate.slice(0, 4));
   const focus = useProvisionFocus();
   // One row open at a time: the one being worked on.
   const [openKey, setOpenKey] = useState<string | null>(null);

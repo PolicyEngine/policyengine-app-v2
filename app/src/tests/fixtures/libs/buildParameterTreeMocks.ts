@@ -311,6 +311,7 @@ export const mockMetadataApiPayload: MetadataApiPayload = {
       time_period: [],
       datasets: [],
     },
+    household_options: { time_period: [] },
     current_law_id: 1,
     basicInputs: [],
     modelled_policies: {

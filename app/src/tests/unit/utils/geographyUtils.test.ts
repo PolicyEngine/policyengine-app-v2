@@ -503,6 +503,7 @@ describe('geographyUtils Northern Ireland region', () => {
       ...mockMetadataWithRegions().economyOptions,
       region: CURRENT_UK_METADATA_REGIONS,
     },
+    householdOptions: { time_period: [] },
   });
 
   it('given a stored country/ni code then the label is Northern Ireland', () => {

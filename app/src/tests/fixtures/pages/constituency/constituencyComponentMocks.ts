@@ -200,6 +200,7 @@ export const MOCK_METADATA: MetadataState = {
     time_period: [],
     datasets: [],
   },
+  householdOptions: { time_period: [] },
   currentLawId: 1,
   basicInputs: [],
   modelledPolicies: {

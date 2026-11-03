@@ -26,6 +26,7 @@ export const EXPECTED_INITIAL_STATE: MetadataState = {
   entities: {},
   variableModules: {},
   economyOptions: { region: [], time_period: [], datasets: [] },
+  householdOptions: { time_period: [] },
   currentLawId: 0,
   basicInputs: [],
   modelledPolicies: { core: {}, filtered: {} },
@@ -129,6 +130,18 @@ export const MOCK_ECONOMY_OPTIONS = {
   ],
 };
 
+// Mock household options with the same years as the economy options, for tests not about household years
+export const MOCK_MATCHING_HOUSEHOLD_OPTIONS = { time_period: MOCK_ECONOMY_OPTIONS.time_period };
+
+// Mock household options: the household years run two years before the society-wide years
+export const MOCK_HOUSEHOLD_OPTIONS = {
+  time_period: [
+    { name: 2020, label: '2020' },
+    { name: 2021, label: '2021' },
+    ...MOCK_ECONOMY_OPTIONS.time_period,
+  ],
+};
+
 // Mock basic inputs
 export const MOCK_BASIC_INPUTS = ['age', 'employment_income', 'state_name'];
 
@@ -180,6 +193,7 @@ export const createMockApiPayload = (
     entities: MOCK_ENTITIES,
     variableModules: MOCK_VARIABLE_MODULES,
     economy_options: MOCK_ECONOMY_OPTIONS,
+    household_options: MOCK_MATCHING_HOUSEHOLD_OPTIONS,
     current_law_id: TEST_CURRENT_LAW_ID,
     basicInputs: MOCK_BASIC_INPUTS,
     modelled_policies: MOCK_MODELLED_POLICIES,
@@ -199,6 +213,7 @@ export const createMockStateWithData = (overrides?: Partial<MetadataState>): Met
   entities: MOCK_ENTITIES,
   variableModules: MOCK_VARIABLE_MODULES,
   economyOptions: MOCK_ECONOMY_OPTIONS,
+  householdOptions: MOCK_MATCHING_HOUSEHOLD_OPTIONS,
   currentLawId: TEST_CURRENT_LAW_ID,
   basicInputs: MOCK_BASIC_INPUTS,
   modelledPolicies: MOCK_MODELLED_POLICIES,
@@ -239,6 +254,7 @@ export const createExpectedFulfilledState = (
   entities: apiPayload.result.entities,
   variableModules: apiPayload.result.variableModules,
   economyOptions: apiPayload.result.economy_options,
+  householdOptions: apiPayload.result.household_options,
   currentLawId: apiPayload.result.current_law_id,
   basicInputs: apiPayload.result.basicInputs,
   modelledPolicies: apiPayload.result.modelled_policies,

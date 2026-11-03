@@ -32,6 +32,7 @@ const createMockStore = (regions: Array<{ name: string; label: string; type: str
         economyOptions: {
           region: regions,
         },
+        householdOptions: { time_period: [] },
       }),
     },
   });

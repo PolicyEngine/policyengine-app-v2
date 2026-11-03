@@ -2,6 +2,13 @@ import { CURRENT_YEAR } from '@/constants';
 import { MetadataApiPayload, MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
 
+/** The years the mock metadata lists, for society-wide and household calculations alike. */
+const MOCK_TIME_PERIODS = [
+  { name: 2023, label: '2023' },
+  { name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR },
+  { name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR },
+];
+
 export const mockMetadataResponse: MetadataApiPayload = {
   status: 'ok',
   message: null,
@@ -78,11 +85,7 @@ export const mockMetadataResponse: MetadataApiPayload = {
           type: UK_REGION_TYPES.COUNTRY,
         },
       ],
-      time_period: [
-        { name: 2023, label: '2023' },
-        { name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR },
-        { name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR },
-      ],
+      time_period: MOCK_TIME_PERIODS,
       datasets: [
         {
           name: 'frs_2022',
@@ -92,6 +95,7 @@ export const mockMetadataResponse: MetadataApiPayload = {
         },
       ],
     },
+    household_options: { time_period: MOCK_TIME_PERIODS },
     current_law_id: 1,
     basicInputs: ['age', 'household_income'],
     modelled_policies: {
@@ -143,6 +147,7 @@ export const mockCustomResponse: MetadataApiPayload = {
       time_period: [],
       datasets: [],
     },
+    household_options: { time_period: [] },
     current_law_id: 1,
     basicInputs: [],
     modelled_policies: {
