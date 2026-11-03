@@ -150,6 +150,21 @@ describe('useFlagshipReport with v3 on the v2 routes', () => {
     expect(result.current.missingParameters).toEqual([]);
   });
 
+  test('given a policy read fails once then it is asked for again and parses, while the check has settled', async () => {
+    // Given: the calculator's retries, without their back-off
+    mockFetchPolicyById.mockRejectedValueOnce(POLICY_UNAVAILABLE_ERROR);
+
+    // When
+    const { result } = renderHook(() => useFlagshipReport(EXISTING_REPORT_ID), {
+      wrapper: v3Wrapper(new QueryClient({ defaultOptions: { queries: { retryDelay: 0 } } })),
+    });
+
+    // Then
+    await waitFor(() => expect(result.current.policies).toHaveLength(2));
+    expect(result.current.failedPolicyIds).toEqual([]);
+    expect(result.current.policiesChecked).toBe(true);
+  });
+
   test('given a report compared with a saved reform then both policies load and parse', async () => {
     // Given
     baselinePolicyId.value = SAVED_BASELINE_POLICY_METADATA.id;

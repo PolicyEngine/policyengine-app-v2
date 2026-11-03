@@ -123,7 +123,13 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     simulationIds.length > 0 &&
     simulationResults.queries.every((query) => !query.isPending) &&
     policyContentResults.queries.every(
-      (query) => !query.isPending || query.dataUpdatedAt > 0 || query.errorUpdatedAt > 0
+      (query) =>
+        !query.isPending ||
+        query.dataUpdatedAt > 0 ||
+        query.errorUpdatedAt > 0 ||
+        // On the v2 routes the policy read shares this query and keeps
+        // its retries: the check settles at its first failure.
+        query.failureCount > 0
     );
   const missingParameters = combinedMissingParameters(
     policyContentResults.queries.map((query) => query.data)

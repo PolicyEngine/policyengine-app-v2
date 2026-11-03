@@ -103,10 +103,6 @@ function useV2Policies(countryId: string, policyIds: string[], enabled: boolean)
       enabled,
       staleTime: Infinity,
       gcTime: V1_POLICY_GC_TIME,
-      // Not retried, as the v1 routes' read (readV1Policy) is not: the
-      // missing-parameter check shares this query and settles when it
-      // fails, and a failed policy is retried from the page.
-      retry: false,
     })),
     combine: combineStoredPolicies,
   });
