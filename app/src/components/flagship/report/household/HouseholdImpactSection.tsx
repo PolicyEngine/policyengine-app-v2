@@ -615,9 +615,14 @@ function HouseholdCard({
     nonDefaultInputs: number;
     sawRunning: boolean;
   } | null>(null);
+  // When the run on screen started: its progress card mounts again each time
+  // the household is opened, and its clock carries on from here, not from 0.
+  const [runStartedAt, setRunStartedAt] = useState<number>();
   const startRun = () => {
+    const startedAt = Date.now();
+    setRunStartedAt(startedAt);
     pendingRun.current = {
-      startedAt: Date.now(),
+      startedAt,
       peopleCount: household.personCount,
       nonDefaultInputs: nonDefaultInputCount(household, countryId, year, region),
       sawRunning: false,
@@ -883,7 +888,11 @@ function HouseholdCard({
               )}
 
               {running && (
-                <RunProgress title="Calculating this household" expectedMs={EXPECTED_MS} />
+                <RunProgress
+                  title="Calculating this household"
+                  expectedMs={EXPECTED_MS}
+                  startedAt={runStartedAt}
+                />
               )}
 
               {failed && (

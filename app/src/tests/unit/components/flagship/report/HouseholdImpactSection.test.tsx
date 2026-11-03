@@ -432,6 +432,28 @@ describe('HouseholdImpactSection', () => {
     expect(result).toHaveTextContent('Single · no children · 2026');
   });
 
+  test('given a run then switching away and back keeps its clock, not 0s', async () => {
+    const user = userEvent.setup();
+    // The run never ends here.
+    mockFetchHouseholdCalculation.mockImplementation(() => new Promise(() => {}));
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('0s · 0%');
+
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    // A minute later, back on the household that runs.
+    const now = Date.now() + 60_000;
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now);
+    try {
+      await openTile(user, /^Household 1/);
+      expect(await screen.findByRole('status')).toHaveTextContent('1m 0s · 28%');
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
   test('given a calculated household then it is passed on to be saved to the user', async () => {
     const user = userEvent.setup();
     renderSection();
