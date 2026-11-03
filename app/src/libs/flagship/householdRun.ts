@@ -470,11 +470,13 @@ async function calculateOnce(countryId: string, householdId: string, policyId: s
 async function calculateHousehold(
   payload: V1HouseholdCreateEnvelope,
   baselinePolicyId: string,
-  reformPolicyId: string
+  reformPolicyId: string,
+  onCreated?: (householdId: string) => void
 ) {
   try {
     const created = await createHousehold(payload);
     const householdId = String(created.result.household_id);
+    onCreated?.(householdId);
     const countryId = payload.country_id;
     const [baseline, reform] = await Promise.all([
       calculateOnce(countryId, householdId, baselinePolicyId),
@@ -516,16 +518,20 @@ export async function runFlagshipHouseholdPayload({
   payload,
   baselinePolicyId,
   reformPolicyId,
+  onCreated,
 }: {
   year: string;
   payload: V1HouseholdCreateEnvelope;
   baselinePolicyId: string;
   reformPolicyId: string;
+  /** Called once the API has stored the household, before it is calculated. */
+  onCreated?: (householdId: string) => void;
 }): Promise<FlagshipHouseholdRun> {
   const { householdId, baseline, reform } = await calculateHousehold(
     payload,
     baselinePolicyId,
-    reformPolicyId
+    reformPolicyId,
+    onCreated
   );
   return {
     householdId,

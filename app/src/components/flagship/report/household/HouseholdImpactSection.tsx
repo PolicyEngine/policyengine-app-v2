@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import {
   HouseholdVariationKeeper,
   type HouseholdBreakdownSource,
+  type HouseholdVariationSource,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
 import HouseholdComparison from '@/components/flagship/report/household/HouseholdComparison';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
@@ -52,6 +53,7 @@ import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
+import type { HouseholdCalculationData } from '@/types/calculation/household';
 import {
   householdErrorCategory,
   trackHouseholdAdded,
@@ -555,11 +557,37 @@ function HouseholdCard({
     payload: V1HouseholdCreateEnvelope;
     summary: string;
   } | null>(null);
+  // The household's variation run (Varying earnings, Marginal tax rates):
+  // started in the background as soon as the API stores the household,
+  // beside its own run, and held here, as the card stays mounted, so it
+  // and its clock carry on while another household or tab is open. A new
+  // household run starts a new one; the earlier one is let go.
+  const [variationRun, setVariationRun] = useState<
+    (HouseholdVariationSource & { startedAt: number }) | null
+  >(null);
+  const startVariation = useCallback(
+    (householdId: string, payload: V1HouseholdCreateEnvelope) =>
+      setVariationRun((current) =>
+        current?.householdId === householdId
+          ? current
+          : {
+              countryId,
+              year,
+              householdId,
+              baselinePolicyId,
+              reformPolicyId,
+              household: payload.data as unknown as HouseholdCalculationData,
+              startedAt: Date.now(),
+            }
+      ),
+    [countryId, year, baselinePolicyId, reformPolicyId]
+  );
   const run = useFlagshipHouseholdPayload({
     year,
     baselinePolicyId,
     reformPolicyId,
     payload: requested?.payload ?? null,
+    onCreated: startVariation,
   });
   const composition = useMemo(() => household.deriveBuilderComposition(year), [household, year]);
   const basicNonPersonFields = useMemo(
@@ -668,25 +696,17 @@ function HouseholdCard({
         : undefined,
     [result, countryId, year, baselinePolicyId, reformPolicyId]
   );
-  // The result's variation run (Varying earnings, Marginal tax rates), once
-  // either opens: held here, as the card stays mounted, so the run and its
-  // clock carry on while another household or another tab is open.
-  const [variationRun, setVariationRun] = useState<{
-    householdId: string;
-    startedAt: number;
-  } | null>(null);
   const resultId = result?.householdId;
   const variationStartedAt =
     variationRun && variationRun.householdId === resultId ? variationRun.startedAt : undefined;
+  // A result held from earlier (the same household asked for again) stored
+  // nothing new: its variation starts when either output opens.
+  const requestedPayload = requested?.payload;
   const openVariation = useCallback(() => {
-    if (resultId) {
-      setVariationRun((current) =>
-        current?.householdId === resultId
-          ? current
-          : { householdId: resultId, startedAt: Date.now() }
-      );
+    if (resultId && requestedPayload) {
+      startVariation(resultId, requestedPayload);
     }
-  }, [resultId]);
+  }, [resultId, requestedPayload, startVariation]);
 
   // A calculated household is saved to the user in the background; nothing
   // here shows it.
@@ -988,9 +1008,7 @@ function HouseholdCard({
           )}
         </div>
       )}
-      {breakdowns && variationStartedAt !== undefined && (
-        <HouseholdVariationKeeper source={breakdowns} />
-      )}
+      {variationRun && !failed && <HouseholdVariationKeeper source={variationRun} />}
     </section>
   );
 }

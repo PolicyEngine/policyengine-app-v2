@@ -258,17 +258,35 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('region', { name: 'Household 2' })).not.toBeInTheDocument();
   });
 
-  test('given a variation output then its run and clock carry on while another household is open', async () => {
+  test('given Calculate then the variation runs in the background, before its tab opens', async () => {
     const user = userEvent.setup();
+    let finish!: () => void;
+    mockFetchHouseholdCalculation.mockImplementation(
+      (_country: string, _household: string, policyId: string) =>
+        new Promise((resolve) => {
+          const result = policyId === BASELINE_POLICY_ID ? BASELINE_RESULT : REFORM_RESULT;
+          const previous = finish;
+          finish = () => {
+            previous?.();
+            resolve(result);
+          };
+        })
+    );
     renderSection();
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
-    const result = await screen.findByRole('region', { name: 'Household impact' });
     expect(screen.queryByTestId('variation-kept')).not.toBeInTheDocument();
 
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    // The household is stored and still calculating: its variation runs beside it.
+    expect(await screen.findByTestId('variation-kept')).toHaveTextContent(
+      String(CREATED_HOUSEHOLD_ID)
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Calculating this household');
+
+    finish();
+    const result = await screen.findByRole('region', { name: 'Household impact' });
     await user.click(within(result).getByRole('tab', { name: 'Varying earnings' }));
     const startedAt = within(result).getByLabelText('Breakdown').dataset.variationStarted;
     expect(Number(startedAt)).toBeGreaterThan(0);
-    expect(screen.getByTestId('variation-kept')).toHaveTextContent(String(CREATED_HOUSEHOLD_ID));
 
     // Another tab, then another household: the run is still held.
     await user.click(within(result).getByRole('tab', { name: 'Summary' }));
@@ -278,8 +296,25 @@ describe('HouseholdImpactSection', () => {
     await openTile(user, /^Household 1/);
     const back = await screen.findByRole('region', { name: 'Household impact' });
     await user.click(within(back).getByRole('tab', { name: 'Marginal tax rates' }));
-    // The same run: its clock from when it started.
+    // The same run: its clock from when the household was stored.
     expect(within(back).getByLabelText('Breakdown').dataset.variationStarted).toBe(startedAt);
+  });
+
+  test('given changed inputs calculated again then a new variation runs for the new household', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    expect(await screen.findByTestId('variation-kept')).toHaveTextContent(
+      String(CREATED_HOUSEHOLD_ID)
+    );
+
+    mockCreateHousehold.mockResolvedValue({ result: { household_id: 999 } });
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+    await user.click(screen.getByRole('button', { name: 'Married' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate again' }));
+
+    await waitFor(() => expect(screen.getByTestId('variation-kept')).toHaveTextContent('999'));
+    expect(screen.getAllByTestId('variation-kept')).toHaveLength(1);
   });
 
   test('given a household renamed then its tile and panel take the name', async () => {

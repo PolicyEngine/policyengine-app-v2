@@ -5,6 +5,7 @@ import HouseholdBreakdowns, {
   HouseholdVariationKeeper,
   type HouseholdBreakdownSource,
   type HouseholdBreakdownView,
+  type HouseholdVariationSource,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
 import {
   BASELINE_POLICY_ID,
@@ -61,16 +62,18 @@ const SOURCE: HouseholdBreakdownSource = {
   gains: true,
 };
 
+const VARIATION: HouseholdVariationSource = { ...SOURCE, household: BASELINE_RESULT };
+
 /** A household's card: the output open, or none (another household open), and the keeper. */
-function renderCard(kept: boolean) {
+function renderCard(kept: boolean, opened: HouseholdBreakdownView | null = 'earnings-variation') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const Card = ({ view }: { view: HouseholdBreakdownView | null }) => (
     <QueryClientProvider client={queryClient}>
       {view && <HouseholdBreakdowns view={view} source={SOURCE} />}
-      {kept && <HouseholdVariationKeeper source={SOURCE} />}
+      {kept && <HouseholdVariationKeeper source={VARIATION} />}
     </QueryClientProvider>
   );
-  const card = render(<Card view="earnings-variation" />);
+  const card = render(<Card view={opened} />);
   return { show: (view: HouseholdBreakdownView | null) => card.rerender(<Card view={view} />) };
 }
 
@@ -78,6 +81,19 @@ describe('HouseholdVariationKeeper', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetchVariation.mockImplementation(() => new Promise(() => {}));
+  });
+
+  test('given no output open then the variation runs, and opening one asks for nothing new', async () => {
+    const { show } = renderCard(true, null);
+    await waitFor(() => expect(mockFetchVariation).toHaveBeenCalledTimes(2));
+
+    show('marginal-tax-rates');
+
+    expect(
+      await screen.findByText('Calculating marginal tax rates across earnings')
+    ).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(mockFetchVariation).toHaveBeenCalledTimes(2);
   });
 
   test('given the output closed and opened again then the variation is not asked for again', async () => {

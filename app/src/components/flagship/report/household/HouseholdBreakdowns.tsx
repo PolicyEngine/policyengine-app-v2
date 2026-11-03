@@ -106,21 +106,40 @@ function useBreakdownInputs(source: HouseholdBreakdownSource) {
   return { baseline, reform, simulations, policyIds };
 }
 
+/** What a household's variation run needs: the stored household, as it was sent. */
+export interface HouseholdVariationSource {
+  countryId: string;
+  year: string;
+  /** The household's id in the API, as created for the run. */
+  householdId: string;
+  baselinePolicyId: string;
+  reformPolicyId: string;
+  /** The household's people and groups, as sent to the API. */
+  household: HouseholdCalculationData;
+}
+
 /**
- * Keeps a household's variation run going while its output is closed.
- * The v2 outputs fetch the variation themselves, and a fetch with no one
- * left to read it is cancelled: opening another household or another tab
- * would then start the run again from 0. This asks for the same two
- * variations as the outputs (the same query keys), from the household's
- * card, which stays mounted. It shows nothing.
+ * Runs a household's variation (Varying earnings, Marginal tax rates) in
+ * the background, from when the household is stored, beside its own run:
+ * either output then opens on the chart, or on the bar already running.
+ * The v2 outputs ask for the same two variations (the same query keys),
+ * so they read this run rather than start one; and as the household's
+ * card holds it, the run carries on while another household or tab is
+ * open. It shows nothing.
  */
-export function HouseholdVariationKeeper({ source }: { source: HouseholdBreakdownSource }) {
+export function HouseholdVariationKeeper({ source }: { source: HouseholdVariationSource }) {
   const { countryId, year, householdId, baselinePolicyId, reformPolicyId } = source;
-  const { baseline, reform, policyIds } = useBreakdownInputs(source);
+  const samePolicy = baselinePolicyId === reformPolicyId;
+  const policyIds = useMemo(
+    () => (samePolicy ? [baselinePolicyId] : [baselinePolicyId, reformPolicyId]),
+    [baselinePolicyId, reformPolicyId, samePolicy]
+  );
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const { policies } = useFlagshipHouseholdPolicies({ countryId, policyIds, enabled: true });
   const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
-  const reformPolicy = reform ? policies.find((policy) => policy.id === reformPolicyId) : undefined;
+  const reformPolicy = samePolicy
+    ? undefined
+    : policies.find((policy) => policy.id === reformPolicyId);
   const baselinePolicyData = useMemo(
     () => (baselinePolicy ? PolicyAdapter.toCreationPayload(baselinePolicy, parameters).data : {}),
     [baselinePolicy, parameters]
@@ -129,13 +148,15 @@ export function HouseholdVariationKeeper({ source }: { source: HouseholdBreakdow
     () => (reformPolicy ? PolicyAdapter.toCreationPayload(reformPolicy, parameters).data : {}),
     [reformPolicy, parameters]
   );
-  const baselinePerson = useMemo(
-    () => getHeadOfHouseholdPersonName(baseline, year),
-    [baseline, year]
-  );
-  const reformPerson = useMemo(
-    () => (reform ? getHeadOfHouseholdPersonName(reform, year) : null),
-    [reform, year]
+  // The person the outputs vary, as they choose it: the same people under
+  // each policy, so the same person for both.
+  const personName = useMemo(
+    () =>
+      getHeadOfHouseholdPersonName(
+        { householdData: toAppCalculationData(source.household) } as HouseholdCalculationOutput,
+        year
+      ),
+    [source.household, year]
   );
   useHouseholdVariation({
     householdId,
@@ -143,7 +164,7 @@ export function HouseholdVariationKeeper({ source }: { source: HouseholdBreakdow
     policyData: baselinePolicyData,
     year,
     countryId,
-    personName: baselinePerson,
+    personName,
     enabled: !!baselinePolicy,
   });
   useHouseholdVariation({
@@ -152,7 +173,7 @@ export function HouseholdVariationKeeper({ source }: { source: HouseholdBreakdow
     policyData: reformPolicyData,
     year,
     countryId,
-    personName: reformPerson ?? baselinePerson,
+    personName,
     enabled: !!reformPolicy,
   });
   return null;
