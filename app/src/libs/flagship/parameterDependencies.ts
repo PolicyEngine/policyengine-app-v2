@@ -1,16 +1,18 @@
 /**
  * Parameter → variable dependency map, traced from the model.
  *
- * `app/scripts/build-parameter-dependency-map.py` runs policyengine-us with
- * core's FullTracer and records which variables read each parameter path
- * and which variables consume each variable. This module answers the
- * question the validation layer needs: given a reform's parameter paths,
- * which model variables does it move, and how far downstream? Depth is the
- * validation "ring": 0–1 is the primary variable, 2–4 the mechanism it
- * feeds, deeper is incidental.
+ * `app/scripts/build-parameter-dependency-map.py` runs a country model
+ * (policyengine-us, or policyengine-uk) with core's FullTracer and records
+ * which variables read each parameter path and which variables consume
+ * each variable. This module answers the question the validation layer
+ * needs: given a reform's parameter paths, which model variables does it
+ * move, and how far downstream? Depth is the validation "ring": 0–1 is the
+ * primary variable, 2–4 the mechanism it feeds, deeper is incidental. The
+ * household section reads the same map upstream, for the inputs a reform
+ * makes worth filling in.
  *
- * The JSON is loaded lazily — it is a few hundred kilobytes and only the
- * validation surfaces need it.
+ * Each country's JSON is loaded lazily: the US map is over a megabyte and
+ * only the validation and household surfaces need one.
  */
 
 export interface ParameterDependencyMap {
@@ -124,26 +126,41 @@ export function variablesReachedByPaths(
   );
 }
 
+/** The countries with a traced map, each loaded only when first asked for. */
+const MAP_LOADERS: Record<string, () => Promise<{ default: unknown }>> = {
+  us: () => import('@/data/flagship/parameterDependencies.json'),
+  uk: () => import('@/data/flagship/parameterDependencies.uk.json'),
+};
+
 /**
- * Whether a country has a traced map. The map is traced from
- * policyengine-us only, so another country's reform paths would match
- * US variables: such a country gets no map at all.
+ * Whether a country has a traced map. Each map is traced from its own
+ * country's model, so another country's reform paths never match it: a
+ * country without its own map gets none at all.
  */
 export function hasParameterDependencies(countryId: string): boolean {
-  return countryId === 'us';
+  return Object.hasOwn(MAP_LOADERS, countryId);
 }
 
-let cached: Promise<ParameterDependencyMap> | null = null;
+const cached = new Map<string, Promise<ParameterDependencyMap>>();
 
-/** The traced map for policyengine-us, loaded once per session. */
-export function loadParameterDependencies(): Promise<ParameterDependencyMap> {
-  if (!cached) {
-    cached = import('@/data/flagship/parameterDependencies.json').then(
-      (module) => module.default as ParameterDependencyMap
-    );
-    cached.catch(() => {
-      cached = null;
+/**
+ * A country's traced map, loaded once per session. Every caller names its
+ * country, so none is given the US map by default: the validation surfaces
+ * (calibration, scorecard, track record) ask for the US map, as their data
+ * is the US model's.
+ */
+export function loadParameterDependencies(countryId: string): Promise<ParameterDependencyMap> {
+  if (!hasParameterDependencies(countryId)) {
+    return Promise.reject(new Error(`No traced parameter map for ${countryId}.`));
+  }
+  const loader = MAP_LOADERS[countryId];
+  let map = cached.get(countryId);
+  if (!map) {
+    map = loader().then((module) => module.default as ParameterDependencyMap);
+    cached.set(countryId, map);
+    map.catch(() => {
+      cached.delete(countryId);
     });
   }
-  return cached;
+  return map;
 }

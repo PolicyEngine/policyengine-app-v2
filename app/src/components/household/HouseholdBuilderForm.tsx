@@ -59,8 +59,6 @@ export interface HouseholdBuilderFormProps {
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
   isReadOnly?: boolean;
-  /** Leave out the SPM geography choice; the household keeps its own. */
-  hideSpmGeography?: boolean;
   /** "columns" sets the sections side by side on a wide screen; stacked by default. */
   layout?: 'stacked' | 'columns';
   /** Variables to list first in the variable search, in order, under their own heading. */
@@ -259,7 +257,6 @@ export default function HouseholdBuilderForm({
   onChange,
   onMaritalStatusChange,
   onNumChildrenChange,
-  hideSpmGeography = false,
   layout = 'stacked',
   suggestedVariables,
   suggestedLabel = 'Suggested',
@@ -609,16 +606,14 @@ export default function HouseholdBuilderForm({
           : undefined
       }
     >
-      {!hideSpmGeography && (
-        <SPMGeographyChoice
-          household={household}
-          year={year}
-          metadata={metadata}
-          onChange={onChange}
-          disabled={disabled}
-          isReadOnly={isReadOnly}
-        />
-      )}
+      <SPMGeographyChoice
+        household={household}
+        year={year}
+        metadata={metadata}
+        onChange={onChange}
+        disabled={disabled}
+        isReadOnly={isReadOnly}
+      />
       {/* Floating notification when variable added to different entity */}
       {warningMessage && (
         <div

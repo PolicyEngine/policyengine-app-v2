@@ -1,5 +1,8 @@
-import type { FlagshipHouseholdInput } from '@/libs/flagship/householdRun';
+import type { HouseholdCalculationResult } from '@/api/householdCalculation';
+import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
+import { Household } from '@/models/Household';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
+import type { SPMSelection } from '@/types/spm';
 
 export const HOUSEHOLD_YEAR = '2026';
 export const BASELINE_POLICY_ID = '2';
@@ -8,13 +11,36 @@ export const CUSTOM_BASELINE_POLICY_ID = '45678';
 export const REFORM_POLICY_ID = '98765';
 export const CREATED_HOUSEHOLD_ID = 54321;
 
-export const MARRIED_TWO_CHILDREN: FlagshipHouseholdInput = {
-  state: 'NY',
-  married: true,
-  childAges: [4, 12],
-  earnings: 60000,
-  partnerEarnings: 25000,
+/** The .py bundle a calculation response names (synthetic versions, never published pins). */
+export const BASELINE_RUN_BUNDLE: PolicyEngineBundle = {
+  policyengine_version: '9.1.0',
+  model_version: '8.1.0',
+  data_version: null,
+  dataset: null,
 };
+export const REFORM_RUN_BUNDLE: PolicyEngineBundle = {
+  ...BASELINE_RUN_BUNDLE,
+  model_version: '8.2.0',
+};
+/** The SPM settings a US calculation response echoes. */
+export const NATIONAL_SPM_CONFIG: SPMSelection = { geography_kind: 'national' };
+
+/** One policy's calculation as the Public API's v1 household route answers it: the result and how it was made. */
+export function calculationResponse(
+  result: HouseholdCalculationData,
+  provenance: Omit<HouseholdCalculationResult, 'result'> = {}
+): HouseholdCalculationResult {
+  return { result, policyengine_bundle: null, ...provenance };
+}
+
+/** A country whose household results v3 does not list (no rows of taxes and benefits). */
+export const COUNTRY_WITHOUT_HOUSEHOLD_RESULT_ROWS = 'ca';
+
+/** A married couple with two children, as the household builder sends it to the Public API. */
+export const US_COUPLE_WITH_CHILDREN_PAYLOAD = Household.starter('us', HOUSEHOLD_YEAR)
+  .withBuilderMaritalStatus(HOUSEHOLD_YEAR, 'married')
+  .withBuilderChildCount(HOUSEHOLD_YEAR, 2)
+  .toV1CreationPayload();
 
 interface ResultValues {
   netIncome: number;
@@ -232,3 +258,44 @@ export const UK_FAMILY_REFORM_RESULT = ukHouseholdResult({
   universalCredit: 20511.06,
   childBenefit: 2337.4,
 });
+
+/**
+ * Issue #358's UK household, in the report's year: an adult earning £100
+ * and a dependant aged 10 earning £10, in one benefit unit, with a BRMA,
+ * region and local authority that name different places. The Public API
+ * once failed to calculate it; policyengine-uk 2.130.1 calculates it.
+ */
+export const ISSUE_358_HOUSEHOLD = Household.fromV1CreationPayload({
+  country_id: 'uk',
+  data: {
+    people: {
+      you: { age: at(40), employment_income: at(100) },
+      'your first dependent': { age: at(10), employment_income: at(10) },
+    },
+    benunits: { 'your benefit unit': { members: ['you', 'your first dependent'] } },
+    households: {
+      'your household': {
+        members: ['you', 'your first dependent'],
+        brma: at('AYLESBURY'),
+        region: at('NORTH_EAST'),
+        local_authority: at('ABERDEENSHIRE'),
+      },
+    },
+  },
+});
+
+/**
+ * Issue #562's UK household: a couple and a child, built with the
+ * household builder's own controls, with an input set on the benefit unit
+ * (it opts out of Child Benefit) rather than on a person or the household.
+ */
+export const UK_COUPLE_WITH_BENEFIT_UNIT_INPUT = Household.starter('uk', HOUSEHOLD_YEAR)
+  .withBuilderMaritalStatus(HOUSEHOLD_YEAR, 'married')
+  .withBuilderChildCount(HOUSEHOLD_YEAR, 1)
+  .setGroupVariableAtYear(
+    'benunits',
+    'your benefit unit',
+    'child_benefit_opts_out',
+    HOUSEHOLD_YEAR,
+    true
+  );

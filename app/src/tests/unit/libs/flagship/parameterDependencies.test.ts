@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
+  hasParameterDependencies,
+  loadParameterDependencies,
   normalizeParameterPath,
   ParameterDependencyMap,
   readersOfPath,
@@ -84,5 +86,42 @@ describe('variablesReachedByPaths', () => {
 
   test('given unrelated paths then nothing is reached', () => {
     expect(variablesReachedByPaths([STANDARD_DEDUCTION_PATH], map)).toEqual([]);
+  });
+});
+
+describe('each country has its own traced map', () => {
+  test.each(['us', 'uk'])('given %s then it has a traced map', (countryId) => {
+    expect(hasParameterDependencies(countryId)).toBe(true);
+  });
+
+  test('given a country without a traced model then it has none', () => {
+    expect(hasParameterDependencies('ca')).toBe(false);
+  });
+
+  test("given a name an object inherits then it is not a country's map", async () => {
+    expect(hasParameterDependencies('constructor')).toBe(false);
+    await expect(loadParameterDependencies('constructor')).rejects.toThrow(
+      'No traced parameter map for constructor.'
+    );
+  });
+
+  test("given the UK then the map is traced from policyengine-uk, with the UK's parameters", async () => {
+    const map = await loadParameterDependencies('uk');
+
+    expect(map.model.package).toBe('policyengine-uk');
+    expect(readersOfPath('gov.dwp.universal_credit.elements.child.amount', map)).toContain(
+      'uc_individual_child_element'
+    );
+  });
+
+  test('given the US then the map is traced from policyengine-us, as the validation surfaces read it', async () => {
+    expect((await loadParameterDependencies('us')).model.package).toBe('policyengine-us');
+  });
+
+  test('given no country then no map loads, so no caller is given the US map by default', async () => {
+    // @ts-expect-error Every caller names its country.
+    await expect(loadParameterDependencies()).rejects.toThrow(
+      'No traced parameter map for undefined.'
+    );
   });
 });

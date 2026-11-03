@@ -2,21 +2,30 @@
 
 The flagship validation layer needs to know which model variables a reform
 touches, so it can look those variables up in the calibration dashboard and
-the scorecard. Grepping formula source for parameter paths misses bracket,
-scale, and vectorised accesses; the only exact record is what the model
-actually reads at run time. This script runs policyengine-us with
-policyengine-core's FullTracer over a subsample of the default microdata,
-calculates every variable, and writes two edge sets:
+the scorecard, and the report's household section uses the same map to
+suggest the household inputs a reform reads. Grepping formula source for
+parameter paths misses bracket, scale, and vectorised accesses; the only
+exact record is what the model actually reads at run time. This script runs
+a country model with policyengine-core's FullTracer, calculates every
+variable, and writes two edge sets:
 
     readers[parameter_path]  -> variables whose formula read that parameter
     consumers[variable]      -> variables whose formula read that variable
 
-Output: app/src/data/flagship/parameterDependencies.json (consumed by
-app/src/libs/flagship/parameterDependencies.ts).
+The US map traces policyengine-us over a subsample of its default microdata.
+The UK map traces policyengine-uk over a generated population of households
+(see uk_situation): the UK microdata is not public, and the formula reads do
+not depend on which households run, only on which formulas run, so a
+population varied enough to reach every program's eligible cases serves.
 
-Run from a Python environment with policyengine-us installed:
+Output (consumed by app/src/libs/flagship/parameterDependencies.ts):
 
-    python app/scripts/build-parameter-dependency-map.py [--households N] [--year YYYY]
+    us: app/src/data/flagship/parameterDependencies.json
+    uk: app/src/data/flagship/parameterDependencies.uk.json
+
+Run from a Python environment with the country's package installed:
+
+    python app/scripts/build-parameter-dependency-map.py [--country us|uk] [--households N] [--year YYYY]
 
 Two core quirks are handled here rather than upstream:
   * core caches the yearly ParameterNodeAtInstant before its own tracing
@@ -35,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
 import time
 from collections import defaultdict
@@ -42,13 +52,12 @@ from datetime import datetime, timezone
 from importlib.metadata import version
 from pathlib import Path
 
-OUTPUT = (
-    Path(__file__).resolve().parent.parent
-    / "src"
-    / "data"
-    / "flagship"
-    / "parameterDependencies.json"
-)
+DATA_DIRECTORY = Path(__file__).resolve().parent.parent / "src" / "data" / "flagship"
+OUTPUTS = {
+    "us": DATA_DIRECTORY / "parameterDependencies.json",
+    "uk": DATA_DIRECTORY / "parameterDependencies.uk.json",
+}
+PACKAGES = {"us": "policyengine-us", "uk": "policyengine-uk"}
 
 # The simulation's tracer, once tracing is on (see patch_tracer).
 TRACING: dict = {}
@@ -172,24 +181,110 @@ def collect_edges(simulation):
     return readers, consumers
 
 
+# The UK inputs the generated population varies, by how each is drawn. Enum
+# inputs draw any of the model's own values, so the list never names a value
+# the model does not have.
+UK_PERSON_AMOUNTS = {
+    "employment_income": (0.6, 150_000),
+    "self_employment_income": (0.15, 80_000),
+    "private_pension_income": (0.2, 40_000),
+    "savings_interest_income": (0.4, 5_000),
+    "dividend_income": (0.15, 60_000),
+    "property_income": (0.1, 30_000),
+    "childcare_expenses": (0.15, 12_000),
+    "hours_worked": (0.6, 2_400),
+}
+UK_PERSON_FLAGS = {"is_disabled_for_benefits": 0.15, "is_blind": 0.03}
+UK_PERSON_ENUMS = ("pip_dl_category", "pip_m_category", "dla_sc_category", "dla_m_category")
+UK_HOUSEHOLD_AMOUNTS = {"rent": (0.4, 18_000)}
+UK_HOUSEHOLD_ENUMS = ("region", "tenure_type", "council_tax_band")
+
+
+def enum_names(system, variable_name: str) -> list[str]:
+    variable = system.variables[variable_name]
+    return [member.name for member in variable.possible_values]
+
+
+def uk_situation(system, households: int, year: int, seed: int) -> dict:
+    """A varied UK population: singles, couples, children, pensioners, carers' cases,
+    every region, tenure and council tax band, and each income source, drawn with a
+    fixed seed so the map is reproducible."""
+    draw = random.Random(seed)
+    period = str(year)
+    people: dict = {}
+    benunits: dict = {}
+    household_records: dict = {}
+    for household_index in range(households):
+        adult_count = draw.choice((1, 1, 2, 2, 2))
+        child_count = draw.choice((0, 0, 1, 2, 3, 4))
+        # Some households are of pension age, some of working age.
+        adult_age_range = draw.choice(((18, 30), (25, 64), (40, 66), (66, 95)))
+        members = []
+        for adult_index in range(adult_count):
+            person_name = f"household {household_index} adult {adult_index}"
+            person = {"age": {period: draw.randint(*adult_age_range)}}
+            for variable_name, (share, ceiling) in UK_PERSON_AMOUNTS.items():
+                if draw.random() < share:
+                    person[variable_name] = {period: round(draw.uniform(0, ceiling))}
+            for variable_name, share in UK_PERSON_FLAGS.items():
+                person[variable_name] = {period: draw.random() < share}
+            for variable_name in UK_PERSON_ENUMS:
+                if draw.random() < 0.15:
+                    person[variable_name] = {
+                        period: draw.choice(enum_names(system, variable_name))
+                    }
+            people[person_name] = person
+            members.append(person_name)
+        for child_index in range(child_count):
+            person_name = f"household {household_index} child {child_index}"
+            people[person_name] = {"age": {period: draw.randint(0, 19)}}
+            if draw.random() < 0.05:
+                people[person_name]["is_disabled_for_benefits"] = {period: True}
+            members.append(person_name)
+        benunits[f"household {household_index} benefit unit"] = {"members": members}
+        household = {"members": list(members)}
+        for variable_name, (share, ceiling) in UK_HOUSEHOLD_AMOUNTS.items():
+            if draw.random() < share:
+                household[variable_name] = {period: round(draw.uniform(0, ceiling))}
+        for variable_name in UK_HOUSEHOLD_ENUMS:
+            household[variable_name] = {period: draw.choice(enum_names(system, variable_name))}
+        household_records[f"household {household_index}"] = household
+    return {"people": people, "benunits": benunits, "households": household_records}
+
+
+def load_simulation(country: str, households: int, year: int):
+    """The traced simulation and the name of the data it runs on."""
+    if country == "us":
+        from policyengine_us import Microsimulation
+
+        simulation = Microsimulation()
+        # Subsampling rewraps the data as a plain dataframe; keep the real name.
+        dataset_name = getattr(simulation.dataset, "name", None)
+        simulation = simulation.subsample(n=households, seed=0) or simulation
+        return simulation, dataset_name
+    from policyengine_uk import CountryTaxBenefitSystem, Simulation
+
+    situation = uk_situation(CountryTaxBenefitSystem(), households, year, seed=0)
+    simulation = Simulation(situation=situation, trace=True)
+    return simulation, "generated households (scripts/build-parameter-dependency-map.py)"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--households", type=int, default=2000)
+    parser.add_argument("--country", choices=sorted(OUTPUTS), default="us")
+    parser.add_argument("--households", type=int, default=None)
     parser.add_argument("--year", type=int, default=2026)
-    parser.add_argument("--output", type=Path, default=OUTPUT)
+    parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
+    households = args.households or (2000 if args.country == "us" else 400)
+    output = args.output or OUTPUTS[args.country]
 
     patch_tracer()
-    from policyengine_us import Microsimulation
-
     started = time.time()
-    simulation = Microsimulation()
-    # Subsampling rewraps the data as a plain dataframe; keep the real name.
-    dataset_name = getattr(simulation.dataset, "name", None)
-    simulation = simulation.subsample(n=args.households, seed=0) or simulation
+    simulation, dataset_name = load_simulation(args.country, households, args.year)
     simulation.trace = True
     enable_parameter_tracing(simulation)
-    print(f"loaded microdata subsample in {time.time() - started:.0f}s", file=sys.stderr)
+    print(f"loaded {households} households in {time.time() - started:.0f}s", file=sys.stderr)
 
     started = time.time()
     outcomes = calculate_everything(simulation, args.year)
@@ -202,11 +297,11 @@ def main() -> None:
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "model": {
-            "package": "policyengine-us",
-            "version": version("policyengine-us"),
+            "package": PACKAGES[args.country],
+            "version": version(PACKAGES[args.country]),
             "coreVersion": version("policyengine-core"),
             "dataset": dataset_name,
-            "households": args.households,
+            "households": households,
             "year": args.year,
         },
         "variablesCalculated": outcomes["ok"],
@@ -214,10 +309,10 @@ def main() -> None:
         "readers": {path: sorted(names) for path, names in sorted(readers.items())},
         "consumers": {name: sorted(users) for name, users in sorted(consumers.items())},
     }
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, separators=(",", ":")) + "\n")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(payload, separators=(",", ":")) + "\n")
     print(
-        f"wrote {args.output} — {len(readers)} parameter paths, {len(consumers)} consumed variables",
+        f"wrote {output} — {len(readers)} parameter paths, {len(consumers)} consumed variables",
         file=sys.stderr,
     )
 

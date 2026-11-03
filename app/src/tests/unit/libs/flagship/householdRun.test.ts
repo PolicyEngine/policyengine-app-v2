@@ -1,35 +1,35 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
-  buildHouseholdPayload,
   compareHouseholds,
-  defaultHouseholdInput,
-  describeHouseholdInput,
-  isValidHouseholdInput,
   plainHouseholdError,
   readHouseholdTotal,
-  runFlagshipHousehold,
   runFlagshipHouseholdPayload,
-  stateFromRegion,
 } from '@/libs/flagship/householdRun';
 import { Household } from '@/models/Household';
 import {
   BASELINE_POLICY_ID,
   BASELINE_RESULT,
+  BASELINE_RUN_BUNDLE,
+  calculationResponse,
+  COUNTRY_WITHOUT_HOUSEHOLD_RESULT_ROWS,
   CREATED_HOUSEHOLD_ID,
   HOUSEHOLD_YEAR,
   householdResult,
   LOW_EARNER_BASELINE_RESULT,
   LOW_EARNER_REFORM_RESULT,
-  MARRIED_TWO_CHILDREN,
+  NATIONAL_SPM_CONFIG,
   REFORM_POLICY_ID,
   REFORM_RESULT,
   REFORM_RESULT_LOSS,
   REFORM_RESULT_WITH_REMAINDER,
+  REFORM_RUN_BUNDLE,
   UK_BASELINE_RESULT,
   UK_FAMILY_BASELINE_RESULT,
   UK_FAMILY_REFORM_RESULT,
   UK_REFORM_RESULT,
+  US_COUPLE_WITH_CHILDREN_PAYLOAD,
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
+import { SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 
 const mockCreateHousehold = vi.fn();
 const mockFetchHouseholdCalculation = vi.fn();
@@ -37,88 +37,15 @@ const mockFetchHouseholdCalculation = vi.fn();
 vi.mock('@/api/household', () => ({
   createHousehold: (...args: unknown[]) => mockCreateHousehold(...args),
 }));
+/** How each policy's calculation was made, as its response says it: nothing unless a test sets it. */
+const mockCalculationProvenance = vi.fn();
 vi.mock('@/api/householdCalculation', () => ({
-  fetchHouseholdCalculation: (...args: unknown[]) => mockFetchHouseholdCalculation(...args),
+  fetchHouseholdCalculationWithBundle: async (...args: unknown[]) =>
+    calculationResponse(
+      await mockFetchHouseholdCalculation(...args),
+      mockCalculationProvenance(...args)
+    ),
 }));
-
-describe('defaultHouseholdInput', () => {
-  test('given a nationwide report then the household is single, childless, in California', () => {
-    expect(defaultHouseholdInput()).toEqual({
-      state: 'CA',
-      married: false,
-      childAges: [],
-      earnings: 50000,
-      partnerEarnings: 0,
-    });
-  });
-
-  test("given a state or district report then the household starts in that report's state", () => {
-    expect(defaultHouseholdInput('state/ny').state).toBe('NY');
-    expect(defaultHouseholdInput('congressional_district/TX-07').state).toBe('TX');
-  });
-
-  test('given a region that is not a state then no state is read from it', () => {
-    expect(stateFromRegion('us')).toBeUndefined();
-    expect(stateFromRegion('state/zz')).toBeUndefined();
-  });
-});
-
-describe('isValidHouseholdInput', () => {
-  test('given the default household then it can run', () => {
-    expect(isValidHouseholdInput(defaultHouseholdInput())).toBe(true);
-  });
-
-  test('given negative or missing earnings or an adult child then it cannot run', () => {
-    const base = defaultHouseholdInput();
-    expect(isValidHouseholdInput({ ...base, earnings: -1 })).toBe(false);
-    expect(isValidHouseholdInput({ ...base, earnings: Number.NaN })).toBe(false);
-    expect(isValidHouseholdInput({ ...base, childAges: [18] })).toBe(false);
-    expect(isValidHouseholdInput({ ...base, childAges: [2.5] })).toBe(false);
-  });
-
-  test("given a single household then the partner's earnings are not read", () => {
-    expect(isValidHouseholdInput({ ...defaultHouseholdInput(), partnerEarnings: Number.NaN })).toBe(
-      true
-    );
-  });
-});
-
-describe('buildHouseholdPayload', () => {
-  test('given a married couple with two children then every person carries the year', () => {
-    const payload = buildHouseholdPayload(MARRIED_TWO_CHILDREN, HOUSEHOLD_YEAR);
-    const people = payload.data.people;
-
-    expect(payload.country_id).toBe('us');
-    // The API reads the year to calculate from "you"'s age.
-    expect(people.you.age).toEqual({ [HOUSEHOLD_YEAR]: 30 });
-    expect(people.you.employment_income).toEqual({ [HOUSEHOLD_YEAR]: 60000 });
-    expect(people['your partner'].employment_income).toEqual({ [HOUSEHOLD_YEAR]: 25000 });
-    expect(people['your first dependent'].age).toEqual({ [HOUSEHOLD_YEAR]: 4 });
-    expect(people['your second dependent'].age).toEqual({ [HOUSEHOLD_YEAR]: 12 });
-    expect(people['your second dependent'].is_tax_unit_dependent).toEqual({
-      [HOUSEHOLD_YEAR]: true,
-    });
-  });
-
-  test('given a state then the household lives there', () => {
-    const payload = buildHouseholdPayload(MARRIED_TWO_CHILDREN, HOUSEHOLD_YEAR);
-
-    expect(payload.data.households?.['your household'].state_name).toEqual({
-      [HOUSEHOLD_YEAR]: 'NY',
-    });
-    expect(payload.data.marital_units?.['your marital unit'].members).toEqual([
-      'you',
-      'your partner',
-    ]);
-  });
-
-  test('given a single adult then the household has one person', () => {
-    const payload = buildHouseholdPayload(defaultHouseholdInput(), HOUSEHOLD_YEAR);
-
-    expect(Object.keys(payload.data.people)).toEqual(['you']);
-    expect(payload.data.tax_units?.['your tax unit'].members).toEqual(['you']);
-  });
-});
 
 describe('readHouseholdTotal', () => {
   test('given a variable in the API result then its year value is read', () => {
@@ -138,7 +65,7 @@ describe('readHouseholdTotal', () => {
 
 describe('compareHouseholds', () => {
   test('given a federal tax cut then net income and the tax line both show it', () => {
-    const impact = compareHouseholds(BASELINE_RESULT, REFORM_RESULT, HOUSEHOLD_YEAR);
+    const impact = compareHouseholds(BASELINE_RESULT, REFORM_RESULT, HOUSEHOLD_YEAR, 'us');
 
     expect(impact.netIncome).toEqual({ baseline: 72000, reform: 73000, change: 1000 });
     expect(impact.components).toEqual([
@@ -154,7 +81,7 @@ describe('compareHouseholds', () => {
   });
 
   test('given a bigger Child Tax Credit then the credit is listed and unchanged ones are not', () => {
-    const impact = compareHouseholds(BASELINE_RESULT, REFORM_RESULT, HOUSEHOLD_YEAR);
+    const impact = compareHouseholds(BASELINE_RESULT, REFORM_RESULT, HOUSEHOLD_YEAR, 'us');
 
     expect(impact.programs.map((line) => [line.label, line.change])).toEqual([
       ['Child Tax Credit', 1000],
@@ -165,7 +92,8 @@ describe('compareHouseholds', () => {
     const impact = compareHouseholds(
       LOW_EARNER_BASELINE_RESULT,
       LOW_EARNER_REFORM_RESULT,
-      HOUSEHOLD_YEAR
+      HOUSEHOLD_YEAR,
+      'us'
     );
 
     expect(impact.netIncome.change).toBe(0);
@@ -182,7 +110,8 @@ describe('compareHouseholds', () => {
         ctcValue: 1500,
         grossCtc: 6000,
       }),
-      HOUSEHOLD_YEAR
+      HOUSEHOLD_YEAR,
+      'us'
     );
 
     expect(impact.programs).toEqual([
@@ -198,7 +127,12 @@ describe('compareHouseholds', () => {
   });
 
   test('given net income moving beyond the listed parts then the rest is "Other"', () => {
-    const impact = compareHouseholds(BASELINE_RESULT, REFORM_RESULT_WITH_REMAINDER, HOUSEHOLD_YEAR);
+    const impact = compareHouseholds(
+      BASELINE_RESULT,
+      REFORM_RESULT_WITH_REMAINDER,
+      HOUSEHOLD_YEAR,
+      'us'
+    );
 
     expect(impact.components.at(-1)).toEqual({
       id: 'other',
@@ -211,7 +145,7 @@ describe('compareHouseholds', () => {
   });
 
   test('given a tax rise and a benefit cut then both read as losses', () => {
-    const impact = compareHouseholds(BASELINE_RESULT, REFORM_RESULT_LOSS, HOUSEHOLD_YEAR);
+    const impact = compareHouseholds(BASELINE_RESULT, REFORM_RESULT_LOSS, HOUSEHOLD_YEAR, 'us');
 
     expect(impact.netIncome.change).toBe(-900);
     expect(impact.components.map((line) => [line.id, line.effect])).toEqual([
@@ -222,7 +156,7 @@ describe('compareHouseholds', () => {
   });
 
   test('given the same result twice then nothing changes', () => {
-    const impact = compareHouseholds(BASELINE_RESULT, BASELINE_RESULT, HOUSEHOLD_YEAR);
+    const impact = compareHouseholds(BASELINE_RESULT, BASELINE_RESULT, HOUSEHOLD_YEAR, 'us');
 
     expect(impact.netIncome.change).toBe(0);
     expect(impact.components).toEqual([]);
@@ -234,10 +168,21 @@ describe('compareHouseholds', () => {
     delete (missing.households as Record<string, Record<string, unknown>>)['your household']
       .household_net_income;
 
-    expect(() => compareHouseholds(BASELINE_RESULT, missing, HOUSEHOLD_YEAR)).toThrow(
+    expect(() => compareHouseholds(BASELINE_RESULT, missing, HOUSEHOLD_YEAR, 'us')).toThrow(
       `The result has no net income for ${HOUSEHOLD_YEAR}.`
     );
-    expect(() => compareHouseholds(missing, BASELINE_RESULT, HOUSEHOLD_YEAR)).toThrow();
+    expect(() => compareHouseholds(missing, BASELINE_RESULT, HOUSEHOLD_YEAR, 'us')).toThrow();
+  });
+
+  test('given a country without household result rows then the comparison fails, not reads as the US', () => {
+    expect(() =>
+      compareHouseholds(
+        BASELINE_RESULT,
+        REFORM_RESULT,
+        HOUSEHOLD_YEAR,
+        COUNTRY_WITHOUT_HOUSEHOLD_RESULT_ROWS
+      )
+    ).toThrow(`Household results are not available for ${COUNTRY_WITHOUT_HOUSEHOLD_RESULT_ROWS}.`);
   });
 });
 
@@ -321,9 +266,17 @@ describe('runFlagshipHouseholdPayload for the UK', () => {
   });
 });
 
-describe('runFlagshipHousehold', () => {
+describe('runFlagshipHouseholdPayload', () => {
+  const runArgs = {
+    year: HOUSEHOLD_YEAR,
+    payload: US_COUPLE_WITH_CHILDREN_PAYLOAD,
+    baselinePolicyId: BASELINE_POLICY_ID,
+    reformPolicyId: REFORM_POLICY_ID,
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCalculationProvenance.mockReset();
     mockCreateHousehold.mockResolvedValue({ result: { household_id: CREATED_HOUSEHOLD_ID } });
     mockFetchHouseholdCalculation.mockImplementation(
       async (_country: string, _household: string, policyId: string) =>
@@ -332,16 +285,9 @@ describe('runFlagshipHousehold', () => {
   });
 
   test('given a household then it is created once and calculated under both policies', async () => {
-    const run = await runFlagshipHousehold({
-      year: HOUSEHOLD_YEAR,
-      input: MARRIED_TWO_CHILDREN,
-      baselinePolicyId: BASELINE_POLICY_ID,
-      reformPolicyId: REFORM_POLICY_ID,
-    });
+    const run = await runFlagshipHouseholdPayload(runArgs);
 
-    expect(mockCreateHousehold).toHaveBeenCalledWith(
-      buildHouseholdPayload(MARRIED_TWO_CHILDREN, HOUSEHOLD_YEAR)
-    );
+    expect(mockCreateHousehold).toHaveBeenCalledWith(US_COUPLE_WITH_CHILDREN_PAYLOAD);
     expect(mockFetchHouseholdCalculation.mock.calls).toEqual([
       ['us', String(CREATED_HOUSEHOLD_ID), BASELINE_POLICY_ID],
       ['us', String(CREATED_HOUSEHOLD_ID), REFORM_POLICY_ID],
@@ -354,10 +300,8 @@ describe('runFlagshipHousehold', () => {
   });
 
   test('given the same policy as baseline and reform then it is calculated once', async () => {
-    const run = await runFlagshipHousehold({
-      year: HOUSEHOLD_YEAR,
-      input: MARRIED_TWO_CHILDREN,
-      baselinePolicyId: BASELINE_POLICY_ID,
+    const run = await runFlagshipHouseholdPayload({
+      ...runArgs,
       reformPolicyId: BASELINE_POLICY_ID,
     });
 
@@ -365,33 +309,69 @@ describe('runFlagshipHousehold', () => {
     expect(run.netIncome.change).toBe(0);
   });
 
+  test('given each response names its .py bundle and SPM provenance then the run keeps them per policy', async () => {
+    mockCalculationProvenance.mockImplementation(
+      (_country: string, _household: string, policyId: string) => ({
+        policyengine_bundle:
+          policyId === BASELINE_POLICY_ID ? BASELINE_RUN_BUNDLE : REFORM_RUN_BUNDLE,
+        spm_config: NATIONAL_SPM_CONFIG,
+        spm_provenance: SPM_RECEIPT,
+      })
+    );
+
+    const run = await runFlagshipHouseholdPayload(runArgs);
+
+    expect(run.provenance).toEqual({
+      baseline: {
+        policyengineBundle: BASELINE_RUN_BUNDLE,
+        spmConfig: NATIONAL_SPM_CONFIG,
+        spmProvenance: SPM_RECEIPT,
+      },
+      reform: {
+        policyengineBundle: REFORM_RUN_BUNDLE,
+        spmConfig: NATIONAL_SPM_CONFIG,
+        spmProvenance: SPM_RECEIPT,
+      },
+    });
+  });
+
+  test('given one calculation for both policies then the reform reads its provenance', async () => {
+    mockCalculationProvenance.mockReturnValue({ policyengine_bundle: BASELINE_RUN_BUNDLE });
+
+    const run = await runFlagshipHouseholdPayload({
+      ...runArgs,
+      reformPolicyId: BASELINE_POLICY_ID,
+    });
+
+    expect(run.provenance.reform).toEqual(run.provenance.baseline);
+    expect(run.provenance.reform.policyengineBundle).toEqual(BASELINE_RUN_BUNDLE);
+  });
+
+  test('given responses without a bundle or SPM provenance then the run says none, not a guess', async () => {
+    const run = await runFlagshipHouseholdPayload(runArgs);
+
+    expect(run.provenance.baseline).toEqual({ policyengineBundle: null });
+    expect(run.provenance.reform).toEqual({ policyengineBundle: null });
+  });
+
   test('given a calculation failure then the run fails with it', async () => {
     mockFetchHouseholdCalculation.mockRejectedValue(new Error('Household calculation failed'));
 
-    await expect(
-      runFlagshipHousehold({
-        year: HOUSEHOLD_YEAR,
-        input: MARRIED_TWO_CHILDREN,
-        baselinePolicyId: BASELINE_POLICY_ID,
-        reformPolicyId: REFORM_POLICY_ID,
-      })
-    ).rejects.toThrow('Household calculation failed');
+    await expect(runFlagshipHouseholdPayload(runArgs)).rejects.toThrow(
+      'Household calculation failed'
+    );
   });
 
   test('given a timeout or a network failure then the run fails in plain words', async () => {
-    const args = {
-      year: HOUSEHOLD_YEAR,
-      input: MARRIED_TWO_CHILDREN,
-      baselinePolicyId: BASELINE_POLICY_ID,
-      reformPolicyId: REFORM_POLICY_ID,
-    };
     mockFetchHouseholdCalculation.mockRejectedValue(
       new Error('Household calculation timed out after 50 seconds (client-side timeout)')
     );
-    await expect(runFlagshipHousehold(args)).rejects.toThrow('The calculation took too long.');
+    await expect(runFlagshipHouseholdPayload(runArgs)).rejects.toThrow(
+      'The calculation took too long.'
+    );
 
     mockCreateHousehold.mockRejectedValue(new TypeError('Failed to fetch'));
-    await expect(runFlagshipHousehold(args)).rejects.toThrow(
+    await expect(runFlagshipHouseholdPayload(runArgs)).rejects.toThrow(
       'Could not reach PolicyEngine. Check your connection.'
     );
   });
@@ -408,22 +388,5 @@ describe('plainHouseholdError', () => {
     const error = new TypeError('Load failed');
 
     expect(plainHouseholdError(error).cause).toBe(error);
-  });
-});
-
-describe('describeHouseholdInput', () => {
-  test('given a household then it reads as one short line', () => {
-    expect(describeHouseholdInput(MARRIED_TWO_CHILDREN)).toBe(
-      'Married · 2 children · $60,000 and $25,000 earnings · New York'
-    );
-    expect(describeHouseholdInput(defaultHouseholdInput())).toBe(
-      'Single · no children · $50,000 earnings · California'
-    );
-  });
-
-  test('given the UK then amounts read in pounds', () => {
-    expect(describeHouseholdInput(MARRIED_TWO_CHILDREN, 'uk')).toContain(
-      '£60,000 and £25,000 earnings'
-    );
   });
 });
