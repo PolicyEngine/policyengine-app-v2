@@ -238,6 +238,8 @@ export const STATE_ERROR: StateEconomyResponse = stateFailure();
 /** The note the Public API ends a failed state run's message with: until then it answers with the same failure. */
 export const STATE_RETRY_NOTE =
   'A new run for this state can be requested 2 minutes after this failure.';
+/** How long after such a failure the Public API runs the state again. */
+export const STATE_RETRY_WAIT_MS = 2 * 60 * 1000;
 /** The reason the app gives for a failure with that note. */
 export const STATE_RETRY_WAIT_REASON =
   'The simulation did not finish. Retry can start a new run 2 minutes after the failure';

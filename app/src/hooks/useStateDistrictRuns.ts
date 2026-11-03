@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { useQueries, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import {
   districtsOf,
@@ -52,9 +52,15 @@ const RECORDS_FAILED_MESSAGE = 'Checking for a saved result failed';
 /**
  * The Public API ends a failed state run's message with when a new run can be
  * requested ("… can be requested 2 minutes after this failure."); until then
- * it answers every request, Retry's too, with the same failure.
+ * it answers every request, Retry's too, with the same failure, so Retry is
+ * not offered for that state until then.
  */
 const RETRY_WAIT_PATTERN = /can be requested (\d+) minutes? after this failure/;
+
+/** The minutes the Public API's failure message says to wait before a new run, if it says. */
+function retryWaitMinutes(message: string): number | null {
+  return Number(message.match(RETRY_WAIT_PATTERN)?.[1]) || null;
+}
 
 type District = USCongressionalDistrictBreakdownItem;
 
@@ -76,7 +82,15 @@ export interface StateDistrictRecords {
 }
 
 /** A state's run as the query cache holds it: its districts once complete, or null. */
-type StateRun = PolledRun<District[] | null>;
+type StateRun = PolledRun<District[] | null> & {
+  /** For a failure the Public API keeps for a while: when (epoch ms) Retry can run the state again. */
+  retryAt?: number;
+};
+
+/** A state's economy answer, with how long the Public API keeps its failure, when it says. */
+type StateRunAnswer = EconomyCalculationResponse<SocietyWideReportOutput> & {
+  retryWaitMs?: number;
+};
 
 export type StateDistrictRunsStatus =
   | 'checking'
@@ -123,11 +137,18 @@ export interface StateDistrictRuns {
   progress: number;
   /** False until the report's policies and year, and the states, are known. */
   canStart: boolean;
-  /** Whether Retry would ask again for a failed state or failed records. */
+  /**
+   * Whether Retry would ask again for a failed state or failed records. A
+   * state whose failure the Public API keeps for a while counts only once
+   * that time has passed since the failure arrived.
+   */
   canRetry: boolean;
   /** Computes every state whose districts are not in, for every view of this year. */
   start: () => void;
-  /** Asks again for each failed state and failed records; a result with no districts stays. */
+  /**
+   * Asks again for each failed state that can run again, and failed records;
+   * a result with no districts stays.
+   */
   retry: () => void;
 }
 
@@ -329,7 +350,7 @@ function isFailedCalculation(message: string): boolean {
  */
 function calculationFailureReason(message: string): string {
   const reason = describeCalculationError(message).title;
-  const minutes = Number(message.match(RETRY_WAIT_PATTERN)?.[1]);
+  const minutes = retryWaitMinutes(message);
   if (!minutes) {
     return reason;
   }
@@ -346,7 +367,7 @@ function calculationFailureReason(message: string): string {
 async function fetchStateRun(
   { reformPolicyId, baselinePolicyId, year }: Required<StateDistrictRunsRequest>,
   region: string
-): Promise<EconomyCalculationResponse<SocietyWideReportOutput>> {
+): Promise<StateRunAnswer> {
   try {
     // Only the region and year: the Public API picks the state's dataset.
     return await fetchSocietyWideCalculation('us', reformPolicyId, baselinePolicyId, {
@@ -355,10 +376,12 @@ async function fetchStateRun(
     });
   } catch (error) {
     if (error instanceof Error && isFailedCalculation(error.message)) {
+      const minutes = retryWaitMinutes(error.message);
       return {
         status: 'error',
         result: null,
         error: calculationFailureReason(error.message),
+        retryWaitMs: minutes ? minutes * 60 * 1000 : undefined,
       };
     }
     throw error;
@@ -380,15 +403,24 @@ async function pollStateRun(
   signal: AbortSignal
 ): Promise<StateRun> {
   const runKey = stateDistrictRunQueryKey({ reformPolicyId, baselinePolicyId, year }, region);
+  let retryWaitMs: number | undefined;
   const run = await requestLimitFor(queryClient).run(() => {
     // Read when the request is sent, so the clock starts then, not in the queue.
     const previous = queryClient.getQueryData<StateRun>(runKey);
     return pollRun(
-      () => fetchStateRun({ reformPolicyId, baselinePolicyId, year }, region),
+      async () => {
+        const answer = await fetchStateRun({ reformPolicyId, baselinePolicyId, year }, region);
+        retryWaitMs = answer.retryWaitMs;
+        return answer;
+      },
       previous && { ...previous, result: null },
       STATE_RUN_POLL_OPTIONS
     );
   }, signal);
+  if (run.status === 'error' && retryWaitMs) {
+    // Counted from when the failure arrived, which is no earlier than when the Public API kept it.
+    return { ...run, result: null, retryAt: Date.now() + retryWaitMs };
+  }
   if (run.status !== 'complete') {
     return { ...run, result: null };
   }
@@ -444,7 +476,7 @@ type StateStanding =
   | { kind: 'no-districts' }
   | { kind: 'waiting' }
   | { kind: 'computing'; progress: number }
-  | { kind: 'failed'; error: string };
+  | { kind: 'failed'; error: string; retryAt?: number };
 
 /**
  * A nationwide US report's congressional districts, from each state's own
@@ -540,7 +572,11 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
     }
     // A failed state asked for again waits for its new answer.
     if (data?.status === 'error' && !run.isFetching) {
-      return { kind: 'failed', error: data.error ?? STATE_RUN_POLL_OPTIONS.failureMessage };
+      return {
+        kind: 'failed',
+        error: data.error ?? STATE_RUN_POLL_OPTIONS.failureMessage,
+        retryAt: data.retryAt,
+      };
     }
     return { kind: 'waiting' };
   });
@@ -611,12 +647,34 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
             ? 'partial'
             : 'error';
 
+  // A failed state the Public API still answers with its failure is not asked
+  // again, and offers no Retry, until its retryAt; this view is drawn again then.
+  const now = Date.now();
+  const canAskAgain = (standing: StateStanding) =>
+    standing.kind === 'records-failed' ||
+    (standing.kind === 'failed' && (standing.retryAt ?? 0) <= now);
+  const nextRetryAt = Math.min(
+    ...standings.map((standing) =>
+      standing.kind === 'failed' && standing.retryAt && standing.retryAt > now
+        ? standing.retryAt
+        : Infinity
+    )
+  );
+  const [, redraw] = useReducer((count: number) => count + 1, 0);
+  useEffect(() => {
+    if (nextRetryAt === Infinity) {
+      return undefined;
+    }
+    const timer = setTimeout(redraw, nextRetryAt - Date.now());
+    return () => clearTimeout(timer);
+  }, [nextRetryAt]);
+
   const askAgain = (restartRuns: boolean) => {
     states.forEach((_state, index) => {
       const standing = standings[index];
       if (standing.kind === 'records-failed') {
         void lookups[index].refetch();
-      } else if (restartRuns && standing.kind === 'failed') {
+      } else if (restartRuns && standing.kind === 'failed' && canAskAgain(standing)) {
         void runs[index].refetch();
       }
     });
@@ -637,7 +695,7 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
     totalStates,
     progress,
     canStart,
-    canRetry: calculationFailures.length > 0,
+    canRetry: standings.some(canAskAgain),
     start: () => {
       if (!canStart) {
         return;

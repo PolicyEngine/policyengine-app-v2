@@ -32,6 +32,7 @@ import {
   STATE_REPORT_PENDING,
   STATE_REQUEST_FAILURE_REASON,
   STATE_RETRY_NOTE,
+  STATE_RETRY_WAIT_MS,
   STATE_RETRY_WAIT_REASON,
   STATE_RUNS_BASELINE_POLICY_ID,
   STATE_RUNS_REFORM_POLICY_ID,
@@ -686,6 +687,55 @@ describe('useStateDistrictRuns compute', () => {
     expect(result.current.calculationFailures).toEqual([
       { label: 'Texas', error: STATE_RETRY_WAIT_REASON },
     ]);
+  });
+
+  test('given a failed calculation whose answer says when a new run can be requested then Retry is offered only from then', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) =>
+          request === 0
+            ? stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`)
+            : stateOk(TEXAS),
+      }),
+    });
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.canRetry).toBe(false);
+    await act(() => vi.advanceTimersByTimeAsync(STATE_RETRY_WAIT_MS - 1000));
+    expect(result.current.canRetry).toBe(false);
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+
+    // Then
+    expect(result.current.canRetry).toBe(true);
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    expect(api.economyRequestsFor(TEXAS)).toHaveLength(2);
+  });
+
+  test('given Retry before a failure can run again then only the states that can run again are asked again', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: () => stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`),
+        [OHIO]: (request) => (request === 0 ? stateErrorPage() : stateOk(OHIO)),
+      }),
+    });
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.canRetry).toBe(true);
+
+    // When
+    act(() => result.current.retry());
+
+    // Then
+    await waitFor(() => expect(result.current.completedCount).toBe(STATE_COUNT - 1));
+    expect(api.economyRequestsFor(OHIO)).toHaveLength(2);
+    expect(api.economyRequestsFor(TEXAS)).toHaveLength(1);
+    expect(result.current.status).toBe('partial');
+    expect(result.current.canRetry).toBe(false);
   });
 
   test('given a request answered with an error page then the state fails with a short reason, not the page', async () => {
