@@ -41,6 +41,7 @@ import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
 import { pathsMissingFromModel } from '@/libs/flagship/missingParameters';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
@@ -295,6 +296,9 @@ export function DraftRunBar({
   const runReport = useRunFlagshipReport();
   const reformStore = useReformStore();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const catalogMissingNames = useSelector(
+    (state: RootState) => state.metadata.v2MissingParameterNames
+  );
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   const taxYears = useSelector(getTaxYears);
   // Saving keeps what the run models: the values that differ from current law.
@@ -407,9 +411,12 @@ export function DraftRunBar({
   // A draft kept across a model update can change a parameter the model
   // has since dropped. Saving and running would both send it, and the API
   // refuses a policy that sets it, so it stops both.
+  // On the v2 routes only the names the catalog lacks count: the rest may
+  // not have loaded yet.
   const draftMissingParameters = pathsMissingFromModel(
     adjusted.map((provision) => provision.path),
-    parameters
+    parameters,
+    V3_API_ROUTES === 'v2' ? (catalogMissingNames ?? []) : undefined
   );
 
   return (

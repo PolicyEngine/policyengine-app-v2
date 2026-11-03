@@ -58,6 +58,28 @@ describe('pathsMissingFromModel', () => {
   test('given a path outside gov, which the metadata never lists, then it is not judged', () => {
     expect(pathsMissingFromModel(['household.example_setting'], MODEL_PARAMETERS)).toEqual([]);
   });
+
+  describe('with the names a v2 catalog version lacks (parameters loaded on demand)', () => {
+    test('given a path not loaded yet that the catalog has not refused then it is not judged', () => {
+      expect(pathsMissingFromModel([REMOVED_US_PARAMETER], MODEL_PARAMETERS, [])).toEqual([]);
+    });
+
+    test('given a path the catalog lacks then it is missing, even before any parameter loads', () => {
+      expect(pathsMissingFromModel([REMOVED_US_PARAMETER], {}, [REMOVED_US_PARAMETER])).toEqual([
+        REMOVED_US_PARAMETER,
+      ]);
+    });
+
+    test('given a loaded path that is only a node then it is missing, as no policy can set it', () => {
+      expect(
+        pathsMissingFromModel(
+          ['gov.irs.deductions.standard.amount', 'gov.irs.credits.ctc.amount.base'],
+          MODEL_PARAMETERS,
+          []
+        )
+      ).toEqual(['gov.irs.deductions.standard.amount']);
+    });
+  });
 });
 
 describe('mergedParameterPaths', () => {

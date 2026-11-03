@@ -47,16 +47,34 @@ export function combinedMissingParameters(
  * only parameters under `gov`, as the API's metadata sends them, so a path
  * outside it is not judged. Empty until the model's parameters have
  * loaded, so nothing is blocked before it can be checked.
+ *
+ * On the v2 routes the parameters load on demand, so the list holds only
+ * those loaded so far: pass `catalogMissingNames`, the names the catalog
+ * version said it does not have. A path is then missing when the catalog
+ * lacks it, or when it is loaded as a node; a path not loaded yet is not
+ * judged.
  */
 export function pathsMissingFromModel(
   paths: string[],
-  parameters: ParameterMetadataCollection | null | undefined
+  parameters: ParameterMetadataCollection | null | undefined,
+  catalogMissingNames?: readonly string[]
 ): string[] {
-  if (!parameters || Object.keys(parameters).length === 0) {
+  const loaded = parameters ?? {};
+  const isLeafParameter = (path: string) =>
+    Object.hasOwn(loaded, path) && loaded[path].type === 'parameter';
+  if (catalogMissingNames) {
+    const lacked = new Set(catalogMissingNames);
+    return mergedParameterPaths(
+      paths.filter(
+        (path) =>
+          path.startsWith('gov') &&
+          (lacked.has(path) || (Object.hasOwn(loaded, path) && !isLeafParameter(path)))
+      )
+    );
+  }
+  if (Object.keys(loaded).length === 0) {
     return [];
   }
-  const isLeafParameter = (path: string) =>
-    Object.hasOwn(parameters, path) && parameters[path].type === 'parameter';
   return mergedParameterPaths(
     paths.filter((path) => path.startsWith('gov') && !isLeafParameter(path))
   );

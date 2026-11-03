@@ -315,6 +315,9 @@ export default function ReformsPage() {
   const currency = currencySymbol(countryId);
   const queryClient = useQueryClient();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const catalogMissingNames = useSelector(
+    (state: RootState) => state.metadata.v2MissingParameterNames
+  );
   const currentLawPolicyId =
     Number(useSelector((state: RootState) => state.metadata.currentLawId)) || undefined;
   const appLocation = useAppLocation();
@@ -1150,7 +1153,11 @@ export default function ReformsPage() {
               // model no longer lists stops it too, whatever the API could say.
               const missing = mergedParameterPaths(
                 reportedMissing,
-                pathsMissingFromModel(changedPaths, parameters)
+                pathsMissingFromModel(
+                  changedPaths,
+                  parameters,
+                  V3_API_ROUTES === 'v2' ? (catalogMissingNames ?? []) : undefined
+                )
               );
               if (missing.length > 0) {
                 setRerunMissingParameters(missing);
