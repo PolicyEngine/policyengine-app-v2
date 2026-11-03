@@ -29,7 +29,10 @@ vi.mock('@/utils/chartUtils', async (importOriginal) => ({
 }));
 
 /** The budget by programme card these tests cover, which the report hides for now. */
-vi.mock('@/libs/flagship/reportCards', () => ({ SHOW_BUDGET_BY_PROGRAMME: true }));
+vi.mock('@/libs/flagship/reportCards', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/libs/flagship/reportCards')>()),
+  SHOW_BUDGET_BY_PROGRAMME: true,
+}));
 
 /** v3 after the switch: V3_API_ROUTES is 'v2'. */
 vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({

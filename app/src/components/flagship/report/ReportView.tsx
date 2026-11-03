@@ -309,7 +309,8 @@ export default function ReportView({
       })
     : (storedMetrics ?? []);
 
-  // One heading for the household tab, whichever of its states draws it.
+  // One heading for the household tab's states that draw one: waiting for
+  // the variables, the section itself, and the policies not known yet.
   const householdHeading = <SectionHeading id="household" title="Household" />;
   const tabPanel = (id: string, content: ReactNode) => (
     <TabsContent
