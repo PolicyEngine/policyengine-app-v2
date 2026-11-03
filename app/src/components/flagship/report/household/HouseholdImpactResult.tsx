@@ -13,6 +13,7 @@ import VariableInfoTip from '@/components/household/VariableInfoTip';
 import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
+import type { HouseholdProgrammeChange } from '@/libs/flagship/householdProgrammeChanges';
 import type { FlagshipHouseholdImpact, HouseholdLineChange } from '@/libs/flagship/householdRun';
 import { trackHouseholdOutputViewed, type HouseholdOutputTab } from '@/utils/analytics';
 
@@ -213,6 +214,7 @@ export default function HouseholdImpactResult({
   impact,
   summary,
   breakdowns,
+  programmes,
   variationStartedAt,
   onVariationOpen,
   countryId = 'us',
@@ -231,6 +233,12 @@ export default function HouseholdImpactResult({
   countryId?: CountryId;
   /** A model variable's description, for the tip beside each line. */
   describe?: DescribeVariable;
+  /**
+   * The programmes the reform changes, from net income's tree, largest
+   * first: "What changes" names them. Without them, it names the lines of
+   * the summary tables.
+   */
+  programmes?: HouseholdProgrammeChange[];
 }) {
   const [view, setView] = useState<'summary' | HouseholdBreakdownView>('summary');
   const { netIncome, components, programs } = impact;
@@ -240,12 +248,37 @@ export default function HouseholdImpactResult({
   const noChange = change === 0 && components.length === 0 && programs.length === 0;
   const id = useId();
 
-  // The changes that drive the result, largest first: what a reader looks for next.
-  const drivers = [...programs, ...components]
-    .filter((line) => Math.round(line.change) !== 0)
-    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
-    .filter((line, index, all) => all.findIndex((other) => other.label === line.label) === index)
-    .slice(0, 3);
+  // The changes that drive the result, largest first: what a reader looks for
+  // next. Each programme that changes, signed by what it does to net income
+  // (a tax that rises reads negative); else the summary's lines.
+  const changed: { id: string; line: HouseholdLineChange; amount: number; effect: number }[] =
+    programmes && programmes.length > 0
+      ? programmes
+          .filter((programme) => Math.round(programme.effect) !== 0)
+          .map((programme) => ({
+            id: programme.variable,
+            line: {
+              id: programme.variable,
+              label: programme.label,
+              variable: programme.variable,
+              baseline: 0,
+              reform: programme.change,
+              change: programme.change,
+              effect: programme.effect,
+            },
+            amount: programme.effect,
+            effect: programme.effect,
+          }))
+      : [...programs, ...components]
+          .filter((line) => Math.round(line.change) !== 0)
+          .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+          .filter(
+            (line, index, all) => all.findIndex((other) => other.label === line.label) === index
+          )
+          .map((line) => ({ id: line.id, line, amount: line.change, effect: line.effect }));
+  const shownCount = programmes && programmes.length > 0 ? 4 : 3;
+  const drivers = changed.slice(0, shownCount);
+  const moreCount = changed.length - drivers.length;
 
   return (
     // No frame or title of its own: the household's panel names it, and the
@@ -328,9 +361,9 @@ export default function HouseholdImpactResult({
             >
               What changes
             </span>
-            {drivers.map((line) => (
+            {drivers.map(({ id: key, line, amount, effect }) => (
               <div
-                key={line.id}
+                key={key}
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -345,13 +378,52 @@ export default function HouseholdImpactResult({
                   style={{
                     fontVariantNumeric: 'tabular-nums',
                     fontWeight: typography.fontWeight.medium,
-                    color: effectColor(line.effect),
+                    color: effectColor(effect),
                   }}
                 >
-                  {signedMoney(line.change, countryId)}
+                  {signedMoney(amount, countryId)}
                 </span>
               </div>
             ))}
+            {moreCount > 0 &&
+              (breakdowns ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    trackHouseholdOutputViewed({
+                      countryId,
+                      tab: VIEW_ANALYTICS_NAMES['net-income'],
+                    });
+                    setView('net-income');
+                  }}
+                  className="tw:cursor-pointer tw:self-start tw:border-0 tw:bg-transparent tw:p-0 tw:underline"
+                  style={{ fontSize: typography.fontSize.sm, color: colors.primary[700] }}
+                >
+                  and {moreCount} more
+                </button>
+              ) : (
+                <span style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                  and {moreCount} more
+                </span>
+              ))}
+            {programmes && changed.length > 1 && (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: spacing.md,
+                  paddingTop: spacing.sm,
+                  borderTop: `1px solid ${colors.border.light}`,
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.fontWeight.medium,
+                }}
+              >
+                <span style={{ color: colors.text.primary }}>Net income</span>
+                <span style={{ fontVariantNumeric: 'tabular-nums', color: effectColor(change) }}>
+                  {signedMoney(change, countryId)}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>

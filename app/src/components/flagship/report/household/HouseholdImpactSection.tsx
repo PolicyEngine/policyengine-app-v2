@@ -3,6 +3,7 @@ import { IconPencil, IconPlus, IconTable, IconTrash } from '@tabler/icons-react'
 import { useSelector } from 'react-redux';
 import {
   HouseholdVariationKeeper,
+  toAppCalculationData,
   type HouseholdBreakdownSource,
   type HouseholdVariationSource,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
@@ -35,6 +36,7 @@ import {
   householdEarnings,
   householdState,
 } from '@/libs/flagship/householdDescription';
+import { householdProgrammeChanges } from '@/libs/flagship/householdProgrammeChanges';
 import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
 import {
   describesAHousehold,
@@ -53,7 +55,11 @@ import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
-import type { HouseholdCalculationData } from '@/types/calculation/household';
+import type {
+  HouseholdCalculationData,
+  HouseholdCalculationOutput,
+} from '@/types/calculation/household';
+import type { MetadataState } from '@/types/metadata';
 import {
   householdErrorCategory,
   trackHouseholdAdded,
@@ -696,6 +702,23 @@ function HouseholdCard({
         : undefined,
     [result, countryId, year, baselinePolicyId, reformPolicyId]
   );
+  // The programmes the reform changes, from net income's tree: "What changes".
+  const programmes = useMemo(() => {
+    if (!result || !metadata?.variables?.household_net_income) {
+      return undefined;
+    }
+    const output = (data: HouseholdCalculationData): HouseholdCalculationOutput => ({
+      id: result.householdId,
+      countryId,
+      householdData: toAppCalculationData(data),
+    });
+    return householdProgrammeChanges(
+      output(result.baseline),
+      output(result.reform),
+      metadata as unknown as MetadataState,
+      year
+    );
+  }, [result, metadata, countryId, year]);
   const resultId = result?.householdId;
   const variationStartedAt =
     variationRun && variationRun.householdId === resultId ? variationRun.startedAt : undefined;
@@ -1000,6 +1023,7 @@ function HouseholdCard({
                   describe={describeVariable}
                   summary={`${requested.summary} · ${year}`}
                   breakdowns={breakdowns}
+                  programmes={programmes}
                   variationStartedAt={variationStartedAt}
                   onVariationOpen={openVariation}
                 />
