@@ -9,6 +9,11 @@ interface V3VariablesGateProps {
   label: string;
   /** Placeholder while the variables load; a few skeleton rows by default. */
   placeholder?: React.ReactNode;
+  /**
+   * Shown above the placeholder and above a failure, for content that
+   * draws its own heading once it shows (the household section).
+   */
+  heading?: React.ReactNode;
 }
 
 function DefaultPlaceholder({ label }: { label: string }) {
@@ -50,19 +55,32 @@ export function VariableNamesFailed({ onRetry }: { onRetry: () => unknown }) {
  * the background, with no time limit, and a failure says so and asks again;
  * on the v1 routes they are always ready, so the content shows as before.
  */
-export default function V3VariablesGate({ children, label, placeholder }: V3VariablesGateProps) {
+export default function V3VariablesGate({
+  children,
+  label,
+  placeholder,
+  heading,
+}: V3VariablesGateProps) {
   const variables = useV3Variables();
   if (variables.status === 'error') {
     return (
-      <ErrorState
-        title="Could not load the model's variables"
-        description={variables.message ?? undefined}
-        onRetry={variables.retry}
-      />
+      <>
+        {heading}
+        <ErrorState
+          title="Could not load the model's variables"
+          description={variables.message ?? undefined}
+          onRetry={variables.retry}
+        />
+      </>
     );
   }
   if (variables.status === 'loading') {
-    return <>{placeholder ?? <DefaultPlaceholder label={label} />}</>;
+    return (
+      <>
+        {heading}
+        {placeholder ?? <DefaultPlaceholder label={label} />}
+      </>
+    );
   }
   return <>{children}</>;
 }

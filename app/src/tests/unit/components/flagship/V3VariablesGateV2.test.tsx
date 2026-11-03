@@ -23,10 +23,10 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
   V3_API_ROUTES: 'v2',
 }));
 
-function renderGate() {
+function renderGate(heading?: React.ReactNode) {
   return render(
     <QueryClientProvider client={testQueryClient()}>
-      <V3VariablesGate label="Loading the household builder">
+      <V3VariablesGate label="Loading the household builder" heading={heading}>
         <p>Household builder</p>
       </V3VariablesGate>
     </QueryClientProvider>
@@ -86,6 +86,32 @@ describe('V3VariablesGate with v3 on the v2 routes', () => {
     // Then
     expect(await screen.findByText('Household builder')).toBeInTheDocument();
     expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(2);
+  });
+
+  test('given a heading then it shows above the placeholder while the variables load', () => {
+    // Given
+    answerVariables = () => new Promise<Response>(() => {});
+
+    // When
+    renderGate(<h2>Household</h2>);
+
+    // Then
+    expect(screen.getByRole('heading', { name: 'Household' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Loading the household builder' })).toBeVisible();
+  });
+
+  test('given a heading and the variables fail then it shows above the failure', async () => {
+    // Given
+    answerVariables = failOnceThenAnswerVariables();
+
+    // When
+    renderGate(<h2>Household</h2>);
+
+    // Then
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Could not load the model's variables"
+    );
+    expect(screen.getByRole('heading', { name: 'Household' })).toBeVisible();
   });
 
   test('given a catalog version published before catalog format 2 then the failure says why', async () => {

@@ -10,6 +10,7 @@ import {
   EXPECTED_RELATIVE_CHANGE_DATA,
   LARGE_LOCAL_AUTHORITY_DATA,
   MOCK_LOCAL_AUTHORITY_DATA,
+  SAVED_LOCAL_AUTHORITY_DATA_WITH_POSITIONS,
   SINGLE_LOCAL_AUTHORITY_DATA,
 } from '@/tests/fixtures/adapters/local-authority/localAuthorityMocks';
 import { BREAKDOWN_LOCAL_AUTHORITY_NAME } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
@@ -41,18 +42,15 @@ describe('localAuthorityDataAdapter', () => {
       expect(result).toEqual(EXPECTED_RELATIVE_CHANGE_DATA);
     });
 
-    test('given data then preserves x and y coordinates', () => {
+    test('given saved areas that still carry x and y then the points leave them out', () => {
       // Given
-      const apiData = MOCK_LOCAL_AUTHORITY_DATA;
+      const apiData = SAVED_LOCAL_AUTHORITY_DATA_WITH_POSITIONS;
 
       // When
       const result = transformLocalAuthorityData(apiData, 'average_household_income_change');
 
       // Then
-      expect(result[0].x).toBe(0);
-      expect(result[0].y).toBe(0);
-      expect(result[1].x).toBe(1);
-      expect(result[1].y).toBe(0);
+      expect(result.some((point) => 'x' in point || 'y' in point)).toBe(false);
     });
 
     test('given local authority names then creates unique IDs', () => {
@@ -103,8 +101,6 @@ describe('localAuthorityDataAdapter', () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('Test Authority');
       expect(result[0].value).toBe(500.0);
-      expect(result[0].x).toBe(5);
-      expect(result[0].y).toBe(10);
     });
 
     test('given large dataset then transforms all local authorities', () => {

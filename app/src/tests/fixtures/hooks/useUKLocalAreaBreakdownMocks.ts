@@ -71,8 +71,6 @@ export const COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY: LocalAreaBreakdown
       by_local_authority: {
         ...NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority,
         [UNLISTED_LOCAL_AUTHORITY_NAME]: {
-          x: 10,
-          y: 15,
           average_household_income_change: 310.5,
           relative_household_income_change: 0.0091,
           code: 'E06000010',
@@ -96,8 +94,6 @@ export const COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN: LocalAreaBreakdownRespo
       by_local_authority: {
         ...NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority,
         [ARDS_AND_NORTH_DOWN]: {
-          x: 13,
-          y: 39,
           average_household_income_change: 95.2,
           relative_household_income_change: 0.0031,
           code: ARDS_AND_NORTH_DOWN_CODE,

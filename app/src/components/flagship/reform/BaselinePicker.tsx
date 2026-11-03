@@ -18,6 +18,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { provisionAdjusts, provisionIntervals, type DraftReform } from '@/libs/draftReform';
+import { reformMissingParameters } from '@/libs/flagship/missingParameters';
 import { sameReformParameters } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
@@ -78,6 +79,11 @@ export function useDraftBaseline(draft: DraftReform) {
     options,
     reform,
     forRun,
+    /**
+     * The parameters the chosen comparison's policy sets that the model no
+     * longer has: while there are any, the draft cannot run against it.
+     */
+    missingParameters: reformMissingParameters(reform),
     /**
      * The chosen comparison is not known until the saved reforms load, nor
      * what it changes until current law for its parameters is in.
@@ -234,18 +240,40 @@ export default function BaselinePicker({ value, onChange, reforms }: BaselinePic
                   <span style={{ color: colors.text.tertiary }}>No saved reforms yet</span>
                 </CommandItem>
               ) : (
-                reforms.map((reform) => (
-                  <CommandItem
-                    key={reform.id}
-                    value={reform.id}
-                    keywords={[savedReformName(reform)]}
-                    onSelect={() => choose(reform.id)}
-                    style={{ justifyContent: 'space-between', gap: spacing.sm, cursor: 'pointer' }}
-                  >
-                    <span className="tw:truncate">{savedReformName(reform)}</span>
-                    {check(reform.id === selected?.id)}
-                  </CommandItem>
-                ))
+                reforms.map((reform) => {
+                  // A reform that cannot run cannot be compared with.
+                  const missingParameters = reformMissingParameters(reform);
+                  const unavailable = missingParameters.length > 0;
+                  return (
+                    <CommandItem
+                      key={reform.id}
+                      value={reform.id}
+                      keywords={[savedReformName(reform)]}
+                      onSelect={() => choose(reform.id)}
+                      disabled={unavailable}
+                      style={{
+                        justifyContent: 'space-between',
+                        gap: spacing.sm,
+                        cursor: unavailable ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      <span className="tw:flex tw:min-w-0 tw:flex-col">
+                        <span className="tw:truncate">{savedReformName(reform)}</span>
+                        {unavailable && (
+                          <span
+                            style={{
+                              fontSize: typography.fontSize.xs,
+                              color: colors.text.tertiary,
+                            }}
+                          >
+                            Uses parameters the model no longer has: {missingParameters.join(', ')}
+                          </span>
+                        )}
+                      </span>
+                      {check(reform.id === selected?.id)}
+                    </CommandItem>
+                  );
+                })
               )}
             </CommandGroup>
           </CommandList>

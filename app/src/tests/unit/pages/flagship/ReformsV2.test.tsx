@@ -12,6 +12,11 @@ import {
 } from '@/tests/fixtures/api/publicApi/publicApiFetchStub';
 import { STANDARD_DEDUCTION_SINGLE } from '@/tests/fixtures/api/publicApi/searchFileMocks';
 import { seedV2ModelCatalog, testQueryClient } from '@/tests/fixtures/hooks/v3MetadataWrapper';
+import {
+  REMOVED_US_PARAMETER,
+  v1PolicyContent,
+} from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import { REMOVED_PROVISION } from '@/tests/fixtures/libs/flagship/missingParameterTransferMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
@@ -27,13 +32,40 @@ vi.mock('@/api/reformStore', async (importOriginal) => ({
   getReformStore: () => ({ findMine: mockFindMine }),
 }));
 
+const mockRun = vi.fn();
 vi.mock('@/hooks/useRunFlagshipReport', () => ({
-  useRunFlagshipReport: () => ({ run: vi.fn(), isRunning: false, error: null }),
+  useRunFlagshipReport: () => ({ run: mockRun, isRunning: false, error: null }),
 }));
 
+const mockFindReports = vi.fn();
 vi.mock('@/api/flagshipReportStore', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/flagshipReportStore')>()),
-  getFlagshipReportStore: () => ({ findMine: async () => [] }),
+  getFlagshipReportStore: () => ({ findMine: mockFindReports }),
+}));
+
+// A saved report's v1 records, which Re-run reads: the report, its
+// simulations and their policies (each with nothing missing).
+vi.mock('@/api/report', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/report')>()),
+  fetchReportById: async (_countryId: string, reportId: string) => ({
+    id: reportId,
+    status: 'complete',
+    year: '2026',
+    simulation_1_id: '9',
+    simulation_2_id: '10',
+  }),
+}));
+vi.mock('@/api/simulation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/simulation')>()),
+  fetchSimulationById: async () => ({
+    population_type: 'geography',
+    population_id: 'us',
+    policy_id: '88',
+  }),
+}));
+vi.mock('@/api/policy', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/policy')>()),
+  fetchPolicyById: async () => v1PolicyContent({}, []),
 }));
 
 const mockFetchTrackerBills = vi.fn();
@@ -104,6 +136,8 @@ describe('ReformsPage with v3 on the v2 routes', () => {
     });
     await seedV2ModelCatalog();
     mockFindMine.mockResolvedValue([DEDUCTION_REFORM]);
+    mockFindReports.mockResolvedValue([]);
+    mockRun.mockReset();
     mockFetchTrackerBills.mockResolvedValue([UNSCORED_BILL]);
   });
 
@@ -227,5 +261,50 @@ describe('ReformsPage with v3 on the v2 routes', () => {
     expect(await within(table).findByText('$15,000')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /View full impact report/ })).toBeEnabled();
     expect(requestsTo(fetchStub, PARAMETERS_PATH)).toHaveLength(2);
+  });
+  test("given a report's changes include a parameter the catalog lacks, which its reform no longer sets, then Re-run names it and runs nothing", async () => {
+    // Given: the report ran a change its saved reform has since dropped,
+    // and the API finds nothing missing in the policies it reads
+    releaseParameters();
+    mockFindReports.mockResolvedValue([
+      {
+        id: 'lfr-local1',
+        countryId: 'us',
+        apiReportId: '902',
+        title: 'Standard deduction',
+        sourceNote: 'Hand-built',
+        provisions: [
+          {
+            path: STANDARD_DEDUCTION_SINGLE,
+            breadcrumb: 'IRS → Deductions → Standard deduction → Single',
+            unit: 'currency-USD',
+            baselineValue: 15000,
+            value: 20000,
+            intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 20000 }],
+          },
+          REMOVED_PROVISION,
+        ],
+        year: '2026',
+        createdAt: '2026-10-14T09:00:00Z',
+        reformId: DEDUCTION_REFORM.id,
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('A larger standard deduction'));
+
+    // When
+    await user.click(await screen.findByRole('button', { name: /re-run/i }));
+
+    // Then
+    const dialog = await screen.findByRole('dialog', {
+      name: 'This report uses parameters the model no longer has',
+    });
+    expect(
+      within(dialog)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent)
+    ).toEqual([REMOVED_US_PARAMETER]);
+    expect(mockRun).not.toHaveBeenCalled();
   });
 });

@@ -8,12 +8,7 @@ import {
   type FlagshipReportRecord,
   type FlagshipReportStore,
 } from '@/api/flagshipReportStore';
-import {
-  fetchV1PolicyJson,
-  fetchV2PolicyItem,
-  getReformStore,
-  type ReformStore,
-} from '@/api/reformStore';
+import { fetchV2PolicyItem, getReformStore, type ReformStore } from '@/api/reformStore';
 import { fetchSharedReport } from '@/api/sharedReport';
 import { isAccountId, type ApiStoreContext } from '@/api/v2Associations';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -22,6 +17,7 @@ import { useLoadV3Parameters } from '@/hooks/useV3Parameters';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
+import { readV1Policy } from '@/libs/flagship/policyChecks';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
 import { selectV2Catalog, selectV2ParameterIds } from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
@@ -41,8 +37,9 @@ export interface V3SavedWork {
   /**
    * Scopes cached saved work to whose it is: the Auth0 subject when signed
    * in, this browser's unauthenticated user when signed out, 'browser'
-   * otherwise. A session that ends without a reload moves every query to
-   * new keys.
+   * otherwise. A session that ends without a reload moves every query keyed
+   * by it to new keys. (A calculated household's save is not keyed by it:
+   * see useSaveCalculatedHousehold.)
    */
   scope: string;
 }
@@ -68,15 +65,11 @@ export function useV3SavedWork(): V3SavedWork {
   }, [status, subject, browserUserId, countryId, client]);
 }
 
-/** A v1 policy's raw parameter map (`policy_json`), per country. */
-const v1PolicyJsonKey = (countryId: string, policyId: string) =>
-  ['v1-policy-json', countryId, policyId] as const;
-
 /** A v2 policy (`GET /v2/policies/{id}`), per country. */
 const v2PolicyKey = (countryId: string, policyId: string) =>
   ['v2-policy', countryId, policyId] as const;
 
-/** How long a fetched policy (v1 or v2) stays cached without a reader. */
+/** How long a fetched v2 policy stays cached without a reader. */
 const SAVED_POLICY_GC_TIME = 30 * 60 * 1000;
 
 /**
@@ -107,13 +100,7 @@ export function useReformStore(): ReformStore {
         },
         // Policies never change, so each is fetched once per session
         // rather than on every list of the account's reforms.
-        fetchPolicyJson: (countryId, policyId) =>
-          queryClient.fetchQuery({
-            queryKey: v1PolicyJsonKey(countryId, policyId),
-            queryFn: () => fetchV1PolicyJson(countryId, policyId),
-            staleTime: Infinity,
-            gcTime: SAVED_POLICY_GC_TIME,
-          }),
+        fetchPolicy: (countryId, policyId) => readV1Policy(queryClient, countryId, policyId),
         fetchV2Policy: (countryId, policyId) =>
           queryClient.fetchQuery({
             queryKey: v2PolicyKey(countryId, policyId),
@@ -126,9 +113,20 @@ export function useReformStore(): ReformStore {
   );
 }
 
+/** The query keys a saved report's page reads it under, without the session and link. */
+export const savedReportQueryKeys = {
+  /** This session's record a report link names. */
+  record: ['flagship-report-record'] as const,
+  /** A saved report as anyone holding its link reads it. */
+  shared: ['shared-report'] as const,
+};
+
 export interface FlagshipReportStoreSelection {
   store: FlagshipReportStore;
-  /** True when records go to the account (one `/v2/user-reports` row per run). */
+  /**
+   * True when records go to the account: one `/v2/user-reports` row per
+   * saved report, which a transfer repoints at its new run.
+   */
   isAccount: boolean;
   /** The session scope for cached records (see V3SavedWork). */
   scope: string;
@@ -155,7 +153,7 @@ export function useFlagshipReportStore(): FlagshipReportStoreSelection {
 export function useReportRecord(link: string | undefined) {
   const { store, scope } = useFlagshipReportStore();
   const { data } = useQuery({
-    queryKey: ['flagship-report-record', scope, link ?? ''],
+    queryKey: [...savedReportQueryKeys.record, scope, link ?? ''],
     queryFn: () => findReportRecordByLink(store, link!),
     enabled: !!link,
     staleTime: 5 * 60 * 1000,
@@ -181,7 +179,7 @@ export interface SharedReport {
 export function useSharedReport(link: string | undefined) {
   const countryId = useCurrentCountry();
   return useQuery({
-    queryKey: ['shared-report', countryId, link ?? ''],
+    queryKey: [...savedReportQueryKeys.shared, countryId, link ?? ''],
     queryFn: async (): Promise<SharedReport | null> => {
       const item = await fetchSharedReport(countryId, link!);
       return item

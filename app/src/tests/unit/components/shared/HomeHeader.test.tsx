@@ -1,8 +1,16 @@
 import { renderWithCountry, screen, userEvent, within } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import HeaderNavigation from '@/components/shared/HomeHeader';
 import appsData from '@/data/apps/apps.json';
+import { colors } from '@/designTokens';
 import { EXPECTED_HEADER_TEXT } from '@/tests/fixtures/components/homeHeader/HeaderMocks';
+import { getToolsMenuEntries } from '@/utils/toolsMenu';
+
+// The real tools list, which a test can empty for a country with no tools.
+vi.mock('@/utils/toolsMenu', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/utils/toolsMenu')>();
+  return { ...actual, getToolsMenuEntries: vi.fn(actual.getToolsMenuEntries) };
+});
 
 /**
  * Test constants
@@ -69,6 +77,18 @@ describe('HeaderNavigation', () => {
       // Country selector button is present
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);
+    });
+
+    test("given the teal header then its country selectors' globe icons are white", () => {
+      // When
+      renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US);
+
+      // Then — the wide-screen selector and the one beside the mobile menu button
+      const selectors = screen.getAllByRole('button', { name: /country selector/i });
+      expect(selectors).toHaveLength(2);
+      selectors.forEach((selector) => {
+        expect(selector.querySelector('svg')).toHaveAttribute('stroke', colors.text.inverse);
+      });
     });
 
     test('given component renders then displays header element', () => {
@@ -139,6 +159,11 @@ describe('HeaderNavigation', () => {
   });
 
   describe('tools menu', () => {
+    afterEach(() => {
+      // Restores the real function passed to vi.fn (Vitest 3), not an empty one.
+      vi.mocked(getToolsMenuEntries).mockReset();
+    });
+
     async function openMobileMenu() {
       const user = userEvent.setup();
       await user.click(screen.getByRole('button', { name: 'Toggle navigation' }));
@@ -281,19 +306,17 @@ describe('HeaderNavigation', () => {
       });
     });
 
-    test.each(['ca', 'ng', 'il'])(
-      'given %s, which has no tools, then there is no tools menu, not even for the main app',
-      async (countryId) => {
-        // Given
-        renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
+    test('given a country with no tools then there is no tools menu, not even for the main app', async () => {
+      // Given: both countries the calculator offers have tools, so the list is emptied
+      vi.mocked(getToolsMenuEntries).mockReturnValue([]);
+      renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.UK, '/uk', 'calculator');
 
-        // Then
-        expect(screen.queryByRole('button', { name: /tools/i })).not.toBeInTheDocument();
-        const menu = await openMobileMenu();
-        expect(menu.queryByText('Tools')).not.toBeInTheDocument();
-        expect(menu.queryByRole('link', { name: 'PolicyEngine app' })).not.toBeInTheDocument();
-      }
-    );
+      // Then
+      expect(screen.queryByRole('button', { name: /tools/i })).not.toBeInTheDocument();
+      const menu = await openMobileMenu();
+      expect(menu.queryByText('Tools')).not.toBeInTheDocument();
+      expect(menu.queryByRole('link', { name: 'PolicyEngine app' })).not.toBeInTheDocument();
+    });
 
     test('given the mobile menu then its panel scrolls vertically', async () => {
       // Given

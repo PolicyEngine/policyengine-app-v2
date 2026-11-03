@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
-import { useQueries, type QueryObserverResult } from '@tanstack/react-query';
+import { useQueries, useQueryClient, type QueryObserverResult } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
-import { fetchPolicyById } from '@/api/policy';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { useParallelQueries } from '@/hooks/utils/queryUtils';
+import { fetchV1Policy, readV1Policy } from '@/libs/flagship/policyChecks';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
-import { policyKeys } from '@/libs/queryKeys';
+import { policyKeys, V1_POLICY_GC_TIME, v1PolicyKey } from '@/libs/queryKeys';
 import type { RootState } from '@/store';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { PolicyMetadata } from '@/types/metadata/policyMetadata';
@@ -20,7 +20,9 @@ import type { PolicyMetadata } from '@/types/metadata/policyMetadata';
  * routes each is first read as stored (`GET /{country}/policy/{id}`), then
  * the parameters it names load in one request, then it is parsed. A policy
  * that cannot be read or parsed, or whose parameters fail to load, is
- * listed as failed.
+ * listed as failed. Either way each policy is read through the v1 policy
+ * query the missing-parameter check shares (libs/flagship/policyChecks),
+ * so the page asks for it once.
  */
 export interface V3Policies {
   policies: Policy[];
@@ -33,11 +35,12 @@ export interface V3Policies {
 }
 
 function useV1Policies(countryId: string, policyIds: string[], enabled: boolean): V3Policies {
+  const queryClient = useQueryClient();
   const { parameters, isReady } = useParameterMetadata(countryId);
   const results = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
     queryFn: async (policyId) =>
-      PolicyAdapter.fromMetadata(await fetchPolicyById(countryId, policyId), parameters),
+      PolicyAdapter.fromMetadata(await readV1Policy(queryClient, countryId, policyId), parameters),
     enabled: enabled && isReady && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
@@ -95,10 +98,11 @@ function useV2Policies(countryId: string, policyIds: string[], enabled: boolean)
   const uniqueIds = [...new Set(policyIds)];
   const stored = useQueries({
     queries: uniqueIds.map((policyId) => ({
-      queryKey: policyKeys.storedById(policyId),
-      queryFn: () => fetchPolicyById(countryId, policyId),
+      queryKey: v1PolicyKey(countryId, policyId),
+      queryFn: () => fetchV1Policy(countryId, policyId),
       enabled,
-      staleTime: 5 * 60 * 1000,
+      staleTime: Infinity,
+      gcTime: V1_POLICY_GC_TIME,
     })),
     combine: combineStoredPolicies,
   });

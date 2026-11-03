@@ -62,6 +62,12 @@ function getBreakdownOptions(
   return options;
 }
 
+/**
+ * The UK's budget by programme card is hidden for now: its bars do not yet
+ * read clearly. Its chart and CSV rows stay, to show it again.
+ */
+const SHOW_BUDGET_BY_PROGRAMME = false;
+
 type DecileMode = 'absolute' | 'relative';
 const DECILE_MODE_OPTIONS = [
   { label: 'Absolute', value: 'absolute' as DecileMode },
@@ -180,7 +186,7 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
           <BudgetaryImpactSubPage output={output} fillHeight />
         </ReportChartCard>
 
-        {isUK && (
+        {isUK && SHOW_BUDGET_BY_PROGRAMME && (
           <ReportChartCard
             title="Budgetary impact by programme"
             fullWidth
