@@ -13,6 +13,7 @@ import {
   POLL_FAILURE,
   POLL_OPTIONS,
   QUEUED_RESPONSE,
+  REQUEST_FAILURE_MESSAGE,
   STARTED_AT,
   TIME_LIMIT_MESSAGE,
   TIME_LIMIT_MS,
@@ -231,6 +232,21 @@ describe('pollRun', () => {
     // Then
     expect(run.status).toBe('error');
     expect(run.error).toBe(POLL_FAILURE.message);
+  });
+
+  test('given a request failure message then a request that fails fails the run with it, not the thrown message', async () => {
+    // When
+    const run = await pollRun(
+      async () => {
+        throw POLL_FAILURE;
+      },
+      computingRun({ failedPolls: MAX_FAILED_POLLS }),
+      { ...POLL_OPTIONS, requestFailureMessage: REQUEST_FAILURE_MESSAGE }
+    );
+
+    // Then
+    expect(run.status).toBe('error');
+    expect(run.error).toBe(REQUEST_FAILURE_MESSAGE);
   });
 });
 

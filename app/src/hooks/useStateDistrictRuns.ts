@@ -44,6 +44,18 @@ const NO_DISTRICTS_MESSAGE = 'The result has no congressional districts.';
 
 const UNREADABLE_RESULT_MESSAGE = 'The result could not be read';
 
+// In place of the request's own error: a response body or a browser's message.
+const REQUEST_FAILED_MESSAGE = "The request to PolicyEngine's servers failed";
+
+const RECORDS_FAILED_MESSAGE = 'Checking for a saved result failed';
+
+/**
+ * The Public API ends a failed state run's message with when a new run can be
+ * requested ("… can be requested 2 minutes after this failure."); until then
+ * it answers every request, Retry's too, with the same failure.
+ */
+const RETRY_WAIT_PATTERN = /can be requested (\d+) minutes? after this failure/;
+
 type District = USCongressionalDistrictBreakdownItem;
 
 export interface StateDistrictRunsRequest {
@@ -218,17 +230,33 @@ async function lookUpStateRecords(
     'us',
     { region, baselinePolicyId, reformPolicyId, year },
     (request) => limit.run(request, signal)
-  );
+  ).catch((error: unknown) => {
+    // The state shows a short reason, so the error itself is logged.
+    if (!signal.aborted) {
+      console.error("[useStateDistrictRuns] Could not look up a state's records:", error);
+    }
+    throw error;
+  });
   const report = ReportAdapter.fromMetadata(metadata);
   return {
     reportId: String(report.id),
     reportStatus: report.status,
     districts:
       report.status === 'complete'
-        ? districtsOf(report.output as EconomyOutput | null | undefined)
+        ? storedDistricts(report.output as EconomyOutput | null | undefined)
         : null,
     baseReport: { ...report, output: null },
   };
+}
+
+/** A complete base report's districts; null, so the state runs, when they cannot be read. */
+function storedDistricts(output: EconomyOutput | null | undefined): District[] | null {
+  try {
+    return districtsOf(output);
+  } catch (error) {
+    console.error('[useStateDistrictRuns] Could not read a saved state result:', error);
+    return null;
+  }
 }
 
 const STATE_RUN_POLL_OPTIONS: PollRunOptions<SocietyWideReportOutput, SocietyWideReportOutput> = {
@@ -236,6 +264,7 @@ const STATE_RUN_POLL_OPTIONS: PollRunOptions<SocietyWideReportOutput, SocietyWid
   timeLimitMs: US_STATE_DISTRICT_RUN_TIME_LIMIT_MS,
   timeLimitMessage: TIME_LIMIT_MESSAGE,
   failureMessage: 'The calculation failed',
+  requestFailureMessage: REQUEST_FAILED_MESSAGE,
   readResult: (result) => ({ result }),
 };
 
@@ -294,12 +323,25 @@ function isFailedCalculation(message: string): boolean {
 }
 
 /**
+ * A failed calculation's reason: short and the same for states that failed
+ * alike (the message itself carries a correlation ID), saying when Retry can
+ * start a new run when the Public API says so.
+ */
+function calculationFailureReason(message: string): string {
+  const reason = describeCalculationError(message).title;
+  const minutes = Number(message.match(RETRY_WAIT_PATTERN)?.[1]);
+  if (!minutes) {
+    return reason;
+  }
+  return `${reason}. Retry can start a new run ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} after the failure`;
+}
+
+/**
  * Asks for a state's economy result. The Public API answers a calculation
  * that failed with 502 and an error body, which the fetch throws: that is the
- * state's answer, not a failed poll, so it becomes the state's error at once,
- * as a short reason that is the same for states that failed alike (the
- * message itself carries a correlation ID). Any other failure, such as a 502
- * from a proxy with no such body, is still a failed poll.
+ * state's answer, not a failed poll, so it becomes the state's error at once.
+ * Any other failure, such as a 502 from a proxy with no such body, is still a
+ * failed poll.
  */
 async function fetchStateRun(
   { reformPolicyId, baselinePolicyId, year }: Required<StateDistrictRunsRequest>,
@@ -316,7 +358,7 @@ async function fetchStateRun(
       return {
         status: 'error',
         result: null,
-        error: describeCalculationError(error.message).title,
+        error: calculationFailureReason(error.message),
       };
     }
     throw error;
@@ -480,10 +522,7 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
   const standings: StateStanding[] = states.map((_state, index): StateStanding => {
     const lookup = lookups[index];
     if (lookup.isError) {
-      return {
-        kind: 'records-failed',
-        error: lookup.error instanceof Error ? lookup.error.message : 'The records failed',
-      };
+      return { kind: 'records-failed', error: RECORDS_FAILED_MESSAGE };
     }
     if (!lookup.data) {
       return { kind: 'checking' };

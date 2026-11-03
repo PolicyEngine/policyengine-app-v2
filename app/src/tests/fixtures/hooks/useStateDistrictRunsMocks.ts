@@ -188,6 +188,13 @@ export const stateReportCompleteWithoutDistricts = (region: string): StoredState
   status: 'complete',
   output: stateResult(region, null),
 });
+export const stateReportCompleteWithUnreadableDistricts = (region: string): StoredStateReport => ({
+  status: 'complete',
+  output: {
+    ...stateResult(region),
+    congressional_district_impact: { districts: 'unreadable' },
+  } as unknown as SocietyWideReportOutput,
+});
 export const STATE_REPORT_PENDING: StoredStateReport = { status: 'pending' };
 export const STATE_REPORT_ERROR: StoredStateReport = { status: 'error' };
 
@@ -227,6 +234,24 @@ export function stateFailure(message: string = STATE_ERROR_MESSAGE): Response {
   });
 }
 export const STATE_ERROR: StateEconomyResponse = stateFailure();
+
+/** The note the Public API ends a failed state run's message with: until then it answers with the same failure. */
+export const STATE_RETRY_NOTE =
+  'A new run for this state can be requested 2 minutes after this failure.';
+/** The reason the app gives for a failure with that note. */
+export const STATE_RETRY_WAIT_REASON =
+  'The simulation did not finish. Retry can start a new run 2 minutes after the failure';
+
+/** An error page in place of the Public API's answer, as a proxy or Cloud Run sends one. */
+export const stateErrorPage = (): Response =>
+  new Response(
+    '<html><head><title>503 Service Unavailable</title></head><body><h1>Error: Service Unavailable</h1></body></html>',
+    { status: 503, headers: { 'Content-Type': 'text/html' } }
+  );
+/** The reason the app gives for a state whose request itself failed. */
+export const STATE_REQUEST_FAILURE_REASON = "The request to PolicyEngine's servers failed";
+/** The reason the app gives for a state whose records could not be looked up. */
+export const STATE_RECORDS_FAILURE_REASON = 'Checking for a saved result failed';
 
 /** A state's result whose districts are not a list, so they cannot be read. */
 export const stateOkWithUnreadableDistricts = (region: string): StateEconomyResponse => ({

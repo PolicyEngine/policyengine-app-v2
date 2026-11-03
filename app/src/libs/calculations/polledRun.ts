@@ -39,6 +39,8 @@ export interface PollRunOptions<Result, Kept> {
   timeLimitMessage: string;
   /** The error when the run fails without saying why. */
   failureMessage: string;
+  /** The error when the run's request itself fails; the thrown message when not given. */
+  requestFailureMessage?: string;
   /** An ok result as the run keeps it, or why the run cannot use it. */
   readResult: (result: Result) => { result: Kept } | { error: string };
 }
@@ -132,7 +134,9 @@ export async function pollRun<Result, Kept>(
       status: 'error',
       startedAt,
       result: null,
-      error: error instanceof Error ? error.message : options.failureMessage,
+      error:
+        options.requestFailureMessage ??
+        (error instanceof Error ? error.message : options.failureMessage),
     };
   }
 }

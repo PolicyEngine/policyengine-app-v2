@@ -59,6 +59,9 @@ export const ERROR_RESPONSE: EconomyCalculationResponse<TestResult> = {
 
 export const POLL_FAILURE = new Error('Society-wide calculation failed (502): Bad Gateway');
 
+/** The error a run is given when its request itself fails, in place of the thrown message. */
+export const REQUEST_FAILURE_MESSAGE = 'The request failed';
+
 /** A run that was computing when last polled. */
 export function computingRun(
   overrides: Partial<PolledRun<TestResult>> = {}

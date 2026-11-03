@@ -23,11 +23,16 @@ import {
   STATE_COMPUTING,
   STATE_COUNT,
   STATE_ERROR,
+  STATE_ERROR_MESSAGE,
   STATE_EXPECTED_MS,
   STATE_FAILURE_REASON,
   STATE_POLL_INTERVAL_MS,
+  STATE_RECORDS_FAILURE_REASON,
   STATE_REPORT_ERROR,
   STATE_REPORT_PENDING,
+  STATE_REQUEST_FAILURE_REASON,
+  STATE_RETRY_NOTE,
+  STATE_RETRY_WAIT_REASON,
   STATE_RUNS_BASELINE_POLICY_ID,
   STATE_RUNS_REFORM_POLICY_ID,
   STATE_RUNS_REQUEST,
@@ -35,12 +40,14 @@ import {
   STATE_TIME_LIMIT_MESSAGE,
   STATE_TIME_LIMIT_MS,
   stateEconomyUrl,
+  stateErrorPage,
   stateFailure,
   stateOk,
   stateOkWithoutDistricts,
   stateOkWithUnreadableDistricts,
   stateReportComplete,
   stateReportCompleteWithoutDistricts,
+  stateReportCompleteWithUnreadableDistricts,
   TEXAS,
   US_STATE_REGIONS,
   UTAH,
@@ -226,7 +233,7 @@ describe('useStateDistrictRuns lookup', () => {
     expect(result.current.status).toBe('idle');
   });
 
-  test('given a state whose records cannot be created then it is failed, and the others are checked', async () => {
+  test('given a state whose records cannot be created then it is failed with a short reason, and the others are checked', async () => {
     // Given
     serveApi({ failingRecords: [OHIO] });
 
@@ -236,7 +243,29 @@ describe('useStateDistrictRuns lookup', () => {
     // Then
     await waitFor(() => expect(result.current.status).toBe('idle'));
     expect(result.current.failedStates).toEqual([OHIO]);
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Ohio', error: STATE_RECORDS_FAILURE_REASON },
+    ]);
     expect(result.current.pendingStates).toHaveLength(STATE_COUNT - 1);
+  });
+
+  test('given a saved base report whose districts cannot be read then the state waits for Compute, which runs it', async () => {
+    // Given
+    serveApi({
+      reports: { [OHIO]: stateReportCompleteWithUnreadableDistricts(OHIO) },
+      economy: (region) => stateOk(region),
+    });
+    const { result } = renderRuns();
+    await waitFor(() => expect(result.current.status).toBe('idle'));
+    expect(result.current.failedStates).toEqual([]);
+    expect(result.current.pendingStates).toContain(OHIO);
+
+    // When
+    act(() => result.current.start());
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    expect(api.economyRequestsFor(OHIO)).toEqual([stateEconomyUrl(OHIO)]);
   });
 
   test('given the records checked then no user report or browser report record is written', async () => {
@@ -638,6 +667,38 @@ describe('useStateDistrictRuns compute', () => {
     expect(result.current.calculationFailures).toEqual([
       { label: 'Ohio', error: STATE_FAILURE_REASON },
       { label: 'Texas', error: STATE_FAILURE_REASON },
+    ]);
+  });
+
+  test('given a failed calculation whose answer says when a new run can be requested then the reason says when Retry can start one', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: () => stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`),
+      }),
+    });
+
+    // When
+    const { result } = await computeAll();
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Texas', error: STATE_RETRY_WAIT_REASON },
+    ]);
+  });
+
+  test('given a request answered with an error page then the state fails with a short reason, not the page', async () => {
+    // Given
+    serveApi({ economy: economyWhere({ [TEXAS]: () => stateErrorPage() }) });
+
+    // When
+    const { result } = await computeAll();
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Texas', error: STATE_REQUEST_FAILURE_REASON },
     ]);
   });
 
