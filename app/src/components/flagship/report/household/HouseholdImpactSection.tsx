@@ -719,6 +719,8 @@ function HouseholdCard({
     });
   }, [onStatus, householdKey, summary, state, stale, netIncome]);
 
+  // Nothing to run: the inputs are invalid, or already calculated.
+  const blocked = !validation.isValid || sameAsShown;
   const calculateBar = (
     <div
       style={{
@@ -728,7 +730,20 @@ function HouseholdCard({
         gap: spacing.md,
       }}
     >
-      <Button onClick={calculate} disabled={running || !validation.isValid || sameAsShown}>
+      {/* Marked unavailable, not disabled: a press on it blurs a field still
+          being typed in, which commits the amount and can make the inputs
+          new; a browser drops the click of a press that landed on a disabled
+          button, so this one stays clickable and checks again on the click. */}
+      <Button
+        onClick={() => {
+          if (!blocked) {
+            calculate();
+          }
+        }}
+        disabled={running}
+        aria-disabled={blocked || undefined}
+        className={blocked ? 'tw:cursor-not-allowed tw:opacity-50' : undefined}
+      >
         {result ? 'Calculate again' : 'Calculate'}
       </Button>
       {!validation.isValid && validation.errors[0] ? (

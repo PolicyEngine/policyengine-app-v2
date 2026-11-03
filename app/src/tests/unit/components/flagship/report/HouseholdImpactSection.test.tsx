@@ -89,6 +89,22 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
       >
         Partner earns 20000
       </button>
+      {/* Like the builder's amounts: typed freely, committed when the field loses focus. */}
+      <input
+        aria-label="Your earnings"
+        defaultValue=""
+        onBlur={(event) =>
+          event.currentTarget.value &&
+          onChange(
+            household.setPersonVariableAtYear(
+              'you',
+              'employment_income',
+              year,
+              Number(event.currentTarget.value)
+            )
+          )
+        }
+      />
     </div>
   ),
 }));
@@ -298,6 +314,38 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('button', { name: /Compare all/ })).not.toBeInTheDocument();
   });
 
+  test('given an amount still being typed then one click on Calculate again commits it and runs', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+
+    // The field keeps focus: the inputs still read as calculated until it commits.
+    await user.type(screen.getByRole('textbox', { name: 'Your earnings' }), '80000');
+    expect(screen.getByText(/These inputs are calculated/)).toBeInTheDocument();
+    // A browser drops a click whose press lands on a disabled button, even if
+    // the press's blur enables it: so it is never disabled here, only marked so.
+    const again = screen.getByRole('button', { name: 'Calculate again' });
+    expect(again).toBeEnabled();
+    expect(again).toHaveAttribute('aria-disabled', 'true');
+    await user.click(again);
+
+    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(2));
+  });
+
+  test('given calculated inputs then Calculate again starts no run', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+
+    await user.click(screen.getByRole('button', { name: 'Calculate again' }));
+
+    expect(mockCreateHousehold).toHaveBeenCalledTimes(1);
+  });
+
   test('given inputs changed after a result then the result says so and offers to calculate again', async () => {
     const user = userEvent.setup();
     renderSection();
@@ -421,7 +469,10 @@ describe('HouseholdImpactSection', () => {
     // The result leads; the inputs open on their tab, with nothing to run again.
     expect(screen.queryByRole('button', { name: 'Calculate again' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Inputs' }));
-    expect(screen.getByRole('button', { name: 'Calculate again' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Calculate again' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     expect(screen.getByText(/These inputs are calculated/)).toBeInTheDocument();
   });
 
