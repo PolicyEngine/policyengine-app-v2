@@ -23,13 +23,19 @@ import {
   COMPLETE_RESPONSE,
   COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN,
   COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
+  COMPLETE_RESPONSE_WITH_WITHHELD_LISTS,
   FAILED_RESPONSE,
+  UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES,
   WITHHELD_LOCAL_AUTHORITIES_WITH_ARDS_AND_NORTH_DOWN,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
+import {
+  hatchedAreaCodes,
+  noDataHexagons,
+} from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
 import {
   V2_UK_LOCAL_AREA_REQUEST_PROPS,
   withNullAreaImpacts,
@@ -231,6 +237,31 @@ describe('LocalAuthoritySubPage', () => {
       expect(
         screen.getByText(new RegExp(`^${hatched} of 361 local authorities are not reported\\.`))
       ).toBeInTheDocument();
+    });
+
+    test('given the areas computed with a list of withheld local authorities then the note counts the list and the hex map hatches only those', async () => {
+      // Given
+      const user = userEvent.setup();
+      mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_WITHHELD_LISTS);
+      const { container } = renderWithQueryClient(
+        <LocalAuthoritySubPage
+          output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+          {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+        />
+      );
+      await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+      // When
+      expect(
+        await screen.findByText(/^1 of 361 local authorities is not reported\./)
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+
+      // Then: Swansea hatched, and the UK's other 359 absent local authorities without data
+      expect(hatchedAreaCodes(container)).toEqual(UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES);
+      expect(noDataHexagons(container)).toHaveLength(
+        EXPECTED_LOCAL_AUTHORITY_COUNT - 1 - UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES.length
+      );
     });
 
     test('given a breakdown release result with constituencies only then the tab offers to compute, as the section does', () => {

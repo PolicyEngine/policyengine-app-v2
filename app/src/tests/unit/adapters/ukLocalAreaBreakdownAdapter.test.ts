@@ -7,7 +7,7 @@ import {
   servesLocalAreaBreakdowns,
   withheldUKAreasOf,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
-import { withheldUKHexAreas } from '@/components/visualization/choropleth/ukHexLayout';
+import { placeUKHexMap } from '@/components/visualization/choropleth/ukHexLayout';
 import {
   ARDS_AND_NORTH_DOWN_CODE,
   BREAKDOWN_CONSTITUENCY_CODES,
@@ -20,6 +20,7 @@ import {
   UK_LOCAL_AUTHORITY_COUNT,
   UK_WIDE_WITHHELD_CONSTITUENCIES,
   UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
+  WALES_CONSTITUENCY_COUNT,
   WALES_LOCAL_AUTHORITY_COUNT,
   WALES_WITHHELD_CONSTITUENCIES,
 } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
@@ -32,8 +33,16 @@ import {
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import {
+  BARNSLEY_NORTH_CODE,
+  LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+  pointsWithCodes,
+} from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
+import {
+  BREAKDOWN_WITH_WITHHELD_LISTS,
   COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
   NORMALIZED_BREAKDOWN,
+  UK_LISTED_WITHHELD_CONSTITUENCY_CODES,
+  UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
@@ -171,15 +180,96 @@ describe('countWithheldUKAreas', () => {
     'given %s then the count is the number of areas the hex map draws as withheld',
     (_, level, region, publishedCodes) => {
       // Given
-      const points = publishedCodes.map((code) => ({ code }));
+      const points = pointsWithCodes(publishedCodes);
 
       // When
       const result = countWithheldUKAreas({ level, region, publishedCodes: [...publishedCodes] });
 
       // Then
-      expect(result?.withheld).toBe(withheldUKHexAreas(level, points, region).length);
+      const hexMap = placeUKHexMap(level, points, { disclosureControlled: true, region });
+      expect(result?.withheld).toBe(hexMap.withheldAreas.length);
     }
   );
+});
+
+describe('countWithheldUKAreas with a breakdown’s list of withheld codes', () => {
+  test('given a list then it counts the listed codes and carries the list', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+    });
+
+    // Then
+    expect(result).toEqual({
+      withheld: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length,
+      total: WALES_CONSTITUENCY_COUNT,
+      listedCodes: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+    });
+  });
+
+  test('given an empty list then it counts none withheld', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes: [],
+    });
+
+    // Then
+    expect(result).toEqual({ withheld: 0, total: WALES_CONSTITUENCY_COUNT, listedCodes: [] });
+  });
+
+  test('given a null list then it counts every area the result leaves out, as before', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes: null,
+    });
+
+    // Then
+    expect(result).toStrictEqual(WALES_WITHHELD_CONSTITUENCIES);
+  });
+
+  test('given a listed code outside the report’s nation then it is not counted', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes: [BARNSLEY_NORTH_CODE, ...LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES],
+    });
+
+    // Then
+    expect(result?.withheld).toBe(LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length);
+  });
+
+  test('given a list then the count is the number of areas the hex map draws as withheld', () => {
+    // Given
+    const points = pointsWithCodes(PUBLISHED_WELSH_CONSTITUENCY_CODES);
+    const listedWithheldCodes = [BARNSLEY_NORTH_CODE, ...LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES];
+
+    // When
+    const result = countWithheldUKAreas({
+      level: 'constituency',
+      region: 'country/wales',
+      publishedCodes: PUBLISHED_WELSH_CONSTITUENCY_CODES,
+      listedWithheldCodes,
+    });
+
+    // Then
+    const hexMap = placeUKHexMap('constituency', points, {
+      disclosureControlled: true,
+      region: 'country/wales',
+      listedWithheldCodes,
+    });
+    expect(result?.withheld).toBe(hexMap.withheldAreas.length);
+  });
 });
 
 describe('withheldUKAreasOf', () => {
@@ -220,6 +310,73 @@ describe('withheldUKAreasOf', () => {
       },
       local_authority: null,
     });
+  });
+
+  test('given a breakdown that lists its withheld codes then counts each level from its list and carries it', () => {
+    // When
+    const result = withheldUKAreasOf(BREAKDOWN_WITH_WITHHELD_LISTS, 'uk');
+
+    // Then
+    expect(result).toEqual({
+      constituency: {
+        withheld: UK_LISTED_WITHHELD_CONSTITUENCY_CODES.length,
+        total: UK_CONSTITUENCY_COUNT,
+        listedCodes: UK_LISTED_WITHHELD_CONSTITUENCY_CODES,
+      },
+      local_authority: {
+        withheld: UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES.length,
+        total: UK_LOCAL_AUTHORITY_COUNT,
+        listedCodes: UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES,
+      },
+    });
+  });
+
+  test('given a breakdown whose lists are empty then counts none withheld at either level', () => {
+    // Given
+    const breakdown: LocalAreaBreakdown = {
+      ...NORMALIZED_BREAKDOWN,
+      constituency_withheld_codes: [],
+      local_authority_withheld_codes: [],
+    };
+
+    // When
+    const result = withheldUKAreasOf(breakdown, 'uk');
+
+    // Then
+    expect(result.constituency?.withheld).toBe(0);
+    expect(result.local_authority?.withheld).toBe(0);
+  });
+
+  test('given a breakdown whose lists are null then counts every area each level leaves out, as before', () => {
+    // Given
+    const breakdown: LocalAreaBreakdown = {
+      ...NORMALIZED_BREAKDOWN,
+      constituency_withheld_codes: null,
+      local_authority_withheld_codes: null,
+    };
+
+    // When
+    const result = withheldUKAreasOf(breakdown, 'uk');
+
+    // Then
+    expect(result).toStrictEqual({
+      constituency: UK_WIDE_WITHHELD_CONSTITUENCIES,
+      local_authority: UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
+    });
+  });
+
+  test('given a list field that is not a list then that level is counted as giving no list', () => {
+    // Given
+    const breakdown = {
+      ...BREAKDOWN_WITH_WITHHELD_LISTS,
+      constituency_withheld_codes: UK_LISTED_WITHHELD_CONSTITUENCY_CODES.join(','),
+    } as unknown as LocalAreaBreakdown;
+
+    // When
+    const result = withheldUKAreasOf(breakdown, 'uk');
+
+    // Then
+    expect(result.constituency).toStrictEqual(UK_WIDE_WITHHELD_CONSTITUENCIES);
   });
 
   test('given a level the API returned as null then counts it as publishing no areas', () => {
