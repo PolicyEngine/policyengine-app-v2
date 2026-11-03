@@ -16,8 +16,6 @@ export const YEAR_LISTS = {
   US_SOCIETY_WIDE_FROM_2024: timePeriodsFrom(2024, 2035),
   /** The US household years in household_options.time_period. */
   US_HOUSEHOLD: timePeriodsFrom(2022, 2035),
-  /** The US society-wide years today, which household readers fall back to. */
-  US_SOCIETY_WIDE_TODAY: timePeriodsFrom(2022, 2035),
   /** The UK society-wide years today. */
   UK_SOCIETY_WIDE_TODAY: timePeriodsFrom(2024, 2030),
   /** The UK household years in household_options.time_period. */
@@ -32,8 +30,8 @@ export function yearValues(timePeriods: readonly MetadataTimePeriod[]): string[]
 export interface YearListMetadata {
   /** economy_options.time_period */
   societyWideYears: MetadataTimePeriod[];
-  /** household_options.time_period; omitted, the response has no household_options. */
-  householdYears?: MetadataTimePeriod[];
+  /** household_options.time_period */
+  householdYears: MetadataTimePeriod[];
 }
 
 /** A metadata response with the given year lists and nothing else of note. */
@@ -50,7 +48,7 @@ export function metadataPayloadWithYearLists({
       entities: {},
       variableModules: {},
       economy_options: { region: [], time_period: societyWideYears, datasets: [] },
-      ...(householdYears ? { household_options: { time_period: householdYears } } : {}),
+      household_options: { time_period: householdYears },
       current_law_id: 2,
       basicInputs: [],
       modelled_policies: { core: {}, filtered: {} },

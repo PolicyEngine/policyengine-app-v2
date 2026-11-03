@@ -26,9 +26,9 @@ export interface MetadataTimePeriod {
 }
 
 /**
- * The years a household calculation can use. Responses from the Public API
- * that predate this list leave it out; household readers then use
- * economy_options.time_period (see getHouseholdYearOptions).
+ * The years a household calculation can use. The Public API adds this list
+ * in PolicyEngine/policyengine-api#4159; the app reads it and nothing else
+ * for household years.
  */
 export interface MetadataHouseholdOptions {
   time_period: MetadataTimePeriod[];
@@ -48,7 +48,7 @@ export interface MetadataApiPayload {
       time_period: MetadataTimePeriod[];
       datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
     };
-    household_options?: MetadataHouseholdOptions;
+    household_options: MetadataHouseholdOptions;
     current_law_id: number;
     basicInputs: string[];
     modelled_policies: {
@@ -95,8 +95,7 @@ export interface MetadataState {
     time_period: MetadataTimePeriod[];
     datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
   };
-  /** Absent when the Public API response had no household_options. */
-  householdOptions?: MetadataHouseholdOptions;
+  householdOptions: MetadataHouseholdOptions;
   currentLawId: number;
   basicInputs: string[];
   modelledPolicies: {

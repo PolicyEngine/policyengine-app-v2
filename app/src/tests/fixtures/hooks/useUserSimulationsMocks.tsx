@@ -28,6 +28,7 @@ export const createMockMetadataState = () => ({
     time_period: [],
     datasets: [],
   },
+  householdOptions: { time_period: [] },
   currentLawId: 1,
   basicInputs: [],
   modelledPolicies: { core: {}, filtered: {} },

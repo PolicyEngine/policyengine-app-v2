@@ -12,6 +12,11 @@ const mockPolicyAssociationRefetch = vi.hoisted(() => vi.fn());
 const mockValueSetterCard = vi.hoisted(() => vi.fn());
 const MODAL_TEST_TIMEOUT_MS = 20_000;
 
+/** The household years most tests use: the same year as the economy options. */
+const DEFAULT_HOUSEHOLD_OPTIONS: MetadataHouseholdOptions = {
+  time_period: [{ name: 2024, label: '2024' }],
+};
+
 const mockReduxState = {
   metadata: {
     parameterTree: null,
@@ -31,15 +36,23 @@ const mockReduxState = {
     economyOptions: {
       time_period: [{ name: '2024', label: '2024' }],
     },
-    householdOptions: undefined as MetadataHouseholdOptions | undefined,
+    householdOptions: DEFAULT_HOUSEHOLD_OPTIONS,
   },
 };
+
+/**
+ * The state the mocked useSelector reads. A test replaces it with a new
+ * object rather than changing mockReduxState: the memoized selectors keep
+ * their result for as long as they get the same state object.
+ */
+let currentReduxState = mockReduxState;
 
 vi.mock('react-redux', async () => {
   const actual = await vi.importActual<typeof import('react-redux')>('react-redux');
   return {
     ...actual,
-    useSelector: (selector: (state: typeof mockReduxState) => unknown) => selector(mockReduxState),
+    useSelector: (selector: (state: typeof mockReduxState) => unknown) =>
+      selector(currentReduxState),
   };
 });
 
@@ -132,7 +145,7 @@ const partlyChangedPolicy: PolicyStateProps = {
 describe('PolicyCreationModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockReduxState.metadata.householdOptions = undefined;
+    currentReduxState = mockReduxState;
     mockCreatePolicyWithLabel.mockResolvedValue({ result: { policy_id: 'pol-new' } });
     mockCreatePolicyApi.mockResolvedValue({ result: { policy_id: 'pol-replacement' } });
     mockUpdatePolicyAssociation.mockResolvedValue({
@@ -383,7 +396,13 @@ describe('PolicyCreationModal', () => {
     'given household years beyond the society-wide years then values can be set for any household year',
     () => {
       // Given: society-wide years 2024 only, household years 2022 to 2035
-      mockReduxState.metadata.householdOptions = { time_period: timePeriodsFrom(2022, 2035) };
+      currentReduxState = {
+        ...mockReduxState,
+        metadata: {
+          ...mockReduxState.metadata,
+          householdOptions: { time_period: timePeriodsFrom(2022, 2035) },
+        },
+      };
       render(
         <PolicyCreationModal
           isOpen

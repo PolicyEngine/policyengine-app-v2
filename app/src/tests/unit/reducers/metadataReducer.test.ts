@@ -240,27 +240,6 @@ describe('metadataReducer', () => {
       expect(state.economyOptions).toEqual(MOCK_ECONOMY_OPTIONS);
     });
 
-    test('given fulfilled action without household_options then leaves the household years unset', () => {
-      // Given
-      const initialState = metadataReducer(
-        MOCK_LOADING_STATE,
-        fetchMetadataThunk.pending('metadata-request', TEST_COUNTRY_US)
-      );
-      const apiPayload = createMockApiPayload();
-      const action = {
-        type: fetchMetadataThunk.fulfilled.type,
-        meta: { requestId: 'metadata-request', arg: TEST_COUNTRY_US },
-        payload: { data: apiPayload, country: TEST_COUNTRY_US },
-      };
-
-      // When
-      const state = metadataReducer(initialState, action);
-
-      // Then
-      expect(state.householdOptions).toBeUndefined();
-      expect(state.economyOptions).toEqual(MOCK_ECONOMY_OPTIONS);
-    });
-
     test('given another country is requested then the earlier household years are cleared', () => {
       // Given
       const loadedState = createMockStateWithData({ householdOptions: MOCK_HOUSEHOLD_OPTIONS });
@@ -272,7 +251,7 @@ describe('metadataReducer', () => {
       );
 
       // Then
-      expect(state.householdOptions).toBeUndefined();
+      expect(state.householdOptions).toEqual(EXPECTED_INITIAL_STATE.householdOptions);
     });
 
     test('given fulfilled action when buildParameterTree returns undefined then sets null tree', () => {

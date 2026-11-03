@@ -9,6 +9,7 @@ import {
   selectSearchableParameters,
   transformMetadataPayload,
 } from '@/libs/metadataUtils';
+import metadataReducer from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
 import {
   EXPECTED_LABELS,
@@ -345,21 +346,7 @@ describe('household and society-wide year lists', () => {
       expect(result.map((option) => option.value)).toEqual(yearValues(YEAR_LISTS.US_HOUSEHOLD));
     });
 
-    it('given no household_options then offers the society-wide years, as before the Public API listed household years', () => {
-      // Given
-      const state = stateWithYearLists({ societyWideYears: YEAR_LISTS.US_SOCIETY_WIDE_TODAY });
-
-      // When
-      const result = getHouseholdYearOptions(state);
-
-      // Then
-      expect(result).toEqual(getSocietyWideYearOptions(state));
-      expect(result.map((option) => option.value)).toEqual(
-        yearValues(YEAR_LISTS.US_SOCIETY_WIDE_TODAY)
-      );
-    });
-
-    it('given household_options with no years then offers the society-wide years', () => {
+    it('given an empty household list then offers no years, not the society-wide years', () => {
       // Given
       const state = stateWithYearLists({
         societyWideYears: YEAR_LISTS.UK_SOCIETY_WIDE_TODAY,
@@ -370,9 +357,7 @@ describe('household and society-wide year lists', () => {
       const result = getHouseholdYearOptions(state);
 
       // Then
-      expect(result.map((option) => option.value)).toEqual(
-        yearValues(YEAR_LISTS.UK_SOCIETY_WIDE_TODAY)
-      );
+      expect(result).toEqual([]);
     });
   });
 
@@ -409,20 +394,23 @@ describe('household and society-wide year lists', () => {
       expect(result).toEqual({ minDate: '2024-01-01', maxDate: '2032-12-31' });
     });
 
-    it('given no household_options then spans the society-wide years', () => {
+    it('given an empty household list then the range is 2022 through 2035, not the society-wide years', () => {
       // Given
-      const state = stateWithYearLists({ societyWideYears: YEAR_LISTS.UK_SOCIETY_WIDE_TODAY });
+      const state = stateWithYearLists({
+        societyWideYears: YEAR_LISTS.UK_SOCIETY_WIDE_TODAY,
+        householdYears: [],
+      });
 
       // When
       const result = getHouseholdDateRange(state);
 
       // Then
-      expect(result).toEqual({ minDate: '2024-01-01', maxDate: '2030-12-31' });
+      expect(result).toEqual({ minDate: '2022-01-01', maxDate: '2035-12-31' });
     });
 
-    it('given neither list then falls back to 2022 through 2035', () => {
+    it('given the metadata has not loaded then the range is 2022 through 2035', () => {
       // Given
-      const state = stateWithYearLists({ societyWideYears: [] });
+      const state = { metadata: metadataReducer(undefined, { type: 'init' }) } as RootState;
 
       // When
       const result = getHouseholdDateRange(state);
@@ -445,19 +433,6 @@ describe('household and society-wide year lists', () => {
 
       // Then
       expect(result.householdOptions).toEqual({ time_period: YEAR_LISTS.US_HOUSEHOLD });
-    });
-
-    it('given no household_options then leaves the household years unset', () => {
-      // Given
-      const payload = metadataPayloadWithYearLists({
-        societyWideYears: YEAR_LISTS.US_SOCIETY_WIDE_TODAY,
-      });
-
-      // When
-      const result = transformMetadataPayload(payload, 'us');
-
-      // Then
-      expect(result.householdOptions).toBeUndefined();
     });
   });
 });

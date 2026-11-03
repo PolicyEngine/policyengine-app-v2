@@ -19,6 +19,7 @@ const READY_METADATA: MetadataState = {
   entities: {},
   variableModules: {},
   economyOptions: { region: [], time_period: [], datasets: [] },
+  householdOptions: { time_period: [] },
   currentLawId: 1,
   basicInputs: [],
   modelledPolicies: { core: {}, filtered: {} },

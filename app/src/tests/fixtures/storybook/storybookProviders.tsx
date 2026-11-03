@@ -55,6 +55,15 @@ const mockUserPolicyAssociation2: UserPolicy = {
 
 // ─── Redux store with pre-loaded metadata ────────────────────────────────────
 
+/** The years the Storybook metadata lists, for society-wide and household calculations alike. */
+const STORYBOOK_TIME_PERIODS = [
+  { name: 2024, label: '2024' },
+  { name: 2025, label: '2025' },
+  { name: 2026, label: '2026' },
+  { name: 2027, label: '2027' },
+  { name: 2028, label: '2028' },
+];
+
 function createStorybookStore() {
   const preloadedMetadata = {
     loading: false,
@@ -74,15 +83,10 @@ function createStorybookStore() {
         { name: 'state/tx', label: 'Texas' },
         { name: 'state/fl', label: 'Florida' },
       ],
-      time_period: [
-        { name: 2024, label: '2024' },
-        { name: 2025, label: '2025' },
-        { name: 2026, label: '2026' },
-        { name: 2027, label: '2027' },
-        { name: 2028, label: '2028' },
-      ],
+      time_period: STORYBOOK_TIME_PERIODS,
       datasets: [],
     },
+    householdOptions: { time_period: STORYBOOK_TIME_PERIODS },
     currentLawId: 1,
     basicInputs: [],
     modelledPolicies: { core: { '1': 'Current law' }, filtered: {} },

@@ -21,6 +21,7 @@ export const mockInitialMetadataState: MetadataState = {
   entities: {},
   variableModules: {},
   economyOptions: { region: [], time_period: [], datasets: [] },
+  householdOptions: { time_period: [] },
   currentLawId: 0,
   basicInputs: [],
   modelledPolicies: { core: {}, filtered: {} },
@@ -69,6 +70,7 @@ export const mockLoadedMetadataState: MetadataState = {
       },
     ],
   },
+  householdOptions: { time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }] },
   currentLawId: 1,
   basicInputs: ['income', 'age'],
   modelledPolicies: {
@@ -102,6 +104,7 @@ export const mockUKMetadataState: MetadataState = {
       },
     ],
   },
+  householdOptions: { time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }] },
   version: '2.0.0',
 };
 

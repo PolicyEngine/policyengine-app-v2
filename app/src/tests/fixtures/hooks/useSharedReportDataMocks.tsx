@@ -95,6 +95,7 @@ export const createMockStore = () => {
         time_period: [],
         datasets: [],
       },
+      householdOptions: { time_period: [] },
     }
   ) => state;
 

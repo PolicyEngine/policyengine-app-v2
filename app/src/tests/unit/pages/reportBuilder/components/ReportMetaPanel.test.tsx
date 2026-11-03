@@ -51,16 +51,4 @@ describe('ReportMetaPanel year menu', () => {
       );
     });
   });
-
-  describe('given metadata with no household years', () => {
-    beforeEach(() => {
-      seedYearListMetadata({ societyWideYears: YEAR_LISTS.US_SOCIETY_WIDE_TODAY });
-    });
-
-    test('given a household report then the menu offers the society-wide years, as before', async () => {
-      expect(await offeredYears(REPORT_POPULATIONS.HOUSEHOLD)).toEqual(
-        yearValues(YEAR_LISTS.US_SOCIETY_WIDE_TODAY)
-      );
-    });
-  });
 });

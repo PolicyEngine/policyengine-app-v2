@@ -15,6 +15,7 @@ const initialState: MetadataState = {
   entities: {},
   variableModules: {},
   economyOptions: { region: [], time_period: [], datasets: [] },
+  householdOptions: { time_period: [] },
   currentLawId: 0,
   basicInputs: [],
   modelledPolicies: { core: {}, filtered: {} },
@@ -101,8 +102,6 @@ const metadataSlice = createSlice({
         state.entities = body.entities;
         state.variableModules = body.variableModules;
         state.economyOptions = body.economy_options;
-        // Missing from responses that predate it; household readers then use
-        // the society-wide list (see getHouseholdYearOptions).
         state.householdOptions = body.household_options;
         state.currentLawId = body.current_law_id;
         state.basicInputs = body.basicInputs;

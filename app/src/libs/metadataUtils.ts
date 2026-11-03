@@ -20,20 +20,10 @@ const selectSocietyWideTimePeriods = (state: RootState) =>
 
 /**
  * The years a household calculation can use, from the metadata's
- * household_options.time_period. When the metadata has no household list
- * (Public API responses that predate it), or the list is empty, this is
- * the society-wide list instead.
+ * household_options.time_period.
  */
-const selectHouseholdTimePeriods = createSelector(
-  [
-    (state: RootState) => state.metadata.householdOptions?.time_period,
-    selectSocietyWideTimePeriods,
-  ],
-  (householdTimePeriods, societyWideTimePeriods) =>
-    householdTimePeriods && householdTimePeriods.length > 0
-      ? householdTimePeriods
-      : societyWideTimePeriods
-);
+const selectHouseholdTimePeriods = (state: RootState) =>
+  state.metadata.householdOptions.time_period;
 
 /** Menu options for a year list, earliest year first. */
 function toYearOptions(timePeriods: MetadataTimePeriod[] | undefined) {
@@ -85,7 +75,8 @@ export const getHouseholdYearOptions = createSelector(selectHouseholdTimePeriods
 
 /**
  * The dates a policy editor can set values for: the household year list's
- * first to last year, or 2022 to 2035 before the metadata loads.
+ * first to last year, or 2022 to 2035 while the list is empty (before the
+ * metadata loads).
  */
 export const getHouseholdDateRange = createSelector(selectHouseholdTimePeriods, toDateRange);
 

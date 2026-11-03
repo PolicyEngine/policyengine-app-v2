@@ -247,6 +247,7 @@ export const MOCK_METADATA_WITH_REGIONS: MetadataState = {
       },
     ],
   },
+  householdOptions: { time_period: [{ name: 2024, label: '2024' }] },
   currentLawId: 1,
   basicInputs: [],
   modelledPolicies: {
