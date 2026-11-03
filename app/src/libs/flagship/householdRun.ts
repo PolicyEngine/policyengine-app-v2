@@ -321,6 +321,8 @@ function linesFor(countryId: string) {
 export interface HouseholdLineChange {
   id: string;
   label: string;
+  /** The model variable the line reads, when it reads one: its description explains the line. */
+  variable?: string;
   /** Null for "Other", which is only a difference. */
   baseline: number | null;
   reform: number | null;
@@ -363,6 +365,7 @@ function lineChange(
   return {
     id: definition.id,
     label: definition.label,
+    ...(definition.sources.length === 1 && { variable: definition.sources[0].variable }),
     baseline: baselineTotal,
     reform: reformTotal,
     change,
@@ -467,11 +470,13 @@ async function calculateOnce(countryId: string, householdId: string, policyId: s
 async function calculateHousehold(
   payload: V1HouseholdCreateEnvelope,
   baselinePolicyId: string,
-  reformPolicyId: string
+  reformPolicyId: string,
+  onCreated?: (householdId: string) => void
 ) {
   try {
     const created = await createHousehold(payload);
     const householdId = String(created.result.household_id);
+    onCreated?.(householdId);
     const countryId = payload.country_id;
     const [baseline, reform] = await Promise.all([
       calculateOnce(countryId, householdId, baselinePolicyId),
@@ -486,8 +491,9 @@ async function calculateHousehold(
 }
 
 /**
- * Creates the household (the API dedupes identical ones) and calculates
- * it under the baseline and the reform at once.
+ * Creates the household and calculates it under the baseline and the
+ * reform at once. The API stores a new household on every call, even for
+ * identical inputs, so each run gets its own household ID.
  */
 export async function runFlagshipHousehold({
   year,
@@ -512,16 +518,20 @@ export async function runFlagshipHouseholdPayload({
   payload,
   baselinePolicyId,
   reformPolicyId,
+  onCreated,
 }: {
   year: string;
   payload: V1HouseholdCreateEnvelope;
   baselinePolicyId: string;
   reformPolicyId: string;
+  /** Called once the API has stored the household, before it is calculated. */
+  onCreated?: (householdId: string) => void;
 }): Promise<FlagshipHouseholdRun> {
   const { householdId, baseline, reform } = await calculateHousehold(
     payload,
     baselinePolicyId,
-    reformPolicyId
+    reformPolicyId,
+    onCreated
   );
   return {
     householdId,

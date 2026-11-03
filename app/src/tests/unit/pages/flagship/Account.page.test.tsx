@@ -16,6 +16,12 @@ import {
   makeAuthValue,
   signedInAuthValue,
 } from '@/tests/fixtures/libs/auth/authMocks';
+import { accountStorage } from '@/tests/fixtures/types/v2UserMocks';
+
+vi.mock('@/types/v2User', async (importOriginal) => {
+  const { withSwitchableAccountStorage } = await import('@/tests/fixtures/types/v2UserMocks');
+  return withSwitchableAccountStorage(await importOriginal());
+});
 
 const fetchMock = vi.fn();
 
@@ -40,6 +46,7 @@ function answerMe(other: () => Response = () => noContentResponse()) {
 
 beforeEach(() => {
   localStorage.clear();
+  accountStorage.withoutAccountStorage = false;
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
 });
@@ -148,7 +155,9 @@ describe('AccountPage', () => {
   });
 
   test('given a country without account storage then the page points to the US and UK', () => {
-    renderPage(signedInAuthValue(), 'ca');
+    accountStorage.withoutAccountStorage = true;
+
+    renderPage(signedInAuthValue());
 
     expect(
       screen.getByText(/accounts store work for the us and uk calculators/i)
@@ -157,16 +166,15 @@ describe('AccountPage', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test.each(['ca', 'ng', 'il'])(
-    'given a signed-out visitor in %s then the page points to the US and UK, with no sign-in',
-    (countryId) => {
-      renderPage(makeAuthValue(), countryId);
+  test('given a signed-out visitor in a country without account storage then there is no sign-in', () => {
+    accountStorage.withoutAccountStorage = true;
 
-      expect(
-        screen.getByText(/accounts store work for the us and uk calculators/i)
-      ).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument();
-    }
-  );
+    renderPage(makeAuthValue());
+
+    expect(
+      screen.getByText(/accounts store work for the us and uk calculators/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument();
+  });
 });

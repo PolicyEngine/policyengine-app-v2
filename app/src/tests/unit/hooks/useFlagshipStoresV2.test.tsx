@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { ApiV2ReformStore, LocalStorageReformStore } from '@/api/reformStore';
+import { ApiV2ReformStore } from '@/api/reformStore';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { useReformStore } from '@/hooks/useFlagshipStores';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
@@ -149,12 +149,12 @@ function seedV2Metadata() {
   });
 }
 
-function wrapperFor(auth: AuthContextValue, countryId: 'us' | 'ca' = 'us') {
+function wrapperFor(auth: AuthContextValue) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return ({ children }: { children: React.ReactNode }) => (
     <ReduxProvider store={store}>
       <QueryClientProvider client={queryClient}>
-        <CountryProvider value={countryId}>
+        <CountryProvider value="us">
           <AuthTestProvider value={auth}>{children}</AuthTestProvider>
         </CountryProvider>
       </QueryClientProvider>
@@ -184,16 +184,6 @@ describe('useReformStore with v3 on the v2 routes', () => {
 
     // Then
     expect(reforms).toBeInstanceOf(ApiV2ReformStore);
-  });
-
-  test('given a country without accounts then reforms stay in this browser', () => {
-    // When
-    const reforms = renderHook(() => useReformStore(), {
-      wrapper: wrapperFor(signedInAuthValue(), 'ca'),
-    }).result.current;
-
-    // Then
-    expect(reforms).toBeInstanceOf(LocalStorageReformStore);
   });
 
   test('given v2 metadata then a saved reform loads its catalog IDs and makes its policy', async () => {

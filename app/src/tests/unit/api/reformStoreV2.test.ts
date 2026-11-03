@@ -120,17 +120,18 @@ function v2Store(catalog: V2CatalogReference | null = CATALOG) {
   const { fetchMock, context } = createTestApiContext('us');
   const createPolicy = vi.fn().mockResolvedValue(V2_POLICY_ID);
   const fetchV2Policy = vi.fn().mockResolvedValue(v2Policy());
-  const fetchPolicyJson = vi.fn().mockResolvedValue({
-    [CTC_AMOUNT]: { '2026-01-01.2100-12-31': 3000 },
+  const fetchPolicy = vi.fn().mockResolvedValue({
+    policy_json: { [CTC_AMOUNT]: { '2026-01-01.2100-12-31': 3000 } },
+    missing_parameters: [],
   });
   const store = new ApiV2ReformStore(context, {
     getV2Catalog: () => catalog,
     resolveParameterIds,
     createV2Policy: createPolicy,
     fetchV2Policy,
-    fetchPolicyJson,
+    fetchPolicy,
   });
-  return { store, fetchMock, createPolicy, fetchV2Policy, fetchPolicyJson };
+  return { store, fetchMock, createPolicy, fetchV2Policy, fetchPolicy };
 }
 
 describe('createV2ReformPolicy', () => {
@@ -334,7 +335,7 @@ describe('ApiV2ReformStore', () => {
 
   it('given saved rows then v2 rows read their policy and v1-only rows read the v1 policy', async () => {
     // Given
-    const { store, fetchMock, fetchV2Policy, fetchPolicyJson } = v2Store();
+    const { store, fetchMock, fetchV2Policy, fetchPolicy } = v2Store();
     const legacyRow = policyItem({
       id: '66666666-6666-4666-8666-666666666666',
       policy_id: null,
@@ -355,7 +356,7 @@ describe('ApiV2ReformStore', () => {
 
     // Then
     expect(fetchV2Policy).toHaveBeenCalledWith('us', V2_POLICY_ID);
-    expect(fetchPolicyJson).toHaveBeenCalledWith('us', String(LEGACY_ONLY_POLICY_ID));
+    expect(fetchPolicy).toHaveBeenCalledWith('us', String(LEGACY_ONLY_POLICY_ID));
     // Each kind of policy in its own field: a v2 UUID, or a v1 numeric ID.
     expect(reforms.map((reform) => [reform.id, reform.v2PolicyId, reform.policyId])).toEqual([
       [ASSOCIATION_IDS.REFORM, V2_POLICY_ID, null],
@@ -367,6 +368,30 @@ describe('ApiV2ReformStore', () => {
         name: CTC_AMOUNT,
         values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3000 }],
       },
+    ]);
+  });
+
+  it('given a v1-only row whose policy sets parameters the model no longer has then the reform names them', async () => {
+    // Given
+    const { store, fetchMock, fetchPolicy } = v2Store();
+    const legacyRow = policyItem({
+      id: '77777777-7777-4777-8777-777777777777',
+      policy_id: null,
+      legacy_policy_id: LEGACY_ONLY_POLICY_ID,
+      provenance: { source: 'manual', ref: null, confidence: null },
+    });
+    fetchPolicy.mockResolvedValue({
+      policy_json: { [CTC_AMOUNT]: { '2026-01-01.2100-12-31': 3000 } },
+      missing_parameters: ['gov.irs.credits.removed_credit.amount'],
+    });
+    fetchMock.mockResolvedValue(pageResponse([legacyRow]));
+
+    // When
+    const reforms = await store.findMine('us');
+
+    // Then
+    expect(reforms.map((reform) => reform.missingParameters)).toEqual([
+      ['gov.irs.credits.removed_credit.amount'],
     ]);
   });
 

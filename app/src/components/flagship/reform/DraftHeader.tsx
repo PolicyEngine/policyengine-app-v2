@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { ReformNotFoundError } from '@/api/reformStore';
 import { BrowserOnlyIdError } from '@/api/v2Associations';
 import { isV2ApiError } from '@/api/v2UserClient';
+import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import { ErrorState } from '@/components/flagship/states';
 import {
   Button,
@@ -37,6 +38,7 @@ import {
   setDraftYear,
 } from '@/libs/draftReform';
 import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
+import { pathsMissingFromModel } from '@/libs/flagship/missingParameters';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
 import { getTaxYears } from '@/libs/metadataUtils';
@@ -402,6 +404,13 @@ export function DraftRunBar({
   // has nothing to save. A saved reform being edited can still go back to
   // current law.
   const nothingToSave = empty || (!draft.editingReformId && adjusted.length === 0);
+  // A draft kept across a model update can change a parameter the model
+  // has since dropped. Saving and running would both send it, and the API
+  // refuses a policy that sets it, so it stops both.
+  const draftMissingParameters = pathsMissingFromModel(
+    adjusted.map((provision) => provision.path),
+    parameters
+  );
 
   return (
     <section
@@ -514,7 +523,13 @@ export function DraftRunBar({
           <Button
             variant="outline"
             onClick={() => saveMutation.mutate()}
-            disabled={nothingToSave || saveMutation.isPending || starting || currentLawUnavailable}
+            disabled={
+              nothingToSave ||
+              saveMutation.isPending ||
+              starting ||
+              currentLawUnavailable ||
+              draftMissingParameters.length > 0
+            }
           >
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
@@ -539,7 +554,9 @@ export function DraftRunBar({
               baseline.pending ||
               baseline.failed ||
               baseline.matchesDraft ||
-              currentLawUnavailable
+              currentLawUnavailable ||
+              baseline.missingParameters.length > 0 ||
+              draftMissingParameters.length > 0
             }
             title={
               !empty && adjusted.length === 0
@@ -590,6 +607,21 @@ export function DraftRunBar({
           onRetry={baseline.retry}
         />
       )}
+
+      {draftMissingParameters.length > 0 && (
+        <MissingParametersNotice subject="This reform" parameterPaths={draftMissingParameters}>
+          Remove {draftMissingParameters.length === 1 ? 'it' : 'them'} from the reform to save or
+          run it.
+        </MissingParametersNotice>
+      )}
+
+      {baseline.reform && baseline.missingParameters.length > 0 && (
+        <MissingParametersNotice
+          subject={`The reform it is compared with, ${savedReformName(baseline.reform)},`}
+          parameterPaths={baseline.missingParameters}
+        />
+      )}
+
       {(runReport.error || saveError) && (
         <p
           role="alert"

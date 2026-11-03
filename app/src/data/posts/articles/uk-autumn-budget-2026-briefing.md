@@ -1,3 +1,5 @@
+> **31 October 2026:** our [dashboard](https://www.policyengine.org/uk/budgets/autumn-2026) now also includes capping single bus fares at £2 in England outside London during 2027, so its combined results cover eight measures. Our estimates in this briefing cover the seven measures in Table 1.
+
 In the Budget on 28 October 2026, the Chancellor [announced](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) support with energy bills this winter, a Pension Tax Allowance, higher tax rates on property and savings income, and a larger trading allowance, among other measures. This briefing sets out what the seven measures for households in our [Autumn Budget 2026 dashboard](https://www.policyengine.org/uk/budgets/autumn-2026) do together and one by one, how our estimates compare with the official costings, and which measures we don't yet model.
 
 Key results, from PolicyEngine's static microsimulation:

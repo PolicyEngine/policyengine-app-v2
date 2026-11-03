@@ -1,0 +1,87 @@
+name: Zone direct-host audit
+
+on:
+  pull_request:
+    paths:
+      - "website/src/data/appZoneRoutes.ts"
+      - "website/src/data/policyEngineIconRewrites.ts"
+      - "website/next.config.ts"
+      - "website/src/middleware.ts"
+      - ".github/scripts/audit-zone-direct-hosts.mjs"
+      - ".github/scripts/audit-zone-direct-hosts.test.mjs"
+      - ".github/scripts/audit-app-zone-shell.mjs"
+      - ".github/workflows/zone-direct-host-audit.yml"
+      - "package.json"
+      - "bun.lock"
+  workflow_dispatch:
+  schedule:
+    - cron: "47 9 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Audit direct visits to zone hosts
+    runs-on: ubuntu-latest
+    # No request, retry or parse runs past 12 minutes (DEFAULT_DEADLINE_MS);
+    # what's left then is called unreachable. This leaves room for the install.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # Like the app-zone shell audit, this connects to production sites over
+      # HTTPS, so it uses a Node 24 release without the compromised eMudhra
+      # (emSign) CAs. Node 24 also runs appZoneRoutes.ts as is, types
+      # stripped; the flag hides its warning that website/ has no "type".
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          check-latest: true
+
+      # The audit reads canonical links with parse5, a root devDependency.
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run direct-host audit unit tests
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test .github/scripts/audit-zone-direct-hosts.test.mjs
+
+      - name: Run direct-host audit
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .github/scripts/audit-zone-direct-hosts.mjs
+
+  report:
+    name: File, bump or close the audit issue
+    needs: audit
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Update the issue for this run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.audit.result }}
+        run: |
+          title="Zone direct-host audit is failing"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "in:title \"$title\"" --json number --jq '.[0].number')
+          if [ "$RESULT" = "success" ]; then
+            if [ -n "$existing" ]; then
+              gh issue close "$existing" --repo "$GITHUB_REPOSITORY" \
+                --comment "Passing again: $run_url"
+            fi
+          elif [ "$RESULT" != "failure" ]; then
+            echo "The audit job ended $RESULT; leaving the issue as it is."
+          elif [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" \
+              --body "Still failing: $run_url"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "The scheduled zone direct-host audit failed: $run_url
+
+          The run log says which step failed. When it's the audit itself, the log names each zone whose direct visits no longer reach the same page on policyengine.org, or that DIRECT_HOST_REDIRECTS lists but that stopped redirecting. Fix it in that zone's repository (docs/engineering/skills/repository-guidance.md → Embedded sites → The direct-host redirect)."
+          fi
