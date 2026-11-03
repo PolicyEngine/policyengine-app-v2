@@ -129,6 +129,15 @@ export const MOCK_ECONOMY_OPTIONS = {
   ],
 };
 
+// Mock household options: the household years run two years before the society-wide years
+export const MOCK_HOUSEHOLD_OPTIONS = {
+  time_period: [
+    { name: 2020, label: '2020' },
+    { name: 2021, label: '2021' },
+    ...MOCK_ECONOMY_OPTIONS.time_period,
+  ],
+};
+
 // Mock basic inputs
 export const MOCK_BASIC_INPUTS = ['age', 'employment_income', 'state_name'];
 

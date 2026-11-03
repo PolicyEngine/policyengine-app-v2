@@ -1,12 +1,15 @@
 import { fireEvent, render, screen, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
+import { timePeriodsFrom } from '@/tests/fixtures/libs/yearListMocks';
+import type { MetadataHouseholdOptions } from '@/types/metadata';
 import type { PolicyStateProps } from '@/types/pathwayState';
 
 const mockCreatePolicyWithLabel = vi.hoisted(() => vi.fn());
 const mockCreatePolicyApi = vi.hoisted(() => vi.fn());
 const mockUpdatePolicyAssociation = vi.hoisted(() => vi.fn());
 const mockPolicyAssociationRefetch = vi.hoisted(() => vi.fn());
+const mockValueSetterCard = vi.hoisted(() => vi.fn());
 const MODAL_TEST_TIMEOUT_MS = 20_000;
 
 const mockReduxState = {
@@ -28,6 +31,7 @@ const mockReduxState = {
     economyOptions: {
       time_period: [{ name: '2024', label: '2024' }],
     },
+    householdOptions: undefined as MetadataHouseholdOptions | undefined,
   },
 };
 
@@ -69,9 +73,18 @@ vi.mock('@/pages/reportBuilder/modals/policyCreation', () => ({
   EmptyParameterState: () => <div data-testid="empty-parameter-state" />,
   HistoricalValuesCard: () => <div data-testid="historical-values-card" />,
   ParameterHeaderCard: () => <div data-testid="parameter-header-card" />,
-  ParameterSidebar: () => <div data-testid="parameter-sidebar" />,
+  ParameterSidebar: ({ onMenuItemClick }: { onMenuItemClick: (paramName: string) => void }) => (
+    <div data-testid="parameter-sidebar">
+      <button type="button" onClick={() => onMenuItemClick('gov.test.parameter')}>
+        Select test parameter
+      </button>
+    </div>
+  ),
   PolicyOverviewContent: () => <div data-testid="policy-overview-content" />,
-  ValueSetterCard: () => <div data-testid="value-setter-card" />,
+  ValueSetterCard: (props: { minDate: string; maxDate: string }) => {
+    mockValueSetterCard(props);
+    return <div data-testid="value-setter-card" />;
+  },
 }));
 
 const initialPolicy: PolicyStateProps = {
@@ -119,6 +132,7 @@ const partlyChangedPolicy: PolicyStateProps = {
 describe('PolicyCreationModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockReduxState.metadata.householdOptions = undefined;
     mockCreatePolicyWithLabel.mockResolvedValue({ result: { policy_id: 'pol-new' } });
     mockCreatePolicyApi.mockResolvedValue({ result: { policy_id: 'pol-replacement' } });
     mockUpdatePolicyAssociation.mockResolvedValue({
@@ -361,6 +375,34 @@ describe('PolicyCreationModal', () => {
           'Partly changed policy'
         );
       });
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given household years beyond the society-wide years then values can be set for any household year',
+    () => {
+      // Given: society-wide years 2024 only, household years 2022 to 2035
+      mockReduxState.metadata.householdOptions = { time_period: timePeriodsFrom(2022, 2035) };
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={initialPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      // When
+      fireEvent.click(screen.getByRole('button', { name: 'Select test parameter' }));
+
+      // Then
+      expect(mockValueSetterCard).toHaveBeenLastCalledWith(
+        expect.objectContaining({ minDate: '2022-01-01', maxDate: '2035-12-31' })
+      );
     },
     MODAL_TEST_TIMEOUT_MS
   );
