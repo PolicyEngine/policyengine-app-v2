@@ -257,9 +257,9 @@ export default function HouseholdBreakdowns({
     };
     content =
       view === 'earnings-variation' ? (
-        <EarningsVariationSubPage {...outputProps} />
+        <EarningsVariationSubPage {...outputProps} tidyChart />
       ) : (
-        <MarginalTaxRatesSubPage {...outputProps} currencyAwareText />
+        <MarginalTaxRatesSubPage {...outputProps} currencyAwareText tidyChart />
       );
   }
 
