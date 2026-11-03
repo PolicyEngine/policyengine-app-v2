@@ -213,6 +213,8 @@ export default function HouseholdImpactResult({
   impact,
   summary,
   breakdowns,
+  variationStartedAt,
+  onVariationOpen,
   countryId = 'us',
   describe,
 }: {
@@ -221,6 +223,10 @@ export default function HouseholdImpactResult({
   summary: string;
   /** The household run the v2 breakdowns read; without it, only the summary shows. */
   breakdowns?: HouseholdBreakdownSource;
+  /** When the household's variation run started, if it has: its bar carries on from there. */
+  variationStartedAt?: number;
+  /** Called when a variation output opens. */
+  onVariationOpen?: () => void;
   /** The report's country: its currency. */
   countryId?: CountryId;
   /** A model variable's description, for the tip beside each line. */
@@ -403,7 +409,12 @@ export default function HouseholdImpactResult({
 
       {breakdowns && view !== 'summary' ? (
         <div style={{ minWidth: 0 }}>
-          <HouseholdBreakdowns view={view} source={breakdowns} />
+          <HouseholdBreakdowns
+            view={view}
+            source={breakdowns}
+            variationStartedAt={variationStartedAt}
+            onVariationOpen={onVariationOpen}
+          />
         </div>
       ) : (
         <SummaryTables

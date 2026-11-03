@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   focusManager,
   onlineManager,
@@ -113,18 +114,35 @@ vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (imp
   ...(await importOriginal<
     typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
   >()),
-  default: ({ view, source }: any) => (
-    <div aria-label="Breakdown" data-country={source.countryId}>
-      {[
-        view,
-        source.householdId,
-        source.year,
-        source.baselinePolicyId,
-        source.reformPolicyId,
-        source.baseline.households['your household'].household_net_income[source.year],
-        source.reform.households['your household'].household_net_income[source.year],
-      ].join(' · ')}
-    </div>
+  default: function BreakdownStandIn({ view, source, variationStartedAt, onVariationOpen }: any) {
+    // As the real one: a variation output, opened, starts the household's variation run.
+    const variation = view === 'earnings-variation' || view === 'marginal-tax-rates';
+    useEffect(() => {
+      if (variation) {
+        onVariationOpen?.();
+      }
+    }, [variation, onVariationOpen]);
+    return (
+      <div
+        aria-label="Breakdown"
+        data-country={source.countryId}
+        data-variation-started={variationStartedAt}
+      >
+        {[
+          view,
+          source.householdId,
+          source.year,
+          source.baselinePolicyId,
+          source.reformPolicyId,
+          source.baseline.households['your household'].household_net_income[source.year],
+          source.reform.households['your household'].household_net_income[source.year],
+        ].join(' · ')}
+      </div>
+    );
+  },
+  // The run's keeper, tested on its own: a stand-in shows that it is there.
+  HouseholdVariationKeeper: ({ source }: any) => (
+    <div data-testid="variation-kept">{source.householdId}</div>
   ),
 }));
 vi.mock('@/utils/HouseholdValidation', () => ({
@@ -238,6 +256,30 @@ describe('HouseholdImpactSection', () => {
       within(first).queryByRole('region', { name: 'Household impact' })
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Household 2' })).not.toBeInTheDocument();
+  });
+
+  test('given a variation output then its run and clock carry on while another household is open', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    const result = await screen.findByRole('region', { name: 'Household impact' });
+    expect(screen.queryByTestId('variation-kept')).not.toBeInTheDocument();
+
+    await user.click(within(result).getByRole('tab', { name: 'Varying earnings' }));
+    const startedAt = within(result).getByLabelText('Breakdown').dataset.variationStarted;
+    expect(Number(startedAt)).toBeGreaterThan(0);
+    expect(screen.getByTestId('variation-kept')).toHaveTextContent(String(CREATED_HOUSEHOLD_ID));
+
+    // Another tab, then another household: the run is still held.
+    await user.click(within(result).getByRole('tab', { name: 'Summary' }));
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+    expect(screen.getByTestId('variation-kept')).toBeInTheDocument();
+
+    await openTile(user, /^Household 1/);
+    const back = await screen.findByRole('region', { name: 'Household impact' });
+    await user.click(within(back).getByRole('tab', { name: 'Marginal tax rates' }));
+    // The same run: its clock from when it started.
+    expect(within(back).getByLabelText('Breakdown').dataset.variationStarted).toBe(startedAt);
   });
 
   test('given a household renamed then its tile and panel take the name', async () => {

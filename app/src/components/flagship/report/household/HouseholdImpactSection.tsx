@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconPencil, IconPlus, IconTable, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
+import {
+  HouseholdVariationKeeper,
+  type HouseholdBreakdownSource,
+} from '@/components/flagship/report/household/HouseholdBreakdowns';
 import HouseholdComparison from '@/components/flagship/report/household/HouseholdComparison';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
 import { money } from '@/components/flagship/report/household/householdMoney';
@@ -647,6 +651,43 @@ function HouseholdCard({
   const running = !!requested && run.isFetching;
   const failed = !!requested && !running && run.isError;
   const result = requested && !running ? run.data : undefined;
+  // The run the v2 breakdowns read.
+  const breakdowns = useMemo<HouseholdBreakdownSource | undefined>(
+    () =>
+      result
+        ? {
+            countryId,
+            year,
+            householdId: result.householdId,
+            baselinePolicyId,
+            reformPolicyId,
+            baseline: result.baseline,
+            reform: result.reform,
+            gains: Math.round(result.netIncome.change) > 0,
+          }
+        : undefined,
+    [result, countryId, year, baselinePolicyId, reformPolicyId]
+  );
+  // The result's variation run (Varying earnings, Marginal tax rates), once
+  // either opens: held here, as the card stays mounted, so the run and its
+  // clock carry on while another household or another tab is open.
+  const [variationRun, setVariationRun] = useState<{
+    householdId: string;
+    startedAt: number;
+  } | null>(null);
+  const resultId = result?.householdId;
+  const variationStartedAt =
+    variationRun && variationRun.householdId === resultId ? variationRun.startedAt : undefined;
+  const openVariation = useCallback(() => {
+    if (resultId) {
+      setVariationRun((current) =>
+        current?.householdId === resultId
+          ? current
+          : { householdId: resultId, startedAt: Date.now() }
+      );
+    }
+  }, [resultId]);
+
   // A calculated household is saved to the user in the background; nothing
   // here shows it.
   useSaveCalculatedHousehold({
@@ -938,21 +979,17 @@ function HouseholdCard({
                   countryId={countryId}
                   describe={describeVariable}
                   summary={`${requested.summary} · ${year}`}
-                  breakdowns={{
-                    countryId,
-                    year,
-                    householdId: result.householdId,
-                    baselinePolicyId,
-                    reformPolicyId,
-                    baseline: result.baseline,
-                    reform: result.reform,
-                    gains: Math.round(result.netIncome.change) > 0,
-                  }}
+                  breakdowns={breakdowns}
+                  variationStartedAt={variationStartedAt}
+                  onVariationOpen={openVariation}
                 />
               )}
             </Stack>
           )}
         </div>
+      )}
+      {breakdowns && variationStartedAt !== undefined && (
+        <HouseholdVariationKeeper source={breakdowns} />
       )}
     </section>
   );
