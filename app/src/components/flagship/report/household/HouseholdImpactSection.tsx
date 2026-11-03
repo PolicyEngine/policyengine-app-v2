@@ -58,6 +58,7 @@ import {
   trackHouseholdVariableAdded,
 } from '@/utils/analytics';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
+import { getNormalizedVariableMetadata } from '@/utils/variableMetadata';
 import { getInputVariables, type VariableInfo } from '@/utils/VariableResolver';
 
 /** The countries whose results, inputs and currency the section knows. */
@@ -535,6 +536,11 @@ function HouseholdCard({
     const who = describeHousehold(household, year, countryId, metadata?.variables);
     return earnings > 0 ? `${who} · ${money(earnings, countryId)} earnings` : who;
   }, [household, year, countryId, metadata?.variables]);
+  // A result line's variable as the country model describes it, for its tip.
+  const describeVariable = useCallback(
+    (name: string) => getNormalizedVariableMetadata(metadata?.variables?.[name]).documentation,
+    [metadata?.variables]
+  );
 
   // The run on its way, for analytics: when it started and what it holds
   // (counts only). Cleared once its end is sent, so each run sends once.
@@ -841,6 +847,7 @@ function HouseholdCard({
                 <HouseholdImpactResult
                   impact={result}
                   countryId={countryId}
+                  describe={describeVariable}
                   summary={`${requested.summary} · ${year}`}
                   breakdowns={{
                     countryId,

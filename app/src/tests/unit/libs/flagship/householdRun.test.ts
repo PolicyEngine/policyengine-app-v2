@@ -145,6 +145,7 @@ describe('compareHouseholds', () => {
       {
         id: 'federal_income_tax',
         label: 'Federal income tax',
+        variable: 'income_tax',
         baseline: 3000,
         reform: 2000,
         change: -1000,
@@ -189,6 +190,7 @@ describe('compareHouseholds', () => {
       {
         id: 'ctc_value',
         label: 'Child Tax Credit',
+        variable: 'ctc_value',
         baseline: 1125,
         reform: 1500,
         change: 375,
@@ -250,6 +252,7 @@ describe('compareHouseholds for the UK', () => {
       {
         id: 'income_tax',
         label: 'Income Tax',
+        variable: 'income_tax',
         baseline: 3486,
         reform: 2986,
         change: -500,

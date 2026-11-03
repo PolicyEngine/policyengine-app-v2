@@ -9,6 +9,7 @@ import {
   money,
   signedMoney,
 } from '@/components/flagship/report/household/householdMoney';
+import VariableInfoTip from '@/components/household/VariableInfoTip';
 import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
@@ -27,6 +28,26 @@ const headerCell: CSSProperties = {
 /** A number column's gap from the column before: narrow on a phone, so all four columns fit. */
 const NUMBER_CELL = 'tw:pl-3 tw:md:pl-8';
 
+/** A model variable's description, by its name; none for a variable without one. */
+type DescribeVariable = (variable: string) => string | undefined;
+
+/**
+ * A line's name with its tip: every amount in the result is for the year,
+ * then the line's variable as the model describes it, where it has one.
+ */
+function LineName({ line, describe }: { line: HouseholdLineChange; describe?: DescribeVariable }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing.xs }}>
+      {line.label}
+      <VariableInfoTip
+        label={line.label}
+        period="Per year"
+        description={line.variable ? describe?.(line.variable) : undefined}
+      />
+    </span>
+  );
+}
+
 const bodyCell: CSSProperties = {
   padding: `${spacing.sm} 0`,
   textAlign: 'right',
@@ -39,11 +60,13 @@ function ChangeTable({
   lines,
   total,
   countryId,
+  describe,
 }: {
   label: string;
   lines: HouseholdLineChange[];
   total?: HouseholdLineChange;
   countryId: CountryId;
+  describe?: DescribeVariable;
 }) {
   const rows = total ? [...lines, total] : lines;
   return (
@@ -96,7 +119,7 @@ function ChangeTable({
                       : typography.fontWeight.normal,
                   }}
                 >
-                  {line.label}
+                  <LineName line={line} describe={describe} />
                 </th>
                 <td className={NUMBER_CELL} style={bodyCell}>
                   {line.baseline === null ? '—' : money(line.baseline, countryId)}
@@ -125,11 +148,13 @@ function SummaryTables({
   noChange,
   change,
   countryId,
+  describe,
 }: {
   impact: FlagshipHouseholdImpact;
   noChange: boolean;
   change: number;
   countryId: CountryId;
+  describe?: DescribeVariable;
 }) {
   const { netIncome, components, programs } = impact;
   return noChange ? (
@@ -143,9 +168,11 @@ function SummaryTables({
           label="Taxes and benefits"
           lines={components}
           countryId={countryId}
+          describe={describe}
           total={{
             id: 'net_income',
             label: 'Net income',
+            variable: 'household_net_income',
             baseline: netIncome.baseline,
             reform: netIncome.reform,
             change: netIncome.change,
@@ -154,7 +181,12 @@ function SummaryTables({
         />
       )}
       {programs.length > 0 && (
-        <ChangeTable label="Credits and benefits" lines={programs} countryId={countryId} />
+        <ChangeTable
+          label="Credits and benefits"
+          lines={programs}
+          countryId={countryId}
+          describe={describe}
+        />
       )}
     </>
   );
@@ -182,6 +214,7 @@ export default function HouseholdImpactResult({
   summary,
   breakdowns,
   countryId = 'us',
+  describe,
 }: {
   impact: FlagshipHouseholdImpact;
   /** The household the result is for, e.g. "Single · no children · $50,000 earnings · Ohio · 2026". */
@@ -190,6 +223,8 @@ export default function HouseholdImpactResult({
   breakdowns?: HouseholdBreakdownSource;
   /** The report's country: its currency. */
   countryId?: CountryId;
+  /** A model variable's description, for the tip beside each line. */
+  describe?: DescribeVariable;
 }) {
   const [view, setView] = useState<'summary' | HouseholdBreakdownView>('summary');
   const { netIncome, components, programs } = impact;
@@ -297,7 +332,9 @@ export default function HouseholdImpactResult({
                   fontSize: typography.fontSize.sm,
                 }}
               >
-                <span style={{ color: colors.text.primary }}>{line.label}</span>
+                <span style={{ color: colors.text.primary }}>
+                  <LineName line={line} describe={describe} />
+                </span>
                 <span
                   style={{
                     fontVariantNumeric: 'tabular-nums',
@@ -369,7 +406,13 @@ export default function HouseholdImpactResult({
           <HouseholdBreakdowns view={view} source={breakdowns} />
         </div>
       ) : (
-        <SummaryTables impact={impact} noChange={noChange} change={change} countryId={countryId} />
+        <SummaryTables
+          impact={impact}
+          noChange={noChange}
+          change={change}
+          countryId={countryId}
+          describe={describe}
+        />
       )}
     </section>
   );

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@test-utils';
+import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import HouseholdBuilderForm, {
   PEOPLE_GRID_CLASSES,
@@ -347,6 +347,39 @@ describe('rankVariablesBySearch', () => {
     renderForm({ layout, metadata, household, basicNonPersonFields: ['rent'] });
 
     expect(screen.getByPlaceholderText(/^Enter/)).toHaveValue(shown);
+  });
+
+  test.each([
+    ['columns', 1],
+    ['stacked', 0],
+  ] as const)('given the %s layout then a described field has %i tip', async (layout, tips) => {
+    const metadata = {
+      entities: { household: { plural: 'households', label: 'Household' } },
+      variables: {
+        rent: {
+          name: 'rent',
+          label: 'Rent',
+          entity: 'household',
+          isInputVariable: true,
+          valueType: 'float',
+          unit: 'currency-USD',
+          defaultValue: 0,
+          // Defined per month in the model, but entered, like every amount, for the year.
+          definition_period: 'month',
+          description: 'Rent paid for the home.',
+        },
+      },
+    };
+    renderForm({ layout, metadata, basicNonPersonFields: ['rent'] });
+
+    const tip = screen.queryAllByRole('button', { name: 'About Rent' });
+    expect(tip).toHaveLength(tips);
+    if (tips) {
+      await userEvent.setup().click(tip[0]);
+      expect(screen.getByRole('tooltip')).toHaveTextContent(
+        'Per year: enter the total for the yearRent paid for the home.'
+      );
+    }
   });
 
   test('given the stacked layout then whole-number inputs keep no step buttons, as before', () => {

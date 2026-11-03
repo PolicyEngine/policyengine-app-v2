@@ -321,6 +321,8 @@ function linesFor(countryId: string) {
 export interface HouseholdLineChange {
   id: string;
   label: string;
+  /** The model variable the line reads, when it reads one: its description explains the line. */
+  variable?: string;
   /** Null for "Other", which is only a difference. */
   baseline: number | null;
   reform: number | null;
@@ -363,6 +365,7 @@ function lineChange(
   return {
     id: definition.id,
     label: definition.label,
+    ...(definition.sources.length === 1 && { variable: definition.sources[0].variable }),
     baseline: baselineTotal,
     reform: reformTotal,
     change,
