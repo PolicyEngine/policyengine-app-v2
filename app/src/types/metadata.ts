@@ -19,6 +19,21 @@ export interface MetadataRegionEntry {
   state_name?: string;
 }
 
+/** One year in a metadata year list, such as economy_options.time_period. */
+export interface MetadataTimePeriod {
+  name: number;
+  label: string;
+}
+
+/**
+ * The years a household calculation can use. Responses from the Public API
+ * that predate this list leave it out; household readers then use
+ * economy_options.time_period (see getHouseholdYearOptions).
+ */
+export interface MetadataHouseholdOptions {
+  time_period: MetadataTimePeriod[];
+}
+
 export interface MetadataApiPayload {
   status: string;
   message: string | null;
@@ -29,9 +44,11 @@ export interface MetadataApiPayload {
     variableModules: Record<string, any>;
     economy_options: {
       region: MetadataRegionEntry[];
-      time_period: Array<{ name: number; label: string }>;
+      /** The years a society-wide (population-wide) calculation can use. */
+      time_period: MetadataTimePeriod[];
       datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
     };
+    household_options?: MetadataHouseholdOptions;
     current_law_id: number;
     basicInputs: string[];
     modelled_policies: {
@@ -74,9 +91,12 @@ export interface MetadataState {
   variableModules: Record<string, any>;
   economyOptions: {
     region: MetadataRegionEntry[];
-    time_period: Array<{ name: number; label: string }>;
+    /** The years a society-wide (population-wide) calculation can use. */
+    time_period: MetadataTimePeriod[];
     datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
   };
+  /** Absent when the Public API response had no household_options. */
+  householdOptions?: MetadataHouseholdOptions;
   currentLawId: number;
   basicInputs: string[];
   modelledPolicies: {

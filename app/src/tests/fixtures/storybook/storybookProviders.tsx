@@ -2,7 +2,7 @@
  * Storybook providers with pre-populated Redux store and React Query cache.
  *
  * Hooks like useUserPolicies, useUserHouseholds, useUserGeographics, and
- * useSelector(getTaxYears) run naturally — they just find data already in
+ * useSelector(getHouseholdYearOptions) run naturally — they just find data already in
  * the cache instead of hitting APIs or empty Redux state.
  */
 import React from 'react';

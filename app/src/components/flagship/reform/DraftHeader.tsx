@@ -40,7 +40,7 @@ import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
 import { pathsMissingFromModel } from '@/libs/flagship/missingParameters';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
-import { getTaxYears } from '@/libs/metadataUtils';
+import { getSocietyWideYearOptions } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
 import { regionKindOf, trackReportRunStarted } from '@/utils/analytics';
@@ -284,11 +284,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const reformStore = useReformStore();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
-  const taxYears = useSelector(getTaxYears);
+  // The page runs society-wide reports only: the years the Public API runs those for.
+  const societyWideYears = useSelector(getSocietyWideYearOptions);
   // Saving keeps what the run models: the values that differ from current law.
   const currentLawValues = (path: string) => parameters?.[path]?.values;
   const year = draftYear(draft);
-  const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
+  const yearOptions =
+    societyWideYears.length > 0 ? societyWideYears.map((option) => Number(option.value)) : [year];
   // The budget's span from the report's year: the year alone, or a window
   // scored a year at a time alongside the report.
   const windowYears = draft.windowYears ?? 1;

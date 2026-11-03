@@ -9,7 +9,7 @@ import { Group, Stack, Text } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
 import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { getTaxYears } from '@/libs/metadataUtils';
+import { getHouseholdYearOptions } from '@/libs/metadataUtils';
 import { getDefaultValueForParam } from '@/pathways/report/components/valueSetters/getDefaultValueForParam';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ValueSetterProps } from '@/pathways/report/components/valueSetters/ValueSetterProps';
@@ -18,8 +18,9 @@ import { ValueInterval } from '@/types/subIngredients/valueInterval';
 export function MultiYearValueSelectorV6(props: ValueSetterProps) {
   const { param, policy, reportYear, setIntervals } = props;
 
-  // Get available years from metadata
-  const availableYears = useSelector(getTaxYears);
+  // The household years from metadata: a policy can be used in a household
+  // calculation for any of them
+  const availableYears = useSelector(getHouseholdYearOptions);
   const countryId = useCurrentCountry();
 
   // Country-specific max years configuration

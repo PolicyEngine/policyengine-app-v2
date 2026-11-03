@@ -40,7 +40,7 @@ import {
   seriesYears,
   setValueFromYear,
 } from '@/libs/flagship/uprating';
-import { getDateRange, getTaxYears } from '@/libs/metadataUtils';
+import { getHouseholdDateRange, getHouseholdYearOptions } from '@/libs/metadataUtils';
 import { selectParameterEntriesByPath } from '@/libs/parameterSearch';
 import { ChangesCard } from '@/pages/reportBuilder/modals/policyCreation/ChangesCard';
 import { RootState } from '@/store';
@@ -100,8 +100,10 @@ function fitsGrid(provision: DraftProvision | undefined): boolean {
 export default function ProvisionDetails({ draft, path, group, focusPath }: ProvisionDetailsProps) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const entriesByPath = useSelector(selectParameterEntriesByPath);
-  const { minDate, maxDate } = useSelector(getDateRange);
-  const taxYears = useSelector(getTaxYears);
+  // A policy can be used in a household calculation for any household year,
+  // so its values can be set for every year in the household list.
+  const { minDate, maxDate } = useSelector(getHouseholdDateRange);
+  const householdYears = useSelector(getHouseholdYearOptions);
   const year = draftYear(draft);
 
   const members = group?.members ?? [
@@ -349,7 +351,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   const firstYear = Math.min(
     year,
     startYears[0] ?? year,
-    ...taxYears.map((taxYear) => Number(taxYear.value)).filter(Number.isFinite)
+    ...householdYears.map((householdYear) => Number(householdYear.value)).filter(Number.isFinite)
   );
   const fromOptions = Array.from(
     { length: Math.max(Math.min(lastYear, year + 10) - firstYear + 1, 1) },
