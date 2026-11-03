@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   focusManager,
   onlineManager,
@@ -89,6 +90,22 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
       >
         Partner earns 20000
       </button>
+      {/* Like the builder's amounts: typed freely, committed when the field loses focus. */}
+      <input
+        aria-label="Your earnings"
+        defaultValue=""
+        onBlur={(event) =>
+          event.currentTarget.value &&
+          onChange(
+            household.setPersonVariableAtYear(
+              'you',
+              'employment_income',
+              year,
+              Number(event.currentTarget.value)
+            )
+          )
+        }
+      />
     </div>
   ),
 }));
@@ -97,18 +114,35 @@ vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (imp
   ...(await importOriginal<
     typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
   >()),
-  default: ({ view, source }: any) => (
-    <div aria-label="Breakdown" data-country={source.countryId}>
-      {[
-        view,
-        source.householdId,
-        source.year,
-        source.baselinePolicyId,
-        source.reformPolicyId,
-        source.baseline.households['your household'].household_net_income[source.year],
-        source.reform.households['your household'].household_net_income[source.year],
-      ].join(' · ')}
-    </div>
+  default: function BreakdownStandIn({ view, source, variationStartedAt, onVariationOpen }: any) {
+    // As the real one: a variation output, opened, starts the household's variation run.
+    const variation = view === 'earnings-variation' || view === 'marginal-tax-rates';
+    useEffect(() => {
+      if (variation) {
+        onVariationOpen?.();
+      }
+    }, [variation, onVariationOpen]);
+    return (
+      <div
+        aria-label="Breakdown"
+        data-country={source.countryId}
+        data-variation-started={variationStartedAt}
+      >
+        {[
+          view,
+          source.householdId,
+          source.year,
+          source.baselinePolicyId,
+          source.reformPolicyId,
+          source.baseline.households['your household'].household_net_income[source.year],
+          source.reform.households['your household'].household_net_income[source.year],
+        ].join(' · ')}
+      </div>
+    );
+  },
+  // The run's keeper, tested on its own: a stand-in shows that it is there.
+  HouseholdVariationKeeper: ({ source }: any) => (
+    <div data-testid="variation-kept">{source.householdId}</div>
   ),
 }));
 vi.mock('@/utils/HouseholdValidation', () => ({
@@ -144,6 +178,13 @@ function calculateWith(reformResult: typeof REFORM_RESULT) {
   mockFetchHouseholdCalculation.mockImplementation(
     async (_country: string, _household: string, policyId: string) =>
       policyId === BASELINE_POLICY_ID ? BASELINE_RESULT : reformResult
+  );
+}
+
+/** Opens a household, or the comparison, from the row of tiles. */
+async function openTile(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
+  await user.click(
+    within(screen.getByRole('tablist', { name: 'Households' })).getByRole('tab', { name })
   );
 }
 
@@ -184,30 +225,217 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('region', { name: 'Household impact' })).not.toBeInTheDocument();
   });
 
-  test('given another household then each has its own builder and result', async () => {
+  test('given another household then it opens, and each has its own builder and result', async () => {
     const user = userEvent.setup();
     renderSection();
 
     await user.click(screen.getByRole('button', { name: 'Add another household' }));
-    const first = screen.getByRole('region', { name: 'Household 1' });
+
+    // The new household opens; the first waits behind its tile.
+    expect(screen.queryByRole('region', { name: 'Household 1' })).not.toBeInTheDocument();
     const second = screen.getByRole('region', { name: 'Household 2' });
     await user.click(within(second).getByRole('button', { name: 'Married' }));
-
-    // The second household's inputs are its own.
-    expect(within(first).getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
-      'single · 0'
-    );
-    expect(within(second).getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
-      'married · 0'
-    );
-
     await user.click(within(second).getByRole('button', { name: 'Calculate' }));
     expect(
       await within(second).findByRole('region', { name: 'Household impact' })
     ).toBeInTheDocument();
     expect(
+      within(screen.getByRole('tablist', { name: 'Households' })).getByRole('tab', {
+        name: /^Household 2/,
+      })
+    ).toHaveTextContent('+$1,000 a year');
+
+    await openTile(user, /^Household 1/);
+
+    // The first household's inputs are its own, with nothing run.
+    const first = screen.getByRole('region', { name: 'Household 1' });
+    expect(within(first).getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
+      'single · 0'
+    );
+    expect(
       within(first).queryByRole('region', { name: 'Household impact' })
     ).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Household 2' })).not.toBeInTheDocument();
+  });
+
+  test('given Calculate then the variation runs in the background, before its tab opens', async () => {
+    const user = userEvent.setup();
+    let finish!: () => void;
+    mockFetchHouseholdCalculation.mockImplementation(
+      (_country: string, _household: string, policyId: string) =>
+        new Promise((resolve) => {
+          const result = policyId === BASELINE_POLICY_ID ? BASELINE_RESULT : REFORM_RESULT;
+          const previous = finish;
+          finish = () => {
+            previous?.();
+            resolve(result);
+          };
+        })
+    );
+    renderSection();
+    expect(screen.queryByTestId('variation-kept')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    // The household is stored and still calculating: its variation runs beside it.
+    expect(await screen.findByTestId('variation-kept')).toHaveTextContent(
+      String(CREATED_HOUSEHOLD_ID)
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Calculating this household');
+
+    finish();
+    const result = await screen.findByRole('region', { name: 'Household impact' });
+    await user.click(within(result).getByRole('tab', { name: 'Varying earnings' }));
+    const startedAt = within(result).getByLabelText('Breakdown').dataset.variationStarted;
+    expect(Number(startedAt)).toBeGreaterThan(0);
+
+    // Another tab, then another household: the run is still held.
+    await user.click(within(result).getByRole('tab', { name: 'Summary' }));
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+    expect(screen.getByTestId('variation-kept')).toBeInTheDocument();
+
+    await openTile(user, /^Household 1/);
+    const back = await screen.findByRole('region', { name: 'Household impact' });
+    await user.click(within(back).getByRole('tab', { name: 'Marginal tax rates' }));
+    // The same run: its clock from when the household was stored.
+    expect(within(back).getByLabelText('Breakdown').dataset.variationStarted).toBe(startedAt);
+  });
+
+  test('given changed inputs calculated again then a new variation runs for the new household', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    expect(await screen.findByTestId('variation-kept')).toHaveTextContent(
+      String(CREATED_HOUSEHOLD_ID)
+    );
+
+    mockCreateHousehold.mockResolvedValue({ result: { household_id: 999 } });
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+    await user.click(screen.getByRole('button', { name: 'Married' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate again' }));
+
+    await waitFor(() => expect(screen.getByTestId('variation-kept')).toHaveTextContent('999'));
+    expect(screen.getAllByTestId('variation-kept')).toHaveLength(1);
+  });
+
+  test('given a household renamed then its tile and panel take the name', async () => {
+    const user = userEvent.setup();
+    renderSection();
+
+    const name = screen.getByRole('textbox', { name: 'Household name' });
+    await user.clear(name);
+    await user.type(name, 'Family of four{Enter}');
+
+    expect(screen.getByRole('region', { name: 'Family of four' })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('tablist', { name: 'Households' })).getByRole('tab', {
+        name: /^Family of four/,
+      })
+    ).toBeInTheDocument();
+
+    // An emptied name goes back to the household's own.
+    await user.clear(name);
+    await user.tab();
+    expect(screen.getByRole('region', { name: 'Household 1' })).toBeInTheDocument();
+  });
+
+  test('given two households then Compare all lists each one, calculated or not', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+
+    // The comparison opens beside the heading, not among the tiles; no tile is selected meanwhile.
+    expect(
+      within(screen.getByRole('tablist', { name: 'Households' })).queryByText(/Compare all/)
+    ).not.toBeInTheDocument();
+    const compare = screen.getByRole('button', { name: 'Compare all (2)' });
+    expect(compare).toHaveAttribute('aria-pressed', 'false');
+    await user.click(compare);
+    expect(compare).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('tab', { selected: true })).not.toBeInTheDocument();
+
+    const table = screen.getByRole('table', { name: 'Households compared' });
+    expect(within(table).getByRole('row', { name: /Household 1/ })).toHaveTextContent(
+      '$72,000$73,000+$1,000'
+    );
+    expect(within(table).getByRole('row', { name: /Household 2/ })).toHaveTextContent(
+      'Not calculated yet'
+    );
+
+    // A household's name opens it.
+    await user.click(within(table).getByRole('button', { name: 'Household 2' }));
+    expect(screen.getByRole('region', { name: 'Household 2' })).toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Households compared' })).not.toBeInTheDocument();
+  });
+
+  test('given Compare all pressed again then the household open before it reopens', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+    await openTile(user, /^Household 1/);
+
+    await user.click(screen.getByRole('button', { name: 'Compare all (2)' }));
+    await user.click(screen.getByRole('button', { name: 'Compare all (2)' }));
+
+    expect(screen.getByRole('region', { name: 'Household 1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Household 1/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+  });
+
+  test('given one household then no Compare all shows', () => {
+    renderSection();
+
+    expect(screen.queryByRole('button', { name: /Compare all/ })).not.toBeInTheDocument();
+  });
+
+  test('given an amount still being typed then one click on Calculate again commits it and runs', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+
+    // The field keeps focus: the inputs still read as calculated until it commits.
+    await user.type(screen.getByRole('textbox', { name: 'Your earnings' }), '80000');
+    expect(screen.getByText(/These inputs are calculated/)).toBeInTheDocument();
+    // A browser drops a click whose press lands on a disabled button, even if
+    // the press's blur enables it: so it is never disabled here, only marked so.
+    const again = screen.getByRole('button', { name: 'Calculate again' });
+    expect(again).toBeEnabled();
+    expect(again).toHaveAttribute('aria-disabled', 'true');
+    await user.click(again);
+
+    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(2));
+  });
+
+  test('given calculated inputs then Calculate again starts no run', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+
+    await user.click(screen.getByRole('button', { name: 'Calculate again' }));
+
+    expect(mockCreateHousehold).toHaveBeenCalledTimes(1);
+  });
+
+  test('given inputs changed after a result then the result says so and offers to calculate again', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
+
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+    await user.click(screen.getByRole('button', { name: 'Married' }));
+    await user.click(screen.getByRole('tab', { name: 'Results' }));
+
+    expect(screen.getByText('The inputs changed after this result was calculated.')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Calculate again' }));
+    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(2));
   });
 
   test('given Remove then that household goes, and the others keep their inputs', async () => {
@@ -219,18 +447,19 @@ describe('HouseholdImpactSection', () => {
         name: 'Married',
       })
     );
+    await openTile(user, /^Household 1/);
 
-    await user.click(screen.getByRole('button', { name: 'Remove household 1' }));
+    await user.click(screen.getByRole('button', { name: 'Remove Household 1' }));
 
-    // The married household is now the first, with its inputs.
-    expect(screen.queryByRole('region', { name: 'Household 2' })).not.toBeInTheDocument();
+    // The married household remains, opened, with its name and inputs.
+    expect(screen.queryByRole('tab', { name: /^Household 1/ })).not.toBeInTheDocument();
     expect(
-      within(screen.getByRole('region', { name: 'Household 1' })).getByRole('generic', {
+      within(screen.getByRole('region', { name: 'Household 2' })).getByRole('generic', {
         name: 'Household builder',
       })
     ).toHaveTextContent('married · 0');
 
-    await user.click(screen.getByRole('button', { name: 'Remove household 1' }));
+    await user.click(screen.getByRole('button', { name: 'Remove Household 2' }));
 
     expect(screen.getByRole('button', { name: 'Add a household' })).toBeInTheDocument();
   });
@@ -266,9 +495,10 @@ describe('HouseholdImpactSection', () => {
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
 
     expect(await screen.findByRole('status')).toHaveTextContent('Calculating this household');
-    // While it runs, the inputs fold to one line, with editing held until it ends.
+    // While it runs, its results lead, and its tile says it is calculating.
+    expect(screen.getByRole('tab', { name: 'Results' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Edit household' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: /^Household 1/ })).toHaveTextContent('Calculating…');
 
     finish();
 
@@ -277,6 +507,28 @@ describe('HouseholdImpactSection', () => {
     expect(headline).toHaveTextContent('+$1,000');
     expect(headline).toHaveTextContent('$72,000 → $73,000 (+1.4%)');
     expect(result).toHaveTextContent('Single · no children · 2026');
+  });
+
+  test('given a run then switching away and back keeps its clock, not 0s', async () => {
+    const user = userEvent.setup();
+    // The run never ends here.
+    mockFetchHouseholdCalculation.mockImplementation(() => new Promise(() => {}));
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('0s · 0%');
+
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    // A minute later, back on the household that runs.
+    const now = Date.now() + 60_000;
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now);
+    try {
+      await openTile(user, /^Household 1/);
+      expect(await screen.findByRole('status')).toHaveTextContent('1m 0s · 28%');
+    } finally {
+      clock.mockRestore();
+    }
   });
 
   test('given a calculated household then it is passed on to be saved to the user', async () => {
@@ -313,10 +565,14 @@ describe('HouseholdImpactSection', () => {
     expect(within(credits).getByRole('row', { name: /Child Tax Credit/ })).toHaveTextContent(
       '+$1,000'
     );
-    // The result leads; the inputs open again on Edit household, with nothing to run again.
-    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Edit household' }));
-    expect(screen.getByRole('button', { name: 'Calculate' })).toBeDisabled();
+    // The result leads; the inputs open on their tab, with nothing to run again.
+    expect(screen.queryByRole('button', { name: 'Calculate again' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+    expect(screen.getByRole('button', { name: 'Calculate again' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(screen.getByText(/These inputs are calculated/)).toBeInTheDocument();
   });
 
   test('given a loss then it reads with a minus sign', async () => {
@@ -391,17 +647,18 @@ describe('HouseholdImpactSection', () => {
   test('given two households then each switches its own breakdowns', async () => {
     const user = userEvent.setup();
     renderSection();
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('region', { name: 'Household impact' });
     await user.click(screen.getByRole('button', { name: 'Add another household' }));
-    const first = screen.getByRole('region', { name: 'Household 1' });
     const second = screen.getByRole('region', { name: 'Household 2' });
-    await user.click(within(first).getByRole('button', { name: 'Calculate' }));
     await user.click(within(second).getByRole('button', { name: 'Calculate' }));
-    await within(first).findByRole('region', { name: 'Household impact' });
     await within(second).findByRole('region', { name: 'Household impact' });
 
     await user.click(within(second).getByRole('tab', { name: 'Net income' }));
-
     expect(within(second).getByLabelText('Breakdown')).toHaveTextContent(/^net-income/);
+
+    await openTile(user, /^Household 1/);
+    const first = screen.getByRole('region', { name: 'Household 1' });
     expect(within(first).queryByLabelText('Breakdown')).not.toBeInTheDocument();
     expect(within(first).getByRole('table', { name: 'Taxes and benefits' })).toBeInTheDocument();
   });
@@ -461,11 +718,13 @@ describe('HouseholdImpactSection', () => {
     renderSection();
 
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
-    const alert = await screen.findByRole('alert');
+    await screen.findByRole('alert');
 
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
     await user.click(screen.getByRole('button', { name: 'Married' }));
     await user.click(screen.getByRole('button', { name: 'Partner earns 20000' }));
-    await user.click(within(alert).getByRole('button', { name: 'Try again' }));
+    await user.click(screen.getByRole('tab', { name: 'Results' }));
+    await user.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Try again' }));
 
     await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(2));
     const people = mockCreateHousehold.mock.calls[1][0].data.people;

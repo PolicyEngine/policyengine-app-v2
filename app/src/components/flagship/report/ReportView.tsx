@@ -554,7 +554,6 @@ export default function ReportView({
                 {tabPanel(
                   'household',
                   <Stack style={{ gap: spacing.md }}>
-                    <SectionHeading id="household" title="Household" />
                     {/* A household runs on the report's own policies, once they exist. */}
                     {runsBlocked ? (
                       <Text
@@ -565,6 +564,8 @@ export default function ReportView({
                       </Text>
                     ) : reformPolicyId && baselinePolicyId ? (
                       <HouseholdImpactSection
+                        // The section sets its heading's line, with "Compare all" at the right.
+                        heading={<SectionHeading id="household" title="Household" />}
                         // New policies, year or region start a new form, with nothing run.
                         key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
                         countryId={countryId}
@@ -577,6 +578,7 @@ export default function ReportView({
                       />
                     ) : (
                       <>
+                        <SectionHeading id="household" title="Household" />
                         <Text
                           style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
                         >

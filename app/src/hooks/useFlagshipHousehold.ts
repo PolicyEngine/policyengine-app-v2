@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ApiFlagshipHouseholdStore } from '@/api/flagshipHouseholdStore';
@@ -22,13 +22,19 @@ export function useFlagshipHouseholdPayload({
   baselinePolicyId,
   reformPolicyId,
   payload,
+  onCreated,
 }: {
   year: string;
   baselinePolicyId: string;
   reformPolicyId: string;
   /** The household asked for; nothing runs while null. */
   payload: V1HouseholdCreateEnvelope | null;
+  /** Called with the household's ID once the API has stored it, while it is calculated. */
+  onCreated?: (householdId: string, payload: V1HouseholdCreateEnvelope) => void;
 }) {
+  // The latest callback, outside the query's key.
+  const created = useRef(onCreated);
+  created.current = onCreated;
   return useQuery({
     queryKey: [
       'flagship-household-full',
@@ -39,7 +45,13 @@ export function useFlagshipHouseholdPayload({
       payload,
     ],
     queryFn: () =>
-      runFlagshipHouseholdPayload({ year, payload: payload!, baselinePolicyId, reformPolicyId }),
+      runFlagshipHouseholdPayload({
+        year,
+        payload: payload!,
+        baselinePolicyId,
+        reformPolicyId,
+        onCreated: (householdId) => created.current?.(householdId, payload!),
+      }),
     enabled: !!payload,
     staleTime: Infinity,
     retry: false,
