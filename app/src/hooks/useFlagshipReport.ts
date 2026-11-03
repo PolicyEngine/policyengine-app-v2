@@ -106,8 +106,12 @@ export function useFlagshipReport(id: string): FlagshipReportData {
   // Whether each policy sets parameters the model no longer has: read at
   // once, not after the parameter metadata, because the report's run
   // waits for it.
-  // A policy that cannot be read is not retried here: the check settles at
-  // once with nothing known to be missing, as before the check existed.
+  // A policy that cannot be read settles the check at its first failure,
+  // with nothing known to be missing, as before the check existed. On the
+  // v1 routes nothing retries this read. On the v2 routes it is the same
+  // query useV3Policies reads above, whose options (the client's retries)
+  // govern the request because it is called first; policiesChecked below
+  // counts a first failure as checked, so the retries do not hold it.
   const policyContentResults = useParallelQueries<PolicyMetadata>(policyIds, {
     queryKey: (policyId) => v1PolicyKey(country, policyId),
     queryFn: (policyId) => fetchV1Policy(country, policyId),

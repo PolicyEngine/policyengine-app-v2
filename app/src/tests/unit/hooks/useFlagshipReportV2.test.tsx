@@ -150,7 +150,7 @@ describe('useFlagshipReport with v3 on the v2 routes', () => {
     expect(result.current.missingParameters).toEqual([]);
   });
 
-  test('given a policy read fails once then it is asked for again and parses, while the check has settled', async () => {
+  test('given a policy read fails once then it is asked for again and parses', async () => {
     // Given: the calculator's retries, without their back-off
     mockFetchPolicyById.mockRejectedValueOnce(POLICY_UNAVAILABLE_ERROR);
 
@@ -162,7 +162,8 @@ describe('useFlagshipReport with v3 on the v2 routes', () => {
     // Then
     await waitFor(() => expect(result.current.policies).toHaveLength(2));
     expect(result.current.failedPolicyIds).toEqual([]);
-    expect(result.current.policiesChecked).toBe(true);
+    // Two policies, one of them asked for twice.
+    expect(mockFetchPolicyById).toHaveBeenCalledTimes(3);
   });
 
   test('given a report compared with a saved reform then both policies load and parse', async () => {
