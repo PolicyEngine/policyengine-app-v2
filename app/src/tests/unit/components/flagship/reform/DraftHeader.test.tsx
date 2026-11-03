@@ -22,6 +22,7 @@ import {
   seedDeductionMetadata,
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockCreate = vi.fn();
@@ -59,6 +60,15 @@ function renderHeader() {
     </QueryClientProvider>
   );
 }
+
+/** A change to a parameter that `seedDeductionMetadata` gives the model. */
+const SEEDED_CHANGE = {
+  path: 'gov.irs.income.exemption.amount',
+  breadcrumb: 'IRS → Income → Exemption → Amount',
+  unit: 'currency-USD',
+  baselineValue: 5000,
+  value: 6000,
+};
 
 describe('DraftHeader', () => {
   beforeEach(() => {
@@ -169,14 +179,8 @@ describe('DraftHeader', () => {
     Element.prototype.hasPointerCapture ??= vi.fn(() => false);
     seedDeductionMetadata();
     const user = userEvent.setup();
-    // A change to run.
-    addDraftProvision('us', {
-      path: 'gov.irs.credits.eitc.max',
-      breadcrumb: 'IRS → Credits → EITC → Maximum',
-      unit: 'currency-USD',
-      baselineValue: 600,
-      value: 900,
-    });
+    // A change to run, to a parameter the seeded model has.
+    addDraftProvision('us', SEEDED_CHANGE);
     renderHeader();
 
     // One control: the year, and the years of budget from it.
@@ -189,6 +193,67 @@ describe('DraftHeader', () => {
     expect(getDraftReform()?.windowYears).toBe(10);
     await user.click(screen.getByRole('button', { name: /run 2026–2035 report/i }));
     expect(mockRun.mock.calls[0][5]).toMatchObject({ fromDraft: true, windowYears: 10 });
+  });
+
+  test('given a change to a parameter the model no longer has then saving and running are off, and the notice names it', async () => {
+    // Given: a draft kept from before the model dropped the parameter
+    seedDeductionMetadata();
+    addDraftProvision('us', SEEDED_CHANGE);
+    addDraftProvision('us', {
+      path: REMOVED_US_PARAMETER,
+      breadcrumb: REMOVED_US_PARAMETER,
+      unit: 'currency-USD',
+      baselineValue: 0,
+      value: 1000,
+    });
+
+    // When
+    renderHeader();
+
+    // Then
+    const notice = await screen.findByRole('alert');
+    expect(notice).toHaveTextContent(/this reform cannot be run/i);
+    expect(
+      within(notice)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent)
+    ).toEqual([REMOVED_US_PARAMETER]);
+    expect(notice).toHaveTextContent(/remove it from the reform to save or run it/i);
+    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+  });
+
+  test('given a parameter the model no longer has left at its earlier value then nothing is checked, and saving and running go ahead', () => {
+    // Given: saving and running leave an unchanged parameter out, so they send nothing for it
+    seedDeductionMetadata();
+    addDraftProvision('us', SEEDED_CHANGE);
+    addDraftProvision('us', {
+      path: REMOVED_US_PARAMETER,
+      breadcrumb: REMOVED_US_PARAMETER,
+      unit: 'currency-USD',
+      baselineValue: 1000,
+      value: 1000,
+    });
+
+    // When
+    renderHeader();
+
+    // Then
+    expect(screen.queryByText(/cannot be run/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+  });
+
+  test("given the model's parameters have not loaded then a draft's changes are not checked", () => {
+    // Given: no metadata yet
+    addDraftProvision('us', SEEDED_CHANGE);
+
+    // When
+    renderHeader();
+
+    // Then
+    expect(screen.queryByText(/cannot be run/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeEnabled();
   });
 
   describe('given a run', () => {
@@ -511,6 +576,43 @@ describe('DraftHeader', () => {
       expect(screen.queryByRole('option', { name: 'Empty' })).not.toBeInTheDocument();
     });
 
+    test('then a saved reform that sets parameters the model no longer has cannot be chosen, and says why', async () => {
+      const user = userEvent.setup();
+      mockFindMine.mockResolvedValue([
+        PLAN_B,
+        {
+          ...PLAN_B,
+          id: 'rf-removed',
+          label: 'Old plan',
+          missingParameters: [REMOVED_US_PARAMETER],
+        },
+      ]);
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: 'Compared with: Current law' }));
+      const option = await screen.findByRole('option', { name: /Old plan/ });
+      expect(option).toHaveAttribute('aria-disabled', 'true');
+      expect(option).toHaveTextContent(
+        `Uses parameters the model no longer has: ${REMOVED_US_PARAMETER}`
+      );
+      await user.click(option);
+
+      expect(getDraftReform()?.baselineReformId).toBeUndefined();
+    });
+
+    test('then a chosen comparison that sets parameters the model no longer has stops the run, and names them', async () => {
+      mockFindMine.mockResolvedValue([{ ...PLAN_B, missingParameters: [REMOVED_US_PARAMETER] }]);
+      addDraftProvision('us', CHANGED);
+      setDraftBaseline('rf-plan-b');
+      renderHeader();
+
+      const notice = await screen.findByRole('alert');
+      expect(notice).toHaveTextContent(/Plan B.*cannot be run/);
+      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
+    });
+
     test('then a chosen comparison holds the run until the saved reforms load', async () => {
       mockFindMine.mockReturnValue(new Promise(() => {}));
       addDraftProvision('us', CHANGED);
@@ -560,13 +662,7 @@ describe('DraftHeader', () => {
   test('given a state is chosen then the draft and its run take it', async () => {
     const user = userEvent.setup();
     seedDeductionMetadata({ regions: US_REGIONS });
-    addDraftProvision('us', {
-      path: 'gov.irs.credits.eitc.max',
-      breadcrumb: 'IRS → Credits → EITC → Maximum',
-      unit: 'currency-USD',
-      baselineValue: 600,
-      value: 900,
-    });
+    addDraftProvision('us', SEEDED_CHANGE);
     renderHeader();
 
     await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));

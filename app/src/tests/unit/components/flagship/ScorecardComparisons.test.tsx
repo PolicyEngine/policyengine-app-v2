@@ -18,6 +18,7 @@ import {
   jctCtcClaim,
   scorecardClaim,
   stackedJctCtcClaim,
+  twoChildLimitClaim,
   utahBaselineClaim,
 } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import {
@@ -29,9 +30,10 @@ describe('scorecard evidence presentation', () => {
   test('given a related reform then shows source-policy counterparts, periods and baseline caveats', () => {
     render(<RelatedReformEstimates rows={[{ ...scorecardClaim(), matchBasis: 'parameter' }]} />);
     expect(screen.getByText(/do not score this exact reform/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show 1 related reform score' }));
     expect(screen.getByRole('columnheader', { name: 'PolicyEngine' })).toBeInTheDocument();
     expect(screen.getByText(/2026 · fiscal year/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('button', { name: 'CTC extension' }));
     expect(screen.getByText('Different stacking baseline')).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /Find external estimates/ })
@@ -49,6 +51,11 @@ describe('scorecard evidence presentation', () => {
       matchBasis: 'parameter' as const,
     }));
     render(<RelatedReformEstimates rows={rows} />);
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: `Show ${RELATED_REFORM_PREVIEW + 2} related reform scores`,
+      })
+    );
     const table = screen.getByRole('table', { name: 'Related reforms' });
     const titles = () =>
       within(table)
@@ -60,6 +67,49 @@ describe('scorecard evidence presentation', () => {
       screen.getByRole('button', { name: `Show all ${RELATED_REFORM_PREVIEW + 2} related reforms` })
     );
     expect(titles()).toHaveLength(RELATED_REFORM_PREVIEW + 2);
+  });
+
+  test('given related reforms then they stay closed until the reader opens them', () => {
+    render(<RelatedReformEstimates rows={[{ ...scorecardClaim(), matchBasis: 'parameter' }]} />);
+
+    expect(screen.queryByRole('table', { name: 'Related reforms' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show 1 related reform score' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+  });
+
+  test('given a costing with static and post-behavioural legs then one row per year shows, the static one, under the measure name', async () => {
+    const rows = [
+      twoChildLimitClaim(2026, 'static', 0, 0),
+      twoChildLimitClaim(2026, 'post_behavioural', 0, 0),
+      twoChildLimitClaim(2027, 'static', -2_055_000_000, -2_308_547_892),
+      twoChildLimitClaim(2027, 'post_behavioural', -2_400_000_000, -2_308_547_892),
+    ].map((row) => ({ ...row, matchBasis: 'variable' as const }));
+    render(<RelatedReformEstimates rows={rows} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show 1 related reform score' }));
+
+    const table = screen.getByRole('table', { name: 'Related reforms' });
+    const titles = within(table)
+      .getAllByRole('rowheader')
+      .map((cell) => cell.textContent);
+    expect(titles).toHaveLength(1);
+    expect(titles[0]).toContain(
+      'Universal Credit Child Element: Remove the two child limit from April 2026'
+    );
+    expect(within(table).getByText('-£2.1B')).toBeInTheDocument();
+    expect(within(table).queryByText(/Different baselines/)).not.toBeInTheDocument();
+  });
+
+  test('given only years in which both sides score zero then no related reforms show', () => {
+    const rows = [twoChildLimitClaim(2026, 'static', 0, 0)].map((row) => ({
+      ...row,
+      matchBasis: 'variable' as const,
+    }));
+    render(<RelatedReformEstimates rows={rows} />);
+
+    expect(screen.queryByText('Related reforms')).not.toBeInTheDocument();
   });
 
   test('given several claims then one table holds them so their numbers line up', () => {

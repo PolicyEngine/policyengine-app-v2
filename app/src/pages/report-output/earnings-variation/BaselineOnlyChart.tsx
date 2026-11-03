@@ -24,6 +24,8 @@ import {
   getClampedChartHeight,
   getNiceTicks,
   getYAxisLayout,
+  householdChartLabelDx,
+  householdChartLegendProps,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
 import { formatChartValueForVariable } from '@/utils/chartValueFormatting';
@@ -42,6 +44,8 @@ interface Props {
   focusPersonName?: string | null;
   variableName: string;
   year: string;
+  /** The legend above the plot on the right, in the ticks' size, and the axis title closer (the v3 report). */
+  tidyChart?: boolean;
 }
 
 function EarningsTooltip({ active, payload, label, formatValue, symbol }: any) {
@@ -76,6 +80,7 @@ export default function BaselineOnlyChart({
   focusPersonName,
   variableName,
   year,
+  tidyChart = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const { height: viewportHeight } = useViewportSize();
@@ -99,7 +104,7 @@ export default function BaselineOnlyChart({
       baseline,
       metadata
     ) as number;
-    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings, countryId);
+    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings);
     const xValues = buildHouseholdVariationEarningsAxis(maxEarnings);
     const currentIndex = getHouseholdVariationIndexForEarnings(currentEarnings, maxEarnings);
     const chartData = xValues.map((earnings, index) => ({
@@ -122,7 +127,7 @@ export default function BaselineOnlyChart({
       xTicks: getNiceTicks([0, maxEarnings]),
       yTicks: getNiceTicks([Math.min(...yNumValues), Math.max(...yNumValues)]),
     };
-  }, [baseline, baselineVariation, countryId, metadata, variableName, year]);
+  }, [baseline, baselineVariation, metadata, variableName, year]);
 
   if (!variable) {
     return <div>Variable not found</div>;
@@ -168,12 +173,12 @@ export default function BaselineOnlyChart({
               value={variable.label}
               angle={-90}
               position="center"
-              dx={yAxis.labelDx}
+              dx={householdChartLabelDx(yAxis.labelDx, tidyChart)}
               style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
             />
           </YAxis>
           <Tooltip content={<EarningsTooltip symbol={symbol} formatValue={formatValue} />} />
-          <Legend verticalAlign="top" align="left" />
+          <Legend {...householdChartLegendProps(tidyChart)} />
           <Line
             type="monotone"
             dataKey="value"

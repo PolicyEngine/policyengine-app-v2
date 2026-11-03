@@ -3,7 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchLocalAreaBreakdown } from '@/api/societyWideCalculation';
+import { UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS } from '@/constants/calculationDurations';
 import {
+  MAX_FAILED_POLLS,
   ukLocalAreaBreakdownQueryKey,
   useUKLocalAreaBreakdown,
 } from '@/hooks/useUKLocalAreaBreakdown';
@@ -16,8 +18,10 @@ import {
   NORMALIZED_BREAKDOWN,
   NOT_A_BREAKDOWN_MESSAGE,
   OTHER_BREAKDOWN_YEAR,
+  POLL_FAILURE,
   QUEUED_RESPONSE,
   SCOTLAND_BREAKDOWN_REQUEST,
+  TIME_LIMIT_MESSAGE,
   UK_BREAKDOWN_REQUEST,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
@@ -340,6 +344,78 @@ describe('useUKLocalAreaBreakdown', () => {
     // Then
     expect(result.current.status).toBe('error');
     expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(2);
+  });
+
+  test('given a computing run whose polls fail a few times in a row then it keeps polling and completes', async () => {
+    // Given
+    mockFetchLocalAreaBreakdown.mockResolvedValueOnce(QUEUED_RESPONSE);
+    for (let index = 0; index < MAX_FAILED_POLLS; index++) {
+      mockFetchLocalAreaBreakdown.mockRejectedValueOnce(POLL_FAILURE);
+    }
+    mockFetchLocalAreaBreakdown.mockResolvedValueOnce(COMPLETE_RESPONSE);
+    const { result } = renderHook(() => useUKLocalAreaBreakdown(UK_BREAKDOWN_REQUEST), {
+      wrapper: wrapperFor(createQueryClient()),
+    });
+    act(() => result.current.start());
+    await waitFor(() => expect(result.current.status).toBe('computing'));
+
+    // When
+    for (let poll = 0; poll < MAX_FAILED_POLLS; poll++) {
+      await act(() => vi.advanceTimersByTimeAsync(BREAKDOWN_POLL_INTERVAL_MS));
+      expect(result.current.status).toBe('computing');
+    }
+    await act(() => vi.advanceTimersByTimeAsync(BREAKDOWN_POLL_INTERVAL_MS));
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    expect(result.current.breakdown).toEqual(NORMALIZED_BREAKDOWN);
+  });
+
+  test('given a computing run whose polls keep failing then it fails after one more failure than it outlasts', async () => {
+    // Given
+    mockFetchLocalAreaBreakdown
+      .mockResolvedValueOnce(QUEUED_RESPONSE)
+      .mockRejectedValue(POLL_FAILURE);
+    const { result } = renderHook(() => useUKLocalAreaBreakdown(UK_BREAKDOWN_REQUEST), {
+      wrapper: wrapperFor(createQueryClient()),
+    });
+    act(() => result.current.start());
+    await waitFor(() => expect(result.current.status).toBe('computing'));
+
+    // When
+    await act(() =>
+      vi.advanceTimersByTimeAsync(BREAKDOWN_POLL_INTERVAL_MS * (MAX_FAILED_POLLS + 1))
+    );
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('error'));
+    expect(result.current.error).toBe(POLL_FAILURE.message);
+    expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(MAX_FAILED_POLLS + 2);
+  });
+
+  test('given a run that computes past the time limit then it fails with retry, and retry checks the run again', async () => {
+    // Given
+    mockFetchLocalAreaBreakdown.mockResolvedValue(QUEUED_RESPONSE);
+    const { result } = renderHook(() => useUKLocalAreaBreakdown(UK_BREAKDOWN_REQUEST), {
+      wrapper: wrapperFor(createQueryClient()),
+    });
+    act(() => result.current.start());
+    await waitFor(() => expect(result.current.status).toBe('computing'));
+
+    // When
+    vi.setSystemTime(Date.now() + UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS);
+    await act(() => vi.advanceTimersByTimeAsync(BREAKDOWN_POLL_INTERVAL_MS));
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('error'));
+    expect(result.current.error).toBe(TIME_LIMIT_MESSAGE);
+
+    // When
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    act(() => result.current.retry());
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('complete'));
   });
 
   test('given the view unmounted while the run computes then polling stops', async () => {

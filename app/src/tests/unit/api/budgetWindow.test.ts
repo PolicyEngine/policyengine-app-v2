@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { fetchBudgetWindow } from '@/api/budgetWindow';
+import {
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_REGION_CODE,
+} from '@/tests/fixtures/models/regionMocks';
 
 const COMPUTING = {
   status: 'computing',
@@ -27,6 +31,20 @@ describe('fetchBudgetWindow', () => {
       'https://api.policyengine.org/us/economy/123/over/2/budget-window?region=state%2Fde&start_year=2026&window_size=10'
     );
     expect(response).toEqual(COMPUTING);
+  });
+
+  test('given a window for country/ni then it asks for country/northern_ireland', async () => {
+    const fetchMock = vi.fn(async (_url: string) => new Response(JSON.stringify(COMPUTING)));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchBudgetWindow('uk', '123', '1', {
+      region: LEGACY_NORTHERN_IRELAND_REGION_CODE,
+      startYear: 2026,
+      windowSize: 10,
+    });
+
+    const requestUrl = new URL(fetchMock.mock.calls[0][0]);
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 
   test('given a refused request then the API message is the error', async () => {

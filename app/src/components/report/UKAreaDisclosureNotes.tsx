@@ -19,13 +19,13 @@ function capitalize(text: string): string {
 function withheldNote(level: UKAreaLevel, withheld: UKWithheldAreas): string | null {
   const noun = UK_AREA_NOUNS[level];
   if (withheld === null) {
-    return `${capitalize(noun.many)} whose estimates fail the survey data’s disclosure rules are not published. The rules ${WITHHOLDING_RULE}`;
+    return `${capitalize(noun.many)} whose estimates fail the survey data’s disclosure rules are not reported. The rules ${WITHHOLDING_RULE}`;
   }
   if (withheld.withheld <= 0) {
     return null;
   }
   const verb = withheld.withheld === 1 ? 'is' : 'are';
-  return `${withheld.withheld} of ${withheld.total} ${noun.many} ${verb} not published. The survey data’s disclosure rules ${WITHHOLDING_RULE}`;
+  return `${withheld.withheld} of ${withheld.total} ${noun.many} ${verb} not reported. The survey data’s disclosure rules ${WITHHOLDING_RULE}`;
 }
 
 function approximateNote(level: UKAreaLevel, count: number): string | null {
@@ -40,7 +40,7 @@ function approximateNote(level: UKAreaLevel, count: number): string | null {
 
 /**
  * Notes under a UK local-area map from a disclosure-controlled breakdown:
- * how many of the level's areas were not published and why, and how many
+ * how many of the level's areas were not reported and why, and how many
  * shown areas are approximate. A saved result (no `withheld`, no tiers)
  * gets no notes.
  */

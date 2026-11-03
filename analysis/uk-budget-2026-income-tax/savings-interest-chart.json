@@ -1,0 +1,273 @@
+{
+  "type": "line",
+  "title": "Savings tax increases apply above the Personal Savings Allowance",
+  "subtitle": "Annual income tax increase; England, salaries £30,000 and £60,000, 2027–28",
+  "xKey": "interest",
+  "xLabel": "Annual savings interest",
+  "yLabel": "Extra annual income tax",
+  "format": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "xFormat": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "source": "PolicyEngine 6.11.1 / UK 2.151.0; synthetic adults, 2027–28; incomes held fixed.",
+  "series": [
+    {
+      "key": "basic",
+      "name": "£30,000 salary",
+      "color": "negative"
+    },
+    {
+      "key": "higher",
+      "name": "£60,000 salary",
+      "color": "secondary"
+    }
+  ],
+  "markers": [
+    {
+      "x": 500,
+      "label": "£60,000 salary: savings allowance"
+    },
+    {
+      "x": 1000,
+      "label": "£30,000 salary: savings allowance"
+    }
+  ],
+  "data": [
+    {
+      "interest": 500,
+      "basic": 0.0,
+      "higher": 0.0
+    },
+    {
+      "interest": 600,
+      "basic": 0.0,
+      "higher": 2.0
+    },
+    {
+      "interest": 700,
+      "basic": 0.0,
+      "higher": 4.0
+    },
+    {
+      "interest": 800,
+      "basic": 0.0,
+      "higher": 6.0
+    },
+    {
+      "interest": 900,
+      "basic": 0.0,
+      "higher": 8.0
+    },
+    {
+      "interest": 1000,
+      "basic": 0.0,
+      "higher": 10.0
+    },
+    {
+      "interest": 1100,
+      "basic": 2.0,
+      "higher": 12.0
+    },
+    {
+      "interest": 1200,
+      "basic": 4.0,
+      "higher": 14.0
+    },
+    {
+      "interest": 1300,
+      "basic": 6.0,
+      "higher": 16.0
+    },
+    {
+      "interest": 1400,
+      "basic": 8.0,
+      "higher": 18.0
+    },
+    {
+      "interest": 1500,
+      "basic": 10.0,
+      "higher": 20.0
+    },
+    {
+      "interest": 1600,
+      "basic": 12.0,
+      "higher": 22.0
+    },
+    {
+      "interest": 1700,
+      "basic": 14.0,
+      "higher": 24.0
+    },
+    {
+      "interest": 1800,
+      "basic": 16.0,
+      "higher": 26.0
+    },
+    {
+      "interest": 1900,
+      "basic": 18.0,
+      "higher": 28.0
+    },
+    {
+      "interest": 2000,
+      "basic": 20.0,
+      "higher": 30.0
+    },
+    {
+      "interest": 2100,
+      "basic": 22.0,
+      "higher": 32.0
+    },
+    {
+      "interest": 2200,
+      "basic": 24.0,
+      "higher": 34.0
+    },
+    {
+      "interest": 2300,
+      "basic": 26.0,
+      "higher": 36.0
+    },
+    {
+      "interest": 2400,
+      "basic": 28.0,
+      "higher": 38.0
+    },
+    {
+      "interest": 2500,
+      "basic": 30.0,
+      "higher": 40.0
+    },
+    {
+      "interest": 2600,
+      "basic": 32.0,
+      "higher": 42.0
+    },
+    {
+      "interest": 2700,
+      "basic": 34.0,
+      "higher": 44.0
+    },
+    {
+      "interest": 2800,
+      "basic": 36.0,
+      "higher": 46.0
+    },
+    {
+      "interest": 2900,
+      "basic": 38.0,
+      "higher": 48.0
+    },
+    {
+      "interest": 3000,
+      "basic": 40.0,
+      "higher": 50.0
+    },
+    {
+      "interest": 3100,
+      "basic": 42.0,
+      "higher": 52.0
+    },
+    {
+      "interest": 3200,
+      "basic": 44.0,
+      "higher": 54.0
+    },
+    {
+      "interest": 3300,
+      "basic": 46.0,
+      "higher": 56.0
+    },
+    {
+      "interest": 3400,
+      "basic": 48.0,
+      "higher": 58.0
+    },
+    {
+      "interest": 3500,
+      "basic": 50.0,
+      "higher": 60.0
+    },
+    {
+      "interest": 3600,
+      "basic": 52.0,
+      "higher": 62.0
+    },
+    {
+      "interest": 3700,
+      "basic": 54.0,
+      "higher": 64.0
+    },
+    {
+      "interest": 3800,
+      "basic": 56.0,
+      "higher": 66.0
+    },
+    {
+      "interest": 3900,
+      "basic": 58.0,
+      "higher": 68.0
+    },
+    {
+      "interest": 4000,
+      "basic": 60.0,
+      "higher": 70.0
+    },
+    {
+      "interest": 4100,
+      "basic": 62.0,
+      "higher": 72.0
+    },
+    {
+      "interest": 4200,
+      "basic": 64.0,
+      "higher": 74.0
+    },
+    {
+      "interest": 4300,
+      "basic": 66.0,
+      "higher": 76.0
+    },
+    {
+      "interest": 4400,
+      "basic": 68.0,
+      "higher": 78.0
+    },
+    {
+      "interest": 4500,
+      "basic": 70.0,
+      "higher": 80.0
+    },
+    {
+      "interest": 4600,
+      "basic": 72.0,
+      "higher": 82.0
+    },
+    {
+      "interest": 4700,
+      "basic": 74.0,
+      "higher": 84.0
+    },
+    {
+      "interest": 4800,
+      "basic": 76.0,
+      "higher": 86.0
+    },
+    {
+      "interest": 4900,
+      "basic": 78.0,
+      "higher": 88.0
+    },
+    {
+      "interest": 5000,
+      "basic": 80.0,
+      "higher": 90.0
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import {
   calibrationFitForGeography,
   CalibrationMatches,
   calibrationMatchesForPaths,
+  calibrationPreviewTargets,
   CalibrationRing,
   calibrationTargetLabel,
   CalibrationTargetRow,
@@ -395,6 +396,52 @@ export function GeographyFitSection({
   );
 }
 
+/**
+ * One calibration group's target rows: its headline totals and largest
+ * gaps first (calibrationPreviewTargets), the rest after "Show all".
+ */
+function CalibrationGroupTargets({
+  targets,
+  group,
+  countryId,
+}: {
+  targets: CalibrationTargetRow[];
+  group: string;
+  countryId: CalibrationCountry;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const { ordered, previewCount } = calibrationPreviewTargets(targets);
+  const visible = showAll ? ordered : ordered.slice(0, previewCount);
+  return (
+    <>
+      {visible.map((target) => (
+        <tr key={target.name}>
+          <th scope="row" style={labelCellStyle}>
+            <TargetDetails target={target} group={group} countryId={countryId} />
+          </th>
+          <TargetCells target={target} />
+        </tr>
+      ))}
+      {ordered.length > previewCount && (
+        <tr>
+          <td colSpan={CALIBRATION_COLUMNS.length} style={{ padding: `${spacing.xs} 0` }}>
+            <button
+              type="button"
+              style={rowButtonStyle}
+              aria-expanded={showAll}
+              onClick={() => setShowAll((value) => !value)}
+            >
+              {showAll
+                ? `Show the first ${previewCount} ${group} targets`
+                : `Show all ${ordered.length} ${group} targets`}
+            </button>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
 export function CalibrationMatchSection({
   matches,
   pin,
@@ -502,14 +549,7 @@ export function CalibrationMatchSection({
                 </CellNote>
               </th>
             </tr>
-            {match.targets.map((target) => (
-              <tr key={target.name}>
-                <th scope="row" style={labelCellStyle}>
-                  <TargetDetails target={target} group={group} countryId={countryId} />
-                </th>
-                <TargetCells target={target} />
-              </tr>
-            ))}
+            <CalibrationGroupTargets targets={match.targets} group={group} countryId={countryId} />
           </tbody>
         );
       })}

@@ -1,6 +1,10 @@
 import type { LocalAreaBreakdownResponse } from '@/api/societyWideCalculation';
 import { EXPECTED_BY_CONSTITUENCY } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
-import { UNLISTED_LOCAL_AUTHORITY_NAME } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
+import {
+  ARDS_AND_NORTH_DOWN,
+  ARDS_AND_NORTH_DOWN_CODE,
+  UNLISTED_LOCAL_AUTHORITY_NAME,
+} from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   BREAKDOWN_ERROR_RESPONSE,
   BREAKDOWN_REGION_SCOTLAND,
@@ -55,8 +59,9 @@ export const COMPLETE_RESPONSE: LocalAreaBreakdownResponse = {
 };
 
 /**
- * A completed breakdown that also publishes a local authority the region
- * metadata does not list, so its local authorities cannot be counted.
+ * A completed breakdown that also publishes a local authority by a name
+ * the Public API's region list does not use (Kingston upon Hull, which
+ * the list names "Kingston upon Hull, City of"), with its ONS code.
  */
 export const COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY: LocalAreaBreakdownResponse = {
   status: 'ok',
@@ -66,8 +71,6 @@ export const COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY: LocalAreaBreakdown
       by_local_authority: {
         ...NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority,
         [UNLISTED_LOCAL_AUTHORITY_NAME]: {
-          x: 10,
-          y: 15,
           average_household_income_change: 310.5,
           relative_household_income_change: 0.0091,
           code: 'E06000010',
@@ -77,6 +80,35 @@ export const COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY: LocalAreaBreakdown
     },
   },
 };
+
+/**
+ * A completed UK-wide breakdown that also publishes Ards and North Down,
+ * which a Public API region list from before PolicyEngine/policyengine-api#4024
+ * leaves out.
+ */
+export const COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN: LocalAreaBreakdownResponse = {
+  status: 'ok',
+  result: {
+    ...NORMALIZED_BREAKDOWN,
+    local_authority_impact: {
+      by_local_authority: {
+        ...NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority,
+        [ARDS_AND_NORTH_DOWN]: {
+          average_household_income_change: 95.2,
+          relative_household_income_change: 0.0031,
+          code: ARDS_AND_NORTH_DOWN_CODE,
+          disclosure_tier: 'reported',
+        },
+      },
+    },
+  },
+};
+
+/**
+ * The local authorities that breakdown leaves out: the UK's 361, less
+ * Hartlepool and Ards and North Down.
+ */
+export const WITHHELD_LOCAL_AUTHORITIES_WITH_ARDS_AND_NORTH_DOWN = 359;
 
 export const FAILED_RESPONSE: LocalAreaBreakdownResponse = {
   status: 'error',
@@ -102,3 +134,10 @@ export const NATIONAL_RESULT_FOR_BREAKDOWN_RESPONSE = {
 /** The message the hook gives for such a response. */
 export const NOT_A_BREAKDOWN_MESSAGE =
   'The API returned national results instead of a local-area breakdown. Its deployment may not support breakdown=local_areas yet.';
+
+/** A poll that fails before reaching the API, e.g. a gateway's 502. */
+export const POLL_FAILURE = new Error('Local-area breakdown failed: 502 Bad Gateway');
+
+/** The message the hook gives once a run computes past its time limit. */
+export const TIME_LIMIT_MESSAGE =
+  'The local-area breakdown is taking much longer than expected. It may still finish on the server: retry to check it again.';

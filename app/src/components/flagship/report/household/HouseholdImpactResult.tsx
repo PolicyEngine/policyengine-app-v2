@@ -4,36 +4,21 @@ import HouseholdBreakdowns, {
   type HouseholdBreakdownSource,
   type HouseholdBreakdownView,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
-import { Stack, Text, Title } from '@/components/ui';
+import {
+  effectColor,
+  money,
+  signedMoney,
+} from '@/components/flagship/report/household/householdMoney';
+import VariableInfoTip from '@/components/household/VariableInfoTip';
+import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
+import type { HouseholdProgrammeChange } from '@/libs/flagship/householdProgrammeChanges';
 import type { FlagshipHouseholdImpact, HouseholdLineChange } from '@/libs/flagship/householdRun';
 import { trackHouseholdOutputViewed, type HouseholdOutputTab } from '@/utils/analytics';
-import { formatCurrency } from '@/utils/formatters';
-
-/** Whole dollars (or pounds), with a true minus sign: "−$1,200", "−£1,200". */
-function money(value: number, countryId: CountryId): string {
-  const rounded = Math.round(value);
-  const text = formatCurrency(Math.abs(rounded), countryId, { maximumFractionDigits: 0 });
-  return rounded < 0 ? `−${text}` : text;
-}
-
-/** A change, always signed: "+$1,200", "−$300", "$0". */
-function signedMoney(value: number, countryId: CountryId): string {
-  const rounded = Math.round(value);
-  return rounded > 0 ? `+${money(rounded, countryId)}` : money(rounded, countryId);
-}
-
-/** Gains read in the brand teal, losses in red. */
-const effectColor = (effect: number) =>
-  Math.round(effect) > 0
-    ? colors.primary[700]
-    : Math.round(effect) < 0
-      ? colors.error
-      : colors.text.primary;
 
 const headerCell: CSSProperties = {
-  padding: `0 ${spacing.md} ${spacing.sm}`,
+  padding: `0 0 ${spacing.sm}`,
   textAlign: 'right',
   fontSize: typography.fontSize.xs,
   fontWeight: typography.fontWeight.medium,
@@ -41,8 +26,31 @@ const headerCell: CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+/** A number column's gap from the column before: narrow on a phone, so all four columns fit. */
+const NUMBER_CELL = 'tw:pl-3 tw:md:pl-8';
+
+/** A model variable's description, by its name; none for a variable without one. */
+type DescribeVariable = (variable: string) => string | undefined;
+
+/**
+ * A line's name with its tip: every amount in the result is for the year,
+ * then the line's variable as the model describes it, where it has one.
+ */
+function LineName({ line, describe }: { line: HouseholdLineChange; describe?: DescribeVariable }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing.xs }}>
+      {line.label}
+      <VariableInfoTip
+        label={line.label}
+        period="Per year"
+        description={line.variable ? describe?.(line.variable) : undefined}
+      />
+    </span>
+  );
+}
+
 const bodyCell: CSSProperties = {
-  padding: `${spacing.sm} ${spacing.md}`,
+  padding: `${spacing.sm} 0`,
   textAlign: 'right',
   fontVariantNumeric: 'tabular-nums',
   whiteSpace: 'nowrap',
@@ -53,11 +61,13 @@ function ChangeTable({
   lines,
   total,
   countryId,
+  describe,
 }: {
   label: string;
   lines: HouseholdLineChange[];
   total?: HouseholdLineChange;
   countryId: CountryId;
+  describe?: DescribeVariable;
 }) {
   const rows = total ? [...lines, total] : lines;
   return (
@@ -76,13 +86,13 @@ function ChangeTable({
             <th scope="col" style={{ ...headerCell, textAlign: 'left', paddingLeft: 0 }}>
               {label}
             </th>
-            <th scope="col" style={headerCell}>
+            <th scope="col" className={NUMBER_CELL} style={headerCell}>
               Baseline
             </th>
-            <th scope="col" style={headerCell}>
+            <th scope="col" className={NUMBER_CELL} style={headerCell}>
               Reform
             </th>
-            <th scope="col" style={headerCell}>
+            <th scope="col" className={NUMBER_CELL} style={headerCell}>
               Change
             </th>
           </tr>
@@ -110,15 +120,18 @@ function ChangeTable({
                       : typography.fontWeight.normal,
                   }}
                 >
-                  {line.label}
+                  <LineName line={line} describe={describe} />
                 </th>
-                <td style={bodyCell}>
+                <td className={NUMBER_CELL} style={bodyCell}>
                   {line.baseline === null ? '—' : money(line.baseline, countryId)}
                 </td>
-                <td style={bodyCell}>
+                <td className={NUMBER_CELL} style={bodyCell}>
                   {line.reform === null ? '—' : money(line.reform, countryId)}
                 </td>
-                <td style={{ ...bodyCell, color: effectColor(line.effect) }}>
+                <td
+                  className={NUMBER_CELL}
+                  style={{ ...bodyCell, color: effectColor(line.effect) }}
+                >
                   {signedMoney(line.change, countryId)}
                 </td>
               </tr>
@@ -136,11 +149,13 @@ function SummaryTables({
   noChange,
   change,
   countryId,
+  describe,
 }: {
   impact: FlagshipHouseholdImpact;
   noChange: boolean;
   change: number;
   countryId: CountryId;
+  describe?: DescribeVariable;
 }) {
   const { netIncome, components, programs } = impact;
   return noChange ? (
@@ -154,9 +169,11 @@ function SummaryTables({
           label="Taxes and benefits"
           lines={components}
           countryId={countryId}
+          describe={describe}
           total={{
             id: 'net_income',
             label: 'Net income',
+            variable: 'household_net_income',
             baseline: netIncome.baseline,
             reform: netIncome.reform,
             change: netIncome.change,
@@ -165,7 +182,12 @@ function SummaryTables({
         />
       )}
       {programs.length > 0 && (
-        <ChangeTable label="Credits and benefits" lines={programs} countryId={countryId} />
+        <ChangeTable
+          label="Credits and benefits"
+          lines={programs}
+          countryId={countryId}
+          describe={describe}
+        />
       )}
     </>
   );
@@ -192,15 +214,31 @@ export default function HouseholdImpactResult({
   impact,
   summary,
   breakdowns,
+  programmes,
+  variationStartedAt,
+  onVariationOpen,
   countryId = 'us',
+  describe,
 }: {
   impact: FlagshipHouseholdImpact;
   /** The household the result is for, e.g. "Single · no children · $50,000 earnings · Ohio · 2026". */
   summary: string;
   /** The household run the v2 breakdowns read; without it, only the summary shows. */
   breakdowns?: HouseholdBreakdownSource;
+  /** When the household's variation run started, if it has: its bar carries on from there. */
+  variationStartedAt?: number;
+  /** Called when a variation output opens. */
+  onVariationOpen?: () => void;
   /** The report's country: its currency. */
   countryId?: CountryId;
+  /** A model variable's description, for the tip beside each line. */
+  describe?: DescribeVariable;
+  /**
+   * The programmes the reform changes, from net income's tree, largest
+   * first: "What changes" names them. Without them, it names the lines of
+   * the summary tables.
+   */
+  programmes?: HouseholdProgrammeChange[];
 }) {
   const [view, setView] = useState<'summary' | HouseholdBreakdownView>('summary');
   const { netIncome, components, programs } = impact;
@@ -210,34 +248,48 @@ export default function HouseholdImpactResult({
   const noChange = change === 0 && components.length === 0 && programs.length === 0;
   const id = useId();
 
-  // The changes that drive the result, largest first: what a reader looks for next.
-  const drivers = [...programs, ...components]
-    .filter((line) => Math.round(line.change) !== 0)
-    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
-    .filter((line, index, all) => all.findIndex((other) => other.label === line.label) === index)
-    .slice(0, 3);
+  // The changes that drive the result, largest first: what a reader looks for
+  // next. Each programme that changes, signed by what it does to net income
+  // (a tax that rises reads negative); else the summary's lines.
+  const changed: { id: string; line: HouseholdLineChange; amount: number; effect: number }[] =
+    programmes && programmes.length > 0
+      ? programmes
+          .filter((programme) => Math.round(programme.effect) !== 0)
+          .map((programme) => ({
+            id: programme.variable,
+            line: {
+              id: programme.variable,
+              label: programme.label,
+              variable: programme.variable,
+              baseline: 0,
+              reform: programme.change,
+              change: programme.change,
+              effect: programme.effect,
+            },
+            amount: programme.effect,
+            effect: programme.effect,
+          }))
+      : [...programs, ...components]
+          .filter((line) => Math.round(line.change) !== 0)
+          .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+          .filter(
+            (line, index, all) => all.findIndex((other) => other.label === line.label) === index
+          )
+          .map((line) => ({ id: line.id, line, amount: line.change, effect: line.effect }));
+  const shownCount = programmes && programmes.length > 0 ? 4 : 3;
+  const drivers = changed.slice(0, shownCount);
+  const moreCount = changed.length - drivers.length;
 
   return (
+    // No frame or title of its own: the household's panel names it, and the
+    // result, its tables and its charts take the panel's full width.
     <section
-      aria-labelledby={`${id}-heading`}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: spacing.lg,
-        padding: spacing.lg,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.container,
-        background: colors.background.primary,
-      }}
+      aria-label="Household impact"
+      style={{ display: 'flex', flexDirection: 'column', gap: spacing.lg, minWidth: 0 }}
     >
-      <Stack style={{ gap: 2 }}>
-        <Title id={`${id}-heading`} order={3} style={{ margin: 0 }}>
-          Household impact
-        </Title>
-        <Text style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          {summary}
-        </Text>
-      </Stack>
+      <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+        {summary}
+      </Text>
 
       {/* The headline beside what drives it, so the result reads at a glance. */}
       <div
@@ -309,9 +361,9 @@ export default function HouseholdImpactResult({
             >
               What changes
             </span>
-            {drivers.map((line) => (
+            {drivers.map(({ id: key, line, amount, effect }) => (
               <div
-                key={line.id}
+                key={key}
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -319,18 +371,59 @@ export default function HouseholdImpactResult({
                   fontSize: typography.fontSize.sm,
                 }}
               >
-                <span style={{ color: colors.text.primary }}>{line.label}</span>
+                <span style={{ color: colors.text.primary }}>
+                  <LineName line={line} describe={describe} />
+                </span>
                 <span
                   style={{
                     fontVariantNumeric: 'tabular-nums',
                     fontWeight: typography.fontWeight.medium,
-                    color: effectColor(line.effect),
+                    color: effectColor(effect),
                   }}
                 >
-                  {signedMoney(line.change, countryId)}
+                  {signedMoney(amount, countryId)}
                 </span>
               </div>
             ))}
+            {moreCount > 0 &&
+              (breakdowns ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    trackHouseholdOutputViewed({
+                      countryId,
+                      tab: VIEW_ANALYTICS_NAMES['net-income'],
+                    });
+                    setView('net-income');
+                  }}
+                  className="tw:cursor-pointer tw:self-start tw:border-0 tw:bg-transparent tw:p-0 tw:underline"
+                  style={{ fontSize: typography.fontSize.sm, color: colors.primary[700] }}
+                >
+                  and {moreCount} more
+                </button>
+              ) : (
+                <span style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                  and {moreCount} more
+                </span>
+              ))}
+            {programmes && changed.length > 1 && (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: spacing.md,
+                  paddingTop: spacing.sm,
+                  borderTop: `1px solid ${colors.border.light}`,
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.fontWeight.medium,
+                }}
+              >
+                <span style={{ color: colors.text.primary }}>Net income</span>
+                <span style={{ fontVariantNumeric: 'tabular-nums', color: effectColor(change) }}>
+                  {signedMoney(change, countryId)}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -388,10 +481,21 @@ export default function HouseholdImpactResult({
 
       {breakdowns && view !== 'summary' ? (
         <div style={{ minWidth: 0 }}>
-          <HouseholdBreakdowns view={view} source={breakdowns} />
+          <HouseholdBreakdowns
+            view={view}
+            source={breakdowns}
+            variationStartedAt={variationStartedAt}
+            onVariationOpen={onVariationOpen}
+          />
         </div>
       ) : (
-        <SummaryTables impact={impact} noChange={noChange} change={change} countryId={countryId} />
+        <SummaryTables
+          impact={impact}
+          noChange={noChange}
+          change={change}
+          countryId={countryId}
+          describe={describe}
+        />
       )}
     </section>
   );

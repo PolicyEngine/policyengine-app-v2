@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@test-utils';
+import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import HouseholdBuilderForm, {
   PEOPLE_GRID_CLASSES,
@@ -67,7 +67,8 @@ describe('HouseholdBuilderForm', () => {
     expect(container.firstElementChild).toHaveClass('tw:lg:flex-row');
     expect(screen.queryByRole('separator', { hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('Individuals')).toBeInTheDocument();
-    expect(screen.getByText('Household')).toBeInTheDocument();
+    // Under the report tab's own "Household" heading, the section names its details.
+    expect(screen.getByText('Household details')).toBeInTheDocument();
   });
 
   test('given the columns layout then the people sit at most four to a row, fewer as the section narrows', () => {
@@ -317,6 +318,68 @@ describe('rankVariablesBySearch', () => {
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '3.7' } });
     expect(input).toHaveValue('37');
+  });
+
+  test.each([
+    ['columns', '45,000'],
+    ['stacked', '45,000.00'],
+  ] as const)('given the %s layout then a whole amount of money shows as %s', (layout, shown) => {
+    const metadata = {
+      entities: {
+        person: { plural: 'people', label: 'Person', is_person: true },
+        household: { plural: 'households', label: 'Household' },
+      },
+      variables: {
+        rent: {
+          name: 'rent',
+          label: 'Rent',
+          entity: 'household',
+          isInputVariable: true,
+          valueType: 'float',
+          unit: 'currency-USD',
+          defaultValue: 0,
+        },
+      },
+    };
+    const household = Household.starter('us', YEAR)
+      .withSPM({ geography_kind: 'national' })
+      .setEntityVariableAtYear('households', 'your household', 'rent', YEAR, 45000);
+    renderForm({ layout, metadata, household, basicNonPersonFields: ['rent'] });
+
+    expect(screen.getByPlaceholderText(/^Enter/)).toHaveValue(shown);
+  });
+
+  test.each([
+    ['columns', 1],
+    ['stacked', 0],
+  ] as const)('given the %s layout then a described field has %i tip', async (layout, tips) => {
+    const metadata = {
+      entities: { household: { plural: 'households', label: 'Household' } },
+      variables: {
+        rent: {
+          name: 'rent',
+          label: 'Rent',
+          entity: 'household',
+          isInputVariable: true,
+          valueType: 'float',
+          unit: 'currency-USD',
+          defaultValue: 0,
+          // Defined per month in the model, but entered, like every amount, for the year.
+          definition_period: 'month',
+          description: 'Rent paid for the home.',
+        },
+      },
+    };
+    renderForm({ layout, metadata, basicNonPersonFields: ['rent'] });
+
+    const tip = screen.queryAllByRole('button', { name: 'About Rent' });
+    expect(tip).toHaveLength(tips);
+    if (tips) {
+      await userEvent.setup().click(tip[0]);
+      expect(screen.getByRole('tooltip')).toHaveTextContent(
+        'Per year: enter the total for the yearRent paid for the home.'
+      );
+    }
   });
 
   test('given the stacked layout then whole-number inputs keep no step buttons, as before', () => {

@@ -1,0 +1,89 @@
+{
+  "vintage": "OBR EFO October 2026",
+  "source": "OBR, Economic and fiscal outlook, October 2026, Annex A",
+  "source_url": "https://www.gov.uk/government/publications/october-2026-economic-and-fiscal-outlook",
+  "replaces": "OBR EFO March 2026, as shipped in policyengine-uk 2.151.0 (gov.economic_assumptions.yoy_growth.obr)",
+  "applies_to": "Every simulation the dashboard builds, baseline and reform alike (uk_budget_data.forecast.with_forecast). Applied before data load, so the dataset's projected years follow it.",
+  "notes": [
+    "Growth rates are Table A.1 (Economy forecast, EFO page 180), percentage change on a year earlier, calendar years 2026 to 2031, keyed YYYY-01-01.YYYY-12-31. 2025 is outturn in Table A.1 and is left as shipped; after 2031 the engine's long-run path is kept.",
+    "The engine's March values equal the March Table A.1 rows: the October value minus the Table A.2 change since March, to within 0.1pp rounding (tests/test_forecast_basis.py).",
+    "Statutory uprating inputs keep their published outturns (September 2026 CPI 3.5%, May-July 2026 earnings 3.9%). Their forecast years are calendar-year growth plus the engine's forecast_gap, which still holds the March 2026 quarterly gaps except where noted below.",
+    "September 2027 CPI: Table A.3 (EFO page 181) gives the 2027-28 triple-lock guarantee as 3.4%, the highest of Q2 2027 earnings growth, Q3 2027 CPI and 2.5%. Q2 earnings cannot reach 3.4% (calendar-year 2027 earnings growth is 3.0%), so Q3 2027 CPI is 3.4%, equal to calendar-year 2027 CPI: the gap is 0. The March gap (+0.07pp) would have given 3.5%.",
+    "Every later Table A.3 triple-lock figure (2.5, 2.5, 2.5, 2.6 for 2028-29 to 2031-32) is reproduced by these series and the remaining March gaps (tests/test_forecast_basis.py).",
+    "Fuel duty (gov.hmrc.fuel_duty.petrol_and_diesel), added in code (uk_budget_data.forecast.fuel_duty_rpi_steps): policyengine-uk stores current law's RPI steps as values from its March RPI. Current law here is the OBR's 60.59p from April 2027 (EFO paragraph 3.19: on 1 July 2027 the 5p cut is reversed with an RPI uprating, 52.95p to 60.59p; the Budget defers that same planned RPI increase from April), then each 1 April the previous calendar year's Table A.1 RPI. The baseline and the fuel duty measure both read this one path.",
+    "Not updated (the OBR detailed forecast tables could not be retrieved): cpih, non_labour_income, rent, mortgage_interest, per_capita, council_tax, fuel volume and price series. They keep the March 2026 path. consumer_price_index_ahc and social_rent are derived from Table A.1 CPI (see their sources)."
+  ],
+  "parameter_changes": {
+    "gov.economic_assumptions.yoy_growth.obr.consumer_price_index": {
+      "source": "Table A.1, Inflation: CPI",
+      "values": {
+        "2026-01-01.2026-12-31": 0.031,
+        "2027-01-01.2027-12-31": 0.034,
+        "2028-01-01.2028-12-31": 0.021,
+        "2029-01-01.2029-12-31": 0.021,
+        "2030-01-01.2030-12-31": 0.02,
+        "2031-01-01.2031-12-31": 0.02
+      }
+    },
+    "gov.economic_assumptions.yoy_growth.obr.rpi": {
+      "source": "Table A.1, Inflation: RPI",
+      "values": {
+        "2026-01-01.2026-12-31": 0.036,
+        "2027-01-01.2027-12-31": 0.043,
+        "2028-01-01.2028-12-31": 0.03,
+        "2029-01-01.2029-12-31": 0.03,
+        "2030-01-01.2030-12-31": 0.023,
+        "2031-01-01.2031-12-31": 0.022
+      }
+    },
+    "gov.economic_assumptions.yoy_growth.obr.average_earnings": {
+      "source": "Table A.1, Labour market: Average weekly earnings (wages and salaries divided by employees)",
+      "values": {
+        "2026-01-01.2026-12-31": 0.037,
+        "2027-01-01.2027-12-31": 0.03,
+        "2028-01-01.2028-12-31": 0.022,
+        "2029-01-01.2029-12-31": 0.023,
+        "2030-01-01.2030-12-31": 0.025,
+        "2031-01-01.2031-12-31": 0.026
+      }
+    },
+    "gov.economic_assumptions.yoy_growth.obr.house_prices": {
+      "source": "Table A.1, Household sector: House prices",
+      "values": {
+        "2026-01-01.2026-12-31": 0.021,
+        "2027-01-01.2027-12-31": 0.024,
+        "2028-01-01.2028-12-31": 0.028,
+        "2029-01-01.2029-12-31": 0.028,
+        "2030-01-01.2030-12-31": 0.027,
+        "2031-01-01.2031-12-31": 0.027
+      }
+    },
+    "gov.economic_assumptions.yoy_growth.obr.consumer_price_index_ahc": {
+      "source": "Table A.1, CPI, as a change: PolicyEngine approximation (not an OBR series), policyengine-uk's March 2026 CPI after housing costs moved by the change in Table A.1 CPI for the same year, as the Living standards tab's October series (living_standards/forecast.py)",
+      "values": {
+        "2026-01-01.2026-12-31": 0.0297,
+        "2027-01-01.2027-12-31": 0.0328,
+        "2028-01-01.2028-12-31": 0.0204,
+        "2029-01-01.2029-12-31": 0.0204,
+        "2030-01-01.2030-12-31": 0.0192,
+        "2031-01-01.2031-12-31": 0.0192
+      }
+    },
+    "gov.economic_assumptions.yoy_growth.obr.social_rent": {
+      "source": "Table A.1, CPI: England social rent policy cap, the previous calendar year's CPI + 1% (2026 is set by September 2025 CPI outturn and kept), as the Living standards tab's October series",
+      "values": {
+        "2027-01-01.2027-12-31": 0.041,
+        "2028-01-01.2028-12-31": 0.044,
+        "2029-01-01.2029-12-31": 0.031,
+        "2030-01-01.2030-12-31": 0.031,
+        "2031-01-01.2031-12-31": 0.03
+      }
+    },
+    "gov.economic_assumptions.statutory_uprating_inputs.forecast_gap.cpi_september": {
+      "source": "Table A.3, 'Triple-lock' guarantee 2027-28: 3.4 (Q3 2027 CPI) minus Table A.1 calendar-year 2027 CPI 3.4",
+      "values": {
+        "2027-09-01.2028-08-31": 0.0
+      }
+    }
+  }
+}

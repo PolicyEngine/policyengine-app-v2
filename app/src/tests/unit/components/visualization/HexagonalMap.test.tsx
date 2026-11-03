@@ -2,12 +2,40 @@ import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import { HexagonalMap, zoomAbout } from '@/components/visualization/HexagonalMap';
 import {
+  FIXED_MAP_WIDTH,
+  MIN_MISSING_AREA_STRIPE_PIXELS,
+  MISSING_AREA_EDGE_COLOR,
+  MISSING_FAR_EAST,
+  MISSING_NORTH_EAST,
+  MISSING_UK_SHAPED_AREA,
   MOCK_HEX_MAP_DATA,
   MOCK_MIXED_VALUES,
   MOCK_NEGATIVE_VALUES,
   MOCK_POSITIVE_VALUES,
+  MOCK_TILED_HEX_DATA,
   MOCK_UK_SHAPED_HEX_DATA,
+  mockRenderedSvgWidth,
+  NOT_REPORTED_TEXT,
+  PHONE_WIDTH_PIXELS,
+  stripeSpacingOnScreen,
 } from '@/tests/fixtures/components/visualization/hexMapMocks';
+
+/** A hexagon polygon's vertices, in drawing order. */
+function vertices(polygon: Element): [number, number][] {
+  return (polygon.getAttribute('points') ?? '')
+    .trim()
+    .split(' ')
+    .map((pair) => pair.split(',').map(Number) as [number, number]);
+}
+
+/** A hexagon polygon's centre. */
+function centre(polygon: Element): [number, number] {
+  const points = vertices(polygon);
+  return [
+    points.reduce((sum, [x]) => sum + x, 0) / points.length,
+    points.reduce((sum, [, y]) => sum + y, 0) / points.length,
+  ];
+}
 
 // jsdom has no PointerEvent; a MouseEvent with a pointer id is enough for the map's drag.
 if (typeof window.PointerEvent === 'undefined') {
@@ -22,6 +50,37 @@ if (typeof window.PointerEvent === 'undefined') {
 }
 
 describe('HexagonalMap', () => {
+  test('given data then hexagons are pointy-topped and rows sit √3/2 of a column apart', () => {
+    // When: the map's only layout, the tiled odd-r grid
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
+
+    // Then
+    const [west, east, north] = ['west', 'east', 'north'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const column = centre(east)[0] - centre(west)[0];
+    const row = centre(west)[1] - centre(north)[1];
+    expect(row / column).toBeCloseTo(Math.sqrt(3) / 2, 5);
+    const points = vertices(west);
+    // A pointy-top hexagon's top and bottom vertices share an x.
+    expect(points[1][0]).toBeCloseTo(points[4][0], 5);
+  });
+
+  test('given data then neighbouring hexagons in a row touch', () => {
+    // When
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
+
+    // Then: the gap between west's right edge and east's left edge is a hairline
+    const [west, east] = ['west', 'east'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const westRight = Math.max(...vertices(west).map(([vertexX]) => vertexX));
+    const eastLeft = Math.min(...vertices(east).map(([vertexX]) => vertexX));
+    const column = centre(east)[0] - centre(west)[0];
+    expect((eastLeft - westRight) / column).toBeGreaterThan(0);
+    expect((eastLeft - westRight) / column).toBeLessThan(0.1);
+  });
+
   test('given minimal data then renders SVG with one hexagon', () => {
     // Given
     const data = [{ id: '1', label: 'Test', value: 100, x: 0, y: 0 }];
@@ -209,18 +268,6 @@ describe('HexagonalMap', () => {
     expect(polygons).toHaveLength(3);
   });
 
-  test('given custom hex size then renders hexagons', () => {
-    // Given
-    const data = MOCK_HEX_MAP_DATA;
-    const config = { hexSize: 20 };
-
-    // When
-    const { container } = render(<HexagonalMap data={data} config={config} />);
-
-    // Then
-    const polygons = container.querySelectorAll('polygon');
-    expect(polygons).toHaveLength(4);
-  });
   test('given no selection props then hexagons carry no selection attributes', () => {
     const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} />);
 
@@ -432,9 +479,35 @@ describe('HexagonalMap default view', () => {
     const { container } = render(<HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} />);
 
     const extent = hexagonExtent(container);
-    // The hexagons start one padding (2 x hex size = 16) in from the left and top.
-    expect(extent.minX).toBeLessThan(16);
-    expect(extent.minY).toBeLessThan(16);
+    // The hexagons' edges start one margin (16) in from the left and top.
+    expect(extent.minX).toBeCloseTo(16, 5);
+    expect(extent.minY).toBeCloseTo(16, 5);
+  });
+});
+
+describe('HexagonalMap frame', () => {
+  test('given a map of a few areas then every hexagon stays inside the frame', () => {
+    // When: three areas, so each hexagon is drawn large
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
+
+    // Then
+    const extent = hexagonExtent(container);
+    expect(extent.minY).toBeGreaterThanOrEqual(0);
+    expect(extent.maxY).toBeLessThanOrEqual(380);
+    expect(extent.minX).toBeGreaterThanOrEqual(0);
+  });
+
+  test('given a UK-shaped map then every hexagon stays inside the frame', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} onSelect={vi.fn()} />
+    );
+
+    // Then
+    const extent = hexagonExtent(container);
+    expect(extent.minY).toBeGreaterThanOrEqual(0);
+    expect(extent.maxY).toBeLessThanOrEqual(380);
+    expect(extent.minX).toBeGreaterThanOrEqual(0);
   });
 });
 
@@ -472,5 +545,201 @@ describe('HexagonalMap fillWidth', () => {
     const { container } = render(<HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} />);
 
     expect(container.querySelector('svg')!.getAttribute('viewBox')).toBe('0 0 600 380');
+  });
+});
+
+describe('HexagonalMap missing areas', () => {
+  /** A missing area's hexagon, by its id. */
+  function missingHexagon(container: HTMLElement, id: string): Element | null {
+    return container.querySelector(`[data-missing-area-id="${id}"]`);
+  }
+
+  test('given a missing area then it is drawn in its place, hatched rather than a colour on the scale', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_NORTH_EAST]} />
+    );
+
+    // Then
+    const hexagon = missingHexagon(container, MISSING_NORTH_EAST.id)!;
+    const hatching = container.querySelector('pattern')!;
+    expect(hexagon).toBeInTheDocument();
+    expect(hexagon.getAttribute('fill')).toBe(`url(#${hatching.id})`);
+    expect(container.querySelectorAll('svg polygon')).toHaveLength(4);
+  });
+
+  test('given a missing area then it sits in the row above, beside the area west of it', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then: one column east of North, in North's row
+    const [west, east, north] = ['west', 'east', 'north'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const northEast = missingHexagon(container, MISSING_NORTH_EAST.id)!;
+    expect(centre(northEast)[1]).toBeCloseTo(centre(north)[1], 5);
+    expect(centre(northEast)[0] - centre(north)[0]).toBeCloseTo(
+      centre(east)[0] - centre(west)[0],
+      5
+    );
+  });
+
+  test('given a missing area hovered then its tooltip gives its name and why it has no value', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        missingAreaText={NOT_REPORTED_TEXT}
+      />
+    );
+
+    // When
+    await user.hover(missingHexagon(container, MISSING_NORTH_EAST.id)!);
+
+    // Then
+    expect(screen.getByText(`North East: ${NOT_REPORTED_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given no missing-area text then a missing area reads no data', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_NORTH_EAST]} />
+    );
+
+    // When
+    await user.hover(missingHexagon(container, MISSING_NORTH_EAST.id)!);
+
+    // Then
+    expect(screen.getByText('North East: No data')).toBeInTheDocument();
+  });
+
+  test('given a selectable map then a missing area is not selectable', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={onSelect}
+      />
+    );
+    const hexagon = missingHexagon(container, MISSING_NORTH_EAST.id)!;
+
+    // When
+    await user.click(hexagon);
+
+    // Then
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(hexagon).not.toHaveAttribute('data-area-id');
+  });
+
+  test('given a missing area far from the valued ones then the map fits it in its frame too', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_FAR_EAST]} />
+    );
+
+    // Then
+    const svg = container.querySelector('svg')!;
+    const [, , frameWidth, frameHeight] = svg.getAttribute('viewBox')!.split(' ').map(Number);
+    const hexagons = [...container.querySelectorAll('svg polygon')];
+    const allVertices = hexagons.flatMap(vertices);
+    expect(missingHexagon(container, MISSING_FAR_EAST.id)).toBeInTheDocument();
+    expect(Math.min(...allVertices.map(([vertexX]) => vertexX))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...allVertices.map(([vertexX]) => vertexX))).toBeLessThanOrEqual(frameWidth);
+    expect(Math.min(...allVertices.map(([, vertexY]) => vertexY))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...allVertices.map(([, vertexY]) => vertexY))).toBeLessThanOrEqual(frameHeight);
+  });
+
+  test('given a map as dense as the UK constituency map then the hatching’s stripes are at least 4 pixels apart', () => {
+    // When: hexagons about 4.7 pixels across their radius, whose stripes would otherwise blend into a grey on the scale
+    const { container } = render(
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} missingAreas={[MISSING_UK_SHAPED_AREA]} />
+    );
+
+    // Then
+    const hatching = container.querySelector('pattern')!;
+    expect(Number(hatching.getAttribute('width'))).toBeGreaterThanOrEqual(
+      MIN_MISSING_AREA_STRIPE_PIXELS
+    );
+  });
+
+  test('given a missing area then its edge is grey, unlike the valued hexagons’ edges', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then
+    const valuedEdge = container.querySelector('[data-area-id="west"]')!.getAttribute('stroke');
+    const missingEdge = missingHexagon(container, MISSING_NORTH_EAST.id)!.getAttribute('stroke');
+    expect(missingEdge).toBe(MISSING_AREA_EDGE_COLOR);
+    expect(missingEdge).not.toBe(valuedEdge);
+  });
+
+  test('given a fixed-width map drawn on a phone then the stripes are at least 4 screen pixels apart', () => {
+    // Given: the 600-unit map drawn 375 pixels wide, so one unit is 0.625 pixels
+    const restoreWidth = mockRenderedSvgWidth(PHONE_WIDTH_PIXELS);
+
+    try {
+      // When
+      const { container } = render(
+        <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} missingAreas={[MISSING_UK_SHAPED_AREA]} />
+      );
+
+      // Then
+      expect(stripeSpacingOnScreen(container, PHONE_WIDTH_PIXELS)).toBeGreaterThanOrEqual(
+        MIN_MISSING_AREA_STRIPE_PIXELS
+      );
+    } finally {
+      restoreWidth();
+    }
+  });
+
+  test('given a zoomable map zoomed from 1 to 20 then the stripes keep their spacing on screen', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_UK_SHAPED_HEX_DATA}
+        missingAreas={[MISSING_UK_SHAPED_AREA]}
+        zoomable
+      />
+    );
+    const spacingAtZoomOne = stripeSpacingOnScreen(container, FIXED_MAP_WIDTH);
+
+    // When: eight steps of 1.5 reach the zoom limit, 20
+    for (let step = 0; step < 8; step++) {
+      await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    }
+
+    // Then
+    expect(screen.getByTestId('hex-map-zoom-layer').getAttribute('transform')).toContain(
+      'scale(20)'
+    );
+    expect(stripeSpacingOnScreen(container, FIXED_MAP_WIDTH)).toBeCloseTo(spacingAtZoomOne, 6);
+  });
+
+  test('given no missing areas then the map draws no hatching', () => {
+    // When
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} />);
+
+    // Then
+    expect(container.querySelector('pattern')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-missing-area-id]')).not.toBeInTheDocument();
   });
 });

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CURRENT_UK_METADATA_REGIONS,
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_LABEL,
+} from '@/tests/fixtures/models/regionMocks';
+import {
   EXPECTED_COUNTRY_LABELS,
   EXPECTED_REGION_TYPE_LABELS,
   mockMetadataEmptyRegions,
@@ -36,12 +41,12 @@ describe('geographyUtils', () => {
       expect(result).toBe(EXPECTED_COUNTRY_LABELS.UK);
     });
 
-    it('given CA code then returns Canada', () => {
+    it('given the code of Canada, which the app no longer offers, then returns Unknown country', () => {
       // When
       const result = getCountryLabel(TEST_COUNTRY_CODES.CA);
 
       // Then
-      expect(result).toBe(EXPECTED_COUNTRY_LABELS.CA);
+      expect(result).toBe(EXPECTED_COUNTRY_LABELS.UNKNOWN);
     });
 
     it('given unknown code then returns Unknown Country', () => {
@@ -487,5 +492,28 @@ describe('geographyUtils', () => {
       // Then
       expect(result).toBe(false);
     });
+  });
+});
+
+describe('geographyUtils Northern Ireland region', () => {
+  const ukMetadata = () => ({
+    ...mockMetadataWithRegions(),
+    currentCountry: 'uk',
+    economyOptions: {
+      ...mockMetadataWithRegions().economyOptions,
+      region: CURRENT_UK_METADATA_REGIONS,
+    },
+  });
+
+  it('given a stored country/ni code then the label is Northern Ireland', () => {
+    expect(getRegionLabel(LEGACY_NORTHERN_IRELAND_REGION_CODE, ukMetadata())).toBe(
+      NORTHERN_IRELAND_LABEL
+    );
+  });
+
+  it('given a stored country/ni code then the region type is Country', () => {
+    expect(getRegionTypeLabel('uk', LEGACY_NORTHERN_IRELAND_REGION_CODE, ukMetadata())).toBe(
+      'Country'
+    );
   });
 });

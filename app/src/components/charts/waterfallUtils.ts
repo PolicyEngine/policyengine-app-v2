@@ -17,6 +17,8 @@ export interface WaterfallItem {
   value: number;
   /** Whether this item is the total bar (anchored to 0) */
   isTotal?: boolean;
+  /** Whether this item stands apart: anchored to 0, and left out of the running total */
+  isStandalone?: boolean;
 }
 
 export interface WaterfallDatum {
@@ -36,6 +38,8 @@ export interface WaterfallDatum {
   label: string;
   /** Whether this is the total bar */
   isTotal: boolean;
+  /** Whether this bar stands apart from the running total */
+  isStandalone?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -92,9 +96,19 @@ export function computeWaterfallData(
   let runningTotal = 0;
 
   for (const item of items) {
-    const { name, value, isTotal = false } = item;
+    const { name, value, isTotal = false, isStandalone = false } = item;
 
-    if (isTotal) {
+    if (isStandalone) {
+      const metrics = computeBarMetrics(0, value, value);
+      result.push({
+        name,
+        value,
+        ...metrics,
+        label: formatValue(value),
+        isTotal: false,
+        isStandalone: true,
+      });
+    } else if (isTotal) {
       const metrics = computeBarMetrics(0, runningTotal, runningTotal);
       result.push({
         name,
@@ -158,6 +172,10 @@ export function computeWaterfallConnectors(data: WaterfallDatum[]): WaterfallCon
   const connectors: WaterfallConnector[] = [];
   for (let i = 0; i < data.length - 1; i++) {
     const d = data[i];
+    // A standalone bar isn't part of the running total, so no line joins it.
+    if (d.isStandalone || data[i + 1].isStandalone) {
+      continue;
+    }
     const y = d.runningTotalEdge === 'top' ? d.base + d.barHeight : d.base;
     connectors.push({ y, fromIndex: i, toIndex: i + 1 });
   }

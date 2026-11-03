@@ -17,6 +17,10 @@ export interface ScorecardClaim {
     sign_convention?: string | null;
     /** "unsigned" when the source prints a size and names the direction in words. */
     change_direction?: string | null;
+    /** UK costings: "static", or "post_behavioural" for the leg after behaviour changes. */
+    scoring_method?: string | null;
+    /** UK costings: the measure as the source's table describes it. */
+    reform_hint?: string | null;
   };
   program?: string | null;
   geography?: string;
@@ -58,6 +62,34 @@ export interface ScorecardClaim {
 export interface RelatedScorecardClaim extends ScorecardClaim {
   matchBasis: 'variable' | 'parameter' | 'program' | 'related-policy';
 }
+/**
+ * Related reforms as a reader can take them in: one score per published
+ * measure, period and metric, and none that says nothing. A costing that
+ * prints a static leg and a post-behavioural leg for the same year keeps
+ * the static one, which PolicyEngine's static runs compare with (else the
+ * one PolicyEngine marks comparable). A year in which both the source and
+ * PolicyEngine score exactly zero, such as a year before the measure
+ * starts, is left out.
+ */
+export function focusRelatedReformClaims(rows: RelatedScorecardClaim[]): RelatedScorecardClaim[] {
+  const rank = (row: RelatedScorecardClaim) =>
+    (row.conditions?.scoring_method === 'static' ? 0 : 2) +
+    ((row.latest?.status_effective ?? row.latest?.status) === 'comparable' ? 0 : 1);
+  const keyOf = (row: RelatedScorecardClaim) =>
+    [row.measure?.key ?? row.name, row.period, row.metric].join('|');
+  const kept = new Map<string, RelatedScorecardClaim>();
+  for (const row of rows) {
+    if (row.external_value === 0 && row.latest?.value === 0) {
+      continue;
+    }
+    const current = kept.get(keyOf(row));
+    if (!current || rank(row) < rank(current)) {
+      kept.set(keyOf(row), row);
+    }
+  }
+  return rows.filter((row) => kept.get(keyOf(row)) === row);
+}
+
 export interface ScorecardComparisonsResult {
   built: string | null;
   rows: RelatedScorecardClaim[];
