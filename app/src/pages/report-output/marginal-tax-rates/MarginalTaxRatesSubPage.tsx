@@ -268,7 +268,7 @@ export default function MarginalTaxRatesSubPage({
             metadata
           )
         : null;
-    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings, countryId);
+    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings);
     const xValues = buildHouseholdVariationEarningsAxis(maxEarnings);
     const currentIndex = getHouseholdVariationIndexForEarnings(currentEarnings, maxEarnings);
     const mtrDifference = reformMTRClipped
@@ -304,7 +304,6 @@ export default function MarginalTaxRatesSubPage({
     };
   }, [
     baseline,
-    countryId,
     metadata,
     normalizedReportYear,
     reform,

@@ -71,6 +71,17 @@ export const policyKeys = {
   byUser: (userId: string) => [...policyKeys.all, 'user_id', userId] as const,
 };
 
+/**
+ * A v1 policy as `GET /{country}/policy/{id}` returns it, per country:
+ * its raw parameter map and the parameters the model no longer has. Saved
+ * reforms and v3 reports read policies through it, once each.
+ */
+export const v1PolicyKey = (countryId: string, policyId: string) =>
+  ['v1-policy', countryId, policyId] as const;
+
+/** How long a fetched v1 policy stays cached without a reader. */
+export const V1_POLICY_GC_TIME = 30 * 60 * 1000;
+
 export const householdKeys = {
   all: ['households'] as const,
   byId: (householdId: string) => [...householdKeys.all, 'household_id', householdId] as const,

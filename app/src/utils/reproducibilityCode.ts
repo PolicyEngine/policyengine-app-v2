@@ -294,7 +294,6 @@ function getPolicyDictCode(policyData: Record<string, any>, variableName: string
 
 function buildHouseholdSituation(
   household: Household | null,
-  countryId: string,
   year: number,
   earningVariation: boolean
 ): PythonPackageHouseholdSituation {
@@ -302,7 +301,7 @@ function buildHouseholdSituation(
   const situation = cleanPythonPackageHouseholdNullValuesForYear(householdInput, year);
 
   if (earningVariation && Object.keys(situation.people).length > 0) {
-    return addVariationAxesToPythonPackageHouseholdData(situation, String(year), countryId);
+    return addVariationAxesToPythonPackageHouseholdData(situation, String(year));
   }
 
   return situation;
@@ -325,7 +324,7 @@ function getSituationCode(
     return [];
   }
 
-  const householdSituation = buildHouseholdSituation(household, countryId, year, earningVariation);
+  const householdSituation = buildHouseholdSituation(household, year, earningVariation);
 
   let householdJson = JSON.stringify(householdSituation, null, 2);
   householdJson = sanitizeStringToPython(householdJson, false);

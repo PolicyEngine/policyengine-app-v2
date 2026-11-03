@@ -104,7 +104,7 @@ export default function BaselineOnlyChart({
       baseline,
       metadata
     ) as number;
-    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings, countryId);
+    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings);
     const xValues = buildHouseholdVariationEarningsAxis(maxEarnings);
     const currentIndex = getHouseholdVariationIndexForEarnings(currentEarnings, maxEarnings);
     const chartData = xValues.map((earnings, index) => ({
@@ -127,7 +127,7 @@ export default function BaselineOnlyChart({
       xTicks: getNiceTicks([0, maxEarnings]),
       yTicks: getNiceTicks([Math.min(...yNumValues), Math.max(...yNumValues)]),
     };
-  }, [baseline, baselineVariation, countryId, metadata, variableName, year]);
+  }, [baseline, baselineVariation, metadata, variableName, year]);
 
   if (!variable) {
     return <div>Variable not found</div>;

@@ -151,7 +151,7 @@ export default function BaselineAndReformChart({
       metadata
     ) as number;
 
-    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings, countryId);
+    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings);
     const xValues = buildHouseholdVariationEarningsAxis(maxEarnings);
     const currentIndex = getHouseholdVariationIndexForEarnings(currentEarnings, maxEarnings);
     const absoluteDiff = baselineYValues.map(
@@ -204,7 +204,7 @@ export default function BaselineAndReformChart({
       relativeDiff,
       xTicks: getNiceTicks([0, maxEarnings]),
     };
-  }, [baseline, baselineVariation, countryId, metadata, reformVariation, variableName, year]);
+  }, [baseline, baselineVariation, metadata, reformVariation, variableName, year]);
 
   if (!variable) {
     return <div>Variable not found</div>;
