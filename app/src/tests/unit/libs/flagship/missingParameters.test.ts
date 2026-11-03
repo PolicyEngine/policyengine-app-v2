@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
+  catalogMissingNamesForRoutes,
   combinedMissingParameters,
   mergedParameterPaths,
   pathsMissingFromModel,
@@ -79,6 +80,13 @@ describe('pathsMissingFromModel', () => {
         )
       ).toEqual(['gov.irs.deductions.standard.amount']);
     });
+  });
+});
+
+describe('catalogMissingNamesForRoutes', () => {
+  test('given the v1 routes, where the parameter list is the whole model, then no catalog names are passed', () => {
+    expect(catalogMissingNamesForRoutes([REMOVED_US_PARAMETER])).toBeUndefined();
+    expect(catalogMissingNamesForRoutes(undefined)).toBeUndefined();
   });
 });
 

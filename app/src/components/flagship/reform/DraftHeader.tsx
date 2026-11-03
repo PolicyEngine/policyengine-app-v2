@@ -38,10 +38,12 @@ import {
   setDraftYear,
 } from '@/libs/draftReform';
 import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
-import { pathsMissingFromModel } from '@/libs/flagship/missingParameters';
+import {
+  catalogMissingNamesForRoutes,
+  pathsMissingFromModel,
+} from '@/libs/flagship/missingParameters';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
-import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
@@ -416,7 +418,7 @@ export function DraftRunBar({
   const draftMissingParameters = pathsMissingFromModel(
     adjusted.map((provision) => provision.path),
     parameters,
-    V3_API_ROUTES === 'v2' ? (catalogMissingNames ?? []) : undefined
+    catalogMissingNamesForRoutes(catalogMissingNames)
   );
 
   return (

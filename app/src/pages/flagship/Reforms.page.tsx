@@ -10,7 +10,7 @@ import {
   IconSearch,
 } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
+import { useSelector, useStore } from 'react-redux';
 import { billRunYear, TrackedBill } from '@/api/billFeed';
 import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
 import { fetchReportById } from '@/api/report';
@@ -44,7 +44,7 @@ import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/
 import { useSavedReformTransfer } from '@/hooks/useMissingParameterTransfers';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
-import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
+import { useEnsureV3Parameters, useLoadV3Parameters } from '@/hooks/useV3Parameters';
 import {
   loadProvisionsIntoDraft,
   provisionsToRun,
@@ -61,6 +61,7 @@ import {
 import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import {
+  catalogMissingNamesForRoutes,
   mergedParameterPaths,
   pathsMissingFromModel,
   reformMissingParameters,
@@ -315,9 +316,8 @@ export default function ReformsPage() {
   const currency = currencySymbol(countryId);
   const queryClient = useQueryClient();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const catalogMissingNames = useSelector(
-    (state: RootState) => state.metadata.v2MissingParameterNames
-  );
+  const metadataStore = useStore<RootState>();
+  const loadParameters = useLoadV3Parameters();
   const currentLawPolicyId =
     Number(useSelector((state: RootState) => state.metadata.currentLawId)) || undefined;
   const appLocation = useAppLocation();
@@ -1126,6 +1126,13 @@ export default function ReformsPage() {
               // the parameter list's check of those changes below.
               setRerunChecking(true);
               const changedPaths = report.provisions.map((provision) => provision.path);
+              // On the v2 routes the parameter list holds only what has
+              // loaded, so the changes' own parameters load first: a name the
+              // catalog lacks is then known. A load that fails leaves them
+              // unjudged, as an API check that cannot be made does.
+              const changesLoaded = Promise.resolve(loadParameters(changedPaths)).catch(
+                () => undefined
+              );
               const reportedMissing = await reportMissingParameters(
                 countryId,
                 report.apiReportId,
@@ -1148,15 +1155,21 @@ export default function ReformsPage() {
                       : []
                   )
                 )
+                .then(async (missingFromPolicies) => {
+                  await changesLoaded;
+                  return missingFromPolicies;
+                })
                 .finally(() => setRerunChecking(false));
               // It runs the changes the report keeps: one to a parameter the
               // model no longer lists stops it too, whatever the API could say.
+              // Read from the store as it is now, after the load above.
+              const metadata = metadataStore.getState().metadata;
               const missing = mergedParameterPaths(
                 reportedMissing,
                 pathsMissingFromModel(
                   changedPaths,
-                  parameters,
-                  V3_API_ROUTES === 'v2' ? (catalogMissingNames ?? []) : undefined
+                  metadata.parameters,
+                  catalogMissingNamesForRoutes(metadata.v2MissingParameterNames)
                 )
               );
               if (missing.length > 0) {

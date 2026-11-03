@@ -1,3 +1,4 @@
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import type { Reform } from '@/types/ingredients/Reform';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { V1PolicyContent } from '@/types/metadata/policyMetadata';
@@ -78,4 +79,16 @@ export function pathsMissingFromModel(
   return mergedParameterPaths(
     paths.filter((path) => path.startsWith('gov') && !isLeafParameter(path))
   );
+}
+
+/**
+ * The names to pass `pathsMissingFromModel` for the routes v3 uses
+ * (V3_API_ROUTES): on the v2 routes the names the catalog version said it
+ * lacks (`v2MissingParameterNames`; none yet is an empty list), and on the
+ * v1 routes nothing, as the parameter list is the whole model there.
+ */
+export function catalogMissingNamesForRoutes(
+  v2MissingParameterNames: readonly string[] | undefined
+): readonly string[] | undefined {
+  return V3_API_ROUTES === 'v2' ? (v2MissingParameterNames ?? []) : undefined;
 }
