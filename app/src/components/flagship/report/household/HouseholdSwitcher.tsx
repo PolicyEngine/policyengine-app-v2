@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { IconPlus, IconTable } from '@tabler/icons-react';
+import { IconPlus } from '@tabler/icons-react';
 import { effectColor, signedMoney } from '@/components/flagship/report/household/householdMoney';
 import { Button } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
@@ -22,7 +22,7 @@ export interface HouseholdTile {
   status?: HouseholdStatus;
 }
 
-/** The comparison's own key in the switcher, beside the households'. */
+/** The comparison's key in the selection, beside the households' own. */
 export const COMPARE_ALL = 'compare';
 
 export type HouseholdSelection = number | typeof COMPARE_ALL;
@@ -71,12 +71,13 @@ const oneLine: React.CSSProperties = {
 };
 
 /**
- * The report's households, one tile each, and the comparison of them all:
- * the reader picks which one the panel below shows. Each tile carries the
- * household's name, who it is and its result, so the households compare at
- * a glance. A row across the top on every width, so the panel below, its
- * tables and its charts keep the full width; it scrolls sideways when the
- * tiles outgrow it.
+ * The report's households, one tile each: the reader picks which one the
+ * panel below shows. Each tile carries the household's name, who it is and
+ * its result, so the households compare at a glance. A row across the top
+ * on every width, so the panel below, its tables and its charts keep the
+ * full width; it scrolls sideways when the tiles outgrow it. While the
+ * comparison shows (opened beside the section's heading), no tile is
+ * selected.
  */
 export default function HouseholdSwitcher({
   households,
@@ -88,10 +89,9 @@ export default function HouseholdSwitcher({
   households: HouseholdTile[];
   selected: HouseholdSelection | null;
   countryId: CountryId;
-  onSelect: (selection: HouseholdSelection) => void;
+  onSelect: (key: number) => void;
   onAdd: () => void;
 }) {
-  const compares = households.length > 1;
   // On a narrow screen the row scrolls: keep the open tile in view, e.g. a household just added.
   const tablist = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -115,32 +115,6 @@ export default function HouseholdSwitcher({
         aria-label="Households"
         style={{ display: 'flex', gap: spacing.sm }}
       >
-        {compares && (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={selected === COMPARE_ALL}
-            onClick={() => onSelect(COMPARE_ALL)}
-            style={{ ...tileStyle(selected === COMPARE_ALL), width: 'auto' }}
-          >
-            <span
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-                fontSize: typography.fontSize.sm,
-                fontWeight: typography.fontWeight.semibold,
-                color: colors.text.primary,
-              }}
-            >
-              <IconTable size={16} aria-hidden />
-              Compare all
-            </span>
-            <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-              {households.length} households
-            </span>
-          </button>
-        )}
         {households.map((household) => {
           const isSelected = selected === household.key;
           const outcome = tileOutcome(household.status, countryId);

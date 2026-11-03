@@ -252,7 +252,15 @@ describe('HouseholdImpactSection', () => {
     await screen.findByRole('region', { name: 'Household impact' });
     await user.click(screen.getByRole('button', { name: 'Add another household' }));
 
-    await openTile(user, /^Compare all/);
+    // The comparison opens beside the heading, not among the tiles; no tile is selected meanwhile.
+    expect(
+      within(screen.getByRole('tablist', { name: 'Households' })).queryByText(/Compare all/)
+    ).not.toBeInTheDocument();
+    const compare = screen.getByRole('button', { name: 'Compare all (2)' });
+    expect(compare).toHaveAttribute('aria-pressed', 'false');
+    await user.click(compare);
+    expect(compare).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('tab', { selected: true })).not.toBeInTheDocument();
 
     const table = screen.getByRole('table', { name: 'Households compared' });
     expect(within(table).getByRole('row', { name: /Household 1/ })).toHaveTextContent(
@@ -266,6 +274,28 @@ describe('HouseholdImpactSection', () => {
     await user.click(within(table).getByRole('button', { name: 'Household 2' }));
     expect(screen.getByRole('region', { name: 'Household 2' })).toBeInTheDocument();
     expect(screen.queryByRole('table', { name: 'Households compared' })).not.toBeInTheDocument();
+  });
+
+  test('given Compare all pressed again then the household open before it reopens', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+    await openTile(user, /^Household 1/);
+
+    await user.click(screen.getByRole('button', { name: 'Compare all (2)' }));
+    await user.click(screen.getByRole('button', { name: 'Compare all (2)' }));
+
+    expect(screen.getByRole('region', { name: 'Household 1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Household 1/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+  });
+
+  test('given one household then no Compare all shows', () => {
+    renderSection();
+
+    expect(screen.queryByRole('button', { name: /Compare all/ })).not.toBeInTheDocument();
   });
 
   test('given inputs changed after a result then the result says so and offers to calculate again', async () => {

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { IconPencil, IconPlus, IconTable, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import HouseholdComparison from '@/components/flagship/report/household/HouseholdComparison';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
@@ -196,6 +196,29 @@ interface HouseholdImpactSectionProps {
   reformPaths?: string[];
   /** The report found the reform changes nothing in its year: no input is suggested. */
   reformChangesNothing?: boolean;
+  /** The section's heading: "Compare all" sits at its right, wrapping under it on a phone. */
+  heading?: ReactNode;
+}
+
+/** The heading's line: the heading, and an action at its right that wraps under it when narrow. */
+function HeadingRow({ heading, action }: { heading?: ReactNode; action?: ReactNode }) {
+  if (!heading && !action) {
+    return null;
+  }
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+      }}
+    >
+      {heading}
+      {action}
+    </div>
+  );
 }
 
 /**
@@ -265,6 +288,7 @@ export default function HouseholdImpactSection({
   reformPolicyId,
   reformPaths = [],
   reformChangesNothing = false,
+  heading,
 }: HouseholdImpactSectionProps) {
   // A reform that changes nothing in the year makes no input worth suggesting.
   const suggestedVariables = useSuggestedInputs(reformChangesNothing ? [] : reformPaths, countryId);
@@ -272,6 +296,14 @@ export default function HouseholdImpactSection({
   const [households, setHouseholds] = useState<{ key: number; name: string }[]>([]);
   const [nextKey, setNextKey] = useState(1);
   const [selected, setSelected] = useState<HouseholdSelection | null>(null);
+  // The household open before the comparison, which closing the comparison reopens.
+  const [lastHousehold, setLastHousehold] = useState<number | null>(null);
+  const select = (selection: HouseholdSelection | null) => {
+    if (typeof selection === 'number') {
+      setLastHousehold(selection);
+    }
+    setSelected(selection);
+  };
   // What each household's tile and the comparison show, as its panel reports it.
   const [statuses, setStatuses] = useState<Record<number, HouseholdStatus>>({});
   const reportStatus = useCallback((key: number, status: HouseholdStatus) => {
@@ -286,7 +318,7 @@ export default function HouseholdImpactSection({
   const add = () => {
     trackHouseholdAdded({ countryId, householdCount: households.length + 1 });
     setHouseholds((current) => [...current, { key: nextKey, name: `Household ${nextKey}` }]);
-    setSelected(nextKey);
+    select(nextKey);
     setNextKey((key) => key + 1);
   };
   const remove = (key: number) => {
@@ -297,7 +329,7 @@ export default function HouseholdImpactSection({
     setStatuses(({ [key]: _removed, ...current }) => current);
     // The neighbour before it opens, or the first one; none when none are left.
     if (selected === key || (selected === COMPARE_ALL && rest.length < 2)) {
-      setSelected(rest[Math.max(0, index - 1)]?.key ?? null);
+      select(rest[Math.max(0, index - 1)]?.key ?? null);
     }
   };
   const rename = (key: number, name: string) =>
@@ -307,35 +339,43 @@ export default function HouseholdImpactSection({
 
   if (!HOUSEHOLD_COUNTRIES.has(countryId)) {
     return (
-      <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-        Household impacts are available for US and UK reports.
-      </Text>
+      <Stack style={{ gap: spacing.md }}>
+        <HeadingRow heading={heading} />
+        <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+          Household impacts are available for US and UK reports.
+        </Text>
+      </Stack>
     );
   }
 
   if (households.length === 0) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: spacing.md,
-          padding: spacing.lg,
-          border: `1px solid ${colors.border.light}`,
-          borderRadius: spacing.radius.container,
-          background: colors.secondary[50],
-        }}
-      >
-        <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          See how this reform changes the net income of households that you describe.
-        </Text>
-        <Button size="sm" onClick={add}>
-          <IconPlus size={16} aria-hidden />
-          Add a household
-        </Button>
-      </div>
+      <Stack style={{ gap: spacing.md }}>
+        <HeadingRow heading={heading} />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: spacing.md,
+            padding: spacing.lg,
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: spacing.radius.container,
+            background: colors.secondary[50],
+          }}
+        >
+          <Text
+            style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+          >
+            See how this reform changes the net income of households that you describe.
+          </Text>
+          <Button size="sm" onClick={add}>
+            <IconPlus size={16} aria-hidden />
+            Add a household
+          </Button>
+        </div>
+      </Stack>
     );
   }
 
@@ -343,21 +383,46 @@ export default function HouseholdImpactSection({
     ...household,
     status: statuses[household.key],
   }));
+  const comparing = selected === COMPARE_ALL;
   return (
     <Stack style={{ gap: spacing.md }}>
+      <HeadingRow
+        heading={heading}
+        action={
+          households.length > 1 && (
+            <Button
+              size="sm"
+              variant={comparing ? 'default' : 'outline'}
+              aria-pressed={comparing}
+              onClick={() =>
+                comparing
+                  ? select(
+                      households.some((household) => household.key === lastHousehold)
+                        ? lastHousehold
+                        : households[0].key
+                    )
+                  : select(COMPARE_ALL)
+              }
+            >
+              <IconTable size={16} aria-hidden />
+              Compare all ({households.length})
+            </Button>
+          )
+        }
+      />
       <HouseholdSwitcher
         households={tiles}
         selected={selected}
         countryId={countryId as CountryId}
-        onSelect={setSelected}
+        onSelect={select}
         onAdd={add}
       />
-      {selected === COMPARE_ALL && (
+      {comparing && (
         <HouseholdComparison
           households={tiles}
           countryId={countryId as CountryId}
           year={year}
-          onOpen={setSelected}
+          onOpen={select}
         />
       )}
       {/* Every household stays mounted, so a run carries on while another shows. */}
