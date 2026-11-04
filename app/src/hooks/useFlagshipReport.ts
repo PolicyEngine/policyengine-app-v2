@@ -1,24 +1,18 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
+import { useQuery } from '@tanstack/react-query';
+import { ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useParameterMetadata } from '@/hooks/useParameterMetadata';
+import { useV3Policies } from '@/hooks/useV3Policies';
 import { isNotFoundError, retryUnlessNotFound } from '@/libs/flagship/loadError';
 import { combinedMissingParameters } from '@/libs/flagship/missingParameters';
-import { fetchV1Policy, readV1Policy } from '@/libs/flagship/policyChecks';
+import { fetchV1Policy } from '@/libs/flagship/policyChecks';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import type { PolicyMetadata } from '@/types/metadata/policyMetadata';
-import {
-  policyKeys,
-  reportKeys,
-  simulationKeys,
-  V1_POLICY_GC_TIME,
-  v1PolicyKey,
-} from '../libs/queryKeys';
+import { reportKeys, simulationKeys, V1_POLICY_GC_TIME, v1PolicyKey } from '../libs/queryKeys';
 import { extractUniqueIds, useParallelQueries } from './utils/queryUtils';
 
 /**
@@ -75,9 +69,6 @@ export interface FlagshipReportData {
  */
 export function useFlagshipReport(id: string): FlagshipReportData {
   const country = useCurrentCountry();
-  const queryClient = useQueryClient();
-  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
-    useParameterMetadata(country);
   const direct = isApiReportId(id);
 
   const {
@@ -108,23 +99,19 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     .filter((s): s is Simulation => !!s);
 
   const policyIds = extractUniqueIds(simulations, 'policyId');
-  const policyResults = useParallelQueries<Policy>(policyIds, {
-    queryKey: policyKeys.byId,
-    // The same request as the check below: each policy is asked for once.
-    queryFn: async (policyId) =>
-      PolicyAdapter.fromMetadata(
-        await readV1Policy(queryClient, country, policyId),
-        parameterMetadata
-      ),
-    enabled: direct && isParameterMetadataReady && policyIds.length > 0,
-    staleTime: 5 * 60 * 1000,
-    structuralSharing: false,
-  });
+  // Each policy is read as stored, the parameters it names are loaded (on
+  // the v2 routes) or already in (v1), and then it is parsed.
+  const policyResults = useV3Policies(country, policyIds, direct);
+  const { policies, failedPolicyIds } = policyResults;
   // Whether each policy sets parameters the model no longer has: read at
   // once, not after the parameter metadata, because the report's run
   // waits for it.
-  // A policy that cannot be read is not retried here: the check settles at
-  // once with nothing known to be missing, as before the check existed.
+  // A policy that cannot be read settles the check at its first failure,
+  // with nothing known to be missing, as before the check existed. On the
+  // v1 routes nothing retries this read. On the v2 routes it is the same
+  // query useV3Policies reads above, whose options (the client's retries)
+  // govern the request because it is called first; policiesChecked below
+  // counts a first failure as checked, so the retries do not hold it.
   const policyContentResults = useParallelQueries<PolicyMetadata>(policyIds, {
     queryKey: (policyId) => v1PolicyKey(country, policyId),
     queryFn: (policyId) => fetchV1Policy(country, policyId),
@@ -140,16 +127,17 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     simulationIds.length > 0 &&
     simulationResults.queries.every((query) => !query.isPending) &&
     policyContentResults.queries.every(
-      (query) => !query.isPending || query.dataUpdatedAt > 0 || query.errorUpdatedAt > 0
+      (query) =>
+        !query.isPending ||
+        query.dataUpdatedAt > 0 ||
+        query.errorUpdatedAt > 0 ||
+        // On the v2 routes the policy read shares this query and keeps
+        // its retries: the check settles at its first failure.
+        query.failureCount > 0
     );
   const missingParameters = combinedMissingParameters(
     policyContentResults.queries.map((query) => query.data)
   );
-  const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
-  const failedPolicyIds = policyIds.filter((_, index) => {
-    const query = policyResults.queries[index];
-    return !!query?.error && !query.data;
-  });
 
   if (!direct) {
     return {
@@ -187,9 +175,8 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     retry: () =>
       Promise.all([
         reportError ? refetchReport() : null,
-        ...[...simulationResults.queries, ...policyResults.queries]
-          .filter((query) => query.error)
-          .map((query) => query.refetch()),
+        ...simulationResults.queries.filter((query) => query.error).map((query) => query.refetch()),
+        policyResults.retry(),
       ]),
   };
 }

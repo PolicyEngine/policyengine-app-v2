@@ -1,6 +1,6 @@
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
+import { useStore } from 'react-redux';
 import {
   findReportRecordByLink,
   getFlagshipReportStore,
@@ -8,16 +8,18 @@ import {
   type FlagshipReportRecord,
   type FlagshipReportStore,
 } from '@/api/flagshipReportStore';
-import { getReformStore, type ReformStore } from '@/api/reformStore';
+import { fetchV2PolicyItem, getReformStore, type ReformStore } from '@/api/reformStore';
 import { fetchSharedReport } from '@/api/sharedReport';
 import { isAccountId, type ApiStoreContext } from '@/api/v2Associations';
 import { useCountryContext } from '@/contexts/CountryContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useLoadV3Parameters } from '@/hooks/useV3Parameters';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { readV1Policy } from '@/libs/flagship/policyChecks';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
+import { selectV2Catalog, selectV2ParameterIds } from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
 
@@ -63,23 +65,51 @@ export function useV3SavedWork(): V3SavedWork {
   }, [status, subject, browserUserId, countryId, client]);
 }
 
+/** A v2 policy (`GET /v2/policies/{id}`), per country. */
+const v2PolicyKey = (countryId: string, policyId: string) =>
+  ['v2-policy', countryId, policyId] as const;
+
+/** How long a fetched v2 policy stays cached without a reader. */
+const SAVED_POLICY_GC_TIME = 30 * 60 * 1000;
+
+/**
+ * The reform store for this session. Which policies an account's reforms
+ * point at (v1 or `/v2/policies`) follows V3_API_ROUTES (see
+ * libs/flagship/v3ApiRoutes); on v2, the catalog IDs a policy names come
+ * with the parameters loaded on demand.
+ */
 export function useReformStore(): ReformStore {
   const { account } = useV3SavedWork();
-  const parameters = useSelector((state: RootState) => state.metadata?.parameters);
-  // Read through a ref so metadata arriving later does not rebuild the store.
-  const parametersRef = useRef(parameters);
-  parametersRef.current = parameters;
+  const loadParameters = useLoadV3Parameters();
+  const reduxStore = useStore<RootState>();
   const queryClient = useQueryClient();
 
+  // Metadata is read from the store when the store asks for it, so
+  // metadata arriving later does not rebuild the store.
   return useMemo(
     () =>
       getReformStore(account, {
-        getParameterMetadata: () => parametersRef.current,
-        // v1 policies never change, so each is fetched once per session
+        getParameterMetadata: () => reduxStore.getState().metadata?.parameters,
+        getV2Catalog: () => selectV2Catalog(reduxStore.getState()),
+        resolveParameterIds: async (_countryId, names) => {
+          await loadParameters(names);
+          const ids = selectV2ParameterIds(reduxStore.getState());
+          return Object.fromEntries(
+            names.filter((name) => ids[name]).map((name) => [name, ids[name]])
+          );
+        },
+        // Policies never change, so each is fetched once per session
         // rather than on every list of the account's reforms.
         fetchPolicy: (countryId, policyId) => readV1Policy(queryClient, countryId, policyId),
+        fetchV2Policy: (countryId, policyId) =>
+          queryClient.fetchQuery({
+            queryKey: v2PolicyKey(countryId, policyId),
+            queryFn: () => fetchV2PolicyItem(countryId, policyId),
+            staleTime: Infinity,
+            gcTime: SAVED_POLICY_GC_TIME,
+          }),
       }),
-    [account, queryClient]
+    [account, loadParameters, queryClient, reduxStore]
   );
 }
 

@@ -109,21 +109,36 @@ function DraftTableSkeleton({ rows }: { rows: number }) {
   );
 }
 
+/** What Build waits on: its loading state, and how to ask again after a failure. */
+export interface ParametersLoader {
+  status: 'loading' | 'error' | 'ready';
+  retry: () => unknown;
+}
+
 /**
  * Build waits on the model's parameters: the add bar has nothing to
  * search and the table cannot group breakdowns until they arrive. While
  * they load, placeholders hold the bar's place (and the table's, for a
  * draft of `paths`, a row per group as the table draws them); if they
- * fail, the error says so and asks for them again.
+ * fail, the error says so and asks for them again. `loader` names what is
+ * awaited (on the v2 routes, the search file and the draft's parameters);
+ * without one, the model's metadata.
  */
-export default function ParametersStatus({ paths = [] }: { paths?: string[] }) {
+export default function ParametersStatus({
+  paths = [],
+  loader,
+}: {
+  paths?: string[];
+  loader?: ParametersLoader;
+}) {
   const metadata = useFlagshipMetadataStatus();
+  const awaited = loader ?? metadata;
   const rows = new Set(paths.map(groupKeyFromPath)).size;
 
-  if (metadata.status === 'error') {
+  if (awaited.status === 'error') {
     return (
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <ErrorState title="Could not load the parameters" onRetry={metadata.retry} />
+        <ErrorState title="Could not load the parameters" onRetry={awaited.retry} />
       </div>
     );
   }

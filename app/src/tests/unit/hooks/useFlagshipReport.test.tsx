@@ -69,11 +69,29 @@ function noRetryClient() {
 describe('useFlagshipReport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetchPolicyById.mockReset();
     store.dispatch(clearMetadata());
     mockFetchReportById.mockResolvedValue(EXISTING_REPORT_METADATA);
     mockFetchSimulationById.mockImplementation(async (_country: string, id: string) =>
       nationwideSimulationMetadata(id, id === BASELINE_SIMULATION_ID ? '2' : '98557')
     );
+  });
+
+  test('given the whole metadata is not in yet then the report is not held up by its policies', async () => {
+    // Given: v1's metadata has not loaded (beforeEach clears it).
+    mockFetchPolicyById.mockResolvedValue({ id: '98557', country_id: 'us', policy_json: {} });
+
+    // When
+    const { result } = renderReportHook(EXISTING_REPORT_ID);
+
+    // Then: the missing-parameter check reads each policy at once, but on
+    // the v1 routes a policy is parsed only once the whole metadata is in,
+    // and the report does not wait for that.
+    await waitFor(() => expect(result.current.policiesChecked).toBe(true));
+    expect(mockFetchPolicyById).toHaveBeenCalledTimes(2);
+    expect(result.current.simulations).toHaveLength(2);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.policies).toEqual([]);
   });
 
   test('given a link to a report then it loads with no error', async () => {

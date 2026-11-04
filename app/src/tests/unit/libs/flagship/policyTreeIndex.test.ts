@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { buildPolicyTreeIndex, folderContents, folderTrail } from '@/libs/flagship/policyTreeIndex';
+import {
+  addableCountsByFolder,
+  buildPolicyTreeIndex,
+  folderContents,
+  folderTrail,
+} from '@/libs/flagship/policyTreeIndex';
 import { DRAFTABLE, POLICY_TREE } from '@/tests/fixtures/components/flagship/policyTreeFixtures';
 
 describe('buildPolicyTreeIndex', () => {
@@ -56,5 +61,23 @@ describe('folderTrail', () => {
       'Credits',
       'EITC maximum',
     ]);
+  });
+});
+
+describe('addableCountsByFolder', () => {
+  test('given addable paths then each folder they run through counts them, brackets included', () => {
+    const counts = addableCountsByFolder([
+      'gov.irs.credits.ctc.amount.base[0].amount',
+      'gov.irs.credits.ctc.amount.base[1].amount',
+      'gov.irs.deductions.standard.amount.SINGLE',
+    ]);
+
+    expect(counts.get('gov')).toBe(3);
+    expect(counts.get('gov.irs.credits.ctc.amount.base')).toBe(2);
+    expect(counts.get('gov.irs.credits.ctc.amount.base[0]')).toBe(1);
+    expect(counts.get('gov.irs.deductions.standard.amount')).toBe(1);
+    // A parameter is not a folder of itself, and a folder with nothing is absent.
+    expect(counts.has('gov.irs.deductions.standard.amount.SINGLE')).toBe(false);
+    expect(counts.has('gov.hmrc')).toBe(false);
   });
 });

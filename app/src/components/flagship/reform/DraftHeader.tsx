@@ -6,6 +6,7 @@ import { ReformNotFoundError } from '@/api/reformStore';
 import { BrowserOnlyIdError } from '@/api/v2Associations';
 import { isV2ApiError } from '@/api/v2UserClient';
 import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
+import { ErrorState } from '@/components/flagship/states';
 import {
   Button,
   Popover,
@@ -37,7 +38,10 @@ import {
   setDraftYear,
 } from '@/libs/draftReform';
 import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
-import { pathsMissingFromModel } from '@/libs/flagship/missingParameters';
+import {
+  catalogMissingNamesForRoutes,
+  pathsMissingFromModel,
+} from '@/libs/flagship/missingParameters';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
 import { getTaxYears } from '@/libs/metadataUtils';
@@ -277,12 +281,26 @@ interface DraftRunRequest {
   runBaseline: RunReportBaseline | undefined;
 }
 
-export function DraftRunBar({ draft }: { draft: DraftReform }) {
+export function DraftRunBar({
+  draft,
+  currentLawUnavailable = false,
+}: {
+  draft: DraftReform;
+  /**
+   * The draft's current-law values are still loading, or failed to (on the
+   * v2 routes). Saving keeps only the values that differ from current law,
+   * so neither save can run until they are in.
+   */
+  currentLawUnavailable?: boolean;
+}) {
   const nav = useAppNavigate();
   const queryClient = useQueryClient();
   const runReport = useRunFlagshipReport();
   const reformStore = useReformStore();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const catalogMissingNames = useSelector(
+    (state: RootState) => state.metadata.v2MissingParameterNames
+  );
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   const taxYears = useSelector(getTaxYears);
   // Saving keeps what the run models: the values that differ from current law.
@@ -395,9 +413,12 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   // A draft kept across a model update can change a parameter the model
   // has since dropped. Saving and running would both send it, and the API
   // refuses a policy that sets it, so it stops both.
+  // On the v2 routes only the names the catalog lacks count: the rest may
+  // not have loaded yet.
   const draftMissingParameters = pathsMissingFromModel(
     adjusted.map((provision) => provision.path),
-    parameters
+    parameters,
+    catalogMissingNamesForRoutes(catalogMissingNames)
   );
 
   return (
@@ -515,6 +536,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
               nothingToSave ||
               saveMutation.isPending ||
               starting ||
+              currentLawUnavailable ||
               draftMissingParameters.length > 0
             }
           >
@@ -539,7 +561,9 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
               starting ||
               saveMutation.isPending ||
               baseline.pending ||
+              baseline.failed ||
               baseline.matchesDraft ||
+              currentLawUnavailable ||
               baseline.missingParameters.length > 0 ||
               draftMissingParameters.length > 0
             }
@@ -583,6 +607,14 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           This reform matches {savedReformName(baseline.reform)}. Change a value or compare with
           something else.
         </p>
+      )}
+
+      {baseline.failed && (
+        <ErrorState
+          compact
+          title="Could not load current law for the comparison"
+          onRetry={baseline.retry}
+        />
       )}
 
       {draftMissingParameters.length > 0 && (
