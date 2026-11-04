@@ -22,6 +22,7 @@ import ReportContents, {
   type DistrictsCardCopy,
   type ReportMetric,
 } from '@/components/flagship/ReportContents';
+import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import type { ModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Tabs, TabsContent, TabsList, TabsTrigger, Text, Title } from '@/components/ui';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
@@ -308,6 +309,9 @@ export default function ReportView({
       })
     : (storedMetrics ?? []);
 
+  // One heading for the household tab's states that draw one: waiting for
+  // the variables, the section itself, and the policies not known yet.
+  const householdHeading = <SectionHeading id="household" title="Household" />;
   const tabPanel = (id: string, content: ReactNode) => (
     <TabsContent
       value={id}
@@ -563,22 +567,30 @@ export default function ReportView({
                         the model no longer has.
                       </Text>
                     ) : reformPolicyId && baselinePolicyId ? (
-                      <HouseholdImpactSection
-                        // The section sets its heading's line, with "Compare all" at the right.
-                        heading={<SectionHeading id="household" title="Household" />}
-                        // New policies, year or region start a new form, with nothing run.
-                        key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
-                        countryId={countryId}
-                        year={year}
-                        region={region}
-                        baselinePolicyId={baselinePolicyId}
-                        reformPolicyId={reformPolicyId}
-                        reformPaths={provisions.map((provision) => provision.path)}
-                        reformChangesNothing={!!output && isSocietyWideReportNoOp(output)}
-                      />
+                      // The builder and breakdown read every variable (v2 loads them in the
+                      // background). The section draws its own heading once it shows; until
+                      // then the gate shows it, above the placeholder or a failure.
+                      <V3VariablesGate
+                        label="Loading the household builder"
+                        heading={householdHeading}
+                      >
+                        <HouseholdImpactSection
+                          // The section sets its heading's line, with "Compare all" at the right.
+                          heading={householdHeading}
+                          // New policies, year or region start a new form, with nothing run.
+                          key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
+                          countryId={countryId}
+                          year={year}
+                          region={region}
+                          baselinePolicyId={baselinePolicyId}
+                          reformPolicyId={reformPolicyId}
+                          reformPaths={provisions.map((provision) => provision.path)}
+                          reformChangesNothing={!!output && isSocietyWideReportNoOp(output)}
+                        />
+                      </V3VariablesGate>
                     ) : (
                       <>
-                        <SectionHeading id="household" title="Household" />
+                        {householdHeading}
                         <Text
                           style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
                         >

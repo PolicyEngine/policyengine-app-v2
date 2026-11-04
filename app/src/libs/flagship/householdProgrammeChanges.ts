@@ -1,6 +1,6 @@
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { MetadataState } from '@/types/metadata';
-import { getParameterAtInstant, getValueFromHousehold } from '@/utils/householdValues';
+import { getParameterNamedParts, getValueFromHousehold } from '@/utils/householdValues';
 
 /** One programme, tax or benefit whose amount the reform changes. */
 export interface HouseholdProgrammeChange {
@@ -83,14 +83,22 @@ function total(name: string, household: HouseholdCalculationOutput, metadata: Me
   return typeof value === 'number' ? value : 0;
 }
 
-/** A variable's parts as the net income breakdown reads them: a list, or a parameter naming one. */
+/**
+ * A variable's parts as the net income breakdown reads them: a list, or a
+ * parameter naming one (on the v2 routes from the catalog's part values,
+ * as the parameter list holds only what has loaded).
+ */
 function parts(list: unknown, metadata: MetadataState, year: string): string[] {
   if (Array.isArray(list)) {
     return list;
   }
   if (typeof list === 'string') {
-    const value = getParameterAtInstant(metadata.parameters[list], `${year}-01-01`);
-    return Array.isArray(value) ? value : [];
+    return getParameterNamedParts(
+      list,
+      `${year}-01-01`,
+      metadata.parameters,
+      metadata.v2PartParameterValues
+    );
   }
   return [];
 }

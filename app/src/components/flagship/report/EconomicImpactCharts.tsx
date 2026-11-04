@@ -14,9 +14,12 @@ import PovertyImpactByGenderSubPage from '@/components/flagship/report/charts/Po
 import PovertyImpactByRaceSubPage from '@/components/flagship/report/charts/PovertyImpactByRaceSubPage';
 import WinnersLosersIncomeDecileSubPage from '@/components/flagship/report/charts/WinnersLosersIncomeDecileSubPage';
 import ReportChartCard from '@/components/flagship/report/ReportChartCard';
+import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import { SegmentedControl, Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useV3Variables } from '@/hooks/useV3Variables';
+import { SHOW_BUDGET_BY_PROGRAMME } from '@/libs/flagship/reportCards';
 import {
   getBudgetCsvRows,
   getDetailedBudgetCsvRows,
@@ -60,12 +63,6 @@ function getBreakdownOptions(
   return options;
 }
 
-/**
- * The UK's budget by programme card is hidden for now: its bars do not yet
- * read clearly. Its chart and CSV rows stay, to show it again.
- */
-const SHOW_BUDGET_BY_PROGRAMME = false;
-
 type DecileMode = 'absolute' | 'relative';
 const DECILE_MODE_OPTIONS = [
   { label: 'Absolute', value: 'absolute' as DecileMode },
@@ -79,6 +76,13 @@ const DECILE_MODE_OPTIONS = [
 export default function EconomicImpactCharts({ output }: { output: SocietyWideReportOutput }) {
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const variablesStatus = useV3Variables();
+  const programmeCsvReason =
+    variablesStatus.status === 'loading'
+      ? 'Loading programme names'
+      : variablesStatus.status === 'error'
+        ? 'Could not load the programme names'
+        : undefined;
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');
   const [wealthDecileMode, setWealthDecileMode] = useState<DecileMode>('absolute');
   // The UK's results also break the budget down by program and rank households by wealth.
@@ -183,9 +187,14 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
             fullWidth
             downloadFilename="budgetary-impact-by-program.svg"
             csvFilename="budgetary-impact-by-program.csv"
-            csvData={getDetailedBudgetCsvRows(output, metadata)}
+            // Its rows name programmes by variable label: on v2 they wait for the variables.
+            csvData={programmeCsvReason ? undefined : getDetailedBudgetCsvRows(output, metadata)}
+            csvUnavailableReason={programmeCsvReason}
           >
-            <BudgetaryImpactByProgramSubPage output={output} fillHeight />
+            {/* Programme names are variable labels (v2 loads them in the background). */}
+            <V3VariablesGate label="Loading programme names">
+              <BudgetaryImpactByProgramSubPage output={output} fillHeight />
+            </V3VariablesGate>
           </ReportChartCard>
         )}
 

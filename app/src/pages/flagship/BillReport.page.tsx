@@ -23,6 +23,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useStoredBillDistricts } from '@/hooks/useStoredBillDistricts';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
+import { useV3VariablesInBackground } from '@/hooks/useV3Variables';
 import { storedBillMetrics } from '@/libs/flagship/billMetrics';
 import {
   billAlreadyCurrentLaw,
@@ -242,6 +243,8 @@ const STORED_NOTE: Partial<Record<RunState, string>> = {
 export default function BillReportPage({ billId: propId }: BillReportPageProps) {
   const params = useParams<{ billId: string }>();
   const billId = propId ?? params.billId ?? '';
+  // On v2, the variables (provision lists, calibration names) start loading at once.
+  useV3VariablesInBackground();
   const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const feed = useTrackedBills(countryId);
