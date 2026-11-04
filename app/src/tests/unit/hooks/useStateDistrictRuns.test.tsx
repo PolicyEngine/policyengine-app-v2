@@ -44,6 +44,7 @@ import {
   STATE_RUNS_REFORM_POLICY_ID,
   STATE_RUNS_REQUEST,
   STATE_RUNS_YEAR,
+  STATE_SHORT_RETRY_WAIT_LIMIT_SECONDS,
   STATE_STORED_FAILURE_SECONDS,
   STATE_TIME_LIMIT_MESSAGE,
   STATE_TIME_LIMIT_MS,
@@ -679,7 +680,7 @@ describe('useStateDistrictRuns compute', () => {
     ]);
   });
 
-  test('given a failed calculation whose answer says when a new run can be requested then the reason says Retry asks again after a few minutes', async () => {
+  test('given a failed calculation whose answer says when a new run can be requested then the reason says Retry can start a new run in a few minutes', async () => {
     // Given
     serveApi({
       economy: economyWhere({
@@ -697,7 +698,7 @@ describe('useStateDistrictRuns compute', () => {
     ]);
   });
 
-  test('given a failed calculation whose answer says when a new run can be requested then Retry is offered only from then', async () => {
+  test('given a failed calculation whose answer says when a new run can be requested then Retry is offered only from then, and the reason drops the wait', async () => {
     // Given
     serveApi({
       economy: economyWhere({
@@ -715,6 +716,10 @@ describe('useStateDistrictRuns compute', () => {
 
     // Then
     expect(result.current.canRetry).toBe(true);
+    // Once the wait is over, the reason no longer says Retry has to wait.
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Texas', error: STATE_FAILURE_REASON },
+    ]);
     act(() => result.current.retry());
     await waitFor(() => expect(result.current.status).toBe('complete'));
     expect(api.economyRequestsFor(TEXAS)).toHaveLength(2);
@@ -795,26 +800,75 @@ describe('useStateDistrictRuns compute', () => {
     expect(result.current.canRetry).toBe(true);
   });
 
-  test('given the wait over while the tab slept then Retry is offered once the tab is shown again, before its timer runs', async () => {
+  test.each([
+    ['shown', () => document.dispatchEvent(new Event('visibilitychange'))],
+    ['focused', () => window.dispatchEvent(new Event('focus'))],
+  ])(
+    'given the wait over while the tab slept then Retry is offered once the tab is %s, before its timer runs',
+    async (_case, returnToTab) => {
+      // Given
+      serveApi({
+        economy: economyWhere({
+          [TEXAS]: (request) => (request === 0 ? stateFailureKeptTwoMinutes() : stateOk(TEXAS)),
+        }),
+      });
+      const { result } = await computeAll();
+      await waitFor(() => expect(result.current.status).toBe('partial'));
+      expect(result.current.canRetry).toBe(false);
+      // The clock moves past the wait while the tab's timers are held back.
+      vi.setSystemTime(Date.now() + STATE_RETRY_WAIT_MS);
+
+      // When
+      act(() => returnToTab());
+
+      // Then
+      expect(result.current.canRetry).toBe(true);
+    }
+  );
+
+  test('given failures with 15 minutes and just over 15 minutes left then the reasons say a few minutes and hours or days', async () => {
     // Given
     serveApi({
       economy: economyWhere({
-        [TEXAS]: (request) => (request === 0 ? stateFailureKeptTwoMinutes() : stateOk(TEXAS)),
+        [OHIO]: () => stateFailure(STATE_ERROR_MESSAGE, STATE_SHORT_RETRY_WAIT_LIMIT_SECONDS),
+        [TEXAS]: () => stateFailure(STATE_ERROR_MESSAGE, STATE_SHORT_RETRY_WAIT_LIMIT_SECONDS + 1),
       }),
     });
-    const { result } = await computeAll();
-    await waitFor(() => expect(result.current.status).toBe('partial'));
-    expect(result.current.canRetry).toBe(false);
-    // The clock moves past the wait while the tab's timers are held back.
-    vi.setSystemTime(Date.now() + STATE_RETRY_WAIT_MS);
 
     // When
-    act(() => {
-      document.dispatchEvent(new Event('visibilitychange'));
-    });
+    const { result } = await computeAll();
 
     // Then
-    expect(result.current.canRetry).toBe(true);
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Ohio', error: STATE_RETRY_WAIT_REASON },
+      { label: 'Texas', error: STATE_LONG_RETRY_WAIT_REASON },
+    ]);
+  });
+
+  test('given a state waiting when the view closes then the tab listeners it added are removed', async () => {
+    // Given
+    serveApi({ economy: economyWhere({ [TEXAS]: () => stateFailureKeptTwoMinutes() }) });
+    const documentListeners = vi.spyOn(document, 'addEventListener');
+    const windowListeners = vi.spyOn(window, 'addEventListener');
+    const documentRemovals = vi.spyOn(document, 'removeEventListener');
+    const windowRemovals = vi.spyOn(window, 'removeEventListener');
+    const { result, unmount } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+
+    // When
+    unmount();
+
+    // Then
+    const added = [...documentListeners.mock.calls, ...windowListeners.mock.calls].filter(
+      ([type]) => type === 'visibilitychange' || type === 'focus'
+    );
+    const removed = [...documentRemovals.mock.calls, ...windowRemovals.mock.calls];
+    expect(added.length).toBeGreaterThan(0);
+    for (const [type, listener] of added) {
+      expect(removed).toContainEqual([type, listener]);
+    }
+    vi.restoreAllMocks();
   });
 
   test('given states that failed alike with different seconds left then they share one reason', async () => {

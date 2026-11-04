@@ -57,18 +57,26 @@ const RECORDS_FAILED_MESSAGE = 'Checking for a saved result failed';
 const MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
 
 /**
- * Said of a failure the Public API keeps for a while, one sentence for a
- * short wait and one for a long one. Neither gives a time: the seconds left
- * differ between states that failed alike, whose reasons are grouped by
- * their text, and a time in the text would go stale. Both hold for one state
- * or several, and while Retry shows for other states.
+ * Added to a failed state's reason while the Public API still keeps its
+ * failure, chosen when the view is drawn from the time left then, and
+ * dropped once it has passed. Neither gives a time: the seconds left differ
+ * between states that failed alike, whose reasons are grouped by their text.
+ * Both hold for one state or several, whether or not Retry shows for others.
  */
-const SHORT_RETRY_WAIT_NOTE = 'Retry asks again after a few minutes, once a new run can start';
-const LONG_RETRY_WAIT_NOTE =
-  'Retry asks again only once a new run can start, which can take hours or days';
+const SHORT_RETRY_WAIT_NOTE = 'Retry can start a new run in a few minutes';
+const LONG_RETRY_WAIT_NOTE = "Retry can't start a new run for hours or days";
 
-/** The longest wait the short sentence is said of: the Public API keeps a US state failure 2 minutes. */
-const SHORT_RETRY_WAIT_SECONDS = 15 * 60;
+/** The most time left the short note is said of: the Public API keeps a US state failure 2 minutes. */
+const SHORT_RETRY_WAIT_MS = 15 * 60 * 1000;
+
+/** A failed state's reason, with a note while its failure is still kept at `now`. */
+function withRetryWait(reason: string, retryAt: number | undefined, now: number): string {
+  if (!retryAt || retryAt <= now) {
+    return reason;
+  }
+  const note = retryAt - now <= SHORT_RETRY_WAIT_MS ? SHORT_RETRY_WAIT_NOTE : LONG_RETRY_WAIT_NOTE;
+  return `${reason}. ${note}`;
+}
 
 type District = USCongressionalDistrictBreakdownItem;
 
@@ -340,17 +348,11 @@ async function saveStateResult(
 
 /**
  * A failed calculation's reason: short and the same for states that failed
- * alike (the message itself carries a correlation ID), saying when Retry
- * asks again if the Public API keeps the failure for a while.
+ * alike (the message itself carries a correlation ID). The wait, if any, is
+ * added when the view is drawn (withRetryWait).
  */
-function calculationFailureReason(message: string, retryAfterSeconds: number | null): string {
-  const reason = describeCalculationError(message).title;
-  if (!retryAfterSeconds) {
-    return reason;
-  }
-  const note =
-    retryAfterSeconds <= SHORT_RETRY_WAIT_SECONDS ? SHORT_RETRY_WAIT_NOTE : LONG_RETRY_WAIT_NOTE;
-  return `${reason}. ${note}`;
+function calculationFailureReason(message: string): string {
+  return describeCalculationError(message).title;
 }
 
 /**
@@ -377,7 +379,7 @@ async function fetchStateRun(
       return {
         status: 'error',
         result: null,
-        error: calculationFailureReason(error.message, seconds),
+        error: calculationFailureReason(error.message),
         retryWaitMs: seconds ? seconds * 1000 : undefined,
       };
     }
@@ -579,6 +581,10 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
     return { kind: 'waiting' };
   });
 
+  // A failed state the Public API still answers with its failure is not asked
+  // again, offers no Retry, and says so in its reason, until its retryAt; this
+  // view is drawn again then.
+  const now = Date.now();
   const pendingStates: string[] = [];
   const failedStates: string[] = [];
   const failedStateLabels: string[] = [];
@@ -598,7 +604,14 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
         return;
       case 'records-failed':
       case 'failed':
-        calculationFailures.push({ label: state.label, error: standing.error });
+        calculationFailures.push({
+          label: state.label,
+          error: withRetryWait(
+            standing.error,
+            standing.kind === 'failed' ? standing.retryAt : undefined,
+            now
+          ),
+        });
         failedStates.push(state.value);
         failedStateLabels.push(state.label);
         settledShare += 1;
@@ -645,9 +658,6 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
             ? 'partial'
             : 'error';
 
-  // A failed state the Public API still answers with its failure is not asked
-  // again, and offers no Retry, until its retryAt; this view is drawn again then.
-  const now = Date.now();
   const canAskAgain = (standing: StateStanding) =>
     standing.kind === 'records-failed' ||
     (standing.kind === 'failed' && (standing.retryAt ?? 0) <= now);
@@ -668,11 +678,16 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
       return undefined;
     }
     const timer = setTimeout(redraw, Math.min(nextRetryAt - Date.now(), MAX_TIMER_DELAY_MS));
-    document.addEventListener('visibilitychange', redraw);
+    const redrawWhenShown = () => {
+      if (document.visibilityState === 'visible') {
+        redraw();
+      }
+    };
+    document.addEventListener('visibilitychange', redrawWhenShown);
     window.addEventListener('focus', redraw);
     return () => {
       clearTimeout(timer);
-      document.removeEventListener('visibilitychange', redraw);
+      document.removeEventListener('visibilitychange', redrawWhenShown);
       window.removeEventListener('focus', redraw);
     };
   }, [nextRetryAt, redrawCount]);

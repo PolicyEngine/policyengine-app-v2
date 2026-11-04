@@ -257,14 +257,16 @@ export const STATE_RETRY_WAIT_MS = STATE_RETRY_WAIT_SECONDS * 1000;
 export const stateFailureKeptTwoMinutes = (): Response =>
   stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`, STATE_RETRY_WAIT_SECONDS);
 /**
- * The reason the app gives for a failure the Public API keeps for a few
- * minutes, however long is left, so states that failed alike share it.
+ * The reason the app gives while a failure the Public API keeps has up to 15
+ * minutes left, however long exactly, so states that failed alike share it.
  */
 export const STATE_RETRY_WAIT_REASON =
-  'The simulation did not finish. Retry asks again after a few minutes, once a new run can start';
-/** The reason the app gives for a failure the Public API keeps for longer, such as 30 days. */
+  'The simulation did not finish. Retry can start a new run in a few minutes';
+/** The reason the app gives while such a failure has longer left, such as 30 days. */
 export const STATE_LONG_RETRY_WAIT_REASON =
-  'The simulation did not finish. Retry asks again only once a new run can start, which can take hours or days';
+  "The simulation did not finish. Retry can't start a new run for hours or days";
+/** The most seconds left for which the reason says "in a few minutes". */
+export const STATE_SHORT_RETRY_WAIT_LIMIT_SECONDS = 15 * 60;
 /** Milliseconds in a second, for moving the fake clock by the Public API's seconds. */
 export const MS_PER_SECOND = 1000;
 /** The seconds a replayed two-minute failure has left, 30 seconds after it was stored. */
