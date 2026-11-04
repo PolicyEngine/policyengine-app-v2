@@ -226,23 +226,46 @@ export const STATE_ERROR_MESSAGE =
 /** The reason the app gives for such a failure, the same for every state that failed alike. */
 export const STATE_FAILURE_REASON = 'The simulation did not finish';
 
-/** The Public API's answer for a calculation that failed: 502 with an error body. */
-export function stateFailure(message: string = STATE_ERROR_MESSAGE): Response {
-  return new Response(JSON.stringify({ status: 'error', message, result: null }), {
-    status: 502,
-    headers: { 'Content-Type': 'application/json' },
-  });
+/**
+ * The Public API's answer for a calculation that failed: 502 with an error
+ * body, whose `retry_after_seconds` says how long it keeps returning the
+ * failure (null when it cannot say).
+ */
+export function stateFailure(
+  message: string = STATE_ERROR_MESSAGE,
+  retryAfterSeconds: number | null = null
+): Response {
+  return new Response(
+    JSON.stringify({
+      status: 'error',
+      message,
+      result: null,
+      retry_after_seconds: retryAfterSeconds,
+    }),
+    { status: 502, headers: { 'Content-Type': 'application/json' } }
+  );
 }
 export const STATE_ERROR: StateEconomyResponse = stateFailure();
 
-/** The note the Public API ends a failed state run's message with: until then it answers with the same failure. */
+/** The note the Public API ends a failed state run's message with, for people to read. */
 export const STATE_RETRY_NOTE =
   'A new run for this state can be requested 2 minutes after this failure.';
-/** How long after such a failure the Public API runs the state again. */
-export const STATE_RETRY_WAIT_MS = 2 * 60 * 1000;
-/** The reason the app gives for a failure with that note. */
+/** How long the Public API keeps a failed state run's error before it runs the state again. */
+export const STATE_RETRY_WAIT_SECONDS = 120;
+export const STATE_RETRY_WAIT_MS = STATE_RETRY_WAIT_SECONDS * 1000;
+/** A failed state run as the Public API answers it: the note, and the seconds it keeps the failure. */
+export const stateFailureKeptTwoMinutes = (): Response =>
+  stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`, STATE_RETRY_WAIT_SECONDS);
+/** The reason the app gives for a failure kept two minutes. */
 export const STATE_RETRY_WAIT_REASON =
   'The simulation did not finish. Retry can start a new run 2 minutes after the failure';
+/** A failure stored before the Public API kept state failures briefly: kept 30 days. */
+export const STATE_STORED_FAILURE_SECONDS = 30 * 24 * 60 * 60;
+/** The longest delay a browser timer keeps, 2^31 − 1 ms; it runs a longer one at once. */
+export const BROWSER_TIMER_LIMIT_MS = 2 ** 31 - 1;
+/** The reason the app gives for a failure kept 30 days. */
+export const STATE_STORED_FAILURE_REASON =
+  'The simulation did not finish. Retry can start a new run 30 days after the failure';
 
 /** An error page in place of the Public API's answer, as a proxy or Cloud Run sends one. */
 export const stateErrorPage = (): Response =>

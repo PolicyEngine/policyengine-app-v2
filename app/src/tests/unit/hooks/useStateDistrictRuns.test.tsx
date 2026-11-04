@@ -11,6 +11,7 @@ import { reportKeys } from '@/libs/queryKeys';
 import { ALL_US_STATE_CODES } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 import {
   allStatesComplete,
+  BROWSER_TIMER_LIMIT_MS,
   CALIFORNIA,
   economyWhere,
   fakeStateDistrictApi,
@@ -38,11 +39,14 @@ import {
   STATE_RUNS_REFORM_POLICY_ID,
   STATE_RUNS_REQUEST,
   STATE_RUNS_YEAR,
+  STATE_STORED_FAILURE_REASON,
+  STATE_STORED_FAILURE_SECONDS,
   STATE_TIME_LIMIT_MESSAGE,
   STATE_TIME_LIMIT_MS,
   stateEconomyUrl,
   stateErrorPage,
   stateFailure,
+  stateFailureKeptTwoMinutes,
   stateOk,
   stateOkWithoutDistricts,
   stateOkWithUnreadableDistricts,
@@ -675,7 +679,7 @@ describe('useStateDistrictRuns compute', () => {
     // Given
     serveApi({
       economy: economyWhere({
-        [TEXAS]: () => stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`),
+        [TEXAS]: () => stateFailureKeptTwoMinutes(),
       }),
     });
 
@@ -693,10 +697,7 @@ describe('useStateDistrictRuns compute', () => {
     // Given
     serveApi({
       economy: economyWhere({
-        [TEXAS]: (request) =>
-          request === 0
-            ? stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`)
-            : stateOk(TEXAS),
+        [TEXAS]: (request) => (request === 0 ? stateFailureKeptTwoMinutes() : stateOk(TEXAS)),
       }),
     });
     const { result } = await computeAll();
@@ -719,7 +720,7 @@ describe('useStateDistrictRuns compute', () => {
     // Given
     serveApi({
       economy: economyWhere({
-        [TEXAS]: () => stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`),
+        [TEXAS]: () => stateFailureKeptTwoMinutes(),
         [OHIO]: (request) => (request === 0 ? stateErrorPage() : stateOk(OHIO)),
       }),
     });
@@ -736,6 +737,78 @@ describe('useStateDistrictRuns compute', () => {
     expect(api.economyRequestsFor(TEXAS)).toHaveLength(1);
     expect(result.current.status).toBe('partial');
     expect(result.current.canRetry).toBe(false);
+  });
+
+  test('given a failure whose message has the note but whose answer has no retry_after_seconds then Retry is offered at once', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) =>
+          request === 0
+            ? stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`)
+            : stateOk(TEXAS),
+      }),
+    });
+
+    // When
+    const { result } = await computeAll();
+
+    // Then: the wait comes from the answer's field, never from its message.
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.canRetry).toBe(true);
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Texas', error: STATE_FAILURE_REASON },
+    ]);
+  });
+
+  test('given an answer whose retry_after_seconds says how long its failure is kept then Retry is offered only from then, whatever its message says', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) =>
+          request === 0 ? stateFailure(STATE_ERROR_MESSAGE, 90) : stateOk(TEXAS),
+      }),
+    });
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Texas', error: STATE_RETRY_WAIT_REASON },
+    ]);
+    await act(() => vi.advanceTimersByTimeAsync(89 * 1000));
+    expect(result.current.canRetry).toBe(false);
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+
+    // Then
+    expect(result.current.canRetry).toBe(true);
+  });
+
+  test('given a failure the Public API keeps for 30 days then Retry is not offered until then, and the reason says so', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: () => stateFailure(STATE_ERROR_MESSAGE, STATE_STORED_FAILURE_SECONDS),
+      }),
+    });
+    const timers = vi.spyOn(globalThis, 'setTimeout');
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Texas', error: STATE_STORED_FAILURE_REASON },
+    ]);
+    await act(() => vi.advanceTimersByTimeAsync((STATE_STORED_FAILURE_SECONDS - 1) * 1000));
+    expect(result.current.canRetry).toBe(false);
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+
+    // Then
+    expect(result.current.canRetry).toBe(true);
+    // A browser runs a longer timer at once, so none is set past its limit.
+    const delays = timers.mock.calls.map(([, delay]) => delay ?? 0);
+    timers.mockRestore();
+    expect(Math.max(...delays)).toBeLessThanOrEqual(BROWSER_TIMER_LIMIT_MS);
   });
 
   test('given a request answered with an error page then the state fails with a short reason, not the page', async () => {

@@ -26,6 +26,8 @@ export const HTTP_STATUS = {
   BAD_REQUEST: 400,
   NOT_FOUND: 404,
   INTERNAL_SERVER_ERROR: 500,
+  BAD_GATEWAY: 502,
+  SERVICE_UNAVAILABLE: 503,
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -48,6 +50,26 @@ export const mockErrorResponse = (status: number) => ({
   ok: false,
   status,
   statusText: status === HTTP_STATUS.NOT_FOUND ? 'Not Found' : 'Error',
+});
+
+/** The Public API's message for a failed US state run, with the note it ends with. */
+export const FAILED_CALCULATION_MESSAGE =
+  'Simulation entrypoint execution failed: out of memory. A new run for this state can be requested 2 minutes after this failure.';
+
+/** The Public API's 502 body for a failed calculation, with the seconds it keeps the failure. */
+export const FAILED_CALCULATION_BODY = {
+  status: 'error',
+  message: FAILED_CALCULATION_MESSAGE,
+  result: null,
+  retry_after_seconds: 120,
+};
+
+/** The Public API's answer for a failed calculation: 502 with an error body. */
+export const mockFailedCalculationResponse = (body: object = FAILED_CALCULATION_BODY) => ({
+  ok: false,
+  status: HTTP_STATUS.BAD_GATEWAY,
+  statusText: 'Bad Gateway',
+  text: vi.fn().mockResolvedValue(JSON.stringify(body)),
 });
 
 // Mock US report output

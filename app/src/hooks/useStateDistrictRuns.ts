@@ -6,6 +6,7 @@ import {
 } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import { ReportAdapter } from '@/adapters/ReportAdapter';
 import {
+  failedCalculationOf,
   fetchSocietyWideCalculation,
   type EconomyCalculationResponse,
   type SocietyWideReportOutput,
@@ -50,16 +51,27 @@ const REQUEST_FAILED_MESSAGE = "The request to PolicyEngine's servers failed";
 const RECORDS_FAILED_MESSAGE = 'Checking for a saved result failed';
 
 /**
- * The Public API ends a failed state run's message with when a new run can be
- * requested ("… can be requested 2 minutes after this failure."); until then
- * it answers every request, Retry's too, with the same failure, so Retry is
- * not offered for that state until then.
+ * The longest delay a browser timer keeps (2^31 − 1 ms, about 24.8 days); a
+ * longer one fires at once. A longer wait is redrawn in steps of this.
  */
-const RETRY_WAIT_PATTERN = /can be requested (\d+) minutes? after this failure/;
+const MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
 
-/** The minutes the Public API's failure message says to wait before a new run, if it says. */
-function retryWaitMinutes(message: string): number | null {
-  return Number(message.match(RETRY_WAIT_PATTERN)?.[1]) || null;
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
+const SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
+
+/**
+ * A wait in whole minutes up to an hour, whole hours up to two days, then
+ * whole days, each rounded up: "2 minutes", "1 hour", "30 days".
+ */
+function waitDescription(seconds: number): string {
+  const [count, unit] =
+    seconds <= SECONDS_PER_HOUR
+      ? [Math.ceil(seconds / SECONDS_PER_MINUTE), 'minute']
+      : seconds <= 2 * SECONDS_PER_DAY
+        ? [Math.ceil(seconds / SECONDS_PER_HOUR), 'hour']
+        : [Math.ceil(seconds / SECONDS_PER_DAY), 'day'];
+  return `${count} ${unit}${count === 1 ? '' : 's'}`;
 }
 
 type District = USCongressionalDistrictBreakdownItem;
@@ -330,39 +342,25 @@ async function saveStateResult(
   }
 }
 
-/** Whether a failed request is the Public API's 502 for a calculation that failed. */
-function isFailedCalculation(message: string): boolean {
-  const body = message.match(/^Society-wide calculation failed \(502\): (\{[\s\S]*\})$/)?.[1];
-  if (!body) {
-    return false;
-  }
-  try {
-    return (JSON.parse(body) as { status?: unknown }).status === 'error';
-  } catch {
-    return false;
-  }
-}
-
 /**
  * A failed calculation's reason: short and the same for states that failed
  * alike (the message itself carries a correlation ID), saying when Retry can
- * start a new run when the Public API says so.
+ * start a new run when the Public API says how long it keeps the failure.
  */
-function calculationFailureReason(message: string): string {
+function calculationFailureReason(message: string, retryAfterSeconds: number | null): string {
   const reason = describeCalculationError(message).title;
-  const minutes = retryWaitMinutes(message);
-  if (!minutes) {
+  if (!retryAfterSeconds) {
     return reason;
   }
-  return `${reason}. Retry can start a new run ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} after the failure`;
+  return `${reason}. Retry can start a new run ${waitDescription(retryAfterSeconds)} after the failure`;
 }
 
 /**
  * Asks for a state's economy result. The Public API answers a calculation
  * that failed with 502 and an error body, which the fetch throws: that is the
- * state's answer, not a failed poll, so it becomes the state's error at once.
- * Any other failure, such as a 502 from a proxy with no such body, is still a
- * failed poll.
+ * state's answer, not a failed poll, so it becomes the state's error at once,
+ * kept for the body's `retry_after_seconds`. Any other failure, such as a 502
+ * from a proxy with no such body, is still a failed poll.
  */
 async function fetchStateRun(
   { reformPolicyId, baselinePolicyId, year }: Required<StateDistrictRunsRequest>,
@@ -375,13 +373,14 @@ async function fetchStateRun(
       time_period: year,
     });
   } catch (error) {
-    if (error instanceof Error && isFailedCalculation(error.message)) {
-      const minutes = retryWaitMinutes(error.message);
+    const failure = failedCalculationOf(error);
+    if (failure && error instanceof Error) {
+      const seconds = failure.retryAfterSeconds;
       return {
         status: 'error',
         result: null,
-        error: calculationFailureReason(error.message),
-        retryWaitMs: minutes ? minutes * 60 * 1000 : undefined,
+        error: calculationFailureReason(error.message, seconds),
+        retryWaitMs: seconds ? seconds * 1000 : undefined,
       };
     }
     throw error;
@@ -418,7 +417,8 @@ async function pollStateRun(
     );
   }, signal);
   if (run.status === 'error' && retryWaitMs) {
-    // Counted from when the failure arrived, which is no earlier than when the Public API kept it.
+    // The seconds the Public API had left when it answered, counted from the answer's arrival,
+    // so never earlier than the stored failure's expiry.
     return { ...run, result: null, retryAt: Date.now() + retryWaitMs };
   }
   if (run.status !== 'complete') {
@@ -660,14 +660,16 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
         : Infinity
     )
   );
-  const [, redraw] = useReducer((count: number) => count + 1, 0);
+  // Each redraw sets the next timer, so a wait longer than a timer keeps is
+  // redrawn in steps until its retryAt.
+  const [redrawCount, redraw] = useReducer((count: number) => count + 1, 0);
   useEffect(() => {
     if (nextRetryAt === Infinity) {
       return undefined;
     }
-    const timer = setTimeout(redraw, nextRetryAt - Date.now());
+    const timer = setTimeout(redraw, Math.min(nextRetryAt - Date.now(), MAX_TIMER_DELAY_MS));
     return () => clearTimeout(timer);
-  }, [nextRetryAt]);
+  }, [nextRetryAt, redrawCount]);
 
   const askAgain = (restartRuns: boolean) => {
     states.forEach((_state, index) => {
