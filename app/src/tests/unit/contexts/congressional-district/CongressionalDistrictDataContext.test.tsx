@@ -2,67 +2,39 @@
  * Tests for CongressionalDistrictDataContext
  */
 
-import { configureStore } from '@reduxjs/toolkit';
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { Provider } from 'react-redux';
+import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as societyWideApi from '@/api/societyWideCalculation';
 import {
   CongressionalDistrictDataProvider,
   useCongressionalDistrictData,
 } from '@/contexts/congressional-district/CongressionalDistrictDataContext';
 import { useRegions } from '@/hooks/useRegions';
-import { MOCK_ALABAMA_DISTRICT_DATA } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
+import {
+  TEST_POLICY_IDS,
+  TEST_REGION_FORMATS,
+  TEST_YEAR,
+} from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 import { mockUSRegionRecords } from '@/tests/fixtures/utils/regionStrategiesMocks';
-
-// Mock the API module
-vi.mock('@/api/societyWideCalculation', () => ({
-  fetchSocietyWideCalculation: vi.fn(),
-}));
 
 vi.mock('@/hooks/useRegions', () => ({
   useRegions: vi.fn(),
 }));
 
-// Create a mock Redux store with metadata
-const createMockStore = (regions: Array<{ name: string; label: string; type: string }> = []) => {
-  return configureStore({
-    reducer: {
-      metadata: () => ({
-        economyOptions: {
-          region: regions,
-        },
-      }),
-    },
-  });
-};
-
-// Create mock regions for testing
-const MOCK_REGIONS = [
-  { name: 'us', label: 'United States', type: 'national' },
-  { name: 'state/al', label: 'Alabama', type: 'state' },
-  { name: 'state/ca', label: 'California', type: 'state' },
-  { name: 'AL-01', label: "Alabama's 1st district", type: 'congressional_district' },
-];
-
-// Wrapper component for testing hooks
-const createWrapper = (
-  store: ReturnType<typeof createMockStore>,
-  props: {
-    reformPolicyId: string;
-    baselinePolicyId: string;
-    year: string;
-    region?: string;
-  }
-) => {
+/** The provider around a hook, for a report on `region`. */
+function wrapperFor(region?: string) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <Provider store={store}>
-        <CongressionalDistrictDataProvider {...props}>{children}</CongressionalDistrictDataProvider>
-      </Provider>
+      <CongressionalDistrictDataProvider
+        reformPolicyId={TEST_POLICY_IDS.REFORM}
+        baselinePolicyId={TEST_POLICY_IDS.BASELINE}
+        year={TEST_YEAR}
+        region={region}
+      >
+        {children}
+      </CongressionalDistrictDataProvider>
     );
   };
-};
+}
 
 describe('CongressionalDistrictDataContext', () => {
   beforeEach(() => {
@@ -75,335 +47,81 @@ describe('CongressionalDistrictDataContext', () => {
     } as ReturnType<typeof useRegions>);
   });
 
-  describe('useCongressionalDistrictData hook', () => {
-    test('given hook used outside provider then throws error', () => {
-      // Suppress console.error for this test
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  test('given the hook used outside the provider then it throws', () => {
+    // Given
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      // When/Then
-      expect(() => {
-        renderHook(() => useCongressionalDistrictData());
-      }).toThrow(
-        'useCongressionalDistrictData must be used within a CongressionalDistrictDataProvider'
-      );
+    // When / Then
+    expect(() => renderHook(() => useCongressionalDistrictData())).toThrow(
+      'useCongressionalDistrictData must be used within a CongressionalDistrictDataProvider'
+    );
+    consoleSpy.mockRestore();
+  });
 
-      consoleSpy.mockRestore();
+  test('given the provider then it gives only the labels, state code, policies, year and scope', () => {
+    // When
+    const { result } = renderHook(() => useCongressionalDistrictData(), {
+      wrapper: wrapperFor(TEST_REGION_FORMATS.NATIONAL),
     });
 
-    test('given initial state then hasStarted is false', () => {
-      // Given
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'us',
-      });
-
-      // When
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-
-      // Then
-      expect(result.current.hasStarted).toBe(false);
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.isComplete).toBe(false);
-    });
-
-    test('given national report then isStateLevelReport is false', () => {
-      // Given
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'us',
-      });
-
-      // When
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-
-      // Then
-      expect(result.current.isStateLevelReport).toBe(false);
-      expect(result.current.stateCode).toBeNull();
-    });
-
-    test('given state-level report then isStateLevelReport is true', () => {
-      // Given
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'state/ca',
-      });
-
-      // When
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-
-      // Then
-      expect(result.current.isStateLevelReport).toBe(true);
-      expect(result.current.stateCode).toBe('ca');
-      expect(societyWideApi.fetchSocietyWideCalculation).not.toHaveBeenCalled();
+    // Then
+    expect(Object.keys(result.current).sort()).toEqual([
+      'baselinePolicyId',
+      'labelLookup',
+      'reformPolicyId',
+      'scope',
+      'stateCode',
+      'year',
+    ]);
+    expect(result.current).toMatchObject({
+      reformPolicyId: TEST_POLICY_IDS.REFORM,
+      baselinePolicyId: TEST_POLICY_IDS.BASELINE,
+      year: TEST_YEAR,
     });
   });
 
-  describe('startFetch', () => {
-    test('given startFetch called then initiates fetching for all states', async () => {
-      // Given
-      const mockFetch = vi.mocked(societyWideApi.fetchSocietyWideCalculation);
-      mockFetch.mockResolvedValue({
-        status: 'ok',
-        result: {
-          congressional_district_impact: {
-            districts: MOCK_ALABAMA_DISTRICT_DATA.districts,
-          },
-        } as any,
-      });
-
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'us',
-      });
-
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-
-      // When
-      act(() => {
-        result.current.startFetch();
-      });
-
-      // Then
-      expect(result.current.hasStarted).toBe(true);
-      expect(result.current.isLoading).toBe(true);
+  test('given district regions then the labels are keyed by district', () => {
+    // When
+    const { result } = renderHook(() => useCongressionalDistrictData(), {
+      wrapper: wrapperFor(TEST_REGION_FORMATS.NATIONAL),
     });
 
-    test('given startFetch called twice then second call is ignored', async () => {
-      // Given
-      const mockFetch = vi.mocked(societyWideApi.fetchSocietyWideCalculation);
-      mockFetch.mockResolvedValue({
-        status: 'computing',
-        queue_position: 1,
-        average_time: 60,
-        result: null,
-      });
-
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'us',
-      });
-
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-
-      // When
-      act(() => {
-        result.current.startFetch();
-      });
-      const callCountAfterFirst = mockFetch.mock.calls.length;
-
-      act(() => {
-        result.current.startFetch();
-      });
-      const callCountAfterSecond = mockFetch.mock.calls.length;
-
-      // Then - no additional calls made
-      expect(callCountAfterSecond).toBe(callCountAfterFirst);
-    });
+    // Then
+    expect(result.current.labelLookup.get('CA-01')).toBe("California's 1st congressional district");
   });
 
-  describe('state-level reports', () => {
-    test('given state-level report then does not auto-start fetching', () => {
-      // Given
-      const mockFetch = vi.mocked(societyWideApi.fetchSocietyWideCalculation);
-      mockFetch.mockResolvedValue({
-        status: 'ok',
-        result: {
-          congressional_district_impact: {
-            districts: MOCK_ALABAMA_DISTRICT_DATA.districts,
-          },
-        } as any,
-      });
-
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'state/al',
-      });
-
-      // When
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-
-      // Then
-      expect(result.current.hasStarted).toBe(false);
-      expect(mockFetch).not.toHaveBeenCalled();
+  test.each([
+    ['a nationwide report', 'nationwide', TEST_REGION_FORMATS.NATIONAL],
+    ['a report with no region', 'nationwide', undefined],
+    ['a state report', 'state', TEST_REGION_FORMATS.STATE_CA],
+    ['a district report', null, TEST_REGION_FORMATS.CONGRESSIONAL_DISTRICT],
+  ])('given %s then the scope is %s', (_label, expected, region) => {
+    // When
+    const { result } = renderHook(() => useCongressionalDistrictData(), {
+      wrapper: wrapperFor(region),
     });
+
+    // Then
+    expect(result.current.scope).toBe(expected);
   });
 
-  describe('polling behavior', () => {
-    test('given API returns ok status then completes state fetch', async () => {
-      // Given
-      const mockFetch = vi.mocked(societyWideApi.fetchSocietyWideCalculation);
-      mockFetch.mockResolvedValue({
-        status: 'ok',
-        result: {
-          congressional_district_impact: {
-            districts: MOCK_ALABAMA_DISTRICT_DATA.districts,
-          },
-        } as any,
-      });
-
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'state/al',
-      });
-
-      // When
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-      act(() => {
-        result.current.startFetch();
-      });
-
-      // Then
-      await waitFor(() => {
-        expect(result.current.isComplete).toBe(true);
-        expect(result.current.completedCount).toBe(1);
-      });
+  test('given a nationwide report then there is no state code', () => {
+    // When
+    const { result } = renderHook(() => useCongressionalDistrictData(), {
+      wrapper: wrapperFor(TEST_REGION_FORMATS.NATIONAL),
     });
 
-    test('given API returns error status then marks state as errored', async () => {
-      // Given
-      const mockFetch = vi.mocked(societyWideApi.fetchSocietyWideCalculation);
-      mockFetch.mockResolvedValue({
-        status: 'error',
-        error: 'Calculation failed',
-        result: null,
-      });
-
-      // Suppress console.error for this test
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'state/al',
-      });
-
-      // When
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-      act(() => {
-        result.current.startFetch();
-      });
-
-      // Then
-      await waitFor(() => {
-        expect(result.current.isComplete).toBe(true);
-        expect(result.current.errorCount).toBe(1);
-      });
-
-      consoleSpy.mockRestore();
-    });
-
-    test('given API call throws error then marks state as errored', async () => {
-      // Given
-      const mockFetch = vi.mocked(societyWideApi.fetchSocietyWideCalculation);
-      mockFetch.mockRejectedValue(new Error('Network error'));
-
-      // Suppress console.error for this test
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'state/al',
-      });
-
-      // When
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-      act(() => {
-        result.current.startFetch();
-      });
-
-      // Then
-      await waitFor(() => {
-        expect(result.current.isComplete).toBe(true);
-        expect(result.current.errorCount).toBe(1);
-      });
-
-      consoleSpy.mockRestore();
-    });
+    // Then
+    expect(result.current.stateCode).toBeNull();
   });
 
-  describe('context value computation', () => {
-    test('given completed fetch then stateResponses contains district data', async () => {
-      // Given
-      const mockFetch = vi.mocked(societyWideApi.fetchSocietyWideCalculation);
-      mockFetch.mockResolvedValue({
-        status: 'ok',
-        result: {
-          congressional_district_impact: {
-            districts: MOCK_ALABAMA_DISTRICT_DATA.districts,
-          },
-        } as any,
-      });
-
-      const store = createMockStore(MOCK_REGIONS);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'state/al',
-      });
-
-      // When
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-      act(() => {
-        result.current.startFetch();
-      });
-
-      // Then
-      await waitFor(() => {
-        expect(result.current.stateResponses.size).toBe(1);
-        expect(result.current.totalDistrictsLoaded).toBe(
-          MOCK_ALABAMA_DISTRICT_DATA.districts.length
-        );
-      });
+  test('given a state report then the state code is its abbreviation', () => {
+    // When
+    const { result } = renderHook(() => useCongressionalDistrictData(), {
+      wrapper: wrapperFor(TEST_REGION_FORMATS.STATE_CA),
     });
 
-    test('given no canonical states then totalStates is 0', () => {
-      // Given
-      vi.mocked(useRegions).mockReturnValueOnce({
-        data: [] as typeof mockUSRegionRecords,
-        isLoading: false,
-        isError: false,
-        error: null,
-      } as ReturnType<typeof useRegions>);
-      const store = createMockStore([]);
-      const wrapper = createWrapper(store, {
-        reformPolicyId: '123',
-        baselinePolicyId: '456',
-        year: '2024',
-        region: 'us',
-      });
-
-      // When
-      const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
-
-      // Then
-      expect(result.current.totalStates).toBe(0);
-    });
+    // Then
+    expect(result.current.stateCode).toBe('ca');
   });
 });

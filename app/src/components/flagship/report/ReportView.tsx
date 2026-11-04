@@ -6,7 +6,7 @@ import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { CalibrationPin } from '@/components/flagship/CalibrationMatches';
 import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
 import BudgetWindowSummary from '@/components/flagship/report/BudgetWindowSummary';
-import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
+import CongressionalDistrictSection from '@/components/flagship/report/CongressionalDistrictSection';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import HouseholdImpactSection from '@/components/flagship/report/household/HouseholdImpactSection';
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
@@ -25,6 +25,7 @@ import ReportContents, {
 import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import type { ModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Tabs, TabsContent, TabsList, TabsTrigger, Text, Title } from '@/components/ui';
+import { congressionalDistrictScope } from '@/contexts/congressional-district/utils';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -61,6 +62,18 @@ const UK_DISTRICTS_COMPUTE_CARD_COPY: DistrictsCardCopy = {
   ...UK_DISTRICTS_CARD_COPY,
   preview:
     'Compare income changes across constituencies and local authorities on a map. They calculate in the background, in a few minutes.',
+};
+
+/**
+ * The card for a nationwide US report's results: its congressional
+ * districts come from each state's own run, on request
+ * (CongressionalDistrictSection), not from the nationwide result.
+ */
+const US_DISTRICTS_COMPUTE_CARD_COPY: DistrictsCardCopy = {
+  title: 'District impacts',
+  action: 'Explore districts',
+  preview:
+    'Compare income changes across districts on a map. Each state’s districts come from a run on its own data, which takes a few minutes.',
 };
 
 function SectionHeading({ id, title }: { id: string; title: string }) {
@@ -293,9 +306,7 @@ export default function ReportView({
 
   // Whether the report's scope has districts at all, results loaded or not:
   // nationwide or one state. showUSDistricts also needs the run's policies.
-  const districtScope =
-    countryId === 'us' &&
-    (!region || region.toLowerCase() === 'us' || region.toLowerCase().startsWith('state/'));
+  const districtScope = countryId === 'us' && congressionalDistrictScope(region) !== null;
   const showUSDistricts = canShowCongressionalDistrictImpactCard({
     countryId,
     reformPolicyId,
@@ -455,7 +466,11 @@ export default function ReportView({
                             outputServesLocalAreaBreakdowns(output)
                             ? UK_DISTRICTS_COMPUTE_CARD_COPY
                             : UK_DISTRICTS_CARD_COPY
-                          : undefined
+                          : output &&
+                              showUSDistricts &&
+                              congressionalDistrictScope(region) === 'nationwide'
+                            ? US_DISTRICTS_COMPUTE_CARD_COPY
+                            : undefined
                       }
                       showDistricts={showDistrictsSection}
                       onOpen={openReportSection}
@@ -516,7 +531,7 @@ export default function ReportView({
                           year={year}
                           region={region}
                         >
-                          <DistrictImpactCard output={output} />
+                          <CongressionalDistrictSection output={output} />
                         </CongressionalDistrictDataProvider>
                       )}
                       {/* Blocked, the maps show what the stored results hold, with no breakdown to run. */}

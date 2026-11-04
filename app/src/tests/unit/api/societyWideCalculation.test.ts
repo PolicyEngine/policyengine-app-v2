@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
 import {
+  EconomyCalculationError,
+  failedCalculationOf,
   fetchLocalAreaBreakdown,
   fetchSocietyWideCalculation,
   isLocalAreaBreakdown,
@@ -36,19 +38,24 @@ import {
   PLAIN_TEXT_ERROR_BODY,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
 import {
+  economyCalculationError,
   ERROR_MESSAGES,
+  FAILED_CALCULATION_BODY,
   HTTP_STATUS,
   mockCompletedResponse,
   mockCompletedResponseWithBundleBesideResult,
   mockCompletedResponseWithBundleInResult,
   mockErrorCalculationResponse,
   mockErrorResponse,
+  mockFailedCalculationResponse,
   mockNetworkError,
   mockPendingResponse,
   mockSuccessResponse,
   mockUSPolicyEngineBundle,
+  READ_RETRY_AFTER_SECONDS,
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
+  UNREAD_RETRY_AFTER_SECONDS_BODIES,
 } from '@/tests/fixtures/api/societyWideMocks';
 import {
   LEGACY_NORTHERN_IRELAND_REGION_CODE,
@@ -285,6 +292,55 @@ describe('societyWide API', () => {
       ).rejects.toThrow(
         ERROR_MESSAGES.CALCULATION_FAILED(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Error')
       );
+    });
+
+    test('given a failed calculation answered with 502 then the error carries the status and the parsed body, with the same message', async () => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(mockFailedCalculationResponse());
+
+      // When
+      const error = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.US,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: 'state/ca', time_period: CURRENT_YEAR }
+      ).catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({
+        status: HTTP_STATUS.BAD_GATEWAY,
+        body: FAILED_CALCULATION_BODY,
+        message: ERROR_MESSAGES.CALCULATION_FAILED(
+          HTTP_STATUS.BAD_GATEWAY,
+          JSON.stringify(FAILED_CALCULATION_BODY)
+        ),
+      });
+    });
+
+    test('given an error page in place of the answer then the error carries the status and no body', async () => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(
+        mockErrorResponseWithBody(
+          HTTP_STATUS.SERVICE_UNAVAILABLE,
+          'Service Unavailable',
+          PLAIN_TEXT_ERROR_BODY
+        )
+      );
+
+      // When
+      const error = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.US,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: 'state/ca', time_period: CURRENT_YEAR }
+      ).catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({ status: HTTP_STATUS.SERVICE_UNAVAILABLE, body: null });
     });
 
     test('given network error then propagates error', async () => {
@@ -734,6 +790,69 @@ describe('societyWide API', () => {
         `Local-area breakdown failed (500): ${PLAIN_TEXT_ERROR_BODY}`
       );
     });
+  });
+});
+
+describe('failedCalculationOf', () => {
+  test('given a 502 with the Public API error body then gives the seconds it keeps the failure', () => {
+    // When
+    const failure = failedCalculationOf(
+      economyCalculationError(HTTP_STATUS.BAD_GATEWAY, FAILED_CALCULATION_BODY)
+    );
+
+    // Then
+    expect(failure).toEqual({ retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds });
+  });
+
+  test.each(READ_RETRY_AFTER_SECONDS)(
+    'given retry_after_seconds %s then the failure has those seconds',
+    (_case, seconds) => {
+      // When
+      const failure = failedCalculationOf(
+        economyCalculationError(HTTP_STATUS.BAD_GATEWAY, {
+          ...FAILED_CALCULATION_BODY,
+          retry_after_seconds: seconds,
+        })
+      );
+
+      // Then
+      expect(failure).toEqual({ retryAfterSeconds: seconds });
+    }
+  );
+
+  test.each(UNREAD_RETRY_AFTER_SECONDS_BODIES)(
+    'given retry_after_seconds %s then the failure has no seconds',
+    (_case, body) => {
+      // When
+      const failure = failedCalculationOf(economyCalculationError(HTTP_STATUS.BAD_GATEWAY, body));
+
+      // Then
+      expect(failure).toEqual({ retryAfterSeconds: null });
+    }
+  );
+
+  test.each([
+    ['a 502 without an error body', economyCalculationError(HTTP_STATUS.BAD_GATEWAY, null)],
+    [
+      'a 502 whose body is a list',
+      economyCalculationError(HTTP_STATUS.BAD_GATEWAY, [FAILED_CALCULATION_BODY]),
+    ],
+    [
+      'another status with an error body',
+      economyCalculationError(HTTP_STATUS.SERVICE_UNAVAILABLE, FAILED_CALCULATION_BODY),
+    ],
+    [
+      'a plain Error whose message reads like one',
+      new Error(
+        `Society-wide calculation failed (502): ${JSON.stringify(FAILED_CALCULATION_BODY)}`
+      ),
+    ],
+  ])('given %s then it is not a failed calculation', (_case, error) => {
+    // When
+    const failure = failedCalculationOf(error);
+
+    // Then
+    expect(failure).toBeNull();
   });
 });
 

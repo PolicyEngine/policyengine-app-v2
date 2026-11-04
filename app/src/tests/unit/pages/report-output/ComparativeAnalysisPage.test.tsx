@@ -1,6 +1,26 @@
-import { render, screen } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, userEvent, waitFor } from '@test-utils';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { useRegions } from '@/hooks/useRegions';
 import { ComparativeAnalysisPage } from '@/pages/report-output/ComparativeAnalysisPage';
+import { COMPUTE_DISTRICTS_LABEL } from '@/tests/fixtures/components/flagship/report/stateDistrictComputePanelMocks';
+import {
+  economyWhere,
+  fakeStateDistrictApi,
+  NATIONWIDE_OUTPUT_WITH_DISTRICTS,
+  STATE_COMPUTING,
+  STATE_COUNT,
+  STATE_RUNS_BASELINE_POLICY_ID,
+  STATE_RUNS_REFORM_POLICY_ID,
+  STATE_RUNS_YEAR,
+  stateOk,
+  US_STATE_REGIONS,
+  UTAH,
+} from '@/tests/fixtures/hooks/useStateDistrictRunsMocks';
+
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({ data: [] })),
+}));
 
 // Mock child components
 vi.mock('@/pages/report-output/budgetary-impact/BudgetaryImpactSubPage', () => ({
@@ -71,5 +91,54 @@ describe('ComparativeAnalysisPage', () => {
 
     // Then
     expect(screen.getByTestId('budgetary-impact-overall')).toBeInTheDocument();
+  });
+});
+
+describe('ComparativeAnalysisPage congressional district views', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('given Compute on one district view then the other view follows the same run', async () => {
+    // Given
+    const user = userEvent.setup();
+    vi.mocked(useRegions).mockReturnValue({
+      data: US_STATE_REGIONS,
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as unknown as ReturnType<typeof useRegions>);
+    const api = fakeStateDistrictApi({
+      economy: economyWhere({ [UTAH]: () => stateOk(UTAH) }, () => STATE_COMPUTING),
+    });
+    vi.stubGlobal('fetch', api.fetch);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const pageFor = (view: string) => (
+      <QueryClientProvider client={queryClient}>
+        <ComparativeAnalysisPage
+          output={NATIONWIDE_OUTPUT_WITH_DISTRICTS}
+          view={view}
+          reformPolicyId={STATE_RUNS_REFORM_POLICY_ID}
+          baselinePolicyId={STATE_RUNS_BASELINE_POLICY_ID}
+          year={STATE_RUNS_YEAR}
+          region="us"
+        />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(pageFor('congressional-district-absolute'));
+    await user.click(await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL }));
+    await waitFor(() => expect(api.economyRequests()).toHaveLength(STATE_COUNT));
+
+    // When
+    rerender(pageFor('congressional-district-relative'));
+
+    // Then
+    expect(
+      await screen.findByText('Relative household income change by congressional district')
+    ).toBeInTheDocument();
+    expect(screen.getByText('1 of 51 states')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_DISTRICTS_LABEL })).not.toBeInTheDocument();
+    expect(api.economyRequests()).toHaveLength(STATE_COUNT);
+    expect(api.reportRequests()).toHaveLength(STATE_COUNT);
   });
 });

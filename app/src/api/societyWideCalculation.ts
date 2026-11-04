@@ -175,16 +175,69 @@ const BREAKDOWN_REQUEST: EconomyRequestKind = {
   readsBodyMessage: true,
 };
 
-/** An error body's `message` field, when the body is JSON with one. */
-function bodyMessage(body: string): string | null {
+/**
+ * A non-ok answer from the economy endpoint. The message reads as it always
+ * has ("Society-wide calculation failed (502): …"), for people and logs;
+ * code reads the HTTP status and the parsed body instead.
+ */
+export class EconomyCalculationError extends Error {
+  /** The answer's HTTP status. */
+  readonly status: number;
+  /** The answer's body parsed as JSON, or null when it is not JSON. */
+  readonly body: unknown;
+
+  constructor(message: string, status: number, body: unknown) {
+    super(message);
+    this.name = 'EconomyCalculationError';
+    this.status = status;
+    this.body = body;
+  }
+}
+
+/** A calculation the Public API ran and that failed, as its 502 answer says. */
+export interface FailedCalculation {
+  /**
+   * How long the Public API keeps answering with this failure, in seconds;
+   * after that a request starts a new run. Null when it does not say.
+   */
+  retryAfterSeconds: number | null;
+}
+
+/**
+ * Whether an economy request's error is a failed calculation: the Public API
+ * answers one with 502 and `{ status: "error", message, result: null,
+ * retry_after_seconds }`. Null for anything else, such as a proxy's 502 page,
+ * another status or a network error, which are failed requests instead.
+ */
+export function failedCalculationOf(error: unknown): FailedCalculation | null {
+  if (!(error instanceof EconomyCalculationError) || error.status !== 502) {
+    return null;
+  }
+  const body = error.body;
+  if (!body || typeof body !== 'object' || (body as { status?: unknown }).status !== 'error') {
+    return null;
+  }
+  const seconds = (body as { retry_after_seconds?: unknown }).retry_after_seconds;
+  return {
+    retryAfterSeconds:
+      typeof seconds === 'number' && Number.isFinite(seconds) && seconds >= 0 ? seconds : null,
+  };
+}
+
+/** A body parsed as JSON, or null when it is not JSON. */
+function parsedBody(body: string): unknown {
   try {
-    const parsed: unknown = JSON.parse(body);
-    if (parsed && typeof parsed === 'object') {
-      const message = (parsed as { message?: unknown }).message;
-      return typeof message === 'string' && message ? message : null;
-    }
+    return JSON.parse(body);
   } catch {
-    // Not JSON: the caller gives the body as it is.
+    return null;
+  }
+}
+
+/** An error body's `message` field, when the body is JSON with one. */
+function bodyMessage(parsed: unknown): string | null {
+  if (parsed && typeof parsed === 'object') {
+    const message = (parsed as { message?: unknown }).message;
+    return typeof message === 'string' && message ? message : null;
   }
   return null;
 }
@@ -227,8 +280,13 @@ async function fetchEconomyCalculation<Result extends ResultProvenance>(
       // ignore
     }
     console.error(`[${kind.logName}] ${response.status} ${response.statusText}`, url, body);
-    const detail = (kind.readsBodyMessage && bodyMessage(body)) || body || response.statusText;
-    throw new Error(`${kind.label} failed (${response.status}): ${detail}`);
+    const parsed = parsedBody(body);
+    const detail = (kind.readsBodyMessage && bodyMessage(parsed)) || body || response.statusText;
+    throw new EconomyCalculationError(
+      `${kind.label} failed (${response.status}): ${detail}`,
+      response.status,
+      parsed
+    );
   }
 
   const data: EconomyCalculationResponse<Result> = await response.json();
