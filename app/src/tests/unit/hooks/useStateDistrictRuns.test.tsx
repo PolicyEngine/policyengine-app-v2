@@ -27,19 +27,21 @@ import {
   STATE_ERROR_MESSAGE,
   STATE_EXPECTED_MS,
   STATE_FAILURE_REASON,
+  STATE_LAST_MINUTE_RETRY_WAIT_SECONDS,
   STATE_POLL_INTERVAL_MS,
   STATE_RECORDS_FAILURE_REASON,
+  STATE_REPLAYED_RETRY_WAIT_SECONDS,
   STATE_REPORT_ERROR,
   STATE_REPORT_PENDING,
   STATE_REQUEST_FAILURE_REASON,
   STATE_RETRY_NOTE,
   STATE_RETRY_WAIT_MS,
   STATE_RETRY_WAIT_REASON,
+  STATE_RETRY_WAIT_SECONDS,
   STATE_RUNS_BASELINE_POLICY_ID,
   STATE_RUNS_REFORM_POLICY_ID,
   STATE_RUNS_REQUEST,
   STATE_RUNS_YEAR,
-  STATE_STORED_FAILURE_REASON,
   STATE_STORED_FAILURE_SECONDS,
   STATE_TIME_LIMIT_MESSAGE,
   STATE_TIME_LIMIT_MS,
@@ -766,7 +768,9 @@ describe('useStateDistrictRuns compute', () => {
     serveApi({
       economy: economyWhere({
         [TEXAS]: (request) =>
-          request === 0 ? stateFailure(STATE_ERROR_MESSAGE, 90) : stateOk(TEXAS),
+          request === 0
+            ? stateFailure(STATE_ERROR_MESSAGE, STATE_REPLAYED_RETRY_WAIT_SECONDS)
+            : stateOk(TEXAS),
       }),
     });
     const { result } = await computeAll();
@@ -774,7 +778,7 @@ describe('useStateDistrictRuns compute', () => {
     expect(result.current.calculationFailures).toEqual([
       { label: 'Texas', error: STATE_RETRY_WAIT_REASON },
     ]);
-    await act(() => vi.advanceTimersByTimeAsync(89 * 1000));
+    await act(() => vi.advanceTimersByTimeAsync((STATE_REPLAYED_RETRY_WAIT_SECONDS - 1) * 1000));
     expect(result.current.canRetry).toBe(false);
 
     // When
@@ -782,6 +786,26 @@ describe('useStateDistrictRuns compute', () => {
 
     // Then
     expect(result.current.canRetry).toBe(true);
+  });
+
+  test('given states that failed alike with different seconds left then they share one reason', async () => {
+    // Given: Texas's failure is replayed in its last minute, Ohio's just after it was stored.
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: () => stateFailure(STATE_ERROR_MESSAGE, STATE_LAST_MINUTE_RETRY_WAIT_SECONDS),
+        [OHIO]: () => stateFailure(STATE_ERROR_MESSAGE, STATE_RETRY_WAIT_SECONDS),
+      }),
+    });
+
+    // When
+    const { result } = await computeAll();
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.calculationFailures).toEqual([
+      { label: 'Ohio', error: STATE_RETRY_WAIT_REASON },
+      { label: 'Texas', error: STATE_RETRY_WAIT_REASON },
+    ]);
   });
 
   test('given a failure the Public API keeps for 30 days then Retry is not offered until then, and the reason says so', async () => {
@@ -795,7 +819,7 @@ describe('useStateDistrictRuns compute', () => {
     const { result } = await computeAll();
     await waitFor(() => expect(result.current.status).toBe('partial'));
     expect(result.current.calculationFailures).toEqual([
-      { label: 'Texas', error: STATE_STORED_FAILURE_REASON },
+      { label: 'Texas', error: STATE_RETRY_WAIT_REASON },
     ]);
     await act(() => vi.advanceTimersByTimeAsync((STATE_STORED_FAILURE_SECONDS - 1) * 1000));
     expect(result.current.canRetry).toBe(false);

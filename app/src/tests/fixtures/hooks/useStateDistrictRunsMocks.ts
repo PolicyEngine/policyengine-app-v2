@@ -256,16 +256,20 @@ export const STATE_RETRY_WAIT_MS = STATE_RETRY_WAIT_SECONDS * 1000;
 /** A failed state run as the Public API answers it: the note, and the seconds it keeps the failure. */
 export const stateFailureKeptTwoMinutes = (): Response =>
   stateFailure(`${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`, STATE_RETRY_WAIT_SECONDS);
-/** The reason the app gives for a failure kept two minutes. */
+/**
+ * The reason the app gives for a failure the Public API keeps for a while,
+ * however long is left, so states that failed alike share it.
+ */
 export const STATE_RETRY_WAIT_REASON =
-  'The simulation did not finish. Retry can start a new run 2 minutes after the failure';
+  'The simulation did not finish. Retry appears once a new run can start';
+/** The seconds a replayed two-minute failure has left, 30 seconds after it was stored. */
+export const STATE_REPLAYED_RETRY_WAIT_SECONDS = 90;
+/** The seconds a replayed two-minute failure has left in its last minute. */
+export const STATE_LAST_MINUTE_RETRY_WAIT_SECONDS = 50;
 /** A failure stored before the Public API kept state failures briefly: kept 30 days. */
 export const STATE_STORED_FAILURE_SECONDS = 30 * 24 * 60 * 60;
 /** The longest delay a browser timer keeps, 2^31 − 1 ms; it runs a longer one at once. */
 export const BROWSER_TIMER_LIMIT_MS = 2 ** 31 - 1;
-/** The reason the app gives for a failure kept 30 days. */
-export const STATE_STORED_FAILURE_REASON =
-  'The simulation did not finish. Retry can start a new run 30 days after the failure';
 
 /** An error page in place of the Public API's answer, as a proxy or Cloud Run sends one. */
 export const stateErrorPage = (): Response =>

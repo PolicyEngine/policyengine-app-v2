@@ -772,11 +772,27 @@ describe('failedCalculationOf', () => {
     );
 
     // Then
-    expect(failure).toEqual({ retryAfterSeconds: 120 });
+    expect(failure).toEqual({ retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds });
   });
 
   test.each([
-    ['missing', { status: 'error', message: 'failed', result: null }],
+    ['0', 0],
+    ['a fraction', 1.5],
+  ])('given retry_after_seconds %s then the failure has those seconds', (_case, seconds) => {
+    // When
+    const failure = failedCalculationOf(
+      failedCalculation(HTTP_STATUS.BAD_GATEWAY, {
+        ...FAILED_CALCULATION_BODY,
+        retry_after_seconds: seconds,
+      })
+    );
+
+    // Then
+    expect(failure).toEqual({ retryAfterSeconds: seconds });
+  });
+
+  test.each([
+    ['missing', { status: 'error', message: FAILED_CALCULATION_BODY.message, result: null }],
     ['null', { ...FAILED_CALCULATION_BODY, retry_after_seconds: null }],
     ['negative', { ...FAILED_CALCULATION_BODY, retry_after_seconds: -1 }],
     ['a string', { ...FAILED_CALCULATION_BODY, retry_after_seconds: '120' }],
@@ -790,6 +806,10 @@ describe('failedCalculationOf', () => {
 
   test.each([
     ['a 502 without an error body', failedCalculation(HTTP_STATUS.BAD_GATEWAY, null)],
+    [
+      'a 502 whose body is a list',
+      failedCalculation(HTTP_STATUS.BAD_GATEWAY, [FAILED_CALCULATION_BODY]),
+    ],
     [
       'another status with an error body',
       failedCalculation(HTTP_STATUS.SERVICE_UNAVAILABLE, FAILED_CALCULATION_BODY),

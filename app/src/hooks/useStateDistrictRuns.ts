@@ -56,23 +56,12 @@ const RECORDS_FAILED_MESSAGE = 'Checking for a saved result failed';
  */
 const MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
 
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
-const SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
-
 /**
- * A wait in whole minutes up to an hour, whole hours up to two days, then
- * whole days, each rounded up: "2 minutes", "1 hour", "30 days".
+ * Said of a failure the Public API keeps for a while. It gives no time: the
+ * seconds left differ between states that failed alike, whose reasons are
+ * grouped by their text, and a time in the text would go stale.
  */
-function waitDescription(seconds: number): string {
-  const [count, unit] =
-    seconds <= SECONDS_PER_HOUR
-      ? [Math.ceil(seconds / SECONDS_PER_MINUTE), 'minute']
-      : seconds <= 2 * SECONDS_PER_DAY
-        ? [Math.ceil(seconds / SECONDS_PER_HOUR), 'hour']
-        : [Math.ceil(seconds / SECONDS_PER_DAY), 'day'];
-  return `${count} ${unit}${count === 1 ? '' : 's'}`;
-}
+const RETRY_WAIT_NOTE = 'Retry appears once a new run can start';
 
 type District = USCongressionalDistrictBreakdownItem;
 
@@ -344,15 +333,12 @@ async function saveStateResult(
 
 /**
  * A failed calculation's reason: short and the same for states that failed
- * alike (the message itself carries a correlation ID), saying when Retry can
- * start a new run when the Public API says how long it keeps the failure.
+ * alike (the message itself carries a correlation ID), saying that Retry
+ * appears later when the Public API keeps the failure for a while.
  */
 function calculationFailureReason(message: string, retryAfterSeconds: number | null): string {
   const reason = describeCalculationError(message).title;
-  if (!retryAfterSeconds) {
-    return reason;
-  }
-  return `${reason}. Retry can start a new run ${waitDescription(retryAfterSeconds)} after the failure`;
+  return retryAfterSeconds ? `${reason}. ${RETRY_WAIT_NOTE}` : reason;
 }
 
 /**
