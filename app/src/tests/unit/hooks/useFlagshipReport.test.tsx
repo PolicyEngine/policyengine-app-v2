@@ -84,12 +84,14 @@ describe('useFlagshipReport', () => {
     // When
     const { result } = renderReportHook(EXISTING_REPORT_ID);
 
-    // Then
-    await waitFor(() => expect(result.current.simulations).toHaveLength(2));
+    // Then: the missing-parameter check reads each policy at once, but on
+    // the v1 routes a policy is parsed only once the whole metadata is in,
+    // and the report does not wait for that.
+    await waitFor(() => expect(result.current.policiesChecked).toBe(true));
+    expect(mockFetchPolicyById).toHaveBeenCalledTimes(2);
+    expect(result.current.simulations).toHaveLength(2);
     expect(result.current.isLoading).toBe(false);
     expect(result.current.policies).toEqual([]);
-    // As before v3 loaded parameters on demand, a policy is read once the metadata is in.
-    expect(mockFetchPolicyById).not.toHaveBeenCalled();
   });
 
   test('given a link to a report then it loads with no error', async () => {
