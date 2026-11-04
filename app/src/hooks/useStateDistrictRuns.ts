@@ -57,11 +57,18 @@ const RECORDS_FAILED_MESSAGE = 'Checking for a saved result failed';
 const MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
 
 /**
- * Said of a failure the Public API keeps for a while. It gives no time: the
- * seconds left differ between states that failed alike, whose reasons are
- * grouped by their text, and a time in the text would go stale.
+ * Said of a failure the Public API keeps for a while, one sentence for a
+ * short wait and one for a long one. Neither gives a time: the seconds left
+ * differ between states that failed alike, whose reasons are grouped by
+ * their text, and a time in the text would go stale. Both hold for one state
+ * or several, and while Retry shows for other states.
  */
-const RETRY_WAIT_NOTE = 'Retry appears once a new run can start';
+const SHORT_RETRY_WAIT_NOTE = 'Retry asks again after a few minutes, once a new run can start';
+const LONG_RETRY_WAIT_NOTE =
+  'Retry asks again only once a new run can start, which can take hours or days';
+
+/** The longest wait the short sentence is said of: the Public API keeps a US state failure 2 minutes. */
+const SHORT_RETRY_WAIT_SECONDS = 15 * 60;
 
 type District = USCongressionalDistrictBreakdownItem;
 
@@ -333,12 +340,17 @@ async function saveStateResult(
 
 /**
  * A failed calculation's reason: short and the same for states that failed
- * alike (the message itself carries a correlation ID), saying that Retry
- * appears later when the Public API keeps the failure for a while.
+ * alike (the message itself carries a correlation ID), saying when Retry
+ * asks again if the Public API keeps the failure for a while.
  */
 function calculationFailureReason(message: string, retryAfterSeconds: number | null): string {
   const reason = describeCalculationError(message).title;
-  return retryAfterSeconds ? `${reason}. ${RETRY_WAIT_NOTE}` : reason;
+  if (!retryAfterSeconds) {
+    return reason;
+  }
+  const note =
+    retryAfterSeconds <= SHORT_RETRY_WAIT_SECONDS ? SHORT_RETRY_WAIT_NOTE : LONG_RETRY_WAIT_NOTE;
+  return `${reason}. ${note}`;
 }
 
 /**
@@ -647,14 +659,22 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
     )
   );
   // Each redraw sets the next timer, so a wait longer than a timer keeps is
-  // redrawn in steps until its retryAt.
+  // redrawn in steps until its retryAt. A timer can run late after the
+  // computer sleeps or while the tab is in the background, so the view is
+  // also drawn again when the tab is shown or focused.
   const [redrawCount, redraw] = useReducer((count: number) => count + 1, 0);
   useEffect(() => {
     if (nextRetryAt === Infinity) {
       return undefined;
     }
     const timer = setTimeout(redraw, Math.min(nextRetryAt - Date.now(), MAX_TIMER_DELAY_MS));
-    return () => clearTimeout(timer);
+    document.addEventListener('visibilitychange', redraw);
+    window.addEventListener('focus', redraw);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', redraw);
+      window.removeEventListener('focus', redraw);
+    };
   }, [nextRetryAt, redrawCount]);
 
   const askAgain = (restartRuns: boolean) => {

@@ -16,6 +16,7 @@ import {
   economyWhere,
   fakeStateDistrictApi,
   MAX_REQUESTS_IN_FLIGHT,
+  MS_PER_SECOND,
   normalizedStateDistricts,
   OHIO,
   OTHER_STATE_RUNS_YEAR,
@@ -28,6 +29,7 @@ import {
   STATE_EXPECTED_MS,
   STATE_FAILURE_REASON,
   STATE_LAST_MINUTE_RETRY_WAIT_SECONDS,
+  STATE_LONG_RETRY_WAIT_REASON,
   STATE_POLL_INTERVAL_MS,
   STATE_RECORDS_FAILURE_REASON,
   STATE_REPLAYED_RETRY_WAIT_SECONDS,
@@ -677,7 +679,7 @@ describe('useStateDistrictRuns compute', () => {
     ]);
   });
 
-  test('given a failed calculation whose answer says when a new run can be requested then the reason says when Retry can start one', async () => {
+  test('given a failed calculation whose answer says when a new run can be requested then the reason says Retry asks again after a few minutes', async () => {
     // Given
     serveApi({
       economy: economyWhere({
@@ -705,11 +707,11 @@ describe('useStateDistrictRuns compute', () => {
     const { result } = await computeAll();
     await waitFor(() => expect(result.current.status).toBe('partial'));
     expect(result.current.canRetry).toBe(false);
-    await act(() => vi.advanceTimersByTimeAsync(STATE_RETRY_WAIT_MS - 1000));
+    await act(() => vi.advanceTimersByTimeAsync(STATE_RETRY_WAIT_MS - MS_PER_SECOND));
     expect(result.current.canRetry).toBe(false);
 
     // When
-    await act(() => vi.advanceTimersByTimeAsync(1000));
+    await act(() => vi.advanceTimersByTimeAsync(MS_PER_SECOND));
 
     // Then
     expect(result.current.canRetry).toBe(true);
@@ -763,13 +765,16 @@ describe('useStateDistrictRuns compute', () => {
     ]);
   });
 
-  test('given an answer whose retry_after_seconds says how long its failure is kept then Retry is offered only from then, whatever its message says', async () => {
+  test('given an answer whose retry_after_seconds differs from the wait its message gives then Retry is offered from the field’s time', async () => {
     // Given
     serveApi({
       economy: economyWhere({
         [TEXAS]: (request) =>
           request === 0
-            ? stateFailure(STATE_ERROR_MESSAGE, STATE_REPLAYED_RETRY_WAIT_SECONDS)
+            ? stateFailure(
+                `${STATE_ERROR_MESSAGE}. ${STATE_RETRY_NOTE}`,
+                STATE_REPLAYED_RETRY_WAIT_SECONDS
+              )
             : stateOk(TEXAS),
       }),
     });
@@ -778,11 +783,35 @@ describe('useStateDistrictRuns compute', () => {
     expect(result.current.calculationFailures).toEqual([
       { label: 'Texas', error: STATE_RETRY_WAIT_REASON },
     ]);
-    await act(() => vi.advanceTimersByTimeAsync((STATE_REPLAYED_RETRY_WAIT_SECONDS - 1) * 1000));
+    await act(() =>
+      vi.advanceTimersByTimeAsync((STATE_REPLAYED_RETRY_WAIT_SECONDS - 1) * MS_PER_SECOND)
+    );
     expect(result.current.canRetry).toBe(false);
 
     // When
-    await act(() => vi.advanceTimersByTimeAsync(1000));
+    await act(() => vi.advanceTimersByTimeAsync(MS_PER_SECOND));
+
+    // Then
+    expect(result.current.canRetry).toBe(true);
+  });
+
+  test('given the wait over while the tab slept then Retry is offered once the tab is shown again, before its timer runs', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) => (request === 0 ? stateFailureKeptTwoMinutes() : stateOk(TEXAS)),
+      }),
+    });
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    expect(result.current.canRetry).toBe(false);
+    // The clock moves past the wait while the tab's timers are held back.
+    vi.setSystemTime(Date.now() + STATE_RETRY_WAIT_MS);
+
+    // When
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
 
     // Then
     expect(result.current.canRetry).toBe(true);
@@ -808,7 +837,7 @@ describe('useStateDistrictRuns compute', () => {
     ]);
   });
 
-  test('given a failure the Public API keeps for 30 days then Retry is not offered until then, and the reason says so', async () => {
+  test('given a failure the Public API keeps for 30 days then Retry is not offered until then, and the reason says it can take days', async () => {
     // Given
     serveApi({
       economy: economyWhere({
@@ -819,13 +848,15 @@ describe('useStateDistrictRuns compute', () => {
     const { result } = await computeAll();
     await waitFor(() => expect(result.current.status).toBe('partial'));
     expect(result.current.calculationFailures).toEqual([
-      { label: 'Texas', error: STATE_RETRY_WAIT_REASON },
+      { label: 'Texas', error: STATE_LONG_RETRY_WAIT_REASON },
     ]);
-    await act(() => vi.advanceTimersByTimeAsync((STATE_STORED_FAILURE_SECONDS - 1) * 1000));
+    await act(() =>
+      vi.advanceTimersByTimeAsync((STATE_STORED_FAILURE_SECONDS - 1) * MS_PER_SECOND)
+    );
     expect(result.current.canRetry).toBe(false);
 
     // When
-    await act(() => vi.advanceTimersByTimeAsync(1000));
+    await act(() => vi.advanceTimersByTimeAsync(MS_PER_SECOND));
 
     // Then
     expect(result.current.canRetry).toBe(true);

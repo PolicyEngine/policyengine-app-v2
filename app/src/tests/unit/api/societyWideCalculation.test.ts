@@ -35,6 +35,7 @@ import {
   PLAIN_TEXT_ERROR_BODY,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
 import {
+  economyCalculationError,
   ERROR_MESSAGES,
   FAILED_CALCULATION_BODY,
   HTTP_STATUS,
@@ -48,8 +49,10 @@ import {
   mockPendingResponse,
   mockSuccessResponse,
   mockUSPolicyEngineBundle,
+  READ_RETRY_AFTER_SECONDS,
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
+  UNREAD_RETRY_AFTER_SECONDS_BODIES,
 } from '@/tests/fixtures/api/societyWideMocks';
 import {
   LEGACY_NORTHERN_IRELAND_REGION_CODE,
@@ -762,57 +765,52 @@ describe('societyWide API', () => {
 });
 
 describe('failedCalculationOf', () => {
-  const failedCalculation = (status: number, body: unknown) =>
-    new EconomyCalculationError(`Society-wide calculation failed (${status})`, status, body);
-
   test('given a 502 with the Public API error body then gives the seconds it keeps the failure', () => {
     // When
     const failure = failedCalculationOf(
-      failedCalculation(HTTP_STATUS.BAD_GATEWAY, FAILED_CALCULATION_BODY)
+      economyCalculationError(HTTP_STATUS.BAD_GATEWAY, FAILED_CALCULATION_BODY)
     );
 
     // Then
     expect(failure).toEqual({ retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds });
   });
 
-  test.each([
-    ['0', 0],
-    ['a fraction', 1.5],
-  ])('given retry_after_seconds %s then the failure has those seconds', (_case, seconds) => {
-    // When
-    const failure = failedCalculationOf(
-      failedCalculation(HTTP_STATUS.BAD_GATEWAY, {
-        ...FAILED_CALCULATION_BODY,
-        retry_after_seconds: seconds,
-      })
-    );
+  test.each(READ_RETRY_AFTER_SECONDS)(
+    'given retry_after_seconds %s then the failure has those seconds',
+    (_case, seconds) => {
+      // When
+      const failure = failedCalculationOf(
+        economyCalculationError(HTTP_STATUS.BAD_GATEWAY, {
+          ...FAILED_CALCULATION_BODY,
+          retry_after_seconds: seconds,
+        })
+      );
 
-    // Then
-    expect(failure).toEqual({ retryAfterSeconds: seconds });
-  });
+      // Then
+      expect(failure).toEqual({ retryAfterSeconds: seconds });
+    }
+  );
 
-  test.each([
-    ['missing', { status: 'error', message: FAILED_CALCULATION_BODY.message, result: null }],
-    ['null', { ...FAILED_CALCULATION_BODY, retry_after_seconds: null }],
-    ['negative', { ...FAILED_CALCULATION_BODY, retry_after_seconds: -1 }],
-    ['a string', { ...FAILED_CALCULATION_BODY, retry_after_seconds: '120' }],
-  ])('given retry_after_seconds %s then the failure has no seconds', (_case, body) => {
-    // When
-    const failure = failedCalculationOf(failedCalculation(HTTP_STATUS.BAD_GATEWAY, body));
+  test.each(UNREAD_RETRY_AFTER_SECONDS_BODIES)(
+    'given retry_after_seconds %s then the failure has no seconds',
+    (_case, body) => {
+      // When
+      const failure = failedCalculationOf(economyCalculationError(HTTP_STATUS.BAD_GATEWAY, body));
 
-    // Then
-    expect(failure).toEqual({ retryAfterSeconds: null });
-  });
+      // Then
+      expect(failure).toEqual({ retryAfterSeconds: null });
+    }
+  );
 
   test.each([
-    ['a 502 without an error body', failedCalculation(HTTP_STATUS.BAD_GATEWAY, null)],
+    ['a 502 without an error body', economyCalculationError(HTTP_STATUS.BAD_GATEWAY, null)],
     [
       'a 502 whose body is a list',
-      failedCalculation(HTTP_STATUS.BAD_GATEWAY, [FAILED_CALCULATION_BODY]),
+      economyCalculationError(HTTP_STATUS.BAD_GATEWAY, [FAILED_CALCULATION_BODY]),
     ],
     [
       'another status with an error body',
-      failedCalculation(HTTP_STATUS.SERVICE_UNAVAILABLE, FAILED_CALCULATION_BODY),
+      economyCalculationError(HTTP_STATUS.SERVICE_UNAVAILABLE, FAILED_CALCULATION_BODY),
     ],
     [
       'a plain Error whose message reads like one',

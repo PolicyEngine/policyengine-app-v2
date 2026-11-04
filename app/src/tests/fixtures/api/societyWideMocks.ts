@@ -1,5 +1,8 @@
 import { vi } from 'vitest';
-import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
+import {
+  EconomyCalculationError,
+  SocietyWideCalculationResponse,
+} from '@/api/societyWideCalculation';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test IDs and constants
@@ -63,6 +66,24 @@ export const FAILED_CALCULATION_BODY = {
   result: null,
   retry_after_seconds: 120,
 };
+
+/** An economy error as the fetch throws it, for a given status and parsed body. */
+export const economyCalculationError = (status: number, body: unknown) =>
+  new EconomyCalculationError(`Society-wide calculation failed (${status})`, status, body);
+
+/** retry_after_seconds values read as they are: no wait, and a fraction of a second. */
+export const READ_RETRY_AFTER_SECONDS: Array<[string, number]> = [
+  ['0', 0],
+  ['a fraction', 1.5],
+];
+
+/** Error bodies whose retry_after_seconds is not read: missing, null, negative or a string. */
+export const UNREAD_RETRY_AFTER_SECONDS_BODIES: Array<[string, object]> = [
+  ['missing', { status: 'error', message: FAILED_CALCULATION_MESSAGE, result: null }],
+  ['null', { ...FAILED_CALCULATION_BODY, retry_after_seconds: null }],
+  ['negative', { ...FAILED_CALCULATION_BODY, retry_after_seconds: -1 }],
+  ['a string', { ...FAILED_CALCULATION_BODY, retry_after_seconds: '120' }],
+];
 
 /** The Public API's answer for a failed calculation: 502 with an error body. */
 export const mockFailedCalculationResponse = (body: object = FAILED_CALCULATION_BODY) => ({
