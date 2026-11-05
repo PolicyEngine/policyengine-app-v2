@@ -37,9 +37,9 @@ import { getUSStates } from '@/utils/regionStrategies';
 /**
  * Requests the state district runs keep in flight per browser tab, counting
  * record requests, run starts, polls, DELETEs of stored failures and result
- * writes. The Public API's production
- * service has about 12 warm request slots (2 instances of 6), and a new
- * instance takes about 6 minutes to start.
+ * writes. The Public API's production service has about 12 warm request
+ * slots (2 instances of 6), and a new instance takes about 6 minutes to
+ * start.
  */
 export const STATE_DISTRICT_REQUEST_CONCURRENCY = 4;
 
@@ -60,7 +60,7 @@ const REQUEST_FAILED_MESSAGE = "The request to PolicyEngine's servers failed";
 const RECORDS_FAILED_MESSAGE = 'Checking for a saved result failed';
 
 // When Retry's DELETE finds the state's stored result is no longer a failure.
-const NEWER_RUN_MESSAGE = 'A newer run is on the server: retry to check it';
+const NEWER_RUN_MESSAGE = "A newer run is on PolicyEngine's servers. Retry to check it";
 
 /**
  * The longest delay a browser timer keeps (2^31 − 1 ms, about 24.8 days); a
@@ -470,8 +470,9 @@ function calculationFailureReason(message: string): string {
  * Asks for a state's economy result. The Public API answers a calculation
  * that failed with 502 and an error body, which the fetch throws: that is the
  * state's answer, not a failed poll, so it becomes the state's error at once,
- * kept for the body's `retry_after_seconds`. Any other failure, such as a 502
- * from a proxy with no such body, is still a failed poll.
+ * with how long the Public API keeps it (`retry_after_seconds`) and when it
+ * will accept a DELETE of it (`delete_after_seconds`). Any other failure,
+ * such as a 502 from a proxy with no such body, is still a failed poll.
  */
 async function fetchStateRun(
   { reformPolicyId, baselinePolicyId, year }: Required<StateDistrictRunsRequest>,
@@ -559,8 +560,8 @@ async function sendOrJoinDelete(
  *   Retry deletes again while the Public API may still keep the failure.
  *
  * A DELETE still queued when the view closes is dropped, and the state
- * stays as it was; one already sent is joined by a later Retry
- * (sendOrJoinDelete).
+ * stays as it was. The answer to one already sent is kept for a view opened
+ * later, and a Retry while it is in flight waits for it (sendOrJoinDelete).
  */
 async function deleteStoredFailure(
   queryClient: QueryClient,
@@ -570,6 +571,17 @@ async function deleteStoredFailure(
   signal: AbortSignal
 ): Promise<StateRun | null> {
   const runKey = stateDistrictRunQueryKey({ reformPolicyId, baselinePolicyId, year }, region);
+  // Each outcome is also written to the cache, so it holds if the view closed
+  // while the DELETE was in flight: the query then goes back to this state,
+  // not to the one before the press, and the cancelled query's own answer is
+  // dropped. Only while the cache still holds the failure the DELETE was sent
+  // for, so an answer that arrives late never replaces a newer run.
+  const settle = (next: StateRun): StateRun => {
+    queryClient.setQueryData<StateRun>(runKey, (current) =>
+      current === failed ? next : undefined
+    );
+    return next;
+  };
   let deletion: StoredFailureDeletion;
   try {
     deletion = await sendOrJoinDelete(
@@ -579,40 +591,34 @@ async function deleteStoredFailure(
       signal
     );
   } catch (error) {
-    if (signal.aborted) {
+    if (signal.aborted && isAbortError(error)) {
       throw error;
     }
     // The state shows a short reason, so the error itself is logged.
     console.error("[useStateDistrictRuns] Could not delete a state's stored failure:", error);
-    return { ...failed, deleteFailed: true, retryAt: undefined };
+    return settle({ ...failed, deleteFailed: true, retryAt: undefined });
   }
   switch (deletion.outcome) {
     case 'deleted':
     case 'nothing-stored':
-      // No failure is stored now. If the view closes before the request
-      // answers, the query goes back to this state rather than to the one
-      // before the press, so the next Retry sends the request alone. Only
-      // while the cache still holds the failure the DELETE was sent for: an
-      // answer that arrives after its view closed never replaces a newer run.
-      queryClient.setQueryData<StateRun>(runKey, (current) =>
-        current === failed ? { ...failed, deletesFailure: false, deleteFailed: false } : undefined
-      );
+      // No failure is stored now, so the next Retry sends the request alone.
+      settle({ ...failed, deletesFailure: false, deleteFailed: false });
       return null;
     case 'too-soon':
       // Counted from the answer's arrival, so never earlier than the Public API accepts it.
-      return {
+      return settle({
         ...failed,
         deleteFailed: false,
         retryAt: Date.now() + deletion.deleteAfterSeconds * 1000,
-      };
+      });
     case 'not-a-failure':
-      return {
+      return settle({
         ...failed,
         error: NEWER_RUN_MESSAGE,
         deleteFailed: false,
         retryAt: undefined,
         deletesFailure: false,
-      };
+      });
   }
 }
 
@@ -620,7 +626,8 @@ async function deleteStoredFailure(
  * Sends one poll of a state's run through the tab's request limit, and
  * writes its result to the state's base report when that report does not
  * hold one yet. A failed state whose failure the Public API lets the app
- * delete has it deleted first (deleteStoredFailure). A poll still queued
+ * delete has it deleted first (deleteStoredFailure), while the Public API
+ * may still keep it (keptUntil). A poll still queued
  * when the view closes is dropped; one already sent still writes its
  * result. A result whose districts cannot be read fails the state, and is
  * not written.

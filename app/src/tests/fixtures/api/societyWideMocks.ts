@@ -106,11 +106,8 @@ export const DELETABLE_FAILED_CALCULATION_BODY = {
   delete_after_seconds: 7,
 };
 
-/** delete_after_seconds values read as they are: accepted now, and a fraction of a second. */
-export const READ_DELETE_AFTER_SECONDS: Array<[string, number]> = [
-  ['0', 0],
-  ['a fraction', 1.5],
-];
+/** delete_after_seconds values read as they are, as retry_after_seconds are: 0 and 1.5 seconds. */
+export const READ_DELETE_AFTER_SECONDS = READ_RETRY_AFTER_SECONDS;
 
 /**
  * 502 bodies whose delete_after_seconds is not read: missing (a Public API
@@ -180,7 +177,7 @@ export const UNREADABLE_DELETE_REFUSAL_BODIES: Array<[string, string, unknown]> 
 ];
 
 /** A 404 body in another service's shape, without the Public API's error envelope. */
-export const NOT_FOUND_WITHOUT_ENVELOPE = { detail: 'Not Found' };
+const NOT_FOUND_WITHOUT_ENVELOPE = { detail: 'Not Found' };
 
 /** A state's economy query, as a state run sends it. */
 export const STATE_ECONOMY_PARAMS = { region: 'state/ca', time_period: CURRENT_YEAR };

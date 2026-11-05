@@ -176,9 +176,10 @@ const BREAKDOWN_REQUEST: EconomyRequestKind = {
 };
 
 /**
- * A non-ok answer from the economy endpoint. The message reads as it always
- * has ("Society-wide calculation failed (502): …"), for people and logs;
- * code reads the HTTP status and the parsed body instead.
+ * A non-ok answer from the economy endpoint, to a GET or a DELETE. The
+ * message names the request ("Society-wide calculation failed (502): …",
+ * as it always has, or "Economy DELETE failed (409): …"), for people and
+ * logs; code reads the HTTP status and the parsed body instead.
  */
 export class EconomyCalculationError extends Error {
   /** The answer's HTTP status. */

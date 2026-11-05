@@ -14,6 +14,7 @@ import {
   BROWSER_TIMER_LIMIT_MS,
   CALIFORNIA,
   economyWhere,
+  FAILED_STATE_DELETES,
   fakeStateDistrictApi,
   MAX_REQUESTS_IN_FLIGHT,
   MS_PER_SECOND,
@@ -31,6 +32,7 @@ import {
   STATE_ERROR_MESSAGE,
   STATE_EXPECTED_MS,
   STATE_FAILURE_REASON,
+  STATE_FAILURES_WITHOUT_DELETE,
   STATE_LAST_MINUTE_RETRY_WAIT_SECONDS,
   STATE_LONG_RETRY_WAIT_REASON,
   STATE_NEWER_RUN_REASON,
@@ -54,10 +56,8 @@ import {
   STATE_TIME_LIMIT_MESSAGE,
   STATE_TIME_LIMIT_MS,
   stateDeleteMethodNotAllowed,
-  stateDeleteNetworkFailure,
   stateDeleteNotAFailure,
   stateDeleteTooSoon,
-  stateDeleteUnavailable,
   stateEconomyUrl,
   stateErrorPage,
   stateFailure,
@@ -1014,18 +1014,7 @@ describe('useStateDistrictRuns compute', () => {
     ]);
   });
 
-  test.each([
-    [
-      'without delete_after_seconds, as from a deploy from before the DELETE',
-      stateFailureKeptTwoMinutes,
-      STATE_RETRY_WAIT_MS,
-    ],
-    [
-      'with delete_after_seconds null, as when no failure is kept',
-      () => stateFailure(STATE_ERROR_MESSAGE, null, null),
-      0,
-    ],
-  ])(
+  test.each(STATE_FAILURES_WITHOUT_DELETE)(
     'given a failure answered %s then Retry, once offered, requests the state with no DELETE',
     async (_case, failure, waitMs) => {
       // Given
@@ -1137,12 +1126,7 @@ describe('useStateDistrictRuns compute', () => {
     expect(api.economyMethodsFor(TEXAS)).toEqual(['GET', 'DELETE', 'GET']);
   });
 
-  test.each([
-    ['answered with an error page', stateErrorPage],
-    ['answered with the Public API’s 502 error body', stateDeleteUnavailable],
-    ['refused by a deploy without the DELETE', stateDeleteMethodNotAllowed],
-    ['failed on the network', stateDeleteNetworkFailure],
-  ])(
+  test.each(FAILED_STATE_DELETES)(
     'given the DELETE %s then the state stays failed with a short reason, and Retry deletes again',
     async (_case, failedDelete) => {
       // Given
@@ -1302,6 +1286,35 @@ describe('useStateDistrictRuns compute', () => {
       expect(api.economyMethodsFor(TEXAS)).toEqual(sentInAll);
     }
   );
+
+  test('given the view closed while its DELETE is in flight and the DELETE refused as too soon then the reopened view keeps Retry hidden for the seconds the answer gives', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) => (request === 0 ? stateFailureDeletable() : stateOk(TEXAS)),
+      }),
+      deleteFailure: () => stateDeleteTooSoon(),
+    });
+    const queryClient = createQueryClient();
+    const first = await computeAll(STATE_RUNS_REQUEST, queryClient);
+    await waitFor(() => expect(first.result.current.status).toBe('partial'));
+    api.holdDeletes();
+    act(() => first.result.current.retry());
+    await waitFor(() => expect(api.deleteRequestsFor(TEXAS)).toHaveLength(1));
+    first.unmount();
+    api.releaseDeletes();
+    await act(() => vi.advanceTimersByTimeAsync(0));
+
+    // When
+    const second = renderRuns(STATE_RUNS_REQUEST, queryClient);
+
+    // Then
+    await waitFor(() => expect(second.result.current.status).toBe('partial'));
+    expect(second.result.current.canRetry).toBe(false);
+    expect(second.result.current.calculationFailures).toEqual([
+      { label: 'Texas', error: STATE_DELETE_WAIT_REASON },
+    ]);
+  });
 
   test('given two views of the report then Retry pressed in each, as drawn, deletes and requests the state once', async () => {
     // Given

@@ -6,6 +6,12 @@ import type {
 import { BASE_URL } from '@/constants';
 import type { Region } from '@/models/region';
 import {
+  DELETE_NOT_A_FAILURE_BODY,
+  DELETE_NOTHING_STORED_BODY,
+  DELETE_REFUSED_SECONDS,
+  DELETE_TOO_SOON_BODY,
+} from '@/tests/fixtures/api/societyWideMocks';
+import {
   CONGRESSIONAL_DISTRICTS_GEOJSON_PATH,
   MOCK_GEOJSON_FEATURE_COLLECTION,
 } from '@/tests/fixtures/components/visualization/usDistrictChoroplethMapMocks';
@@ -300,7 +306,7 @@ export const STATE_DELETE_WAIT_REASON =
   'The simulation did not finish. Retry can start a new run in under a minute';
 
 /** The seconds a refused DELETE says are left before the Public API will accept one. */
-export const STATE_DELETE_REFUSED_SECONDS = 4;
+export const STATE_DELETE_REFUSED_SECONDS = DELETE_REFUSED_SECONDS;
 
 /** A DELETE's answer for a state: an answer, or an error the request throws. */
 export type StateDeleteResponse = Response | Error;
@@ -310,21 +316,15 @@ export const stateFailureDeleted = (): Response => new Response(null, { status: 
 
 /** 404: the Public API had nothing stored for the state. */
 export const stateNothingStored = (): Response =>
-  Response.json({ status: 'error', message: 'Nothing stored.', result: null }, { status: 404 });
+  Response.json(DELETE_NOTHING_STORED_BODY, { status: 404 });
 
 /** 409: the state's failure is too new to delete; a DELETE is accepted in `seconds`. */
 export const stateDeleteTooSoon = (seconds = STATE_DELETE_REFUSED_SECONDS): Response =>
-  Response.json(
-    { status: 'error', message: 'Too soon.', result: null, delete_after_seconds: seconds },
-    { status: 409 }
-  );
+  Response.json({ ...DELETE_TOO_SOON_BODY, delete_after_seconds: seconds }, { status: 409 });
 
 /** 409: the state's stored result is not a failure, because a newer run is computing or done. */
 export const stateDeleteNotAFailure = (): Response =>
-  Response.json(
-    { status: 'error', message: 'Not a failure.', result: null, delete_after_seconds: null },
-    { status: 409 }
-  );
+  Response.json(DELETE_NOT_A_FAILURE_BODY, { status: 409 });
 
 /** 405: a Public API instance without the DELETE refuses it. */
 export const stateDeleteMethodNotAllowed = (): Response =>
@@ -347,7 +347,7 @@ export const stateDeleteNetworkFailure = (): Error => new TypeError('Failed to f
 export const stateFailureNoLongerKept = (): Response => stateFailure(STATE_ERROR_MESSAGE, 0, 0);
 
 /** The reason the app gives when the DELETE finds a newer run in place of the failure. */
-export const STATE_NEWER_RUN_REASON = 'A newer run is on the server: retry to check it';
+export const STATE_NEWER_RUN_REASON = "A newer run is on PolicyEngine's servers. Retry to check it";
 
 /** An error page in place of the Public API's answer, as a proxy or Cloud Run sends one. */
 export const stateErrorPage = (): Response =>
@@ -359,6 +359,32 @@ export const stateErrorPage = (): Response =>
 export const STATE_REQUEST_FAILURE_REASON = "The request to PolicyEngine's servers failed";
 /** The reason the app gives for a state whose records could not be looked up. */
 export const STATE_RECORDS_FAILURE_REASON = 'Checking for a saved result failed';
+
+/**
+ * Failed state runs whose answer lets no DELETE clear them, each with the
+ * milliseconds before Retry is offered: from a deploy from before the
+ * DELETE (no delete_after_seconds), and with no failure kept (null).
+ */
+export const STATE_FAILURES_WITHOUT_DELETE: Array<[string, () => Response, number]> = [
+  [
+    'without delete_after_seconds, as from a deploy from before the DELETE',
+    stateFailureKeptTwoMinutes,
+    STATE_RETRY_WAIT_MS,
+  ],
+  [
+    'with delete_after_seconds null, as when no failure is kept',
+    () => stateFailure(STATE_ERROR_MESSAGE, null, null),
+    0,
+  ],
+];
+
+/** DELETEs of a state's stored failure that fail, as the request answers or throws. */
+export const FAILED_STATE_DELETES: Array<[string, () => StateDeleteResponse]> = [
+  ['answered with an error page', stateErrorPage],
+  ['answered with the Public API’s 502 error body', stateDeleteUnavailable],
+  ['refused by a deploy without the DELETE', stateDeleteMethodNotAllowed],
+  ['failed on the network', stateDeleteNetworkFailure],
+];
 
 /** A state's result whose districts are not a list, so they cannot be read. */
 export const stateOkWithUnreadableDistricts = (region: string): StateEconomyResponse => ({
