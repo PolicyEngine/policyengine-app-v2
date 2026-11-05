@@ -1,7 +1,6 @@
 {
-  "policyengine_uk": "2.170.0",
-  "policyengine_core": "3.34.2",
-  "policyengine_uk_commit": "2da212abcf2086337fc088a4a1236f4ae7b6af63",
+  "policyengine_uk": "2.175.5",
+  "policyengine_core": "3.34.7",
   "s57_allowance": {
     "2022": 12960,
     "2023": 14270,

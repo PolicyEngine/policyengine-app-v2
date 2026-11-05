@@ -81,7 +81,7 @@ Minimum wage workers ["tend to work part-time"](https://assets.publishing.servic
   "xFormat": {
     "decimals": 1
   },
-  "source": "PolicyEngine UK 2.170.0; hypothetical worker, 2026-27; we assume no behavioural response.",
+  "source": "PolicyEngine UK 2.175.5; hypothetical worker, 2026-27; we assume no behavioural response.",
   "series": [
     {
       "key": "aligned",
@@ -398,4 +398,4 @@ A single worker with no children and the same rent receives no UC at 35 hours, s
 - A Scottish taxpayer at 35 hours pays the same extra amounts.
 - A one-earner couple on the same pay who claim the Marriage Allowance pay £772 more income tax in 2026-27 and £898 more in 2027-28, because the amount they can transfer rises with the Personal Allowance.
 - We hold pay and hours fixed, so the estimates include no behavioural response.
-- We calculate every figure with [PolicyEngine UK 2.170.0](https://github.com/PolicyEngine/policyengine-uk/tree/2da212abcf2086337fc088a4a1236f4ae7b6af63) on hypothetical households, give no count of the workers in each case, and publish the [script and results](https://github.com/PolicyEngine/policyengine-app-v2/tree/main/analysis/uk-threshold-freeze-nlw).
+- We calculate every figure with [PolicyEngine UK 2.175.5](https://pypi.org/project/policyengine-uk/2.175.5/) on hypothetical households, give no count of the workers in each case, and publish the [script and results](https://github.com/PolicyEngine/policyengine-app-v2/tree/main/analysis/uk-threshold-freeze-nlw).

@@ -1,0 +1,310 @@
+{
+ "policyengine_uk": "2.175.5",
+ "policyengine_core": "3.34.7",
+ "council_bills": {
+  "MERTON": 1431.17,
+  "KINGSTON_UPON_THAMES": 1739.47,
+  "NEWHAM": 1296.15,
+  "WESTMINSTER": 699.7,
+  "OXFORD": 1785.6
+ },
+ "benefit_runs_out_at_hours": {
+  "single_social_rent": {
+   "uc_raised": 31.88,
+   "uc_frozen": 33.95
+  },
+  "single_kingston_upon_thames": {
+   "ctr_raised": 31.16,
+   "uc_raised": 31.88,
+   "ctr_frozen": 33.22,
+   "uc_frozen": 33.95
+  }
+ },
+ "chart_hours": [
+  15.0,
+  15.5,
+  16.0,
+  16.5,
+  17.0,
+  17.5,
+  18.0,
+  18.5,
+  19.0,
+  19.02,
+  19.5,
+  20.0,
+  20.5,
+  21.0,
+  21.5,
+  22.0,
+  22.5,
+  23.0,
+  23.5,
+  23.6,
+  24.0,
+  24.33,
+  24.5,
+  25.0,
+  25.5,
+  26.0,
+  26.5,
+  27.0,
+  27.5,
+  28.0,
+  28.5,
+  29.0,
+  29.5,
+  30.0,
+  30.5,
+  31.0,
+  31.16,
+  31.5,
+  31.88,
+  32.0,
+  32.5,
+  33.0,
+  33.22,
+  33.5,
+  33.95,
+  34.0,
+  34.5,
+  35.0,
+  35.5,
+  36.0,
+  36.5,
+  37.0,
+  37.5,
+  38.0,
+  38.5,
+  39.0,
+  39.5,
+  40.0
+ ],
+ "largest_gap_between_chart_and_model_on_a_grid_of_0_01_hours": {
+  "single": 0.1,
+  "lone_parent": 0.05,
+  "single_social_rent": 2.46,
+  "single_kingston_upon_thames": 2.46
+ },
+ "minimum_income_floor": [
+  {
+   "self_employed": true,
+   "income": 3000,
+   "floor_applies": true,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 0.0,
+   "uc_frozen": 11639.5,
+   "uc_raised": 11253.4,
+   "net_income_change": 386.1
+  },
+  {
+   "self_employed": true,
+   "income": 8000,
+   "floor_applies": true,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 0.0,
+   "uc_frozen": 11639.5,
+   "uc_raised": 11253.4,
+   "net_income_change": 386.1
+  },
+  {
+   "self_employed": true,
+   "income": 12000,
+   "floor_applies": true,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 0.0,
+   "uc_frozen": 11639.5,
+   "uc_raised": 11253.4,
+   "net_income_change": 386.1
+  },
+  {
+   "self_employed": true,
+   "income": 14000,
+   "floor_applies": true,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 286.0,
+   "uc_frozen": 11639.5,
+   "uc_raised": 11253.4,
+   "net_income_change": 100.1
+  },
+  {
+   "self_employed": true,
+   "income": 16000,
+   "floor_applies": true,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 686.0,
+   "uc_frozen": 11639.5,
+   "uc_raised": 11253.4,
+   "net_income_change": -299.9
+  },
+  {
+   "self_employed": true,
+   "income": 20000,
+   "floor_applies": true,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 702.0,
+   "uc_frozen": 11569.33,
+   "uc_raised": 11183.23,
+   "net_income_change": -315.9
+  },
+  {
+   "self_employed": true,
+   "income": 24000,
+   "floor_applies": true,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 702.0,
+   "uc_frozen": 9941.33,
+   "uc_raised": 9555.23,
+   "net_income_change": -315.9
+  },
+  {
+   "self_employed": false,
+   "income": 3000,
+   "floor_applies": false,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 0.0,
+   "uc_frozen": 18688.64,
+   "uc_raised": 18688.64,
+   "net_income_change": 0.0
+  },
+  {
+   "self_employed": false,
+   "income": 8000,
+   "floor_applies": false,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 0.0,
+   "uc_frozen": 17106.84,
+   "uc_raised": 17106.84,
+   "net_income_change": 0.0
+  },
+  {
+   "self_employed": false,
+   "income": 12000,
+   "floor_applies": false,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 0.0,
+   "uc_frozen": 14906.84,
+   "uc_raised": 14906.84,
+   "net_income_change": 0.0
+  },
+  {
+   "self_employed": false,
+   "income": 14000,
+   "floor_applies": false,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 400.4,
+   "uc_frozen": 14027.06,
+   "uc_raised": 13806.84,
+   "net_income_change": -180.18
+  },
+  {
+   "self_employed": false,
+   "income": 16000,
+   "floor_applies": false,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 960.4,
+   "uc_frozen": 13235.06,
+   "uc_raised": 12706.84,
+   "net_income_change": -432.18
+  },
+  {
+   "self_employed": false,
+   "income": 20000,
+   "floor_applies": false,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 982.8,
+   "uc_frozen": 11651.06,
+   "uc_raised": 11110.52,
+   "net_income_change": -442.26
+  },
+  {
+   "self_employed": false,
+   "income": 24000,
+   "floor_applies": false,
+   "floor_frozen": 17940.62,
+   "floor_raised": 18642.62,
+   "extra_tax_and_ni": 982.8,
+   "uc_frozen": 10067.06,
+   "uc_raised": 9526.52,
+   "net_income_change": -442.26
+  }
+ ],
+ "higher_earners": [
+  {
+   "pay": 45000,
+   "allowance_frozen": 12570.0,
+   "allowance_raised": 16080.0,
+   "extra_income_tax": 702.0,
+   "extra_ni": 280.8
+  },
+  {
+   "pay": 50270,
+   "allowance_frozen": 12570.0,
+   "allowance_raised": 16080.0,
+   "extra_income_tax": 702.0,
+   "extra_ni": 280.8
+  },
+  {
+   "pay": 55000,
+   "allowance_frozen": 12570.0,
+   "allowance_raised": 16080.0,
+   "extra_income_tax": 1404.0,
+   "extra_ni": 280.8
+  },
+  {
+   "pay": 60000,
+   "allowance_frozen": 12570.0,
+   "allowance_raised": 16080.0,
+   "extra_income_tax": 1404.0,
+   "extra_ni": 280.8
+  },
+  {
+   "pay": 100000,
+   "allowance_frozen": 12570.0,
+   "allowance_raised": 16080.0,
+   "extra_income_tax": 1404.0,
+   "extra_ni": 280.8
+  },
+  {
+   "pay": 110000,
+   "allowance_frozen": 7570.0,
+   "allowance_raised": 11080.0,
+   "extra_income_tax": 1404.0,
+   "extra_ni": 280.8
+  },
+  {
+   "pay": 125140,
+   "allowance_frozen": 0.0,
+   "allowance_raised": 3510.0,
+   "extra_income_tax": 1404.0,
+   "extra_ni": 280.8
+  },
+  {
+   "pay": 132160,
+   "allowance_frozen": 0.0,
+   "allowance_raised": 0.0,
+   "extra_income_tax": 0.0,
+   "extra_ni": 280.8
+  },
+  {
+   "pay": 150000,
+   "allowance_frozen": 0.0,
+   "allowance_raised": 0.0,
+   "extra_income_tax": 0.0,
+   "extra_ni": 280.8
+  }
+ ]
+}

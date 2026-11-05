@@ -19,9 +19,32 @@ ACTUAL_PT_WEEK = 241.73  # 12,570 / 52, as the model stores it
 # Alternative assumed allowances for the sensitivity sentence in the post.
 ALTERNATIVE_PA = {2026: 16_070, 2027: 16_632}
 
+# The OBR's "with indexation" thresholds, in £ a year, from Table 4.19 of the
+# receipts tables of its October 2026 outlook.
+OBR_INDEXED = {
+    2026: {"personal_allowance": 16_070, "higher_rate_threshold": 64_470, "primary_threshold": 12_272},
+    2027: {"personal_allowance": 16_570, "higher_rate_threshold": 66_470, "primary_threshold": 12_636},
+}
+
 # Weekly hours at which pay reaches £12,570, £15,600 and £16,080 at £12.71 an
 # hour, so the chart's straight segments meet at its kinks.
 CHART_KINKS = (19.02, 23.6, 24.33)
+
+# Band D council tax for 2026-27, from the table PolicyEngine UK stores from
+# MHCLG's Council tax levels set by local authorities in England, Table 10.
+BAND_D = {
+    "MERTON": 2_146.76,
+    "KINGSTON_UPON_THAMES": 2_609.20,
+    "NEWHAM": 1_944.23,
+    "WESTMINSTER": 1_049.55,
+    "OXFORD": 2_678.40,
+}
+BAND_C_SHARE = 8 / 9  # Local Government Finance Act 1992 s5
+SINGLE_PERSON_SHARE = 0.75  # Local Government Finance Act 1992 s11
+
+
+def council_bill(council: str) -> float:
+    return round(BAND_D[council] * BAND_C_SHARE * SINGLE_PERSON_SHARE, 2)
 
 
 def s57_allowance(cpi_sep: dict = CPI_SEP) -> dict:

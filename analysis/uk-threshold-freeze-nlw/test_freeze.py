@@ -298,7 +298,6 @@ def test_cpi_list_in_the_post_matches_the_script():
 
 def test_post_states_the_recorded_model_version():
     assert f"PolicyEngine UK {META['policyengine_uk']}" in TEXT
-    assert META["policyengine_uk_commit"] in TEXT
 
 
 # The live model

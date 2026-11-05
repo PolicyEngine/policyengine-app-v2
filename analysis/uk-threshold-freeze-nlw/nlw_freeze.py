@@ -170,7 +170,6 @@ def main():
     meta = {
         "policyengine_uk": importlib.metadata.version("policyengine-uk"),
         "policyengine_core": importlib.metadata.version("policyengine-core"),
-        "policyengine_uk_commit": "2da212abcf2086337fc088a4a1236f4ae7b6af63",
         "s57_allowance": S57_PA,
         "pt_2021_week": PT_2021_WEEK,
         "pt_jul22_week": PT_JUL22_WEEK,
