@@ -15,7 +15,7 @@ analysis/uk-threshold-freeze-nlw/.venv/bin/python -m pytest analysis/uk-threshol
 
 `nlw_freeze.py` runs PolicyEngine UK on hypothetical households and writes `results.csv` and `meta.json`. It uses no microdata. `thresholds.py` holds the CPI series and threshold paths and needs no model code. `test_freeze.py` checks the invariants below, compares every table, the chart, the key prose figures and the post's metadata with `results.csv`, and reruns two rows on the live model when PolicyEngine UK is installed.
 
-The run used PolicyEngine UK 2.170.0 at commit [`2da212ab`](https://github.com/PolicyEngine/policyengine-uk/tree/2da212abcf2086337fc088a4a1236f4ae7b6af63) and policyengine-core 3.34.2. That commit carries the Budget baseline from [policyengine-uk#2719](https://github.com/PolicyEngine/policyengine-uk/pull/2719). PyPI does not yet carry 2.170.0, so `requirements.txt` pins the commit.
+The run used PolicyEngine UK 2.170.0 at commit [`2da212ab`](https://github.com/PolicyEngine/policyengine-uk/tree/2da212abcf2086337fc088a4a1236f4ae7b6af63) and policyengine-core 3.34.2. That commit carries the Budget baseline from [policyengine-uk#2719](https://github.com/PolicyEngine/policyengine-uk/pull/2719). PyPI has no 2.170.0 release, so `requirements.txt` pins the commit. Running `nlw_freeze.py` on 2.175.3 with policyengine-core 3.34.7, both from PyPI, gives a byte-identical `results.csv`.
 
 ## Comparisons
 
