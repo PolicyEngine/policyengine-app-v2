@@ -44,6 +44,7 @@ import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { useV3VariablesInBackground } from '@/hooks/useV3Variables';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
+import { describeCalculationError } from '@/libs/flagship/calculationError';
 import {
   isUntitledReform,
   reportYearLabel,
@@ -306,6 +307,12 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     region && report && region !== report.countryId
       ? populationLabel(region, economyRegions)
       : undefined;
+  // Where the reform ran, as a failed calculation's message says it.
+  const calculationScope = regionLabel
+    ? `for ${regionLabel}`
+    : report?.countryId === 'uk'
+      ? 'UK-wide'
+      : 'nationwide';
   // A budget window's years. The run scored the first in full; another
   // year runs once it is opened, or with the rest from the All years view.
   // Blocked, the report shows its own year only: another would need a run.
@@ -470,13 +477,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           </Title>
           <ReportCalculationError
             message={calcStatus.error?.message}
-            scope={
-              regionLabel
-                ? `for ${regionLabel}`
-                : report?.countryId === 'uk'
-                  ? 'UK-wide'
-                  : 'nationwide'
-            }
+            scope={calculationScope}
             // The reform comes back as a draft to edit; without it, Build starts blank.
             onEdit={
               meta?.provisions.length && report
@@ -591,14 +592,21 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     }
   };
   const shownOutput = otherYear ? (yearEconomy?.output ?? null) : output;
+  // A failed year, said plainly: the API's error as a reader can act on it
+  // (a year outside the model's data in the API's own words), not the raw
+  // response, and a retry only where one can help.
+  const yearError =
+    yearEconomy?.status === 'error'
+      ? describeCalculationError(yearEconomy.message, calculationScope)
+      : null;
   const yearPending =
     otherYear && yearEconomy?.status !== 'complete' ? (
-      yearEconomy?.status === 'error' ? (
+      yearError ? (
         <ErrorState
           compact
           title={`Could not calculate ${reportYearLabel(year, report?.countryId)}`}
-          description={yearEconomy.message}
-          onRetry={yearEconomy.retry}
+          description={yearError.body}
+          onRetry={yearError.retryable ? yearEconomy?.retry : undefined}
         />
       ) : (
         <RunProgress

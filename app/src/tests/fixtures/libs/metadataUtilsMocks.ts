@@ -149,3 +149,22 @@ export function searchVisibilityState(
 ): RootState {
   return { metadata: { parameters } } as RootState;
 }
+
+/** The US model's years as the Public API's metadata lists them: newest first. */
+export const US_TIME_PERIODS_NEWEST_FIRST = [2035, 2034, 2033, 2032, 2031, 2030, 2029, 2028].map(
+  (year) => ({ name: year, label: String(year) })
+);
+
+/** Metadata state whose economy options list the given years. */
+export const stateWithTimePeriods = (
+  timePeriods: Array<{ name: number; label: string }>
+): RootState => {
+  const state = mockStateWithMetadata() as RootState;
+  return {
+    ...state,
+    metadata: {
+      ...state.metadata,
+      economyOptions: { ...state.metadata.economyOptions, time_period: timePeriods },
+    },
+  };
+};

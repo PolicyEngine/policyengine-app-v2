@@ -29,6 +29,21 @@ export const getTaxYears = createSelector(
   }
 );
 
+/**
+ * The last year the country's model and data can simulate: the latest
+ * year in the metadata's economy_options.time_period. Null until the
+ * metadata has loaded, when no year is known to be out of range.
+ */
+export const getLastSupportedYear = createSelector(
+  (state: RootState) => state.metadata.economyOptions.time_period,
+  (timePeriods): number | null => {
+    const years = (timePeriods ?? [])
+      .map((timePeriod) => Number(timePeriod.name))
+      .filter((year) => Number.isFinite(year));
+    return years.length > 0 ? Math.max(...years) : null;
+  }
+);
+
 export const getDateRange = createSelector(
   (state: RootState) => state.metadata.economyOptions.time_period,
   (timePeriods) => {
