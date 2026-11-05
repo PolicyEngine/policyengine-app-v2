@@ -268,7 +268,7 @@ def test_prose_figures_match_results():
         f"{spread('2027-28', 'freeze_tax_and_ni', 'lone_parent')}, "
         f"{spread('2027-28', 'uc_if_indexed_minus_base', 'lone_parent', -1)}, "
         f"and {spread('2027-28', 'freeze_net_loss', 'lone_parent')}",
-        f"they receive {gbp(float(row(household='lone_parent')['uc_base']))} of UC",
+        f"They receive {gbp(float(row(household='lone_parent')['uc_base']))} of UC",
         f"pay {gbp(float(META['ni_2021_rules']['2026']['rules_2021']))} of NI in 2026-27",
         f"against {gbp(float(META['ni_2021_rules']['2026']['actual']))} now",
         f"pays {gbp(float(row('2026-27', path='alternative')['freeze_tax_and_ni']))} more income tax and NI in 2026-27"

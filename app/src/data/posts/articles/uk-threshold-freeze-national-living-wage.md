@@ -1,11 +1,18 @@
-Parliament has fixed the Personal Allowance at £12,570 until April 2031, and the government plans to hold the National Insurance (NI) primary threshold at the same level. A worker whose pay rises while those thresholds stand still pays income tax and NI on more of their pay, an effect economists call fiscal drag. In the [Budget on 28 October 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#additional-support-for-households), the government announced a National Living Wage of £13.21 an hour from April 2027. We estimate how much more income tax and NI a single worker on the National Living Wage pays than if the Treasury had raised the Personal Allowance with inflation. We compare five paths for the NI threshold.
+Parliament has fixed the Personal Allowance at £12,570 until April 2031, and the government plans to hold the National Insurance (NI) primary threshold at the same level. A worker whose pay rises while those thresholds stand still pays income tax and NI on more of their pay, an effect economists call fiscal drag. In the [Budget on 28 October 2026](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#additional-support-for-households), the government announced a National Living Wage of £13.21 an hour from April 2027. We estimate how much more income tax and NI a single worker on the National Living Wage pays than if the Treasury had raised the Personal Allowance with inflation, across five paths for the NI threshold. We follow the difference through Universal Credit (UC) and Council Tax Reduction to net income, and we run the same comparison for all UK households.
 
 For a single worker under State Pension age on the National Living Wage, with no other income, we find:
 
 - A full-time worker pays £702 more income tax in 2026-27 and £816 more in 2027-28 than if the Treasury had raised the Personal Allowance with inflation each April from 2022.
 - Parliament raised the NI threshold 27% in July 2022, so the extra NI depends on the path the Treasury would otherwise have set. Across the five paths we compare, the worker pays £678 to £983 more income tax and NI in 2026-27, and £816 to £1,142 more in 2027-28.
 - A part-time worker on £12.71 an hour pays no income tax or NI at 19 hours a week or fewer, and pays the full extra £702 of income tax from about 24.3 hours.
-- A worker on Universal Credit (UC) pays the same extra income tax and NI. While UC stays in payment, they get 55p more UC for each £1 of it, so their net income falls by 45p for each £1.
+- A worker on UC pays the same extra income tax and NI. While UC stays in payment, they get 55p more UC for each £1 of it, so their net income falls by 45p for each £1. In a council that takes 20p of Council Tax Reduction for each £1 of income, it falls by 36p. Once their UC and Council Tax Reduction run out, they lose the whole £1.
+
+Across UK households, we estimate:
+
+- Households pay £29.7 billion to £37.3 billion more income tax and NI in 2026-27 across the five paths, and £35.9 billion to £44.1 billion more in 2027-28. They get about 3p of each £1 back in benefits.
+- Households in the ninth income decile have 2.6% less net income in 2026-27 than if the government had raised the NI threshold with the allowance, and households in the lowest decile have 0.9% less.
+- On that path, the 2.4 million employees on £20,000 to £25,000, a band that includes full-time pay at the National Living Wage, pay £996 more income tax and NI on average in 2026-27 and have £937 less net income.
+- On that path, 481,000 more people fall below the absolute poverty line before housing costs in 2026-27, and 325,000 fewer fall below the relative line, which moves with median income.
 
 ## How the thresholds reached £12,570
 
@@ -385,11 +392,11 @@ A worker who pays into a net pay pension scheme pays income tax on less of their
 
 In Great Britain, the Department for Work and Pensions counts [earnings after income tax and NI](https://www.legislation.gov.uk/uksi/2013/376/regulation/55) when it works out UC, then [reduces the award by 55p](https://www.legislation.gov.uk/uksi/2013/376/regulation/22) for each £1 of those earnings above any work allowance. A worker on UC who pays £1 more income tax or NI therefore gets 55p more UC and ends up 45p down, as long as UC stays in payment. They still pay the whole amount to HMRC.
 
-For UC, we assume employers pay workers the same amount each month. Take a lone parent with two children aged 4 and 7, who works 35 hours on the National Living Wage, has no childcare costs and pays £110 a week in social rent. We estimate they receive £9,835 of UC in 2026-27. Across the five paths, they pay £678 to £983 more income tax and NI, receive £373 to £541 more UC, and have £305 to £442 less net income. In 2027-28, those figures rise to £816 to £1,142, £449 to £628, and £367 to £514.
+For UC, we assume employers pay workers the same amount each month. Take a lone parent with two children aged 4 and 7, who works 35 hours on the National Living Wage, has no childcare costs and pays £110 a week in social rent. They receive £9,835 of UC in 2026-27. Across the five paths, they pay £678 to £983 more income tax and NI, receive £373 to £541 more UC, and have £305 to £442 less net income. In 2027-28, those figures rise to £816 to £1,142, £449 to £628, and £367 to £514.
 
 A single worker with no children and the same rent also loses 45p for each £1, which comes to £442 from about 24.3 hours. Their UC runs out at about 34 hours with thresholds frozen, and would have run out at about 32 hours if the government had raised the allowance and NI threshold together. From about 34 hours, they have the full £983 less.
 
-In England, [each council makes its own](https://www.legislation.gov.uk/ukpga/1992/14/section/13A) Council Tax Reduction scheme. PolicyEngine UK runs the working-age schemes of five councils, and our other examples leave Council Tax Reduction out. For example, [Kingston upon Thames](https://www.kingston.gov.uk/sites/default/files/2026-03/Council%20Tax%20Reduction%20Scheme%202026%20-%202027.pdf) cuts the reduction of a working-age UC claimant by 20p for each £1 of income above their maximum UC award and counts their UC as income, so they get back 9p of the 45p and end up 36p down. A single renter there with a Band C bill of £1,739, after the [25% discount for living alone](https://www.legislation.gov.uk/ukpga/1992/14/section/11), has £354 less net income from about 24.3 hours to about 31 hours. Beyond that, their reduction and then their UC run out, and from about 34 hours they have the full £983 less.
+In England, [each council makes its own](https://www.legislation.gov.uk/ukpga/1992/14/section/13A) Council Tax Reduction scheme. PolicyEngine UK runs the working-age schemes of five councils, and our other examples leave Council Tax Reduction out. For example, [Kingston upon Thames](https://www.kingston.gov.uk/sites/default/files/2026-03/Council%20Tax%20Reduction%20Scheme%202026%20-%202027.pdf) cuts the reduction of a working-age UC claimant by 20p for each £1 of income above their maximum UC award, and it counts their UC as income. Of the 45p, they get back 9p and end up 36p down. A single renter there with a Band C bill of £1,739, after the [25% discount for living alone](https://www.legislation.gov.uk/ukpga/1992/14/section/11), has £354 less net income from about 24.3 hours to about 31 hours. Beyond that, their reduction and then their UC run out, and from about 34 hours they have the full £983 less.
 
 ```chart
 {
@@ -417,7 +424,7 @@ In England, [each council makes its own](https://www.legislation.gov.uk/ukpga/19
     {
       "key": "loneParent",
       "name": "Lone parent on UC",
-      "color": "secondary"
+      "color": "quinary"
     },
     {
       "key": "renter",
@@ -427,7 +434,7 @@ In England, [each council makes its own](https://www.legislation.gov.uk/ukpga/19
     {
       "key": "kingston",
       "name": "Single renter in Kingston upon Thames on UC and Council Tax Reduction",
-      "color": "quinary"
+      "color": "secondary"
     }
   ],
   "markers": [
@@ -857,6 +864,170 @@ In England, [each council makes its own](https://www.legislation.gov.uk/ukpga/19
 
 A single renter's reduction on a Band C bill runs out sooner in the other London schemes we model: by about 26 hours in [Merton](https://www.merton.gov.uk/sites/default/files/2026-03/Council%20Tax%20Reduction%20Scheme%20L%20B%20Merton%202026-27.pdf), and before 15 hours in [Newham](https://www.newham.gov.uk/downloads/file/10753/council-tax-reduction-scheme-2026) and [Westminster](https://www.westminster.gov.uk/sites/default/files/media/documents/council-tax-support-scheme-for-2026-27.pdf). [Oxford](https://www.oxford.gov.uk/council-tax-reduction/council-tax-reduction-scheme-2026-27) sets support by bands of weekly income, so a small change in income can move a household across a band. For example, a lone parent working 24 hours there has £32 more net income with thresholds frozen, because their lower income keeps them in a band with £446 more support. From 25 hours, they have £442 less.
 
+## Households across the UK
+
+We run the same comparison for all UK households on Microcosm UK, PolicyEngine UK's representative sample, with the October 2026 forecast of the Office for Budget Responsibility (OBR). On each path, we raise the allowance to its section 57 level and hold the basic rate band at £37,700, so the higher rate threshold rises with the allowance. We leave the upper earnings limit, Class 4 limits and employer thresholds where they stand. In each table, we subtract what households would pay and receive if the government had taken that path from what they pay and receive with thresholds frozen.
+
+**2026-27, in £ billion**
+
+| If the government had                                                     | Extra income tax | Extra NI | Extra benefits | Change in net income |
+| ------------------------------------------------------------------------- | ---------------- | -------- | -------------- | -------------------- |
+| raised the NI threshold with the allowance                                | 30.3             | 6.9      | 1.0            | −36.3                |
+| raised £242 a week by each September's CPI from April 2023                | 30.3             | 6.0      | 1.0            | −35.4                |
+| raised £242 a week by CPI since July 2022                                 | 30.3             | 3.5      | 0.9            | −33.0                |
+| left the NI threshold at £12,570                                          | 30.3             | 0.0      | 0.8            | −29.6                |
+| skipped the July 2022 rise and raised £184 a week by each September's CPI | 30.3             | −0.6     | 0.8            | −29.0                |
+
+**2027-28, in £ billion**
+
+| If the government had                                                     | Extra income tax | Extra NI | Extra benefits | Change in net income |
+| ------------------------------------------------------------------------- | ---------------- | -------- | -------------- | -------------------- |
+| raised the NI threshold with the allowance                                | 35.9             | 8.2      | 1.2            | −42.9                |
+| raised £242 a week by each September's CPI from April 2023                | 35.9             | 7.2      | 1.2            | −42.0                |
+| raised £242 a week by CPI since July 2022                                 | 35.9             | 4.6      | 1.1            | −39.5                |
+| left the NI threshold at £12,570                                          | 35.9             | 0.0      | 1.0            | −35.0                |
+| skipped the July 2022 rise and raised £184 a week by each September's CPI | 35.9             | 0.2      | 1.0            | −35.2                |
+
+We estimate 8% of employees aged 21 to State Pension age live in a family on UC, and households get about 3p of each £1 back in UC, Housing Benefit, Pension Credit and Council Tax Reduction. With thresholds frozen, households have £1,245 less net income on average in 2026-27 than if the government had raised the NI threshold with the allowance: 81% have less, 18% have the same and 0.4% have more.
+
+More than 90% of the households with more net income include someone on UC's minimum income floor. The Department for Work and Pensions counts a self-employed claimant past any start-up period who faces all of UC's work-related requirements as earning at least a set amount. It sets that amount after [deducting the income tax and NI](https://www.legislation.gov.uk/uksi/2013/376/regulation/62) the Secretary of State considers appropriate. We calculate those deductions from the Personal Allowance and NI thresholds, so with thresholds frozen the claimant has lower counted earnings and receives more UC. For example, a self-employed lone parent with children aged 7 and 10 and £8,000 of profit pays no more tax with thresholds frozen and receives £386 more UC in 2026-27.
+
+With thresholds frozen, 1.7% of households have more net income in 2026-27 than if the government had skipped the July 2022 rise and raised £184 a week by each September's CPI. Most of them include someone on more than £132,160, who has no allowance either way and pays £24 less NI.
+
+### Income deciles
+
+We rank households by net income, adjusted for household size, with thresholds frozen. We estimate households in the lowest decile pay £270 more income tax and NI on average in 2026-27 than if the government had raised the NI threshold with the allowance. They receive £28 more in benefits and have 0.9% less net income. Those in the ninth decile lose the largest share: 2.6%, or £2,303.
+
+For example, a worker on £55,000 pays 40p on each £1 of the £3,510 between the allowances, or £1,404 more income tax, because the higher rate threshold rises with the allowance. A worker on £150,000 has no allowance either way, so they pay £281 more NI and no more income tax, and households in the top decile lose 1.3%, or £2,079.
+
+```chart
+{
+  "type": "bar",
+  "title": "Households in the ninth income decile lose the largest share of net income",
+  "subtitle": "Change in net income with thresholds frozen, as a share of net income if the government had taken each path, 2026-27",
+  "xKey": "decile",
+  "series": [
+    {
+      "key": "aligned",
+      "name": "If the government had raised the NI threshold with the allowance",
+      "color": "primary"
+    },
+    {
+      "key": "allowanceOnly",
+      "name": "If the government had left the NI threshold at £12,570",
+      "color": "secondary"
+    }
+  ],
+  "data": [
+    {
+      "decile": "1st",
+      "aligned": -0.93,
+      "allowanceOnly": -0.75
+    },
+    {
+      "decile": "2nd",
+      "aligned": -1.32,
+      "allowanceOnly": -1.1
+    },
+    {
+      "decile": "3rd",
+      "aligned": -1.51,
+      "allowanceOnly": -1.26
+    },
+    {
+      "decile": "4th",
+      "aligned": -1.77,
+      "allowanceOnly": -1.46
+    },
+    {
+      "decile": "5th",
+      "aligned": -2.02,
+      "allowanceOnly": -1.65
+    },
+    {
+      "decile": "6th",
+      "aligned": -2.33,
+      "allowanceOnly": -1.88
+    },
+    {
+      "decile": "7th",
+      "aligned": -2.4,
+      "allowanceOnly": -1.95
+    },
+    {
+      "decile": "8th",
+      "aligned": -2.5,
+      "allowanceOnly": -2.02
+    },
+    {
+      "decile": "9th",
+      "aligned": -2.62,
+      "allowanceOnly": -2.16
+    },
+    {
+      "decile": "10th",
+      "aligned": -1.33,
+      "allowanceOnly": -1.09
+    }
+  ],
+  "yLabel": "Change in net income",
+  "format": {
+    "decimals": 1,
+    "suffix": "%",
+    "signed": true
+  },
+  "valueLabels": false,
+  "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast."
+}
+```
+
+### Employees by pay
+
+We can't identify who earns the National Living Wage from survey data on hours and pay, so we group employees aged 21 to State Pension age by annual pay. We estimate 2.4 million of them earn £20,000 to £25,000 in 2026-27, a band that includes full-time pay at the National Living Wage. They pay £996 more income tax and NI on average than if the government had raised the NI threshold with the allowance, and have £937 less net income. The 11% in a family on UC have £462 less, and the rest have £996 less. The average exceeds our single worker's £983 because some employees in the band transfer a Marriage Allowance or have other income.
+
+**Employees by annual pay, 2026-27, if the government had raised the NI threshold with the allowance**
+
+| Annual pay          | Employees (millions) | In a family on UC | Extra income tax and NI | Change in net income | Change in net income, family on UC |
+| ------------------- | -------------------- | ----------------- | ----------------------- | -------------------- | ---------------------------------- |
+| Up to £12,570       | 3.1                  | 29%               | £203                    | −£201                | −£13                               |
+| £12,570 to £16,080  | 1.9                  | 15%               | £601                    | −£568                | −£257                              |
+| £16,080 to £20,000  | 1.8                  | 16%               | £987                    | −£899                | −£439                              |
+| £20,000 to £25,000  | 2.4                  | 11%               | £996                    | −£937                | −£462                              |
+| £25,000 to £30,000  | 3.2                  | 8%                | £995                    | −£955                | −£452                              |
+| £30,000 to £50,270  | 9.0                  | 4%                | £1,024                  | −£1,005              | −£482                              |
+| £50,270 to £100,000 | 5.2                  | 1%                | £1,583                  | −£1,579              | −£1,075                            |
+| Over £100,000       | 1.5                  | –                 | £948                    | −£947                | –                                  |
+| All employees       | 28.0                 | 8%                | £996                    | −£972                | −£275                              |
+
+Employees on up to £12,570 pay £203 more on average because 31% of them have other income that lifts their total income above £12,570. We show a dash where too few survey households sit behind a figure.
+
+### Poverty and inequality
+
+We count people as in absolute poverty when their household's income falls below 60% of the 2024-25 median in real terms, and in relative poverty when it falls below 60% of the median in the same year.
+
+**2026-27, if the government had raised the NI threshold with the allowance**
+
+| Measure                                | Thresholds frozen | Thresholds raised | Change in people | Change in children |
+| -------------------------------------- | ----------------- | ----------------- | ---------------- | ------------------ |
+| Absolute poverty, before housing costs | 13.3%             | 12.6%             | +481,000         | +84,000            |
+| Absolute poverty, after housing costs  | 17.8%             | 16.8%             | +682,000         | +214,000           |
+| Relative poverty, before housing costs | 14.1%             | 14.5%             | −325,000         | −124,000           |
+| Relative poverty, after housing costs  | 17.9%             | 18.2%             | −253,000         | −71,000            |
+
+Across the five paths, we estimate 432,000 to 481,000 more people, including 70,000 to 84,000 children, fall below the absolute line before housing costs in 2026-27. Relative poverty falls with thresholds frozen because the line moves with median income. Households around the median lose a larger share of net income than those near the line: 2.0% and 2.3% in the fifth and sixth deciles, against 1.3% in the second. On the path in the table, the Gini index of net income, adjusted for household size, rises from 0.281 to 0.282 with thresholds frozen.
+
+### Comparison with the OBR and HMRC
+
+The [OBR](https://obr.uk/download/october-2026-economic-and-fiscal-outlook-detailed-forecast-tables-receipts/) compares frozen thresholds with its own indexed levels. For 2026-27 and 2027-28, it puts the Personal Allowance at £16,070 and £16,570, the higher rate threshold at £64,470 and £66,470 and the NI primary threshold at £12,272 and £12,636, with the additional rate threshold back at £150,000. Against those levels, we estimate 4.8 million more people pay income tax in 2026-27 with thresholds frozen and 5.5 million more in 2027-28. The OBR estimates 4.8 million and 5.3 million, after it takes off 0.3 million for the Pension Tax Allowance in 2027-28, which PolicyEngine UK 2.151.0 leaves out.
+
+In its Table 4.17, the OBR puts the yield from freezing the income tax thresholds at £33.6 billion and £39.2 billion. Our estimate against those levels, £42.3 billion and £49.2 billion, exceeds that by 26% in each year. Our baseline income tax receipts trail [its forecast](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/) by 6% and 8%. The OBR publishes the yield by measure with no split by income, so we can't trace the difference.
+
+The OBR's higher rate threshold exceeds the £53,780 on our five paths in 2026-27, and its additional rate threshold exceeds their £125,140. With its levels, households in the top decile would have £3,277 more net income on average. The Gini index would reach 0.283, against 0.282 with thresholds frozen, the opposite direction from our five paths.
+
+In its [November 2025 outlook](https://obr.uk/docs/dlm_uploads/OBR_Economic_and_fiscal_outlook_November_2025.pdf), the OBR puts employee NI £1.3 billion and £0.5 billion lower with thresholds frozen in those years. On our closest path, which skips the July 2022 rise, we estimate £0.6 billion less in 2026-27 and £0.2 billion more in 2027-28.
+
+In its [June 2025 ready reckoner](https://assets.publishing.service.gov.uk/media/68552862b46781eacfd71d71/June_2025_TRR_ODS__1_.ods), HMRC puts the cost of raising the Personal Allowance, starting rate limit and basic rate limit by 10% at £14.4 billion in 2026-27 and £17.7 billion in 2027-28. HMRC includes behavioural responses and leaves out the income tax devolved to Scotland and Wales. We estimate £15.2 billion and £15.9 billion, with no behavioural response and without Scottish income tax, so our figure exceeds HMRC's by 6% in 2026-27 and trails it by 10% in 2027-28.
+
 ## What the estimates cover
 
 - We model a single worker aged 30, with no other income, on £12.71 an hour in 2026-27 and £13.21 in 2027-28. Working 35 hours for 52 weeks gives pay of £23,132 and £24,042. The government puts the full-time gain from the 50p rise at [£910](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#additional-support-for-households), which implies 35 hours, and 37.5 or 40 hours give the same results.
@@ -866,4 +1037,7 @@ A single renter's reduction on a Band C bill runs out sooner in the other London
 - A Scottish taxpayer at 35 hours pays the same extra amounts.
 - A one-earner couple on the same pay who claim the Marriage Allowance pay £772 more income tax in 2026-27 and £898 more in 2027-28, because the amount they can transfer rises with the Personal Allowance.
 - We hold pay and hours fixed, so the estimates include no behavioural response.
-- We calculate every figure with [PolicyEngine UK 2.175.5](https://pypi.org/project/policyengine-uk/2.175.5/) on hypothetical households, give no count of the workers in each case, and publish the [script and results](https://github.com/PolicyEngine/policyengine-app-v2/tree/main/analysis/uk-threshold-freeze-nlw).
+- We calculate the household examples with [PolicyEngine UK 2.175.5](https://pypi.org/project/policyengine-uk/2.175.5/) and publish the [scripts and results](https://github.com/PolicyEngine/policyengine-app-v2/tree/main/analysis/uk-threshold-freeze-nlw).
+- We run the UK-wide comparison on the certified Microcosm UK dataset that `policyengine` 6.11.1 pins, with PolicyEngine UK 2.151.0 and its take-up assumptions, as PolicyEngine's Autumn Budget 2026 dashboard does.
+- PolicyEngine UK 2.151.0 has no Pension Tax Allowance. With PolicyEngine UK 2.175.5, which has it, we estimate households have £36.0 billion and £42.4 billion less net income than if the government had raised the NI threshold with the allowance. In the tables above, that comes to £36.3 billion and £42.9 billion.
+- PolicyEngine UK counts only the families who report Council Tax Reduction in the survey. It holds the reported amount for working-age families in English councils beyond the five above, so the UK-wide figures show no change for those families.

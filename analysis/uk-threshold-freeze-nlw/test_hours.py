@@ -308,3 +308,18 @@ def test_post_names_the_council_tax_bill_rules():
     assert "25% discount for living alone" in TEXT
     assert SINGLE_PERSON_SHARE == 0.75
     assert BAND_C_SHARE == 8 / 9
+
+
+def test_floor_example_in_the_post_matches_the_results():
+    row = floor_row(8_000, True)
+    assert row["extra_tax_and_ni"] == 0
+    extra_uc = gbp(row["uc_frozen"] - row["uc_raised"])
+    assert f"£8,000 of profit pays no more tax with thresholds frozen and receives {extra_uc} more UC" in TEXT
+
+
+def test_higher_earner_figures_in_the_post_match_the_results():
+    gap = S57_PA[2026] - ACTUAL_PA
+    extra_tax = gbp(earner(55_000)["extra_income_tax"])
+    assert f"40p on each £1 of the {gbp(gap)} between the allowances, or {extra_tax} more income tax" in TEXT
+    assert earner(150_000)["extra_income_tax"] == 0
+    assert f"A worker on £150,000 has no allowance either way, so they pay {gbp(earner(150_000)['extra_ni'])} more NI and no more income tax" in TEXT

@@ -102,6 +102,8 @@ CONSTANT_PERSON = (
     "is_hbai_dependent_child",
     "allowances",
     "ni_class_1_income",
+    "trading_loss",
+    "uc_mif_applies",
 )
 PERSON = (
     "total_income",
@@ -386,10 +388,34 @@ def totals_row(base: dict, res: dict) -> dict:
     return row
 
 
+def on_uc_floor(base: dict) -> np.ndarray:
+    """Households with someone UC's minimum income floor applies to."""
+    return (
+        np.bincount(
+            base["p_household_index"],
+            weights=base["p_uc_mif_applies"] > 0,
+            minlength=len(base["h_household_weight"]),
+        )
+        > 0
+    )
+
+
+def no_allowance_and_less_ni(base: dict, res: dict) -> np.ndarray:
+    """Households with someone who has no Personal Allowance on either side and pays
+    less NI with thresholds frozen."""
+    person = (
+        (base["p_personal_allowance"] == 0)
+        & (res["p_personal_allowance"] == 0)
+        & (base["p_national_insurance"] < res["p_national_insurance"] - CHANGE_TOLERANCE)
+    )
+    return np.bincount(base["p_household_index"], weights=person, minlength=len(base["h_household_weight"])) > 0
+
+
 def counts_row(base: dict, res: dict) -> dict:
-    """People paying income tax and NI on each side, and the share of households
-    whose net income the freeze lowers or raises. A cell behind too few survey
-    households stays blank."""
+    """People paying income tax and NI on each side, the share of households whose
+    net income the freeze lowers or raises, and the shares of those it raises with
+    someone on UC's minimum income floor, or with someone who pays less NI and has no
+    allowance on either side. A cell behind too few survey households stays blank."""
     pw, w = base["p_person_weight"], base["h_household_weight"]
     survey = base["h_survey_household"]
     person_survey = survey[base["p_household_index"]]
@@ -410,6 +436,13 @@ def counts_row(base: dict, res: dict) -> dict:
             return None, None
         return float(pw[frozen].sum() / 1e6), float(pw[raised].sum() / 1e6)
 
+    def share_of_higher(mask):
+        """Blank when either side of the split rests on too few survey households."""
+        chosen, others = higher & mask, higher & ~mask
+        if min(len(np.unique(survey[chosen])), len(np.unique(survey[others]))) < SURVEY_HOUSEHOLD_FLOOR:
+            return None
+        return float(w[chosen].sum() / w[higher].sum())
+
     tax_frozen, tax_raised = people(frozen_tax, raised_tax)
     ni_frozen, ni_raised = people(frozen_ni, raised_ni)
     return {
@@ -419,6 +452,8 @@ def counts_row(base: dict, res: dict) -> dict:
         "ni_payers_raised_m": ni_raised,
         "share_households_lower_net_income": share(lower),
         "share_households_higher_net_income": share(higher),
+        "share_of_those_higher_on_uc_minimum_income_floor": share_of_higher(on_uc_floor(base)),
+        "share_of_those_higher_with_no_allowance_and_less_ni": share_of_higher(no_allowance_and_less_ni(base, res)),
     }
 
 
@@ -449,8 +484,8 @@ def decile_rows(base: dict, res: dict) -> list:
     w = base["h_household_weight"]
     decile = base["h_household_income_decile"]
     survey = base["h_survey_household"]
-    net = base["h_household_net_income"]
-    net_change = net - res["h_household_net_income"]
+    net_raised = res["h_household_net_income"]
+    net_change = base["h_household_net_income"] - net_raised
     extra = (base["h_income_tax"] - res["h_income_tax"]) + (base["h_national_insurance"] - res["h_national_insurance"])
     extra_benefits = base["h_household_benefits"] - res["h_household_benefits"]
     changed = np.abs(net_change) >= CHANGE_TOLERANCE
@@ -463,7 +498,9 @@ def decile_rows(base: dict, res: dict) -> list:
                 "decile": d,
                 "households_m": float(ww.sum() / 1e6),
                 "average_net_income_change": weighted_mean(ww, net_change[m]),
-                "percent_net_income_change": 100 * float(np.dot(ww, net_change[m])) / float(np.dot(ww, net[m])),
+                # As a share of what they would have if the government had raised
+                # the thresholds, so "2.6% less than" reads against that net income.
+                "percent_net_income_change": 100 * float(np.dot(ww, net_change[m])) / float(np.dot(ww, net_raised[m])),
                 "average_extra_income_tax_and_ni": weighted_mean(ww, extra[m]),
                 "average_extra_benefits": weighted_mean(ww, extra_benefits[m]),
                 "thin": thin(survey, m, changed),
@@ -513,6 +550,9 @@ def pay_band_rows(base: dict, res: dict, year: int) -> list:
                 "band": label,
                 "employees_m": float(weights.sum() / 1e6),
                 "share_in_family_on_uc": None if uc_is_thin else float(pw[m & on_uc].sum() / weights.sum()),
+                "share_with_total_income_above_frozen_allowance": float(
+                    pw[m & (base["p_total_income"] > ACTUAL_PA)].sum() / weights.sum()
+                ),
                 "average_extra_income_tax": mean(frame["extra_tax"]),
                 "average_extra_ni": mean(frame["extra_ni"]),
                 "average_extra_income_tax_and_ni": mean(frame["extra"]),
@@ -556,10 +596,11 @@ def poverty_rows(base: dict, res: dict) -> list:
 def simple_workers(base: dict, res: dict) -> np.ndarray:
     """Employees whose income tax and NI plain arithmetic can state: only
     employment income, from the frozen allowance to £45,000, under State Pension
-    age, outside Scottish income tax, with no pension contributions, no allowance
-    or relief beyond the Personal Allowance, NI on their pay alone, and no
-    Marriage Allowance in their family on either side. A higher allowance gives
-    some partners an allowance to transfer, so the raised side counts too."""
+    age, outside Scottish income tax, with no pension contributions, no trading
+    loss to relieve against their pay, no allowance or relief beyond the Personal
+    Allowance, NI on their pay alone, and no Marriage Allowance in their family on
+    either side. A higher allowance gives some partners an allowance to transfer,
+    so the raised side counts too."""
     pay = base["p_employment_income"]
     family = base["p_benunit_index"]
     transfers = np.bincount(
@@ -576,6 +617,7 @@ def simple_workers(base: dict, res: dict) -> np.ndarray:
         & (base["p_pension_contributions"] == 0)
         & (np.abs(base["p_allowances"] - base["p_personal_allowance"]) < 0.01)
         & (np.abs(base["p_ni_class_1_income"] - pay) < 0.01)
+        & (base["p_trading_loss"] == 0)
         & (transfers[family] == 0)
     )
 
@@ -694,6 +736,13 @@ def rounded(key: str, value):
     return round(value, 5 if key.startswith(("rate_", "gini_")) else 3)
 
 
+def without_thin_values(rows: list, keep: tuple) -> list:
+    """A row behind too few survey households keeps its labels and its group's size,
+    and loses its values."""
+    labels = ("year", "scenario", "thin", *keep)
+    return [{k: v if k in labels or not row["thin"] else None for k, v in row.items()} for row in rows]
+
+
 def write_csv(path: Path, rows: list) -> None:
     with open(path, "w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
@@ -763,9 +812,9 @@ def run_tables(args) -> None:
             holds[f"{fy} {scenario}"], shares[f"{fy} {scenario}"] = checks_for(base, res, scenario, year)
     write_csv(out_dir / f"national_totals_{label}.csv", totals)
     write_csv(out_dir / f"national_baseline_{label}.csv", baseline)
-    write_csv(out_dir / f"national_deciles_{label}.csv", deciles)
-    write_csv(out_dir / f"national_pay_bands_{label}.csv", bands)
-    write_csv(out_dir / f"national_poverty_{label}.csv", poverty)
+    write_csv(out_dir / f"national_deciles_{label}.csv", without_thin_values(deciles, ("decile", "households_m")))
+    write_csv(out_dir / f"national_pay_bands_{label}.csv", without_thin_values(bands, ("band", "employees_m")))
+    write_csv(out_dir / f"national_poverty_{label}.csv", without_thin_values(poverty, ("measure", "group")))
     write_csv(out_dir / f"national_counts_{label}.csv", counts)
     (private_dir / f"national_shares_{label}.json").write_text(json.dumps(shares, indent=1) + "\n")
     meta = {

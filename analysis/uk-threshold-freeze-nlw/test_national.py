@@ -27,25 +27,29 @@ from national_freeze import (
     counts_row,
     decile_rows,
     gini,
+    no_allowance_and_less_ni,
+    on_uc_floor,
     pay_band_rows,
     pay_bands,
     poverty_rows,
     scenario_changes,
     scenario_thresholds,
+    simple_workers,
     thin,
     totals_row,
+    without_thin_values,
 )
 from thresholds import OBR_INDEXED, S57_PA, YEARS, scenarios
 
 HERE = Path(__file__).resolve().parent
 POST = HERE.parents[1] / "app/src/data/posts/articles/uk-threshold-freeze-national-living-wage.md"
+POSTS = HERE.parents[1] / "app/src/data/posts/posts.json"
 TEXT = POST.read_text()
 LABEL = "certified"
-PERCENT = 100
 
 
-def table(name: str) -> list:
-    return list(csv.DictReader((HERE / f"national_{name}_{LABEL}.csv").open()))
+def table(name: str, label: str = LABEL) -> list:
+    return list(csv.DictReader((HERE / f"national_{name}_{label}.csv").open()))
 
 
 TOTALS = table("totals")
@@ -54,9 +58,19 @@ DECILES = table("deciles")
 BANDS = table("pay_bands")
 POVERTY = table("poverty")
 COUNTS = table("counts")
+LATEST_TOTALS = table("totals", "latest")
 META = json.loads((HERE / f"national_meta_{LABEL}.json").read_text())
+LATEST_META = json.loads((HERE / "national_meta_latest.json").read_text())
 FISCAL_YEARS = ("2026-27", "2027-28")
 FIRST, LAST = FIVE_PATHS[0], FIVE_PATHS[-1]
+# The post's labels for the paths, the same in its household tables and its UK-wide tables.
+PATH_LABELS = {
+    "ni_tracks_allowance": "raised the NI threshold with the allowance",
+    "ni_sep_cpi_from_jul22": "raised £242 a week by each September's CPI from April 2023",
+    "ni_p2p_from_jul22": "raised £242 a week by CPI since July 2022",
+    "allowance_only": "left the NI threshold at £12,570",
+    "ni_sep_cpi_from_2021": "skipped the July 2022 rise and raised £184 a week by each September's CPI",
+}
 
 
 def total(year: str, scenario: str) -> dict:
@@ -94,7 +108,12 @@ def spread_bn(year: str, field: str, sign: float = 1) -> tuple[float, float]:
 
 
 def bn(value: float) -> str:
-    return f"£{value:.1f}bn"
+    return f"£{abs(value):.1f} billion"
+
+
+def one_decimal(value: float) -> str:
+    text = f"{abs(value):.1f}"
+    return f"−{text}" if round(value, 1) < 0 else text
 
 
 def gbp(value: float) -> str:
@@ -104,6 +123,14 @@ def gbp(value: float) -> str:
 
 def thousands(value_m: float) -> str:
     return f"{round(abs(value_m) * 1_000):,},000"
+
+
+def signed_thousands(value_m: float) -> str:
+    return f"{'+' if value_m > 0 else '−'}{thousands(value_m)}"
+
+
+def percent(share: float, places: int = 0) -> str:
+    return f"{share:.{places}%}"
 
 
 # The scenarios
@@ -248,6 +275,77 @@ def test_thin_applies_the_floor_to_the_survey_households_behind_a_change():
     assert not thin(survey, everyone, changed)
 
 
+def test_a_thin_row_keeps_its_labels_and_loses_its_values():
+    tag = {"year": "2026-27", "scenario": "s"}
+    rows = [
+        {**tag, "band": "a", "employees_m": 1.0, "value": 5.0, "thin": True},
+        {**tag, "band": "b", "employees_m": 2.0, "value": 6.0, "thin": False},
+    ]
+    blanked, kept = without_thin_values(rows, ("band", "employees_m"))
+    assert blanked == {**tag, "band": "a", "employees_m": 1.0, "value": None, "thin": True}
+    assert kept == rows[1]
+
+
+def test_uc_floor_marks_the_household_of_anyone_it_applies_to():
+    base = {
+        "h_household_weight": np.ones(3),
+        "p_household_index": np.array([0, 0, 1, 2]),
+        "p_uc_mif_applies": np.array([0.0, 1.0, 0.0, 0.0]),
+    }
+    assert on_uc_floor(base).tolist() == [True, False, False]
+
+
+def test_less_ni_counts_only_someone_with_no_allowance_on_both_sides():
+    base = {
+        "h_household_weight": np.ones(4),
+        "p_household_index": np.arange(4),
+        "p_personal_allowance": np.array([0.0, 0.0, 12_570.0, 0.0]),
+        "p_national_insurance": np.full(4, 100.0),
+    }
+    res = {
+        "p_personal_allowance": np.array([0.0, 0.0, 0.0, 5_000.0]),
+        "p_national_insurance": np.array([124.0, 100.0, 124.0, 124.0]),
+    }
+    assert no_allowance_and_less_ni(base, res).tolist() == [True, False, False, False]
+
+
+def test_simple_workers_leave_out_someone_with_a_trading_loss():
+    pay, zeros = np.full(2, 23_000.0), np.zeros(2)
+    base = {
+        "p_employment_income": pay,
+        "p_total_income": pay,
+        "p_benunit_index": np.arange(2),
+        "p_marriage_allowance": zeros,
+        "p_is_SP_age": zeros,
+        "p_pays_scottish_income_tax": zeros,
+        "p_pension_contributions": zeros,
+        "p_allowances": np.full(2, 12_570.0),
+        "p_personal_allowance": np.full(2, 12_570.0),
+        "p_ni_class_1_income": pay,
+        "p_trading_loss": np.array([0.0, 500.0]),
+    }
+    assert simple_workers(base, {"p_marriage_allowance": zeros}).tolist() == [True, False]
+
+
+def test_simple_workers_leave_out_a_family_with_a_marriage_allowance_on_either_side():
+    pay, zeros = np.full(3, 23_000.0), np.zeros(3)
+    base = {
+        "p_employment_income": pay,
+        "p_total_income": pay,
+        "p_benunit_index": np.array([0, 0, 1]),
+        "p_marriage_allowance": zeros,
+        "p_is_SP_age": zeros,
+        "p_pays_scottish_income_tax": zeros,
+        "p_pension_contributions": zeros,
+        "p_allowances": np.full(3, 12_570.0),
+        "p_personal_allowance": np.full(3, 12_570.0),
+        "p_ni_class_1_income": pay,
+        "p_trading_loss": zeros,
+    }
+    raised = {"p_marriage_allowance": np.array([1_608.0, 0.0, 0.0])}
+    assert simple_workers(base, raised).tolist() == [False, False, True]
+
+
 @pytest.mark.parametrize("year", YEARS)
 @given(pay=st.floats(0, 1e7, allow_nan=False))
 def test_pay_bands_place_every_pay_in_one_band(year, pay):
@@ -289,6 +387,9 @@ def made_up_records(people: int = 60) -> tuple[dict, dict]:
         "p_in_poverty_bhc": (net < 20_000).astype(float),
         "p_is_hbai_dependent_child": np.zeros(people),
         "p_pays_scottish_income_tax": (index % 12 == 0).astype(float),
+        "p_total_income": pay,
+        "p_personal_allowance": np.full(people, 12_570.0),
+        "p_uc_mif_applies": np.zeros(people),
         "u_universal_credit": uc,
         "u_benefits": uc,
         "u_benunit_weight": weight,
@@ -308,6 +409,7 @@ def made_up_records(people: int = 60) -> tuple[dict, dict]:
         "p_income_tax": tax - extra_tax,
         "p_national_insurance": ni - extra_ni,
         "p_in_poverty_bhc": ((net + extra_tax + extra_ni - extra_uc) < 20_000).astype(float),
+        "p_personal_allowance": np.full(people, 16_080.0),
         "u_universal_credit": uc - extra_uc,
         "u_benefits": uc - extra_uc,
         "b_universal_credit": uc - extra_uc,
@@ -322,6 +424,34 @@ def test_deciles_add_up_to_the_total():
     added = sum(r["households_m"] * r["average_net_income_change"] for r in rows) / 1e3
     assert added == pytest.approx(row["net_income_change_bn"], rel=1e-9)
     assert row["net_income_change_bn"] == pytest.approx(row["extra_benefits_bn"] - row["extra_income_tax_and_ni_bn"])
+
+
+def test_decile_percent_takes_net_income_on_the_raised_side():
+    base, res = made_up_records()
+    rows = decile_rows(base, res)
+    for row in rows:
+        m = base["h_household_income_decile"] == row["decile"]
+        w = base["h_household_weight"][m]
+        raised = float(np.dot(w, res["h_household_net_income"][m]))
+        frozen = float(np.dot(w, base["h_household_net_income"][m]))
+        assert row["percent_net_income_change"] == pytest.approx(100 * (frozen - raised) / raised)
+
+
+def test_counts_split_those_with_higher_net_income_by_why():
+    base, res = made_up_records()
+    gained = dict(res)
+    net = base["h_household_net_income"].copy()
+    net[:30] -= 50
+    gained["h_household_net_income"] = net
+    mif = np.zeros(len(net))
+    mif[:15] = 1
+    floor_base = {**base, "p_uc_mif_applies": mif}
+    row = counts_row(floor_base, gained)
+    w = base["h_household_weight"]
+    assert row["share_of_those_higher_on_uc_minimum_income_floor"] == pytest.approx(w[:15].sum() / w[:30].sum())
+    assert row["share_of_those_higher_with_no_allowance_and_less_ni"] is None
+    mif[:25] = 1
+    assert counts_row(floor_base, gained)["share_of_those_higher_on_uc_minimum_income_floor"] is None
 
 
 def test_pay_bands_add_up_to_the_all_employees_row():
@@ -458,15 +588,21 @@ def test_pay_bands_add_up(year, scenario):
 
 
 def test_no_published_cell_rests_on_too_few_survey_households():
-    for rows in (DECILES, BANDS, POVERTY):
-        assert [r for r in rows if r["thin"] != "False"] == []
+    tables = ((DECILES, ("decile", "households_m")), (BANDS, ("band", "employees_m")), (POVERTY, ("measure", "group")))
+    for rows, labels in tables:
+        for row in rows:
+            if row["thin"] != "False":
+                assert row["scenario"] == HMRC_TEN_PERCENT
+                values = {k: v for k, v in row.items() if k not in ("year", "scenario", "thin", *labels)}
+                assert set(values.values()) == {""}
     assert META["survey_household_floor"] == SURVEY_HOUSEHOLD_FLOOR == 10
 
 
 def test_poverty_people_follow_the_rates():
     for row in POVERTY:
-        difference = float(row["rate_frozen"]) - float(row["rate_raised"])
-        assert difference * float(row["people_change_m"]) >= 0
+        if row["thin"] == "False":
+            difference = float(row["rate_frozen"]) - float(row["rate_raised"])
+            assert difference * float(row["people_change_m"]) >= 0
 
 
 @pytest.mark.parametrize("year", FISCAL_YEARS)
@@ -484,3 +620,339 @@ def test_freeze_raises_absolute_poverty_and_lowers_relative_poverty(year, scenar
 def chart(title_start: str) -> dict:
     specs = [json.loads(block) for block in re.findall(r"```chart\n(.*?)\n```", TEXT, re.S)]
     return next(spec for spec in specs if spec["title"].startswith(title_start))
+
+
+def post_table(heading: str) -> list:
+    """The body rows of the table that follows a bold heading in the post."""
+    after = TEXT.split(f"**{heading}**", 1)[1].lstrip("\n")
+    lines = []
+    for line in after.splitlines():
+        if not line.startswith("|"):
+            break
+        lines.append([cell.strip() for cell in line.strip("|").split("|")])
+    return lines[2:]
+
+
+def tax_and_ni(year: str, scenario: str) -> float:
+    return float(total(year, scenario)["extra_income_tax_and_ni_bn"])
+
+
+def test_summary_spreads_match_the_totals():
+    first, second = (spread_bn(year, "extra_income_tax_and_ni_bn") for year in FISCAL_YEARS)
+    assert (
+        f"Households pay {bn(first[0])} to {bn(first[1])} more income tax and NI in 2026-27 across the five paths, "
+        f"and {bn(second[0])} to {bn(second[1])} more in 2027-28." in TEXT
+    )
+
+
+def test_about_3p_of_each_pound_comes_back_on_every_path():
+    for year in FISCAL_YEARS:
+        for scenario in FIVE_PATHS:
+            assert 0.025 <= float(total(year, scenario)["extra_benefits_bn"]) / tax_and_ni(year, scenario) < 0.035
+    assert TEXT.count("about 3p of each £1 back") == 2
+
+
+def test_description_carries_the_uk_wide_spread():
+    entry = next(e for e in json.loads(POSTS.read_text()) if e["filename"] == POST.name)
+    low, high = spread_bn("2026-27", "extra_income_tax_and_ni_bn")
+    assert f"We estimate UK households pay {bn(low)} to {bn(high)} more." in entry["description"]
+
+
+@pytest.mark.parametrize("year", FISCAL_YEARS)
+def test_totals_tables_match_the_results(year):
+    expected = [
+        [
+            PATH_LABELS[s],
+            *(
+                one_decimal(float(total(year, s)[key]))
+                for key in ("extra_income_tax_bn", "extra_ni_bn", "extra_benefits_bn", "net_income_change_bn")
+            ),
+        ]
+        for s in FIVE_PATHS
+    ]
+    assert post_table(f"{year}, in £ billion") == expected
+
+
+def test_uk_wide_tables_use_the_labels_of_the_household_tables():
+    for label in PATH_LABELS.values():
+        assert TEXT.count(f"| {label} ") == 4
+
+
+def test_average_household_figures_match_the_results():
+    row, year = total("2026-27", FIRST), "2026-27"
+    average = -float(row["net_income_change_bn"]) / float(baseline(year)["households_m"]) * 1e3
+    shares = counts(year, FIRST)
+    lower, higher = float(shares["share_households_lower_net_income"]), float(shares["share_households_higher_net_income"])
+    assert (
+        f"With thresholds frozen, households have {gbp(average)} less net income on average in 2026-27 "
+        f"than if the government had {PATH_LABELS[FIRST]}: "
+        f"{percent(lower)} have less, {percent(1 - lower - higher)} have the same and {percent(higher, 1)} have more."
+    ) in TEXT
+    everyone = band(year, FIRST, "all employees")
+    assert f"We estimate {percent(float(everyone['share_in_family_on_uc']))} of employees aged 21 to State Pension age live in a family on UC" in TEXT
+
+
+def test_nearly_all_households_with_more_net_income_on_the_main_path_include_someone_on_the_uc_floor():
+    for year in FISCAL_YEARS:
+        assert float(counts(year, FIRST)["share_of_those_higher_on_uc_minimum_income_floor"]) > 0.9
+    assert "More than 90% of the households with more net income include someone on UC's minimum income floor." in TEXT
+
+
+def test_most_households_with_more_net_income_on_the_fifth_path_include_someone_with_no_allowance():
+    row = counts("2026-27", LAST)
+    higher = float(row["share_households_higher_net_income"])
+    assert float(row["share_of_those_higher_with_no_allowance_and_less_ni"]) > 0.5
+    fifth_threshold = scenarios(2026, S57_PA)[LAST][1]
+    no_allowance_from = 100_000 + 2 * S57_PA[2026]
+    less_ni = 0.08 * (12_570 - fifth_threshold)
+    assert (
+        f"With thresholds frozen, {percent(higher, 1)} of households have more net income in 2026-27 "
+        f"than if the government had {PATH_LABELS[LAST]}. "
+        f"Most of them include someone on more than {gbp(no_allowance_from)}, who has no allowance either way "
+        f"and pays {gbp(less_ni)} less NI."
+    ) in TEXT
+
+
+def test_chart_of_deciles_matches_the_results():
+    spec = chart("Households in the ninth income decile")
+    assert [s["key"] for s in spec["series"]] == ["aligned", "allowanceOnly"]
+    assert spec["series"][0]["name"] == f"If the government had {PATH_LABELS[FIRST]}"
+    assert spec["series"][1]["name"] == f"If the government had {PATH_LABELS['allowance_only']}"
+    assert len(spec["data"]) == 10
+    for number, point in enumerate(spec["data"], start=1):
+        assert point["aligned"] == round(float(decile("2026-27", FIRST, number)["percent_net_income_change"]), 2)
+        assert point["allowanceOnly"] == round(float(decile("2026-27", "allowance_only", number)["percent_net_income_change"]), 2)
+    for key in ("aligned", "allowanceOnly"):
+        assert min(spec["data"], key=lambda p: p[key])["decile"] == "9th"
+    assert f"PolicyEngine UK {META['policyengine_uk']}" in spec["source"]
+
+
+@pytest.mark.parametrize("year", FISCAL_YEARS)
+@pytest.mark.parametrize("scenario", FIVE_PATHS)
+def test_ninth_decile_loses_the_largest_share_on_every_path(year, scenario):
+    shares = {n: float(decile(year, scenario, n)["percent_net_income_change"]) for n in range(1, 11)}
+    assert min(shares, key=shares.get) == 9
+
+
+def test_decile_prose_matches_the_results():
+    year = "2026-27"
+    lowest, ninth, top = (decile(year, FIRST, n) for n in (1, 9, 10))
+    share = lambda row: f"{abs(float(row['percent_net_income_change'])):.1f}%"
+    expected = [
+        f"Households in the ninth income decile have {share(ninth)} less net income in 2026-27",
+        f"households in the lowest decile have {share(lowest)} less",
+        f"households in the lowest decile pay {gbp(float(lowest['average_extra_income_tax_and_ni']))} more income tax and NI on average in 2026-27 "
+        f"than if the government had {PATH_LABELS[FIRST]}. "
+        f"They receive {gbp(float(lowest['average_extra_benefits']))} more in benefits and have {share(lowest)} less net income",
+        f"Those in the ninth decile lose the largest share: {share(ninth)}, or {gbp(abs(float(ninth['average_net_income_change'])))}.",
+        f"households in the top decile lose {share(top)}, or {gbp(abs(float(top['average_net_income_change'])))}.",
+    ]
+    for phrase in expected:
+        assert phrase in TEXT, phrase
+    fifth, sixth, second = (decile(year, FIRST, n) for n in (5, 6, 2))
+    assert f"{share(fifth)} and {share(sixth)} in the fifth and sixth deciles, against {share(second)} in the second" in TEXT
+
+
+def test_pay_band_table_matches_the_results():
+    year = "2026-27"
+    rows = [r for r in BANDS if r["year"] == year and r["scenario"] == FIRST]
+    expected = []
+    for row in rows:
+        blank = row["share_in_family_on_uc"] == ""
+        expected.append(
+            [
+                row["band"][0].upper() + row["band"][1:],
+                f"{float(row['employees_m']):.1f}",
+                "–" if blank else percent(float(row["share_in_family_on_uc"])),
+                gbp(float(row["average_extra_income_tax_and_ni"])),
+                gbp(float(row["average_net_income_change"])),
+                "–" if blank else gbp(float(row["average_net_income_change_on_uc"])),
+            ]
+        )
+    assert post_table("Employees by annual pay, 2026-27, if the government had raised the NI threshold with the allowance") == expected
+
+
+def test_pay_band_prose_matches_the_results():
+    year = "2026-27"
+    middle = band(year, FIRST, "£20,000 to £25,000")
+    lowest = band(year, FIRST, "up to £12,570")
+    extra, net = float(middle["average_extra_income_tax_and_ni"]), float(middle["average_net_income_change"])
+    on_uc = float(middle["average_net_income_change_on_uc"])
+    not_on_uc = float(middle["average_net_income_change_not_on_uc"])
+    expected = [
+        f"On that path, the {float(middle['employees_m']):.1f} million employees on £20,000 to £25,000, a band that includes full-time pay at the National Living Wage, "
+        f"pay {gbp(extra)} more income tax and NI on average in 2026-27 and have {gbp(abs(net))} less net income.",
+        f"We estimate {float(middle['employees_m']):.1f} million of them earn £20,000 to £25,000 in 2026-27",
+        f"They pay {gbp(extra)} more income tax and NI on average than if the government had raised the NI threshold with the allowance, and have {gbp(abs(net))} less net income.",
+        f"The {percent(float(middle['share_in_family_on_uc']))} in a family on UC have {gbp(abs(on_uc))} less, and the rest have {gbp(abs(not_on_uc))} less.",
+        f"Employees on up to £12,570 pay {gbp(float(lowest['average_extra_income_tax_and_ni']))} more on average because "
+        f"{percent(float(lowest['share_with_total_income_above_frozen_allowance']))} of them have other income",
+    ]
+    for phrase in expected:
+        assert phrase in TEXT, phrase
+    assert extra > 983
+
+
+def test_poverty_table_matches_the_results():
+    year = "2026-27"
+    names = {
+        "absolute_bhc": "Absolute poverty, before housing costs",
+        "absolute_ahc": "Absolute poverty, after housing costs",
+        "relative_bhc": "Relative poverty, before housing costs",
+        "relative_ahc": "Relative poverty, after housing costs",
+    }
+    expected = []
+    for measure, name in names.items():
+        everyone = poverty(year, FIRST, measure)
+        children = poverty(year, FIRST, measure, "children")
+        expected.append(
+            [
+                name,
+                percent(float(everyone["rate_frozen"]), 1),
+                percent(float(everyone["rate_raised"]), 1),
+                signed_thousands(float(everyone["people_change_m"])),
+                signed_thousands(float(children["people_change_m"])),
+            ]
+        )
+    assert post_table("2026-27, if the government had raised the NI threshold with the allowance") == expected
+
+
+def test_poverty_prose_matches_the_results():
+    year = "2026-27"
+    people = [float(poverty(year, s, "absolute_bhc")["people_change_m"]) for s in FIVE_PATHS]
+    children = [float(poverty(year, s, "absolute_bhc", "children")["people_change_m"]) for s in FIVE_PATHS]
+    assert (
+        f"Across the five paths, we estimate {thousands(min(people))} to {thousands(max(people))} more people, "
+        f"including {thousands(min(children))} to {thousands(max(children))} children, fall below the absolute line"
+    ) in TEXT
+    absolute = float(poverty(year, FIRST, "absolute_bhc")["people_change_m"])
+    relative = float(poverty(year, FIRST, "relative_bhc")["people_change_m"])
+    assert (
+        f"On that path, {thousands(absolute)} more people fall below the absolute poverty line before housing costs in 2026-27, "
+        f"and {thousands(relative)} fewer fall below the relative line"
+    ) in TEXT
+
+
+def test_gini_prose_matches_the_results():
+    row = total("2026-27", FIRST)
+    assert f"the Gini index of net income, adjusted for household size, rises from {float(row['gini_raised']):.3f} to {float(row['gini_frozen']):.3f} with thresholds frozen" in TEXT
+    obr = total("2026-27", OBR_THRESHOLDS)
+    assert (
+        f"The Gini index would reach {float(obr['gini_raised']):.3f}, against {float(obr['gini_frozen']):.3f} with thresholds frozen, "
+        "the opposite direction from our five paths."
+    ) in TEXT
+
+
+@pytest.mark.parametrize("year", FISCAL_YEARS)
+def test_thresholds_frozen_move_the_gini_index_opposite_ways_on_the_paths_and_the_obrs_levels(year):
+    for scenario in FIVE_PATHS:
+        assert float(total(year, scenario)["gini_frozen"]) > float(total(year, scenario)["gini_raised"])
+    assert float(total(year, OBR_THRESHOLDS)["gini_frozen"]) < float(total(year, OBR_THRESHOLDS)["gini_raised"])
+
+
+# Published figures the post compares with, from the OBR's October 2026 receipts
+# tables (4.17, 4.18), its October 2026 outlook (Table A.5), its November 2025 outlook
+# (Box 3.3, Table A) and HMRC's June 2025 ready reckoner.
+ACTUAL_ALLOWANCE = 12_570
+OBR_YIELD = {"2026-27": 32.667158242427405 + 0.91, "2027-28": 38.22560300197248 + 0.94}
+OBR_BROUGHT_IN = {"2026-27": 4.83, "2027-28": 5.3}
+OBR_PENSION_TAX_ALLOWANCE = {"2026-27": 0, "2027-28": 0.289}
+OBR_RECEIPTS = {"2026-27": 365.4, "2027-28": 392.2}
+OBR_EMPLOYEE_NI = {"2026-27": -1.3, "2027-28": -0.5}
+HMRC_TEN_PERCENT_COST = {"2026-27": 14.4, "2027-28": 17.7}
+
+
+def test_obr_thresholds_in_the_post_match_the_scenario():
+    first, second = OBR_INDEXED[2026], OBR_INDEXED[2027]
+    expected = (
+        f"it puts the Personal Allowance at {gbp(first['personal_allowance'])} and {gbp(second['personal_allowance'])}, "
+        f"the higher rate threshold at {gbp(first['higher_rate_threshold'])} and {gbp(second['higher_rate_threshold'])} "
+        f"and the NI primary threshold at {gbp(first['primary_threshold'])} and {gbp(second['primary_threshold'])}, "
+        "with the additional rate threshold back at £150,000."
+    )
+    assert expected in TEXT
+
+
+def test_obr_taxpayer_comparison_matches_the_results():
+    brought = {
+        year: float(counts(year, OBR_THRESHOLDS)["income_taxpayers_frozen_m"])
+        - float(counts(year, OBR_THRESHOLDS)["income_taxpayers_raised_m"])
+        for year in FISCAL_YEARS
+    }
+    first, second = FISCAL_YEARS
+    assert (
+        f"we estimate {brought[first]:.1f} million more people pay income tax in 2026-27 with thresholds frozen "
+        f"and {brought[second]:.1f} million more in 2027-28. The OBR estimates {OBR_BROUGHT_IN[first]:.1f} million "
+        f"and {OBR_BROUGHT_IN[second]:.1f} million, after it takes off {OBR_PENSION_TAX_ALLOWANCE[second]:.1f} million "
+        "for the Pension Tax Allowance in 2027-28"
+    ) in TEXT
+
+
+def test_obr_yield_comparison_matches_the_results():
+    first, second = FISCAL_YEARS
+    ours = {year: float(total(year, OBR_THRESHOLDS)["extra_income_tax_bn"]) for year in FISCAL_YEARS}
+    gaps = {f"{ours[year] / OBR_YIELD[year] - 1:.0%}" for year in FISCAL_YEARS}
+    assert gaps == {"26%"}
+    assert (
+        f"In its Table 4.17, the OBR puts the yield from freezing the income tax thresholds at {bn(OBR_YIELD[first])} and {bn(OBR_YIELD[second])}. "
+        f"Our estimate against those levels, {bn(ours[first])} and {bn(ours[second])}, exceeds that by 26% in each year."
+    ) in TEXT
+    trail = [1 - float(baseline(year)["income_tax_bn"]) / OBR_RECEIPTS[year] for year in FISCAL_YEARS]
+    assert "Our baseline income tax receipts trail [its forecast]" in TEXT
+    assert f"by {trail[0]:.0%} and {trail[1]:.0%}." in TEXT
+
+
+def test_obr_top_decile_comparison_matches_the_results():
+    top = float(decile("2026-27", OBR_THRESHOLDS, 10)["average_net_income_change"])
+    assert f"With its levels, households in the top decile would have {gbp(abs(top))} more net income on average" in TEXT
+    assert top < 0
+    assert f"exceeds the {gbp(S57_PA[2026] + 37_700)} on our five paths in 2026-27" in TEXT
+    assert OBR_INDEXED[2026]["higher_rate_threshold"] > S57_PA[2026] + 37_700
+    assert f"exceeds their {gbp(100_000 + 2 * ACTUAL_ALLOWANCE)}" in TEXT
+
+
+def test_obr_employee_ni_comparison_matches_the_results():
+    first, second = (float(total(year, LAST)["extra_ni_bn"]) for year in FISCAL_YEARS)
+    assert first < 0 < second
+    assert OBR_EMPLOYEE_NI["2026-27"] < 0 and OBR_EMPLOYEE_NI["2027-28"] < 0
+    assert (
+        f"the OBR puts employee NI {bn(OBR_EMPLOYEE_NI['2026-27'])} and {bn(OBR_EMPLOYEE_NI['2027-28'])} lower with thresholds frozen in those years. "
+        f"On our closest path, which skips the July 2022 rise, we estimate {bn(first)} less in 2026-27 and {bn(second)} more in 2027-28."
+    ) in TEXT
+
+
+def test_hmrc_comparison_matches_the_results():
+    first, second = FISCAL_YEARS
+    ours = {year: float(total(year, HMRC_TEN_PERCENT)["extra_income_tax_outside_scottish_income_tax_bn"]) for year in FISCAL_YEARS}
+    above = ours[first] / HMRC_TEN_PERCENT_COST[first] - 1
+    below = 1 - ours[second] / HMRC_TEN_PERCENT_COST[second]
+    assert above > 0 and below > 0
+    assert (
+        f"at {bn(HMRC_TEN_PERCENT_COST[first])} in 2026-27 and {bn(HMRC_TEN_PERCENT_COST[second])} in 2027-28. "
+        "HMRC includes behavioural responses and leaves out the income tax devolved to Scotland and Wales. "
+        f"We estimate {bn(ours[first])} and {bn(ours[second])}, with no behavioural response and without Scottish income tax, "
+        f"so our figure exceeds HMRC's by {above:.0%} in 2026-27 and trails it by {below:.0%} in 2027-28."
+    ) in TEXT
+
+
+def test_sensitivity_to_the_model_version_matches_the_results():
+    assert LATEST_META["policyengine_uk"] == "2.175.5"
+    assert LATEST_META["dataset_sha256"] == META["dataset_sha256"]
+    assert all(held is True for checks in LATEST_META["checks"].values() for held in checks.values())
+    latest = {
+        r["year"]: float(r["net_income_change_bn"]) for r in LATEST_TOTALS if r["scenario"] == FIRST
+    }
+    first, second = FISCAL_YEARS
+    certified = {year: float(total(year, FIRST)["net_income_change_bn"]) for year in FISCAL_YEARS}
+    assert (
+        f"With PolicyEngine UK {LATEST_META['policyengine_uk']}, which has it, we estimate households have "
+        f"{bn(latest[first])} and {bn(latest[second])} less net income than if the government had {PATH_LABELS[FIRST]}. "
+        f"In the tables above, that comes to {bn(certified[first])} and {bn(certified[second])}."
+    ) in TEXT
+
+
+def test_post_names_the_versions_and_the_dataset_it_ran_on():
+    assert META["policyengine_uk"] == "2.151.0"
+    assert META["dataset"].startswith("microcosm-uk-2024-25-national-")
+    assert f"with PolicyEngine UK {META['policyengine_uk']} and its take-up assumptions" in TEXT
+    assert "`policyengine` 6.11.1" in TEXT
