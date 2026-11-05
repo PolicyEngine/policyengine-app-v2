@@ -60,11 +60,12 @@ import {
   mockPendingResponse,
   mockSuccessResponse,
   mockUSPolicyEngineBundle,
-  NOT_FOUND_WITHOUT_ENVELOPE,
   READ_DELETE_AFTER_SECONDS,
   READ_RETRY_AFTER_SECONDS,
+  STATE_ECONOMY_PARAMS,
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
+  UNEXPECTED_DELETE_ANSWERS,
   UNREAD_DELETE_AFTER_SECONDS_BODIES,
   UNREAD_RETRY_AFTER_SECONDS_BODIES,
   UNREADABLE_DELETE_REFUSAL_BODIES,
@@ -902,8 +903,6 @@ describe('failedCalculationOf', () => {
 });
 
 describe('deleteFailedSocietyWideCalculation', () => {
-  const STATE_PARAMS = { region: 'state/ca', time_period: CURRENT_YEAR };
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -912,7 +911,7 @@ describe('deleteFailedSocietyWideCalculation', () => {
     vi.restoreAllMocks();
   });
 
-  const deleteFailure = (params = STATE_PARAMS, countryId: string = TEST_COUNTRIES.US) =>
+  const deleteFailure = (params = STATE_ECONOMY_PARAMS, countryId: string = TEST_COUNTRIES.US) =>
     deleteFailedSocietyWideCalculation(
       countryId,
       TEST_POLICY_IDS.REFORM,
@@ -929,7 +928,7 @@ describe('deleteFailedSocietyWideCalculation', () => {
       TEST_COUNTRIES.US,
       TEST_POLICY_IDS.REFORM,
       TEST_POLICY_IDS.BASELINE,
-      STATE_PARAMS
+      STATE_ECONOMY_PARAMS
     );
 
     // When
@@ -1025,18 +1024,7 @@ describe('deleteFailedSocietyWideCalculation', () => {
     }
   );
 
-  test.each([
-    ['404 with an error page', HTTP_STATUS.NOT_FOUND, '<html><body>Not Found</body></html>', null],
-    [
-      '404 without the error envelope',
-      HTTP_STATUS.NOT_FOUND,
-      JSON.stringify(NOT_FOUND_WITHOUT_ENVELOPE),
-      NOT_FOUND_WITHOUT_ENVELOPE,
-    ],
-    ['405 from a deploy without the DELETE', HTTP_STATUS.METHOD_NOT_ALLOWED, '', null],
-    ['500', HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error', null],
-    ['200 in place of 204', HTTP_STATUS.OK, JSON.stringify({ status: 'ok' }), { status: 'ok' }],
-  ])(
+  test.each(UNEXPECTED_DELETE_ANSWERS)(
     'given %s then it throws an error that names the DELETE, with the status and the parsed body',
     async (_case, status, body, parsed) => {
       // Given

@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useReducer, useRef } from 'react';
-import { useQueries, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import {
+  hashKey,
+  useQueries,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import {
   districtsOf,
   mergeStateDistricts,
@@ -323,6 +329,31 @@ function writtenReportsFor(queryClient: QueryClient): Set<string> {
 }
 
 /**
+ * The DELETEs of states' stored failures that are queued or sent, per query
+ * client, by the hash of the state's run key. A view that closes leaves its
+ * sent DELETE to finish, and puts the run back as it was before the press;
+ * Retry in a view opened meanwhile waits for that DELETE's answer instead of
+ * sending a second one.
+ */
+const deletesInFlight = new WeakMap<QueryClient, Map<string, Promise<StoredFailureDeletion>>>();
+
+function deletesInFlightFor(queryClient: QueryClient): Map<string, Promise<StoredFailureDeletion>> {
+  let deletions = deletesInFlight.get(queryClient);
+  if (!deletions) {
+    deletions = new Map();
+    deletesInFlight.set(queryClient, deletions);
+  }
+  return deletions;
+}
+
+/** Whether an error is the request limit dropping a task that never started. */
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error || error instanceof DOMException
+    ? error.name === 'AbortError'
+    : false;
+}
+
+/**
  * Creates, or reuses, a state's two simulations and base report, through
  * the tab's request limit; a request still queued when the view closes is
  * dropped.
@@ -460,13 +491,55 @@ async function fetchStateRun(
         status: 'error',
         result: null,
         error: calculationFailureReason(error.message),
-        // 0 means the Public API no longer keeps the failure: no wait, as when it does not say.
-        retryWaitMs: retryAfterSeconds ? retryAfterSeconds * 1000 : undefined,
+        // 0 means the Public API no longer keeps the failure: no wait, and no DELETE needed.
+        retryWaitMs: retryAfterSeconds === null ? undefined : retryAfterSeconds * 1000,
         // 0 means the Public API accepts a DELETE now: Retry deletes first, with no wait.
         deleteWaitMs: deleteAfterSeconds === null ? undefined : deleteAfterSeconds * 1000,
       };
     }
     throw error;
+  }
+}
+
+/**
+ * Sends the DELETE of a state's stored failure through the tab's request
+ * limit, or, when one is already queued or sent for that state, waits for
+ * its answer. A DELETE the limit dropped before sending it, because its
+ * view closed, is sent again.
+ */
+async function sendOrJoinDelete(
+  queryClient: QueryClient,
+  { reformPolicyId, baselinePolicyId, year }: Required<StateDistrictRunsRequest>,
+  region: string,
+  signal: AbortSignal
+): Promise<StoredFailureDeletion> {
+  const key = hashKey(stateDistrictRunQueryKey({ reformPolicyId, baselinePolicyId, year }, region));
+  const deletions = deletesInFlightFor(queryClient);
+  const earlier = deletions.get(key);
+  if (earlier) {
+    try {
+      return await earlier;
+    } catch (error) {
+      if (!isAbortError(error) || signal.aborted) {
+        throw error;
+      }
+    }
+  }
+  const deletion = requestLimitFor(queryClient).run(
+    () =>
+      deleteFailedSocietyWideCalculation('us', reformPolicyId, baselinePolicyId, {
+        region,
+        time_period: year,
+      }),
+    signal
+  );
+  deletions.set(key, deletion);
+  try {
+    return await deletion;
+  } finally {
+    if (deletions.get(key) === deletion) {
+      deletions.delete(key);
+    }
   }
 }
 
@@ -486,7 +559,8 @@ async function fetchStateRun(
  *   Retry deletes again while the Public API may still keep the failure.
  *
  * A DELETE still queued when the view closes is dropped, and the state
- * stays as it was.
+ * stays as it was; one already sent is joined by a later Retry
+ * (sendOrJoinDelete).
  */
 async function deleteStoredFailure(
   queryClient: QueryClient,
@@ -498,12 +572,10 @@ async function deleteStoredFailure(
   const runKey = stateDistrictRunQueryKey({ reformPolicyId, baselinePolicyId, year }, region);
   let deletion: StoredFailureDeletion;
   try {
-    deletion = await requestLimitFor(queryClient).run(
-      () =>
-        deleteFailedSocietyWideCalculation('us', reformPolicyId, baselinePolicyId, {
-          region,
-          time_period: year,
-        }),
+    deletion = await sendOrJoinDelete(
+      queryClient,
+      { reformPolicyId, baselinePolicyId, year },
+      region,
       signal
     );
   } catch (error) {
@@ -519,12 +591,12 @@ async function deleteStoredFailure(
     case 'nothing-stored':
       // No failure is stored now. If the view closes before the request
       // answers, the query goes back to this state rather than to the one
-      // before the press, so the next Retry sends the request alone.
-      queryClient.setQueryData<StateRun>(runKey, {
-        ...failed,
-        deletesFailure: false,
-        deleteFailed: false,
-      });
+      // before the press, so the next Retry sends the request alone. Only
+      // while the cache still holds the failure the DELETE was sent for: an
+      // answer that arrives after its view closed never replaces a newer run.
+      queryClient.setQueryData<StateRun>(runKey, (current) =>
+        current === failed ? { ...failed, deletesFailure: false, deleteFailed: false } : undefined
+      );
       return null;
     case 'too-soon':
       // Counted from the answer's arrival, so never earlier than the Public API accepts it.
@@ -586,12 +658,13 @@ async function pollStateRun(
   }, signal);
   // Each wait is the seconds the Public API had left when it answered, counted from the answer's
   // arrival, so never earlier than it accepts a DELETE or stops keeping the failure.
-  const keptUntil = kept.retryWaitMs ? Date.now() + kept.retryWaitMs : undefined;
+  const keptUntil = kept.retryWaitMs === undefined ? undefined : Date.now() + kept.retryWaitMs;
   if (run.status === 'error' && kept.deleteWaitMs !== undefined) {
     const retryAt = kept.deleteWaitMs > 0 ? Date.now() + kept.deleteWaitMs : undefined;
     return { ...run, result: null, retryAt, keptUntil, deletesFailure: true };
   }
-  if (run.status === 'error' && keptUntil) {
+  // A wait of 0 is no wait, as when the answer does not say.
+  if (run.status === 'error' && kept.retryWaitMs) {
     return { ...run, result: null, retryAt: keptUntil, keptUntil };
   }
   if (run.status !== 'complete') {

@@ -326,6 +326,26 @@ export const stateDeleteNotAFailure = (): Response =>
     { status: 409 }
   );
 
+/** 405: a Public API instance without the DELETE refuses it. */
+export const stateDeleteMethodNotAllowed = (): Response =>
+  new Response('Method Not Allowed', { status: 405 });
+
+/** 502: the Public API's error envelope when it cannot reach the simulation service. */
+export const stateDeleteUnavailable = (): Response =>
+  Response.json(
+    { status: 'error', message: 'The simulation service could not be reached.', result: null },
+    { status: 502 }
+  );
+
+/** A DELETE that fails on the network, as the browser's fetch throws it. */
+export const stateDeleteNetworkFailure = (): Error => new TypeError('Failed to fetch');
+
+/**
+ * A failed state run the Public API no longer keeps (its stored index has
+ * expired): 0 seconds left, and a DELETE accepted now.
+ */
+export const stateFailureNoLongerKept = (): Response => stateFailure(STATE_ERROR_MESSAGE, 0, 0);
+
 /** The reason the app gives when the DELETE finds a newer run in place of the failure. */
 export const STATE_NEWER_RUN_REASON = 'A newer run is on the server: retry to check it';
 

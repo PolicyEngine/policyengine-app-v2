@@ -3,6 +3,7 @@ import {
   EconomyCalculationError,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
+import { CURRENT_YEAR } from '@/constants';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test IDs and constants
@@ -180,6 +181,26 @@ export const UNREADABLE_DELETE_REFUSAL_BODIES: Array<[string, string, unknown]> 
 
 /** A 404 body in another service's shape, without the Public API's error envelope. */
 export const NOT_FOUND_WITHOUT_ENVELOPE = { detail: 'Not Found' };
+
+/** A state's economy query, as a state run sends it. */
+export const STATE_ECONOMY_PARAMS = { region: 'state/ca', time_period: CURRENT_YEAR };
+
+/**
+ * DELETE answers outside the contract, each with its status, raw body and
+ * the body as the error carries it.
+ */
+export const UNEXPECTED_DELETE_ANSWERS: Array<[string, number, string, unknown]> = [
+  ['404 with an error page', HTTP_STATUS.NOT_FOUND, '<html><body>Not Found</body></html>', null],
+  [
+    '404 without the error envelope',
+    HTTP_STATUS.NOT_FOUND,
+    JSON.stringify(NOT_FOUND_WITHOUT_ENVELOPE),
+    NOT_FOUND_WITHOUT_ENVELOPE,
+  ],
+  ['405 from a deploy without the DELETE', HTTP_STATUS.METHOD_NOT_ALLOWED, '', null],
+  ['500', HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error', null],
+  ['200 in place of 204', HTTP_STATUS.OK, JSON.stringify({ status: 'ok' }), { status: 'ok' }],
+];
 
 /** An answer to a DELETE of a stored failure, for a status and a raw body. */
 export const mockDeleteResponse = (status: number, body = '') => ({
