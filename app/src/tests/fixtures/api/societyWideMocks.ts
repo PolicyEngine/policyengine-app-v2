@@ -149,18 +149,37 @@ export const DELETE_NOTHING_STORED_BODY = {
   result: null,
 };
 
-/** 409 bodies that do not say whether the DELETE may be sent again: missing field, or a string. */
-export const UNREADABLE_DELETE_REFUSAL_BODIES: Array<[string, string]> = [
+const REFUSAL_WITHOUT_SECONDS = { status: 'error', message: 'Refused.', result: null };
+const REFUSAL_WITH_STRING_SECONDS = { ...DELETE_TOO_SOON_BODY, delete_after_seconds: '4' };
+const REFUSAL_WITH_NEGATIVE_SECONDS = { ...DELETE_TOO_SOON_BODY, delete_after_seconds: -1 };
+
+/**
+ * 409 answers that do not say whether the DELETE may be sent again, each
+ * with its raw body and the body as the error carries it: no
+ * delete_after_seconds, one that is a string or negative, or a body that is
+ * not JSON.
+ */
+export const UNREADABLE_DELETE_REFUSAL_BODIES: Array<[string, string, unknown]> = [
   [
     'without delete_after_seconds',
-    JSON.stringify({ status: 'error', message: 'Refused.', result: null }),
+    JSON.stringify(REFUSAL_WITHOUT_SECONDS),
+    REFUSAL_WITHOUT_SECONDS,
   ],
   [
     'with delete_after_seconds as a string',
-    JSON.stringify({ ...DELETE_TOO_SOON_BODY, delete_after_seconds: '4' }),
+    JSON.stringify(REFUSAL_WITH_STRING_SECONDS),
+    REFUSAL_WITH_STRING_SECONDS,
   ],
-  ['that is not JSON', '<html><body>Conflict</body></html>'],
+  [
+    'with negative delete_after_seconds',
+    JSON.stringify(REFUSAL_WITH_NEGATIVE_SECONDS),
+    REFUSAL_WITH_NEGATIVE_SECONDS,
+  ],
+  ['that is not JSON', '<html><body>Conflict</body></html>', null],
 ];
+
+/** A 404 body in another service's shape, without the Public API's error envelope. */
+export const NOT_FOUND_WITHOUT_ENVELOPE = { detail: 'Not Found' };
 
 /** An answer to a DELETE of a stored failure, for a status and a raw body. */
 export const mockDeleteResponse = (status: number, body = '') => ({
@@ -172,7 +191,7 @@ export const mockDeleteResponse = (status: number, body = '') => ({
 
 /** A DELETE error's message, as the fetch throws it. */
 export const DELETE_FAILED_MESSAGE = (status: number, detail: string) =>
-  `Deleting a failed calculation failed (${status}): ${detail}`;
+  `Economy DELETE failed (${status}): ${detail}`;
 
 // Mock US report output
 export const mockUSReportOutput: ReportOutputSocietyWideUS = {

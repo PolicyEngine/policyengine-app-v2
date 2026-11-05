@@ -231,7 +231,8 @@ function isErrorBody(body: unknown): body is object {
  * answers one with 502 and `{ status: "error", message, result: null,
  * retry_after_seconds, delete_after_seconds }`. Null for anything else, such
  * as a proxy's 502 page, another status or a network error, which are failed
- * requests instead.
+ * requests instead. Only for an economy GET's error: a DELETE's error is the
+ * same class, but a 502 from it is not a failed calculation.
  */
 export function failedCalculationOf(error: unknown): FailedCalculation | null {
   if (!(error instanceof EconomyCalculationError) || error.status !== 502) {
@@ -259,7 +260,7 @@ export type StoredFailureDeletion =
   | { outcome: 'not-a-failure' };
 
 const DELETE_REQUEST: EconomyRequestKind = {
-  label: 'Deleting a failed calculation',
+  label: 'Economy DELETE',
   logName: 'deleteFailedSocietyWideCalculation',
   readsBodyMessage: false,
 };

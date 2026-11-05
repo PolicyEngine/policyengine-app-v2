@@ -60,6 +60,7 @@ import {
   mockPendingResponse,
   mockSuccessResponse,
   mockUSPolicyEngineBundle,
+  NOT_FOUND_WITHOUT_ENVELOPE,
   READ_DELETE_AFTER_SECONDS,
   READ_RETRY_AFTER_SECONDS,
   TEST_COUNTRIES,
@@ -911,9 +912,9 @@ describe('deleteFailedSocietyWideCalculation', () => {
     vi.restoreAllMocks();
   });
 
-  const deleteFailure = (params = STATE_PARAMS) =>
+  const deleteFailure = (params = STATE_PARAMS, countryId: string = TEST_COUNTRIES.US) =>
     deleteFailedSocietyWideCalculation(
-      TEST_COUNTRIES.US,
+      countryId,
       TEST_POLICY_IDS.REFORM,
       TEST_POLICY_IDS.BASELINE,
       params
@@ -946,7 +947,10 @@ describe('deleteFailedSocietyWideCalculation', () => {
     mockFetch.mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
 
     // When
-    await deleteFailure({ region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR });
+    await deleteFailure(
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR },
+      TEST_COUNTRIES.UK
+    );
 
     // Then
     const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
@@ -1005,7 +1009,7 @@ describe('deleteFailedSocietyWideCalculation', () => {
 
   test.each(UNREADABLE_DELETE_REFUSAL_BODIES)(
     'given 409 %s then it throws an error with the status and the parsed body',
-    async (_case, body) => {
+    async (_case, body, parsed) => {
       // Given
       vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(global.fetch).mockResolvedValue(
@@ -1017,18 +1021,24 @@ describe('deleteFailedSocietyWideCalculation', () => {
 
       // Then
       expect(error).toBeInstanceOf(EconomyCalculationError);
-      expect(error).toMatchObject({ status: HTTP_STATUS.CONFLICT });
+      expect(error).toMatchObject({ status: HTTP_STATUS.CONFLICT, body: parsed });
     }
   );
 
   test.each([
-    ['404 with an error page', HTTP_STATUS.NOT_FOUND, '<html><body>Not Found</body></html>'],
-    ['405 from a deploy without the DELETE', HTTP_STATUS.METHOD_NOT_ALLOWED, ''],
-    ['500', HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error'],
-    ['200 in place of 204', HTTP_STATUS.OK, JSON.stringify({ status: 'ok' })],
+    ['404 with an error page', HTTP_STATUS.NOT_FOUND, '<html><body>Not Found</body></html>', null],
+    [
+      '404 without the error envelope',
+      HTTP_STATUS.NOT_FOUND,
+      JSON.stringify(NOT_FOUND_WITHOUT_ENVELOPE),
+      NOT_FOUND_WITHOUT_ENVELOPE,
+    ],
+    ['405 from a deploy without the DELETE', HTTP_STATUS.METHOD_NOT_ALLOWED, '', null],
+    ['500', HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error', null],
+    ['200 in place of 204', HTTP_STATUS.OK, JSON.stringify({ status: 'ok' }), { status: 'ok' }],
   ])(
-    'given %s then it throws an error that names the DELETE and the status',
-    async (_case, status, body) => {
+    'given %s then it throws an error that names the DELETE, with the status and the parsed body',
+    async (_case, status, body, parsed) => {
       // Given
       vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(global.fetch).mockResolvedValue(mockDeleteResponse(status, body) as any);
@@ -1040,6 +1050,7 @@ describe('deleteFailedSocietyWideCalculation', () => {
       expect(error).toBeInstanceOf(EconomyCalculationError);
       expect(error).toMatchObject({
         status,
+        body: parsed,
         message: DELETE_FAILED_MESSAGE(status, body || String(status)),
       });
     }

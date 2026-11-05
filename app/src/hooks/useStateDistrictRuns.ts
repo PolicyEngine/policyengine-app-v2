@@ -30,7 +30,8 @@ import { getUSStates } from '@/utils/regionStrategies';
 
 /**
  * Requests the state district runs keep in flight per browser tab, counting
- * record requests, run starts, polls and result writes. The Public API's production
+ * record requests, run starts, polls, DELETEs of stored failures and result
+ * writes. The Public API's production
  * service has about 12 warm request slots (2 instances of 6), and a new
  * instance takes about 6 minutes to start.
  */
@@ -166,6 +167,14 @@ type StateRun = PolledRun<District[] | null> & {
    * the DELETE first, so that the state's request starts a new run.
    */
   deletesFailure?: boolean;
+  /**
+   * For a failure the Public API keeps for a while: when (epoch ms) it stops
+   * keeping it, as its answer said. After that Retry sends no DELETE, which a
+   * request no longer needs.
+   */
+  keptUntil?: number;
+  /** Whether Retry's last DELETE failed; the reason says so in place of the calculation's. */
+  deleteFailed?: boolean;
 };
 
 /**
@@ -474,7 +483,7 @@ async function fetchStateRun(
  *   computing or done): failed with a short reason, and Retry asks without
  *   a DELETE.
  * - any other answer, or a failed request: failed with a short reason, and
- *   Retry deletes again.
+ *   Retry deletes again while the Public API may still keep the failure.
  *
  * A DELETE still queued when the view closes is dropped, and the state
  * stays as it was.
@@ -486,6 +495,7 @@ async function deleteStoredFailure(
   failed: StateRun,
   signal: AbortSignal
 ): Promise<StateRun | null> {
+  const runKey = stateDistrictRunQueryKey({ reformPolicyId, baselinePolicyId, year }, region);
   let deletion: StoredFailureDeletion;
   try {
     deletion = await requestLimitFor(queryClient).run(
@@ -502,17 +512,35 @@ async function deleteStoredFailure(
     }
     // The state shows a short reason, so the error itself is logged.
     console.error("[useStateDistrictRuns] Could not delete a state's stored failure:", error);
-    return { ...failed, error: REQUEST_FAILED_MESSAGE, retryAt: undefined };
+    return { ...failed, deleteFailed: true, retryAt: undefined };
   }
   switch (deletion.outcome) {
     case 'deleted':
     case 'nothing-stored':
+      // No failure is stored now. If the view closes before the request
+      // answers, the query goes back to this state rather than to the one
+      // before the press, so the next Retry sends the request alone.
+      queryClient.setQueryData<StateRun>(runKey, {
+        ...failed,
+        deletesFailure: false,
+        deleteFailed: false,
+      });
       return null;
     case 'too-soon':
       // Counted from the answer's arrival, so never earlier than the Public API accepts it.
-      return { ...failed, retryAt: Date.now() + deletion.deleteAfterSeconds * 1000 };
+      return {
+        ...failed,
+        deleteFailed: false,
+        retryAt: Date.now() + deletion.deleteAfterSeconds * 1000,
+      };
     case 'not-a-failure':
-      return { ...failed, error: NEWER_RUN_MESSAGE, retryAt: undefined, deletesFailure: false };
+      return {
+        ...failed,
+        error: NEWER_RUN_MESSAGE,
+        deleteFailed: false,
+        retryAt: undefined,
+        deletesFailure: false,
+      };
   }
 }
 
@@ -535,7 +563,8 @@ async function pollStateRun(
   const request = { reformPolicyId, baselinePolicyId, year };
   const runKey = stateDistrictRunQueryKey(request, region);
   const failed = queryClient.getQueryData<StateRun>(runKey);
-  if (failed?.status === 'error' && failed.deletesFailure) {
+  const mayStillBeKept = failed?.keptUntil === undefined || Date.now() < failed.keptUntil;
+  if (failed?.status === 'error' && failed.deletesFailure && mayStillBeKept) {
     const stillFailed = await deleteStoredFailure(queryClient, request, region, failed, signal);
     if (stillFailed) {
       return stillFailed;
@@ -557,12 +586,13 @@ async function pollStateRun(
   }, signal);
   // Each wait is the seconds the Public API had left when it answered, counted from the answer's
   // arrival, so never earlier than it accepts a DELETE or stops keeping the failure.
+  const keptUntil = kept.retryWaitMs ? Date.now() + kept.retryWaitMs : undefined;
   if (run.status === 'error' && kept.deleteWaitMs !== undefined) {
     const retryAt = kept.deleteWaitMs > 0 ? Date.now() + kept.deleteWaitMs : undefined;
-    return { ...run, result: null, retryAt, deletesFailure: true };
+    return { ...run, result: null, retryAt, keptUntil, deletesFailure: true };
   }
-  if (run.status === 'error' && kept.retryWaitMs) {
-    return { ...run, result: null, retryAt: Date.now() + kept.retryWaitMs };
+  if (run.status === 'error' && keptUntil) {
+    return { ...run, result: null, retryAt: keptUntil, keptUntil };
   }
   if (run.status !== 'complete') {
     return { ...run, result: null };
@@ -720,7 +750,9 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
     if (data?.status === 'error' && !run.isFetching) {
       return {
         kind: 'failed',
-        error: data.error ?? STATE_RUN_POLL_OPTIONS.failureMessage,
+        error: data.deleteFailed
+          ? REQUEST_FAILED_MESSAGE
+          : (data.error ?? STATE_RUN_POLL_OPTIONS.failureMessage),
         wait: data.retryAt
           ? { retryAt: data.retryAt, deletesFailure: !!data.deletesFailure }
           : undefined,

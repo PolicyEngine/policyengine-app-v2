@@ -1187,6 +1187,157 @@ describe('useStateDistrictRuns compute', () => {
     expect(api.economyMethodsFor(TEXAS)).toEqual(['GET', 'DELETE', 'GET']);
   });
 
+  test('given a DELETE that keeps failing then Retry deletes again while the failure is kept, and afterwards requests the state alone', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) => (request === 0 ? stateFailureDeletable() : stateOk(TEXAS)),
+      }),
+      deleteFailure: () => new Response('Method Not Allowed', { status: 405 }),
+    });
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    act(() => result.current.retry());
+    await waitFor(() => expect(api.deleteRequestsFor(TEXAS)).toHaveLength(1));
+    await waitFor(() => expect(result.current.canRetry).toBe(true));
+    act(() => result.current.retry());
+    await waitFor(() => expect(api.deleteRequestsFor(TEXAS)).toHaveLength(2));
+    await waitFor(() => expect(result.current.canRetry).toBe(true));
+    await act(() => vi.advanceTimersByTimeAsync(STATE_RETRY_WAIT_MS));
+
+    // When
+    act(() => result.current.retry());
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    expect(api.economyMethodsFor(TEXAS)).toEqual(['GET', 'DELETE', 'DELETE', 'GET']);
+  });
+
+  test('given a failed DELETE and then one refused as too soon then the reason is the calculation’s own again, with the wait', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) => (request === 0 ? stateFailureDeletable() : stateOk(TEXAS)),
+      }),
+      deleteFailure: (_region, request) =>
+        request === 0 ? stateErrorPage() : stateDeleteTooSoon(),
+    });
+    const { result } = await computeAll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+    act(() => result.current.retry());
+    await waitFor(() =>
+      expect(result.current.calculationFailures).toEqual([
+        { label: 'Texas', error: STATE_REQUEST_FAILURE_REASON },
+      ])
+    );
+
+    // When
+    act(() => result.current.retry());
+
+    // Then
+    await waitFor(() =>
+      expect(result.current.calculationFailures).toEqual([
+        { label: 'Texas', error: STATE_DELETE_WAIT_REASON },
+      ])
+    );
+  });
+
+  test.each([
+    [
+      'while its DELETE is in flight',
+      () => api.holdDeletes(),
+      () => api.releaseDeletes(),
+      ['GET', 'DELETE'],
+      ['GET', 'DELETE', 'GET'],
+    ],
+    [
+      'after its DELETE, with its request in flight',
+      () => api.holdEconomy(),
+      () => api.releaseEconomy(),
+      ['GET', 'DELETE', 'GET'],
+      ['GET', 'DELETE', 'GET', 'GET'],
+    ],
+  ])(
+    'given the view closed %s then the reopened view’s Retry requests the state with no second DELETE',
+    async (_case, hold, release, sentBeforeClose, sentInAll) => {
+      // Given
+      serveApi({
+        economy: economyWhere({
+          [TEXAS]: (request) => (request === 0 ? stateFailureDeletable() : stateOk(TEXAS)),
+        }),
+      });
+      const queryClient = createQueryClient();
+      const first = await computeAll(STATE_RUNS_REQUEST, queryClient);
+      await waitFor(() => expect(first.result.current.status).toBe('partial'));
+      hold();
+      act(() => first.result.current.retry());
+      await waitFor(() => expect(api.economyMethodsFor(TEXAS)).toEqual(sentBeforeClose));
+
+      // When
+      first.unmount();
+      release();
+      await act(() => vi.advanceTimersByTimeAsync(MS_PER_SECOND));
+      const second = renderRuns(STATE_RUNS_REQUEST, queryClient);
+      await waitFor(() => expect(second.result.current.canRetry).toBe(true));
+      act(() => second.result.current.retry());
+
+      // Then
+      await waitFor(() => expect(second.result.current.status).toBe('complete'));
+      expect(api.economyMethodsFor(TEXAS)).toEqual(sentInAll);
+    }
+  );
+
+  test('given two views of the report then Retry pressed in each, as drawn, deletes and requests the state once', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) => (request === 0 ? stateFailureDeletable() : stateOk(TEXAS)),
+      }),
+    });
+    const queryClient = createQueryClient();
+    const first = await computeAll(STATE_RUNS_REQUEST, queryClient);
+    const second = renderRuns(STATE_RUNS_REQUEST, queryClient);
+    await waitFor(() => expect(first.result.current.status).toBe('partial'));
+    await waitFor(() => expect(second.result.current.status).toBe('partial'));
+    const retryInFirst = first.result.current.retry;
+    const retryInSecond = second.result.current.retry;
+
+    // When
+    act(() => {
+      retryInFirst();
+      retryInSecond();
+    });
+
+    // Then
+    await waitFor(() => expect(second.result.current.status).toBe('complete'));
+    expect(api.economyMethodsFor(TEXAS)).toEqual(['GET', 'DELETE', 'GET']);
+  });
+
+  test('given a failure a DELETE can clear that arrives on a later poll then Retry deletes it and requests the state', async () => {
+    // Given
+    serveApi({
+      economy: economyWhere({
+        [TEXAS]: (request) =>
+          request === 0
+            ? STATE_COMPUTING
+            : request === 1
+              ? stateFailureDeletable()
+              : stateOk(TEXAS),
+      }),
+    });
+    const { result } = await computeAll();
+    await waitFor(() => expect(api.economyRequestsFor(TEXAS)).toHaveLength(1));
+    await poll();
+    await waitFor(() => expect(result.current.status).toBe('partial'));
+
+    // When
+    act(() => result.current.retry());
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    expect(api.economyMethodsFor(TEXAS)).toEqual(['GET', 'GET', 'DELETE', 'GET']);
+  });
+
   test('given every state failed with a failure it can delete then Retry deletes and requests each state once, within four requests in flight', async () => {
     // Given
     serveApi({

@@ -380,9 +380,9 @@ export interface FakeStateApiOptions {
 export interface FakeStateApi {
   fetch: ReturnType<typeof vi.fn>;
   requests: () => RecordedRequest[];
-  /** The economy requests' (GET) URLs, in order. */
+  /** The economy requests' URLs, in order, whatever their method. */
   economyRequests: () => string[];
-  /** The economy requests' (GET) URLs for one state. */
+  /** The economy requests' URLs for one state, whatever their method. */
   economyRequestsFor: (region: string) => string[];
   /** The DELETEs of one state's stored failure, by URL. */
   deleteRequestsFor: (region: string) => string[];
@@ -400,6 +400,8 @@ export interface FakeStateApi {
   maxInFlight: () => number;
   /** Lets record requests fail, or succeed again, by state. */
   setFailingRecords: (regions: string[]) => void;
+  /** Holds every economy (GET) response from now until `releaseEconomy()`. */
+  holdEconomy: () => void;
   /** Sends the economy responses held so far, and holds no more. */
   releaseEconomy: () => void;
   /** Holds every DELETE's answer until `releaseDeletes()`. */
@@ -535,14 +537,8 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
   return {
     fetch,
     requests: () => requests,
-    economyRequests: () =>
-      requests
-        .filter((request) => isEconomyRequest(request) && request.method === 'GET')
-        .map((request) => request.url),
-    economyRequestsFor: (region) =>
-      requests
-        .filter((request) => isFor(region)(request) && request.method === 'GET')
-        .map((request) => request.url),
+    economyRequests: () => requests.filter(isEconomyRequest).map((request) => request.url),
+    economyRequestsFor: (region) => requests.filter(isFor(region)).map((request) => request.url),
     deleteRequestsFor: (region) =>
       requests
         .filter((request) => isFor(region)(request) && request.method === 'DELETE')
@@ -570,6 +566,9 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
     releaseRecords: () => {
       heldRecordStates = new Set();
       heldRecords.splice(0).forEach((release) => release());
+    },
+    holdEconomy: () => {
+      holdEconomy = true;
     },
     releaseEconomy: () => {
       holdEconomy = false;
