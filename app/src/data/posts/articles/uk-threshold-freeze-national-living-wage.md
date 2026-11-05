@@ -904,7 +904,7 @@ For example, a worker on £55,000 pays 40p on each £1 of the £3,510 between th
 {
   "type": "bar",
   "title": "Households in the ninth income decile lose the largest share of net income",
-  "subtitle": "Change in net income with thresholds frozen, as a share of net income if the government had taken each path, 2026-27",
+  "subtitle": "Change in net income with thresholds frozen, as a share of net income if the government had taken each path, by income decile (1 = lowest), 2026-27",
   "xKey": "decile",
   "series": [
     {
@@ -920,52 +920,52 @@ For example, a worker on £55,000 pays 40p on each £1 of the £3,510 between th
   ],
   "data": [
     {
-      "decile": "1st",
+      "decile": "1",
       "aligned": -0.93,
       "allowanceOnly": -0.75
     },
     {
-      "decile": "2nd",
+      "decile": "2",
       "aligned": -1.32,
       "allowanceOnly": -1.1
     },
     {
-      "decile": "3rd",
+      "decile": "3",
       "aligned": -1.51,
       "allowanceOnly": -1.26
     },
     {
-      "decile": "4th",
+      "decile": "4",
       "aligned": -1.77,
       "allowanceOnly": -1.46
     },
     {
-      "decile": "5th",
+      "decile": "5",
       "aligned": -2.02,
       "allowanceOnly": -1.65
     },
     {
-      "decile": "6th",
+      "decile": "6",
       "aligned": -2.33,
       "allowanceOnly": -1.88
     },
     {
-      "decile": "7th",
+      "decile": "7",
       "aligned": -2.4,
       "allowanceOnly": -1.95
     },
     {
-      "decile": "8th",
+      "decile": "8",
       "aligned": -2.5,
       "allowanceOnly": -2.02
     },
     {
-      "decile": "9th",
+      "decile": "9",
       "aligned": -2.62,
       "allowanceOnly": -2.16
     },
     {
-      "decile": "10th",
+      "decile": "10",
       "aligned": -1.33,
       "allowanceOnly": -1.09
     }

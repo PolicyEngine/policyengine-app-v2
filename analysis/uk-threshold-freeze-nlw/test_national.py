@@ -718,12 +718,13 @@ def test_chart_of_deciles_matches_the_results():
     assert [s["key"] for s in spec["series"]] == ["aligned", "allowanceOnly"]
     assert spec["series"][0]["name"] == f"If the government had {PATH_LABELS[FIRST]}"
     assert spec["series"][1]["name"] == f"If the government had {PATH_LABELS['allowance_only']}"
-    assert len(spec["data"]) == 10
+    assert [point["decile"] for point in spec["data"]] == [str(number) for number in range(1, 11)]
+    assert "by income decile (1 = lowest)" in spec["subtitle"]
     for number, point in enumerate(spec["data"], start=1):
         assert point["aligned"] == round(float(decile("2026-27", FIRST, number)["percent_net_income_change"]), 2)
         assert point["allowanceOnly"] == round(float(decile("2026-27", "allowance_only", number)["percent_net_income_change"]), 2)
     for key in ("aligned", "allowanceOnly"):
-        assert min(spec["data"], key=lambda p: p[key])["decile"] == "9th"
+        assert min(spec["data"], key=lambda p: p[key])["decile"] == "9"
     assert f"PolicyEngine UK {META['policyengine_uk']}" in spec["source"]
 
 
