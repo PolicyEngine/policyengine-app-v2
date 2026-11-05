@@ -1,0 +1,435 @@
+{
+ "policyengine_uk": "2.151.0",
+ "policyengine_core": "3.33.3",
+ "dataset": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
+ "dataset_sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
+ "forecast": {
+  "dashboard_commit": "640426575270224db9b04d6c94d30e264a347be2",
+  "source": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/640426575270224db9b04d6c94d30e264a347be2/src/uk_budget_data/forecast/obr_october_2026.json",
+  "forecast_file_git_blob": "b504a48fffb93714ff358d869cad712b6daea20e",
+  "forecast_module_git_blob": "b2ca186b6fd514f334ced11934d38b256e6d2127",
+  "forecast_file_sha256": "dc039d30660d17f30a45e49538dbd22953e02bd4f6b63eda2eaebcf8252baf54",
+  "baseline_and_reform": true,
+  "nominal_household_inputs": "Held fixed in 2027; the forecast updates model parameters, not the supplied income amounts.",
+  "remaining_series": "March paths remain for cpih, non-labour income, private rent, mortgage interest, per-capita series, council tax and fuel volumes/prices, as recorded by this forecast vintage."
+ },
+ "survey_household_floor": 10,
+ "scenarios": {
+  "ni_tracks_allowance": {
+   "gov.hmrc.income_tax.allowances.personal_allowance.amount": {
+    "2026": 16080,
+    "2027": 16650
+   },
+   "gov.hmrc.national_insurance.class_1.employee_scale[1].threshold": {
+    "2026": 309.2307692307692,
+    "2027": 320.1923076923077
+   }
+  },
+  "ni_sep_cpi_from_jul22": {
+   "gov.hmrc.income_tax.allowances.personal_allowance.amount": {
+    "2026": 16080,
+    "2027": 16650
+   },
+   "gov.hmrc.national_insurance.class_1.employee_scale[1].threshold": {
+    "2026": 300.0,
+    "2027": 311.0
+   }
+  },
+  "ni_p2p_from_jul22": {
+   "gov.hmrc.income_tax.allowances.personal_allowance.amount": {
+    "2026": 16080,
+    "2027": 16650
+   },
+   "gov.hmrc.national_insurance.class_1.employee_scale[1].threshold": {
+    "2026": 275.0,
+    "2027": 285.0
+   }
+  },
+  "allowance_only": {
+   "gov.hmrc.income_tax.allowances.personal_allowance.amount": {
+    "2026": 16080,
+    "2027": 16650
+   },
+   "gov.hmrc.national_insurance.class_1.employee_scale[1].threshold": {
+    "2026": 241.73,
+    "2027": 241.73
+   }
+  },
+  "ni_sep_cpi_from_2021": {
+   "gov.hmrc.income_tax.allowances.personal_allowance.amount": {
+    "2026": 16080,
+    "2027": 16650
+   },
+   "gov.hmrc.national_insurance.class_1.employee_scale[1].threshold": {
+    "2026": 236.0,
+    "2027": 244.0
+   }
+  },
+  "obr_thresholds": {
+   "gov.hmrc.income_tax.allowances.personal_allowance.amount": {
+    "2026": 16070,
+    "2027": 16570
+   },
+   "gov.hmrc.income_tax.rates.uk[1].threshold": {
+    "2026": 48400,
+    "2027": 49900
+   },
+   "gov.hmrc.income_tax.rates.uk[2].threshold": {
+    "2026": 150000,
+    "2027": 150000
+   },
+   "gov.hmrc.national_insurance.class_1.employee_scale[1].threshold": {
+    "2026": 236.0,
+    "2027": 243.0
+   },
+   "gov.hmrc.national_insurance.class_1.employee_scale[2].threshold": {
+    "2026": 1239.8076923076924,
+    "2027": 1278.2692307692307
+   },
+   "gov.hmrc.national_insurance.class_4.thresholds.lower_profits_limit": {
+    "2026": 12272,
+    "2027": 12636
+   },
+   "gov.hmrc.national_insurance.class_4.thresholds.upper_profits_limit": {
+    "2026": 64470,
+    "2027": 66470
+   }
+  },
+  "hmrc_ten_percent": {
+   "gov.hmrc.income_tax.allowances.personal_allowance.amount": {
+    "2026": 13827.000000000002,
+    "2027": 13827.000000000002
+   },
+   "gov.hmrc.income_tax.rates.uk[1].threshold": {
+    "2026": 41470.0,
+    "2027": 41470.0
+   },
+   "gov.hmrc.income_tax.rates.savings_starter_rate.allowance": {
+    "2026": 5500.0,
+    "2027": 5500.0
+   }
+  }
+ },
+ "parameters_held": {
+  "baseline": {
+   "2026": {
+    "personal_allowance": 12570.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 241.73,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   },
+   "2027": {
+    "personal_allowance": 12570.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 241.73,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   }
+  },
+  "ni_tracks_allowance": {
+   "2026": {
+    "personal_allowance": 16080.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 309.2307692307692,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   },
+   "2027": {
+    "personal_allowance": 16650.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 320.1923076923077,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   }
+  },
+  "ni_sep_cpi_from_jul22": {
+   "2026": {
+    "personal_allowance": 16080.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 300.0,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   },
+   "2027": {
+    "personal_allowance": 16650.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 311.0,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   }
+  },
+  "ni_p2p_from_jul22": {
+   "2026": {
+    "personal_allowance": 16080.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 275.0,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   },
+   "2027": {
+    "personal_allowance": 16650.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 285.0,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   }
+  },
+  "allowance_only": {
+   "2026": {
+    "personal_allowance": 16080.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 241.73,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   },
+   "2027": {
+    "personal_allowance": 16650.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 241.73,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   }
+  },
+  "ni_sep_cpi_from_2021": {
+   "2026": {
+    "personal_allowance": 16080.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 236.0,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   },
+   "2027": {
+    "personal_allowance": 16650.0,
+    "basic_rate_band": 37700.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 244.0,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   }
+  },
+  "obr_thresholds": {
+   "2026": {
+    "personal_allowance": 16070.0,
+    "basic_rate_band": 48400.0,
+    "additional_rate_threshold": 150000.0,
+    "primary_threshold_week": 236.0,
+    "upper_earnings_limit_week": 1239.8076923076924,
+    "lower_profits_limit": 12272.0,
+    "upper_profits_limit": 64470.0
+   },
+   "2027": {
+    "personal_allowance": 16570.0,
+    "basic_rate_band": 49900.0,
+    "additional_rate_threshold": 150000.0,
+    "primary_threshold_week": 243.0,
+    "upper_earnings_limit_week": 1278.2692307692307,
+    "lower_profits_limit": 12636.0,
+    "upper_profits_limit": 66470.0
+   }
+  },
+  "hmrc_ten_percent": {
+   "2026": {
+    "personal_allowance": 13827.000000000002,
+    "basic_rate_band": 41470.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 241.73,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   },
+   "2027": {
+    "personal_allowance": 13827.000000000002,
+    "basic_rate_band": 41470.0,
+    "additional_rate_threshold": 125140.0,
+    "primary_threshold_week": 241.73,
+    "upper_earnings_limit_week": 966.73,
+    "lower_profits_limit": 12570.0,
+    "upper_profits_limit": 50270.0
+   }
+  }
+ },
+ "checks": {
+  "2026-27 paths": {
+   "income_tax_same_on_all_paths": true,
+   "extra_ni_rises_with_primary_threshold": true
+  },
+  "2026-27 ni_tracks_allowance": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true
+  },
+  "2026-27 ni_sep_cpi_from_jul22": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true
+  },
+  "2026-27 ni_p2p_from_jul22": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true
+  },
+  "2026-27 allowance_only": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true,
+   "no_ni_change": true
+  },
+  "2026-27 ni_sep_cpi_from_2021": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true
+  },
+  "2026-27 obr_thresholds": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true
+  },
+  "2026-27 hmrc_ten_percent": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true
+  },
+  "2027-28 paths": {
+   "income_tax_same_on_all_paths": true,
+   "extra_ni_rises_with_primary_threshold": true
+  },
+  "2027-28 ni_tracks_allowance": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true
+  },
+  "2027-28 ni_sep_cpi_from_jul22": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true
+  },
+  "2027-28 ni_p2p_from_jul22": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true
+  },
+  "2027-28 allowance_only": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true,
+   "no_ni_change": true
+  },
+  "2027-28 ni_sep_cpi_from_2021": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true,
+   "simple_workers_exist": true,
+   "simple_workers_income_tax_within_1": true,
+   "simple_workers_ni_within_1": true,
+   "households_behind_changes_above_floor": true,
+   "allowance_held": true
+  },
+  "2027-28 obr_thresholds": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true
+  },
+  "2027-28 hmrc_ten_percent": {
+   "net_income_identity_within_float_rounding": true,
+   "market_income_unchanged": true,
+   "pension_contributions_unchanged": true,
+   "benefit_components_add_up_within_float_rounding": true,
+   "gainers_above_floor": true
+  }
+ }
+}
