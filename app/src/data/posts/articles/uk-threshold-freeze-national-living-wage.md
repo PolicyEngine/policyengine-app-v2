@@ -387,7 +387,475 @@ In Great Britain, the Department for Work and Pensions counts [earnings after in
 
 For UC, we assume employers pay workers the same amount each month. Take a lone parent with two children aged 4 and 7, who works 35 hours on the National Living Wage, has no childcare costs and pays £110 a week in social rent. We estimate they receive £9,835 of UC in 2026-27. Across the five paths, they pay £678 to £983 more income tax and NI, receive £373 to £541 more UC, and have £305 to £442 less net income. In 2027-28, those figures rise to £816 to £1,142, £449 to £628, and £367 to £514.
 
-A single worker with no children and the same rent receives no UC at 35 hours, so they pay the full amount with no offset. We leave out Council Tax Reduction, so a household that receives it could lose less.
+A single worker with no children and the same rent also loses 45p for each £1, which comes to £442 from about 24.3 hours. Their UC runs out at about 34 hours with thresholds frozen, and would have run out at about 32 hours if the government had raised the allowance and NI threshold together. From about 34 hours, they have the full £983 less.
+
+In England, [each council makes its own](https://www.legislation.gov.uk/ukpga/1992/14/section/13A) Council Tax Reduction scheme. PolicyEngine UK runs the working-age schemes of five councils, and our other examples leave Council Tax Reduction out. For example, [Kingston upon Thames](https://www.kingston.gov.uk/sites/default/files/2026-03/Council%20Tax%20Reduction%20Scheme%202026%20-%202027.pdf) cuts the reduction of a working-age UC claimant by 20p for each £1 of income above their maximum UC award and counts their UC as income, so they get back 9p of the 45p and end up 36p down. A single renter there with a Band C bill of £1,739, after the [25% discount for living alone](https://www.legislation.gov.uk/ukpga/1992/14/section/11), has £354 less net income from about 24.3 hours to about 31 hours. Beyond that, their reduction and then their UC run out, and from about 34 hours they have the full £983 less.
+
+```chart
+{
+  "type": "line",
+  "title": "Workers on UC lose less net income until their UC runs out",
+  "subtitle": "Net income with thresholds frozen, less net income if the government had raised the allowance and NI threshold together; £12.71 an hour, 2026-27",
+  "xKey": "hours",
+  "xLabel": "Hours a week",
+  "yLabel": "Change in net income a year",
+  "format": {
+    "prefix": "£",
+    "decimals": 0,
+    "separator": true
+  },
+  "xFormat": {
+    "decimals": 1
+  },
+  "source": "PolicyEngine UK 2.175.5; hypothetical households, 2026-27; we assume no behavioural response.",
+  "series": [
+    {
+      "key": "noBenefits",
+      "name": "Single worker with no benefits",
+      "color": "primary"
+    },
+    {
+      "key": "loneParent",
+      "name": "Lone parent on UC",
+      "color": "secondary"
+    },
+    {
+      "key": "renter",
+      "name": "Single renter on UC",
+      "color": "tertiary"
+    },
+    {
+      "key": "kingston",
+      "name": "Single renter in Kingston upon Thames on UC and Council Tax Reduction",
+      "color": "quinary"
+    }
+  ],
+  "markers": [
+    {
+      "x": 19.02,
+      "label": "Pay reaches £12,570"
+    },
+    {
+      "x": 24.33,
+      "label": "Pay reaches £16,080"
+    },
+    {
+      "x": 33.95,
+      "label": "Single renter's UC runs out"
+    }
+  ],
+  "data": [
+    {
+      "hours": 15.0,
+      "noBenefits": 0.0,
+      "loneParent": 0.0,
+      "renter": 0.0,
+      "kingston": 0.0
+    },
+    {
+      "hours": 15.5,
+      "noBenefits": 0.0,
+      "loneParent": 0.0,
+      "renter": 0.0,
+      "kingston": 0.0
+    },
+    {
+      "hours": 16.0,
+      "noBenefits": 0.0,
+      "loneParent": 0.0,
+      "renter": 0.0,
+      "kingston": 0.0
+    },
+    {
+      "hours": 16.5,
+      "noBenefits": 0.0,
+      "loneParent": 0.0,
+      "renter": 0.0,
+      "kingston": 0.0
+    },
+    {
+      "hours": 17.0,
+      "noBenefits": 0.0,
+      "loneParent": 0.0,
+      "renter": 0.0,
+      "kingston": 0.0
+    },
+    {
+      "hours": 17.5,
+      "noBenefits": 0.0,
+      "loneParent": 0.0,
+      "renter": 0.0,
+      "kingston": 0.0
+    },
+    {
+      "hours": 18.0,
+      "noBenefits": 0.0,
+      "loneParent": 0.0,
+      "renter": 0.0,
+      "kingston": 0.0
+    },
+    {
+      "hours": 18.5,
+      "noBenefits": 0.0,
+      "loneParent": 0.0,
+      "renter": 0.0,
+      "kingston": 0.0
+    },
+    {
+      "hours": 19.0,
+      "noBenefits": 0.0,
+      "loneParent": 0.0,
+      "renter": 0.0,
+      "kingston": 0.0
+    },
+    {
+      "hours": 19.02,
+      "noBenefits": -0.2,
+      "loneParent": -0.09,
+      "renter": -0.09,
+      "kingston": -0.07
+    },
+    {
+      "hours": 19.5,
+      "noBenefits": -89.03,
+      "loneParent": -40.06,
+      "renter": -40.06,
+      "kingston": -32.05
+    },
+    {
+      "hours": 20.0,
+      "noBenefits": -181.56,
+      "loneParent": -81.7,
+      "renter": -81.7,
+      "kingston": -65.36
+    },
+    {
+      "hours": 20.5,
+      "noBenefits": -274.08,
+      "loneParent": -123.34,
+      "renter": -123.34,
+      "kingston": -98.67
+    },
+    {
+      "hours": 21.0,
+      "noBenefits": -366.61,
+      "loneParent": -164.98,
+      "renter": -164.98,
+      "kingston": -131.98
+    },
+    {
+      "hours": 21.5,
+      "noBenefits": -459.14,
+      "loneParent": -206.61,
+      "renter": -206.62,
+      "kingston": -165.29
+    },
+    {
+      "hours": 22.0,
+      "noBenefits": -551.67,
+      "loneParent": -248.25,
+      "renter": -248.25,
+      "kingston": -198.6
+    },
+    {
+      "hours": 22.5,
+      "noBenefits": -644.2,
+      "loneParent": -289.89,
+      "renter": -289.89,
+      "kingston": -231.91
+    },
+    {
+      "hours": 23.0,
+      "noBenefits": -736.73,
+      "loneParent": -331.53,
+      "renter": -331.53,
+      "kingston": -265.22
+    },
+    {
+      "hours": 23.5,
+      "noBenefits": -829.26,
+      "loneParent": -373.17,
+      "renter": -373.16,
+      "kingston": -298.53
+    },
+    {
+      "hours": 23.6,
+      "noBenefits": -847.76,
+      "loneParent": -381.49,
+      "renter": -381.49,
+      "kingston": -305.2
+    },
+    {
+      "hours": 24.0,
+      "noBenefits": -921.79,
+      "loneParent": -414.8,
+      "renter": -414.8,
+      "kingston": -331.84
+    },
+    {
+      "hours": 24.33,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 24.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 25.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 25.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 26.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 26.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.27,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 27.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 27.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 28.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 28.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 29.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 29.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 30.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 30.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 31.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -353.81
+    },
+    {
+      "hours": 31.16,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -354.06
+    },
+    {
+      "hours": 31.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -442.26,
+      "kingston": -368.62
+    },
+    {
+      "hours": 31.88,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -443.55,
+      "kingston": -386.19
+    },
+    {
+      "hours": 32.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.27,
+      "renter": -474.96,
+      "kingston": -422.74
+    },
+    {
+      "hours": 32.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.27,
+      "renter": -605.82,
+      "kingston": -575.01
+    },
+    {
+      "hours": 33.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.27,
+      "renter": -736.68,
+      "kingston": -727.29
+    },
+    {
+      "hours": 33.22,
+      "noBenefits": -982.8,
+      "loneParent": -442.27,
+      "renter": -794.26,
+      "kingston": -794.26
+    },
+    {
+      "hours": 33.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -867.55,
+      "kingston": -867.55
+    },
+    {
+      "hours": 33.95,
+      "noBenefits": -982.8,
+      "loneParent": -442.27,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 34.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 34.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 35.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 35.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 36.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.27,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 36.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 37.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.27,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 37.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 38.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 38.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 39.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 39.5,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    },
+    {
+      "hours": 40.0,
+      "noBenefits": -982.8,
+      "loneParent": -442.26,
+      "renter": -982.8,
+      "kingston": -982.8
+    }
+  ]
+}
+```
+
+A single renter's reduction on a Band C bill runs out sooner in the other London schemes we model: by about 26 hours in [Merton](https://www.merton.gov.uk/sites/default/files/2026-03/Council%20Tax%20Reduction%20Scheme%20L%20B%20Merton%202026-27.pdf), and before 15 hours in [Newham](https://www.newham.gov.uk/downloads/file/10753/council-tax-reduction-scheme-2026) and [Westminster](https://www.westminster.gov.uk/sites/default/files/media/documents/council-tax-support-scheme-for-2026-27.pdf). [Oxford](https://www.oxford.gov.uk/council-tax-reduction/council-tax-reduction-scheme-2026-27) sets support by bands of weekly income, so a small change in income can move a household across a band. For example, a lone parent working 24 hours there has £32 more net income with thresholds frozen, because their lower income keeps them in a band with £446 more support. From 25 hours, they have £442 less.
 
 ## What the estimates cover
 

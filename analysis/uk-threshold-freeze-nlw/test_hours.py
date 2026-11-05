@@ -7,16 +7,27 @@ Needs hours.csv, hours_meta.json and results.csv. Runs no model code.
 
 import csv
 import json
+import re
 from pathlib import Path
 
 import pytest
 
-from thresholds import ACTUAL_PA, BAND_D, CHART_KINKS, NLW, S57_PA, council_bill
+from thresholds import (
+    ACTUAL_PA,
+    BAND_C_SHARE,
+    BAND_D,
+    CHART_KINKS,
+    NLW,
+    S57_PA,
+    SINGLE_PERSON_SHARE,
+    council_bill,
+)
 
 HERE = Path(__file__).resolve().parent
 ROWS = list(csv.DictReader((HERE / "hours.csv").open()))
 META = json.loads((HERE / "hours_meta.json").read_text())
 RESULTS = list(csv.DictReader((HERE / "results.csv").open()))
+TEXT = (HERE.parents[1] / "app/src/data/posts/articles/uk-threshold-freeze-national-living-wage.md").read_text()
 PATH = "ni_tracks_allowance"
 TWENTY_PERCENT_COUNCILS = ("kingston_upon_thames", "merton", "westminster")
 # Oxford's scheme sets support by bands of weekly income, so a small change in
@@ -212,3 +223,88 @@ def test_someone_with_no_allowance_on_either_side_pays_no_more_income_tax():
     assert row["allowance_frozen"] == row["allowance_raised"] == 0
     assert row["extra_income_tax"] == 0
     assert row["extra_ni"] == pytest.approx(0.08 * (S57_PA[2026] - ACTUAL_PA), abs=1)
+
+
+# The post
+
+
+def gbp(value: float) -> str:
+    return f"£{abs(value):,.0f}"
+
+
+def about(hours: float) -> str:
+    return f"about {hours:.0f} hours"
+
+
+def net(household: str, hours: float) -> float:
+    return number(at(household, hours), "net_income_change")
+
+
+def chart_titled(start: str) -> dict:
+    specs = [json.loads(block) for block in re.findall(r"```chart\n(.*?)\n```", TEXT, re.S)]
+    return next(spec for spec in specs if spec["title"].startswith(start))
+
+
+def test_net_income_chart_matches_the_results():
+    spec = chart_titled("Workers on UC lose less net income")
+    series = {
+        "noBenefits": "single",
+        "loneParent": "lone_parent",
+        "renter": "single_social_rent",
+        "kingston": "single_kingston_upon_thames",
+    }
+    assert [s["key"] for s in spec["series"]] == list(series)
+    assert [point["hours"] for point in spec["data"]] == META["chart_hours"]
+    for point in spec["data"]:
+        for key, household in series.items():
+            assert point[key] == pytest.approx(net(household, point["hours"]), abs=0.01)
+    runs_out = META["benefit_runs_out_at_hours"]["single_social_rent"]["uc_frozen"]
+    assert [m["x"] for m in spec["markers"]] == [CHART_KINKS[0], CHART_KINKS[2], runs_out]
+    assert f"PolicyEngine UK {META['policyengine_uk']}" in spec["source"]
+
+
+def test_chart_says_which_way_the_comparison_runs():
+    subtitle = chart_titled("Workers on UC lose less net income")["subtitle"]
+    assert subtitle.startswith("Net income with thresholds frozen, less net income if the government had raised")
+    for household in ("single", "lone_parent", "single_social_rent", "single_kingston_upon_thames"):
+        assert net(household, 35.0) < 0
+
+
+def test_uc_and_council_tax_reduction_prose_matches_the_results():
+    renter = META["benefit_runs_out_at_hours"]["single_social_rent"]
+    kingston = META["benefit_runs_out_at_hours"]["single_kingston_upon_thames"]
+    expected = [
+        f"which comes to {gbp(net('single_social_rent', 24.33))} from about 24.3 hours",
+        f"Their UC runs out at {about(renter['uc_frozen'])} with thresholds frozen",
+        f"would have run out at {about(renter['uc_raised'])} if the government",
+        f"From {about(renter['uc_frozen'])}, they have the full {gbp(net('single_social_rent', 34.0))} less",
+        f"Band C bill of {gbp(META['council_bills']['KINGSTON_UPON_THAMES'])}",
+        f"has {gbp(net('single_kingston_upon_thames', 25.0))} less net income from about 24.3 hours to {about(kingston['ctr_raised'])}",
+        f"from {about(kingston['uc_frozen'])} they have the full {gbp(net('single_kingston_upon_thames', 34.0))} less",
+    ]
+    for phrase in expected:
+        assert phrase in TEXT, phrase
+    assert net("single_kingston_upon_thames", 25.0) == pytest.approx(net("single_kingston_upon_thames", 30.0), abs=0.05)
+
+
+def test_other_councils_in_the_post_match_the_results():
+    assert number(at("single_merton", 25.5), "ctr_frozen") > 0
+    assert number(at("single_merton", 26.5), "ctr_frozen") == 0
+    assert "by about 26 hours in [Merton]" in TEXT
+    for household in ("single_newham", "single_westminster"):
+        row = at(household, 15.0)
+        assert on_neither_side(row, "ctr")
+    assert "before 15 hours in [Newham]" in TEXT
+    oxford = at("lone_parent_oxford", 24.0)
+    assert f"a lone parent working 24 hours there has {gbp(number(oxford, 'net_income_change'))} more net income" in TEXT
+    assert number(oxford, "net_income_change") > 0
+    gap = number(oxford, "ctr_frozen") - number(oxford, "ctr_raised")
+    assert f"a band with {gbp(gap)} more support" in TEXT
+    assert f"From 25 hours, they have {gbp(net('lone_parent_oxford', 25.0))} less" in TEXT
+    assert net("lone_parent_oxford", 25.0) < 0
+
+
+def test_post_names_the_council_tax_bill_rules():
+    assert "25% discount for living alone" in TEXT
+    assert SINGLE_PERSON_SHARE == 0.75
+    assert BAND_C_SHARE == 8 / 9
