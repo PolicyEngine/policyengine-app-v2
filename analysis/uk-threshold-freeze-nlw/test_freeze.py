@@ -271,8 +271,8 @@ def test_prose_figures_match_results():
         f"they receive {gbp(float(row(household='lone_parent')['uc_base']))} of UC",
         f"pay {gbp(float(META['ni_2021_rules']['2026']['rules_2021']))} of NI in 2026-27",
         f"against {gbp(float(META['ni_2021_rules']['2026']['actual']))} now",
-        f"would pay {gbp(float(row('2026-27', path='alternative')['freeze_tax_and_ni']))}"
-        f" and {gbp(float(row('2027-28', path='alternative')['freeze_tax_and_ni']))} more",
+        f"pays {gbp(float(row('2026-27', path='alternative')['freeze_tax_and_ni']))} more income tax and NI in 2026-27"
+        f" and {gbp(float(row('2027-28', path='alternative')['freeze_tax_and_ni']))} more in 2027-28 than if the Treasury",
         f"pay {gbp(float(couple26['freeze_income_tax']))} more income tax in 2026-27 and "
         f"{gbp(float(couple27['freeze_income_tax']))} more in 2027-28",
         f"the £{S57_PA[2026] - ACTUAL_PA:,} and £{S57_PA[2027] - ACTUAL_PA:,} of pay",

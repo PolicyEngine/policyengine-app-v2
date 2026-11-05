@@ -23,7 +23,7 @@ Parliament has not indexed the NI primary threshold, and the [Treasury sets it](
 
 Had the Treasury applied section 57 each April from 2022, the allowance would reach £16,080 in 2026-27 and £16,650 in 2027-28. The government uses the same rule as its default in its [Budget 2026 policy costings](https://assets.publishing.service.gov.uk/media/6ae1883fe4367e5c8b0467df/AB26_Policy_Costing.pdf#page=110). A full-time worker on the National Living Wage pays the 20% basic rate on the £3,510 and £4,080 of pay between those levels and £12,570, which comes to £702 and £816.
 
-In July 2022, Parliament raised the NI threshold above the level the Treasury would have reached by uprating it with CPI alone. The Treasury sets the threshold one year at a time, with no formula in law, so we compare five paths, each with the allowance at those higher levels.
+In July 2022, Parliament raised the NI threshold above the level the Treasury would have reached by uprating it with CPI alone. The Treasury sets the threshold one year at a time, with no formula in law. We therefore compare what the worker pays with what they would pay on five paths for the NI threshold, each with the allowance at its section 57 level.
 
 **2026-27, on pay of £23,132**
 
@@ -49,7 +49,7 @@ If the Treasury had raised the allowance and followed its 2022 statement, it wou
 
 We then undo the July 2022 rise, which goes beyond the freeze. If Parliament had omitted that rise and the Treasury had uprated £184 a week by each September's CPI, the threshold would reach £12,272 in 2026-27. The actual £12,570 exceeds that, so the worker pays £24 less NI than they would have.
 
-If the Treasury had used allowances of £16,070 in 2026-27 and £16,632 in 2027-28 and raised the NI threshold with the allowance, the worker would pay £980 and £1,137 more.
+The worker pays £980 more income tax and NI in 2026-27 and £1,137 more in 2027-28 than if the Treasury had used allowances of £16,070 and £16,632 and raised the NI threshold with the allowance.
 
 ## Part-time workers
 

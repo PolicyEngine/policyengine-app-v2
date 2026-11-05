@@ -1,6 +1,6 @@
 # The threshold freeze and the National Living Wage
 
-Supports [the post](../../app/src/data/posts/articles/uk-threshold-freeze-national-living-wage.md) on how much more income tax and National Insurance workers on the National Living Wage pay under the threshold freeze.
+This folder holds the script, results and tests behind [the post](../../app/src/data/posts/articles/uk-threshold-freeze-national-living-wage.md) on how much more income tax and National Insurance workers on the National Living Wage pay under the threshold freeze.
 
 ## Reproduce the figures
 
@@ -33,13 +33,13 @@ Each scenario overrides the Personal Allowance and the Class 1 primary threshold
 
 ## Decisions
 
-- **Allowance basis.** The post uses the section 57 path. Both section 57 and the government's Budget 2026 policy costings (Annex A) set the Personal Allowance default as CPI rounded up to the nearest £10. The `alternative` rows support the post's sensitivity sentence.
-- **NI rounding.** The rows from £242 a week round to the nearest £1 a week, the Primary Threshold default in the same annex.
-- **No national microsimulation.** In the Microcosm UK 2024-25 national file (`a6299504`), implied hourly pay (employment income divided by hours, adults aged 21 or over) shows no spike at the data year's £11.44 wage floor, and about 23% of 28.5 million employees sit more than 5% below it. The Low Pay Commission puts coverage at about 6% of jobs. A count of workers in each case would therefore reflect noise in reported hours and pay, so the post shows example workers and quotes no national figure from our microdata.
-- **Council Tax Reduction.** The hypothetical households name no local scheme, so `council_tax_benefit` falls back to a reported £0. The post leaves Council Tax Reduction out and says that a household receiving it could lose less.
-- **UC pay pattern.** PolicyEngine UK calculates UC over a year, which matches 12 equal monthly assessments, so the post assumes employers pay workers the same amount each month. In 2026-27, the single renter's maximum award of £902 a month falls short of 55% of their £1,681 monthly net pay, so they receive no UC. A worker paid every four weeks would net £1,552 in a month with one payday and receive about £48 of UC that month.
-- **Marriage Allowance.** The post's figures cover a single worker. The `couple_two_children` rows give the one-earner couple's income tax figures, which the post states separately.
-- **Chart points.** The chart adds 19.02, 23.6 and 24.33 hours to its half-hour grid, where pay reaches £12,570, £15,600 and £16,080, so its straight segments meet at the kinks.
+- **Allowance basis.** We use the section 57 path in the post. Section 57 has the Treasury round each CPI increase up to a multiple of £10, and the government uses the same rule as its Personal Allowance default in Annex A of its Budget 2026 policy costings. We take the post's sensitivity sentence from the `alternative` rows.
+- **NI rounding.** We round the rows from £242 a week to the nearest £1 a week, the government's Primary Threshold default in the same annex.
+- **No national microsimulation.** In the Microcosm UK 2024-25 national file (`a6299504`), implied hourly pay (employment income divided by hours, adults aged 21 or over) shows no spike at the data year's £11.44 wage floor, and about 23% of 28.5 million employees sit more than 5% below it. The Low Pay Commission puts coverage at about 6% of jobs. A count of workers in each case would therefore reflect noise in reported hours and pay, so we show example workers in the post and quote no national figure from our microdata.
+- **Council Tax Reduction.** The hypothetical households name no local scheme, so `council_tax_benefit` falls back to a reported £0. We leave Council Tax Reduction out of the post and say that a household receiving it could lose less.
+- **UC pay pattern.** PolicyEngine UK calculates UC over a year, which matches 12 equal monthly assessments, so we assume in the post that employers pay workers the same amount each month. In 2026-27, the single renter's maximum award of £902 a month falls short of 55% of their £1,681 monthly net pay, so they receive no UC. If their employer paid them every four weeks, they would net £1,552 in a month with one payday and receive about £48 of UC that month.
+- **Marriage Allowance.** Our main figures cover a single worker. The `couple_two_children` rows give the one-earner couple's income tax figures, which we state separately in the post.
+- **Chart points.** We add 19.02, 23.6 and 24.33 hours to the chart's half-hour grid, where pay reaches £12,570, £15,600 and £16,080, so its straight segments meet at the kinks.
 
 ## Invariants
 
@@ -54,7 +54,7 @@ These hold for every input, and `test_freeze.py` checks them:
 - UC rises by 55% of the extra tax and NI wherever UC stays in payment.
 - At 35 hours, 37.5 hours, 40 hours, in Scotland and with minimum auto-enrolment contributions, extra income tax and NI stay equal.
 
-Extra NI on the last row turns negative in 2026-27 by design: £12,570 exceeds the £12,272 that path reaches.
+Extra NI turns negative in 2026-27 on the path without the July 2022 rise, as intended, because £12,570 exceeds the £12,272 that path reaches.
 
 ## Sources
 
