@@ -90,11 +90,16 @@ The post sets our national estimates beside published ones. Every comparison bel
 | OBR Table A.5, income tax receipts | 365.4 | 392.2 |
 | Ours, baseline income tax | 342.6 | 361.8 |
 | OBR November 2025, Box 3.3 Table A, employee NI | −1.3 | −0.5 |
+| Ours, `obr_thresholds`, extra NI | −5.1 | −5.1 |
 | Ours, `ni_sep_cpi_from_2021`, extra NI | −0.6 | 0.2 |
+| OBR November 2025, Box 3.3 Table A, income tax and employee NI | 33.9 | 39.3 |
+| Ours, `obr_thresholds`, extra income tax and NI | 37.1 | 44.1 |
 | HMRC reckoner, all main allowances, starting and basic rate limits +10% | 14.4 | 17.7 |
 | Ours, `hmrc_ten_percent`, extra income tax outside Scottish income tax | 15.2 | 15.9 |
 
 HMRC's row includes behavioural responses and leaves out the income tax devolved to Scotland and Wales, according to notes 1 and 3 of the reckoner. Our row includes no behavioural response and leaves out Scottish income tax. Table 4.17 carries no note on behavioural responses, so we state nothing about them.
+
+`obr_thresholds` and `ni_sep_cpi_from_2021` hold the same primary threshold in 2026-27, £236 a week. `obr_thresholds` also raises the upper earnings and profits limits to the OBR's higher rate threshold and moves the lower profits limit to its primary threshold, and those limits account for the £4.5 billion between the two. Table 4.19 sets the upper earnings limit on the same indexed path as the higher rate threshold, while Box 3.3's text names only the primary threshold and lower profits limit under employee NI and its table shows one row with no split by threshold. So we report both of our figures and can't say which one its row matches. Our run's income tax and NI together exceed Box 3.3's by 10% and 12%, and our run uses the OBR's later forecast.
 
 | Millions of people | 2026-27 | 2027-28 |
 | --- | --- | --- |

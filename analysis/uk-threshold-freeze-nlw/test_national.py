@@ -781,8 +781,9 @@ def test_pay_band_prose_matches_the_results():
     on_uc = float(middle["average_net_income_change_on_uc"])
     not_on_uc = float(middle["average_net_income_change_not_on_uc"])
     expected = [
-        f"On that path, the {float(middle['employees_m']):.1f} million employees on £20,000 to £25,000, a band that includes full-time pay at the National Living Wage, "
-        f"pay {gbp(extra)} more income tax and NI on average in 2026-27 and have {gbp(abs(net))} less net income.",
+        f"On that path, the {float(middle['employees_m']):.1f} million employees on £20,000 to £25,000 "
+        f"pay {gbp(extra)} more income tax and NI on average in 2026-27 and have {gbp(abs(net))} less net income. "
+        "That band includes full-time pay at the National Living Wage.",
         f"We estimate {float(middle['employees_m']):.1f} million of them earn £20,000 to £25,000 in 2026-27",
         f"They pay {gbp(extra)} more income tax and NI on average than if the government had raised the NI threshold with the allowance, and have {gbp(abs(net))} less net income.",
         f"The {percent(float(middle['share_in_family_on_uc']))} in a family on UC have {gbp(abs(on_uc))} less, and the rest have {gbp(abs(not_on_uc))} less.",
@@ -916,10 +917,29 @@ def test_obr_employee_ni_comparison_matches_the_results():
     first, second = (float(total(year, LAST)["extra_ni_bn"]) for year in FISCAL_YEARS)
     assert first < 0 < second
     assert OBR_EMPLOYEE_NI["2026-27"] < 0 and OBR_EMPLOYEE_NI["2027-28"] < 0
+    at_obr_levels = [float(total(year, OBR_THRESHOLDS)["extra_ni_bn"]) for year in FISCAL_YEARS]
+    assert max(at_obr_levels) < 0
+    assert {bn(value) for value in at_obr_levels} == {"£5.1 billion"}
     assert (
-        f"the OBR puts employee NI {bn(OBR_EMPLOYEE_NI['2026-27'])} and {bn(OBR_EMPLOYEE_NI['2027-28'])} lower with thresholds frozen in those years. "
-        f"On our closest path, which skips the July 2022 rise, we estimate {bn(first)} less in 2026-27 and {bn(second)} more in 2027-28."
+        f"the OBR puts employee NI {bn(OBR_EMPLOYEE_NI['2026-27'])} and {bn(OBR_EMPLOYEE_NI['2027-28'])} lower with thresholds frozen in those years, with no split by threshold. "
+        f"Against its October 2026 levels, we estimate {bn(at_obr_levels[0])} less in each year, because the OBR also raises the upper earnings and profits limits, where the NI rate falls, with its higher rate threshold. "
+        f"On the path without the July 2022 rise and with those limits at £50,270, we estimate {bn(first)} less in 2026-27 and {bn(second)} more in 2027-28."
     ) in TEXT
+
+
+def test_the_obr_upper_limits_explain_the_gap_between_our_two_ni_figures():
+    held = META["parameters_held"]
+    obr, path = held[OBR_THRESHOLDS]["2026"], held[LAST]["2026"]
+    # The two runs hold the same primary threshold in 2026-27, so the gap between their
+    # NI figures comes from the limits the OBR's levels also move.
+    assert obr["primary_threshold_week"] == path["primary_threshold_week"]
+    higher_rate_threshold = OBR_INDEXED[2026]["higher_rate_threshold"]
+    assert obr["upper_earnings_limit_week"] == pytest.approx(higher_rate_threshold / 52)
+    assert obr["upper_profits_limit"] == higher_rate_threshold
+    assert path["upper_earnings_limit_week"] == pytest.approx(50_270 / 52, abs=0.01)
+    assert path["upper_profits_limit"] == 50_270
+    gap = float(total("2026-27", OBR_THRESHOLDS)["extra_ni_bn"]) - float(total("2026-27", LAST)["extra_ni_bn"])
+    assert gap < 0
 
 
 def test_hmrc_comparison_matches_the_results():

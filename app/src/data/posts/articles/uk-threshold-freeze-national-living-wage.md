@@ -11,7 +11,7 @@ Across UK households, we estimate:
 
 - Households pay £29.7 billion to £37.3 billion more income tax and NI in 2026-27 across the five paths, and £35.9 billion to £44.1 billion more in 2027-28. They get about 3p of each £1 back in benefits.
 - Households in the ninth income decile have 2.6% less net income in 2026-27 than if the government had raised the NI threshold with the allowance, and households in the lowest decile have 0.9% less.
-- On that path, the 2.4 million employees on £20,000 to £25,000, a band that includes full-time pay at the National Living Wage, pay £996 more income tax and NI on average in 2026-27 and have £937 less net income.
+- On that path, the 2.4 million employees on £20,000 to £25,000 pay £996 more income tax and NI on average in 2026-27 and have £937 less net income. That band includes full-time pay at the National Living Wage.
 - On that path, 481,000 more people fall below the absolute poverty line before housing costs in 2026-27, and 325,000 fewer fall below the relative line, which moves with median income.
 
 ## How the thresholds reached £12,570
@@ -977,7 +977,7 @@ For example, a worker on £55,000 pays 40p on each £1 of the £3,510 between th
     "signed": true
   },
   "valueLabels": false,
-  "source": "Source: PolicyEngine UK 2.151.0 microsimulation on the Microcosm UK dataset and the OBR's October 2026 forecast."
+  "source": "PolicyEngine UK 2.151.0; Microcosm UK dataset and the OBR's October 2026 forecast, 2026-27; we assume no behavioural response."
 }
 ```
 
@@ -1024,7 +1024,7 @@ In its Table 4.17, the OBR puts the yield from freezing the income tax threshold
 
 The OBR's higher rate threshold exceeds the £53,780 on our five paths in 2026-27, and its additional rate threshold exceeds their £125,140. With its levels, households in the top decile would have £3,277 more net income on average. The Gini index would reach 0.283, against 0.282 with thresholds frozen, the opposite direction from our five paths.
 
-In its [November 2025 outlook](https://obr.uk/docs/dlm_uploads/OBR_Economic_and_fiscal_outlook_November_2025.pdf), the OBR puts employee NI £1.3 billion and £0.5 billion lower with thresholds frozen in those years. On our closest path, which skips the July 2022 rise, we estimate £0.6 billion less in 2026-27 and £0.2 billion more in 2027-28.
+In its [November 2025 outlook](https://obr.uk/docs/dlm_uploads/OBR_Economic_and_fiscal_outlook_November_2025.pdf), the OBR puts employee NI £1.3 billion and £0.5 billion lower with thresholds frozen in those years, with no split by threshold. Against its October 2026 levels, we estimate £5.1 billion less in each year, because the OBR also raises the upper earnings and profits limits, where the NI rate falls, with its higher rate threshold. On the path without the July 2022 rise and with those limits at £50,270, we estimate £0.6 billion less in 2026-27 and £0.2 billion more in 2027-28.
 
 In its [June 2025 ready reckoner](https://assets.publishing.service.gov.uk/media/68552862b46781eacfd71d71/June_2025_TRR_ODS__1_.ods), HMRC puts the cost of raising the Personal Allowance, starting rate limit and basic rate limit by 10% at £14.4 billion in 2026-27 and £17.7 billion in 2027-28. HMRC includes behavioural responses and leaves out the income tax devolved to Scotland and Wales. We estimate £15.2 billion and £15.9 billion, with no behavioural response and without Scottish income tax, so our figure exceeds HMRC's by 6% in 2026-27 and trails it by 10% in 2027-28.
 
