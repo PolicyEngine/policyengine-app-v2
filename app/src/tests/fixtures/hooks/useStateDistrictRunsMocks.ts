@@ -229,11 +229,15 @@ export const STATE_FAILURE_REASON = 'The simulation did not finish';
 /**
  * The Public API's answer for a calculation that failed: 502 with an error
  * body, whose `retry_after_seconds` says how long it keeps returning the
- * failure (null when it cannot say).
+ * failure (null when it cannot say), and whose `delete_after_seconds` says
+ * in how many seconds a DELETE of it will be accepted. Without
+ * `deleteAfterSeconds` the body has no such field, as from a deploy from
+ * before the DELETE.
  */
 export function stateFailure(
   message: string = STATE_ERROR_MESSAGE,
-  retryAfterSeconds: number | null = null
+  retryAfterSeconds: number | null = null,
+  deleteAfterSeconds?: number | null
 ): Response {
   return new Response(
     JSON.stringify({
@@ -241,6 +245,7 @@ export function stateFailure(
       message,
       result: null,
       retry_after_seconds: retryAfterSeconds,
+      ...(deleteAfterSeconds === undefined ? {} : { delete_after_seconds: deleteAfterSeconds }),
     }),
     { status: 502, headers: { 'Content-Type': 'application/json' } }
   );
@@ -267,6 +272,8 @@ export const STATE_LONG_RETRY_WAIT_REASON =
   "The simulation did not finish. Retry can't start a new run for hours or days";
 /** The most seconds left for which the reason says "in a few minutes". */
 export const STATE_SHORT_RETRY_WAIT_LIMIT_SECONDS = 15 * 60;
+/** Seconds past those 15 minutes that a failure is kept, to see the reason change at 15 minutes. */
+export const STATE_PAST_SHORT_RETRY_WAIT_SECONDS = 30;
 /** Milliseconds in a second, for moving the fake clock by the Public API's seconds. */
 export const MS_PER_SECOND = 1000;
 /** The seconds a replayed two-minute failure has left, 30 seconds after it was stored. */
@@ -277,6 +284,50 @@ export const STATE_LAST_MINUTE_RETRY_WAIT_SECONDS = 50;
 export const STATE_STORED_FAILURE_SECONDS = 30 * 24 * 60 * 60;
 /** The longest delay a browser timer keeps, 2^31 − 1 ms; it runs a longer one at once. */
 export const BROWSER_TIMER_LIMIT_MS = 2 ** 31 - 1;
+
+/** The Public API's lockout: a DELETE is accepted 10 seconds after the failure was recorded. */
+export const STATE_DELETE_LOCKOUT_SECONDS = 10;
+
+/**
+ * A failed state run as a Public API with the DELETE answers it: kept 2
+ * minutes, and deletable in `deleteAfterSeconds` (0: now).
+ */
+export const stateFailureDeletable = (deleteAfterSeconds = 0): Response =>
+  stateFailure(STATE_ERROR_MESSAGE, STATE_RETRY_WAIT_SECONDS, deleteAfterSeconds);
+
+/** The reason the app gives while a DELETE of a state's failure is not accepted yet. */
+export const STATE_DELETE_WAIT_REASON =
+  'The simulation did not finish. Retry can start a new run in under a minute';
+
+/** The seconds a refused DELETE says are left before the Public API will accept one. */
+export const STATE_DELETE_REFUSED_SECONDS = 4;
+
+/** A DELETE's answer for a state: an answer, or an error the request throws. */
+export type StateDeleteResponse = Response | Error;
+
+/** 204: the Public API removed the state's stored failure. */
+export const stateFailureDeleted = (): Response => new Response(null, { status: 204 });
+
+/** 404: the Public API had nothing stored for the state. */
+export const stateNothingStored = (): Response =>
+  Response.json({ status: 'error', message: 'Nothing stored.', result: null }, { status: 404 });
+
+/** 409: the state's failure is too new to delete; a DELETE is accepted in `seconds`. */
+export const stateDeleteTooSoon = (seconds = STATE_DELETE_REFUSED_SECONDS): Response =>
+  Response.json(
+    { status: 'error', message: 'Too soon.', result: null, delete_after_seconds: seconds },
+    { status: 409 }
+  );
+
+/** 409: the state's stored result is not a failure, because a newer run is computing or done. */
+export const stateDeleteNotAFailure = (): Response =>
+  Response.json(
+    { status: 'error', message: 'Not a failure.', result: null, delete_after_seconds: null },
+    { status: 409 }
+  );
+
+/** The reason the app gives when the DELETE finds a newer run in place of the failure. */
+export const STATE_NEWER_RUN_REASON = 'A newer run is on the server: retry to check it';
 
 /** An error page in place of the Public API's answer, as a proxy or Cloud Run sends one. */
 export const stateErrorPage = (): Response =>
@@ -319,15 +370,24 @@ export interface FakeStateApiOptions {
   failingRecords?: string[];
   /** Holds every economy response until `releaseEconomy()`. */
   holdEconomy?: boolean;
+  /**
+   * Each state's answer to its nth DELETE of its stored failure (from 0);
+   * 204 when not given.
+   */
+  deleteFailure?: (region: string, request: number) => StateDeleteResponse;
 }
 
 export interface FakeStateApi {
   fetch: ReturnType<typeof vi.fn>;
   requests: () => RecordedRequest[];
-  /** The economy requests' URLs, in order. */
+  /** The economy requests' (GET) URLs, in order. */
   economyRequests: () => string[];
-  /** The economy requests' URLs for one state. */
+  /** The economy requests' (GET) URLs for one state. */
   economyRequestsFor: (region: string) => string[];
+  /** The DELETEs of one state's stored failure, by URL. */
+  deleteRequestsFor: (region: string) => string[];
+  /** The methods of one state's requests to the economy URL, in order: GET or DELETE. */
+  economyMethodsFor: (region: string) => string[];
   simulationRequests: () => RecordedRequest[];
   reportRequests: () => RecordedRequest[];
   /** The base report writes (PATCH /us/report), in order. */
@@ -342,6 +402,10 @@ export interface FakeStateApi {
   setFailingRecords: (regions: string[]) => void;
   /** Sends the economy responses held so far, and holds no more. */
   releaseEconomy: () => void;
+  /** Holds every DELETE's answer until `releaseDeletes()`. */
+  holdDeletes: () => void;
+  /** Sends the DELETE answers held so far, and holds no more. */
+  releaseDeletes: () => void;
   /** Holds these states' simulation requests until `releaseRecords()`. */
   holdRecords: (regions: string[]) => void;
   /** Sends the simulation responses held so far, and holds no more. */
@@ -362,6 +426,7 @@ function ok(result: unknown): Response {
 export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeStateApi {
   const requests: RecordedRequest[] = [];
   const economyCalls = new Map<string, number>();
+  const deleteCalls = new Map<string, number>();
   const simulationRegions = new Map<number, string>();
   let failingRecords = new Set(options.failingRecords ?? []);
   let inFlight = 0;
@@ -370,6 +435,8 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
   let heldRecordStates = new Set<string>();
   const heldRecords: Array<() => void> = [];
   const heldEconomy: Array<() => void> = [];
+  let holdDeletes = false;
+  const heldDeletes: Array<() => void> = [];
 
   const reportIdFor = (region: string) => 5000 + ALL_US_STATE_CODES.indexOf(region);
   const simulationIdFor = (region: string, policy: 'baseline' | 'reform') =>
@@ -407,6 +474,19 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
     }
     if (url === `${BASE_URL}/us/report` && method === 'PATCH') {
       return ok({ id: body.id, status: body.status });
+    }
+    if (url.includes('/us/economy/') && method === 'DELETE') {
+      if (holdDeletes) {
+        await new Promise<void>((release) => heldDeletes.push(release));
+      }
+      const region = new URL(url).searchParams.get('region')!;
+      const call = deleteCalls.get(region) ?? 0;
+      deleteCalls.set(region, call + 1);
+      const response = options.deleteFailure?.(region, call) ?? stateFailureDeleted();
+      if (response instanceof Error) {
+        throw response;
+      }
+      return response.clone();
     }
     if (url.includes('/us/economy/')) {
       if (holdEconomy) {
@@ -448,19 +528,26 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
     }
   });
 
+  const isEconomyRequest = (request: RecordedRequest) => request.url.includes('/economy/');
+  const isFor = (region: string) => (request: RecordedRequest) =>
+    isEconomyRequest(request) && new URL(request.url).searchParams.get('region') === region;
+
   return {
     fetch,
     requests: () => requests,
     economyRequests: () =>
-      requests.filter((request) => request.url.includes('/economy/')).map((request) => request.url),
+      requests
+        .filter((request) => isEconomyRequest(request) && request.method === 'GET')
+        .map((request) => request.url),
     economyRequestsFor: (region) =>
       requests
-        .filter(
-          (request) =>
-            request.url.includes('/economy/') &&
-            new URL(request.url).searchParams.get('region') === region
-        )
+        .filter((request) => isFor(region)(request) && request.method === 'GET')
         .map((request) => request.url),
+    deleteRequestsFor: (region) =>
+      requests
+        .filter((request) => isFor(region)(request) && request.method === 'DELETE')
+        .map((request) => request.url),
+    economyMethodsFor: (region) => requests.filter(isFor(region)).map((request) => request.method),
     simulationRequests: () =>
       requests.filter((request) => request.url === `${BASE_URL}/us/simulation`),
     reportRequests: () =>
@@ -487,6 +574,13 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
     releaseEconomy: () => {
       holdEconomy = false;
       heldEconomy.splice(0).forEach((release) => release());
+    },
+    holdDeletes: () => {
+      holdDeletes = true;
+    },
+    releaseDeletes: () => {
+      holdDeletes = false;
+      heldDeletes.splice(0).forEach((release) => release());
     },
   };
 }

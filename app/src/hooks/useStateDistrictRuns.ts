@@ -6,10 +6,12 @@ import {
 } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import { ReportAdapter } from '@/adapters/ReportAdapter';
 import {
+  deleteFailedSocietyWideCalculation,
   failedCalculationOf,
   fetchSocietyWideCalculation,
   type EconomyCalculationResponse,
   type SocietyWideReportOutput,
+  type StoredFailureDeletion,
 } from '@/api/societyWideCalculation';
 import {
   US_STATE_DISTRICT_RUN_TIME_LIMIT_MS,
@@ -50,6 +52,9 @@ const REQUEST_FAILED_MESSAGE = "The request to PolicyEngine's servers failed";
 
 const RECORDS_FAILED_MESSAGE = 'Checking for a saved result failed';
 
+// When Retry's DELETE finds the state's stored result is no longer a failure.
+const NEWER_RUN_MESSAGE = 'A newer run is on the server: retry to check it';
+
 /**
  * The longest delay a browser timer keeps (2^31 − 1 ms, about 24.8 days); a
  * longer one fires at once. A longer wait is redrawn in steps of this.
@@ -57,25 +62,76 @@ const RECORDS_FAILED_MESSAGE = 'Checking for a saved result failed';
 const MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
 
 /**
- * Added to a failed state's reason while the Public API still keeps its
- * failure, chosen when the view is drawn from the time left then, and
- * dropped once it has passed. Neither gives a time: the seconds left differ
- * between states that failed alike, whose reasons are grouped by their text.
- * Both hold for one state or several, whether or not Retry shows for others.
+ * A note added to a failed state's reason while Retry waits, and the most
+ * time left it is said of. The note is chosen when the view is drawn, from
+ * the time left then, and dropped once the wait is over. None gives a time:
+ * the seconds left differ between states that failed alike, whose reasons
+ * are grouped by their text. Each holds for one state or several, whether or
+ * not Retry shows for others.
  */
-const SHORT_RETRY_WAIT_NOTE = 'Retry can start a new run in a few minutes';
-const LONG_RETRY_WAIT_NOTE = "Retry can't start a new run for hours or days";
+interface RetryWaitNote {
+  upToMs: number;
+  note: string;
+}
 
-/** The most time left the short note is said of: the Public API keeps a US state failure 2 minutes. */
-const SHORT_RETRY_WAIT_MS = 15 * 60 * 1000;
+/** For the wait until the Public API accepts a DELETE of the failure: 10 seconds from the failure. */
+const UNDER_A_MINUTE_NOTE: RetryWaitNote = {
+  upToMs: 60 * 1000,
+  note: 'Retry can start a new run in under a minute',
+};
 
-/** A failed state's reason, with a note while its failure is still kept at `now`. */
-function withRetryWait(reason: string, retryAt: number | undefined, now: number): string {
-  if (!retryAt || retryAt <= now) {
+/** For a failure the Public API keeps for a while: a US state failure, 2 minutes. */
+const FEW_MINUTES_NOTE: RetryWaitNote = {
+  upToMs: 15 * 60 * 1000,
+  note: 'Retry can start a new run in a few minutes',
+};
+
+/** For a failure stored before the Public API kept failures briefly: up to 30 days. */
+const HOURS_OR_DAYS_NOTE: RetryWaitNote = {
+  upToMs: Infinity,
+  note: "Retry can't start a new run for hours or days",
+};
+
+/** Why Retry waits for a failed state, and until when. */
+interface RetryWait {
+  /** When (epoch ms) Retry can be offered again. */
+  retryAt: number;
+  /** Whether Retry will delete the stored failure first (StateRun.deletesFailure). */
+  deletesFailure: boolean;
+}
+
+/**
+ * The notes a wait can show, shortest first. Only the wait for a DELETE says
+ * "under a minute": a failure that is waited out says "a few minutes" for all
+ * of its last 15 minutes, so that states answered at different moments in its
+ * 2 minutes share one reason.
+ */
+function retryWaitNotes(wait: RetryWait): RetryWaitNote[] {
+  return wait.deletesFailure
+    ? [UNDER_A_MINUTE_NOTE, FEW_MINUTES_NOTE, HOURS_OR_DAYS_NOTE]
+    : [FEW_MINUTES_NOTE, HOURS_OR_DAYS_NOTE];
+}
+
+/** A failed state's reason, with a note while Retry still waits at `now`. */
+function withRetryWait(reason: string, wait: RetryWait | undefined, now: number): string {
+  const left = wait ? wait.retryAt - now : 0;
+  if (!wait || left <= 0) {
     return reason;
   }
-  const note = retryAt - now <= SHORT_RETRY_WAIT_MS ? SHORT_RETRY_WAIT_NOTE : LONG_RETRY_WAIT_NOTE;
+  const { note } = retryWaitNotes(wait).find(({ upToMs }) => left <= upToMs)!;
   return `${reason}. ${note}`;
+}
+
+/**
+ * When (epoch ms) a waiting state's reason next changes: when a shorter note
+ * starts to apply, or when the wait ends and Retry is offered.
+ */
+function nextReasonChangeAt(wait: RetryWait, now: number): number {
+  const left = wait.retryAt - now;
+  const shorterLimits = retryWaitNotes(wait)
+    .map(({ upToMs }) => upToMs)
+    .filter((upToMs) => upToMs < left);
+  return shorterLimits.length > 0 ? wait.retryAt - Math.max(...shorterLimits) : wait.retryAt;
 }
 
 type District = USCongressionalDistrictBreakdownItem;
@@ -99,13 +155,26 @@ export interface StateDistrictRecords {
 
 /** A state's run as the query cache holds it: its districts once complete, or null. */
 type StateRun = PolledRun<District[] | null> & {
-  /** For a failure the Public API keeps for a while: when (epoch ms) Retry can run the state again. */
+  /**
+   * For a failure the Public API keeps for a while: when (epoch ms) Retry
+   * can be offered again, either because the Public API will accept a DELETE
+   * of the failure or because it no longer keeps it.
+   */
   retryAt?: number;
+  /**
+   * For a failure the Public API keeps and lets the app delete: Retry sends
+   * the DELETE first, so that the state's request starts a new run.
+   */
+  deletesFailure?: boolean;
 };
 
-/** A state's economy answer, with how long the Public API keeps its failure, when it says. */
+/**
+ * A state's economy answer, with how long the Public API keeps its failure,
+ * and when it will accept a DELETE of it, when it says.
+ */
 type StateRunAnswer = EconomyCalculationResponse<SocietyWideReportOutput> & {
   retryWaitMs?: number;
+  deleteWaitMs?: number;
 };
 
 export type StateDistrictRunsStatus =
@@ -155,15 +224,17 @@ export interface StateDistrictRuns {
   canStart: boolean;
   /**
    * Whether Retry would ask again for a failed state or failed records. A
-   * state whose failure the Public API keeps for a while counts only once
-   * that time has passed since the failure arrived.
+   * state whose failure the Public API keeps counts only once the Public API
+   * will accept a DELETE of it, or, when its answer does not say, once it no
+   * longer keeps it, counted from when the failure arrived.
    */
   canRetry: boolean;
   /** Computes every state whose districts are not in, for every view of this year. */
   start: () => void;
   /**
    * Asks again for each failed state that can run again, and failed records;
-   * a result with no districts stays.
+   * a result with no districts stays. A state whose failure the Public API
+   * keeps and lets the app delete has it deleted first, so it runs again.
    */
   retry: () => void;
 }
@@ -375,12 +446,15 @@ async function fetchStateRun(
   } catch (error) {
     const failure = failedCalculationOf(error);
     if (failure && error instanceof Error) {
-      const seconds = failure.retryAfterSeconds;
+      const { retryAfterSeconds, deleteAfterSeconds } = failure;
       return {
         status: 'error',
         result: null,
         error: calculationFailureReason(error.message),
-        retryWaitMs: seconds ? seconds * 1000 : undefined,
+        // 0 means the Public API no longer keeps the failure: no wait, as when it does not say.
+        retryWaitMs: retryAfterSeconds ? retryAfterSeconds * 1000 : undefined,
+        // 0 means the Public API accepts a DELETE now: Retry deletes first, with no wait.
+        deleteWaitMs: deleteAfterSeconds === null ? undefined : deleteAfterSeconds * 1000,
       };
     }
     throw error;
@@ -388,11 +462,68 @@ async function fetchStateRun(
 }
 
 /**
+ * Before Retry asks again for a state whose failure the Public API keeps,
+ * asks it to delete that failure, through the tab's request limit, so the
+ * state's request that follows starts a new run. Answers with the state's
+ * run when the DELETE leaves it failed, or null to go on to the request:
+ *
+ * - deleted, or nothing stored: null.
+ * - refused as too soon: the same failure, with Retry hidden for the
+ *   seconds the answer gives.
+ * - refused because the stored result is not a failure (a newer run is
+ *   computing or done): failed with a short reason, and Retry asks without
+ *   a DELETE.
+ * - any other answer, or a failed request: failed with a short reason, and
+ *   Retry deletes again.
+ *
+ * A DELETE still queued when the view closes is dropped, and the state
+ * stays as it was.
+ */
+async function deleteStoredFailure(
+  queryClient: QueryClient,
+  { reformPolicyId, baselinePolicyId, year }: Required<StateDistrictRunsRequest>,
+  region: string,
+  failed: StateRun,
+  signal: AbortSignal
+): Promise<StateRun | null> {
+  let deletion: StoredFailureDeletion;
+  try {
+    deletion = await requestLimitFor(queryClient).run(
+      () =>
+        deleteFailedSocietyWideCalculation('us', reformPolicyId, baselinePolicyId, {
+          region,
+          time_period: year,
+        }),
+      signal
+    );
+  } catch (error) {
+    if (signal.aborted) {
+      throw error;
+    }
+    // The state shows a short reason, so the error itself is logged.
+    console.error("[useStateDistrictRuns] Could not delete a state's stored failure:", error);
+    return { ...failed, error: REQUEST_FAILED_MESSAGE, retryAt: undefined };
+  }
+  switch (deletion.outcome) {
+    case 'deleted':
+    case 'nothing-stored':
+      return null;
+    case 'too-soon':
+      // Counted from the answer's arrival, so never earlier than the Public API accepts it.
+      return { ...failed, retryAt: Date.now() + deletion.deleteAfterSeconds * 1000 };
+    case 'not-a-failure':
+      return { ...failed, error: NEWER_RUN_MESSAGE, retryAt: undefined, deletesFailure: false };
+  }
+}
+
+/**
  * Sends one poll of a state's run through the tab's request limit, and
  * writes its result to the state's base report when that report does not
- * hold one yet. A poll still queued when the view closes is dropped; one
- * already sent still writes its result. A result whose districts cannot be
- * read fails the state, and is not written.
+ * hold one yet. A failed state whose failure the Public API lets the app
+ * delete has it deleted first (deleteStoredFailure). A poll still queued
+ * when the view closes is dropped; one already sent still writes its
+ * result. A result whose districts cannot be read fails the state, and is
+ * not written.
  */
 async function pollStateRun(
   queryClient: QueryClient,
@@ -401,25 +532,37 @@ async function pollStateRun(
   records: StateDistrictRecords,
   signal: AbortSignal
 ): Promise<StateRun> {
-  const runKey = stateDistrictRunQueryKey({ reformPolicyId, baselinePolicyId, year }, region);
-  let retryWaitMs: number | undefined;
+  const request = { reformPolicyId, baselinePolicyId, year };
+  const runKey = stateDistrictRunQueryKey(request, region);
+  const failed = queryClient.getQueryData<StateRun>(runKey);
+  if (failed?.status === 'error' && failed.deletesFailure) {
+    const stillFailed = await deleteStoredFailure(queryClient, request, region, failed, signal);
+    if (stillFailed) {
+      return stillFailed;
+    }
+  }
+  let kept: Pick<StateRunAnswer, 'retryWaitMs' | 'deleteWaitMs'> = {};
   const run = await requestLimitFor(queryClient).run(() => {
     // Read when the request is sent, so the clock starts then, not in the queue.
     const previous = queryClient.getQueryData<StateRun>(runKey);
     return pollRun(
       async () => {
-        const answer = await fetchStateRun({ reformPolicyId, baselinePolicyId, year }, region);
-        retryWaitMs = answer.retryWaitMs;
+        const answer = await fetchStateRun(request, region);
+        kept = answer;
         return answer;
       },
       previous && { ...previous, result: null },
       STATE_RUN_POLL_OPTIONS
     );
   }, signal);
-  if (run.status === 'error' && retryWaitMs) {
-    // The seconds the Public API had left when it answered, counted from the answer's arrival,
-    // so never earlier than the stored failure's expiry.
-    return { ...run, result: null, retryAt: Date.now() + retryWaitMs };
+  // Each wait is the seconds the Public API had left when it answered, counted from the answer's
+  // arrival, so never earlier than it accepts a DELETE or stops keeping the failure.
+  if (run.status === 'error' && kept.deleteWaitMs !== undefined) {
+    const retryAt = kept.deleteWaitMs > 0 ? Date.now() + kept.deleteWaitMs : undefined;
+    return { ...run, result: null, retryAt, deletesFailure: true };
+  }
+  if (run.status === 'error' && kept.retryWaitMs) {
+    return { ...run, result: null, retryAt: Date.now() + kept.retryWaitMs };
   }
   if (run.status !== 'complete') {
     return { ...run, result: null };
@@ -476,7 +619,7 @@ type StateStanding =
   | { kind: 'no-districts' }
   | { kind: 'waiting' }
   | { kind: 'computing'; progress: number }
-  | { kind: 'failed'; error: string; retryAt?: number };
+  | { kind: 'failed'; error: string; wait?: RetryWait };
 
 /**
  * A nationwide US report's congressional districts, from each state's own
@@ -491,7 +634,10 @@ type StateStanding =
  * base report, deliberately with no user association, so that it is not
  * calculated again. A state computing for longer than
  * US_STATE_DISTRICT_RUN_TIME_LIMIT_MS fails, with Retry, which checks the
- * same run again.
+ * same run again. A state whose run failed, and whose failure the Public API
+ * keeps, offers Retry once the Public API will accept a DELETE of that
+ * failure; Retry sends the DELETE, then the state's request, which starts a
+ * new run.
  *
  * Every view of the same report and year shares the records, the runs and
  * Compute through their query keys, which are kept for the session; a year
@@ -575,15 +721,17 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
       return {
         kind: 'failed',
         error: data.error ?? STATE_RUN_POLL_OPTIONS.failureMessage,
-        retryAt: data.retryAt,
+        wait: data.retryAt
+          ? { retryAt: data.retryAt, deletesFailure: !!data.deletesFailure }
+          : undefined,
       };
     }
     return { kind: 'waiting' };
   });
 
-  // A failed state the Public API still answers with its failure is not asked
-  // again, offers no Retry, and says so in its reason, until its retryAt; this
-  // view is drawn again then.
+  // A failed state Retry has to wait for is not asked again, offers no Retry,
+  // and says so in its reason, until its retryAt; this view is drawn again
+  // then, and whenever the reason's note changes.
   const now = Date.now();
   const pendingStates: string[] = [];
   const failedStates: string[] = [];
@@ -608,7 +756,7 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
           label: state.label,
           error: withRetryWait(
             standing.error,
-            standing.kind === 'failed' ? standing.retryAt : undefined,
+            standing.kind === 'failed' ? standing.wait : undefined,
             now
           ),
         });
@@ -660,24 +808,24 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
 
   const canAskAgain = (standing: StateStanding) =>
     standing.kind === 'records-failed' ||
-    (standing.kind === 'failed' && (standing.retryAt ?? 0) <= now);
-  const nextRetryAt = Math.min(
+    (standing.kind === 'failed' && (standing.wait?.retryAt ?? 0) <= now);
+  const nextRedrawAt = Math.min(
     ...standings.map((standing) =>
-      standing.kind === 'failed' && standing.retryAt && standing.retryAt > now
-        ? standing.retryAt
+      standing.kind === 'failed' && standing.wait && standing.wait.retryAt > now
+        ? nextReasonChangeAt(standing.wait, now)
         : Infinity
     )
   );
   // Each redraw sets the next timer, so a wait longer than a timer keeps is
-  // redrawn in steps until its retryAt. A timer can run late after the
-  // computer sleeps or while the tab is in the background, so the view is
+  // redrawn in steps until its reason changes. A timer can run late after
+  // the computer sleeps or while the tab is in the background, so the view is
   // also drawn again when the tab is shown or focused.
   const [redrawCount, redraw] = useReducer((count: number) => count + 1, 0);
   useEffect(() => {
-    if (nextRetryAt === Infinity) {
+    if (nextRedrawAt === Infinity) {
       return undefined;
     }
-    const timer = setTimeout(redraw, Math.min(nextRetryAt - Date.now(), MAX_TIMER_DELAY_MS));
+    const timer = setTimeout(redraw, Math.min(nextRedrawAt - Date.now(), MAX_TIMER_DELAY_MS));
     const redrawWhenShown = () => {
       if (document.visibilityState === 'visible') {
         redraw();
@@ -690,15 +838,18 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
       document.removeEventListener('visibilitychange', redrawWhenShown);
       window.removeEventListener('focus', redraw);
     };
-  }, [nextRetryAt, redrawCount]);
+  }, [nextRedrawAt, redrawCount]);
 
+  // A request still in flight is joined rather than sent again
+  // (cancelRefetch: false), so a second press before the view is drawn again
+  // asks for no state twice, and sends no second DELETE.
   const askAgain = (restartRuns: boolean) => {
     states.forEach((_state, index) => {
       const standing = standings[index];
       if (standing.kind === 'records-failed') {
-        void lookups[index].refetch();
+        void lookups[index].refetch({ cancelRefetch: false });
       } else if (restartRuns && standing.kind === 'failed' && canAskAgain(standing)) {
-        void runs[index].refetch();
+        void runs[index].refetch({ cancelRefetch: false });
       }
     });
   };
