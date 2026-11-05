@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
 import {
+  deleteFailedSocietyWideCalculation,
   EconomyCalculationError,
   failedCalculationOf,
   fetchLocalAreaBreakdown,
@@ -38,6 +39,12 @@ import {
   PLAIN_TEXT_ERROR_BODY,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
 import {
+  DELETABLE_FAILED_CALCULATION_BODY,
+  DELETE_FAILED_MESSAGE,
+  DELETE_NOT_A_FAILURE_BODY,
+  DELETE_NOTHING_STORED_BODY,
+  DELETE_REFUSED_SECONDS,
+  DELETE_TOO_SOON_BODY,
   economyCalculationError,
   ERROR_MESSAGES,
   FAILED_CALCULATION_BODY,
@@ -45,6 +52,7 @@ import {
   mockCompletedResponse,
   mockCompletedResponseWithBundleBesideResult,
   mockCompletedResponseWithBundleInResult,
+  mockDeleteResponse,
   mockErrorCalculationResponse,
   mockErrorResponse,
   mockFailedCalculationResponse,
@@ -52,10 +60,15 @@ import {
   mockPendingResponse,
   mockSuccessResponse,
   mockUSPolicyEngineBundle,
+  READ_DELETE_AFTER_SECONDS,
   READ_RETRY_AFTER_SECONDS,
+  STATE_ECONOMY_PARAMS,
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
+  UNEXPECTED_DELETE_ANSWERS,
+  UNREAD_DELETE_AFTER_SECONDS_BODIES,
   UNREAD_RETRY_AFTER_SECONDS_BODIES,
+  UNREADABLE_DELETE_REFUSAL_BODIES,
 } from '@/tests/fixtures/api/societyWideMocks';
 import {
   LEGACY_NORTHERN_IRELAND_REGION_CODE,
@@ -801,7 +814,10 @@ describe('failedCalculationOf', () => {
     );
 
     // Then
-    expect(failure).toEqual({ retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds });
+    expect(failure).toEqual({
+      retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds,
+      deleteAfterSeconds: null,
+    });
   });
 
   test.each(READ_RETRY_AFTER_SECONDS)(
@@ -816,7 +832,7 @@ describe('failedCalculationOf', () => {
       );
 
       // Then
-      expect(failure).toEqual({ retryAfterSeconds: seconds });
+      expect(failure).toEqual({ retryAfterSeconds: seconds, deleteAfterSeconds: null });
     }
   );
 
@@ -827,7 +843,37 @@ describe('failedCalculationOf', () => {
       const failure = failedCalculationOf(economyCalculationError(HTTP_STATUS.BAD_GATEWAY, body));
 
       // Then
-      expect(failure).toEqual({ retryAfterSeconds: null });
+      expect(failure).toEqual({ retryAfterSeconds: null, deleteAfterSeconds: null });
+    }
+  );
+
+  test.each(READ_DELETE_AFTER_SECONDS)(
+    'given delete_after_seconds %s then the failure has those seconds until a DELETE is accepted',
+    (_case, seconds) => {
+      // When
+      const failure = failedCalculationOf(
+        economyCalculationError(HTTP_STATUS.BAD_GATEWAY, {
+          ...DELETABLE_FAILED_CALCULATION_BODY,
+          delete_after_seconds: seconds,
+        })
+      );
+
+      // Then
+      expect(failure).toEqual({
+        retryAfterSeconds: DELETABLE_FAILED_CALCULATION_BODY.retry_after_seconds,
+        deleteAfterSeconds: seconds,
+      });
+    }
+  );
+
+  test.each(UNREAD_DELETE_AFTER_SECONDS_BODIES)(
+    'given delete_after_seconds %s then the failure cannot be deleted',
+    (_case, body) => {
+      // When
+      const failure = failedCalculationOf(economyCalculationError(HTTP_STATUS.BAD_GATEWAY, body));
+
+      // Then
+      expect(failure?.deleteAfterSeconds).toBeNull();
     }
   );
 
@@ -853,6 +899,160 @@ describe('failedCalculationOf', () => {
 
     // Then
     expect(failure).toBeNull();
+  });
+});
+
+describe('deleteFailedSocietyWideCalculation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const deleteFailure = (params = STATE_ECONOMY_PARAMS, countryId: string = TEST_COUNTRIES.US) =>
+    deleteFailedSocietyWideCalculation(
+      countryId,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      params
+    );
+
+  test('given a state then it sends DELETE to the URL the economy request uses', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
+    mockFetch.mockResolvedValueOnce(mockSuccessResponse(mockPendingResponse) as any);
+    await fetchSocietyWideCalculation(
+      TEST_COUNTRIES.US,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      STATE_ECONOMY_PARAMS
+    );
+
+    // When
+    await deleteFailure();
+
+    // Then
+    const [[economyUrl], [deleteUrl, deleteInit]] = mockFetch.mock.calls;
+    expect(deleteUrl).toBe(economyUrl);
+    expect(deleteInit).toMatchObject({ method: 'DELETE' });
+  });
+
+  test('given a saved region code for Northern Ireland then the DELETE names the region the app uses', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
+
+    // When
+    await deleteFailure(
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR },
+      TEST_COUNTRIES.UK
+    );
+
+    // Then
+    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  test('given 204 then the stored failure was deleted', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'deleted' });
+  });
+
+  test('given 404 with the Public API error body then nothing was stored', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockDeleteResponse(HTTP_STATUS.NOT_FOUND, JSON.stringify(DELETE_NOTHING_STORED_BODY)) as any
+    );
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'nothing-stored' });
+  });
+
+  test('given 409 with delete_after_seconds then the DELETE was too soon, with the seconds left', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockDeleteResponse(HTTP_STATUS.CONFLICT, JSON.stringify(DELETE_TOO_SOON_BODY)) as any
+    );
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'too-soon', deleteAfterSeconds: DELETE_REFUSED_SECONDS });
+  });
+
+  test('given 409 with delete_after_seconds null then the stored result is not a failure', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockDeleteResponse(HTTP_STATUS.CONFLICT, JSON.stringify(DELETE_NOT_A_FAILURE_BODY)) as any
+    );
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'not-a-failure' });
+  });
+
+  test.each(UNREADABLE_DELETE_REFUSAL_BODIES)(
+    'given 409 %s then it throws an error with the status and the parsed body',
+    async (_case, body, parsed) => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockDeleteResponse(HTTP_STATUS.CONFLICT, body) as any
+      );
+
+      // When
+      const error = await deleteFailure().catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({ status: HTTP_STATUS.CONFLICT, body: parsed });
+    }
+  );
+
+  test.each(UNEXPECTED_DELETE_ANSWERS)(
+    'given %s then it throws an error that names the DELETE, with the status and the parsed body',
+    async (_case, status, body, parsed) => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue(mockDeleteResponse(status, body) as any);
+
+      // When
+      const error = await deleteFailure().catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({
+        status,
+        body: parsed,
+        message: DELETE_FAILED_MESSAGE(status, body || String(status)),
+      });
+    }
+  );
+
+  test('given a network error then it propagates', async () => {
+    // Given
+    vi.mocked(global.fetch).mockRejectedValue(mockNetworkError);
+
+    // When
+    const deletion = deleteFailure();
+
+    // Then
+    await expect(deletion).rejects.toThrow(ERROR_MESSAGES.NETWORK_ERROR);
   });
 });
 
