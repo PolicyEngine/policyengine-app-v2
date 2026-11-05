@@ -48,6 +48,18 @@ export function compareResearchItems(
   return compareNewestFirst(a, b) || Number(b.isApp) - Number(a.isApp);
 }
 
+/**
+ * A post's URL slug: its file name up to the first dot, lowercased, with
+ * underscores as hyphens. The comparables gate (comparables.ts) and the
+ * scorecard's comparables records name posts by it.
+ */
+export function postSlug(filename: string): string {
+  return filename
+    .substring(0, filename.indexOf("."))
+    .toLowerCase()
+    .replace(/_/g, "-");
+}
+
 // Lazy-initialized processed data
 let _postsSorted: BlogPost[] | null = null;
 let _locationTags: string[] | null = null;
@@ -59,11 +71,7 @@ function initPosts() {
   _postsSorted = [...(postsData as BlogPost[])].sort(compareNewestFirst);
 
   for (const post of _postsSorted) {
-    const filenameWithoutExt = post.filename.substring(
-      0,
-      post.filename.indexOf("."),
-    );
-    post.slug = filenameWithoutExt.toLowerCase().replace(/_/g, "-");
+    post.slug = postSlug(post.filename);
   }
 
   const allTags = [...new Set(_postsSorted.flatMap((p) => p.tags))].sort();
