@@ -4,8 +4,8 @@
  * window lengths the app offers.
  */
 
-/** The US model's years run 2022 to 2035. */
-export const US_FIRST_SUPPORTED_YEAR = 2022;
+/** The US model's years run 2024 to 2035. */
+export const US_FIRST_SUPPORTED_YEAR = 2024;
 export const US_LAST_SUPPORTED_YEAR = 2035;
 
 /** The window lengths the Build page and the report's adjust panel offer. */
