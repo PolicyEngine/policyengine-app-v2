@@ -569,7 +569,11 @@ export default function ClaudePluginClient({
                 <TerminalLine type="comment" text="# 2. Add the plugin" />
                 <TerminalLine
                   type="command"
-                  text="claude plugins add PolicyEngine/policyengine-claude"
+                  text="claude plugin marketplace add PolicyEngine/policyengine-claude"
+                />
+                <TerminalLine
+                  type="command"
+                  text="claude plugin install complete@policyengine-claude"
                 />
                 <div style={{ marginTop: 6 }} />
                 <div style={{ marginTop: 6 }} />
