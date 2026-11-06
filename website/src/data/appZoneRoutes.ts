@@ -73,6 +73,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://uk-triple-lock.vercel.app/uk/triple-lock",
   },
   {
+    source: "/uk/couple-penalties",
+    destination: "https://uk-couple-penalties.vercel.app/uk/couple-penalties",
+  },
+  {
     source: "/uk/middle-east-war-living-standards",
     destination:
       "https://uk-energy-shock-impact.vercel.app/uk/middle-east-war-living-standards",
