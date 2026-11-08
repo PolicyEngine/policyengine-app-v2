@@ -21,13 +21,15 @@ As in [2025](/us/research/federal-tax-inflation-adjustments-2025), the IRS adjus
 | Head of household | $24,150 | $24,850 | $24,925 | $700 | $775 |
 | Married filing separately | $16,100 | $16,550 | $16,600 | $450 | $500 |
 
+Both indexed amounts of the Child Tax Credit (CTC) also rose. The maximum refundable portion, which the [Tax Cuts and Jobs Act of 2017](https://www.congress.gov/115/plaws/publ97/PLAW-115publ97.pdf#page=21) (Public Law 115-97, section 11022) set at $1,400 per child and indexed for inflation, rises from $1,700 in 2026 to $1,800 in 2027. The maximum credit, which [H.R. 1, the One Big Beautiful Bill Act](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=90) (Public Law 119-21, section 70104), raised to $2,200 and indexed for inflation after 2025, rises from $2,200 in 2026 to $2,300 in 2027. Both amounts round down to the next lowest multiple of $100.
+
 In addition to the standard deduction, we updated the following provisions to their 2027 values:
 
 - [Additional standard deduction for the aged or blind](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/deductions/standard/aged_or_blind/amount.yaml) ($1,700, or $2,100 for unmarried filers)
 - [Dependent standard deduction](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/deductions/standard/dependent/amount.yaml) ($1,400) and its [earned income addition](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/deductions/standard/dependent/additional_earned_income.yaml) ($500)
 - [Income tax bracket thresholds](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/income/bracket.yaml)
 - [Capital gains bracket thresholds](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/capital_gains/thresholds.yaml)
-- [Child Tax Credit refundable maximum](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/credits/ctc/refundable/individual_max.yaml) ($1,800); the [maximum credit](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/credits/ctc/amount/base.yaml), indexed since the One Big Beautiful Bill Act, rises to $2,300
+- [CTC refundable maximum](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/credits/ctc/refundable/individual_max.yaml) ($1,800) and [maximum credit](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/credits/ctc/amount/base.yaml) ($2,300)
 - [EITC maximum amounts](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/credits/eitc/max.yaml)
 - [EITC phase-out start](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/credits/eitc/phase_out/start.yaml)
 - [EITC joint bonus](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/credits/eitc/phase_out/joint_bonus.yaml) (the difference between the phase-out start for joint filers and other filers)
