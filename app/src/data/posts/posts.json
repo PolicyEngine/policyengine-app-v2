@@ -1,5 +1,13 @@
 [
   {
+    "title": "State income taxes on military retired pay in 2026",
+    "description": "Draft, not for publication: how much state income tax military retirees owe on their retired pay in each state in 2026, for a working 45-year-old and a retired couple in their 60s, and other veteran rules PolicyEngine models.",
+    "date": "2026-11-11 08:00:00",
+    "tags": ["us", "policy", "tax"],
+    "authors": ["max-ghenis"],
+    "filename": "military-retired-pay-state-taxes-2026.md"
+  },
+  {
     "title": "Autumn Budget 2026: our briefing on what it means for households",
     "description": "We estimate the seven household measures we model cost \u00a33.11 billion in 2026-27 and raise net income by \u00a3107 per household on average that year. From 2028-29 they raise \u00a3166 million to \u00a3301 million a year, because the higher rates on property income bring in more than the other measures cost.",
     "date": "2026-10-29 07:00:00",
