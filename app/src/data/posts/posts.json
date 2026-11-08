@@ -1870,5 +1870,14 @@
     "authors": ["vahid-ahmadi"],
     "filename": "multi-agent-workflows-policy-research.md",
     "image": "multi-agent-workflows-policy-research.webp"
+  },
+  {
+    "title": "Federal Tax Inflation Adjustments for Tax Year 2027",
+    "description": "PolicyEngine has updated its federal tax parameters to the IRS's 2027 inflation-adjusted amounts.",
+    "date": "2026-11-09 09:00:00",
+    "tags": ["us", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "federal-tax-inflation-adjustments-2027.md",
+    "image": "fed_tax_inflation_adjustments.webp"
   }
 ]
