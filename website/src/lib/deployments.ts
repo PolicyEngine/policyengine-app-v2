@@ -726,7 +726,7 @@ export function classifyDeployment(
   };
 }
 
-type FetchLike = (
+export type FetchLike = (
   input: string,
   init?: RequestInit & { next?: { revalidate?: number } },
 ) => Promise<Response>;

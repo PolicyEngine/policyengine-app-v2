@@ -48,10 +48,33 @@ export interface ForwardOptions {
   readonly responseHeaders?: HeadersInit;
 }
 
+export interface ServerRequestOptions {
+  readonly next?: {
+    readonly revalidate?: number | false;
+    readonly tags?: string[];
+  };
+  readonly timeoutMilliseconds?: number;
+}
+
+export class PublicApiUnavailableError extends Error {
+  override name = "PublicApiUnavailableError";
+
+  constructor(
+    message: string,
+    readonly statusCode: number,
+  ) {
+    super(message);
+  }
+}
+
 export interface PublicApiForwarder {
   forward(
     request: PublicApiRequest,
     options: ForwardOptions,
+  ): Promise<Response>;
+  fetchFromServer(
+    request: PublicApiRequest,
+    options?: ServerRequestOptions,
   ): Promise<Response>;
 }
 
@@ -69,6 +92,7 @@ export interface PublicApiForwarderOptions {
 }
 
 export const DEFAULT_RESPONSE_HEADERS_TIMEOUT_MILLISECONDS = 60_000;
+export const DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS = 30_000;
 
 export const USER_AUTHORIZATION_HEADER = "PolicyEngine-User-Authorization";
 export const UNAUTHENTICATED_USER_HEADER = "PolicyEngine-Unauthenticated-User";
@@ -380,5 +404,8 @@ export function createPublicApiForwarder(
     return browserResponse(upstream, publicApiRequest, forwardOptions, logger);
   }
 
-  return { forward };
+  // Placeholder until the implementation commit.
+  const fetchFromServer = async () => new Response(null, { status: 501 });
+
+  return { forward, fetchFromServer };
 }

@@ -17,6 +17,8 @@ export {
 } from "./cors";
 export {
   DEFAULT_RESPONSE_HEADERS_TIMEOUT_MILLISECONDS,
+  DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS,
+  PublicApiUnavailableError,
   UNAUTHENTICATED_USER_HEADER,
   USER_AUTHORIZATION_HEADER,
   createPublicApiForwarder,
@@ -26,6 +28,7 @@ export {
   type PublicApiForwarderOptions,
   type PublicApiMethod,
   type PublicApiRequest,
+  type ServerRequestOptions,
 } from "./forward";
 export { errorResponse } from "./responses";
 export {
