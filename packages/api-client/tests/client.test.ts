@@ -372,3 +372,164 @@ describe("getMetadata", () => {
     });
   });
 });
+
+describe("compareEconomy failures from the Public API", () => {
+  const STORED_FAILURE = {
+    status: "error",
+    message: "The simulation failed: dataset unavailable",
+    result: null,
+    retry_after_seconds: 3600,
+    delete_after_seconds: 0,
+  };
+  const SIMULATION_SERVICE_UNREACHABLE = {
+    status: "error",
+    message: "The simulation service did not respond",
+    result: null,
+    retry_after_seconds: null,
+    delete_after_seconds: null,
+  };
+
+  test("given a stored failed comparison answered with 502 then getEconomyComparison resolves with the error answer", async () => {
+    // Given
+    fetchMock.mockResolvedValue(jsonAnswer(STORED_FAILURE, 502));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const answer = await client
+      .getEconomyComparison(COMPARISON_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(answer).toEqual(STORED_FAILURE);
+  });
+
+  test("given a stored failed comparison then compareEconomy throws its message once, without polling again", async () => {
+    // Given
+    fetchMock.mockResolvedValue(jsonAnswer(STORED_FAILURE, 502));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .compareEconomy(COMPARISON_REQUEST, { intervalMilliseconds: 1 })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PolicyEngineApiError);
+    expect(failure).toMatchObject({
+      status: 502,
+      message: STORED_FAILURE.message,
+      body: STORED_FAILURE,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("given the simulation service did not respond, so nothing is stored, then compareEconomy polls again", async () => {
+    // Given
+    fetchMock
+      .mockResolvedValueOnce(jsonAnswer(SIMULATION_SERVICE_UNREACHABLE, 502))
+      .mockResolvedValueOnce(okAnswer(ECONOMY_RESULT));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const result = await client.compareEconomy(COMPARISON_REQUEST, {
+      intervalMilliseconds: 1,
+    });
+
+    // Then
+    expect(result).toEqual(ECONOMY_RESULT);
+  });
+});
+
+describe("request failures", () => {
+  test("given the caller aborts while the answer is still arriving then it rejects with the abort", async () => {
+    // Given
+    const abortController = new AbortController();
+    fetchMock.mockImplementation(
+      async () =>
+        new Response(
+          new ReadableStream({
+            start(streamController) {
+              streamController.enqueue(new TextEncoder().encode('{"status"'));
+              abortController.signal.addEventListener("abort", () =>
+                streamController.error(abortController.signal.reason),
+              );
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const loading = client
+      .getMetadata("us", { signal: abortController.signal })
+      .catch((error: unknown) => error);
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    abortController.abort(new DOMException("Changed country", "AbortError"));
+    const failure = await loading;
+
+    // Then
+    expect(failure).not.toBeInstanceOf(PolicyEngineApiError);
+    expect((failure as DOMException).name).toBe("AbortError");
+  });
+
+  test("given the connection drops while the answer is arriving then it throws without claiming an answer arrived", async () => {
+    // Given
+    fetchMock.mockImplementation(
+      async () =>
+        new Response(
+          new ReadableStream({
+            start(streamController) {
+              streamController.enqueue(new TextEncoder().encode('{"status"'));
+              streamController.error(new TypeError("terminated"));
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .getMetadata("us")
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PolicyEngineApiError);
+    expect(failure).toMatchObject({ status: null });
+  });
+
+  test.each([
+    [
+      "createPolicy",
+      (client: ReturnType<typeof createPolicyEngineApiClient>) =>
+        client.createPolicy({ country: "us", parameters: REFORM_PARAMETERS }),
+      400,
+    ],
+    [
+      "getMetadata",
+      (client: ReturnType<typeof createPolicyEngineApiClient>) =>
+        client.getMetadata("uk"),
+      503,
+    ],
+  ])(
+    "given the dashboard API refuses %s then it throws with the status",
+    async (_methodName, callClient, statusCode) => {
+      // Given
+      fetchMock.mockResolvedValue(
+        jsonAnswer(
+          { status: "error", message: "Refused", result: null },
+          statusCode,
+        ),
+      );
+      const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+      // When
+      const failure = await callClient(client).catch((error: unknown) => error);
+
+      // Then
+      expect(failure).toBeInstanceOf(PolicyEngineApiError);
+      expect(failure).toMatchObject({ status: statusCode, message: "Refused" });
+    },
+  );
+});
