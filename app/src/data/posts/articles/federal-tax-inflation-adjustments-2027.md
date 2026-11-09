@@ -1,12 +1,12 @@
-On November 5th, 2026, the Internal Revenue Service (IRS) released its annual inflation adjustments for federal tax parameters for tax year 2027 in [Revenue Procedure 2026-35](https://www.irs.gov/pub/irs-drop/rp-26-35.pdf). The IRS provides inflation adjustments for over sixty federal tax provisions each year, including income tax thresholds, the standard deduction, and the Earned Income Tax Credit (EITC), which affect the millions of American households who file taxes each year. PolicyEngine has updated its US model to reflect these changes.
+On November 5th, 2026, the Internal Revenue Service (IRS) released its annual inflation adjustments for over sixty federal tax parameters for tax year 2027 in [Revenue Procedure 2026-35](https://www.irs.gov/pub/irs-drop/rp-26-35.pdf). These include the standard deduction, income tax thresholds, and the Earned Income Tax Credit (EITC), which affect the millions of American households who file taxes each year. PolicyEngine has updated its US model to reflect these changes.
 
-## How are federal tax provisions indexed for inflation?
+## Overview
 
 Since the passage of the [Tax Cuts and Jobs Act of 2017](https://www.congress.gov/115/plaws/publ97/PLAW-115publ97.pdf#page=7) ([26 U.S.C. § 1(f)(3)](https://www.law.cornell.edu/uscode/text/26/1#f_3)), federal income tax provisions are indexed using the Chained Consumer Price Index for All Urban Consumers (C-CPI-U). The C-CPI-U averaged 182.86 over the 12 months ending August 31, 2026, up 3.2% from 177.11 over the 12 months ending August 31, 2025.
 
-PolicyEngine projects these indexed amounts for years the IRS has not yet published, using the Congressional Budget Office's [inflation projections](https://www.cbo.gov/data/budget-economic-data#4) and observed C-CPI-U and applying the same statutory rounding rules. This lets users calculate their household net income and analyze policy proposals for future years before the IRS announces the official values.
+PolicyEngine estimates these indexed amounts for years the IRS has not yet published, using the Congressional Budget Office's [inflation projections](https://www.cbo.gov/data/budget-economic-data#4) and observed C-CPI-U and applying the same statutory rounding rules. This allows users to calculate their household net income and analyze policy proposals for future years before the IRS announces the official values.
 
-As in [previous years](/us/research/federal-tax-inflation-adjustments-2025), the IRS adjustments were somewhat larger than our projections: across the brackets, standard deduction, EITC, capital gains and AMT amounts, the official increases were about 9% larger at the median. For example, we projected that the standard deduction for single filers would rise $450, from $16,100 in 2026 to $16,550 in 2027. The IRS set it at $16,600, a $500 increase. Table 1 shows the standard deduction for each filing status.
+As in [previous years](/us/research/federal-tax-inflation-adjustments-2025), the IRS adjustments were slightly larger than our projections across most indexed provisions; the official increases were about 9% larger at the median. For example, we projected that the standard deduction for single filers would rise $450, from $16,100 in 2026 to $16,550 in 2027; the IRS set it at $16,600, a $500 increase. Table 1 shows the standard deduction for each filing status.
 
 **Table 1: Standard deduction in tax year 2027**
 
@@ -17,7 +17,7 @@ As in [previous years](/us/research/federal-tax-inflation-adjustments-2025), the
 | Head of household | $24,150 | $24,850 | $24,925 | $700 | $775 |
 | Married filing separately | $16,100 | $16,550 | $16,600 | $450 | $500 |
 
-Both indexed amounts of the Child Tax Credit (CTC) also rose. The maximum refundable portion, which the [Tax Cuts and Jobs Act of 2017](https://www.congress.gov/115/plaws/publ97/PLAW-115publ97.pdf#page=21) (Public Law 115-97, section 11022) set at $1,400 per child and indexed for inflation, rises from $1,700 in 2026 to $1,800 in 2027. The maximum credit, which [H.R. 1, the One Big Beautiful Bill Act](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=90) (Public Law 119-21, section 70104), raised to $2,200 and indexed for inflation after 2025, rises from $2,200 in 2026 to $2,300 in 2027. Both amounts round down to the next lowest multiple of $100.
+In addition, both indexed amounts of the Child Tax Credit (CTC) are scheduled to rise in 2027. The maximum refundable portion, which the [Tax Cuts and Jobs Act of 2017](https://www.congress.gov/115/plaws/publ97/PLAW-115publ97.pdf#page=21) (Public Law 115-97, section 11022) set at $1,400 per child and indexed for inflation, rises from $1,700 in 2026 to $1,800 in 2027. The maximum credit, which [H.R. 1, the One Big Beautiful Bill Act](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=90) (Public Law 119-21, section 70104), raised to $2,200 and indexed for inflation after 2025, rises from $2,200 in 2026 to $2,300 in 2027. Both amounts round down to the next lowest multiple of $100.
 
 In addition to the standard deduction and the CTC, we updated the following provisions to their 2027 values:
 
