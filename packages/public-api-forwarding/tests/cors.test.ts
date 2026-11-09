@@ -21,10 +21,17 @@ const POLICY: CorsPolicy = {
   preflightMaxAgeSeconds: 600,
 };
 
-function requestFrom(origin: string | null, method = "GET"): Request {
+function requestFrom(
+  origin: string | null,
+  method = "GET",
+  fetchSite?: string,
+): Request {
   const headers = new Headers({ host: "www.example.test" });
   if (origin !== null) {
     headers.set("origin", origin);
+  }
+  if (fetchSite !== undefined) {
+    headers.set("sec-fetch-site", fetchSite);
   }
   return new Request(`${SITE_URL}/api/metadata/us`, { method, headers });
 }
@@ -46,6 +53,24 @@ describe("checkOrigin", () => {
     // Then
     expect(check.kind).toBe(expectedKind);
   });
+});
+
+describe("checkOrigin without an Origin header", () => {
+  test.each([
+    ["cross-site", "refused"],
+    ["same-site", "refused"],
+    ["same-origin", "no-origin"],
+    ["none", "no-origin"],
+  ])(
+    "given a browser's Sec-Fetch-Site of %s then it returns %s",
+    (fetchSite, expectedKind) => {
+      // When
+      const check = checkOrigin(requestFrom(null, "GET", fetchSite), POLICY);
+
+      // Then
+      expect(check.kind).toBe(expectedKind);
+    },
+  );
 });
 
 describe("corsResponseHeaders", () => {
