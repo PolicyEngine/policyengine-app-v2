@@ -42,8 +42,6 @@ In addition to the standard deduction and the CTC, we updated the following prov
 - [Qualifying relative gross income limit](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/income/exemption/amount.yaml) ($5,500)
 - [Estate tax basic exclusion amount](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/credits/estate/base.yaml) ($15,480,000)
 
-For the long-term care premium limit at ages 41 to 50, the revenue procedure prints $945. The statute rounds each amount to the nearest multiple of $10, and the other four age bands imply $940, so PolicyEngine uses $940.
-
 Two state amounts follow the federal values and were updated with them: Arizona's standard deduction and Maine's additional standard deduction for the aged or blind.
 
 You can browse these parameters in our [parameter explorer](/us/model/rules/parameters) and [compute your own policy reforms](https://app.policyengine.org/us) using the updated values.
