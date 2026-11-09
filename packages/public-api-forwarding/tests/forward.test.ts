@@ -486,7 +486,8 @@ describe("createPublicApiForwarder when the browser has gone", () => {
   });
 
   test("given the browser goes away before the Public API answers then nothing is logged as an error", async () => {
-    // Given
+    // Given a fetch that, like the real one, rejects on an aborted signal,
+    // whether it was aborted before or during the request
     const browserConnection = new AbortController();
     const forwarder = createPublicApiForwarder({
       environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
@@ -495,9 +496,13 @@ describe("createPublicApiForwarder when the browser has gone", () => {
       clientAddress: () => undefined,
       fetchImplementation: (_input, init) =>
         new Promise<Response>((_resolve, reject) => {
-          init?.signal?.addEventListener("abort", () =>
-            reject(new DOMException("aborted", "AbortError")),
-          );
+          const rejectAsAborted = () =>
+            reject(new DOMException("aborted", "AbortError"));
+          if (init?.signal?.aborted) {
+            rejectAsAborted();
+            return;
+          }
+          init?.signal?.addEventListener("abort", rejectAsAborted);
         }),
       logger: silentLogger,
     });
