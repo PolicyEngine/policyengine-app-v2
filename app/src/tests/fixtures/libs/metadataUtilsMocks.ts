@@ -29,19 +29,19 @@ export const EXPECTED_LABELS = {
 } as const;
 
 export const TEST_TIME_PERIOD_YEARS = {
-  THROUGH_2036: [2036, 2035, 2022],
-  // The US API's years today: 2022 to 2035, newest first
-  US_THROUGH_2035: [2035, 2034, 2022],
-  // The UK API's years today: 2024 to 2030
-  UK_2024_TO_2030: [2024, 2025, 2030],
+  THROUGH_2036: [2036, 2035, 2024],
+  // The US API's years today: 2024 to 2035, newest first
+  US_THROUGH_2035: [2035, 2034, 2024],
+  // The UK API's years today: 2024 to 2032
+  UK_2024_TO_2032: [2024, 2025, 2032],
   NONE: [],
 } as const;
 
 export const EXPECTED_DATE_RANGES = {
-  THROUGH_2036: { minDate: '2022-01-01', maxDate: '2036-12-31' },
-  US_THROUGH_2035: { minDate: '2022-01-01', maxDate: '2035-12-31' },
-  UK_2024_TO_2030: { minDate: '2024-01-01', maxDate: '2030-12-31' },
-  FALLBACK: { minDate: '2022-01-01', maxDate: '2036-12-31' },
+  THROUGH_2036: { minDate: '2024-01-01', maxDate: '2036-12-31' },
+  US_THROUGH_2035: { minDate: '2024-01-01', maxDate: '2035-12-31' },
+  UK_2024_TO_2032: { minDate: '2024-01-01', maxDate: '2032-12-31' },
+  FALLBACK: { minDate: '2024-01-01', maxDate: '2036-12-31' },
 } as const;
 
 export const mockMetadataPayload = (overrides?: any): MetadataApiPayload => ({

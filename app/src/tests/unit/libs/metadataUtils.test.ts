@@ -305,18 +305,18 @@ describe('metadataUtils', () => {
       expect(result).toEqual(EXPECTED_DATE_RANGES.US_THROUGH_2035);
     });
 
-    it('given metadata from 2024 to 2030 then the range starts in 2024 and ends in 2030', () => {
+    it('given metadata from 2024 to 2032 then the range starts in 2024 and ends in 2032', () => {
       // Given
-      const state = mockStateWithTimePeriods(TEST_TIME_PERIOD_YEARS.UK_2024_TO_2030) as RootState;
+      const state = mockStateWithTimePeriods(TEST_TIME_PERIOD_YEARS.UK_2024_TO_2032) as RootState;
 
       // When
       const result = getDateRange(state);
 
       // Then
-      expect(result).toEqual(EXPECTED_DATE_RANGES.UK_2024_TO_2030);
+      expect(result).toEqual(EXPECTED_DATE_RANGES.UK_2024_TO_2032);
     });
 
-    it('given no time periods yet then falls back to 2022 through 2036', () => {
+    it('given no time periods yet then falls back to 2024 through 2036', () => {
       // Given
       const state = mockStateWithTimePeriods(TEST_TIME_PERIOD_YEARS.NONE) as RootState;
 
@@ -327,7 +327,7 @@ describe('metadataUtils', () => {
       expect(result).toEqual(EXPECTED_DATE_RANGES.FALLBACK);
     });
 
-    it('given the metadata request is still in flight then falls back to 2022 through 2036', () => {
+    it('given the metadata request is still in flight then falls back to 2024 through 2036', () => {
       // Given
       const state = mockStateWhileMetadataLoads() as RootState;
 
