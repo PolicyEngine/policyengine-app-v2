@@ -419,7 +419,72 @@ describe("compareEconomy failures from the Public API", () => {
       status: 502,
       message: STORED_FAILURE.message,
       body: STORED_FAILURE,
+      retryAfterSeconds: STORED_FAILURE.retry_after_seconds,
     });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("given a stored failure whose lifetime has run out then compareEconomy still throws it once rather than starting a new run", async () => {
+    // Given
+    fetchMock.mockResolvedValue(
+      jsonAnswer({ ...STORED_FAILURE, retry_after_seconds: 0 }, 502),
+    );
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .compareEconomy(COMPARISON_REQUEST, { intervalMilliseconds: 1 })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({ status: 502, retryAfterSeconds: 0 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("given a gateway's own 502, which the dashboard API turns into JSON with no retry_after_seconds, then compareEconomy polls again", async () => {
+    // Given
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonAnswer(
+          {
+            status: "error",
+            message: "The Public API answered HTTP 502.",
+            result: null,
+          },
+          502,
+        ),
+      )
+      .mockResolvedValueOnce(okAnswer(ECONOMY_RESULT));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const result = await client.compareEconomy(COMPARISON_REQUEST, {
+      intervalMilliseconds: 1,
+    });
+
+    // Then
+    expect(result).toEqual(ECONOMY_RESULT);
+  });
+
+  test("given the caller aborts before any answer arrives then compareEconomy rejects with the abort without retrying", async () => {
+    // Given
+    const abortController = new AbortController();
+    abortController.abort(new DOMException("Left the page", "AbortError"));
+    fetchMock.mockImplementation(async (_input, init) => {
+      throw init?.signal?.reason;
+    });
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .compareEconomy(COMPARISON_REQUEST, {
+        intervalMilliseconds: 1,
+        signal: abortController.signal,
+      })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect((failure as DOMException).name).toBe("AbortError");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

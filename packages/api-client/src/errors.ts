@@ -8,7 +8,10 @@ export class PolicyEngineApiError extends Error {
     readonly status: number | null,
     /** The answer's parsed body, when it had one. */
     readonly body: unknown = null,
-    /** Seconds to wait before trying again, from Retry-After. */
+    /**
+     * Seconds to wait before trying again: from Retry-After, or for a failed
+     * economy comparison, how long the Public API keeps the failure.
+     */
     readonly retryAfterSeconds: number | null = null,
   ) {
     super(message);

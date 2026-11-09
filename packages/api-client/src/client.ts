@@ -205,8 +205,10 @@ export function createPolicyEngineApiClient(
    * One read of a comparison, with the HTTP status. The Public API answers
    * a failed comparison with 502 and a body naming how long it keeps the
    * failure (`retry_after_seconds`); that is the comparison's answer, not a
-   * gateway failure. A 502 without a stored failure (`retry_after_seconds`
-   * null) is thrown, so polling tries again.
+   * gateway failure. A 502 whose `retry_after_seconds` is null, or that has
+   * none, is thrown, so polling tries again up to three times: the Public
+   * API sends null when nothing is stored, when the next request would
+   * answer from a newer run, or when it cannot read the failure's lifetime.
    */
   async function readEconomyComparison(
     request: EconomyComparisonRequest,

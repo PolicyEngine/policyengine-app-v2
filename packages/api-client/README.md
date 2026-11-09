@@ -77,7 +77,7 @@ Every method takes a `signal` to cancel the request (or the polling).
 
 ## Polling
 
-`compareEconomy` reads the comparison every 5 seconds by default and gives up after 30 minutes with `EconomyComparisonTimeoutError`. A rate-limited read (429) waits for `Retry-After`. A brief gateway failure (502, 503 or 504) waits one interval. A fourth such failure in a row ends polling. Keep the interval at a few seconds: the dashboard API allows 120 comparison reads a minute from one address.
+`compareEconomy` reads the comparison every 5 seconds by default and gives up after 30 minutes with `EconomyComparisonTimeoutError`. A rate-limited read (429) waits for `Retry-After`. A brief gateway failure (502, 503 or 504) waits one interval. A fourth such failure in a row ends polling. Keep the interval at a few seconds: the dashboard API's planned rate limit is 120 comparison reads a minute from one address.
 
 A comparison that failed is not a gateway failure. The Public API answers it with 502, `status: "error"` and `retry_after_seconds`, which says how long it keeps that failure. `getEconomyComparison` resolves with that answer, and `compareEconomy` throws it at once rather than polling.
 
@@ -105,8 +105,8 @@ npm lets a package trust a workflow only once the package exists. So an owner of
 ```bash
 npx -y bun@1.2.21 install --frozen-lockfile
 cd packages/api-client
-bun run test
-bun run build
+npm test
+npm run build
 npm pack --dry-run
 npm publish --access public
 ```
