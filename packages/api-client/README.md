@@ -79,6 +79,8 @@ Every method takes a `signal` to cancel the request (or the polling).
 
 `compareEconomy` reads the comparison every 5 seconds by default and gives up after 30 minutes with `EconomyComparisonTimeoutError`. A rate-limited read (429) waits for `Retry-After`. A brief gateway failure (502, 503 or 504) waits one interval. A fourth such failure in a row ends polling. Keep the interval at a few seconds: the dashboard API allows 120 comparison reads a minute from one address.
 
+A comparison that failed is not a gateway failure. The Public API answers it with 502, `status: "error"` and `retry_after_seconds`, which says how long it keeps that failure. `getEconomyComparison` resolves with that answer, and `compareEconomy` throws it at once rather than polling.
+
 ## Errors
 
 Every failure throws `PolicyEngineApiError`, with:
@@ -88,7 +90,7 @@ Every failure throws `PolicyEngineApiError`, with:
 - `body`: the parsed answer;
 - `retryAfterSeconds`: from `Retry-After`, when the answer had one.
 
-A comparison that ends in `"error"` throws it with status 200.
+A comparison that ends in `"error"` throws it with the answer's HTTP status (502 from the Public API), and with `retryAfterSeconds` set to its `retry_after_seconds`. An abort rejects with the abort's reason, also when the answer is still arriving. A connection that drops mid-answer throws with `status` `null`.
 
 ## Which pages may call it
 
@@ -96,4 +98,17 @@ The dashboard API answers browser requests from www.policyengine.org itself, fro
 
 ## Releases
 
-Published from `packages/api-client` in PolicyEngine/policyengine-app-v2 by the "Publish @policyengine/api-client" workflow. The workflow is started by hand, uses npm trusted publishing, and publishes the version in `package.json` if npm does not have it yet.
+Published from `packages/api-client` in PolicyEngine/policyengine-app-v2 by the "Publish @policyengine/api-client" workflow. The workflow is started by hand on `main`. It uses npm trusted publishing, and publishes the version in `package.json` if npm does not have it yet.
+
+npm lets a package trust a workflow only once the package exists. So an owner of the `@policyengine` npm scope publishes the first version by hand, from `main`:
+
+```bash
+npx -y bun@1.2.21 install --frozen-lockfile
+cd packages/api-client
+bun run test
+bun run build
+npm pack --dry-run
+npm publish --access public
+```
+
+Then, on npmjs.com, open the package's Settings, then Trusted Publisher, and choose GitHub Actions with repository `PolicyEngine/policyengine-app-v2` and workflow `publish-api-client.yaml`. Later versions are released by raising `version` in a PR and running the workflow after it merges.

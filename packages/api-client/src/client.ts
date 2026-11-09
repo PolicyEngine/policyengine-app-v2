@@ -143,7 +143,26 @@ export function createPolicyEngineApiClient(
       );
     }
 
-    const answerBody: unknown = await response.json().catch(() => null);
+    // Read the whole answer first, so that an abort or a dropped connection
+    // while it arrives is not mistaken for an answer that is not JSON.
+    let answerText: string;
+    try {
+      answerText = await response.text();
+    } catch (error) {
+      if (signal?.aborted) {
+        throw error;
+      }
+      throw new PolicyEngineApiError(
+        `The dashboard API's answer could not be read: ${error instanceof Error ? error.message : String(error)}`,
+        null,
+      );
+    }
+    let answerBody: unknown = null;
+    try {
+      answerBody = answerText === "" ? null : JSON.parse(answerText);
+    } catch {
+      // Not JSON, such as a platform error page; the status still tells.
+    }
     return { response, body: answerBody };
   }
 
@@ -182,24 +201,46 @@ export function createPolicyEngineApiClient(
     return `/api/economy/compare?${query.toString()}`;
   }
 
-  async function getEconomyComparison(
+  /**
+   * One read of a comparison, with the HTTP status. The Public API answers
+   * a failed comparison with 502 and a body naming how long it keeps the
+   * failure (`retry_after_seconds`); that is the comparison's answer, not a
+   * gateway failure. A 502 without a stored failure (`retry_after_seconds`
+   * null) is thrown, so polling tries again.
+   */
+  async function readEconomyComparison(
     request: EconomyComparisonRequest,
-    options: RequestOptions = {},
-  ): Promise<DashboardApiAnswer> {
+    signal: AbortSignal | undefined,
+  ): Promise<{ answer: DashboardApiAnswer; httpStatus: number }> {
     const answer = await send(
       "GET",
       economyComparisonPath(request),
       undefined,
-      options.signal,
+      signal,
     );
-    const status = (answer.body as { status?: unknown } | null)?.status;
-    if (
-      !answer.response.ok ||
-      (status !== "ok" && status !== "computing" && status !== "error")
-    ) {
+    const fields = (answer.body ?? {}) as Record<string, unknown>;
+    const isAnswer =
+      answer.response.ok &&
+      (fields.status === "ok" ||
+        fields.status === "computing" ||
+        fields.status === "error");
+    const isStoredFailure =
+      fields.status === "error" &&
+      typeof fields.retry_after_seconds === "number";
+    if (!isAnswer && !isStoredFailure) {
       throw refusal(answer.response, answer.body);
     }
-    return answer.body as DashboardApiAnswer;
+    return {
+      answer: answer.body as DashboardApiAnswer,
+      httpStatus: answer.response.status,
+    };
+  }
+
+  async function getEconomyComparison(
+    request: EconomyComparisonRequest,
+    options: RequestOptions = {},
+  ): Promise<DashboardApiAnswer> {
+    return (await readEconomyComparison(request, options.signal)).answer;
   }
 
   async function compareEconomy(
@@ -215,10 +256,12 @@ export function createPolicyEngineApiClient(
 
     for (;;) {
       let answer: DashboardApiAnswer;
+      let httpStatus: number;
       try {
-        answer = await getEconomyComparison(request, {
-          signal: options.signal,
-        });
+        ({ answer, httpStatus } = await readEconomyComparison(
+          request,
+          options.signal,
+        ));
         consecutiveRetries = 0;
       } catch (error) {
         // Rate limiting and brief gateway failures are waited out; anything
@@ -251,8 +294,11 @@ export function createPolicyEngineApiClient(
       if (answer.status === "error") {
         throw new PolicyEngineApiError(
           messageFrom(answer, "The economy comparison failed."),
-          200,
+          httpStatus,
           answer,
+          typeof answer.retry_after_seconds === "number"
+            ? answer.retry_after_seconds
+            : null,
         );
       }
       options.onProgress?.(answer);

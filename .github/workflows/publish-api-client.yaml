@@ -9,7 +9,7 @@
 # npmjs.com, the package's Settings → Trusted publishing must name this
 # repository and this workflow file. npm needs the package to exist before
 # that can be set, so its first version is published by hand by an owner
-# of the @policyengine scope (see packages/api-client/README.md).
+# of the @policyengine scope ("Releases" in packages/api-client/README.md).
 
 name: Publish @policyengine/api-client
 
@@ -23,6 +23,8 @@ permissions:
 jobs:
   publish:
     name: Publish
+    # Only what has merged is published.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
