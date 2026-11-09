@@ -434,6 +434,14 @@ export function createPublicApiForwarder(
         "abort",
         abortForDisconnectedBrowser,
       );
+      if (incomingRequest.signal.aborted && !timedOut) {
+        // The browser has gone; nobody will read this answer.
+        return errorResponse(
+          502,
+          "The browser closed the request.",
+          extraHeaders,
+        );
+      }
       if (timedOut) {
         logger.error(
           `The Public API did not answer ${publicApiRequest.method} ${publicApiRequest.path} in time.`,

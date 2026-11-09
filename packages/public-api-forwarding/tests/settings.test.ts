@@ -70,6 +70,34 @@ describe("readPublicApiSettings", () => {
     },
   );
 
+  test.each([
+    ["preview", "https://api.policyengine.org"],
+    ["development", "https://api.policyengine.org/"],
+  ])(
+    "given a %s deployment whose POLICYENGINE_API_URL names the production Public API then it refuses",
+    (deploymentEnvironment, configuredUrl) => {
+      // When
+      const result = readPublicApiSettings({
+        VERCEL_ENV: deploymentEnvironment,
+        POLICYENGINE_API_URL: configuredUrl,
+      });
+
+      // Then
+      expect(result.ok).toBe(false);
+    },
+  );
+
+  test("given a production deployment naming the production Public API then it accepts it", () => {
+    // When
+    const result = readPublicApiSettings({
+      VERCEL_ENV: "production",
+      POLICYENGINE_API_URL: PRODUCTION_PUBLIC_API_URL,
+    });
+
+    // Then
+    expect(result.ok).toBe(true);
+  });
+
   test("given a local http Public API then it accepts it for local work", () => {
     // When
     const result = readPublicApiSettings({
