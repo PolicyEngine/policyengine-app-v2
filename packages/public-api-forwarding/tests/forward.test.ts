@@ -601,6 +601,50 @@ describe("fetchFromServer", () => {
     expect(publicApiCalls()).toHaveLength(0);
   });
 
+  test("given the Public API cannot be reached then it throws PublicApiUnavailableError with 502", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      publicApiAnswer: () => {
+        throw new TypeError("fetch failed");
+      },
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({ statusCode: 502 });
+  });
+
+  test("given the Public API does not answer in time then it throws PublicApiUnavailableError with 504", async () => {
+    // Given a Public API that answers only when the request is aborted
+    const forwarder = createPublicApiForwarder({
+      environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
+      callerName: "policyengine-test-caller",
+      sharedTokenStore: null,
+      clientAddress: () => undefined,
+      fetchImplementation: (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("timed out", "TimeoutError")),
+          );
+        }),
+      logger: silentLogger,
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, { timeoutMilliseconds: 10 })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({ statusCode: 504 });
+  });
+
   test("given a path that could leave the configured Public API then it throws without calling anything", async () => {
     // Given
     const { forwarder, fetchImplementation } = forwarderWith();
