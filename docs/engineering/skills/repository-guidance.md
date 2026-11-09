@@ -93,6 +93,7 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 - `calculator-app/` - the Next.js calculator, deployed to app.policyengine.org (Vercel project `policyengine-calculator-next`)
 - `app/src/` - calculator source shared by `calculator-app/`, plus the data files the website reads
 - `app/public/` - static files; served on app.policyengine.org through the `calculator-app/public` symlink, and `app/public/assets/` is copied into the website build
+- `packages/` - workspace packages shared by the website and the calculator. `packages/public-api-forwarding/` is the server-side code their route handlers use to call the Public API with PolicyEngine's server credential; it ships TypeScript source, so each Next.js app that imports it lists it in `transpilePackages`
 - Run both apps locally with `bun run dev` (the website on the first free port from 3000, the calculator on the next free port after it)
 
 ## Embedded sites
@@ -248,5 +249,5 @@ No route embeds a GitHub Pages site as a whole page any more: the 2025 year in r
 
 1. Run `make format` to format `app/`, `website/` and `calculator-app/` with Prettier. `app/` has its own Prettier config; `website/` and `calculator-app/` use Prettier's defaults.
 2. Run `make lint` to run ESLint (and Stylelint in `app/`) in all three.
-3. Run `make typecheck` to type-check all three, and `make test` to run the `app/` and `website/` tests (`calculator-app/` has none). These match CI's type checking and tests jobs. They don't match CI's Node version, though. vitest's launcher starts with `#!/usr/bin/env node`, so `bun run test` runs the tests on the `node` first on your PATH, not on Bun. CI's Tests job pins Node 26 (in `pr.yaml` and `push.yaml`) because `Intl` number formatting differs between Node versions. `make test` uses your local Node, and `app/.nvmrc` says v24.22.1, so a test that checks formatted numbers can pass locally and fail in CI, or the reverse. Run the tests on Node 26 to match CI.
+3. Run `make typecheck` to type-check all three and the workspace packages, and `make test` to run the `app/`, `website/` and package tests (`calculator-app/` has none). These match CI's type checking and tests jobs. They don't match CI's Node version, though. vitest's launcher starts with `#!/usr/bin/env node`, so `bun run test` runs the tests on the `node` first on your PATH, not on Bun. CI's Tests job pins Node 26 (in `pr.yaml` and `push.yaml`) because `Intl` number formatting differs between Node versions. `make test` uses your local Node, and `app/.nvmrc` says v24.22.1, so a test that checks formatted numbers can pass locally and fail in CI, or the reverse. Run the tests on Node 26 to match CI.
 4. CI fails on ESLint warnings as well as errors (`--max-warnings 0`), and on files Prettier would reformat, so fix all of them.
