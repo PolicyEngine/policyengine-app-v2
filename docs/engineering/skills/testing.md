@@ -17,7 +17,7 @@ In `website/`:
 - Run tests: `bun run test`
 - Watch mode: `bun run test:watch`
 
-In `packages/public-api-forwarding/`:
+In `packages/public-api-forwarding/` and `packages/api-client/`:
 
 - Run tests: `bun run test` (Vitest in the Node environment; tests live in `tests/`)
 

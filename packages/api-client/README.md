@@ -1,0 +1,99 @@
+# @policyengine/api-client
+
+A browser client for www.policyengine.org's dashboard API. PolicyEngine dashboards use it instead of calling the PolicyEngine Public API (api.policyengine.org) directly. The website's server sends PolicyEngine's credential, so a dashboard needs none.
+
+It has no dependencies and uses the browser's `fetch`.
+
+## Install
+
+```bash
+npm install @policyengine/api-client
+```
+
+## Use
+
+```ts
+import { createPolicyEngineApiClient } from "@policyengine/api-client";
+
+const policyengine = createPolicyEngineApiClient();
+
+// A household under current law, or under parameter changes.
+const household = await policyengine.calculateHousehold({
+  country: "us",
+  household: {
+    people: { you: { age: { 2026: 40 }, employment_income: { 2026: 50000 } } },
+    households: { your_household: { members: ["you"] } },
+  },
+  policy: {
+    "gov.irs.credits.ctc.amount.base[0].amount": {
+      "2026-01-01.2100-12-31": 3000,
+    },
+  },
+});
+
+// Store parameter changes as a policy, then compare it with current law
+// across the whole economy. compareEconomy polls until the comparison is
+// ready, which can take several minutes.
+const reformId = await policyengine.createPolicy({
+  country: "us",
+  parameters: {
+    "gov.irs.credits.ctc.amount.base[0].amount": {
+      "2026-01-01.2100-12-31": 3000,
+    },
+  },
+});
+const impact = await policyengine.compareEconomy(
+  { country: "us", policy: reformId, baseline: 2, region: "us", year: 2026 },
+  { onProgress: (answer) => console.log(answer.status) },
+);
+
+// A country's variables and parameters.
+const metadata = await policyengine.getMetadata("uk");
+```
+
+`baseline` is the policy ID of current law for the country, as the Public API numbers it.
+
+## Operations
+
+| Method | Dashboard API route | Resolves with |
+| --- | --- | --- |
+| `calculateHousehold({country, household, policy?})` | `POST /api/household/calculate` | The calculated household (`result`) |
+| `createPolicy({country, parameters})` | `POST /api/policies` | The stored policy's ID |
+| `getEconomyComparison({country, policy, baseline, region, year})` | `GET /api/economy/compare` | One answer: `{status: "computing" \| "ok" \| "error", result, …}` |
+| `compareEconomy(request, {intervalMilliseconds?, timeoutMilliseconds?, onProgress?, signal?})` | the same, polled | The comparison's `result` |
+| `getMetadata(country)` | `GET /api/metadata/{country}` | The country's metadata (`result`) |
+
+`country` is `"us"` or `"uk"`.
+
+## Options
+
+`createPolicyEngineApiClient({ baseUrl, fetch, unauthenticatedUserId })`:
+
+- `baseUrl`: where the dashboard API is served. The default is https://www.policyengine.org, which works from a dashboard served on www.policyengine.org, from its preview and from local development. Pass `""` to call the page's own origin.
+- `fetch`: a `fetch` to use instead of the global one.
+- `unauthenticatedUserId`: sent as `PolicyEngine-Unauthenticated-User`, for pages that keep one.
+
+Every method takes a `signal` to cancel the request (or the polling).
+
+## Polling
+
+`compareEconomy` reads the comparison every 5 seconds by default and gives up after 30 minutes with `EconomyComparisonTimeoutError`. A rate-limited read (429) waits for `Retry-After`. A brief gateway failure (502, 503 or 504) waits one interval. A fourth such failure in a row ends polling. Keep the interval at a few seconds: the dashboard API allows 120 comparison reads a minute from one address.
+
+## Errors
+
+Every failure throws `PolicyEngineApiError`, with:
+
+- `status`: the HTTP status, or `null` when no answer arrived;
+- `message`: the dashboard API's message;
+- `body`: the parsed answer;
+- `retryAfterSeconds`: from `Retry-After`, when the answer had one.
+
+A comparison that ends in `"error"` throws it with status 200.
+
+## Which pages may call it
+
+The dashboard API answers browser requests from www.policyengine.org itself, from `http://localhost` and `http://127.0.0.1` on any port, from the PolicyEngine team's Vercel previews (`*-policy-engine.vercel.app`), and from the dashboards' own `*.vercel.app` hosts that www.policyengine.org serves. It refuses other sites' pages with 403.
+
+## Releases
+
+Published from `packages/api-client` in PolicyEngine/policyengine-app-v2 by the "Publish @policyengine/api-client" workflow. The workflow is started by hand, uses npm trusted publishing, and publishes the version in `package.json` if npm does not have it yet.
