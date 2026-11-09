@@ -73,7 +73,7 @@ afterEach(() => {
 });
 
 describe('calculator /api/policyengine/{Public API path}', () => {
-  test('given an allowed calculation then it forwards it to the same Public API path with its query', async () => {
+  test('given an allowed calculation then it forwards it to the same Public API path', async () => {
     // When
     const response = await publicApiRoute.POST(
       routeRequest('/us/calculate-full', { method: 'POST', body: HOUSEHOLD_BODY })
@@ -160,6 +160,49 @@ describe('calculator /api/policyengine/{Public API path}', () => {
     const { headers } = onlyPublicApiCall();
     expect(headers.get('authorization')).toBe(`Bearer ${CALCULATOR_SERVER_TOKEN}`);
     expect(headers.get('policyengine-user-authorization')).toBe(`Bearer ${USER_ACCESS_TOKEN}`);
+  });
+
+  test('given an account upgrade with no body and both identities then the Public API receives both and no body', async () => {
+    // When
+    const response = await publicApiRoute.POST(
+      routeRequest('/v2/me/upgrade?country_id=us', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${USER_ACCESS_TOKEN}`,
+          'PolicyEngine-Unauthenticated-User': UNAUTHENTICATED_USER_ID,
+        },
+      })
+    );
+
+    // Then
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    const calls = publicApiCalls();
+    expect(calls).toHaveLength(1);
+    const [, init] = calls[0];
+    const headers = new Headers(init?.headers);
+    expect(init?.body).toBeUndefined();
+    expect(headers.get('authorization')).toBe(`Bearer ${USER_ACCESS_TOKEN}`);
+    expect(headers.get('policyengine-unauthenticated-user')).toBe(UNAUTHENTICATED_USER_ID);
+  });
+
+  test('given a HEAD request, which Next answers with the GET handler, then it answers 404 without calling the Public API', async () => {
+    // When
+    const response = await publicApiRoute.GET(routeRequest('/us/metadata', { method: 'HEAD' }));
+
+    // Then
+    expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test("given another site's page loading it as an image or script, which sends no Origin, then it answers 403", async () => {
+    // When
+    const response = await publicApiRoute.GET(
+      routeRequest('/us/metadata', { headers: { 'Sec-Fetch-Site': 'cross-site' } })
+    );
+
+    // Then
+    expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   test('given a catalog read then the CDN may keep it for an hour', async () => {

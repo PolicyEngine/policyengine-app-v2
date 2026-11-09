@@ -109,6 +109,17 @@ describe('matchAllowedOperation', () => {
     }
   );
 
+  test('given every method of every operation then the calculator sends it', () => {
+    // Then
+    const allowedPairs = ALLOWED_OPERATIONS.flatMap((operation) =>
+      operation.methods.map((method) => `${method} ${operation.name}`)
+    );
+    const sentPairs = new Set(
+      CALCULATOR_OPERATIONS.map(([method, , operationName]) => `${method} ${operationName}`)
+    );
+    expect(allowedPairs.sort()).toEqual([...sentPairs].sort());
+  });
+
   test('given every operation then it is one the calculator sends', () => {
     // Then
     const usedNames = new Set(CALCULATOR_OPERATIONS.map(([, , operationName]) => operationName));
