@@ -10,6 +10,8 @@ import {
   isAllowedDashboardOrigin,
 } from "@/lib/dashboardApi/cors";
 
+import { getLegacyAppRedirectUrl } from "@/lib/legacyRedirect";
+
 import { resolveRoute } from "../helpers/resolveRoute";
 
 const SITE_URL = "https://www.policyengine.org";
@@ -50,11 +52,13 @@ function dashboardRequest(
     origin,
     body,
     contentType = "application/json",
+    fetchSite,
   }: {
     method?: string;
     origin?: string;
     body?: unknown;
     contentType?: string;
+    fetchSite?: string;
   } = {},
 ): Request {
   const headers = new Headers({
@@ -63,6 +67,9 @@ function dashboardRequest(
   });
   if (origin !== undefined) {
     headers.set("origin", origin);
+  }
+  if (fetchSite !== undefined) {
+    headers.set("sec-fetch-site", fetchSite);
   }
   if (body !== undefined) {
     headers.set("content-type", contentType);
@@ -353,6 +360,20 @@ describe("GET /api/economy/compare", () => {
     });
   });
 
+  test("given another site's page loading it as an image or script, which sends no Origin, then it answers 403 without calling the Public API", async () => {
+    // When
+    const response = await economyCompareRoute.GET(
+      dashboardRequest(
+        "/api/economy/compare?country=us&policy=12&baseline=2&region=us&year=2026",
+        { fetchSite: "cross-site" },
+      ),
+    );
+
+    // Then
+    expect(response.status).toBe(403);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   test.each([
     [
       "a policy that is not an ID",
@@ -497,6 +518,22 @@ describe("dashboard API origins", () => {
 
       // Then
       expect(resolved).toEqual({ hops: [], pathname: path, upstream: null });
+    },
+  );
+
+  test.each([
+    "/api/household/calculate",
+    "/api/policies",
+    "/api/economy/compare",
+    "/api/metadata/us",
+  ])(
+    "given %s then the middleware's legacy-app redirect leaves it alone",
+    (path) => {
+      // When
+      const redirectUrl = getLegacyAppRedirectUrl(`${SITE_URL}${path}`);
+
+      // Then
+      expect(redirectUrl).toBeNull();
     },
   );
 });

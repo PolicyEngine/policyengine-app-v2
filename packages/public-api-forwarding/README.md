@@ -10,7 +10,7 @@ Browser pages will reach the Public API only through these routes, and the route
 
 - **Chooses the Public API** from `POLICYENGINE_API_URL`. A production deployment without it uses https://api.policyengine.org. Every other deployment without it answers 503, so a preview never reaches the production Public API by omission.
 - **Adds the server credential** when the four `POLICYENGINE_API_AUTH0_*` variables are set: an Auth0 client-credentials access token in `Authorization: Bearer`. With none of them set it forwards without a credential; with only some set it answers 503.
-- **Caches the token** until five minutes before it expires: in the function instance's memory, then in Vercel Runtime Cache (one copy per region), shared by the deployment's instances. Requests that arrive while a token is being fetched wait for that one request. Auth0 counts issued machine-to-machine tokens per tenant per month, so tokens are never fetched per request.
+- **Caches the token** until five minutes before it expires (or halfway through the life of a token shorter than ten minutes): in the function instance's memory, then in Vercel Runtime Cache (one copy per region), shared by the deployment's instances. Requests that arrive while a token is being fetched wait for that one request. Auth0 counts issued machine-to-machine tokens per tenant per month, so tokens are never fetched per request.
 - **Sends only these headers**, built from nothing rather than copied: `Accept`, `Content-Type` for a body, `User-Agent` (the caller's name), `X-Forwarded-For` (the browser's address, from Vercel's `x-real-ip`), `PolicyEngine-Unauthenticated-User` when the browser sent it, `If-None-Match` and `If-Modified-Since` for reads, and the user's token:
   - with a server credential, the browser's `Authorization` moves to `PolicyEngine-User-Authorization`;
   - without one, it stays in `Authorization`, as on a direct browser call.
@@ -36,7 +36,9 @@ The same object's `fetchFromServer(request, options)` is for the server's own re
 
 The website's `withPublicApiCredential(fetch)` wraps a `fetch` so that requests to https://api.policyengine.org go through `fetchFromServer()`, and requests to other hosts pass unchanged. `/api/deployments` uses it for the Public API's version reports.
 
-`checkOrigin()`, `corsResponseHeaders()` and `preflightResponse()` apply a route's CORS rules. A request whose `Origin` is neither the route's own site nor allowed gets 403 and is never forwarded: CORS alone only stops another site's page from reading the answer, not the request from running.
+`checkOrigin()`, `corsResponseHeaders()` and `preflightResponse()` apply a route's CORS rules. A request whose `Origin` is neither the route's own site nor allowed gets 403 and is never forwarded: CORS alone only stops another site's page from reading the answer, not the request from running. So does a browser request with no `Origin` whose `Sec-Fetch-Site` is `cross-site` or `same-site`, which is how browsers send another site's `<img>`, `<script>` or no-cors GET. Requests without either header, such as from servers, are let through; rate limits hold those back.
+
+The Auth0 token request never follows a redirect, which would re-send the client secret.
 
 ## Configuration
 

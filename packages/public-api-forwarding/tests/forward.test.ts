@@ -401,6 +401,85 @@ describe("createPublicApiForwarder", () => {
   });
 });
 
+describe("createPublicApiForwarder conditional reads and disconnects", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("given a browser's cached copy then its validators reach the Public API and a 304 keeps the route's Cache-Control", async () => {
+    // Given
+    const { forwarder, onlyPublicApiCall } = forwarderWith({
+      publicApiAnswer: () =>
+        new Response(null, {
+          status: 304,
+          headers: { ETag: '"metadata-version"' },
+        }),
+    });
+
+    // When
+    const response = await forwarder.forward(METADATA_REQUEST, {
+      incomingRequest: new Request("https://www.example.test/api/metadata/us", {
+        headers: {
+          "If-None-Match": '"metadata-version"',
+          "If-Modified-Since": "Mon, 09 Nov 2026 12:00:00 GMT",
+        },
+      }),
+      cacheControl: "max-age=3600",
+    });
+
+    // Then
+    const headers = sentHeaders(onlyPublicApiCall());
+    expect(headers.get("if-none-match")).toBe('"metadata-version"');
+    expect(headers.get("if-modified-since")).toBe(
+      "Mon, 09 Nov 2026 12:00:00 GMT",
+    );
+    expect(response.status).toBe(304);
+    expect(response.headers.get("cache-control")).toBe("max-age=3600");
+    expect(response.headers.get("etag")).toBe('"metadata-version"');
+  });
+
+  test("given a write then the browser's validators are not sent", async () => {
+    // Given
+    const { forwarder, onlyPublicApiCall } = forwarderWith();
+
+    // When
+    await forwarder.forward(CALCULATE_REQUEST, {
+      incomingRequest: browserRequest({ "If-None-Match": '"anything"' }),
+    });
+
+    // Then
+    expect(sentHeaders(onlyPublicApiCall()).get("if-none-match")).toBeNull();
+  });
+
+  test("given the browser goes away then the request to the Public API is aborted", async () => {
+    // Given
+    const browserConnection = new AbortController();
+    let upstreamSignal: AbortSignal | undefined;
+    const forwarder = createPublicApiForwarder({
+      environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
+      callerName: "policyengine-test-caller",
+      sharedTokenStore: null,
+      clientAddress: () => undefined,
+      fetchImplementation: async (_input, init) => {
+        upstreamSignal = init?.signal ?? undefined;
+        return jsonResponse(CALCULATION_RESULT);
+      },
+      logger: silentLogger,
+    });
+    await forwarder.forward(METADATA_REQUEST, {
+      incomingRequest: new Request("https://www.example.test/api/metadata/us", {
+        signal: browserConnection.signal,
+      }),
+    });
+
+    // When
+    browserConnection.abort();
+
+    // Then
+    expect(upstreamSignal?.aborted).toBe(true);
+  });
+});
+
 describe("isForwardablePath", () => {
   test.each([
     ["/us/calculate", true],
