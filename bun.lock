@@ -100,6 +100,7 @@
         "@anthropic-ai/sdk": "^0.116.0",
         "@auth0/auth0-react": "2.27.0",
         "@normy/react-query": "^0.20.0",
+        "@policyengine/public-api-forwarding": "workspace:*",
         "@policyengine/ui-kit": "^0.4.0",
         "@reduxjs/toolkit": "^2.8.2",
         "@tabler/icons-react": "^3.34.0",
