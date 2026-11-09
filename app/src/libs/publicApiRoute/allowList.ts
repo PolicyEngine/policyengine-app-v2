@@ -39,8 +39,113 @@ export const CACHE_CONTROL: Readonly<Record<CachePolicy, string | undefined>> = 
   metadata: 'max-age=3600',
 };
 
-// Placeholder until the implementation commit.
-export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [];
+const COUNTRY = '(?:us|uk)';
+/** The v1 routes' integer IDs. */
+const NUMERIC_ID = '[0-9]{1,10}';
+/** Saved-record and shared-report IDs. */
+const UUID = '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}';
+/** v2 policy IDs, which the schema types only as strings. */
+const OPAQUE_ID = '[A-Za-z0-9_-]{1,64}';
+
+const DEFAULT_TIMEOUT_MILLISECONDS = 60_000;
+const CALCULATION_TIMEOUT_MILLISECONDS = 280_000;
+
+function exactPath(pattern: string): RegExp {
+  return new RegExp(`^${pattern}$`);
+}
+
+function operation(
+  name: string,
+  methods: readonly ForwardedMethod[],
+  pathPattern: string,
+  cache: CachePolicy = 'never',
+  responseHeadersTimeoutMilliseconds = DEFAULT_TIMEOUT_MILLISECONDS
+): AllowedOperation {
+  return {
+    name,
+    methods,
+    pathPattern: exactPath(pathPattern),
+    cache,
+    responseHeadersTimeoutMilliseconds,
+  };
+}
+
+/**
+ * Every Public API operation the calculator sends (app/src/api/), checked
+ * against the code on 2026-11-09. Add an operation here when the
+ * calculator starts calling a new one.
+ */
+export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
+  // Country metadata (api/metadata.ts).
+  operation('metadata', ['GET'], `/${COUNTRY}/metadata`, 'metadata'),
+
+  // Households and their calculations (api/household.ts,
+  // householdCalculation.ts, householdVariation.ts).
+  operation('household creation', ['POST'], `/${COUNTRY}/household`),
+  operation('household', ['GET'], `/${COUNTRY}/household/${NUMERIC_ID}`),
+  operation(
+    'household under a policy',
+    ['GET'],
+    `/${COUNTRY}/household/${NUMERIC_ID}/policy/${NUMERIC_ID}`,
+    'never',
+    CALCULATION_TIMEOUT_MILLISECONDS
+  ),
+  operation(
+    'household calculation with variations',
+    ['POST'],
+    `/${COUNTRY}/calculate-full`,
+    'never',
+    CALCULATION_TIMEOUT_MILLISECONDS
+  ),
+
+  // v1 policies, simulations and reports (api/policy.ts, simulation.ts,
+  // report.ts). Updates send the ID in the body.
+  operation('policy creation', ['POST'], `/${COUNTRY}/policy`),
+  operation('policy', ['GET'], `/${COUNTRY}/policy/${NUMERIC_ID}`),
+  operation('simulation creation and update', ['POST', 'PATCH'], `/${COUNTRY}/simulation`),
+  operation('simulation', ['GET'], `/${COUNTRY}/simulation/${NUMERIC_ID}`),
+  operation('report creation and update', ['POST', 'PATCH'], `/${COUNTRY}/report`),
+  operation('report', ['GET'], `/${COUNTRY}/report/${NUMERIC_ID}`),
+
+  // Economy comparisons, polled; DELETE clears a stored failure before a
+  // retry (api/societyWideCalculation.ts, budgetWindow.ts).
+  operation(
+    'economy comparison',
+    ['GET', 'DELETE'],
+    `/${COUNTRY}/economy/${NUMERIC_ID}/over/${NUMERIC_ID}`
+  ),
+  operation(
+    'budget-window economy comparison',
+    ['GET'],
+    `/${COUNTRY}/economy/${NUMERIC_ID}/over/${NUMERIC_ID}/budget-window`
+  ),
+
+  // The v2 model catalog (api/publicApi/).
+  operation('model catalog', ['GET'], '/v2/model-catalog', 'catalog'),
+  operation('catalog parameters', ['GET'], '/v2/model-catalog/parameters', 'catalog'),
+  operation('catalog variables', ['GET'], '/v2/model-catalog/variables', 'catalog'),
+  operation('parameter children', ['GET'], '/v2/parameters/children', 'catalog'),
+  operation('parameter search file', ['GET'], '/v2/parameters/search-file', 'catalog'),
+
+  // v2 policies (api/reformStore.ts).
+  operation('v2 policy creation', ['POST'], '/v2/policies'),
+  operation('v2 policy', ['GET'], `/v2/policies/${OPAQUE_ID}`),
+
+  // The signed-in account (api/v2Me.ts).
+  operation('account', ['GET', 'DELETE'], '/v2/me'),
+  operation('account export', ['GET'], '/v2/me/export'),
+  operation('account upgrade', ['POST'], '/v2/me/upgrade'),
+
+  // Shared reports, read by anyone with the link (api/sharedReport.ts).
+  operation('shared report', ['GET'], `/v2/shared-reports/${UUID}`),
+
+  // Saved records (api/v2Associations.ts).
+  operation('saved policies', ['GET', 'POST'], '/v2/user-policies'),
+  operation('saved policy', ['GET', 'PATCH', 'DELETE'], `/v2/user-policies/${UUID}`),
+  operation('saved reports', ['GET', 'POST'], '/v2/user-reports'),
+  operation('saved report', ['GET', 'PATCH'], `/v2/user-reports/${UUID}`),
+  operation('saved households', ['GET', 'POST'], '/v2/user-households'),
+];
 
 /** The operation a request names, or null when the route forwards no such request. */
 export function matchAllowedOperation(
