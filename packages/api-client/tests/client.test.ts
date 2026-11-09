@@ -1,0 +1,374 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+import { DEFAULT_BASE_URL, createPolicyEngineApiClient } from "../src/client";
+import {
+  EconomyComparisonTimeoutError,
+  PolicyEngineApiError,
+} from "../src/errors";
+
+const HOUSEHOLD = {
+  people: { you: { age: { 2026: 40 } } },
+  households: { your_household: { members: ["you"] } },
+};
+const CALCULATED_HOUSEHOLD = {
+  ...HOUSEHOLD,
+  people: { you: { age: { 2026: 40 }, net_income: { 2026: 50_000 } } },
+};
+const REFORM_PARAMETERS = {
+  "gov.irs.credits.ctc.amount.base[0].amount": {
+    "2026-01-01.2100-12-31": 3000,
+  },
+};
+const STORED_POLICY_ID = 98765;
+const CURRENT_LAW_POLICY_ID = 2;
+const ECONOMY_RESULT = { budget: { budgetary_impact: -1_000_000_000 } };
+const COMPARISON_REQUEST = {
+  country: "us",
+  policy: STORED_POLICY_ID,
+  baseline: CURRENT_LAW_POLICY_ID,
+  region: "state/ca",
+  year: 2026,
+} as const;
+const UNAUTHENTICATED_USER_ID = "3f2c8b62-4a43-4d4f-9a5c-0d1b8ad8b7e1";
+
+function jsonAnswer(
+  body: unknown,
+  statusCode = 200,
+  headers: Record<string, string> = {},
+): Response {
+  return new Response(JSON.stringify(body), {
+    status: statusCode,
+    headers: { "Content-Type": "application/json", ...headers },
+  });
+}
+
+const okAnswer = (result: unknown) =>
+  jsonAnswer({ status: "ok", message: null, result });
+const computingAnswer = (queuePosition: number) =>
+  jsonAnswer({
+    status: "computing",
+    message: null,
+    result: null,
+    queue_position: queuePosition,
+  });
+
+const fetchMock = vi.fn<typeof fetch>();
+
+function sentRequest(callIndex = 0) {
+  expect(fetchMock.mock.calls.length).toBeGreaterThan(callIndex);
+  const [input, init] = fetchMock.mock.calls[callIndex];
+  return {
+    url: String(input),
+    method: init?.method,
+    headers: new Headers(init?.headers),
+    credentials: init?.credentials,
+    body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+  };
+}
+
+beforeEach(() => {
+  fetchMock.mockReset();
+});
+
+describe("calculateHousehold", () => {
+  test("given a household then it posts it to the dashboard API on www.policyengine.org and resolves with the result", async () => {
+    // Given
+    fetchMock.mockResolvedValue(okAnswer(CALCULATED_HOUSEHOLD));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const result = await client.calculateHousehold({
+      country: "us",
+      household: HOUSEHOLD,
+      policy: REFORM_PARAMETERS,
+    });
+
+    // Then
+    expect(result).toEqual(CALCULATED_HOUSEHOLD);
+    expect(sentRequest()).toMatchObject({
+      url: `${DEFAULT_BASE_URL}/api/household/calculate`,
+      method: "POST",
+      credentials: "omit",
+      body: { country: "us", household: HOUSEHOLD, policy: REFORM_PARAMETERS },
+    });
+    expect(sentRequest().headers.get("content-type")).toBe("application/json");
+  });
+
+  test("given an unauthenticated user ID then every request carries it", async () => {
+    // Given
+    fetchMock.mockResolvedValue(okAnswer(CALCULATED_HOUSEHOLD));
+    const client = createPolicyEngineApiClient({
+      fetch: fetchMock,
+      unauthenticatedUserId: UNAUTHENTICATED_USER_ID,
+    });
+
+    // When
+    await client.calculateHousehold({ country: "us", household: HOUSEHOLD });
+
+    // Then
+    expect(sentRequest().headers.get("policyengine-unauthenticated-user")).toBe(
+      UNAUTHENTICATED_USER_ID,
+    );
+  });
+
+  test("given a base URL of the page's own origin then it calls relative paths", async () => {
+    // Given
+    fetchMock.mockResolvedValue(okAnswer(CALCULATED_HOUSEHOLD));
+    const client = createPolicyEngineApiClient({
+      fetch: fetchMock,
+      baseUrl: "",
+    });
+
+    // When
+    await client.calculateHousehold({ country: "uk", household: HOUSEHOLD });
+
+    // Then
+    expect(sentRequest().url).toBe("/api/household/calculate");
+  });
+
+  test("given the dashboard API refuses the household then it throws with the status and message", async () => {
+    // Given
+    fetchMock.mockResolvedValue(
+      jsonAnswer(
+        {
+          status: "error",
+          message: "household must be a JSON object.",
+          result: null,
+        },
+        400,
+      ),
+    );
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .calculateHousehold({ country: "us", household: HOUSEHOLD })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PolicyEngineApiError);
+    expect(failure).toMatchObject({
+      status: 400,
+      message: "household must be a JSON object.",
+    });
+  });
+
+  test("given a rate-limited request then the error carries Retry-After", async () => {
+    // Given
+    fetchMock.mockResolvedValue(
+      jsonAnswer({ status: "error", message: "Slow down", result: null }, 429, {
+        "Retry-After": "30",
+      }),
+    );
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .calculateHousehold({ country: "us", household: HOUSEHOLD })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({ status: 429, retryAfterSeconds: 30 });
+  });
+
+  test("given the network fails then it throws a PolicyEngineApiError without a status", async () => {
+    // Given
+    fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .calculateHousehold({ country: "us", household: HOUSEHOLD })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PolicyEngineApiError);
+    expect(failure).toMatchObject({ status: null });
+  });
+});
+
+describe("createPolicy", () => {
+  test("given parameters then it posts them and resolves with the stored policy's ID", async () => {
+    // Given
+    fetchMock.mockResolvedValue(jsonAnswer({ id: STORED_POLICY_ID }, 201));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const policyId = await client.createPolicy({
+      country: "us",
+      parameters: REFORM_PARAMETERS,
+    });
+
+    // Then
+    expect(policyId).toBe(STORED_POLICY_ID);
+    expect(sentRequest()).toMatchObject({
+      url: `${DEFAULT_BASE_URL}/api/policies`,
+      method: "POST",
+      body: { country: "us", parameters: REFORM_PARAMETERS },
+    });
+  });
+});
+
+describe("getEconomyComparison", () => {
+  test("given a comparison then it reads it once with the comparison's query", async () => {
+    // Given
+    fetchMock.mockResolvedValue(computingAnswer(3));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const answer = await client.getEconomyComparison(COMPARISON_REQUEST);
+
+    // Then
+    expect(answer.status).toBe("computing");
+    expect(sentRequest()).toMatchObject({
+      url: `${DEFAULT_BASE_URL}/api/economy/compare?country=us&policy=98765&baseline=2&region=state%2Fca&year=2026`,
+      method: "GET",
+    });
+  });
+});
+
+describe("compareEconomy", () => {
+  test("given a comparison that computes for two reads then it polls until it resolves with the result", async () => {
+    // Given
+    fetchMock
+      .mockResolvedValueOnce(computingAnswer(2))
+      .mockResolvedValueOnce(computingAnswer(1))
+      .mockResolvedValueOnce(okAnswer(ECONOMY_RESULT));
+    const onProgress = vi.fn();
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const result = await client.compareEconomy(COMPARISON_REQUEST, {
+      intervalMilliseconds: 1,
+      onProgress,
+    });
+
+    // Then
+    expect(result).toEqual(ECONOMY_RESULT);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(onProgress).toHaveBeenCalledTimes(2);
+  });
+
+  test("given a comparison that fails then it throws the comparison's message", async () => {
+    // Given
+    fetchMock.mockResolvedValue(
+      jsonAnswer({
+        status: "error",
+        message: "Simulation failed",
+        result: null,
+      }),
+    );
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .compareEconomy(COMPARISON_REQUEST, { intervalMilliseconds: 1 })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PolicyEngineApiError);
+    expect((failure as Error).message).toBe("Simulation failed");
+  });
+
+  test("given a rate-limited read then it waits and keeps polling", async () => {
+    // Given
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonAnswer(
+          { status: "error", message: "Slow down", result: null },
+          429,
+          {
+            "Retry-After": "0",
+          },
+        ),
+      )
+      .mockResolvedValueOnce(okAnswer(ECONOMY_RESULT));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const result = await client.compareEconomy(COMPARISON_REQUEST, {
+      intervalMilliseconds: 1,
+    });
+
+    // Then
+    expect(result).toEqual(ECONOMY_RESULT);
+  });
+
+  test("given four gateway failures in a row then it stops polling and throws", async () => {
+    // Given
+    fetchMock.mockImplementation(async () =>
+      jsonAnswer(
+        { status: "error", message: "Bad gateway", result: null },
+        502,
+      ),
+    );
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .compareEconomy(COMPARISON_REQUEST, { intervalMilliseconds: 1 })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({ status: 502 });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  test("given a comparison still computing at the deadline then it throws a timeout error", async () => {
+    // Given
+    fetchMock.mockImplementation(async () => computingAnswer(1));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .compareEconomy(COMPARISON_REQUEST, {
+        intervalMilliseconds: 5,
+        timeoutMilliseconds: 12,
+      })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(EconomyComparisonTimeoutError);
+  });
+
+  test("given the caller aborts while it waits then it stops polling", async () => {
+    // Given
+    fetchMock.mockImplementation(async () => computingAnswer(1));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+    const abortController = new AbortController();
+
+    // When
+    const polling = client
+      .compareEconomy(COMPARISON_REQUEST, {
+        intervalMilliseconds: 60_000,
+        signal: abortController.signal,
+      })
+      .catch((error: unknown) => error);
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    abortController.abort(new DOMException("Left the page", "AbortError"));
+    const failure = await polling;
+
+    // Then
+    expect((failure as DOMException).name).toBe("AbortError");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getMetadata", () => {
+  test("given a country then it reads the country's metadata", async () => {
+    // Given
+    const metadata = { variables: {}, parameters: {} };
+    fetchMock.mockResolvedValue(okAnswer(metadata));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const result = await client.getMetadata("uk");
+
+    // Then
+    expect(result).toEqual(metadata);
+    expect(sentRequest()).toMatchObject({
+      url: `${DEFAULT_BASE_URL}/api/metadata/uk`,
+      method: "GET",
+    });
+  });
+});

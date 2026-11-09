@@ -141,6 +141,15 @@
         "typescript": "^5.8.0",
       },
     },
+    "packages/api-client": {
+      "name": "@policyengine/api-client",
+      "version": "0.1.0",
+      "devDependencies": {
+        "prettier": "^3.5.3",
+        "typescript": "^5.8.0",
+        "vitest": "^3.2.3",
+      },
+    },
     "packages/public-api-forwarding": {
       "name": "@policyengine/public-api-forwarding",
       "version": "0.1.0",
@@ -521,6 +530,8 @@
     "@plotly/point-cluster": ["@plotly/point-cluster@3.1.9", "", { "dependencies": { "array-bounds": "^1.0.1", "binary-search-bounds": "^2.0.4", "clamp": "^1.0.1", "defined": "^1.0.0", "dtype": "^2.0.0", "flatten-vertex-data": "^1.0.2", "is-obj": "^1.0.1", "math-log2": "^1.0.1", "parse-rect": "^1.2.0", "pick-by-alias": "^1.2.0" } }, "sha512-MwaI6g9scKf68Orpr1pHZ597pYx9uP8UEFXLPbsCmuw3a84obwz6pnMXGc90VhgDNeNiLEdlmuK7CPo+5PIxXw=="],
 
     "@plotly/regl": ["@plotly/regl@2.1.2", "", {}, "sha512-Mdk+vUACbQvjd0m/1JJjOOafmkp/EpmHjISsopEz5Av44CBq7rPC05HHNbYGKVyNUF2zmEoBS/TT0pd0SPFFyw=="],
+
+    "@policyengine/api-client": ["@policyengine/api-client@workspace:packages/api-client"],
 
     "@policyengine/calculator": ["@policyengine/calculator@workspace:calculator-app"],
 
