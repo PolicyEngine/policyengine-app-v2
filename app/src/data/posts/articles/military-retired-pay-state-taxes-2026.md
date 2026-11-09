@@ -136,8 +136,8 @@ PolicyEngine also models rules in benefit programs and other state taxes that tu
 
 | Program | Rule | Law |
 | --- | --- | --- |
-| SNAP | Congress exempted veterans from SNAP's time limit for adults without dependents in 2023, then ended the exemption in July 2025. | [P.L. 118-5, sec. 311](https://www.govinfo.gov/content/pkg/PLAW-118publ5/html/PLAW-118publ5.htm); [P.L. 119-21, sec. 10102](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=10) |
-| Medicaid | States must start work requirements by January 1, 2027, or by the end of 2028 with a federal exemption, and must exempt veterans with a disability rated as total. | [P.L. 119-21, sec. 71119](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=235) |
+| SNAP | Congress exempted veterans from SNAP's time limit for adults without dependents in 2023, then ended the exemption in July 2025. | [P.L. 118-5, sec. 311](https://www.govinfo.gov/content/pkg/PLAW-118publ5/html/PLAW-118publ5.htm); [P.L. 119-21, sec. 10102](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=11) |
+| Medicaid | States must start work requirements by January 1, 2027, or by the end of 2028 with a federal exemption, and must exempt veterans with a disability rated as total. | [P.L. 119-21, sec. 71119](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=236) |
 | Kansas income tax | Each veteran the VA pays disability compensation at the 100% rate, for a permanent service-connected disability, gets an extra $2,320 exemption. | [K.S.A. 79-32,121b(b)(2)](https://www.kslegislature.gov/li/b2025_26/statute/079_000_0000_chapter/079_032_0000_article/079_032_0121b_section/079_032_0121b_k/) |
 | Michigan income tax | Each veteran with a service-connected disability, at any rating, gets an extra $500 exemption. | [MCL 206.30](https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-206-30), subsections (3)(b) and (7); [2025 MI-1040 instructions, p. 10](https://www.michigan.gov/taxes/-/media/Project/Websites/taxes/Forms/IIT/TY2025/MI-1040-Book.pdf#page=10) |
 
