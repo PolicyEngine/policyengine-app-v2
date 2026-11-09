@@ -479,6 +479,42 @@ describe("createPublicApiForwarder conditional reads and disconnects", () => {
   });
 });
 
+describe("createPublicApiForwarder when the browser has gone", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("given the browser goes away before the Public API answers then nothing is logged as an error", async () => {
+    // Given
+    const browserConnection = new AbortController();
+    const forwarder = createPublicApiForwarder({
+      environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
+      callerName: "policyengine-test-caller",
+      sharedTokenStore: null,
+      clientAddress: () => undefined,
+      fetchImplementation: (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("aborted", "AbortError")),
+          );
+        }),
+      logger: silentLogger,
+    });
+    const forwarding = forwarder.forward(METADATA_REQUEST, {
+      incomingRequest: new Request("https://www.example.test/api/metadata/us", {
+        signal: browserConnection.signal,
+      }),
+    });
+
+    // When
+    browserConnection.abort();
+    await forwarding;
+
+    // Then
+    expect(silentLogger.error).not.toHaveBeenCalled();
+  });
+});
+
 describe("isForwardablePath", () => {
   test.each([
     ["/us/calculate", true],

@@ -90,6 +90,15 @@ function readBaseUrl(
       problem: `${PUBLIC_API_URL_VARIABLE} must not carry a query, fragment or user name.`,
     };
   }
+  if (
+    environment.VERCEL_ENV !== "production" &&
+    parsedUrl.origin === new URL(PRODUCTION_PUBLIC_API_URL).origin
+  ) {
+    return {
+      ok: false,
+      problem: `${PUBLIC_API_URL_VARIABLE} names the production Public API, which only production deployments may call.`,
+    };
+  }
   return {
     ok: true,
     baseUrl: `${parsedUrl.origin}${parsedUrl.pathname.replace(/\/+$/, "")}`,
@@ -151,7 +160,8 @@ function readCredential(
  *
  * - `POLICYENGINE_API_URL` names the Public API. A production deployment
  *   (`VERCEL_ENV=production`) without it uses https://api.policyengine.org;
- *   any other deployment without it is refused.
+ *   any other deployment without it, or naming the production Public API,
+ *   is refused.
  * - The four `POLICYENGINE_API_AUTH0_*` variables name an Auth0 client. With
  *   none of them set, requests go without a server credential; with only
  *   some set, the settings are refused.

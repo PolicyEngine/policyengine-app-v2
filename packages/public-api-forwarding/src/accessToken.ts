@@ -140,8 +140,14 @@ export function createAccessTokenProvider(
         },
       );
     } catch (error) {
+      // Node's fetch says only "fetch failed"; the reason, such as a DNS or
+      // TLS failure or a refused redirect, is its cause.
+      const cause =
+        error instanceof Error && error.cause instanceof Error
+          ? ` (${error.cause.message})`
+          : "";
       throw new AccessTokenError(
-        `The Auth0 token request failed: ${error instanceof Error ? error.message : String(error)}`,
+        `The Auth0 token request failed: ${error instanceof Error ? error.message : String(error)}${cause}`,
       );
     }
 
