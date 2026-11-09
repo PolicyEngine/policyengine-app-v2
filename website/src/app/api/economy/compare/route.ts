@@ -30,7 +30,7 @@ export async function GET(request: Request): Promise<Response> {
     return websitePublicApi.forward(operation.request, {
       incomingRequest: request,
       responseHeaders: corsHeaders,
-      responseHeadersTimeoutMilliseconds: 50_000,
+      responseHeadersTimeoutMilliseconds: 40_000,
     });
   });
 }
