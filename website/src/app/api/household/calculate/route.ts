@@ -15,6 +15,8 @@ import { websitePublicApi } from "@/lib/publicApi/forwarder";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 // A household with many people or a variation chart can take over a minute.
+// The Public API gets 100 s to answer, after up to 10 s for a token, so the
+// route's own JSON 504 arrives before Vercel ends the function.
 export const maxDuration = 120;
 
 export function OPTIONS(request: Request): Response {
@@ -34,7 +36,7 @@ export async function POST(request: Request): Promise<Response> {
     return websitePublicApi.forward(operation.request, {
       incomingRequest: request,
       responseHeaders: corsHeaders,
-      responseHeadersTimeoutMilliseconds: 110_000,
+      responseHeadersTimeoutMilliseconds: 100_000,
     });
   });
 }

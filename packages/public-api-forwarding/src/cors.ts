@@ -3,7 +3,8 @@
 // CORS only stops other sites' pages from reading a response; it does not
 // stop a request from running. So a request whose Origin is neither the
 // route's own site nor an allowed one is refused outright (403) before it
-// reaches the Public API.
+// reaches the Public API, and so is a browser request without an Origin
+// that Sec-Fetch-Site marks as coming from another site.
 
 export interface CorsPolicy {
   /** Whether a page at this origin, other than the route's own, may call it. */
@@ -41,10 +42,19 @@ function ownHosts(request: Request): Set<string> {
   return hosts;
 }
 
+// Browsers send no Origin on a GET made by an <img>, a <script> or a
+// no-cors fetch, but they do say where it came from in Sec-Fetch-Site.
+const OTHER_SITE_FETCH_SITES = new Set(["cross-site", "same-site"]);
+
 export function checkOrigin(request: Request, policy: CorsPolicy): OriginCheck {
   const originHeader = request.headers.get("origin");
   if (originHeader === null) {
-    return { kind: "no-origin" };
+    // A server, or a browser on the route's own origin, may call without
+    // one; another site's page may not.
+    const fetchSite = request.headers.get("sec-fetch-site")?.toLowerCase();
+    return fetchSite !== undefined && OTHER_SITE_FETCH_SITES.has(fetchSite)
+      ? { kind: "refused" }
+      : { kind: "no-origin" };
   }
 
   let origin: URL;

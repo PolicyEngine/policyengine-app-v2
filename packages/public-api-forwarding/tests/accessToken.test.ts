@@ -221,4 +221,44 @@ describe("createAccessTokenProvider", () => {
     // Then
     expect(accessToken).toBe(SERVER_ACCESS_TOKEN);
   });
+
+  test("given a token request then it never follows a redirect, which would re-send the client secret", async () => {
+    // Given
+    const fetchImplementation = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) => tokenResponse(),
+    );
+    const { getAccessToken } = providerWith(fetchImplementation);
+
+    // When
+    await getAccessToken(WEBSITE_CREDENTIAL);
+
+    // Then
+    expect(fetchImplementation).toHaveBeenCalledTimes(1);
+    expect(fetchImplementation.mock.calls[0][1]?.redirect).toBe("error");
+  });
+
+  test("given a token shorter than ten minutes then it is replaced halfway through its life", async () => {
+    // Given
+    const shortLifetimeSeconds = 400;
+    const fetchImplementation = vi
+      .fn()
+      .mockResolvedValueOnce(
+        tokenResponse(SERVER_ACCESS_TOKEN, shortLifetimeSeconds),
+      )
+      .mockResolvedValueOnce(tokenResponse(SECOND_SERVER_ACCESS_TOKEN));
+    const { getAccessToken, clock } = providerWith(fetchImplementation);
+    await getAccessToken(WEBSITE_CREDENTIAL);
+
+    // When
+    clock.now += (shortLifetimeSeconds / 2 - 1) * 1000;
+    const tokenBeforeHalfway = await getAccessToken(WEBSITE_CREDENTIAL);
+    clock.now += 1000;
+    const tokenAtHalfway = await getAccessToken(WEBSITE_CREDENTIAL);
+
+    // Then
+    expect([tokenBeforeHalfway, tokenAtHalfway]).toEqual([
+      SERVER_ACCESS_TOKEN,
+      SECOND_SERVER_ACCESS_TOKEN,
+    ]);
+  });
 });

@@ -134,6 +134,9 @@ export function createAccessTokenProvider(
             audience: credential.audience,
           }),
           signal: AbortSignal.timeout(TOKEN_REQUEST_TIMEOUT_MILLISECONDS),
+          // A followed 307 or 308 would send the client secret on to
+          // wherever it points.
+          redirect: "error",
         },
       );
     } catch (error) {
