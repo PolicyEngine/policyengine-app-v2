@@ -261,4 +261,22 @@ describe("createAccessTokenProvider", () => {
       SECOND_SERVER_ACCESS_TOKEN,
     ]);
   });
+
+  test("given the token request fails on the network then the error names the cause, not only fetch's own message", async () => {
+    // Given
+    const fetchImplementation = vi.fn(async () => {
+      throw new TypeError("fetch failed", {
+        cause: new Error("getaddrinfo ENOTFOUND auth.example.test"),
+      });
+    });
+    const { getAccessToken } = providerWith(fetchImplementation);
+
+    // When
+    const failure = await getAccessToken(WEBSITE_CREDENTIAL).catch(
+      (error: unknown) => error,
+    );
+
+    // Then
+    expect((failure as Error).message).toContain("ENOTFOUND");
+  });
 });
