@@ -496,7 +496,28 @@ export function createPublicApiForwarder(
     if (serverOptions.next !== undefined) {
       init.next = serverOptions.next;
     }
-    const upstream = await fetchImplementation(upstreamUrl, init);
+    let upstream: Response;
+    try {
+      upstream = await fetchImplementation(upstreamUrl, init);
+    } catch (error) {
+      const timedOut =
+        error instanceof DOMException && error.name === "TimeoutError";
+      logger.error(
+        timedOut
+          ? `The Public API did not answer ${publicApiRequest.method} ${publicApiRequest.path} in time.`
+          : `Could not reach the Public API for ${publicApiRequest.method} ${publicApiRequest.path}:`,
+        error instanceof Error ? error.message : error,
+      );
+      throw timedOut
+        ? new PublicApiUnavailableError(
+            "The Public API did not answer in time.",
+            504,
+          )
+        : new PublicApiUnavailableError(
+            "The Public API could not be reached.",
+            502,
+          );
+    }
     warnIfCredentialRefused(publicApiRequest, serverToken, upstream);
     return upstream;
   }
