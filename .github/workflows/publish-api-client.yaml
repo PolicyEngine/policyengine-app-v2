@@ -18,14 +18,16 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
-  publish:
-    name: Publish
+  build:
+    name: Test, build and pack
     # Only what has merged is published.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    outputs:
+      package-version: ${{ steps.pack.outputs.package-version }}
+      tarball: ${{ steps.pack.outputs.tarball }}
 
     steps:
       - name: Check out repository
@@ -36,12 +38,10 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
-      # Trusted publishing needs npm 11.5.1 or later, which Node 24 ships.
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "24"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -50,17 +50,62 @@ jobs:
         working-directory: ./packages/api-client
         run: bun run test
 
-      - name: Build the package
-        working-directory: ./packages/api-client
-        run: bun run build
-
-      - name: Publish unless npm already has this version
+      - name: Build and pack the package
+        id: pack
         working-directory: ./packages/api-client
         run: |
+          set -o pipefail
+          bun run build
+          tarball="$(npm pack --ignore-scripts | tail -n 1)"
+          # Anything but a tarball here would make the publish job publish a
+          # directory, which runs the package's scripts there.
+          case "${tarball}" in
+            *.tgz) ;;
+            *) echo "npm pack named no tarball: '${tarball}'" >&2; exit 1 ;;
+          esac
+          echo "tarball=${tarball}" >> "$GITHUB_OUTPUT"
+          echo "package-version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Keep the tarball for the publish job
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-client-tarball
+          path: packages/api-client/${{ steps.pack.outputs.tarball }}
+          if-no-files-found: error
+          retention-days: 1
+
+  # Holds the OIDC permission, so it runs no install and no repository
+  # code: it only publishes the tarball the build job made.
+  publish:
+    name: Publish
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Fetch the tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: api-client-tarball
+
+      # Trusted publishing needs npm 11.5.1 or later, which Node 24 ships.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish unless npm already has this version
+        env:
+          PACKAGE_VERSION: ${{ needs.build.outputs.package-version }}
+          TARBALL: ${{ needs.build.outputs.tarball }}
+        run: |
           npm --version
-          package_version="$(node -p "require('./package.json').version")"
-          if npm view "@policyengine/api-client@${package_version}" version > /dev/null 2>&1; then
-            echo "npm already has @policyengine/api-client ${package_version}; nothing to publish."
+          if npm view "@policyengine/api-client@${PACKAGE_VERSION}" version > /dev/null 2>&1; then
+            echo "npm already has @policyengine/api-client ${PACKAGE_VERSION}; nothing to publish."
             exit 0
           fi
-          npm publish --access public --provenance
+          npm publish "./${TARBALL}" --access public --provenance --ignore-scripts

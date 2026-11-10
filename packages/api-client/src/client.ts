@@ -37,28 +37,34 @@ export interface PolicyEngineApiClientOptions {
 }
 
 export interface PolicyEngineApiClient {
-  /** Calculates a household; resolves with the calculated household. */
-  calculateHousehold(
+  /**
+   * Calculates a household; resolves with the calculated household. The
+   * type argument names its shape; it is not checked at run time.
+   */
+  calculateHousehold<Result = unknown>(
     request: HouseholdCalculationRequest,
     options?: RequestOptions,
-  ): Promise<unknown>;
+  ): Promise<Result>;
   /** Stores parameter changes as a policy; resolves with its ID. */
   createPolicy(
     request: PolicyCreationRequest,
     options?: RequestOptions,
   ): Promise<number>;
   /** Reads an economy comparison once; it may still be computing. */
-  getEconomyComparison(
+  getEconomyComparison<Result = unknown>(
     request: EconomyComparisonRequest,
     options?: RequestOptions,
-  ): Promise<DashboardApiAnswer>;
+  ): Promise<DashboardApiAnswer<Result>>;
   /** Polls an economy comparison until it finishes; resolves with its result. */
-  compareEconomy(
+  compareEconomy<Result = unknown>(
     request: EconomyComparisonRequest,
     options?: EconomyComparisonPollOptions,
-  ): Promise<unknown>;
+  ): Promise<Result>;
   /** Reads a country's model metadata. */
-  getMetadata(country: Country, options?: RequestOptions): Promise<unknown>;
+  getMetadata<Result = unknown>(
+    country: Country,
+    options?: RequestOptions,
+  ): Promise<Result>;
 }
 
 function retryAfterSeconds(response: Response): number | null {
@@ -176,18 +182,18 @@ export function createPolicyEngineApiClient(
   }
 
   /** The result of an "ok" answer; anything else is thrown. */
-  async function okResult(
+  async function okResult<Result>(
     method: "GET" | "POST",
     path: string,
     body: unknown,
     signal: AbortSignal | undefined,
-  ): Promise<unknown> {
+  ): Promise<Result> {
     const answer = await send(method, path, body, signal);
     const status = (answer.body as { status?: unknown } | null)?.status;
     if (!answer.response.ok || status !== "ok") {
       throw refusal(answer.response, answer.body);
     }
-    return (answer.body as DashboardApiAnswer).result;
+    return (answer.body as DashboardApiAnswer<Result>).result as Result;
   }
 
   function economyComparisonPath(request: EconomyComparisonRequest): string {
@@ -238,17 +244,18 @@ export function createPolicyEngineApiClient(
     };
   }
 
-  async function getEconomyComparison(
+  async function getEconomyComparison<Result = unknown>(
     request: EconomyComparisonRequest,
     options: RequestOptions = {},
-  ): Promise<DashboardApiAnswer> {
-    return (await readEconomyComparison(request, options.signal)).answer;
+  ): Promise<DashboardApiAnswer<Result>> {
+    return (await readEconomyComparison(request, options.signal))
+      .answer as DashboardApiAnswer<Result>;
   }
 
-  async function compareEconomy(
+  async function compareEconomy<Result = unknown>(
     request: EconomyComparisonRequest,
     options: EconomyComparisonPollOptions = {},
-  ): Promise<unknown> {
+  ): Promise<Result> {
     const intervalMilliseconds =
       options.intervalMilliseconds ?? DEFAULT_POLL_INTERVAL_MILLISECONDS;
     const deadline =
@@ -291,7 +298,7 @@ export function createPolicyEngineApiClient(
       }
 
       if (answer.status === "ok") {
-        return answer.result;
+        return answer.result as Result;
       }
       if (answer.status === "error") {
         throw new PolicyEngineApiError(
@@ -314,8 +321,11 @@ export function createPolicyEngineApiClient(
   }
 
   return {
-    calculateHousehold: (request, options = {}) =>
-      okResult(
+    calculateHousehold: <Result = unknown>(
+      request: HouseholdCalculationRequest,
+      options: RequestOptions = {},
+    ) =>
+      okResult<Result>(
         "POST",
         "/api/household/calculate",
         {
@@ -343,8 +353,11 @@ export function createPolicyEngineApiClient(
     getEconomyComparison,
     compareEconomy,
 
-    getMetadata: (country, options = {}) =>
-      okResult(
+    getMetadata: <Result = unknown>(
+      country: Country,
+      options: RequestOptions = {},
+    ) =>
+      okResult<Result>(
         "GET",
         `/api/metadata/${encodeURIComponent(country)}`,
         undefined,
