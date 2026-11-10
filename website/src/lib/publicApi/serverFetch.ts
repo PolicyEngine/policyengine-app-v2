@@ -40,10 +40,13 @@ export function withPublicApiCredential(
     if (url.origin !== API_ORIGIN) {
       return fetchImplementation(input, init);
     }
+    // fetch reads null as "none" for these, so null is passed over too.
     const droppedOptions = Object.entries(init ?? {})
       .filter(
         ([name, value]) =>
-          value !== undefined && !PASSED_REQUEST_OPTIONS.has(name),
+          value !== undefined &&
+          value !== null &&
+          !PASSED_REQUEST_OPTIONS.has(name),
       )
       .map(([name]) => name);
     if (droppedOptions.length > 0) {
@@ -51,7 +54,11 @@ export function withPublicApiCredential(
         `A Public API request cannot carry: ${droppedOptions.join(", ")}`,
       );
     }
-    if (init?.body !== undefined && typeof init.body !== "string") {
+    if (
+      init?.body !== undefined &&
+      init.body !== null &&
+      typeof init.body !== "string"
+    ) {
       throw new TypeError("A Public API request body must be a string.");
     }
     const method = (init?.method ?? "GET").toUpperCase() as PublicApiMethod;

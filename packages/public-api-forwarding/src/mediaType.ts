@@ -9,10 +9,11 @@ export function isJsonMediaType(contentType: string | null): boolean {
     return false;
   }
   const mediaType = contentType.split(";")[0].trim().toLowerCase();
-  const [type, subtype] = mediaType.split("/");
-  if (type !== "application" || subtype === undefined) {
+  const parts = mediaType.split("/");
+  if (parts.length !== 2 || parts[0] !== "application") {
     return false;
   }
+  const subtype = parts[1];
   return (
     subtype === "json" ||
     (subtype.endsWith("+json") && subtype.length > "+json".length)

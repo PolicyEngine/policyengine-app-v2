@@ -54,8 +54,15 @@ jobs:
         id: pack
         working-directory: ./packages/api-client
         run: |
+          set -o pipefail
           bun run build
           tarball="$(npm pack --ignore-scripts | tail -n 1)"
+          # Anything but a tarball here would make the publish job publish a
+          # directory, which runs the package's scripts there.
+          case "${tarball}" in
+            *.tgz) ;;
+            *) echo "npm pack named no tarball: '${tarball}'" >&2; exit 1 ;;
+          esac
           echo "tarball=${tarball}" >> "$GITHUB_OUTPUT"
           echo "package-version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
@@ -101,4 +108,4 @@ jobs:
             echo "npm already has @policyengine/api-client ${PACKAGE_VERSION}; nothing to publish."
             exit 0
           fi
-          npm publish "./${TARBALL}" --access public --provenance
+          npm publish "./${TARBALL}" --access public --provenance --ignore-scripts
