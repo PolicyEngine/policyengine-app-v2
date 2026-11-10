@@ -24,7 +24,7 @@ export const DEFAULT_POLL_TIMEOUT_MILLISECONDS = 30 * 60_000;
  * dashboard API's firewall answers a request over its rate limit that way,
  * and counts requests in fixed windows this long.
  */
-export const DEFAULT_RATE_LIMIT_WAIT_MILLISECONDS = 60_000;
+export const RATE_LIMIT_WAIT_MILLISECONDS = 60_000;
 
 const RATE_LIMITED_STATUS = 429;
 /** Brief gateway failures, which polling retries up to this many times. */
@@ -270,6 +270,23 @@ export function createPolicyEngineApiClient(
       (options.timeoutMilliseconds ?? DEFAULT_POLL_TIMEOUT_MILLISECONDS);
     let gatewayRetriesSinceLastAnswer = 0;
 
+    /**
+     * Waits before the next read, but never past the deadline, so the last
+     * read happens at the deadline; once the deadline has passed, throws.
+     */
+    async function waitBeforeNextRead(milliseconds: number): Promise<void> {
+      const remainingMilliseconds = deadline - Date.now();
+      if (remainingMilliseconds <= 0) {
+        throw new EconomyComparisonTimeoutError(
+          "The economy comparison did not finish in time.",
+        );
+      }
+      await waitFor(
+        Math.min(milliseconds, remainingMilliseconds),
+        options.signal,
+      );
+    }
+
     for (;;) {
       let answer: DashboardApiAnswer;
       let httpStatus: number;
@@ -298,19 +315,19 @@ export function createPolicyEngineApiClient(
           }
           gatewayRetriesSinceLastAnswer += 1;
         }
-        const fallbackWaitMilliseconds = isRateLimited
-          ? DEFAULT_RATE_LIMIT_WAIT_MILLISECONDS
-          : intervalMilliseconds;
-        const waitMilliseconds =
-          error.retryAfterSeconds !== null
-            ? error.retryAfterSeconds * 1000
-            : fallbackWaitMilliseconds;
-        if (Date.now() + waitMilliseconds > deadline) {
-          throw new EconomyComparisonTimeoutError(
-            "The economy comparison did not finish in time.",
-          );
-        }
-        await waitFor(waitMilliseconds, options.signal);
+        const retryAfterMilliseconds =
+          error.retryAfterSeconds === null
+            ? null
+            : error.retryAfterSeconds * 1000;
+        // A rate-limited read waits at least one interval, so a Retry-After
+        // of 0 cannot make polling read again at once, over and over.
+        const waitMilliseconds = isRateLimited
+          ? Math.max(
+              retryAfterMilliseconds ?? RATE_LIMIT_WAIT_MILLISECONDS,
+              intervalMilliseconds,
+            )
+          : (retryAfterMilliseconds ?? intervalMilliseconds);
+        await waitBeforeNextRead(waitMilliseconds);
         continue;
       }
 
@@ -328,12 +345,7 @@ export function createPolicyEngineApiClient(
         );
       }
       options.onProgress?.(answer);
-      if (Date.now() + intervalMilliseconds > deadline) {
-        throw new EconomyComparisonTimeoutError(
-          "The economy comparison did not finish in time.",
-        );
-      }
-      await waitFor(intervalMilliseconds, options.signal);
+      await waitBeforeNextRead(intervalMilliseconds);
     }
   }
 

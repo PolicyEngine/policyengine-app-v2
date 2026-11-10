@@ -79,10 +79,10 @@ Every method takes a `signal` to cancel the request (or the polling).
 
 ## Polling
 
-`compareEconomy` reads the comparison every 5 seconds by default and gives up after 30 minutes with `EconomyComparisonTimeoutError`.
+`compareEconomy` reads the comparison every 5 seconds by default and gives up after 30 minutes with `EconomyComparisonTimeoutError`. No wait runs past that deadline: the last one is shortened so that polling reads once more at the deadline.
 
-- A rate-limited read (429) waits for `Retry-After`. Without one, it waits 60 seconds (`DEFAULT_RATE_LIMIT_WAIT_MILLISECONDS`), the length of the rate limit's window. Rate-limited reads never end polling by themselves; the timeout still applies.
-- A brief gateway failure (502, 503 or 504) waits one interval. The fourth gateway failure since the last answer ends polling.
+- A rate-limited read (429) waits for `Retry-After`. Without one, it waits 60 seconds (`RATE_LIMIT_WAIT_MILLISECONDS`), the length of the rate limit's window. It always waits at least one interval. Rate-limited reads never end polling by themselves; the deadline still applies.
+- A brief gateway failure (502, 503 or 504) waits for `Retry-After`, or one interval without it. The fourth gateway failure since the last answer ends polling.
 
 Keep the interval at a few seconds: the dashboard API allows 120 comparison reads a minute from one address.
 
@@ -109,11 +109,11 @@ www.policyengine.org's firewall limits the requests from each IP address, counte
 | `getEconomyComparison`, and each read `compareEconomy` makes | 120 |
 | `createPolicy` and `getMetadata`, together | 300 |
 
-Everyone behind one address, such as an office network, shares these limits.
+Everyone behind one address, such as an office network, shares these limits. Each Vercel region counts separately.
 
-Over a limit, the firewall itself answers 429 with the text "Too Many Requests" and no `Retry-After`, so `retryAfterSeconds` is `null`. Requests are accepted again when the window ends, within 60 seconds. `compareEconomy` waits that out; the other methods throw the 429.
+Over a limit, the firewall itself answers 429 with the text "Too Many Requests" and no `Retry-After`. The error therefore has `status` 429, `retryAfterSeconds` `null`, `body` `null`, and the message "The dashboard API answered HTTP 429.". Requests are accepted again when the window ends, within 60 seconds. `compareEconomy` waits that out; the other methods throw the 429.
 
-That answer has no CORS headers. A page on www.policyengine.org reads it as above, but a page on another origin, such as `http://localhost` in development, cannot: the browser reports a network failure, so `status` is `null`.
+That answer has no CORS headers. A page on www.policyengine.org reads it as above. A page on another origin cannot read it: the browser reports a network failure, so `status` is `null`, and `compareEconomy` stops at once with that error. Other origins include `http://localhost` in development, a preview, or a dashboard's own `*.vercel.app` host.
 
 ## Which pages may call it
 
