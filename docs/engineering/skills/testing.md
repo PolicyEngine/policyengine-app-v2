@@ -2,7 +2,7 @@
 
 ## Test commands
 
-From the repository root, `make test` runs the `app/` tests and then the `website/` tests, the same two suites as CI's Tests job. `calculator-app/` has no test suite of its own; tests of its code run in the `app/` suite (for example, under `app/src/tests/unit/calculator/`).
+From the repository root, `make test` runs the `app/` tests, the `website/` tests and the tests of each package under `packages/`, the same suites as CI's Tests job. `calculator-app/` has no test suite of its own; tests of its code run in the `app/` suite (for example, under `app/src/tests/unit/calculator/`).
 
 In `app/`:
 
@@ -16,6 +16,10 @@ In `website/`:
 
 - Run tests: `bun run test`
 - Watch mode: `bun run test:watch`
+
+In `packages/public-api-forwarding/`:
+
+- Run tests: `bun run test` (Vitest in the Node environment; tests live in `tests/`)
 
 vitest runs on Node, not Bun, so results can depend on your Node version. See step 3 of "Before committing" in `repository-guidance.md`.
 
