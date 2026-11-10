@@ -21,7 +21,6 @@ import {
   sentRequests,
   SIGNED_IN_ADMIN,
   SIGNED_IN_ADMIN_USER,
-  typeChangedMessage,
   type FakeAdminApiOptions,
 } from '@/tests/fixtures/api/v2AdminUserMocks';
 import { deferredResponse, errorResponse, meItemOfType } from '@/tests/fixtures/api/v2UserMocks';
@@ -94,6 +93,12 @@ function adminRequests(): string[] {
 
 function patchRequests(): string[] {
   return adminRequests().filter((request) => request.startsWith('PATCH'));
+}
+
+function patchBodies(): unknown[] {
+  return fetchMock.mock.calls
+    .filter(([, init]) => init.method === 'PATCH')
+    .map(([, init]) => JSON.parse(init.body));
 }
 
 function listReads(): string[] {
@@ -529,12 +534,70 @@ describe('AdminUsersPage', () => {
     await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
 
     // Then
-    expect(await within(confirmation).findByRole('alert')).toHaveTextContent(
-      typeChangedMessage('admin', 'standard')
+    await waitFor(() =>
+      expect(within(confirmation).getByRole('alert')).toHaveTextContent(
+        `The type of ${GRACE.email} changed to Admin since you opened this. Confirm to change it from Admin to Author, or cancel.`
+      )
     );
+    expect(confirmation).toHaveTextContent(`${GRACE.email} will change from Admin to Author.`);
+  });
+
+  test('given a slow read of the user is under way when the change is refused then the dialog names the type read after the refusal', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    // Returning to the window reads Grace; the API answers Standard, and the answer arrives late.
+    const { deliverHeldAnswers } = holdAnswersOfUserReads(fetchMock, GRACE.id);
+    await returnToWindow();
+    await letPendingWorkRun();
+    setUserType(apiState, GRACE.id, 'admin');
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await within(confirmation).findByRole('alert');
+    await letRetriesRun();
+    deliverHeldAnswers();
+
+    // Then
     await waitFor(() =>
       expect(confirmation).toHaveTextContent(`${GRACE.email} will change from Admin to Author.`)
     );
+  });
+
+  test('given a slow read of the user is under way when the confirmation opens then it names the type read after it opened', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const { deliverHeldAnswers } = holdAnswersOfUserReads(fetchMock, GRACE.id);
+    await returnToWindow();
+    await letPendingWorkRun();
+    setUserType(apiState, GRACE.id, 'admin');
+
+    // When
+    const confirmation = await askToChangeType(user, 'Author');
+    await letRetriesRun();
+    deliverHeldAnswers();
+
+    // Then
+    await waitFor(() =>
+      expect(confirmation).toHaveTextContent(`${GRACE.email} will change from Admin to Author.`)
+    );
+  });
+
+  test('given a read changes the cached type while the dialog is open then the PATCH still sends the type the dialog names', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    setUserType(apiState, GRACE.id, 'admin');
+    // Returning to the window reads Grace again, and the cache now holds Admin.
+    await returnToWindow();
+    await letRetriesRun();
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await within(confirmation).findByRole('alert');
+
+    // Then
+    expect(patchBodies()).toEqual([{ user_type: 'author', expected_user_type: 'standard' }]);
   });
 
   test('given the change was refused because the type changed then confirming again sends the new type and saves', async () => {
@@ -552,10 +615,7 @@ describe('AdminUsersPage', () => {
 
     // Then
     expect(await screen.findByText('Admin to Author')).toBeInTheDocument();
-    const patchBodies = fetchMock.mock.calls
-      .filter(([, init]) => init.method === 'PATCH')
-      .map(([, init]) => JSON.parse(init.body));
-    expect(patchBodies).toEqual([
+    expect(patchBodies()).toEqual([
       { user_type: 'author', expected_user_type: 'standard' },
       { user_type: 'author', expected_user_type: 'admin' },
     ]);
@@ -576,6 +636,23 @@ describe('AdminUsersPage', () => {
     expect(await within(confirmation).findByRole('alert')).toHaveTextContent(
       ADMIN_API_MESSAGES.LAST_ADMIN_DEMOTION
     );
+  });
+
+  test('given a last-admin refusal then the user is read again', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, {
+      users: [{ ...GRACE, user_type: 'admin' }],
+      patchRefusal: { status: 409, message: ADMIN_API_MESSAGES.LAST_ADMIN_DEMOTION },
+    });
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Standard');
+    const userReadsBefore = readsOfUser(GRACE.id).length;
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await within(confirmation).findByRole('alert');
+
+    // Then
+    await waitFor(() => expect(readsOfUser(GRACE.id).length).toBe(userReadsBefore + 1));
   });
 
   test('given the user is deleted before the change is confirmed then the user is read again and shown as gone', async () => {

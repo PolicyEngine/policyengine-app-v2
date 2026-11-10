@@ -1,5 +1,5 @@
 import type { Mock } from 'vitest';
-import type { AdminUserItem, UserTypeChangeItem } from '@/api/v2AdminUsers';
+import type { AdminUserItem, SignedInUserType, UserTypeChangeItem } from '@/api/v2AdminUsers';
 import {
   errorResponse,
   itemResponse,
@@ -28,8 +28,32 @@ export const CHANGE_IDS = {
  * The Public API's 409 when the user's stored type is no longer the one the
  * admin read (the API may reword it; the app matches the status, not this).
  */
-export function typeChangedMessage(currentType: string, expectedType: string): string {
-  return `This user's type is now ${currentType}, not ${expectedType}: read the user again before changing it`;
+export function typeChangedMessage(
+  currentType: SignedInUserType,
+  expectedType: SignedInUserType
+): string {
+  return `This user's type is now ${currentType}, not ${expectedType}. Nothing was changed.`;
+}
+
+const SIGNED_IN_USER_TYPES: readonly string[] = ['standard', 'author', 'admin'];
+
+/** Whether a PATCH body is exactly `{user_type, expected_user_type}`, each a signed-in type. */
+function isUserTypePatchBody(
+  body: unknown
+): body is { user_type: SignedInUserType; expected_user_type: SignedInUserType } {
+  if (typeof body !== 'object' || body === null) {
+    return false;
+  }
+  const fields = Object.keys(body).sort();
+  const { user_type: userType, expected_user_type: expectedUserType } = body as Record<
+    string,
+    unknown
+  >;
+  return (
+    fields.join(',') === 'expected_user_type,user_type' &&
+    SIGNED_IN_USER_TYPES.includes(String(userType)) &&
+    SIGNED_IN_USER_TYPES.includes(String(expectedUserType))
+  );
 }
 
 /** The Public API's messages for the admin routes' refusals. */
@@ -122,12 +146,13 @@ export interface FakeAdminApiOptions {
 
 /**
  * Makes `fetchMock` behave like the Public API's `/v2/me` and admin routes
- * over `users` and `changes`. A PATCH needs `expected_user_type`, refused
- * with 409 when the stored type differs (unless it already is the new
- * type); it changes the user's type and records the change, newest first,
- * as the signed-in admin's; another type than the user's own is needed for
- * a change to be recorded. It returns the
- * fake's state, so a test can read what the PATCH stored.
+ * over `users` and `changes`, and returns that state, so a test can read
+ * what a PATCH stored. A PATCH is checked as the API checks it: the body
+ * (422), then the user (404). The type the user already has is a 200 that
+ * records nothing, whatever was expected. Otherwise a stored type other
+ * than `expected_user_type` is a 409, and `patchRefusal` (a last-admin
+ * refusal) applies; a change is recorded newest first, as the signed-in
+ * admin's.
  */
 export function answerAdminApi(
   fetchMock: Mock,
@@ -179,35 +204,33 @@ export function answerAdminApi(
       return userResponse(userRoute[1]);
     }
     if (userRoute && method === 'PATCH') {
-      if (patchRefusal) {
-        return errorResponse(patchRefusal.status, patchRefusal.message);
+      const body: unknown = JSON.parse(String(init.body));
+      if (!isUserTypePatchBody(body)) {
+        return errorResponse(422, 'The request does not match the schema.');
       }
       const user = state.users.find((candidate) => candidate.id === userRoute[1]);
       if (!user) {
         return userResponse(userRoute[1]);
       }
-      const { user_type: newUserType, expected_user_type: expectedUserType } = JSON.parse(
-        String(init.body)
-      );
-      if (newUserType === undefined || expectedUserType === undefined) {
-        return errorResponse(422, 'The request does not match the schema.');
+      const { user_type: newUserType, expected_user_type: expectedUserType } = body;
+      if (newUserType === user.user_type) {
+        return itemResponse(user);
       }
-      // Like the API: the type the user already has answers 200 whatever was
-      // expected; another stored type than the expected one is refused.
-      if (newUserType !== user.user_type && expectedUserType !== user.user_type) {
+      if (expectedUserType !== user.user_type) {
         return errorResponse(409, typeChangedMessage(user.user_type, expectedUserType));
       }
-      if (newUserType !== user.user_type) {
-        state.changes.unshift(
-          userTypeChangeItem({
-            id: CHANGE_IDS.SECOND,
-            user_id: user.id,
-            previous_user_type: user.user_type,
-            new_user_type: newUserType,
-          })
-        );
-        user.user_type = newUserType;
+      if (patchRefusal) {
+        return errorResponse(patchRefusal.status, patchRefusal.message);
       }
+      state.changes.unshift(
+        userTypeChangeItem({
+          id: CHANGE_IDS.SECOND,
+          user_id: user.id,
+          previous_user_type: user.user_type,
+          new_user_type: newUserType,
+        })
+      );
+      user.user_type = newUserType;
       return itemResponse(user);
     }
     return errorResponse(404, 'Not found');
