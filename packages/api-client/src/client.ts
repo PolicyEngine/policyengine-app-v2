@@ -30,8 +30,14 @@ export const RATE_LIMIT_WAIT_MILLISECONDS = 60_000;
 const LONGEST_TIMER_MILLISECONDS = 2 ** 31 - 1;
 
 const RATE_LIMITED_STATUS = 429;
-/** Brief gateway failures, which polling retries up to this many times. */
+/**
+ * The shortest wait after a 429, whatever Retry-After and the polling
+ * interval say, so that polling cannot read again at once, over and over.
+ */
+const SHORTEST_RATE_LIMIT_WAIT_MILLISECONDS = 1_000;
+/** Brief gateway failures, which polling waits out and retries. */
 const GATEWAY_FAILURE_STATUSES = new Set([502, 503, 504]);
+/** How many gateway failures polling retries after the last answer. */
 const MAXIMUM_GATEWAY_RETRIES_SINCE_LAST_ANSWER = 3;
 
 export interface PolicyEngineApiClientOptions {
@@ -82,8 +88,13 @@ function retryAfterSeconds(response: Response): number | null {
   if (value === null) {
     return null;
   }
-  const seconds = Number(value);
-  return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
+  // A delay is decimal digits only; a date, or anything else, is ignored.
+  const digits = value.trim();
+  if (!/^[0-9]+$/.test(digits)) {
+    return null;
+  }
+  const seconds = Number(digits);
+  return Number.isFinite(seconds) ? seconds : null;
 }
 
 function messageFrom(body: unknown, fallback: string): string {
@@ -270,15 +281,20 @@ export function createPolicyEngineApiClient(
       options.intervalMilliseconds ?? DEFAULT_POLL_INTERVAL_MILLISECONDS;
     const timeoutMilliseconds =
       options.timeoutMilliseconds ?? DEFAULT_POLL_TIMEOUT_MILLISECONDS;
-    // Either mistake would make every wait one that setTimeout runs at once.
+    // Values outside these ranges, or that are not numbers, would make
+    // waits that setTimeout runs at once, or a deadline that never comes.
     if (!Number.isFinite(intervalMilliseconds) || intervalMilliseconds < 0) {
       throw new RangeError(
-        `intervalMilliseconds must be a finite number, 0 or more; got ${intervalMilliseconds}.`,
+        `intervalMilliseconds must be a finite number, 0 or more; got ${String(intervalMilliseconds)}.`,
       );
     }
-    if (Number.isNaN(timeoutMilliseconds) || timeoutMilliseconds < 0) {
+    if (
+      typeof timeoutMilliseconds !== "number" ||
+      Number.isNaN(timeoutMilliseconds) ||
+      timeoutMilliseconds < 0
+    ) {
       throw new RangeError(
-        `timeoutMilliseconds must be a number, 0 or more, or Infinity; got ${timeoutMilliseconds}.`,
+        `timeoutMilliseconds must be a number, 0 or more, or Infinity; got ${String(timeoutMilliseconds)}.`,
       );
     }
     const deadline = Date.now() + timeoutMilliseconds;
@@ -337,12 +353,14 @@ export function createPolicyEngineApiClient(
           error.retryAfterSeconds === null
             ? null
             : error.retryAfterSeconds * 1000;
-        // A rate-limited read waits at least one interval, so a Retry-After
-        // of 0 cannot make polling read again at once, over and over.
+        // A rate-limited read waits at least one interval, and at least a
+        // second, so a Retry-After of 0 cannot make polling read again at
+        // once, over and over.
         const waitMilliseconds = isRateLimited
           ? Math.max(
               retryAfterMilliseconds ?? RATE_LIMIT_WAIT_MILLISECONDS,
               intervalMilliseconds,
+              SHORTEST_RATE_LIMIT_WAIT_MILLISECONDS,
             )
           : (retryAfterMilliseconds ?? intervalMilliseconds);
         await waitBeforeNextRead(waitMilliseconds);

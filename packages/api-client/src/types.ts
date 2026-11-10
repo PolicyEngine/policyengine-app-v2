@@ -48,8 +48,10 @@ export interface RequestOptions {
 
 export interface EconomyComparisonPollOptions extends RequestOptions {
   /**
-   * How long to wait between reads while the comparison is computing: a
-   * finite number, 0 or more, or compareEconomy rejects with RangeError.
+   * How long to wait between reads while the comparison is computing, and
+   * after a gateway failure with no Retry-After; also the shortest wait
+   * after a 429, if longer than a second. A finite number, 0 or more, or
+   * compareEconomy rejects with RangeError.
    */
   readonly intervalMilliseconds?: number;
   /**
