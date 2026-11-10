@@ -24,6 +24,14 @@ export const CHANGE_IDS = {
   SCRIPT: '0a3b4c5d-6e7f-4a8b-8c1d-2e3f4a5b6c7d',
 } as const;
 
+/**
+ * The Public API's 409 when the user's stored type is no longer the one the
+ * admin read (the API may reword it; the app matches the status, not this).
+ */
+export function typeChangedMessage(currentType: string, expectedType: string): string {
+  return `This user's type is now ${currentType}, not ${expectedType}: read the user again before changing it`;
+}
+
 /** The Public API's messages for the admin routes' refusals. */
 export const ADMIN_API_MESSAGES = {
   LAST_ADMIN_DEMOTION: "The last admin can't be demoted; make another user an admin first",
@@ -114,9 +122,11 @@ export interface FakeAdminApiOptions {
 
 /**
  * Makes `fetchMock` behave like the Public API's `/v2/me` and admin routes
- * over `users` and `changes`. A PATCH changes the user's type and records
- * the change, newest first, as the signed-in admin's; another type than
- * the user's own is needed for a change to be recorded. It returns the
+ * over `users` and `changes`. A PATCH needs `expected_user_type`, refused
+ * with 409 when the stored type differs (unless it already is the new
+ * type); it changes the user's type and records the change, newest first,
+ * as the signed-in admin's; another type than the user's own is needed for
+ * a change to be recorded. It returns the
  * fake's state, so a test can read what the PATCH stored.
  */
 export function answerAdminApi(
@@ -176,7 +186,17 @@ export function answerAdminApi(
       if (!user) {
         return userResponse(userRoute[1]);
       }
-      const { user_type: newUserType } = JSON.parse(String(init.body));
+      const { user_type: newUserType, expected_user_type: expectedUserType } = JSON.parse(
+        String(init.body)
+      );
+      if (newUserType === undefined || expectedUserType === undefined) {
+        return errorResponse(422, 'The request does not match the schema.');
+      }
+      // Like the API: the type the user already has answers 200 whatever was
+      // expected; another stored type than the expected one is refused.
+      if (newUserType !== user.user_type && expectedUserType !== user.user_type) {
+        return errorResponse(409, typeChangedMessage(user.user_type, expectedUserType));
+      }
       if (newUserType !== user.user_type) {
         state.changes.unshift(
           userTypeChangeItem({

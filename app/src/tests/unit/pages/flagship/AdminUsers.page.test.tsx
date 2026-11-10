@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { cleanup, render, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { SignedInUserType } from '@/api/v2AdminUsers';
 import { ADMIN_USER_PAGE_SIZE } from '@/hooks/useAdminUsers';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import AdminUsersPage from '@/pages/flagship/AdminUsers.page';
@@ -20,6 +21,7 @@ import {
   sentRequests,
   SIGNED_IN_ADMIN,
   SIGNED_IN_ADMIN_USER,
+  typeChangedMessage,
   type FakeAdminApiOptions,
 } from '@/tests/fixtures/api/v2AdminUserMocks';
 import { deferredResponse, errorResponse, meItemOfType } from '@/tests/fixtures/api/v2UserMocks';
@@ -104,6 +106,15 @@ function meReads(): string[] {
 
 function readsOfUser(userId: string): string[] {
   return adminRequests().filter((request) => request === `GET /v2/admin/users/${userId}`);
+}
+
+/** Another admin's change, made in the API behind the page's back. */
+function setUserType(
+  apiState: ReturnType<typeof answerAdminApi>,
+  userId: string,
+  userType: SignedInUserType
+) {
+  apiState.users.find((candidate) => candidate.id === userId)!.user_type = userType;
 }
 
 function deleteUser(apiState: ReturnType<typeof answerAdminApi>, userId: string) {
@@ -488,7 +499,7 @@ describe('AdminUsersPage', () => {
     expect(patchRequests()).toEqual([]);
   });
 
-  test('given the change is confirmed then the PATCH is sent and the history shows the change', async () => {
+  test('given the change is confirmed then the PATCH is sent with the type the confirmation read and the history shows the change', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!);
     const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
@@ -503,9 +514,51 @@ describe('AdminUsersPage', () => {
     const patchCall = fetchMock.mock.calls.find(([, init]) => init.method === 'PATCH')!;
     expect([patchCall[0], JSON.parse(patchCall[1].body)]).toEqual([
       `https://api.policyengine.org/v2/admin/users/${ADMIN_USER_IDS.GRACE}`,
-      { user_type: 'author' },
+      { user_type: 'author', expected_user_type: 'standard' },
     ]);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  test("given another admin changes the user after the confirmation's read then the refusal shows and the dialog names the new type", async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    setUserType(apiState, GRACE.id, 'admin');
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+
+    // Then
+    expect(await within(confirmation).findByRole('alert')).toHaveTextContent(
+      typeChangedMessage('admin', 'standard')
+    );
+    await waitFor(() =>
+      expect(confirmation).toHaveTextContent(`${GRACE.email} will change from Admin to Author.`)
+    );
+  });
+
+  test('given the change was refused because the type changed then confirming again sends the new type and saves', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    setUserType(apiState, GRACE.id, 'admin');
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await waitFor(() =>
+      expect(confirmation).toHaveTextContent(`${GRACE.email} will change from Admin to Author.`)
+    );
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+
+    // Then
+    expect(await screen.findByText('Admin to Author')).toBeInTheDocument();
+    const patchBodies = fetchMock.mock.calls
+      .filter(([, init]) => init.method === 'PATCH')
+      .map(([, init]) => JSON.parse(init.body));
+    expect(patchBodies).toEqual([
+      { user_type: 'author', expected_user_type: 'standard' },
+      { user_type: 'author', expected_user_type: 'admin' },
+    ]);
   });
 
   test('given the API refuses the change with 409 then its message shows', async () => {

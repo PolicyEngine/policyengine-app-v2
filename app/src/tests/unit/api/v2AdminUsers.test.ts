@@ -69,13 +69,16 @@ describe('v2AdminUsers', () => {
     expect(fetchCall(fetchMock).path).toBe(`/v2/admin/users/${ADMIN_USER_IDS.GRACE}`);
   });
 
-  test('given a new type then the change is sent as a PATCH of the user', async () => {
+  test('given a new type and the type last read then the change sends both as a PATCH of the user', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockResolvedValue(itemResponse({ ...GRACE, user_type: 'author' }));
 
     // When
-    const user = await changeAdminUserType(context.client, ADMIN_USER_IDS.GRACE, 'author');
+    const user = await changeAdminUserType(context.client, ADMIN_USER_IDS.GRACE, {
+      userType: 'author',
+      expectedUserType: 'standard',
+    });
 
     // Then
     expect(user.user_type).toBe('author');
@@ -83,7 +86,7 @@ describe('v2AdminUsers', () => {
     expect([request.method, request.path, request.body]).toEqual([
       'PATCH',
       `/v2/admin/users/${ADMIN_USER_IDS.GRACE}`,
-      { user_type: 'author' },
+      { user_type: 'author', expected_user_type: 'standard' },
     ]);
   });
 
