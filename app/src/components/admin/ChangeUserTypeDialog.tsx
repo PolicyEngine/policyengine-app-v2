@@ -25,6 +25,16 @@ export interface UserTypeConfirmation {
   readErrorMessage: string | null;
 }
 
+/**
+ * What the dialog says about the last change: why it failed (`alert`), or
+ * an outcome that needs nothing more (`status`, such as "nothing will
+ * change").
+ */
+export interface ChangeOutcomeMessage {
+  text: string;
+  role: 'alert' | 'status';
+}
+
 interface ChangeUserTypeDialogProps {
   open: boolean;
   /** The user's email, or its ID when it has none. */
@@ -33,8 +43,11 @@ interface ChangeUserTypeDialogProps {
   /** Whether the user is the signed-in admin. */
   isOwnAccount: boolean;
   changing: boolean;
-  /** Why the last change failed: the API's message. */
-  errorMessage: string | null;
+  /**
+   * About the last change: the API's message, or after a changed-type
+   * refusal the app's own sentence.
+   */
+  outcomeMessage: ChangeOutcomeMessage | null;
   onConfirm: () => void;
   onCancel: () => void;
   onReadAgain: () => void;
@@ -70,7 +83,7 @@ export default function ChangeUserTypeDialog({
   confirmation,
   isOwnAccount,
   changing,
-  errorMessage,
+  outcomeMessage,
   onConfirm,
   onCancel,
   onReadAgain,
@@ -106,9 +119,16 @@ export default function ChangeUserTypeDialog({
             This is your own account: you will no longer be an admin, and you will lose this page.
           </Text>
         )}
-        {errorMessage && (
-          <Text role="alert" size="sm" style={{ margin: 0, color: colors.error }}>
-            {errorMessage}
+        {outcomeMessage && (
+          <Text
+            role={outcomeMessage.role}
+            size="sm"
+            style={{
+              margin: 0,
+              color: outcomeMessage.role === 'alert' ? colors.error : colors.text.secondary,
+            }}
+          >
+            {outcomeMessage.text}
           </Text>
         )}
         <DialogFooter>

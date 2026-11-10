@@ -140,7 +140,11 @@ export interface FakeAdminApiOptions {
   signedInUser?: MeItem;
   users?: AdminUserItem[];
   changes?: UserTypeChangeItem[];
-  /** When set, `PATCH /v2/admin/users/{id}` answers with this error and changes nothing. */
+  /**
+   * A last-admin refusal: when set, a PATCH that passes the body (422),
+   * user (404), same-type and changed-type (409) checks answers with this
+   * error and changes nothing.
+   */
   patchRefusal?: { status: number; message: string };
 }
 

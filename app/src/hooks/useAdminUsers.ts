@@ -218,6 +218,8 @@ export function useReadAdminUserNow() {
         queryKey,
         queryFn: () => readMeAgainOnRefusal(fetchAdminUser(client, userId)),
         staleTime: 0,
+        // As the user's own query retries: fetchQuery would retry nothing.
+        retry: retryTemporaryFailures(queryClient),
       });
     },
     [client, queryClient, subject, readMeAgainOnRefusal]
