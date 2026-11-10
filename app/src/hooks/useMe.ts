@@ -1,24 +1,44 @@
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { fetchMe } from '@/api/v2Me';
 import { useCountryContext } from '@/contexts/CountryContext';
+import { useCurrentPathname } from '@/contexts/LocationContext';
+import { isCallbackPath } from '@/libs/auth/authConfig';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { isAssociationCountry, type AssociationCountryId } from '@/types/v2User';
 
-/** The cache key of `GET /v2/me`: one entry per signed-in session and country. */
+/**
+ * The cache key of `GET /v2/me`: one entry per Auth0 subject and country.
+ * A signed-out visitor's entry (subject null) stays idle, since nothing is
+ * requested for it.
+ */
 export function meQueryKey(subject: string | null, countryId: string | null) {
   return ['account', subject, countryId] as const;
 }
 
 /**
+ * Whether this page is the sign-in callback (`/{country}/callback`), where
+ * `GET /v2/me` is never requested. The callback page sends
+ * `POST /v2/me/upgrade`, and on a first sign-in a `GET /v2/me` racing it
+ * can create the account first; the upgrade then merges this browser's
+ * unauthenticated user into that new account instead of converting it.
+ */
+export function useIsSignInCallback(): boolean {
+  return isCallbackPath(useCurrentPathname());
+}
+
+/**
  * The country `useMe` requests `GET /v2/me` for: the current country while
- * signed in to the US or UK, the countries with accounts. Null otherwise,
- * when nothing is requested.
+ * signed in to the US or UK, the countries with accounts, except on the
+ * sign-in callback. Null otherwise, when nothing is requested.
  */
 export function useMeRequestCountry(): AssociationCountryId | null {
   const auth = useAuthStatus();
   const countryId = useCountryContext();
-  return auth.status === 'signed_in' && isAssociationCountry(countryId) ? countryId : null;
+  const onSignInCallback = useIsSignInCallback();
+  return auth.status === 'signed_in' && isAssociationCountry(countryId) && !onSignInCallback
+    ? countryId
+    : null;
 }
 
 /**
