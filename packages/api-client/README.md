@@ -123,9 +123,9 @@ The dashboard API answers browser requests from www.policyengine.org itself, fro
 
 ## Releases
 
-Published from `packages/api-client` in PolicyEngine/policyengine-app-v2 by the "Publish @policyengine/api-client" workflow. The workflow is started by hand on `main`. It uses npm trusted publishing, and publishes the version in `package.json` if npm does not have it yet.
+Published from `packages/api-client` in PolicyEngine/policyengine-app-v2 by the "Publish @policyengine/api-client" workflow. The workflow is started by hand on `main`. It uses npm trusted publishing, and publishes the version in `package.json` if npm does not have it yet. Its publish job runs in the repository's `npm-publish` environment, which only `main` may deploy to.
 
-npm lets a package trust a workflow only once the package exists. So an owner of the `@policyengine` npm scope publishes the first version by hand, from `main`:
+npm lets a package trust a workflow only once the package exists. So an owner of the `@policyengine` npm scope published the first version, 0.1.0, by hand from `main`:
 
 ```bash
 npx -y bun@1.2.21 install --frozen-lockfile
@@ -136,7 +136,7 @@ npm pack --dry-run
 npm publish --access public
 ```
 
-Then, on npmjs.com, open the package's Settings, then Trusted Publisher, and choose GitHub Actions with repository `PolicyEngine/policyengine-app-v2` and workflow `publish-api-client.yaml`. Later versions are released by raising `version` in a PR and running the workflow after it merges.
+Then, on npmjs.com, open the package's Settings, then Trusted Publisher, and choose GitHub Actions with repository `PolicyEngine/policyengine-app-v2`, workflow `publish-api-client.yaml` and environment `npm-publish`. npm checks only these, so the environment is what limits publishing to `main`. Later versions are released by raising `version` in a PR and running the workflow after it merges.
 
 ## Licence
 

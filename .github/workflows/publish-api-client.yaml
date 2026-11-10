@@ -6,10 +6,15 @@
 #
 # It uses npm trusted publishing: GitHub's OIDC token proves the workflow
 # runs in PolicyEngine/policyengine-app-v2, so no npm token is stored. On
-# npmjs.com, the package's Settings → Trusted publishing must name this
-# repository and this workflow file. npm needs the package to exist before
-# that can be set, so its first version is published by hand by an owner
-# of the @policyengine scope ("Releases" in packages/api-client/README.md).
+# npmjs.com, the package's Settings → Trusted publishing names this
+# repository, this workflow file and the environment npm-publish. npm checks
+# only those, and the main-only conditions below are part of this file, so
+# a copy of it run from another branch would leave them out. The
+# environment's deployment branches are limited to main in the repository's
+# settings, so only main can publish. The first version, 0.1.0, was
+# published by hand by an owner of the @policyengine scope ("Releases" in
+# packages/api-client/README.md), since npm needs a package to exist before
+# it can trust a workflow.
 
 name: Publish @policyengine/api-client
 
@@ -75,12 +80,15 @@ jobs:
           retention-days: 1
 
   # Holds the OIDC permission, so it runs no install and no repository
-  # code: it only publishes the tarball the build job made.
+  # code: it only publishes the tarball the build job made. It runs in the
+  # npm-publish environment, which only main may deploy to, and npm's
+  # trusted publisher accepts tokens only from that environment.
   publish:
     name: Publish
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: npm-publish
     permissions:
       contents: read
       id-token: write
