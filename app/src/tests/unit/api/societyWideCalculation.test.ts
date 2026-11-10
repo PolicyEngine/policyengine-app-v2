@@ -807,6 +807,57 @@ describe('societyWide API', () => {
   });
 });
 
+describe('failedCalculationOf through the calculator route', () => {
+  const ECONOMY_PARAMETERS = { region: 'us', time_period: CURRENT_YEAR };
+
+  test("given the route's own 502, such as the Public API being unreachable, then it is a failed request, not a failed calculation", async () => {
+    // Given
+    (global.fetch as any).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: 'error',
+          message: 'The Public API could not be reached.',
+          result: null,
+        }),
+        {
+          status: HTTP_STATUS.BAD_GATEWAY,
+          headers: { 'Content-Type': 'application/json', 'X-PolicyEngine-Route-Error': 'true' },
+        }
+      )
+    );
+
+    // When
+    const error = await fetchSocietyWideCalculation('us', '2', '1', ECONOMY_PARAMETERS).catch(
+      (caught: unknown) => caught
+    );
+
+    // Then
+    expect(error).toBeInstanceOf(EconomyCalculationError);
+    expect(failedCalculationOf(error)).toBeNull();
+  });
+
+  test("given the Public API's own 502 for a failed calculation, passed on by the route, then it is a failed calculation", async () => {
+    // Given
+    (global.fetch as any).mockResolvedValue(
+      new Response(JSON.stringify(FAILED_CALCULATION_BODY), {
+        status: HTTP_STATUS.BAD_GATEWAY,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    // When
+    const error = await fetchSocietyWideCalculation('us', '2', '1', ECONOMY_PARAMETERS).catch(
+      (caught: unknown) => caught
+    );
+
+    // Then
+    expect(failedCalculationOf(error)).toEqual({
+      retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds,
+      deleteAfterSeconds: null,
+    });
+  });
+});
+
 describe('failedCalculationOf', () => {
   test('given a 502 with the Public API error body then gives the seconds it keeps the failure', () => {
     // When

@@ -323,10 +323,13 @@ describe('calculator /api/policyengine/{Public API path}', () => {
 
   // A starting Public API instance can take minutes to answer any request:
   // its load balancer's records for 2026-11-03 to 2026-11-10 show country
-  // metadata answered after up to 246 s and a v1 policy after 242 s.
+  // metadata answered after up to 246 s, a v1 policy after 242 s, and a
+  // household under a policy after 396 s, Cloud Run's 300 s counting only
+  // from when an instance took the request.
   test.each([
     ['country metadata', '/us/metadata', 246],
     ['a v1 policy', '/us/policy/98765', 242],
+    ['a household under a policy', '/us/household/12345/policy/2', 396],
   ])(
     'given %s (GET %s) that a starting Public API instance answers after %i seconds then the route still forwards the answer',
     async (_label, path, answerSeconds) => {
