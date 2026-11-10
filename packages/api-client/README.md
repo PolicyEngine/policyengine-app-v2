@@ -79,7 +79,12 @@ Every method takes a `signal` to cancel the request (or the polling).
 
 ## Polling
 
-`compareEconomy` reads the comparison every 5 seconds by default and gives up after 30 minutes with `EconomyComparisonTimeoutError`. A rate-limited read (429) waits for `Retry-After`. A brief gateway failure (502, 503 or 504) waits one interval. A fourth such failure in a row ends polling. Keep the interval at a few seconds: the dashboard API's planned rate limit is 120 comparison reads a minute from one address.
+`compareEconomy` reads the comparison every 5 seconds by default and gives up after 30 minutes with `EconomyComparisonTimeoutError`.
+
+- A rate-limited read (429) waits for `Retry-After`. Without one, it waits 60 seconds (`DEFAULT_RATE_LIMIT_WAIT_MILLISECONDS`), the length of the rate limit's window. Rate-limited reads never end polling by themselves; the timeout still applies.
+- A brief gateway failure (502, 503 or 504) waits one interval. The fourth gateway failure since the last answer ends polling.
+
+Keep the interval at a few seconds: the dashboard API allows 120 comparison reads a minute from one address.
 
 A comparison that failed is not a gateway failure. The Public API answers it with 502, `status: "error"` and `retry_after_seconds`, which says how long it keeps that failure. `getEconomyComparison` resolves with that answer, and `compareEconomy` throws it at once rather than polling.
 
@@ -93,6 +98,22 @@ Every failure throws `PolicyEngineApiError`, with:
 - `retryAfterSeconds`: from `Retry-After`, when the answer had one.
 
 A comparison that ends in `"error"` throws it with the answer's HTTP status (502 from the Public API), and with `retryAfterSeconds` set to its `retry_after_seconds`. An abort rejects with the abort's reason, also when the answer is still arriving. A connection that drops mid-answer throws with `status` `null`.
+
+## Rate limits
+
+www.policyengine.org's firewall limits the requests from each IP address, counted in fixed 60-second windows:
+
+| Requests | Allowed a minute |
+| --- | --- |
+| `calculateHousehold` | 30 |
+| `getEconomyComparison`, and each read `compareEconomy` makes | 120 |
+| `createPolicy` and `getMetadata`, together | 300 |
+
+Everyone behind one address, such as an office network, shares these limits.
+
+Over a limit, the firewall itself answers 429 with the text "Too Many Requests" and no `Retry-After`, so `retryAfterSeconds` is `null`. Requests are accepted again when the window ends, within 60 seconds. `compareEconomy` waits that out; the other methods throw the 429.
+
+That answer has no CORS headers. A page on www.policyengine.org reads it as above, but a page on another origin, such as `http://localhost` in development, cannot: the browser reports a network failure, so `status` is `null`.
 
 ## Which pages may call it
 
