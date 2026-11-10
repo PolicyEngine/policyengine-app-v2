@@ -5,6 +5,7 @@ import {
   EconomyComparisonTimeoutError,
   PolicyEngineApiError,
 } from "../src/errors";
+import type { EconomyComparisonPollOptions } from "../src/types";
 
 const HOUSEHOLD = {
   people: { you: { age: { 2026: 40 } } },
@@ -193,6 +194,26 @@ describe("calculateHousehold", () => {
 
     // Then
     expect(failure).toMatchObject({ status: 429, retryAfterSeconds: 30 });
+  });
+
+  test("given the firewall's 429 then it throws it with no Retry-After, no body and the fallback message", async () => {
+    // Given
+    fetchMock.mockResolvedValue(firewallRateLimitAnswer());
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .calculateHousehold({ country: "us", household: HOUSEHOLD })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PolicyEngineApiError);
+    expect(failure).toMatchObject({
+      status: 429,
+      retryAfterSeconds: null,
+      body: null,
+      message: "The dashboard API answered HTTP 429.",
+    });
   });
 
   test("given the network fails then it throws a PolicyEngineApiError without a status", async () => {
@@ -502,18 +523,110 @@ describe("compareEconomy", () => {
     const client = createPolicyEngineApiClient({ fetch: fetchMock });
 
     // When
-    const polling = client
-      .compareEconomy(COMPARISON_REQUEST, {
-        intervalMilliseconds: 5_000,
-        timeoutMilliseconds: 12_000,
-      })
-      .catch((error: unknown) => error);
-    await vi.advanceTimersByTimeAsync(12_000);
-    const outcome = await polling;
+    const polling = trackSettlement(
+      client
+        .compareEconomy(COMPARISON_REQUEST, {
+          intervalMilliseconds: 5_000,
+          timeoutMilliseconds: 12_000,
+        })
+        .catch((error: unknown) => error),
+    );
+    await vi.advanceTimersByTimeAsync(12_000 - 1);
+    const settledBeforeTheDeadline = polling.settled;
+    await vi.advanceTimersByTimeAsync(1);
+    const outcome = await polling.promise;
 
     // Then
+    expect(settledBeforeTheDeadline).toBe(false);
     expect(outcome).toEqual(ECONOMY_RESULT);
     expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  describe("given poll options that would make it read without waiting", () => {
+    /** Polls for a moment with real timers, then stops it. */
+    async function pollBriefly(pollOptions: EconomyComparisonPollOptions) {
+      const abortController = new AbortController();
+      const client = createPolicyEngineApiClient({ fetch: fetchMock });
+      const polling = client
+        .compareEconomy(COMPARISON_REQUEST, {
+          ...pollOptions,
+          signal: abortController.signal,
+        })
+        .catch((error: unknown) => error);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      abortController.abort(new DOMException("Test over", "AbortError"));
+      return polling;
+    }
+
+    test.each([Number.NaN, -1, Number.POSITIVE_INFINITY])(
+      "given an interval of %s then it rejects with a RangeError without reading",
+      async (intervalMilliseconds) => {
+        // Given
+        fetchMock.mockImplementation(async () => computingAnswer(1));
+
+        // When
+        const outcome = await pollBriefly({ intervalMilliseconds });
+
+        // Then
+        expect(outcome).toBeInstanceOf(RangeError);
+        expect(fetchMock).not.toHaveBeenCalled();
+      },
+    );
+
+    test.each([Number.NaN, -1])(
+      "given a timeout of %s then it rejects with a RangeError without reading",
+      async (timeoutMilliseconds) => {
+        // Given
+        fetchMock.mockImplementation(async () => computingAnswer(1));
+
+        // When
+        const outcome = await pollBriefly({ timeoutMilliseconds });
+
+        // Then
+        expect(outcome).toBeInstanceOf(RangeError);
+        expect(fetchMock).not.toHaveBeenCalled();
+      },
+    );
+
+    test("given a Retry-After longer than the longest timer and no timeout then it waits instead of reading again at once", async () => {
+      // Given
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonAnswer(
+            { status: "error", message: "Slow down", result: null },
+            429,
+            { "Retry-After": "3000000" },
+          ),
+        )
+        .mockResolvedValue(okAnswer(ECONOMY_RESULT));
+
+      // When
+      const outcome = await pollBriefly({
+        timeoutMilliseconds: Number.POSITIVE_INFINITY,
+      });
+
+      // Then
+      expect((outcome as DOMException).name).toBe("AbortError");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  test("given the firewall's 429 on another origin, which fetch reports as a network failure, then it stops at once with no status", async () => {
+    // Given
+    fetchMock
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValue(okAnswer(ECONOMY_RESULT));
+    const client = createPolicyEngineApiClient({ fetch: fetchMock });
+
+    // When
+    const failure = await client
+      .compareEconomy(COMPARISON_REQUEST, { intervalMilliseconds: 1 })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PolicyEngineApiError);
+    expect(failure).toMatchObject({ status: null });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   test("given a comparison still computing at the deadline then it throws a timeout error", async () => {
