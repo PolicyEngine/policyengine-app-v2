@@ -69,6 +69,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
@@ -319,6 +320,41 @@ describe('calculator /api/policyengine/{Public API path}', () => {
     // Then
     expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
   });
+
+  // A starting Public API instance can take minutes to answer any request:
+  // its load balancer's records for 2026-11-03 to 2026-11-10 show country
+  // metadata answered after up to 246 s and a v1 policy after 242 s.
+  test.each([
+    ['country metadata', '/us/metadata', 246],
+    ['a v1 policy', '/us/policy/98765', 242],
+  ])(
+    'given %s that a starting Public API instance answers after %i seconds then the route still forwards the answer',
+    async (_label, path, answerSeconds) => {
+      // Given
+      vi.useFakeTimers();
+      fetchMock.mockImplementation(
+        (_input, init) =>
+          new Promise<Response>((resolve, reject) => {
+            const answerTimer = setTimeout(
+              () => resolve(Response.json(OK_ANSWER)),
+              answerSeconds * 1000
+            );
+            init?.signal?.addEventListener('abort', () => {
+              clearTimeout(answerTimer);
+              reject(new DOMException('The request was aborted.', 'AbortError'));
+            });
+          })
+      );
+
+      // When
+      const pendingResponse = publicApiRoute.GET(routeRequest(path));
+      await vi.advanceTimersByTimeAsync(answerSeconds * 1000);
+      const response = await pendingResponse;
+
+      // Then
+      expect(response.status).toBe(HTTP_STATUS.OK);
+    }
+  );
 
   test('given the longest calculation wait then the function may run long enough to get a token, wait and stream the answer', () => {
     // Given
