@@ -170,6 +170,20 @@ describe("POST /api/household/calculate", () => {
     },
   );
 
+  test("given a body sent as another JSON media type then it is accepted", async () => {
+    // When
+    const response = await householdCalculateRoute.POST(
+      dashboardRequest("/api/household/calculate", {
+        method: "POST",
+        body: { country: "us", household: HOUSEHOLD },
+        contentType: "application/vnd.policyengine+json; charset=utf-8",
+      }),
+    );
+
+    // Then
+    expect(response.status).toBe(200);
+  });
+
   test("given a body that is not sent as application/json then it answers 415 without calling the Public API", async () => {
     // When
     const response = await householdCalculateRoute.POST(

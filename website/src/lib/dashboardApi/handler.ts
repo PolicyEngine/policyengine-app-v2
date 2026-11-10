@@ -6,6 +6,7 @@ import {
   checkOrigin,
   corsResponseHeaders,
   errorResponse,
+  isJsonMediaType,
   preflightResponse,
 } from "@policyengine/public-api-forwarding";
 
@@ -40,18 +41,14 @@ export async function handleDashboardApiRequest(
 }
 
 /**
- * Reads a JSON request body. The body must be sent as application/json, so
+ * Reads a JSON request body. The body must be sent as a JSON media type, so
  * another site's page can only send one after a CORS preflight.
  */
 export async function readJsonBody(
   request: Request,
   corsHeaders: Headers,
 ): Promise<JsonBodyResult> {
-  const mediaType = (request.headers.get("content-type") ?? "")
-    .split(";")[0]
-    .trim()
-    .toLowerCase();
-  if (mediaType !== "application/json") {
+  if (!isJsonMediaType(request.headers.get("content-type"))) {
     return {
       ok: false,
       response: errorResponse(

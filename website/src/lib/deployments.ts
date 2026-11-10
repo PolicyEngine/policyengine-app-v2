@@ -576,6 +576,52 @@ export interface DeploymentsResponse {
   rows: DeploymentRow[];
 }
 
+/**
+ * The report as read on a deployment whose Public API is not API_ORIGIN,
+ * such as a preview reading the staging service: the Public API rows name
+ * the address actually read. Production's report is returned unchanged.
+ */
+export function describeServedPublicApi(
+  response: DeploymentsResponse,
+  publicApiBaseUrl: string,
+): DeploymentsResponse {
+  const publicApiUrl = new URL(publicApiBaseUrl);
+  if (publicApiUrl.origin === API_ORIGIN) return response;
+  const relabel = (text: string) =>
+    text.split(API_ORIGIN).join(publicApiBaseUrl);
+  return {
+    ...response,
+    rows: response.rows.map((row) => {
+      // A surface served "via" the Public API (the app) carries the Public
+      // API's report too, so its served state is relabelled as well.
+      const servedFromPublicApi =
+        row.served.source_url?.startsWith(API_ORIGIN) ?? false;
+      const isPublicApiSurface = row.surface.served?.origin === API_ORIGIN;
+      if (!servedFromPublicApi && !isPublicApiSurface) return row;
+      return {
+        ...row,
+        surface:
+          isPublicApiSurface && row.surface.served
+            ? {
+                ...row.surface,
+                serves: publicApiUrl.host,
+                served: { ...row.surface.served, origin: publicApiBaseUrl },
+              }
+            : row.surface,
+        detail: relabel(row.detail),
+        served: {
+          ...row.served,
+          source_url:
+            row.served.source_url === null
+              ? null
+              : relabel(row.served.source_url),
+          detail: relabel(row.served.detail),
+        },
+      };
+    }),
+  };
+}
+
 // Data builds published by Microcosm are releases on its dashboard; a .py
 // bundle can also certify a legacy dataset (e.g. policyengine-uk-data).
 export function isMicrocosmBuild(buildId: string): boolean {

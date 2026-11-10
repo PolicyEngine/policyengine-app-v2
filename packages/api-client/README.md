@@ -65,6 +65,8 @@ const metadata = await policyengine.getMetadata("uk");
 
 `country` is `"us"` or `"uk"`.
 
+Each method that resolves with a result takes the result's type, for example `calculateHousehold<MyHousehold>(…)` or `compareEconomy<MyImpact>(…)`. The type is not checked at run time. Without one, the result is `unknown`.
+
 ## Options
 
 `createPolicyEngineApiClient({ baseUrl, fetch, unauthenticatedUserId })`:

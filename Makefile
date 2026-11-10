@@ -7,7 +7,7 @@ help:
 	@echo "  make build      - Build the website and calculator"
 	@echo "  make typecheck  - Run type checks (app, website, calculator, packages)"
 	@echo "  make test       - Run tests (app, website, packages)"
-	@echo "  make lint       - Run linters"
+	@echo "  make lint       - Run linters and Prettier checks"
 	@echo "  make format     - Format code"
 	@echo "  make clean      - Clean build artifacts"
 	@echo "  make deploy     - Build; Vercel deploys from main"
@@ -38,9 +38,11 @@ test:
 	cd packages/api-client && bun run test
 
 lint:
-	cd app && bun run lint
-	cd website && bun run lint
-	cd calculator-app && bun run lint
+	cd app && bun run lint && bun run prettier
+	cd website && bun run lint && bun run format:check
+	cd calculator-app && bun run lint && bun run format:check
+	cd packages/public-api-forwarding && bun run format:check
+	cd packages/api-client && bun run format:check
 
 format:
 	cd app && bun run prettier:write

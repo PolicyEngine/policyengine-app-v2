@@ -30,6 +30,7 @@ export {
   type PublicApiRequest,
   type ServerRequestOptions,
 } from "./forward";
+export { isJsonMediaType } from "./mediaType";
 export { errorResponse } from "./responses";
 export {
   CREDENTIAL_VARIABLES,

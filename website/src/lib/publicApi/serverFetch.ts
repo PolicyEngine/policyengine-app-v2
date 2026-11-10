@@ -12,6 +12,10 @@ import { API_ORIGIN, type FetchLike } from "@/lib/deployments";
 
 import { websitePublicApi } from "./forwarder";
 
+// The request options a Public API request may carry; fetchFromServer()
+// builds every header itself and sets its own timeout.
+const PASSED_REQUEST_OPTIONS = new Set(["method", "body", "next"]);
+
 const PUBLIC_API_METHODS: readonly PublicApiMethod[] = [
   "GET",
   "HEAD",
@@ -36,6 +40,27 @@ export function withPublicApiCredential(
     if (url.origin !== API_ORIGIN) {
       return fetchImplementation(input, init);
     }
+    // fetch reads null as "none" for these, so null is passed over too.
+    const droppedOptions = Object.entries(init ?? {})
+      .filter(
+        ([name, value]) =>
+          value !== undefined &&
+          value !== null &&
+          !PASSED_REQUEST_OPTIONS.has(name),
+      )
+      .map(([name]) => name);
+    if (droppedOptions.length > 0) {
+      throw new TypeError(
+        `A Public API request cannot carry: ${droppedOptions.join(", ")}`,
+      );
+    }
+    if (
+      init?.body !== undefined &&
+      init.body !== null &&
+      typeof init.body !== "string"
+    ) {
+      throw new TypeError("A Public API request body must be a string.");
+    }
     const method = (init?.method ?? "GET").toUpperCase() as PublicApiMethod;
     if (!PUBLIC_API_METHODS.includes(method)) {
       throw new TypeError(`Unsupported method for the Public API: ${method}`);
@@ -45,7 +70,7 @@ export function withPublicApiCredential(
         method,
         path: url.pathname,
         query: url.search ? url.searchParams : undefined,
-        body: typeof init?.body === "string" ? init.body : undefined,
+        body: init?.body ?? undefined,
       },
       { next: init?.next },
     );
