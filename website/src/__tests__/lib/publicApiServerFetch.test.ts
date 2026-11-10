@@ -101,6 +101,25 @@ describe("withPublicApiCredential request options", () => {
     },
   );
 
+  test("given a null body and a null signal, which fetch reads as none, then the Public API request goes through", async () => {
+    // Given
+    const { publicApi, fetchFromServer } = fakePublicApi();
+    const fetchWithCredential = withPublicApiCredential(
+      vi.fn(async () => new Response("unused")),
+      publicApi,
+    );
+
+    // When
+    await fetchWithCredential(`${API_ORIGIN}/deployment`, {
+      body: null,
+      signal: null,
+    } as Parameters<typeof fetchWithCredential>[1]);
+
+    // Then
+    expect(fetchFromServer).toHaveBeenCalledTimes(1);
+    expect(fetchFromServer.mock.calls[0][0].body).toBeUndefined();
+  });
+
   test("given the same options for another host then they are passed on as they are", async () => {
     // Given
     const underlyingFetch = vi.fn(async () => new Response("{}"));

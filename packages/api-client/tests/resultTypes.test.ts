@@ -39,9 +39,37 @@ describe("result types", () => {
   });
 
   test("given no result type then each method resolves with unknown", () => {
+    // Calls inside functions that are never run, so the methods' default
+    // type arguments apply, not their constraints.
+    const calculateWithoutType = () =>
+      client.calculateHousehold({ country: "us", household: {} });
+    const metadataWithoutType = () => client.getMetadata("us");
+    const comparisonWithoutType = () =>
+      client.compareEconomy({
+        country: "us",
+        policy: 98765,
+        baseline: 2,
+        region: "us",
+        year: 2026,
+      });
+    const oneReadWithoutType = () =>
+      client.getEconomyComparison({
+        country: "us",
+        policy: 98765,
+        baseline: 2,
+        region: "us",
+        year: 2026,
+      });
+
     expectTypeOf(
-      client.calculateHousehold,
+      calculateWithoutType,
     ).returns.resolves.toEqualTypeOf<unknown>();
-    expectTypeOf(client.getMetadata).returns.resolves.toEqualTypeOf<unknown>();
+    expectTypeOf(metadataWithoutType).returns.resolves.toEqualTypeOf<unknown>();
+    expectTypeOf(
+      comparisonWithoutType,
+    ).returns.resolves.toEqualTypeOf<unknown>();
+    expectTypeOf(oneReadWithoutType).returns.resolves.toEqualTypeOf<
+      DashboardApiAnswer<unknown>
+    >();
   });
 });

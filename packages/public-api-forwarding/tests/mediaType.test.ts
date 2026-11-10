@@ -12,6 +12,9 @@ describe("isJsonMediaType", () => {
     ["text/plain", false],
     ["text/html; charset=utf-8", false],
     ["application/jsonp", false],
+    ["application/json/extra", false],
+    ["application/+json", false],
+    ["text/plain+json", false],
     ["", false],
     [null, false],
   ])("given %s then it returns %s", (contentType, expected) => {
