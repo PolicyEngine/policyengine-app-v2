@@ -42,6 +42,8 @@ The website's `withPublicApiCredential(fetch)` wraps a `fetch` so that requests 
 
 The Auth0 token request never follows a redirect, which would re-send the client secret.
 
+`isJsonMediaType()` is the JSON content-type check the package and its routes share: `application/json` or any `application/...+json` type.
+
 ## Configuration
 
 | Variable | Meaning |
