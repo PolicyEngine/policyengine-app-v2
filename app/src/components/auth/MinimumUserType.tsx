@@ -17,10 +17,10 @@ interface MinimumUserTypeProps {
  * or failed without an answer) it shows nothing: neither `children` nor
  * `fallback`.
  *
- * Do not render it on the sign-in callback route (`/{country}/callback`,
- * `AuthCallback.page.tsx`). Signed in, it requests `GET /v2/me`, and on a
- * first sign-in that request creates the account before
- * `POST /v2/me/upgrade` runs, so the upgrade merges this browser's
+ * On the sign-in callback route (`/{country}/callback`) it shows nothing
+ * and sends no `GET /v2/me` (see `useIsSignInCallback`): on a first
+ * sign-in that request, racing `POST /v2/me/upgrade`, can create the
+ * account first, so the upgrade would merge this browser's
  * unauthenticated user into that new account instead of converting it.
  */
 export default function MinimumUserType({

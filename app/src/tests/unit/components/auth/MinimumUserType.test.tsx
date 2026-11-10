@@ -13,6 +13,7 @@ import {
 } from '@/tests/fixtures/api/v2UserMocks';
 import {
   createTestQueryClient,
+  letPendingWorkRun,
   MeStatusProbe,
   UserSessionProviders,
 } from '@/tests/fixtures/hooks/useMeMocks';
@@ -27,10 +28,15 @@ const fetchMock = vi.fn();
 
 function renderRestrictedContent(
   auth: AuthContextValue,
-  { minimum = 'author', fallback }: { minimum?: UserType; fallback?: ReactNode } = {}
+  {
+    minimum = 'author',
+    fallback,
+    pathname,
+  }: { minimum?: UserType; fallback?: ReactNode; pathname?: string } = {}
 ) {
-  return render(
-    <UserSessionProviders queryClient={createTestQueryClient()} session={{ auth, countryId: 'us' }}>
+  const queryClient = createTestQueryClient();
+  const view = render(
+    <UserSessionProviders queryClient={queryClient} session={{ auth, countryId: 'us', pathname }}>
       <MinimumUserType minimum={minimum} fallback={fallback}>
         <p>{RESTRICTED_CONTENT}</p>
       </MinimumUserType>
@@ -38,6 +44,7 @@ function renderRestrictedContent(
       <MeStatusProbe />
     </UserSessionProviders>
   );
+  return { ...view, queryClient };
 }
 
 beforeEach(() => {
@@ -144,5 +151,50 @@ describe('MinimumUserType', () => {
     // Then
     expect(screen.queryByText(FALLBACK_CONTENT)).not.toBeInTheDocument();
     expect(screen.queryByText(RESTRICTED_CONTENT)).not.toBeInTheDocument();
+  });
+
+  test('given a signed-out visitor and a standard minimum with a fallback then the fallback shows', () => {
+    // When
+    renderRestrictedContent(makeAuthValue(), {
+      minimum: 'standard',
+      fallback: <p>{FALLBACK_CONTENT}</p>,
+    });
+
+    // Then
+    expect(screen.getByText(FALLBACK_CONTENT)).toBeInTheDocument();
+  });
+
+  test('given a refetch of /v2/me fails after an author saw the content then the content stays', async () => {
+    // Given
+    answerMeWithUser(fetchMock, meItemOfType('author'));
+    const { queryClient } = renderRestrictedContent(signedInAuthValue());
+    await screen.findByText(RESTRICTED_CONTENT);
+    answerMe(fetchMock, {
+      meResponse: () => errorResponse(503, 'The v2 database cannot be reached'),
+    });
+
+    // When
+    await act(() => queryClient.refetchQueries());
+    await screen.findByText('/v2/me status: error');
+
+    // Then
+    expect(screen.getByText(RESTRICTED_CONTENT)).toBeInTheDocument();
+  });
+
+  test('given an admin on the sign-in callback then neither the content nor the fallback shows', async () => {
+    // Given
+    answerMeWithUser(fetchMock, meItemOfType('admin'));
+
+    // When
+    renderRestrictedContent(signedInAuthValue(), {
+      fallback: <p>{FALLBACK_CONTENT}</p>,
+      pathname: '/us/callback',
+    });
+    await letPendingWorkRun();
+
+    // Then
+    expect(screen.queryByText(RESTRICTED_CONTENT)).not.toBeInTheDocument();
+    expect(screen.queryByText(FALLBACK_CONTENT)).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
