@@ -5,16 +5,18 @@
 # packages/api-client/package.json, and does nothing if npm already has it.
 #
 # It uses npm trusted publishing: GitHub's OIDC token proves the workflow
-# runs in PolicyEngine/policyengine-app-v2, so no npm token is stored. On
-# npmjs.com, the package's Settings → Trusted publishing names this
-# repository, this workflow file and the environment npm-publish. npm checks
-# only those, and the main-only conditions below are part of this file, so
-# a copy of it run from another branch would leave them out. The
-# environment's deployment branches are limited to main in the repository's
-# settings, so only main can publish. The first version, 0.1.0, was
-# published by hand by an owner of the @policyengine scope ("Releases" in
-# packages/api-client/README.md), since npm needs a package to exist before
-# it can trust a workflow.
+# runs in PolicyEngine/policyengine-app-v2, so no npm token is stored. The
+# package's trusted publisher on npmjs.com is to name this repository, this
+# workflow file and the environment npm-publish. npm checks only those, and
+# this file's main-only conditions are not among them: a copy of this file
+# run from another branch could leave them out. So the publish job runs in
+# npm-publish, an environment whose deployment branches the repository's
+# settings limit to main. Create that environment, with its branch rule,
+# before the trusted publisher names it: a run that names a missing
+# environment creates it with no restrictions. The steps are under
+# "Releases" in packages/api-client/README.md. The first version, 0.1.0,
+# was published by hand, since npm needs a package to exist before it can
+# trust a workflow.
 
 name: Publish @policyengine/api-client
 
@@ -81,8 +83,8 @@ jobs:
 
   # Holds the OIDC permission, so it runs no install and no repository
   # code: it only publishes the tarball the build job made. It runs in the
-  # npm-publish environment, which only main may deploy to, and npm's
-  # trusted publisher accepts tokens only from that environment.
+  # npm-publish environment, so that npm's trusted publisher, which names
+  # that environment, accepts only tokens from main (see the header).
   publish:
     name: Publish
     needs: build

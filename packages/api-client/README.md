@@ -123,20 +123,19 @@ The dashboard API answers browser requests from www.policyengine.org itself, fro
 
 ## Releases
 
-Published from `packages/api-client` in PolicyEngine/policyengine-app-v2 by the "Publish @policyengine/api-client" workflow. The workflow is started by hand on `main`. It uses npm trusted publishing, and publishes the version in `package.json` if npm does not have it yet. Its publish job runs in the repository's `npm-publish` environment, which only `main` may deploy to.
+Versions after 0.1.0 are published by the "Publish @policyengine/api-client" workflow (`.github/workflows/publish-api-client.yaml`), started by hand on `main`. It publishes the version in `package.json` if npm doesn't have it yet. It uses npm trusted publishing, so no npm token is stored, and the versions it publishes carry provenance.
 
-npm lets a package trust a workflow only once the package exists. So an owner of the `@policyengine` npm scope published the first version, 0.1.0, by hand from `main`:
+To release a version, raise `version` in a PR. After it merges, run the workflow on `main` (Actions → "Publish @policyengine/api-client" → Run workflow).
 
-```bash
-npx -y bun@1.2.21 install --frozen-lockfile
-cd packages/api-client
-npm test
-npm run build
-npm pack --dry-run
-npm publish --access public
-```
+0.1.0 was published by hand by an owner of the `@policyengine` npm scope, from a tarball packed on `main`, because npm lets a package trust a workflow only once the package exists.
 
-Then, on npmjs.com, open the package's Settings, then Trusted Publisher, and choose GitHub Actions with repository `PolicyEngine/policyengine-app-v2`, workflow `publish-api-client.yaml` and environment `npm-publish`. npm checks only these, so the environment is what limits publishing to `main`. Later versions are released by raising `version` in a PR and running the workflow after it merges.
+### Setting up the workflow's publishing
+
+This is done once, in this order, by a repository admin and an owner of the `@policyengine` scope:
+
+1. **Create the environment.** In the repository's Settings → Environments, create `npm-publish`. Under "Deployment branches and tags", choose "Selected branches and tags" and add the branch `main`. Do this first: a workflow run that names an environment that doesn't exist creates it with no restrictions.
+2. **Add the trusted publisher.** On npmjs.com, open the package's Settings → Trusted Publisher, choose GitHub Actions, and enter repository `PolicyEngine/policyengine-app-v2`, workflow `publish-api-client.yaml` and environment `npm-publish`. npm checks only these. The workflow's own `main`-only conditions are part of the workflow file, which a copy on another branch could leave out. So the environment's branch rule is what limits the workflow's publishing to `main`.
+3. **Optionally, disallow tokens.** Under the package's Publishing access, choose "Require two-factor authentication and disallow tokens". This stops publishing with npm access tokens. Scope owners can still publish by hand with two-factor authentication.
 
 ## Licence
 
