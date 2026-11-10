@@ -1,5 +1,10 @@
 import type { ReactNode } from 'react';
-import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  focusManager,
+  onlineManager,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
 import { act, renderHook } from '@test-utils';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { LocationProvider } from '@/contexts/LocationContext';
@@ -47,6 +52,14 @@ export async function returnToWindow() {
   await act(async () => {
     focusManager.setFocused(false);
     focusManager.setFocused(true);
+  });
+}
+
+/** The browser going offline and coming back online, which react-query treats as a reconnect. */
+export async function reconnect() {
+  await act(async () => {
+    onlineManager.setOnline(false);
+    onlineManager.setOnline(true);
   });
 }
 

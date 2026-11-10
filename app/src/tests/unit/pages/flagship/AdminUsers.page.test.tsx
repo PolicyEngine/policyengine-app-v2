@@ -12,6 +12,7 @@ import {
   answerAdminApi,
   answerAsDemotedAdmin,
   GRACE,
+  holdAnswersOfUserReads,
   holdRequests,
   holdUserReads,
   numberedAdminUsers,
@@ -27,6 +28,7 @@ import {
   createTestQueryClient,
   forgetWindowFocus,
   letPendingWorkRun,
+  reconnect,
   returnToWindow,
   UserSessionProviders,
 } from '@/tests/fixtures/hooks/useMeMocks';
@@ -102,6 +104,13 @@ function meReads(): string[] {
 
 function readsOfUser(userId: string): string[] {
   return adminRequests().filter((request) => request === `GET /v2/admin/users/${userId}`);
+}
+
+function deleteUser(apiState: ReturnType<typeof answerAdminApi>, userId: string) {
+  apiState.users.splice(
+    apiState.users.findIndex((candidate) => candidate.id === userId),
+    1
+  );
 }
 
 /** Lets queued work run several times over, long enough for immediate retries to finish. */
@@ -499,14 +508,11 @@ describe('AdminUsersPage', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  test.each([
-    [409, ADMIN_API_MESSAGES.LAST_ADMIN_DEMOTION],
-    [404, ADMIN_API_MESSAGES.NO_SIGNED_IN_USER],
-  ])('given the API refuses the change with %i then its message shows', async (status, message) => {
+  test('given the API refuses the change with 409 then its message shows', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!, {
       users: [{ ...GRACE, user_type: 'admin' }],
-      patchRefusal: { status, message },
+      patchRefusal: { status: 409, message: ADMIN_API_MESSAGES.LAST_ADMIN_DEMOTION },
     });
     const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Standard');
 
@@ -514,7 +520,147 @@ describe('AdminUsersPage', () => {
     await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
 
     // Then
-    expect(await within(confirmation).findByRole('alert')).toHaveTextContent(message);
+    expect(await within(confirmation).findByRole('alert')).toHaveTextContent(
+      ADMIN_API_MESSAGES.LAST_ADMIN_DEMOTION
+    );
+  });
+
+  test('given the user is deleted before the change is confirmed then the user is read again and shown as gone', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    deleteUser(apiState, GRACE.id);
+    const userReadsBefore = readsOfUser(GRACE.id).length;
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+
+    // Then
+    expect(await screen.findByText('This user no longer exists.')).toBeInTheDocument();
+    expect(readsOfUser(GRACE.id).length).toBeGreaterThan(userReadsBefore);
+  });
+
+  test('given the user is deleted before the change is confirmed then focus moves to the details heading', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    deleteUser(apiState, GRACE.id);
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await screen.findByText('This user no longer exists.');
+
+    // Then
+    await waitFor(() => expect(screen.getByRole('heading', { name: GRACE.email! })).toHaveFocus());
+  });
+
+  test('given the confirmation is cancelled then focus returns to "Change type"', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // Then
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Change type' })).toHaveFocus());
+  });
+
+  test('given the confirmation is closed with Escape then focus returns to "Change type"', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+
+    // When
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // Then
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Change type' })).toHaveFocus());
+  });
+
+  test('given a read of the user that answers after the change then the change is kept', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    const { deliverHeldAnswers } = holdAnswersOfUserReads(fetchMock, GRACE.id);
+    await returnToWindow();
+    await letPendingWorkRun();
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await screen.findByText('Standard to Author');
+    deliverHeldAnswers();
+    await letRetriesRun();
+
+    // Then
+    expect(screen.getByRole('radio', { name: 'Author' })).toBeChecked();
+  });
+
+  test('given a refused list then returning to the window keeps the refusal showing while it is read again', async () => {
+    // Given
+    answerAdminApi(fetchMock);
+    renderAdminPage();
+    await screen.findByRole('button', { name: GRACE.email! });
+    // The admin routes refuse, and /v2/me cannot be read, so it still says admin.
+    fetchMock.mockImplementation(async (url: string) =>
+      new URL(url).pathname === '/v2/me'
+        ? errorResponse(503, 'Saved work is temporarily unavailable.')
+        : errorResponse(403, ADMIN_API_MESSAGES.ADMINS_ONLY)
+    );
+    await returnToWindow();
+    await screen.findByText(/We could not load the users/);
+    const { answerHeldRequests } = holdRequests(
+      fetchMock,
+      (method, path) => method === 'GET' && path === '/v2/admin/users'
+    );
+
+    // When
+    await returnToWindow();
+    await letPendingWorkRun();
+
+    // Then
+    expect(screen.queryByRole('button', { name: GRACE.email! })).not.toBeInTheDocument();
+    answerHeldRequests();
+  });
+
+  test('given several admin reads are refused at once then /v2/me is read once', async () => {
+    // Given
+    await openUserDetails(GRACE.email!, {}, createProductionLikeQueryClient());
+    const meReadsBefore = meReads().length;
+    answerAsDemotedAdmin(fetchMock);
+
+    // When
+    await returnToWindow();
+    await screen.findByRole('heading', { name: 'Page not found' });
+    await letRetriesRun();
+
+    // Then
+    expect(meReads().length - meReadsBefore).toBe(1);
+  });
+
+  test('given more pages are loaded then reconnecting reads only the first page again', async () => {
+    // Given
+    const user = userEvent.setup();
+    const users = numberedAdminUsers(ADMIN_USER_PAGE_SIZE * 2 + 3);
+    answerAdminApi(fetchMock, { users });
+    renderAdminPage();
+    await screen.findByRole('button', { name: users[0].email! });
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+    await screen.findByRole('button', { name: users[ADMIN_USER_PAGE_SIZE].email! });
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+    await screen.findByRole('button', { name: users.at(-1)!.email! });
+    const listReadsBefore = listReads().length;
+
+    // When
+    await reconnect();
+    await letRetriesRun();
+
+    // Then
+    expect(listReads().slice(listReadsBefore)).toEqual([
+      `GET /v2/admin/users?offset=0&limit=${ADMIN_USER_PAGE_SIZE}`,
+    ]);
   });
 
   test('given a change the type script made then the history names the script and no admin', async () => {
@@ -588,7 +734,10 @@ describe('AdminUsersPage', () => {
     await returnToWindow();
 
     // Then
-    expect(await screen.findByText('This user no longer exists.')).toBeInTheDocument();
+    expect(await screen.findByText('This user no longer exists.')).toHaveAttribute(
+      'role',
+      'status'
+    );
     expect(screen.queryByRole('button', { name: 'Change type' })).not.toBeInTheDocument();
   });
 

@@ -247,3 +247,26 @@ export function answerAsDemotedAdmin(fetchMock: Mock) {
       : errorResponse(403, ADMIN_API_MESSAGES.ADMINS_ONLY)
   );
 }
+
+/**
+ * Lets every later `GET /v2/admin/users/{userId}` be answered at once, as
+ * the API answers it then, but holds the answer back until the test calls
+ * `deliverHeldAnswers`: a read answered before a change and delivered
+ * after it.
+ */
+export function holdAnswersOfUserReads(fetchMock: Mock, userId: string) {
+  const answerAsBefore = fetchMock.getMockImplementation()!;
+  const heldDeliveries: Array<() => void> = [];
+  fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+    const isReadOfTheUser =
+      (init.method ?? 'GET') === 'GET' && new URL(url).pathname === `/v2/admin/users/${userId}`;
+    if (!isReadOfTheUser) {
+      return answerAsBefore(url, init);
+    }
+    const answer = await answerAsBefore(url, init);
+    return new Promise<Response>((resolve) => {
+      heldDeliveries.push(() => resolve(answer));
+    });
+  });
+  return { deliverHeldAnswers: () => heldDeliveries.splice(0).forEach((deliver) => deliver()) };
+}
