@@ -122,6 +122,24 @@ function setUserType(
   apiState.users.find((candidate) => candidate.id === userId)!.user_type = userType;
 }
 
+/**
+ * Holds the next reads of Grace and answers them, as the API then would,
+ * when the test calls `answerHeldRequests`, which says how many it answered.
+ */
+function holdUserReadsAsAnsweredLater(fetchMock: ReturnType<typeof vi.fn>) {
+  const { answerHeldRequests, heldRequestCount } = holdRequests(
+    fetchMock,
+    (method, path) => method === 'GET' && path === `/v2/admin/users/${GRACE.id}`
+  );
+  return {
+    answerHeldRequests: () => {
+      const answeredCount = heldRequestCount();
+      answerHeldRequests();
+      return answeredCount;
+    },
+  };
+}
+
 function deleteUser(apiState: ReturnType<typeof answerAdminApi>, userId: string) {
   apiState.users.splice(
     apiState.users.findIndex((candidate) => candidate.id === userId),
@@ -536,10 +554,102 @@ describe('AdminUsersPage', () => {
     // Then
     await waitFor(() =>
       expect(within(confirmation).getByRole('alert')).toHaveTextContent(
-        `The type of ${GRACE.email} changed to Admin since you opened this. Confirm to change it from Admin to Author, or cancel.`
+        `The type of ${GRACE.email} changed from Standard to Admin since it was last checked. Confirm to change it from Admin to Author, or cancel.`
       )
     );
     expect(confirmation).toHaveTextContent(`${GRACE.email} will change from Admin to Author.`);
+  });
+
+  test('given the read after a changed-type refusal fails then trying again still words the refusal', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    setUserType(apiState, GRACE.id, 'admin');
+    const answerAsTheApi = fetchMock.getMockImplementation()!;
+    let userReadFailuresLeft = 1;
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      const isReadOfGrace =
+        (init.method ?? 'GET') === 'GET' && new URL(url).pathname === `/v2/admin/users/${GRACE.id}`;
+      if (isReadOfGrace && userReadFailuresLeft > 0) {
+        userReadFailuresLeft -= 1;
+        return errorResponse(503, 'Saved work is temporarily unavailable.');
+      }
+      return answerAsTheApi(url, init);
+    });
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await within(confirmation).findByText(/We could not check this user's current type/);
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Try again' }));
+
+    // Then
+    await waitFor(() =>
+      expect(within(confirmation).getByRole('alert')).toHaveTextContent(
+        `The type of ${GRACE.email} changed from Standard to Admin since it was last checked. Confirm to change it from Admin to Author, or cancel.`
+      )
+    );
+  });
+
+  test('given the type changed and changed back before the re-read then the refusal says so', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    setUserType(apiState, GRACE.id, 'admin');
+    const { answerHeldRequests } = holdUserReadsAsAnsweredLater(fetchMock);
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await within(confirmation).findByRole('alert');
+    setUserType(apiState, GRACE.id, 'standard');
+
+    // When
+    await waitFor(() => expect(answerHeldRequests()).toBeGreaterThan(0));
+
+    // Then
+    await waitFor(() =>
+      expect(within(confirmation).getByRole('alert')).toHaveTextContent(
+        `The type of ${GRACE.email} changed since it was last checked and is Standard again. Confirm to change it from Standard to Author, or cancel.`
+      )
+    );
+  });
+
+  test('given the user now has the chosen type when the refusal is re-read then it says nothing will change, as a status', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    setUserType(apiState, GRACE.id, 'admin');
+    const { answerHeldRequests } = holdUserReadsAsAnsweredLater(fetchMock);
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await within(confirmation).findByRole('alert');
+    setUserType(apiState, GRACE.id, 'author');
+
+    // When
+    await waitFor(() => expect(answerHeldRequests()).toBeGreaterThan(0));
+
+    // Then
+    const sentence = `The type of ${GRACE.email} changed from Standard to Author since it was last checked, so nothing will change.`;
+    expect(await within(confirmation).findByText(sentence)).toHaveAttribute('role', 'status');
+    expect(within(confirmation).queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test("given the confirmation's read fails once with a server error then it is read again", async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, {}, createProductionLikeQueryClient());
+    const answerAsTheApi = fetchMock.getMockImplementation()!;
+    let userReadFailuresLeft = 1;
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      const isReadOfGrace =
+        (init.method ?? 'GET') === 'GET' && new URL(url).pathname === `/v2/admin/users/${GRACE.id}`;
+      if (isReadOfGrace && userReadFailuresLeft > 0) {
+        userReadFailuresLeft -= 1;
+        return errorResponse(503, 'Saved work is temporarily unavailable.');
+      }
+      return answerAsTheApi(url, init);
+    });
+
+    // When
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+
+    // Then
+    expect(confirmation).toHaveTextContent(`${GRACE.email} will change from Standard to Author.`);
   });
 
   test('given a slow read of the user is under way when the change is refused then the dialog names the type read after the refusal', async () => {
@@ -629,11 +739,17 @@ describe('AdminUsersPage', () => {
     });
     const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Standard');
 
+    const userReadsBefore = readsOfUser(GRACE.id).length;
+
     // When
     await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await waitFor(() => expect(readsOfUser(GRACE.id).length).toBe(userReadsBefore + 1));
+    await waitFor(() =>
+      expect(within(confirmation).queryByText(/Checking/)).not.toBeInTheDocument()
+    );
 
     // Then
-    expect(await within(confirmation).findByRole('alert')).toHaveTextContent(
+    expect(within(confirmation).getByRole('alert')).toHaveTextContent(
       ADMIN_API_MESSAGES.LAST_ADMIN_DEMOTION
     );
   });
