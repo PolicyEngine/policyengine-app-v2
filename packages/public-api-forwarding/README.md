@@ -32,6 +32,10 @@ Browser pages will reach the Public API only through these routes, and the route
 
   JSON errors from the Public API itself pass through unchanged.
 
+The same object's `fetchFromServer(request, options)` is for the server's own requests, not a browser's. It uses the same settings, token cache and path check. It sends only `Accept`, `User-Agent`, `Content-Type` for a body, and the server token, and never follows redirects. It passes Next.js's `next` cache options through, gives up after 30 seconds by default, and resolves with the Public API's response as it is, whatever its status. When the request cannot be sent, because the settings are missing, the token cannot be obtained, the path is refused, the Public API cannot be reached or it does not answer in time, it throws `PublicApiUnavailableError` with the status a route would answer with.
+
+The website's `withPublicApiCredential(fetch)` wraps a `fetch` so that requests to https://api.policyengine.org go through `fetchFromServer()`, and requests to other hosts pass unchanged. `/api/deployments` uses it for the Public API's version reports.
+
 `checkOrigin()`, `corsResponseHeaders()` and `preflightResponse()` apply a route's CORS rules. A request whose `Origin` is neither the route's own site nor allowed gets 403 and is never forwarded: CORS alone only stops another site's page from reading the answer, not the request from running. So does a browser request with no `Origin` whose `Sec-Fetch-Site` is `cross-site` or `same-site`, which is how browsers send another site's `<img>`, `<script>` or no-cors GET. Requests without either header, such as from servers, are let through; rate limits hold those back. So are no-Origin GETs from browsers that send no `Sec-Fetch-Site`, such as Safari before 16.4.
 
 The Auth0 token request never follows a redirect, which would re-send the client secret.

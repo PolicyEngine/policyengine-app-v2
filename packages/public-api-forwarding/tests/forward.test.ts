@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
+  PublicApiUnavailableError,
   createPublicApiForwarder,
   isForwardablePath,
   type PublicApiRequest,
@@ -533,5 +534,169 @@ describe("isForwardablePath", () => {
   ])("given %s then it returns %s", (path, expected) => {
     // When / Then
     expect(isForwardablePath(path)).toBe(expected);
+  });
+});
+
+describe("fetchFromServer", () => {
+  const DEPLOYMENT_REPORT_REQUEST: PublicApiRequest = {
+    method: "GET",
+    path: "/deployment",
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("given a configured credential then it sends only the server token and its own headers", async () => {
+    // Given
+    const { forwarder, onlyPublicApiCall } = forwarderWith();
+
+    // When
+    const response = await forwarder.fetchFromServer(DEPLOYMENT_REPORT_REQUEST);
+
+    // Then
+    expect(response.status).toBe(200);
+    const [requestUrl, requestInit] = onlyPublicApiCall();
+    expect(String(requestUrl)).toBe(`${STAGING_PUBLIC_API_URL}/deployment`);
+    expect(Object.fromEntries(new Headers(requestInit?.headers))).toEqual({
+      accept: "application/json",
+      authorization: `Bearer ${SERVER_ACCESS_TOKEN}`,
+      "user-agent": "policyengine-test-caller",
+    });
+    expect(requestInit?.redirect).toBe("manual");
+  });
+
+  test("given no credential configured then it sends no Authorization header", async () => {
+    // Given
+    const { forwarder, onlyPublicApiCall } = forwarderWith({
+      environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
+    });
+
+    // When
+    await forwarder.fetchFromServer(DEPLOYMENT_REPORT_REQUEST);
+
+    // Then
+    expect(
+      new Headers(onlyPublicApiCall()[1]?.headers).get("authorization"),
+    ).toBeNull();
+  });
+
+  test("given Next.js cache options then they reach fetch", async () => {
+    // Given
+    const { forwarder, onlyPublicApiCall } = forwarderWith();
+
+    // When
+    await forwarder.fetchFromServer(DEPLOYMENT_REPORT_REQUEST, {
+      next: { revalidate: 900 },
+    });
+
+    // Then
+    expect(
+      (onlyPublicApiCall()[1] as RequestInit & { next?: unknown }).next,
+    ).toEqual({ revalidate: 900 });
+  });
+
+  test("given an error answer then it resolves with the Public API's response as it is", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      publicApiAnswer: () => jsonResponse({ status: "error" }, 500),
+    });
+
+    // When
+    const response = await forwarder.fetchFromServer(DEPLOYMENT_REPORT_REQUEST);
+
+    // Then
+    expect(response.status).toBe(500);
+  });
+
+  test("given a preview deployment without POLICYENGINE_API_URL then it throws without calling anything", async () => {
+    // Given
+    const { forwarder, fetchImplementation } = forwarderWith({
+      environment: { VERCEL_ENV: "preview" },
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({ statusCode: 503 });
+    expect(fetchImplementation).not.toHaveBeenCalled();
+  });
+
+  test("given the token request fails then it throws without calling the Public API", async () => {
+    // Given
+    const { forwarder, publicApiCalls } = forwarderWith({
+      tokenAnswer: () => jsonResponse({ error: "access_denied" }, 403),
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({ statusCode: 502 });
+    expect(publicApiCalls()).toHaveLength(0);
+  });
+
+  test("given the Public API cannot be reached then it throws PublicApiUnavailableError with 502", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      publicApiAnswer: () => {
+        throw new TypeError("fetch failed");
+      },
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({ statusCode: 502 });
+  });
+
+  test("given the Public API does not answer in time then it throws PublicApiUnavailableError with 504", async () => {
+    // Given a Public API that answers only when the request is aborted
+    const forwarder = createPublicApiForwarder({
+      environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
+      callerName: "policyengine-test-caller",
+      sharedTokenStore: null,
+      clientAddress: () => undefined,
+      fetchImplementation: (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("timed out", "TimeoutError")),
+          );
+        }),
+      logger: silentLogger,
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, { timeoutMilliseconds: 10 })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({ statusCode: 504 });
+  });
+
+  test("given a path that could leave the configured Public API then it throws without calling anything", async () => {
+    // Given
+    const { forwarder, fetchImplementation } = forwarderWith();
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer({ method: "GET", path: "/../deployment" })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({ statusCode: 404 });
+    expect(fetchImplementation).not.toHaveBeenCalled();
   });
 });

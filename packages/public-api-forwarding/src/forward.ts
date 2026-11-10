@@ -48,10 +48,48 @@ export interface ForwardOptions {
   readonly responseHeaders?: HeadersInit;
 }
 
+export interface ServerRequestOptions {
+  /** Next.js's fetch options, such as { revalidate: 900 } for its data cache. */
+  readonly next?: {
+    readonly revalidate?: number | false;
+    readonly tags?: string[];
+  };
+  /** How long to wait for the whole request. */
+  readonly timeoutMilliseconds?: number;
+}
+
+/**
+ * The Public API cannot be called: it is not configured, the server
+ * credential cannot be obtained, or the path is not one a route may name.
+ * The message is safe to show; details go to the server's log.
+ */
+export class PublicApiUnavailableError extends Error {
+  override name = "PublicApiUnavailableError";
+
+  constructor(
+    message: string,
+    /** The status a route would answer with for this failure. */
+    readonly statusCode: number,
+  ) {
+    super(message);
+  }
+}
+
 export interface PublicApiForwarder {
+  /** Sends a browser's request on to the Public API and streams the answer. */
   forward(
     request: PublicApiRequest,
     options: ForwardOptions,
+  ): Promise<Response>;
+  /**
+   * Sends a request from the server's own code, not on behalf of a browser:
+   * no browser headers, only the server credential when one is configured.
+   * Resolves with the Public API's response as it is, whatever its status;
+   * throws PublicApiUnavailableError when the request cannot be sent.
+   */
+  fetchFromServer(
+    request: PublicApiRequest,
+    options?: ServerRequestOptions,
   ): Promise<Response>;
 }
 
@@ -69,6 +107,7 @@ export interface PublicApiForwarderOptions {
 }
 
 export const DEFAULT_RESPONSE_HEADERS_TIMEOUT_MILLISECONDS = 60_000;
+export const DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS = 30_000;
 
 export const USER_AUTHORIZATION_HEADER = "PolicyEngine-User-Authorization";
 export const UNAUTHENTICATED_USER_HEADER = "PolicyEngine-Unauthenticated-User";
@@ -260,15 +299,23 @@ export function createPublicApiForwarder(
     logger,
   });
 
-  async function forward(
-    publicApiRequest: PublicApiRequest,
-    forwardOptions: ForwardOptions,
-  ): Promise<Response> {
-    const extraHeaders = forwardOptions.responseHeaders;
-    const { incomingRequest } = forwardOptions;
+  type Connection =
+    | {
+        readonly ok: true;
+        readonly upstreamUrl: URL;
+        readonly serverToken: string | null;
+      }
+    | { readonly ok: false; readonly error: PublicApiUnavailableError };
 
+  /** Checks the path, reads the settings and gets the server token. */
+  async function connect(
+    publicApiRequest: PublicApiRequest,
+  ): Promise<Connection> {
     if (!isForwardablePath(publicApiRequest.path)) {
-      return errorResponse(404, "Unknown route.", extraHeaders);
+      return {
+        ok: false,
+        error: new PublicApiUnavailableError("Unknown route.", 404),
+      };
     }
 
     const settingsResult = readPublicApiSettings(forwarderOptions.environment);
@@ -276,7 +323,13 @@ export function createPublicApiForwarder(
       logger.error(
         `Public API forwarding is not configured: ${settingsResult.problem}`,
       );
-      return errorResponse(503, "This route is not configured.", extraHeaders);
+      return {
+        ok: false,
+        error: new PublicApiUnavailableError(
+          "The Public API is not configured on this deployment.",
+          503,
+        ),
+      };
     }
     const { settings } = settingsResult;
 
@@ -289,11 +342,13 @@ export function createPublicApiForwarder(
           "Could not obtain a Public API access token:",
           error instanceof Error ? error.message : error,
         );
-        return errorResponse(
-          502,
-          "Could not obtain a credential for the Public API.",
-          extraHeaders,
-        );
+        return {
+          ok: false,
+          error: new PublicApiUnavailableError(
+            "Could not obtain a credential for the Public API.",
+            502,
+          ),
+        };
       }
     }
 
@@ -301,6 +356,40 @@ export function createPublicApiForwarder(
     if (publicApiRequest.query !== undefined) {
       upstreamUrl.search = publicApiRequest.query.toString();
     }
+    return { ok: true, upstreamUrl, serverToken };
+  }
+
+  function warnIfCredentialRefused(
+    publicApiRequest: PublicApiRequest,
+    serverToken: string | null,
+    upstream: Response,
+  ): void {
+    if (
+      serverToken !== null &&
+      (upstream.status === 401 || upstream.status === 403)
+    ) {
+      logger.warn(
+        `The Public API refused ${publicApiRequest.method} ${publicApiRequest.path} (HTTP ${upstream.status}) although the server credential was sent.`,
+      );
+    }
+  }
+
+  async function forward(
+    publicApiRequest: PublicApiRequest,
+    forwardOptions: ForwardOptions,
+  ): Promise<Response> {
+    const extraHeaders = forwardOptions.responseHeaders;
+    const { incomingRequest } = forwardOptions;
+
+    const connection = await connect(publicApiRequest);
+    if (!connection.ok) {
+      return errorResponse(
+        connection.error.statusCode,
+        connection.error.message,
+        extraHeaders,
+      );
+    }
+    const { upstreamUrl, serverToken } = connection;
 
     const abortController = new AbortController();
     let timedOut = false;
@@ -376,17 +465,70 @@ export function createPublicApiForwarder(
       clearTimeout(timeoutTimer);
     }
 
-    if (
-      serverToken !== null &&
-      (upstream.status === 401 || upstream.status === 403)
-    ) {
-      logger.warn(
-        `The Public API refused ${publicApiRequest.method} ${publicApiRequest.path} (HTTP ${upstream.status}) although the server credential was sent.`,
-      );
-    }
-
+    warnIfCredentialRefused(publicApiRequest, serverToken, upstream);
     return browserResponse(upstream, publicApiRequest, forwardOptions, logger);
   }
 
-  return { forward };
+  async function fetchFromServer(
+    publicApiRequest: PublicApiRequest,
+    serverOptions: ServerRequestOptions = {},
+  ): Promise<Response> {
+    const connection = await connect(publicApiRequest);
+    if (!connection.ok) {
+      throw connection.error;
+    }
+    const { upstreamUrl, serverToken } = connection;
+
+    const headers = new Headers({
+      Accept: "application/json",
+      "User-Agent": forwarderOptions.callerName,
+    });
+    if (publicApiRequest.body !== undefined) {
+      headers.set("Content-Type", "application/json");
+    }
+    if (serverToken !== null) {
+      headers.set("Authorization", `Bearer ${serverToken}`);
+    }
+
+    const init: RequestInit & { next?: ServerRequestOptions["next"] } = {
+      method: publicApiRequest.method,
+      headers,
+      body: publicApiRequest.body,
+      signal: AbortSignal.timeout(
+        serverOptions.timeoutMilliseconds ??
+          DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS,
+      ),
+      // Never followed: a redirect would carry the server credential.
+      redirect: "manual",
+    };
+    if (serverOptions.next !== undefined) {
+      init.next = serverOptions.next;
+    }
+    let upstream: Response;
+    try {
+      upstream = await fetchImplementation(upstreamUrl, init);
+    } catch (error) {
+      const timedOut =
+        error instanceof DOMException && error.name === "TimeoutError";
+      logger.error(
+        timedOut
+          ? `The Public API did not answer ${publicApiRequest.method} ${publicApiRequest.path} in time.`
+          : `Could not reach the Public API for ${publicApiRequest.method} ${publicApiRequest.path}:`,
+        error instanceof Error ? error.message : error,
+      );
+      throw timedOut
+        ? new PublicApiUnavailableError(
+            "The Public API did not answer in time.",
+            504,
+          )
+        : new PublicApiUnavailableError(
+            "The Public API could not be reached.",
+            502,
+          );
+    }
+    warnIfCredentialRefused(publicApiRequest, serverToken, upstream);
+    return upstream;
+  }
+
+  return { forward, fetchFromServer };
 }

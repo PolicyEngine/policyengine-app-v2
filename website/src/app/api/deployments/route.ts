@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isDeploymentCountry, loadDeployments } from "@/lib/deployments";
+import { withPublicApiCredential } from "@/lib/publicApi/serverFetch";
 
 export const runtime = "nodejs";
 
@@ -17,7 +18,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await loadDeployments(country, fetch, REVALIDATE_SECONDS);
+    // The Public API's reports go to this deployment's Public API with the
+    // website's credential; the other sources are fetched as they are.
+    const data = await loadDeployments(
+      country,
+      withPublicApiCredential(fetch),
+      REVALIDATE_SECONDS,
+    );
     return NextResponse.json(data, {
       headers: {
         "Cache-Control": `s-maxage=${REVALIDATE_SECONDS}, stale-while-revalidate=60`,
