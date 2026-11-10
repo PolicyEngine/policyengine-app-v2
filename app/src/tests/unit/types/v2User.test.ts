@@ -2,6 +2,7 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
+import { UNKNOWN_USER_TYPE } from '@/tests/fixtures/types/v2UserMocks';
 import { isUserType, USER_TYPES, userTypeMeetsMinimum } from '@/types/v2User';
 
 const OPENAPI_DOCUMENT_PATH = fileURLToPath(
@@ -69,4 +70,22 @@ describe('userTypeMeetsMinimum', () => {
       expect(userTypeMeetsMinimum(userType, minimum)).toBe(false);
     }
   );
+
+  test.each(['unauthenticated', 'standard', 'author', 'admin'] as const)(
+    'given the %s type and an unknown minimum then the type does not meet it',
+    (userType) => {
+      expect(userTypeMeetsMinimum(userType, UNKNOWN_USER_TYPE)).toBe(false);
+    }
+  );
+
+  test.each(['unauthenticated', 'standard', 'author', 'admin'] as const)(
+    'given an unknown type and the %s minimum then the type does not meet it',
+    (minimum) => {
+      expect(userTypeMeetsMinimum(UNKNOWN_USER_TYPE, minimum)).toBe(false);
+    }
+  );
+
+  test('given an unknown type and an unknown minimum then the type does not meet it', () => {
+    expect(userTypeMeetsMinimum(UNKNOWN_USER_TYPE, UNKNOWN_USER_TYPE)).toBe(false);
+  });
 });

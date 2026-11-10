@@ -1,6 +1,7 @@
 import { vi, type Mock } from 'vitest';
 import type { ApiStoreContext } from '@/api/v2Associations';
 import { createV2UserClient } from '@/api/v2UserClient';
+import { UNKNOWN_USER_TYPE } from '@/tests/fixtures/types/v2UserMocks';
 import type {
   MeItem,
   SharedReportItem,
@@ -55,10 +56,7 @@ export function meItemOfType(userType: UserType): MeItem {
 }
 
 /** A `/v2/me` user whose type this app does not know, as a newer API could send. */
-export const meItemWithUnknownType = {
-  ...mockMeItem,
-  user_type: 'owner',
-} as unknown as MeItem;
+export const meItemWithUnknownType: MeItem = { ...mockMeItem, user_type: UNKNOWN_USER_TYPE };
 
 const base = {
   country_id: 'us' as const,

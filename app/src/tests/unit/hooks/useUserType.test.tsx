@@ -93,7 +93,7 @@ describe('useUserType', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('given a signed-in user while /v2/me loads then the type is unauthenticated', async () => {
+  test('given a signed-in user while /v2/me loads then the type is unknown', async () => {
     // Given
     answerMe(fetchMock, { meResponse: () => deferredResponse().response });
 
@@ -102,7 +102,7 @@ describe('useUserType', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
 
     // Then
-    expect(result.current.userType).toBe('unauthenticated');
+    expect(result.current.userType).toBeNull();
   });
 
   test.each(['standard', 'author', 'admin'] as const)(
@@ -119,7 +119,7 @@ describe('useUserType', () => {
     }
   );
 
-  test('given /v2/me fails then the type is unauthenticated', async () => {
+  test('given /v2/me fails before it has answered then the type is unknown', async () => {
     // Given
     answerMe(fetchMock, {
       meResponse: () => errorResponse(500, 'The v2 database cannot be reached'),
@@ -130,7 +130,24 @@ describe('useUserType', () => {
     await waitFor(() => expect(result.current.me.isError).toBe(true));
 
     // Then
-    expect(result.current.userType).toBe('unauthenticated');
+    expect(result.current.userType).toBeNull();
+  });
+
+  test('given a refetch of /v2/me fails after it answered then the type is still the answered type', async () => {
+    // Given
+    answerMeWithUser(fetchMock, meItemOfType('author'));
+    const { result } = renderUserType(signedInAuthValue());
+    await waitFor(() => expect(result.current.userType).toBe('author'));
+    answerMe(fetchMock, {
+      meResponse: () => errorResponse(503, 'The v2 database cannot be reached'),
+    });
+
+    // When
+    await act(() => result.current.me.refetch());
+    await waitFor(() => expect(result.current.me.isError).toBe(true));
+
+    // Then
+    expect(result.current.userType).toBe('author');
   });
 
   test('given /v2/me returns a type the app does not know then the type is unauthenticated', async () => {

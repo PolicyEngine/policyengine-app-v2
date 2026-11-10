@@ -7,10 +7,15 @@ import {
   answerMe,
   answerMeWithUser,
   deferredResponse,
+  errorResponse,
   itemResponse,
   meItemOfType,
 } from '@/tests/fixtures/api/v2UserMocks';
-import { createTestQueryClient, UserSessionProviders } from '@/tests/fixtures/hooks/useMeMocks';
+import {
+  createTestQueryClient,
+  MeStatusProbe,
+  UserSessionProviders,
+} from '@/tests/fixtures/hooks/useMeMocks';
 import { UserTypeProbe } from '@/tests/fixtures/hooks/useUserTypeMocks';
 import { makeAuthValue, signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
 import type { UserType } from '@/types/v2User';
@@ -30,6 +35,7 @@ function renderRestrictedContent(
         <p>{RESTRICTED_CONTENT}</p>
       </MinimumUserType>
       <UserTypeProbe />
+      <MeStatusProbe />
     </UserSessionProviders>
   );
 }
@@ -111,5 +117,32 @@ describe('MinimumUserType', () => {
 
     // Then
     expect(await screen.findByText(RESTRICTED_CONTENT)).toBeInTheDocument();
+  });
+
+  test('given a signed-in user while /v2/me loads then the fallback is not shown', async () => {
+    // Given
+    answerMe(fetchMock, { meResponse: () => deferredResponse().response });
+
+    // When
+    renderRestrictedContent(signedInAuthValue(), { fallback: <p>{FALLBACK_CONTENT}</p> });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    // Then
+    expect(screen.queryByText(FALLBACK_CONTENT)).not.toBeInTheDocument();
+  });
+
+  test('given /v2/me fails before it has answered then neither the content nor the fallback shows', async () => {
+    // Given
+    answerMe(fetchMock, {
+      meResponse: () => errorResponse(500, 'The v2 database cannot be reached'),
+    });
+
+    // When
+    renderRestrictedContent(signedInAuthValue(), { fallback: <p>{FALLBACK_CONTENT}</p> });
+    await screen.findByText('/v2/me status: error');
+
+    // Then
+    expect(screen.queryByText(FALLBACK_CONTENT)).not.toBeInTheDocument();
+    expect(screen.queryByText(RESTRICTED_CONTENT)).not.toBeInTheDocument();
   });
 });
