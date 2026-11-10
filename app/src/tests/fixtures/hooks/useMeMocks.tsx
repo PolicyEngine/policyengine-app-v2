@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@test-utils';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { LocationProvider } from '@/contexts/LocationContext';
@@ -22,6 +22,35 @@ export interface TestSession {
 /** A query client that does not retry, so a failed request fails at once. */
 export function createTestQueryClient(): QueryClient {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
+}
+
+/**
+ * A query client with the calculator's query defaults (calculator-app's
+ * providers.tsx: data stays fresh for five minutes and is read again when
+ * the window regains focus), without retries.
+ */
+export function createProductionLikeQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: true, retry: false },
+    },
+  });
+}
+
+/**
+ * The browser window losing and regaining focus, which react-query treats
+ * as a return to the page. Undo with `forgetWindowFocus()` after the test.
+ */
+export async function returnToWindow() {
+  await act(async () => {
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
+  });
+}
+
+/** Hands focus tracking back to the browser's own events. */
+export function forgetWindowFocus() {
+  focusManager.setFocused(undefined);
 }
 
 /** The providers `useMe` reads: the query client, the country, the sign-in state and the path. */

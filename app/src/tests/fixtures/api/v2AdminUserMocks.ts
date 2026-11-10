@@ -21,6 +21,13 @@ export const ADMIN_USER_IDS = {
 export const CHANGE_IDS = {
   FIRST: '8e1f2a3b-4c5d-4e6f-8a9b-0c1d2e3f4a5b',
   SECOND: '9f2a3b4c-5d6e-4f7a-9b0c-1d2e3f4a5b6c',
+  SCRIPT: '0a3b4c5d-6e7f-4a8b-8c1d-2e3f4a5b6c7d',
+} as const;
+
+/** The Public API's messages for the admin routes' refusals. */
+export const ADMIN_API_MESSAGES = {
+  LAST_ADMIN_DEMOTION: "The last admin can't be demoted; make another user an admin first",
+  NO_SIGNED_IN_USER: 'No signed-in user has this ID.',
 } as const;
 
 /** A signed-in user as `/v2/admin/users` lists it. */
@@ -39,6 +46,14 @@ export function adminUserItem(overrides: Partial<AdminUserItem> = {}): AdminUser
 }
 
 export const GRACE = adminUserItem();
+/** The signed-in admin (`SIGNED_IN_ADMIN`) as the admin routes list them. */
+export const SIGNED_IN_ADMIN_USER = adminUserItem({
+  id: SIGNED_IN_ADMIN.id,
+  user_type: 'admin',
+  email: SIGNED_IN_ADMIN.email,
+  first_name: SIGNED_IN_ADMIN.first_name,
+  last_name: SIGNED_IN_ADMIN.last_name,
+});
 export const ALAN = adminUserItem({
   id: ADMIN_USER_IDS.ALAN,
   email: 'alan@example.org',
@@ -79,6 +94,7 @@ export function userTypeChangeItem(
 
 /** A change the type script made: it names no admin. */
 export const SCRIPT_CHANGE = userTypeChangeItem({
+  id: CHANGE_IDS.SCRIPT,
   previous_user_type: 'standard',
   new_user_type: 'admin',
   changed_by_user_id: null,
@@ -118,7 +134,7 @@ export function answerAdminApi(
 
   function userResponse(userId: string): Response {
     const user = state.users.find((candidate) => candidate.id === userId);
-    return user ? itemResponse(user) : errorResponse(404, 'No signed-in user has this ID.');
+    return user ? itemResponse(user) : errorResponse(404, ADMIN_API_MESSAGES.NO_SIGNED_IN_USER);
   }
 
   fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
@@ -186,4 +202,27 @@ export function sentRequests(fetchMock: Mock): string[] {
     const requestUrl = new URL(url);
     return `${init.method ?? 'GET'} ${requestUrl.pathname}${requestUrl.search}`;
   });
+}
+
+/**
+ * Holds every later `GET /v2/admin/users/{user_id}` until the test calls
+ * `answerHeldUserReads`, which answers them as `fetchMock` did before.
+ * Other requests answer at once.
+ */
+export function holdUserReads(fetchMock: Mock) {
+  const answerAsBefore = fetchMock.getMockImplementation()!;
+  const heldReads: Array<() => void> = [];
+  fetchMock.mockImplementation((url: string, init: RequestInit) => {
+    const isUserRead =
+      /^\/v2\/admin\/users\/[^/]+$/.test(new URL(url).pathname) && (init.method ?? 'GET') === 'GET';
+    if (!isUserRead) {
+      return answerAsBefore(url, init);
+    }
+    return new Promise<Response>((resolve) => {
+      heldReads.push(() => resolve(answerAsBefore(url, init)));
+    });
+  });
+  return {
+    answerHeldUserReads: () => heldReads.splice(0).forEach((answerRead) => answerRead()),
+  };
 }
