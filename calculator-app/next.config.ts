@@ -16,6 +16,9 @@ function envValue(...names: string[]): string {
 }
 
 const nextConfig: NextConfig = {
+  // Workspace packages that ship TypeScript source rather than a build.
+  transpilePackages: ["@policyengine/public-api-forwarding"],
+
   // Compile TypeScript files from ../app/src/ (the shared Vite codebase)
   experimental: {
     externalDir: true,
