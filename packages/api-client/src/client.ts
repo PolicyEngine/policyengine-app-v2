@@ -26,6 +26,9 @@ export const DEFAULT_POLL_TIMEOUT_MILLISECONDS = 30 * 60_000;
  */
 export const RATE_LIMIT_WAIT_MILLISECONDS = 60_000;
 
+/** setTimeout runs any longer delay at once, so no wait is longer. */
+const LONGEST_TIMER_MILLISECONDS = 2 ** 31 - 1;
+
 const RATE_LIMITED_STATUS = 429;
 /** Brief gateway failures, which polling retries up to this many times. */
 const GATEWAY_FAILURE_STATUSES = new Set([502, 503, 504]);
@@ -265,9 +268,20 @@ export function createPolicyEngineApiClient(
   ): Promise<Result> {
     const intervalMilliseconds =
       options.intervalMilliseconds ?? DEFAULT_POLL_INTERVAL_MILLISECONDS;
-    const deadline =
-      Date.now() +
-      (options.timeoutMilliseconds ?? DEFAULT_POLL_TIMEOUT_MILLISECONDS);
+    const timeoutMilliseconds =
+      options.timeoutMilliseconds ?? DEFAULT_POLL_TIMEOUT_MILLISECONDS;
+    // Either mistake would make every wait one that setTimeout runs at once.
+    if (!Number.isFinite(intervalMilliseconds) || intervalMilliseconds < 0) {
+      throw new RangeError(
+        `intervalMilliseconds must be a finite number, 0 or more; got ${intervalMilliseconds}.`,
+      );
+    }
+    if (Number.isNaN(timeoutMilliseconds) || timeoutMilliseconds < 0) {
+      throw new RangeError(
+        `timeoutMilliseconds must be a number, 0 or more, or Infinity; got ${timeoutMilliseconds}.`,
+      );
+    }
+    const deadline = Date.now() + timeoutMilliseconds;
     let gatewayRetriesSinceLastAnswer = 0;
 
     /**
@@ -282,7 +296,11 @@ export function createPolicyEngineApiClient(
         );
       }
       await waitFor(
-        Math.min(milliseconds, remainingMilliseconds),
+        Math.min(
+          milliseconds,
+          remainingMilliseconds,
+          LONGEST_TIMER_MILLISECONDS,
+        ),
         options.signal,
       );
     }

@@ -81,8 +81,10 @@ Every method takes a `signal` to cancel the request (or the polling).
 
 `compareEconomy` reads the comparison every 5 seconds by default and gives up after 30 minutes with `EconomyComparisonTimeoutError`. No wait runs past that deadline: the last one is shortened so that polling reads once more at the deadline.
 
-- A rate-limited read (429) waits for `Retry-After`. Without one, it waits 60 seconds (`RATE_LIMIT_WAIT_MILLISECONDS`), the length of the rate limit's window. It always waits at least one interval. Rate-limited reads never end polling by themselves; the deadline still applies.
-- A brief gateway failure (502, 503 or 504) waits for `Retry-After`, or one interval without it. The fourth gateway failure since the last answer ends polling.
+- A rate-limited read (429) waits the number of seconds in `Retry-After`; a date there is ignored. Without one, it waits 60 seconds (`RATE_LIMIT_WAIT_MILLISECONDS`), the length of the rate limit's window. It waits at least one interval, unless the deadline comes sooner. On a page that can read the 429 (see [Rate limits](#rate-limits)), rate-limited reads never end polling by themselves; the deadline still applies.
+- A brief gateway failure (502, 503 or 504) waits the seconds in `Retry-After`, or one interval without it. The fourth gateway failure since the last answer ends polling.
+
+`intervalMilliseconds` must be a finite number, 0 or more. `timeoutMilliseconds` must be a number, 0 or more, or `Infinity`. Any other value rejects with `RangeError` before the first read.
 
 Keep the interval at a few seconds: the dashboard API allows 120 comparison reads a minute from one address.
 

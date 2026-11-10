@@ -47,9 +47,15 @@ export interface RequestOptions {
 }
 
 export interface EconomyComparisonPollOptions extends RequestOptions {
-  /** How long to wait between reads while the comparison is computing. */
+  /**
+   * How long to wait between reads while the comparison is computing: a
+   * finite number, 0 or more, or compareEconomy rejects with RangeError.
+   */
   readonly intervalMilliseconds?: number;
-  /** How long to keep polling before giving up. */
+  /**
+   * How long to keep polling before giving up: a number, 0 or more, or
+   * Infinity, or compareEconomy rejects with RangeError.
+   */
   readonly timeoutMilliseconds?: number;
   /** Called with each "computing" answer, for progress displays. */
   readonly onProgress?: (answer: DashboardApiAnswer) => void;
