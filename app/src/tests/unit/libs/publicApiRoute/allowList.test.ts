@@ -129,6 +129,28 @@ describe('matchAllowedOperation', () => {
   });
 });
 
+describe('response-headers timeouts', () => {
+  // The Public API's Cloud Run services end every request at 300 seconds
+  // (read 2026-11-10), so no calculation can answer later than that.
+  const PUBLIC_API_REQUEST_LIMIT_MILLISECONDS = 300_000;
+
+  test.each([
+    ['POST', '/us/calculate-full'],
+    ['GET', '/uk/household/12345/policy/2'],
+  ])(
+    'given a household calculation, %s %s, then the route waits as long as the Public API lets a request run',
+    (method, path) => {
+      // When
+      const operation = matchAllowedOperation(method, path);
+
+      // Then
+      expect(operation?.responseHeadersTimeoutMilliseconds).toBe(
+        PUBLIC_API_REQUEST_LIMIT_MILLISECONDS
+      );
+    }
+  );
+});
+
 describe('CACHE_CONTROL', () => {
   test('given a saved record, a calculation or an economy comparison then no cache may keep it', () => {
     // When

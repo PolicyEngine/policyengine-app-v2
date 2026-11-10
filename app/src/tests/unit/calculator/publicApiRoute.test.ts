@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { matchAllowedOperation } from '@/libs/publicApiRoute/allowList';
 import * as publicApiRoute from '../../../../../calculator-app/src/app/api/policyengine/[...path]/route';
 
 const APP_URL = 'https://app.policyengine.org';
@@ -316,6 +317,22 @@ describe('calculator /api/policyengine/{Public API path}', () => {
 
     // Then
     expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+  });
+
+  test('given the longest calculation wait then the function may run long enough to get a token, wait and stream the answer', () => {
+    // Given
+    const calculationWaitMilliseconds =
+      matchAllowedOperation('POST', '/us/calculate-full')?.responseHeadersTimeoutMilliseconds ?? 0;
+    // The forwarding package gives up on a token request after 10 seconds.
+    const tokenRequestMilliseconds = 10_000;
+    // Reading the request and streaming a large answer back.
+    const bodyTransferMilliseconds = 30_000;
+
+    // Then
+    expect(calculationWaitMilliseconds).toBeGreaterThan(0);
+    expect(publicApiRoute.maxDuration * 1000).toBeGreaterThanOrEqual(
+      calculationWaitMilliseconds + tokenRequestMilliseconds + bodyTransferMilliseconds
+    );
   });
 
   test('given a preview deployment without POLICYENGINE_API_URL then it refuses rather than calling the production Public API', async () => {

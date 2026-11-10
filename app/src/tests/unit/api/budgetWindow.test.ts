@@ -28,7 +28,7 @@ describe('fetchBudgetWindow', () => {
     });
 
     expect(fetchMock.mock.calls[0][0]).toBe(
-      'https://api.policyengine.org/us/economy/123/over/2/budget-window?region=state%2Fde&start_year=2026&window_size=10'
+      '/api/policyengine/us/economy/123/over/2/budget-window?region=state%2Fde&start_year=2026&window_size=10'
     );
     expect(response).toEqual(COMPUTING);
   });
