@@ -13,6 +13,8 @@ import type {
 
 export const TEST_API_BASE = 'https://api.test.policyengine.org';
 export const TEST_ACCESS_TOKEN = 'test-access-token';
+/** The access token of a second account signed in on the same browser. */
+export const OTHER_ACCESS_TOKEN = 'other-test-access-token';
 /** This browser's unauthenticated user in tests. */
 export const BROWSER_USER_ID = '6f1c2a9e-3b4d-4e5f-8a7b-9c0d1e2f3a4b';
 export const PE_USER_ID = '7c1e5a8e-2b1f-4c55-9a3e-1f2d3c4b5a69';

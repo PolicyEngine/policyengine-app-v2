@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import { AuthContext, type AuthContextValue } from '@/libs/auth/AuthContext';
-import { TEST_ACCESS_TOKEN } from '@/tests/fixtures/api/v2UserMocks';
+import { OTHER_ACCESS_TOKEN, TEST_ACCESS_TOKEN } from '@/tests/fixtures/api/v2UserMocks';
 
 export const TEST_AUTH0_CONFIG = {
   domain: 'auth.test.policyengine.org',
@@ -51,6 +51,15 @@ export function signedInAuthValue(overrides: Partial<AuthContextValue> = {}): Au
     profile: { ...TEST_PROFILE },
     subject: TEST_AUTH0_SUBJECT,
     getAccessToken: vi.fn().mockResolvedValue(TEST_ACCESS_TOKEN),
+    ...overrides,
+  });
+}
+
+/** The second account signed in on the same browser, with its own access token. */
+export function otherAccountAuthValue(overrides: Partial<AuthContextValue> = {}): AuthContextValue {
+  return signedInAuthValue({
+    subject: OTHER_AUTH0_SUBJECT,
+    getAccessToken: vi.fn().mockResolvedValue(OTHER_ACCESS_TOKEN),
     ...overrides,
   });
 }

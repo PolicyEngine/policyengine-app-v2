@@ -7,14 +7,16 @@ import {
   answerMeWithUser,
   deferredResponse,
   meItemOfType,
+  OTHER_ACCESS_TOKEN,
 } from '@/tests/fixtures/api/v2UserMocks';
 import {
   createTestQueryClient,
+  letPendingWorkRun,
   renderHookInSession,
   UserSessionProviders,
 } from '@/tests/fixtures/hooks/useMeMocks';
 import { UserTypeProbe } from '@/tests/fixtures/hooks/useUserTypeMocks';
-import { OTHER_AUTH0_SUBJECT, signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
+import { otherAccountAuthValue, signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
 
 const fetchMock = vi.fn();
 
@@ -31,6 +33,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  window.history.pushState(null, '', '/');
 });
 
 describe('useMe', () => {
@@ -87,13 +90,41 @@ describe('useMe', () => {
     answerMe(fetchMock, { meResponse: () => otherAccountAnswer.response });
 
     // When
-    changeSession({
-      auth: signedInAuthValue({ subject: OTHER_AUTH0_SUBJECT }),
-      countryId: 'us',
-    });
+    changeSession({ auth: otherAccountAuthValue(), countryId: 'us' });
 
     // Then
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     expect(result.current.data).toBeUndefined();
+    const [, secondRequest] = fetchMock.mock.calls[1];
+    expect(secondRequest.headers.Authorization).toBe(`Bearer ${OTHER_ACCESS_TOKEN}`);
+  });
+
+  test('given a signed-in user on the sign-in callback then /v2/me is not requested', async () => {
+    // Given
+    answerMeWithUser(fetchMock, meItemOfType('admin'));
+
+    // When
+    renderHookInSession(() => useMe(), {
+      auth: signedInAuthValue(),
+      countryId: 'us',
+      pathname: '/us/callback',
+    });
+    await letPendingWorkRun();
+
+    // Then
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('given a signed-in user on the sign-in callback with no location provider then /v2/me is not requested', async () => {
+    // Given
+    answerMeWithUser(fetchMock, meItemOfType('admin'));
+    window.history.pushState(null, '', '/uk/callback');
+
+    // When
+    renderHookInSession(() => useMe(), { auth: signedInAuthValue(), countryId: 'uk' });
+    await letPendingWorkRun();
+
+    // Then
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

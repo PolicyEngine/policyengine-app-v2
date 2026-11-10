@@ -11,7 +11,7 @@ import {
   meItemOfType,
   meItemWithUnknownType,
 } from '@/tests/fixtures/api/v2UserMocks';
-import { renderHookInSession } from '@/tests/fixtures/hooks/useMeMocks';
+import { letPendingWorkRun, renderHookInSession } from '@/tests/fixtures/hooks/useMeMocks';
 import { makeAuthValue, signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
 import { accountStorage } from '@/tests/fixtures/types/v2UserMocks';
 
@@ -27,19 +27,14 @@ const fetchMock = vi.fn();
  * a test can wait for the request. The status is read while rendering:
  * react-query re-renders only for the result fields a render read.
  */
-function renderUserType(auth: AuthContextValue) {
+function renderUserType(auth: AuthContextValue, pathname?: string) {
   return renderHookInSession(
     () => {
       const me = useMe();
       return { userType: useUserType(), meStatus: me.status, refetchMe: me.refetch };
     },
-    { auth, countryId: 'us' }
+    { auth, countryId: 'us', pathname }
   );
-}
-
-/** Lets queued promises and timers run, so a request the hook would send has been sent. */
-async function letPendingWorkRun() {
-  await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
 }
 
 beforeEach(() => {
@@ -157,13 +152,39 @@ describe('useUserType', () => {
     expect(result.current.userType).toBe('author');
   });
 
-  test('given /v2/me returns a type the app does not know then the type is unauthenticated', async () => {
+  test('given /v2/me returns a type the app does not know then the type is standard', async () => {
     // Given
     answerMeWithUser(fetchMock, meItemWithUnknownType);
 
     // When
     const { result } = renderUserType(signedInAuthValue());
     await waitFor(() => expect(result.current.meStatus).toBe('success'));
+
+    // Then
+    expect(result.current.userType).toBe('standard');
+  });
+
+  test('given a signed-in admin on the sign-in callback then the type is unknown and /v2/me is not requested', async () => {
+    // Given
+    answerMeWithUser(fetchMock, meItemOfType('admin'));
+
+    // When
+    const { result } = renderUserType(signedInAuthValue(), '/us/callback');
+    await letPendingWorkRun();
+
+    // Then
+    expect(result.current.userType).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('given an admin whose session ends on the page then the type is unauthenticated', async () => {
+    // Given
+    answerMeWithUser(fetchMock, meItemOfType('admin'));
+    const { result, changeSession } = renderUserType(signedInAuthValue());
+    await waitFor(() => expect(result.current.userType).toBe('admin'));
+
+    // When
+    changeSession({ auth: makeAuthValue({ sessionEnded: true }), countryId: 'us' });
 
     // Then
     expect(result.current.userType).toBe('unauthenticated');
