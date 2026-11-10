@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { TOKEN_REQUEST_TIMEOUT_MILLISECONDS } from '@policyengine/public-api-forwarding';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { matchAllowedOperation } from '@/libs/publicApiRoute/allowList';
 import * as publicApiRoute from '../../../../../calculator-app/src/app/api/policyengine/[...path]/route';
@@ -323,8 +324,8 @@ describe('calculator /api/policyengine/{Public API path}', () => {
     // Given
     const calculationWaitMilliseconds =
       matchAllowedOperation('POST', '/us/calculate-full')?.responseHeadersTimeoutMilliseconds ?? 0;
-    // The forwarding package gives up on a token request after 10 seconds.
-    const tokenRequestMilliseconds = 10_000;
+    // The forwarding package's limit on a token request.
+    const tokenRequestMilliseconds = TOKEN_REQUEST_TIMEOUT_MILLISECONDS;
     // Reading the request and streaming a large answer back.
     const bodyTransferMilliseconds = 30_000;
 

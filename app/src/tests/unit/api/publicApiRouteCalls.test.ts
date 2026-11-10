@@ -223,6 +223,25 @@ const PUBLIC_API_CALLS: ReadonlyArray<[string, () => Promise<unknown>, string, s
     `/v2/user-reports/${SAVED_RECORD_ID}`,
   ],
   [
+    'a saved report',
+    () => savedRecords('user-reports').get(SAVED_RECORD_ID),
+    'GET',
+    `/v2/user-reports/${SAVED_RECORD_ID}`,
+  ],
+  ['the saved policies', () => savedRecords('user-policies').list(), 'GET', '/v2/user-policies'],
+  [
+    'a new saved policy',
+    () => savedRecords('user-policies').create({ country_id: 'us' }),
+    'POST',
+    '/v2/user-policies',
+  ],
+  [
+    'a saved policy update',
+    () => savedRecords('user-policies').patch(SAVED_RECORD_ID, { label: 'Renamed' }),
+    'PATCH',
+    `/v2/user-policies/${SAVED_RECORD_ID}`,
+  ],
+  [
     'a saved policy',
     () => savedRecords('user-policies').get(SAVED_RECORD_ID),
     'GET',

@@ -326,8 +326,9 @@ class JourneyProfiler {
   }
 
   /**
-   * Install a global fetch interceptor that wraps calls to api.policyengine.org
-   * with performance marks. Non-API calls pass through unmodified.
+   * Install a global fetch interceptor that wraps calls to the Public API,
+   * through the calculator's own route, with performance marks. Other calls
+   * pass through unmodified.
    */
   private installFetchInterceptor(): void {
     const origFetch = window.fetch.bind(window);
