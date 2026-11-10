@@ -20,7 +20,7 @@ The calculator's pages reach the Public API only through its route (`BASE_URL` i
   Cookies, `Origin`, `Referer` and any `PolicyEngine-User-Authorization` the browser sends are dropped.
 - **Streams the answer back** with an allow list of response headers (`Content-Type`, `ETag`, `Last-Modified`, `Retry-After`, `WWW-Authenticate` and the Public API's request IDs). `Content-Encoding` and `Content-Length` are dropped, because `fetch` has already decompressed the body. Streaming matters because Vercel caps a buffered function answer at 4.5 MB.
 - **Caches nothing it should not**: the route's `cacheControl` applies only to 2xx and 304 answers; every other answer is `no-store`, and so is every answer when the route gives none.
-- **Maps failures to JSON** in the Public API's own error shape, `{"status": "error", "message": ..., "result": null}`:
+- **Maps failures to JSON** in the Public API's own error shape, `{"status": "error", "message": ..., "result": null}`, marked with `X-PolicyEngine-Route-Error: true` (`ROUTE_ERROR_HEADER`) so a caller can tell them from the Public API's own errors, such as its 502 for a failed calculation:
 
   | Failure | Status |
   | --- | --- |

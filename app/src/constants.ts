@@ -1,4 +1,4 @@
-import { PUBLIC_API_ROUTE_PREFIX } from '@/libs/publicApiRoute/routePrefix';
+import { PUBLIC_API_ROUTE_PREFIX } from '@/libs/publicApiRoute/sameOriginRoute';
 
 export const FOREVER = '2100-12-31';
 // Where the browser reaches the Public API: app.policyengine.org's own

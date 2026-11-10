@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { TOKEN_REQUEST_TIMEOUT_MILLISECONDS } from '@policyengine/public-api-forwarding';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { PUBLIC_API_REQUEST_LIMIT_MILLISECONDS } from '@/libs/publicApiRoute/allowList';
+import { PUBLIC_API_WAIT_MILLISECONDS } from '@/libs/publicApiRoute/allowList';
 import * as publicApiRoute from '../../../../../calculator-app/src/app/api/policyengine/[...path]/route';
 
 const APP_URL = 'https://app.policyengine.org';
@@ -368,7 +368,7 @@ describe('calculator /api/policyengine/{Public API path}', () => {
 
     // Then
     expect(publicApiRoute.maxDuration * 1000).toBeGreaterThanOrEqual(
-      PUBLIC_API_REQUEST_LIMIT_MILLISECONDS + tokenRequestMilliseconds + bodyTransferMilliseconds
+      PUBLIC_API_WAIT_MILLISECONDS + tokenRequestMilliseconds + bodyTransferMilliseconds
     );
   });
 
