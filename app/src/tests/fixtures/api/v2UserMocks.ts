@@ -7,6 +7,7 @@ import type {
   UserHouseholdItem,
   UserPolicyItem,
   UserReportItem,
+  UserType,
 } from '@/types/v2User';
 
 export const TEST_API_BASE = 'https://api.test.policyengine.org';
@@ -47,6 +48,17 @@ export const mockMeItem: MeItem = {
   email: 'ada@example.org',
   created_at: TIMESTAMPS.CREATED,
 };
+
+/** The signed-in user as `/v2/me` returns them, with the given stored type. */
+export function meItemOfType(userType: UserType): MeItem {
+  return { ...mockMeItem, user_type: userType };
+}
+
+/** A `/v2/me` user whose type this app does not know, as a newer API could send. */
+export const meItemWithUnknownType = {
+  ...mockMeItem,
+  user_type: 'owner',
+} as unknown as MeItem;
 
 const base = {
   country_id: 'us' as const,
