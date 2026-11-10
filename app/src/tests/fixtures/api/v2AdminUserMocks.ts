@@ -181,7 +181,8 @@ export function answerAdminApi(
 
 /** Each request `fetchMock` received, as method and path with its query. */
 export function sentRequests(fetchMock: Mock): string[] {
-  return fetchMock.mock.calls.map(([url, init]: [string, RequestInit]) => {
+  return fetchMock.mock.calls.map((call) => {
+    const [url, init] = call as [string, RequestInit];
     const requestUrl = new URL(url);
     return `${init.method ?? 'GET'} ${requestUrl.pathname}${requestUrl.search}`;
   });

@@ -1,0 +1,148 @@
+import { useState, type FormEvent } from 'react';
+import {
+  Button,
+  Input,
+  Label,
+  ShadcnTable,
+  Spinner,
+  Stack,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Text,
+} from '@/components/ui';
+import { colors, spacing } from '@/designTokens';
+import { useAdminUserSearch } from '@/hooks/useAdminUsers';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { adminUserName, formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
+
+const EMAIL_INPUT_ID = 'admin-user-email';
+
+interface AdminUserSearchProps {
+  selectedUserId: string | null;
+  onSelectUser: (userId: string) => void;
+}
+
+/**
+ * Finds signed-in users by part of their email, newest first, a page at a
+ * time. Without a search it lists every signed-in user.
+ */
+export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminUserSearchProps) {
+  const countryId = useCurrentCountry();
+  const [emailDraft, setEmailDraft] = useState('');
+  const [searchedEmail, setSearchedEmail] = useState('');
+  const search = useAdminUserSearch(searchedEmail);
+  const users = search.data?.pages.flatMap((page) => page.items) ?? [];
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSearchedEmail(emailDraft.trim());
+  };
+
+  let results: React.ReactNode;
+  if (search.isPending) {
+    results = (
+      <Stack role="status" aria-live="polite" align="center" gap="md">
+        <Spinner size="sm" />
+        <Text style={{ margin: 0, color: colors.text.secondary }}>Loading users…</Text>
+      </Stack>
+    );
+  } else if (search.isError) {
+    results = (
+      <Stack gap="sm" align="start">
+        <Text role="alert" style={{ margin: 0, color: colors.error }}>
+          We could not load the users: {search.error.message}
+        </Text>
+        <Button variant="outline" onClick={() => search.refetch()}>
+          Try again
+        </Button>
+      </Stack>
+    );
+  } else if (users.length === 0) {
+    results = (
+      <Text style={{ margin: 0, color: colors.text.secondary }}>
+        {searchedEmail
+          ? 'No signed-in user has an email that contains this.'
+          : 'No signed-in users yet.'}
+      </Text>
+    );
+  } else {
+    results = (
+      <Stack gap="md" align="start">
+        <ShadcnTable aria-label="Users">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Email</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Last seen</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => {
+              const selected = user.id === selectedUserId;
+              return (
+                <TableRow
+                  key={user.id}
+                  style={selected ? { backgroundColor: colors.primary[50] } : undefined}
+                >
+                  <TableCell>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      aria-pressed={selected}
+                      onClick={() => onSelectUser(user.id)}
+                      style={{ padding: 0, height: 'auto' }}
+                    >
+                      {user.email ?? 'No email'}
+                    </Button>
+                  </TableCell>
+                  <TableCell>{adminUserName(user) ?? '—'}</TableCell>
+                  <TableCell>{USER_TYPE_LABELS[user.user_type]}</TableCell>
+                  <TableCell>
+                    {user.last_seen_at ? formatAdminDate(user.last_seen_at, countryId) : 'Never'}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </ShadcnTable>
+        {search.hasNextPage && (
+          <Button
+            variant="outline"
+            onClick={() => search.fetchNextPage()}
+            disabled={search.isFetchingNextPage}
+          >
+            {search.isFetchingNextPage && <Spinner size="sm" />}
+            Load more
+          </Button>
+        )}
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack gap="lg">
+      <form
+        role="search"
+        onSubmit={handleSubmit}
+        style={{ display: 'flex', gap: spacing.sm, alignItems: 'flex-end', flexWrap: 'wrap' }}
+      >
+        <Stack gap="xs" style={{ flex: '1 1 240px' }}>
+          <Label htmlFor={EMAIL_INPUT_ID}>Email</Label>
+          <Input
+            id={EMAIL_INPUT_ID}
+            type="search"
+            value={emailDraft}
+            onChange={(event) => setEmailDraft(event.target.value)}
+            placeholder="Part of an email address"
+          />
+        </Stack>
+        <Button type="submit">Search</Button>
+      </form>
+      {results}
+    </Stack>
+  );
+}
