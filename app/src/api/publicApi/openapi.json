@@ -354,7 +354,7 @@
             }
           },
           "409": {
-            "description": "The change conflicts with stored state, such as a record maintained by the v1 saved-policy mirror.",
+            "description": "The caller is the last admin; make another user an admin first. Nothing was deleted.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9030,7 +9030,7 @@
           "last_seen_at"
         ],
         "title": "AdminUserItem",
-        "description": "A signed-in user as admins see it.\n\n``email`` is the email of the user's most recently seen sign-in identity\nthat has one, and ``last_seen_at`` when that identity was last seen."
+        "description": "A signed-in user as admins see it.\n\n``email`` is the email of the most recently seen of the user's sign-in\nidentities that has one, else the user's own. ``last_seen_at`` is when the\nuser's most recently seen identity was last seen."
       },
       "AdminUserPageResponse": {
         "properties": {

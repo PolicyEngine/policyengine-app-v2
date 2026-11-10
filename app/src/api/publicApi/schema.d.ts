@@ -815,8 +815,9 @@ export interface components {
      * AdminUserItem
      * @description A signed-in user as admins see it.
      *
-     *     ``email`` is the email of the user's most recently seen sign-in identity
-     *     that has one, and ``last_seen_at`` when that identity was last seen.
+     *     ``email`` is the email of the most recently seen of the user's sign-in
+     *     identities that has one, else the user's own. ``last_seen_at`` is when the
+     *     user's most recently seen identity was last seen.
      */
     AdminUserItem: {
       /**
@@ -3659,7 +3660,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The change conflicts with stored state, such as a record maintained by the v1 saved-policy mirror. */
+      /** @description The caller is the last admin; make another user an admin first. Nothing was deleted. */
       409: {
         headers: {
           [name: string]: unknown;
