@@ -1,0 +1,66 @@
+# Publishes @policyengine/api-client to npm.
+#
+# Started by hand only (Actions → "Publish @policyengine/api-client" → Run
+# workflow), never by a push. It publishes the version in
+# packages/api-client/package.json, and does nothing if npm already has it.
+#
+# It uses npm trusted publishing: GitHub's OIDC token proves the workflow
+# runs in PolicyEngine/policyengine-app-v2, so no npm token is stored. On
+# npmjs.com, the package's Settings → Trusted publishing must name this
+# repository and this workflow file. npm needs the package to exist before
+# that can be set, so its first version is published by hand by an owner
+# of the @policyengine scope ("Releases" in packages/api-client/README.md).
+
+name: Publish @policyengine/api-client
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish
+    # Only what has merged is published.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      # Trusted publishing needs npm 11.5.1 or later, which Node 24 ships.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run the package's tests
+        working-directory: ./packages/api-client
+        run: bun run test
+
+      - name: Build the package
+        working-directory: ./packages/api-client
+        run: bun run build
+
+      - name: Publish unless npm already has this version
+        working-directory: ./packages/api-client
+        run: |
+          npm --version
+          package_version="$(node -p "require('./package.json').version")"
+          if npm view "@policyengine/api-client@${package_version}" version > /dev/null 2>&1; then
+            echo "npm already has @policyengine/api-client ${package_version}; nothing to publish."
+            exit 0
+          fi
+          npm publish --access public --provenance

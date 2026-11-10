@@ -93,7 +93,7 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 - `calculator-app/` - the Next.js calculator, deployed to app.policyengine.org (Vercel project `policyengine-calculator-next`)
 - `app/src/` - calculator source shared by `calculator-app/`, plus the data files the website reads
 - `app/public/` - static files; served on app.policyengine.org through the `calculator-app/public` symlink, and `app/public/assets/` is copied into the website build
-- `packages/` - workspace packages shared by the website and the calculator. `packages/public-api-forwarding/` is the server-side code their route handlers use to call the Public API with PolicyEngine's server credential; it ships TypeScript source, so each Next.js app that imports it lists it in `transpilePackages`
+- `packages/` - workspace packages shared by the website and the calculator. `packages/public-api-forwarding/` is the server-side code their route handlers use to call the Public API with PolicyEngine's server credential; it ships TypeScript source, so each Next.js app that imports it lists it in `transpilePackages`. `packages/api-client/` is `@policyengine/api-client`, the npm package dashboards use to call the website's dashboard API; it builds to `dist/` and is published by the hand-started `publish-api-client.yaml` workflow
 - Run both apps locally with `bun run dev` (the website on the first free port from 3000, the calculator on the next free port after it)
 
 ## Embedded sites

@@ -59,6 +59,10 @@ jobs:
         working-directory: ./packages/public-api-forwarding
         run: bun run format:check
 
+      - name: Check formatting with Prettier (browser client package)
+        working-directory: ./packages/api-client
+        run: bun run format:check
+
   typecheck:
     name: Type checking
     runs-on: ubuntu-latest
@@ -87,6 +91,10 @@ jobs:
 
       - name: Run TypeScript type checks (Public API forwarding package)
         working-directory: ./packages/public-api-forwarding
+        run: bun run typecheck
+
+      - name: Run TypeScript type checks (browser client package)
+        working-directory: ./packages/api-client
         run: bun run typecheck
 
   test:
@@ -122,6 +130,10 @@ jobs:
 
       - name: Run Public API forwarding package tests
         working-directory: ./packages/public-api-forwarding
+        run: bun run test
+
+      - name: Run browser client package tests
+        working-directory: ./packages/api-client
         run: bun run test
 
   public-api-client:
@@ -192,4 +204,8 @@ jobs:
 
       - name: Build calculator
         working-directory: ./calculator-app
+        run: bun run build
+
+      - name: Build the browser client package
+        working-directory: ./packages/api-client
         run: bun run build

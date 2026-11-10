@@ -26,6 +26,7 @@ typecheck:
 	cd website && bun run typecheck
 	cd calculator-app && bun run typecheck
 	cd packages/public-api-forwarding && bun run typecheck
+	cd packages/api-client && bun run typecheck
 
 test-all:
 	cd app && bun run test-all
@@ -34,6 +35,7 @@ test:
 	cd app && bun run test
 	cd website && bun run test
 	cd packages/public-api-forwarding && bun run test
+	cd packages/api-client && bun run test
 
 lint:
 	cd app && bun run lint
@@ -45,6 +47,7 @@ format:
 	cd website && bun run format
 	cd calculator-app && bun run format
 	cd packages/public-api-forwarding && bun run format
+	cd packages/api-client && bun run format
 
 clean:
 	rm -rf website/.next calculator-app/.next app/node_modules node_modules packages/*/node_modules
