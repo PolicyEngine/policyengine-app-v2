@@ -35,9 +35,12 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 // A household calculation, or any answer from a starting Public API
-// instance, can take minutes. The route may run for the Pro limit on Fluid
-// compute, 800 s: a token request of up to 10 s, a wait of up to 750 s
-// (PUBLIC_API_WAIT_MILLISECONDS) and then the streamed answer.
+// instance, can take minutes. The route may run for 800 s, Vercel Pro's
+// standard limit on Fluid compute: a token request of up to 10 s, a wait of
+// up to 750 s (PUBLIC_API_WAIT_MILLISECONDS) and then the streamed answer.
+// calculator-app/vercel.json turns on Vercel's request cancellation for
+// this route, so a browser that goes away stops the function and its
+// request to the Public API, rather than holding them for that long.
 export const maxDuration = 800;
 
 const calculatorPublicApi = createPublicApiForwarder({

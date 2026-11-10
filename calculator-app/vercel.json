@@ -3,5 +3,10 @@
   "framework": "nextjs",
   "installCommand": "cd .. && bun install --frozen-lockfile",
   "buildCommand": "bash scripts/vercel-build.sh",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "functions": {
+    "src/app/api/policyengine/**/*": {
+      "supportsCancellation": true
+    }
+  }
 }

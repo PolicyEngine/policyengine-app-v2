@@ -54,8 +54,10 @@ const OPAQUE_ID = '[A-Za-z0-9_-]{1,64}';
  * 2026-11-10), but a request can first wait for an instance to start. Its
  * load balancer recorded answers after up to 396 s, and slow answers are
  * not only calculations: country metadata took up to 246 s and a v1 policy
- * read 242 s (2026-11-03 to 2026-11-10). Browsers calling it directly had
- * no limit, so any shorter wait here would turn answers into errors.
+ * read 242 s (2026-11-03 to 2026-11-10). Browsers calling it directly
+ * waited as long as their own timers allowed (none for most calls, 240 s
+ * for a household under a policy, 10 minutes for calculate-full), so a
+ * shorter wait here would turn answers into errors.
  */
 export const PUBLIC_API_WAIT_MILLISECONDS = 750_000;
 

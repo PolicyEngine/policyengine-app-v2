@@ -300,6 +300,11 @@ export async function deleteFailedSocietyWideCalculation(
 
   const body = await responseText(response);
   const parsed = parsedBody(body);
+  // An answer the calculator's route wrote itself says nothing about what
+  // the Public API stores: the DELETE failed.
+  if (response.headers.get(ROUTE_ERROR_HEADER) === 'true') {
+    throw economyRequestError(response, url, body, parsed, DELETE_REQUEST);
+  }
   if (response.status === 404 && isErrorBody(parsed)) {
     return { outcome: 'nothing-stored' };
   }
