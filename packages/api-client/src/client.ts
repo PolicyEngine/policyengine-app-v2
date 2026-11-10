@@ -19,10 +19,26 @@ import type {
 export const DEFAULT_BASE_URL = "https://www.policyengine.org";
 export const DEFAULT_POLL_INTERVAL_MILLISECONDS = 5_000;
 export const DEFAULT_POLL_TIMEOUT_MILLISECONDS = 30 * 60_000;
+/**
+ * How long polling waits after a 429 that names no Retry-After. The
+ * dashboard API's firewall answers a request over its rate limit that way,
+ * and counts requests in fixed windows this long.
+ */
+export const RATE_LIMIT_WAIT_MILLISECONDS = 60_000;
 
-/** Answers that polling waits out and retries, up to this many in a row. */
-const RETRIED_POLL_STATUSES = new Set([429, 502, 503, 504]);
-const MAXIMUM_CONSECUTIVE_POLL_RETRIES = 3;
+/** setTimeout runs any longer delay at once, so no wait is longer. */
+const LONGEST_TIMER_MILLISECONDS = 2 ** 31 - 1;
+
+const RATE_LIMITED_STATUS = 429;
+/**
+ * The shortest wait after a 429, whatever Retry-After and the polling
+ * interval say, so that polling cannot read again at once, over and over.
+ */
+const SHORTEST_RATE_LIMIT_WAIT_MILLISECONDS = 1_000;
+/** Brief gateway failures, which polling waits out and retries. */
+const GATEWAY_FAILURE_STATUSES = new Set([502, 503, 504]);
+/** How many gateway failures polling retries after the last answer. */
+const MAXIMUM_GATEWAY_RETRIES_SINCE_LAST_ANSWER = 3;
 
 export interface PolicyEngineApiClientOptions {
   /**
@@ -72,8 +88,13 @@ function retryAfterSeconds(response: Response): number | null {
   if (value === null) {
     return null;
   }
-  const seconds = Number(value);
-  return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
+  // A delay is decimal digits only; a date, or anything else, is ignored.
+  const digits = value.trim();
+  if (!/^[0-9]+$/.test(digits)) {
+    return null;
+  }
+  const seconds = Number(digits);
+  return Number.isFinite(seconds) ? seconds : null;
 }
 
 function messageFrom(body: unknown, fallback: string): string {
@@ -258,10 +279,47 @@ export function createPolicyEngineApiClient(
   ): Promise<Result> {
     const intervalMilliseconds =
       options.intervalMilliseconds ?? DEFAULT_POLL_INTERVAL_MILLISECONDS;
-    const deadline =
-      Date.now() +
-      (options.timeoutMilliseconds ?? DEFAULT_POLL_TIMEOUT_MILLISECONDS);
-    let consecutiveRetries = 0;
+    const timeoutMilliseconds =
+      options.timeoutMilliseconds ?? DEFAULT_POLL_TIMEOUT_MILLISECONDS;
+    // Values outside these ranges, or that are not numbers, would make
+    // waits that setTimeout runs at once, or a deadline that never comes.
+    if (!Number.isFinite(intervalMilliseconds) || intervalMilliseconds < 0) {
+      throw new RangeError(
+        `intervalMilliseconds must be a finite number, 0 or more; got ${String(intervalMilliseconds)}.`,
+      );
+    }
+    if (
+      typeof timeoutMilliseconds !== "number" ||
+      Number.isNaN(timeoutMilliseconds) ||
+      timeoutMilliseconds < 0
+    ) {
+      throw new RangeError(
+        `timeoutMilliseconds must be a number, 0 or more, or Infinity; got ${String(timeoutMilliseconds)}.`,
+      );
+    }
+    const deadline = Date.now() + timeoutMilliseconds;
+    let gatewayRetriesSinceLastAnswer = 0;
+
+    /**
+     * Waits before the next read, but never past the deadline, so the last
+     * read happens at the deadline; once the deadline has passed, throws.
+     */
+    async function waitBeforeNextRead(milliseconds: number): Promise<void> {
+      const remainingMilliseconds = deadline - Date.now();
+      if (remainingMilliseconds <= 0) {
+        throw new EconomyComparisonTimeoutError(
+          "The economy comparison did not finish in time.",
+        );
+      }
+      await waitFor(
+        Math.min(
+          milliseconds,
+          remainingMilliseconds,
+          LONGEST_TIMER_MILLISECONDS,
+        ),
+        options.signal,
+      );
+    }
 
     for (;;) {
       let answer: DashboardApiAnswer;
@@ -271,29 +329,41 @@ export function createPolicyEngineApiClient(
           request,
           options.signal,
         ));
-        consecutiveRetries = 0;
+        gatewayRetriesSinceLastAnswer = 0;
       } catch (error) {
-        // Rate limiting and brief gateway failures are waited out; anything
-        // else, or a fourth retry in a row, ends polling.
-        if (
-          !(error instanceof PolicyEngineApiError) ||
-          error.status === null ||
-          !RETRIED_POLL_STATUSES.has(error.status) ||
-          consecutiveRetries >= MAXIMUM_CONSECUTIVE_POLL_RETRIES
-        ) {
+        // A rate-limited read is waited out for as long as the deadline
+        // allows, and is not counted as a gateway failure. A brief gateway
+        // failure is waited out too, but the fourth since the last answer
+        // ends polling, as does any other failure.
+        if (!(error instanceof PolicyEngineApiError) || error.status === null) {
           throw error;
         }
-        consecutiveRetries += 1;
-        const waitMilliseconds =
-          error.retryAfterSeconds !== null
-            ? error.retryAfterSeconds * 1000
-            : intervalMilliseconds;
-        if (Date.now() + waitMilliseconds > deadline) {
-          throw new EconomyComparisonTimeoutError(
-            "The economy comparison did not finish in time.",
-          );
+        const isRateLimited = error.status === RATE_LIMITED_STATUS;
+        if (!isRateLimited) {
+          if (
+            !GATEWAY_FAILURE_STATUSES.has(error.status) ||
+            gatewayRetriesSinceLastAnswer >=
+              MAXIMUM_GATEWAY_RETRIES_SINCE_LAST_ANSWER
+          ) {
+            throw error;
+          }
+          gatewayRetriesSinceLastAnswer += 1;
         }
-        await waitFor(waitMilliseconds, options.signal);
+        const retryAfterMilliseconds =
+          error.retryAfterSeconds === null
+            ? null
+            : error.retryAfterSeconds * 1000;
+        // A rate-limited read waits at least one interval, and at least a
+        // second, so a Retry-After of 0 cannot make polling read again at
+        // once, over and over.
+        const waitMilliseconds = isRateLimited
+          ? Math.max(
+              retryAfterMilliseconds ?? RATE_LIMIT_WAIT_MILLISECONDS,
+              intervalMilliseconds,
+              SHORTEST_RATE_LIMIT_WAIT_MILLISECONDS,
+            )
+          : (retryAfterMilliseconds ?? intervalMilliseconds);
+        await waitBeforeNextRead(waitMilliseconds);
         continue;
       }
 
@@ -311,12 +381,7 @@ export function createPolicyEngineApiClient(
         );
       }
       options.onProgress?.(answer);
-      if (Date.now() + intervalMilliseconds > deadline) {
-        throw new EconomyComparisonTimeoutError(
-          "The economy comparison did not finish in time.",
-        );
-      }
-      await waitFor(intervalMilliseconds, options.signal);
+      await waitBeforeNextRead(intervalMilliseconds);
     }
   }
 
