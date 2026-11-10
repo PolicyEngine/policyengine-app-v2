@@ -15,46 +15,33 @@ interface EconomyImpact {
   readonly budget: { readonly budgetary_impact: number };
 }
 
-const COMPARISON_REQUEST = {
-  country: "us",
-  policy: 98765,
-  baseline: 2,
-  region: "us",
-  year: 2026,
-} as const;
-
 // These are checked by the package's type check (tsc --noEmit), not at run
-// time: each method takes the caller's result type.
+// time: each method takes the caller's result type. The methods are only
+// named, never called, so no request is made.
 describe("result types", () => {
-  test("given a result type then each method resolves with it", () => {
-    const client = createPolicyEngineApiClient({
-      fetch: async () => new Response("{}"),
-    });
+  const client = createPolicyEngineApiClient({
+    fetch: async () => new Response("{}"),
+  });
 
+  test("given a result type then each method resolves with it", () => {
     expectTypeOf(
-      client.calculateHousehold<CalculatedHousehold>({
-        country: "us",
-        household: {},
-      }),
-    ).resolves.toEqualTypeOf<CalculatedHousehold>();
+      client.calculateHousehold<CalculatedHousehold>,
+    ).returns.resolves.toEqualTypeOf<CalculatedHousehold>();
     expectTypeOf(
-      client.getMetadata<CountryMetadata>("uk"),
-    ).resolves.toEqualTypeOf<CountryMetadata>();
+      client.getMetadata<CountryMetadata>,
+    ).returns.resolves.toEqualTypeOf<CountryMetadata>();
     expectTypeOf(
-      client.compareEconomy<EconomyImpact>(COMPARISON_REQUEST),
-    ).resolves.toEqualTypeOf<EconomyImpact>();
+      client.compareEconomy<EconomyImpact>,
+    ).returns.resolves.toEqualTypeOf<EconomyImpact>();
     expectTypeOf(
-      client.getEconomyComparison<EconomyImpact>(COMPARISON_REQUEST),
-    ).resolves.toEqualTypeOf<DashboardApiAnswer<EconomyImpact>>();
+      client.getEconomyComparison<EconomyImpact>,
+    ).returns.resolves.toEqualTypeOf<DashboardApiAnswer<EconomyImpact>>();
   });
 
   test("given no result type then each method resolves with unknown", () => {
-    const client = createPolicyEngineApiClient({
-      fetch: async () => new Response("{}"),
-    });
-
     expectTypeOf(
-      client.calculateHousehold({ country: "us", household: {} }),
-    ).resolves.toEqualTypeOf<unknown>();
+      client.calculateHousehold,
+    ).returns.resolves.toEqualTypeOf<unknown>();
+    expectTypeOf(client.getMetadata).returns.resolves.toEqualTypeOf<unknown>();
   });
 });
