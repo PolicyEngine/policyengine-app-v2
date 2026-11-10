@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import {
   focusManager,
+  onlineManager,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -80,7 +81,11 @@ function useReadMeAgainOnRefusal() {
     <Result>(request: Promise<Result>): Promise<Result> =>
       request.catch((error: unknown) => {
         if (isV2ApiError(error, 403)) {
-          void queryClient.invalidateQueries({ queryKey: meQueryKey(subject, countryId) });
+          // Several refusals at once share one /v2/me read.
+          void queryClient.invalidateQueries(
+            { queryKey: meQueryKey(subject, countryId) },
+            { cancelRefetch: false }
+          );
         }
         throw error;
       }),
@@ -92,10 +97,11 @@ function useReadMeAgainOnRefusal() {
  * Signed-in users whose email contains `email` (every user when empty),
  * newest first, a page at a time.
  *
- * It is read again when the page shows it again and when the window
- * regains focus, but only its first page: what was loaded after it is
- * dropped, and "Load more" continues from the first page. react-query's
- * own re-read would read every loaded page again, one after another.
+ * It is read again when the page shows it again, when the window regains
+ * focus and when the browser reconnects, but only its first page: what was
+ * loaded after it is dropped, and "Load more" continues from the first
+ * page. react-query's own re-read would read every loaded page again, one
+ * after another.
  */
 export function useAdminUserSearch(email: string) {
   const { subject } = useAuthStatus();
@@ -115,28 +121,44 @@ export function useAdminUserSearch(email: string) {
     // The effect below reads the first page again instead.
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: retryTemporaryFailures(queryClient),
   });
 
   useEffect(() => {
     const queryKey = adminUserKeys.search(subject, email);
     const readFirstPageAgain = () => {
-      if (queryClient.getQueryData(queryKey) === undefined) {
+      const searchState = queryClient.getQueryState<UserSearchData>(queryKey);
+      if (searchState?.data === undefined) {
         return;
       }
-      queryClient.setQueryData<UserSearchData>(
-        queryKey,
-        (data) => data && { pages: data.pages.slice(0, 1), pageParams: data.pageParams.slice(0, 1) }
-      );
+      // Writing the shorter data would also clear an error, and show the
+      // earlier users again in place of a refusal.
+      if (searchState.status !== 'error') {
+        queryClient.setQueryData<UserSearchData>(
+          queryKey,
+          (data) =>
+            data && { pages: data.pages.slice(0, 1), pageParams: data.pageParams.slice(0, 1) }
+        );
+      }
       void queryClient.invalidateQueries({ queryKey, exact: true });
     };
     // A search read before, shown again.
     readFirstPageAgain();
-    return focusManager.subscribe((focused) => {
+    const stopWatchingFocus = focusManager.subscribe((focused) => {
       if (focused) {
         readFirstPageAgain();
       }
     });
+    const stopWatchingConnection = onlineManager.subscribe((online) => {
+      if (online) {
+        readFirstPageAgain();
+      }
+    });
+    return () => {
+      stopWatchingFocus();
+      stopWatchingConnection();
+    };
   }, [queryClient, subject, email]);
 
   return search;
@@ -211,9 +233,10 @@ export function useUserTypeChanges(userId: string) {
 }
 
 /**
- * Changes a user's type. It resolves as soon as the PATCH answers: the
- * answer is written into the user's cache entry and into the user's row
- * in every loaded list, and the user's type changes are read again without
+ * Changes a user's type. It resolves as soon as the PATCH answers: reads
+ * of the user and the lists still under way are cancelled, the answer is
+ * written into the user's cache entry and into the user's row in every
+ * loaded list, and the user's type changes are read again without
  * waiting. `/v2/me` is read again only when the changed user is the
  * signed-in admin. After a 404 the user is read again, to show it is gone.
  */
@@ -226,7 +249,13 @@ export function useChangeUserType() {
   return useMutation({
     mutationFn: ({ userId, userType }: { userId: string; userType: SignedInUserType }) =>
       readMeAgainOnRefusal(changeAdminUserType(client, userId, userType)),
-    onSuccess: (changedUser) => {
+    onSuccess: async (changedUser) => {
+      // A read that started before the PATCH would otherwise land after it
+      // and overwrite its answer.
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: adminUserKeys.user(subject, changedUser.id) }),
+        queryClient.cancelQueries({ queryKey: adminUserKeys.searches(subject) }),
+      ]);
       queryClient.setQueryData(adminUserKeys.user(subject, changedUser.id), changedUser);
       queryClient.setQueriesData<UserSearchData>(
         { queryKey: adminUserKeys.searches(subject) },

@@ -38,7 +38,10 @@ interface ChangeUserTypeDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   onReadAgain: () => void;
-  /** Where focus goes when the dialog has closed; by default back to what opened it. */
+  /**
+   * Places focus when the dialog closes. It opens from state, with no
+   * trigger, so without this focus falls to the page body.
+   */
   onCloseAutoFocus?: (event: Event) => void;
 }
 

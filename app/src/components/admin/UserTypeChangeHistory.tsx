@@ -1,11 +1,10 @@
+import { useId } from 'react';
 import type { UserTypeChangeItem } from '@/api/v2AdminUsers';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { isRefusedOrMissing, useUserTypeChanges } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { formatAdminDateTime, USER_TYPE_LABELS } from './adminUserFormat';
-
-const HISTORY_HEADING_ID = 'user-type-changes-heading';
 
 /** Who made a change: an admin through the admin routes, or the type script. */
 function changeAuthor(change: UserTypeChangeItem): string {
@@ -20,6 +19,7 @@ function changeAuthor(change: UserTypeChangeItem): string {
 export default function UserTypeChangeHistory({ userId }: { userId: string }) {
   const countryId = useCurrentCountry();
   const changes = useUserTypeChanges(userId);
+  const headingId = useId();
 
   let content: React.ReactNode;
   // Changes already read stay on the screen when a later read fails for a
@@ -50,7 +50,7 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
   } else {
     content = (
       <ol
-        aria-labelledby={HISTORY_HEADING_ID}
+        aria-labelledby={headingId}
         style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: spacing.md }}
       >
         {changes.data.map((change) => (
@@ -72,11 +72,7 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
 
   return (
     <Stack gap="sm">
-      <Title
-        order={3}
-        id={HISTORY_HEADING_ID}
-        style={{ margin: 0, fontSize: typography.fontSize.base }}
-      >
+      <Title order={3} id={headingId} style={{ margin: 0, fontSize: typography.fontSize.base }}>
         Type changes
       </Title>
       {content}

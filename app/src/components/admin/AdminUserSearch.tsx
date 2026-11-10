@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import type { AdminUserItem, AdminUserPageResult } from '@/api/v2AdminUsers';
 import {
   Button,
@@ -23,7 +23,6 @@ import {
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { adminUserName, formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
 
-const EMAIL_INPUT_ID = 'admin-user-email';
 /** The longest email part the API's `email` filter accepts. */
 const EMAIL_SEARCH_MAX_LENGTH = 320;
 
@@ -55,6 +54,7 @@ interface AdminUserSearchProps {
  */
 export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminUserSearchProps) {
   const countryId = useCurrentCountry();
+  const emailInputId = useId();
   const [emailDraft, setEmailDraft] = useState('');
   const [searchedEmail, setSearchedEmail] = useState('');
   const search = useAdminUserSearch(searchedEmail);
@@ -116,7 +116,7 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
               return (
                 <TableRow
                   key={user.id}
-                  style={selected ? { backgroundColor: colors.primary[50] } : undefined}
+                  style={selected ? { backgroundColor: colors.secondary[50] } : undefined}
                 >
                   <TableCell>
                     <Button
@@ -166,9 +166,9 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
         style={{ display: 'flex', gap: spacing.sm, alignItems: 'flex-end', flexWrap: 'wrap' }}
       >
         <Stack gap="xs" style={{ flex: '1 1 auto' }}>
-          <Label htmlFor={EMAIL_INPUT_ID}>Email</Label>
+          <Label htmlFor={emailInputId}>Email</Label>
           <Input
-            id={EMAIL_INPUT_ID}
+            id={emailInputId}
             type="search"
             value={emailDraft}
             maxLength={EMAIL_SEARCH_MAX_LENGTH}
