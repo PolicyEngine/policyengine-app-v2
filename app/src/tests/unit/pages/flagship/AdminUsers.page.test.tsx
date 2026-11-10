@@ -10,7 +10,9 @@ import {
   adminUserItem,
   ALAN,
   answerAdminApi,
+  answerAsDemotedAdmin,
   GRACE,
+  holdRequests,
   holdUserReads,
   numberedAdminUsers,
   SCRIPT_CHANGE,
@@ -88,6 +90,25 @@ function adminRequests(): string[] {
 
 function patchRequests(): string[] {
   return adminRequests().filter((request) => request.startsWith('PATCH'));
+}
+
+function listReads(): string[] {
+  return adminRequests().filter((request) => request.startsWith('GET /v2/admin/users?'));
+}
+
+function meReads(): string[] {
+  return sentRequests(fetchMock).filter((request) => request.startsWith('GET /v2/me'));
+}
+
+function readsOfUser(userId: string): string[] {
+  return adminRequests().filter((request) => request === `GET /v2/admin/users/${userId}`);
+}
+
+/** Lets queued work run several times over, long enough for immediate retries to finish. */
+async function letRetriesRun() {
+  for (let round = 0; round < 10; round += 1) {
+    await letPendingWorkRun();
+  }
 }
 
 beforeEach(() => {
@@ -505,5 +526,200 @@ describe('AdminUsersPage', () => {
     expect(await within(history).findByText('Standard to Admin')).toBeInTheDocument();
     expect(within(history).getByText('Set by the type script')).toBeInTheDocument();
     expect(within(history).queryByText(/Changed by/)).not.toBeInTheDocument();
+  });
+
+  test('given another admin demotes the signed-in admin then the page becomes not found', async () => {
+    // Given
+    await openUserDetails(GRACE.email!, {}, createProductionLikeQueryClient());
+    answerAsDemotedAdmin(fetchMock);
+
+    // When
+    await returnToWindow();
+
+    // Then
+    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
+  });
+
+  test('given an admin route refuses with 403 then the read is not retried', async () => {
+    // Given
+    answerAdminApi(fetchMock);
+    renderAdminPage({ queryClient: createProductionLikeQueryClient() });
+    await screen.findByRole('button', { name: GRACE.email! });
+    const listReadsBefore = listReads().length;
+    answerAsDemotedAdmin(fetchMock);
+
+    // When
+    await returnToWindow();
+    await letRetriesRun();
+
+    // Then
+    expect(listReads().length - listReadsBefore).toBe(1);
+  });
+
+  test('given the list fails once with a server error then it is read again and shows', async () => {
+    // Given
+    answerAdminApi(fetchMock);
+    const answerAsTheApi = fetchMock.getMockImplementation()!;
+    let listFailuresLeft = 1;
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      if (new URL(url).pathname === '/v2/admin/users' && listFailuresLeft > 0) {
+        listFailuresLeft -= 1;
+        return errorResponse(503, 'Saved work is temporarily unavailable.');
+      }
+      return answerAsTheApi(url, init);
+    });
+
+    // When
+    renderAdminPage({ queryClient: createProductionLikeQueryClient() });
+
+    // Then
+    expect(await screen.findByRole('button', { name: GRACE.email! })).toBeInTheDocument();
+  });
+
+  test('given the open user is deleted then the details say the user no longer exists', async () => {
+    // Given
+    const { apiState } = await openUserDetails(GRACE.email!);
+    apiState.users.splice(
+      apiState.users.findIndex((candidate) => candidate.id === GRACE.id),
+      1
+    );
+
+    // When
+    await returnToWindow();
+
+    // Then
+    expect(await screen.findByText('This user no longer exists.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Change type' })).not.toBeInTheDocument();
+  });
+
+  test('given the open user is deleted then its read is not retried', async () => {
+    // Given
+    const { apiState } = await openUserDetails(GRACE.email!, {}, createProductionLikeQueryClient());
+    apiState.users.splice(
+      apiState.users.findIndex((candidate) => candidate.id === GRACE.id),
+      1
+    );
+    const userReadsBefore = readsOfUser(GRACE.id).length;
+
+    // When
+    await returnToWindow();
+    await letRetriesRun();
+
+    // Then
+    expect(readsOfUser(GRACE.id).length - userReadsBefore).toBe(1);
+  });
+
+  test('given the change is saved then the dialog closes without waiting for other reads', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    const { answerHeldRequests } = holdRequests(fetchMock, (method) => method === 'GET');
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+
+    // Then
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    answerHeldRequests();
+  });
+
+  test('given the change is saved then the list shows the new type at once', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    const { answerHeldRequests } = holdRequests(fetchMock, (method) => method === 'GET');
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+
+    // Then
+    // `hidden`: while the dialog is open the rest of the page is hidden from the accessibility tree.
+    const graceRow = screen
+      .getByRole('button', { name: GRACE.email!, hidden: true })
+      .closest('tr')!;
+    await waitFor(() => expect(within(graceRow).getByText('Author')).toBeInTheDocument());
+    answerHeldRequests();
+  });
+
+  test('given an admin changes another user then /v2/me is not read again', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+    const meReadsBefore = meReads().length;
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await screen.findByText('Standard to Author');
+    await letPendingWorkRun();
+
+    // Then
+    expect(meReads().length).toBe(meReadsBefore);
+  });
+
+  test('given an admin changes their own type then /v2/me is read again', async () => {
+    // Given
+    const { user } = await openUserDetails(SIGNED_IN_ADMIN.email!, {
+      users: [SIGNED_IN_ADMIN_USER, GRACE],
+    });
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Standard');
+    const meReadsBefore = meReads().length;
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+
+    // Then
+    await waitFor(() => expect(meReads().length).toBe(meReadsBefore + 1));
+  });
+
+  test('given more pages are loaded then returning to the window reads only the first page again, and load more continues after it', async () => {
+    // Given
+    const user = userEvent.setup();
+    const users = numberedAdminUsers(ADMIN_USER_PAGE_SIZE * 2 + 3);
+    answerAdminApi(fetchMock, { users });
+    renderAdminPage();
+    await screen.findByRole('button', { name: users[0].email! });
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+    await screen.findByRole('button', { name: users[ADMIN_USER_PAGE_SIZE].email! });
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+    await screen.findByRole('button', { name: users.at(-1)!.email! });
+    const listReadsBefore = listReads().length;
+
+    // When
+    await returnToWindow();
+    await letRetriesRun();
+
+    // Then
+    expect(listReads().slice(listReadsBefore)).toEqual([
+      `GET /v2/admin/users?offset=0&limit=${ADMIN_USER_PAGE_SIZE}`,
+    ]);
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+    expect(listReads().at(-1)).toBe(
+      `GET /v2/admin/users?offset=${ADMIN_USER_PAGE_SIZE}&limit=${ADMIN_USER_PAGE_SIZE}`
+    );
+  });
+
+  test('given the email field then it takes at most the 320 characters the API accepts', async () => {
+    // When
+    answerAdminApi(fetchMock);
+    renderAdminPage();
+
+    // Then
+    expect(await screen.findByRole('searchbox', { name: 'Email' })).toHaveAttribute(
+      'maxlength',
+      '320'
+    );
+  });
+
+  test('given the change is saved then focus moves to the chosen type, not the disabled change button', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const confirmation = await askToChangeTypeAndWaitForTheCheck(user, 'Author');
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // Then
+    await waitFor(() => expect(screen.getByRole('radio', { name: 'Author' })).toHaveFocus());
   });
 });

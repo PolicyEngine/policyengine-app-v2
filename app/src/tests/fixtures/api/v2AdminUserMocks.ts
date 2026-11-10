@@ -28,6 +28,7 @@ export const CHANGE_IDS = {
 export const ADMIN_API_MESSAGES = {
   LAST_ADMIN_DEMOTION: "The last admin can't be demoted; make another user an admin first",
   NO_SIGNED_IN_USER: 'No signed-in user has this ID.',
+  ADMINS_ONLY: 'Only admins may use these routes.',
 } as const;
 
 /** A signed-in user as `/v2/admin/users` lists it. */
@@ -205,24 +206,44 @@ export function sentRequests(fetchMock: Mock): string[] {
 }
 
 /**
- * Holds every later `GET /v2/admin/users/{user_id}` until the test calls
- * `answerHeldUserReads`, which answers them as `fetchMock` did before.
- * Other requests answer at once.
+ * Holds every later request that `shouldHold` picks (by method and path)
+ * until the test calls `answerHeldRequests`, which answers them as
+ * `fetchMock` did before. Other requests answer at once.
  */
-export function holdUserReads(fetchMock: Mock) {
+export function holdRequests(
+  fetchMock: Mock,
+  shouldHold: (method: string, path: string) => boolean
+) {
   const answerAsBefore = fetchMock.getMockImplementation()!;
-  const heldReads: Array<() => void> = [];
+  const heldRequests: Array<() => void> = [];
   fetchMock.mockImplementation((url: string, init: RequestInit) => {
-    const isUserRead =
-      /^\/v2\/admin\/users\/[^/]+$/.test(new URL(url).pathname) && (init.method ?? 'GET') === 'GET';
-    if (!isUserRead) {
+    if (!shouldHold(init.method ?? 'GET', new URL(url).pathname)) {
       return answerAsBefore(url, init);
     }
     return new Promise<Response>((resolve) => {
-      heldReads.push(() => resolve(answerAsBefore(url, init)));
+      heldRequests.push(() => resolve(answerAsBefore(url, init)));
     });
   });
   return {
-    answerHeldUserReads: () => heldReads.splice(0).forEach((answerRead) => answerRead()),
+    answerHeldRequests: () => heldRequests.splice(0).forEach((answerRequest) => answerRequest()),
+    heldRequestCount: () => heldRequests.length,
   };
+}
+
+/** Holds every later `GET /v2/admin/users/{user_id}` until `answerHeldUserReads`. */
+export function holdUserReads(fetchMock: Mock) {
+  const { answerHeldRequests } = holdRequests(
+    fetchMock,
+    (method, path) => method === 'GET' && /^\/v2\/admin\/users\/[^/]+$/.test(path)
+  );
+  return { answerHeldUserReads: answerHeldRequests };
+}
+
+/** Makes every admin route answer 403 and `/v2/me` return a standard user, as after a demotion. */
+export function answerAsDemotedAdmin(fetchMock: Mock) {
+  fetchMock.mockImplementation(async (url: string) =>
+    new URL(url).pathname === '/v2/me'
+      ? itemResponse(meItemOfType('standard'))
+      : errorResponse(403, ADMIN_API_MESSAGES.ADMINS_ONLY)
+  );
 }
