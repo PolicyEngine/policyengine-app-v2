@@ -235,6 +235,21 @@ describe('calculator /api/policyengine/{Public API path}', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
   });
 
+  test('given a body sent as another JSON media type then it is forwarded', async () => {
+    // When
+    const response = await publicApiRoute.POST(
+      routeRequest('/us/calculate-full', {
+        method: 'POST',
+        body: HOUSEHOLD_BODY,
+        headers: { 'content-type': 'application/vnd.policyengine+json' },
+      })
+    );
+
+    // Then
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(publicApiCalls()).toHaveLength(1);
+  });
+
   test('given a body that is not sent as application/json then it answers 415 without calling the Public API', async () => {
     // When
     const response = await publicApiRoute.POST(

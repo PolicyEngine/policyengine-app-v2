@@ -15,6 +15,7 @@ import {
   corsResponseHeaders,
   createPublicApiForwarder,
   errorResponse,
+  isJsonMediaType,
   isLocalDevelopmentOrigin,
   preflightResponse,
   vercelClientAddress,
@@ -58,13 +59,6 @@ const LOCAL_DEVELOPMENT_CORS_POLICY: CorsPolicy = {
   ],
   preflightMaxAgeSeconds: 600,
 };
-
-function isJsonMediaType(contentType: string | null): boolean {
-  return (
-    (contentType ?? "").split(";")[0].trim().toLowerCase() ===
-    "application/json"
-  );
-}
 
 async function forwardAllowedOperation(request: Request): Promise<Response> {
   const originCheck = checkOrigin(request, LOCAL_DEVELOPMENT_CORS_POLICY);
