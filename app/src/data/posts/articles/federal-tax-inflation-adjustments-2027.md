@@ -48,4 +48,4 @@ In addition to the standard deduction and the CTC, we updated the following prov
 
 Arizona's Department of Revenue adjusts the state's standard deduction for inflation the same way the IRS adjusts the federal one, so we updated Arizona's 2027 amounts to match. From 2027, Maine sets its standard deduction equal to the federal one, subject to Maine's own phase-out.
 
-You can browse these parameters in our [parameter explorer](/us/model/rules/parameters) and [compute your own policy reforms](https://app.policyengine.org/us) using the updated values.
+The 2027 values are available now in the latest release of our [policyengine-us](https://pypi.org/project/policyengine-us/) Python package. Our [parameter explorer](/us/model/rules/parameters) and [web app](https://app.policyengine.org/us) still use an earlier version of the model and will show them in a future update.
