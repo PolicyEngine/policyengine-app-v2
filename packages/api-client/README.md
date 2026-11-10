@@ -137,3 +137,7 @@ npm publish --access public
 ```
 
 Then, on npmjs.com, open the package's Settings, then Trusted Publisher, and choose GitHub Actions with repository `PolicyEngine/policyengine-app-v2` and workflow `publish-api-client.yaml`. Later versions are released by raising `version` in a PR and running the workflow after it merges.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
