@@ -111,7 +111,7 @@ export interface paths {
     head?: never;
     /**
      * Change a signed-in user's type
-     * @description Admins only. Records the change in the user's type history; setting the type the user already has changes and records nothing. expected_user_type is the user's type as the admin last read it: when the stored type differs, the change is refused (409), so it can't overwrite a change made since. Demoting the last admin is refused (409) too.
+     * @description Admins only. Records the change in the user's type history. Setting the type the user already has changes and records nothing, whatever expected_user_type is. Otherwise expected_user_type, the user's type as the admin last read it, must still be the stored type: when it differs, the change is refused (409) and nothing is written. Only the type is compared, so a type changed and changed back since the read is not detected. Demoting the last admin is refused (409) too.
      */
     patch: operations['change_user_type_v2_admin_users__user_id__patch'];
     trace?: never;
@@ -3471,9 +3471,12 @@ export interface components {
      * UserTypePatchRequest
      * @description The signed-in type an admin gives a user, and the type the admin last read.
      *
-     *     ``expected_user_type`` is the user's type as the admin last read it. When
-     *     the user's stored type differs, someone changed it since, and the change
-     *     is refused (409) so it can't silently overwrite theirs.
+     *     expected_user_type is the user's type as the admin last read it. When the
+     *     request would change the type and the stored type differs from
+     *     expected_user_type, the change is refused (409) and nothing is written.
+     *     When the user already has user_type, nothing changes (200), whatever
+     *     expected_user_type is. Only the type is compared: a type changed and
+     *     changed back since the read is not detected.
      */
     UserTypePatchRequest: {
       /**
