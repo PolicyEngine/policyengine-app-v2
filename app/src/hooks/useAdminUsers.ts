@@ -16,7 +16,7 @@ import {
   searchAdminUsers,
   type AdminUserItem,
   type AdminUserPageResult,
-  type SignedInUserType,
+  type UserTypeChange,
 } from '@/api/v2AdminUsers';
 import { isV2ApiError } from '@/api/v2UserClient';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -247,8 +247,8 @@ export function useChangeUserType() {
   const queryClient = useQueryClient();
   const readMeAgainOnRefusal = useReadMeAgainOnRefusal();
   return useMutation({
-    mutationFn: ({ userId, userType }: { userId: string; userType: SignedInUserType }) =>
-      readMeAgainOnRefusal(changeAdminUserType(client, userId, userType)),
+    mutationFn: ({ userId, ...change }: UserTypeChange & { userId: string }) =>
+      readMeAgainOnRefusal(changeAdminUserType(client, userId, change)),
     onSuccess: async (changedUser) => {
       // A read that started before the PATCH would otherwise land after it
       // and overwrite its answer.

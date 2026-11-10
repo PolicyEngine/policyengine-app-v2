@@ -111,7 +111,7 @@ export interface paths {
     head?: never;
     /**
      * Change a signed-in user's type
-     * @description Admins only. Records the change in the user's type history; setting the type the user already has changes and records nothing. Demoting the last admin is refused (409).
+     * @description Admins only. Records the change in the user's type history; setting the type the user already has changes and records nothing. expected_user_type is the user's type as the admin last read it: when the stored type differs, the change is refused (409), so it can't overwrite a change made since. Demoting the last admin is refused (409) too.
      */
     patch: operations['change_user_type_v2_admin_users__user_id__patch'];
     trace?: never;
@@ -3469,7 +3469,11 @@ export interface components {
     };
     /**
      * UserTypePatchRequest
-     * @description The signed-in type an admin gives a user.
+     * @description The signed-in type an admin gives a user, and the type the admin last read.
+     *
+     *     ``expected_user_type`` is the user's type as the admin last read it. When
+     *     the user's stored type differs, someone changed it since, and the change
+     *     is refused (409) so it can't silently overwrite theirs.
      */
     UserTypePatchRequest: {
       /**
@@ -3477,6 +3481,11 @@ export interface components {
        * @enum {string}
        */
       user_type: 'standard' | 'author' | 'admin';
+      /**
+       * Expected User Type
+       * @enum {string}
+       */
+      expected_user_type: 'standard' | 'author' | 'admin';
     };
     /**
      * V2ErrorResponse
@@ -4086,7 +4095,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The change would leave no admin. */
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -4180,7 +4189,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The change would leave no admin. */
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -4278,7 +4287,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The change would leave no admin. */
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -4372,7 +4381,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The change would leave no admin. */
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
       409: {
         headers: {
           [name: string]: unknown;

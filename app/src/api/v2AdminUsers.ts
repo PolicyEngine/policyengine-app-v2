@@ -42,14 +42,26 @@ export async function fetchAdminUser(client: V2UserClient, userId: string): Prom
   return result.item;
 }
 
-/** Gives the user `userType`; the same type changes and records nothing. */
+export interface UserTypeChange {
+  userType: SignedInUserType;
+  /**
+   * The user's type as the admin last read it. When the stored type is no
+   * longer that, someone changed it since, and the API refuses (409).
+   */
+  expectedUserType: SignedInUserType;
+}
+
+/** Gives the user `userType`; the type the user already has changes and records nothing. */
 export async function changeAdminUserType(
   client: V2UserClient,
   userId: string,
-  userType: SignedInUserType
+  { userType, expectedUserType }: UserTypeChange
 ): Promise<AdminUserItem> {
   const result = await client.request<V2ItemResult<AdminUserItem>>('PATCH', adminUserPath(userId), {
-    body: { user_type: userType } satisfies components['schemas']['UserTypePatchRequest'],
+    body: {
+      user_type: userType,
+      expected_user_type: expectedUserType,
+    } satisfies components['schemas']['UserTypePatchRequest'],
   });
   return result.item;
 }

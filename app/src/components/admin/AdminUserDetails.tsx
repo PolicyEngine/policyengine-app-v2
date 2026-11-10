@@ -184,16 +184,27 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
   };
 
   const confirmChange = () => {
-    if (!confirmation) {
+    if (!confirmation?.currentType) {
       return;
     }
+    const { newType, currentType } = confirmation;
     changeUserType.mutate(
-      { userId, userType: confirmation.newType },
+      // The type the dialog names, so the API refuses if someone changed it since.
+      { userId, userType: newType, expectedUserType: currentType },
       {
         onSuccess: (changedUser) => {
           savedTypeToFocus.current = changedUser.user_type;
           setConfirmationOpen(false);
           setChosenType(null);
+        },
+        onError: (error) => {
+          // A 409 is either a type changed since the dialog's read or a
+          // last-admin refusal. Reading the user again tells them apart: the
+          // dialog then names the current type (unchanged after a last-admin
+          // refusal), and the API's message stays above it.
+          if (isV2ApiError(error, 409)) {
+            void readCurrentType(newType);
+          }
         },
       }
     );
