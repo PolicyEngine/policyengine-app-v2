@@ -26,8 +26,6 @@ export interface AllowedOperation {
   readonly methods: readonly ForwardedMethod[];
   readonly pathPattern: RegExp;
   readonly cache: CachePolicy;
-  /** How long to wait for the Public API's response headers. */
-  readonly responseHeadersTimeoutMilliseconds: number;
 }
 
 export const CACHE_CONTROL: Readonly<Record<CachePolicy, string | undefined>> = {
@@ -47,14 +45,17 @@ const UUID = '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-
 /** v2 policy IDs, which the schema types only as strings. */
 const OPAQUE_ID = '[A-Za-z0-9_-]{1,64}';
 
-const DEFAULT_TIMEOUT_MILLISECONDS = 60_000;
 /**
- * The Public API's Cloud Run services end every request at 300 seconds
- * (read 2026-11-10), so a calculation can never answer later than that.
- * The route's `maxDuration` leaves room for the token request and the body
- * on top of this wait.
+ * How long the route waits for the Public API's response headers, for every
+ * operation: as long as the Public API lets a request run. Its Cloud Run
+ * services end every request at 300 seconds (read 2026-11-10), and slow
+ * answers are not only calculations: a starting instance has answered
+ * country metadata after 246 s and a v1 policy read after 242 s (load
+ * balancer records, 2026-11-03 to 2026-11-10). Giving up sooner would turn
+ * those answers into errors. The route's `maxDuration` leaves room for the
+ * token request and the body on top of this wait.
  */
-export const CALCULATION_TIMEOUT_MILLISECONDS = 300_000;
+export const PUBLIC_API_REQUEST_LIMIT_MILLISECONDS = 300_000;
 
 function exactPath(pattern: string): RegExp {
   return new RegExp(`^${pattern}$`);
@@ -64,16 +65,9 @@ function operation(
   name: string,
   methods: readonly ForwardedMethod[],
   pathPattern: string,
-  cache: CachePolicy = 'never',
-  responseHeadersTimeoutMilliseconds = DEFAULT_TIMEOUT_MILLISECONDS
+  cache: CachePolicy = 'never'
 ): AllowedOperation {
-  return {
-    name,
-    methods,
-    pathPattern: exactPath(pathPattern),
-    cache,
-    responseHeadersTimeoutMilliseconds,
-  };
+  return { name, methods, pathPattern: exactPath(pathPattern), cache };
 }
 
 /**
@@ -92,17 +86,9 @@ export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
   operation(
     'household under a policy',
     ['GET'],
-    `/${COUNTRY}/household/${NUMERIC_ID}/policy/${NUMERIC_ID}`,
-    'never',
-    CALCULATION_TIMEOUT_MILLISECONDS
+    `/${COUNTRY}/household/${NUMERIC_ID}/policy/${NUMERIC_ID}`
   ),
-  operation(
-    'household calculation with variations',
-    ['POST'],
-    `/${COUNTRY}/calculate-full`,
-    'never',
-    CALCULATION_TIMEOUT_MILLISECONDS
-  ),
+  operation('household calculation with variations', ['POST'], `/${COUNTRY}/calculate-full`),
 
   // v1 policies, simulations and reports (api/policy.ts, simulation.ts,
   // report.ts). Updates send the ID in the body.

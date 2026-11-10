@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { TOKEN_REQUEST_TIMEOUT_MILLISECONDS } from '@policyengine/public-api-forwarding';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { matchAllowedOperation } from '@/libs/publicApiRoute/allowList';
+import { PUBLIC_API_REQUEST_LIMIT_MILLISECONDS } from '@/libs/publicApiRoute/allowList';
 import * as publicApiRoute from '../../../../../calculator-app/src/app/api/policyengine/[...path]/route';
 
 const APP_URL = 'https://app.policyengine.org';
@@ -328,7 +328,7 @@ describe('calculator /api/policyengine/{Public API path}', () => {
     ['country metadata', '/us/metadata', 246],
     ['a v1 policy', '/us/policy/98765', 242],
   ])(
-    'given %s that a starting Public API instance answers after %i seconds then the route still forwards the answer',
+    'given %s (GET %s) that a starting Public API instance answers after %i seconds then the route still forwards the answer',
     async (_label, path, answerSeconds) => {
       // Given
       vi.useFakeTimers();
@@ -356,19 +356,16 @@ describe('calculator /api/policyengine/{Public API path}', () => {
     }
   );
 
-  test('given the longest calculation wait then the function may run long enough to get a token, wait and stream the answer', () => {
+  test("given the route's wait for the Public API then the function may run long enough to get a token, wait and stream the answer", () => {
     // Given
-    const calculationWaitMilliseconds =
-      matchAllowedOperation('POST', '/us/calculate-full')?.responseHeadersTimeoutMilliseconds ?? 0;
     // The forwarding package's limit on a token request.
     const tokenRequestMilliseconds = TOKEN_REQUEST_TIMEOUT_MILLISECONDS;
     // Reading the request and streaming a large answer back.
     const bodyTransferMilliseconds = 30_000;
 
     // Then
-    expect(calculationWaitMilliseconds).toBeGreaterThan(0);
     expect(publicApiRoute.maxDuration * 1000).toBeGreaterThanOrEqual(
-      calculationWaitMilliseconds + tokenRequestMilliseconds + bodyTransferMilliseconds
+      PUBLIC_API_REQUEST_LIMIT_MILLISECONDS + tokenRequestMilliseconds + bodyTransferMilliseconds
     );
   });
 

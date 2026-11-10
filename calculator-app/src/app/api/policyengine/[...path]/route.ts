@@ -26,16 +26,18 @@ import {
 import {
   CACHE_CONTROL,
   FORWARDED_METHODS,
+  PUBLIC_API_REQUEST_LIMIT_MILLISECONDS,
   PUBLIC_API_ROUTE_PREFIX,
   matchAllowedOperation,
 } from "@/libs/publicApiRoute/allowList";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// A household calculation can take minutes: the route waits up to 300 s
-// (CALCULATION_TIMEOUT_MILLISECONDS, the Public API's own request limit),
-// after a token request of up to 10 s, and then streams the answer. The
-// project runs on Fluid compute, whose Pro limit is 800 s.
+// A household calculation, or any answer from a starting Public API
+// instance, can take minutes: the route waits up to 300 s
+// (PUBLIC_API_REQUEST_LIMIT_MILLISECONDS, the Public API's own request
+// limit), after a token request of up to 10 s, and then streams the
+// answer. The project runs on Fluid compute, whose Pro limit is 800 s.
 export const maxDuration = 360;
 
 const calculatorPublicApi = createPublicApiForwarder({
@@ -115,8 +117,7 @@ async function forwardAllowedOperation(request: Request): Promise<Response> {
       incomingRequest: request,
       responseHeaders: corsHeaders,
       cacheControl: CACHE_CONTROL[operation.cache],
-      responseHeadersTimeoutMilliseconds:
-        operation.responseHeadersTimeoutMilliseconds,
+      responseHeadersTimeoutMilliseconds: PUBLIC_API_REQUEST_LIMIT_MILLISECONDS,
     },
   );
 }
