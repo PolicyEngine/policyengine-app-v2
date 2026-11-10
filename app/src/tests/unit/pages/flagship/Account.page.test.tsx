@@ -6,6 +6,8 @@ import AccountPage from '@/pages/flagship/Account.page';
 import {
   answerMe,
   errorResponse,
+  itemResponse,
+  meItemOfType,
   mockMeItem,
   okResponse,
   TEST_ACCESS_TOKEN,
@@ -151,6 +153,32 @@ describe('AccountPage', () => {
     const [url, init] = fetchMock.mock.calls[1];
     expect(url).toBe('https://api.policyengine.org/v2/me?country_id=us');
     expect(init.method).toBe('DELETE');
+  });
+
+  test('given an admin then the page links to the users page', async () => {
+    // Given
+    answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
+
+    // When
+    renderPage(signedInAuthValue());
+
+    // Then
+    expect(await screen.findByRole('link', { name: 'Manage users' })).toHaveAttribute(
+      'href',
+      '/us/admin/users'
+    );
+  });
+
+  test('given a standard user then the page has no link to the users page', async () => {
+    // Given
+    answerMe(fetchMock);
+
+    // When
+    renderPage(signedInAuthValue());
+    await screen.findByText(mockMeItem.id);
+
+    // Then
+    expect(screen.queryByRole('link', { name: 'Manage users' })).not.toBeInTheDocument();
   });
 
   test('given a country without account storage then the page points to the US and UK', () => {
