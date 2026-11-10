@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import type { SignedInUserType } from '@/api/v2AdminUsers';
 import {
   Button,
@@ -15,8 +15,9 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
-import { useAdminUser, useChangeUserType } from '@/hooks/useAdminUsers';
+import { useAdminUser, useChangeUserType, useReadAdminUserNow } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useMe } from '@/hooks/useMe';
 import { getCountryLabel } from '@/utils/geographyUtils';
 import {
   adminUserLabel,
@@ -25,20 +26,32 @@ import {
   SIGNED_IN_USER_TYPES,
   USER_TYPE_LABELS,
 } from './adminUserFormat';
-import ChangeUserTypeDialog from './ChangeUserTypeDialog';
+import ChangeUserTypeDialog, { type UserTypeConfirmation } from './ChangeUserTypeDialog';
 import UserTypeChangeHistory from './UserTypeChangeHistory';
 
 const TYPE_GROUP_LABEL_ID = 'admin-user-type-label';
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+/** Labels and values in two columns, the labels as wide as the widest. */
+function DetailList({ details }: { details: ReadonlyArray<[label: string, value: string]> }) {
   return (
-    <div style={{ display: 'flex', gap: spacing.md, flexWrap: 'wrap' }}>
-      <Text size="sm" style={{ margin: 0, minWidth: 140, color: colors.text.secondary }}>
-        {label}
-      </Text>
-      <Text size="sm" style={{ margin: 0, wordBreak: 'break-all' }}>
-        {value}
-      </Text>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'max-content 1fr',
+        columnGap: spacing.lg,
+        rowGap: spacing.sm,
+      }}
+    >
+      {details.map(([label, value]) => (
+        <Fragment key={label}>
+          <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
+            {label}
+          </Text>
+          <Text size="sm" style={{ margin: 0, wordBreak: 'break-all' }}>
+            {value}
+          </Text>
+        </Fragment>
+      ))}
     </div>
   );
 }
@@ -47,12 +60,31 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 export default function AdminUserDetails({ userId }: { userId: string }) {
   const countryId = useCurrentCountry();
   const adminUser = useAdminUser(userId);
+  const readUserNow = useReadAdminUserNow();
   const changeUserType = useChangeUserType();
+  const signedInUserId = useMe().data?.id ?? null;
   // The type chosen in the control; null while it shows the user's own type.
   const [chosenType, setChosenType] = useState<SignedInUserType | null>(null);
-  const [confirming, setConfirming] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  // Kept after the dialog closes, so it reads the same while it animates away.
+  const [confirmation, setConfirmation] = useState<UserTypeConfirmation | null>(null);
+  // Counts the confirmation's reads, so only the latest one's answer is shown.
+  const latestReadNumber = useRef(0);
 
-  if (adminUser.isPending) {
+  // A user already read stays on the screen when a later read fails.
+  if (adminUser.data === undefined) {
+    if (adminUser.isError) {
+      return (
+        <Stack gap="sm" align="start">
+          <Text role="alert" style={{ margin: 0, color: colors.error }}>
+            We could not load this user: {adminUser.error.message}
+          </Text>
+          <Button variant="outline" onClick={() => adminUser.refetch()}>
+            Try again
+          </Button>
+        </Stack>
+      );
+    }
     return (
       <Stack role="status" aria-live="polite" align="center" gap="md">
         <Spinner size="sm" />
@@ -61,28 +93,51 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
     );
   }
 
-  if (adminUser.isError) {
-    return (
-      <Text role="alert" style={{ margin: 0, color: colors.error }}>
-        We could not load this user: {adminUser.error.message}
-      </Text>
-    );
-  }
-
   const user = adminUser.data;
   const selectedType = chosenType ?? user.user_type;
 
+  /** Reads the user's type again, since the cached one may be out of date. */
+  const readCurrentType = async (newType: SignedInUserType) => {
+    latestReadNumber.current += 1;
+    const readNumber = latestReadNumber.current;
+    setConfirmation({ newType, currentType: null, readErrorMessage: null });
+    try {
+      const currentUser = await readUserNow(userId);
+      if (readNumber === latestReadNumber.current) {
+        setConfirmation({ newType, currentType: currentUser.user_type, readErrorMessage: null });
+      }
+    } catch (error) {
+      if (readNumber === latestReadNumber.current) {
+        setConfirmation({
+          newType,
+          currentType: null,
+          readErrorMessage: error instanceof Error ? error.message : 'The user could not be read.',
+        });
+      }
+    }
+  };
+
+  const openConfirmation = () => {
+    changeUserType.reset();
+    setConfirmationOpen(true);
+    void readCurrentType(selectedType);
+  };
+
   const closeConfirmation = () => {
-    setConfirming(false);
+    latestReadNumber.current += 1;
+    setConfirmationOpen(false);
     changeUserType.reset();
   };
 
   const confirmChange = () => {
+    if (!confirmation) {
+      return;
+    }
     changeUserType.mutate(
-      { userId, userType: selectedType },
+      { userId, userType: confirmation.newType },
       {
         onSuccess: () => {
-          setConfirming(false);
+          setConfirmationOpen(false);
           setChosenType(null);
         },
       }
@@ -97,19 +152,21 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
       </CardHeader>
       <CardContent>
         <Stack gap="xl">
-          <Stack gap="sm">
-            <DetailRow label="Type" value={USER_TYPE_LABELS[user.user_type]} />
-            <DetailRow
-              label="Primary country"
-              value={user.primary_country ? getCountryLabel(user.primary_country) : 'None'}
-            />
-            <DetailRow label="Member since" value={formatAdminDate(user.created_at, countryId)} />
-            <DetailRow
-              label="Last seen"
-              value={user.last_seen_at ? formatAdminDate(user.last_seen_at, countryId) : 'Never'}
-            />
-            <DetailRow label="PolicyEngine user ID" value={user.id} />
-          </Stack>
+          <DetailList
+            details={[
+              ['Type', USER_TYPE_LABELS[user.user_type]],
+              [
+                'Primary country',
+                user.primary_country ? getCountryLabel(user.primary_country) : 'None',
+              ],
+              ['Member since', formatAdminDate(user.created_at, countryId)],
+              [
+                'Last seen',
+                user.last_seen_at ? formatAdminDate(user.last_seen_at, countryId) : 'Never',
+              ],
+              ['PolicyEngine user ID', user.id],
+            ]}
+          />
 
           <Stack gap="sm" align="start">
             <Text id={TYPE_GROUP_LABEL_ID} size="sm" style={{ margin: 0 }}>
@@ -135,7 +192,7 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
             </RadioGroup>
             <Button
               variant="outline"
-              onClick={() => setConfirming(true)}
+              onClick={openConfirmation}
               disabled={selectedType === user.user_type}
             >
               Change type
@@ -146,16 +203,19 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
         </Stack>
       </CardContent>
 
-      <ChangeUserTypeDialog
-        open={confirming}
-        userLabel={adminUserLabel(user)}
-        currentType={user.user_type}
-        newType={selectedType}
-        changing={changeUserType.isPending}
-        errorMessage={changeUserType.error?.message ?? null}
-        onConfirm={confirmChange}
-        onCancel={closeConfirmation}
-      />
+      {confirmation && (
+        <ChangeUserTypeDialog
+          open={confirmationOpen}
+          userLabel={adminUserLabel(user)}
+          confirmation={confirmation}
+          isOwnAccount={user.id === signedInUserId}
+          changing={changeUserType.isPending}
+          errorMessage={changeUserType.error?.message ?? null}
+          onConfirm={confirmChange}
+          onCancel={closeConfirmation}
+          onReadAgain={() => void readCurrentType(confirmation.newType)}
+        />
+      )}
     </Card>
   );
 }

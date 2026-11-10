@@ -1,5 +1,5 @@
 import type { UserTypeChangeItem } from '@/api/v2AdminUsers';
-import { Spinner, Stack, Text, Title } from '@/components/ui';
+import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useUserTypeChanges } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -22,17 +22,23 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
   const changes = useUserTypeChanges(userId);
 
   let content: React.ReactNode;
-  if (changes.isPending) {
+  // Changes already read stay on the screen when a later read fails.
+  if (changes.data === undefined && changes.isError) {
+    content = (
+      <Stack gap="sm" align="start">
+        <Text role="alert" size="sm" style={{ margin: 0, color: colors.error }}>
+          We could not load the type changes: {changes.error.message}
+        </Text>
+        <Button variant="outline" size="sm" onClick={() => changes.refetch()}>
+          Try again
+        </Button>
+      </Stack>
+    );
+  } else if (changes.data === undefined) {
     content = (
       <Stack role="status" aria-live="polite" gap="sm">
         <Spinner size="sm" />
       </Stack>
-    );
-  } else if (changes.isError) {
-    content = (
-      <Text role="alert" size="sm" style={{ margin: 0, color: colors.error }}>
-        We could not load the type changes: {changes.error.message}
-      </Text>
     );
   } else if (changes.data.length === 0) {
     content = (
@@ -49,7 +55,7 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
         {changes.data.map((change) => (
           <li key={change.id} style={{ display: 'grid', gap: spacing.xs }}>
             <Text size="sm" style={{ margin: 0, fontWeight: typography.fontWeight.medium }}>
-              {`${USER_TYPE_LABELS[change.previous_user_type]} to ${change.new_user_type}`}
+              {`${USER_TYPE_LABELS[change.previous_user_type]} to ${USER_TYPE_LABELS[change.new_user_type]}`}
             </Text>
             <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
               {changeAuthor(change)}

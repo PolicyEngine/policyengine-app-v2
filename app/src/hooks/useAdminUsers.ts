@@ -1,9 +1,11 @@
+import { useCallback } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   changeAdminUserType,
   fetchAdminUser,
   fetchUserTypeChanges,
   searchAdminUsers,
+  type AdminUserItem,
   type SignedInUserType,
 } from '@/api/v2AdminUsers';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -20,6 +22,17 @@ import { meQueryKey } from './useMe';
 /** How many users one page of the list or a search reads. */
 export const ADMIN_USER_PAGE_SIZE = 50;
 
+/**
+ * Admin data is never kept fresh: another admin, or the type script, can
+ * change it at any time. Each mount and each return to the window reads it
+ * again, whatever the calculator's defaults (five minutes fresh).
+ */
+const ALWAYS_READ_AGAIN = {
+  staleTime: 0,
+  refetchOnMount: true,
+  refetchOnWindowFocus: true,
+} as const;
+
 /** Signed-in users whose email contains `email` (every user when empty), newest first, a page at a time. */
 export function useAdminUserSearch(email: string) {
   const { subject } = useAuthStatus();
@@ -31,7 +44,23 @@ export function useAdminUserSearch(email: string) {
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
       lastPage.has_more ? lastPage.offset + lastPage.items.length : undefined,
+    ...ALWAYS_READ_AGAIN,
   });
+}
+
+/**
+ * Starts a search for `email` from its first page, discarding what an
+ * earlier search for the same text read, so submitting it again reads the
+ * users again.
+ */
+export function useStartAdminUserSearch() {
+  const { subject } = useAuthStatus();
+  const queryClient = useQueryClient();
+  return useCallback(
+    (email: string) =>
+      queryClient.resetQueries({ queryKey: adminUserKeys.search(subject, email), exact: true }),
+    [queryClient, subject]
+  );
 }
 
 export function useAdminUser(userId: string) {
@@ -40,7 +69,24 @@ export function useAdminUser(userId: string) {
   return useQuery({
     queryKey: adminUserKeys.user(subject, userId),
     queryFn: () => fetchAdminUser(client, userId),
+    ...ALWAYS_READ_AGAIN,
   });
+}
+
+/** Reads the user from the API now, whatever is cached, and stores the answer in the cache. */
+export function useReadAdminUserNow() {
+  const { subject } = useAuthStatus();
+  const client = useV2UserClient();
+  const queryClient = useQueryClient();
+  return useCallback(
+    (userId: string): Promise<AdminUserItem> =>
+      queryClient.fetchQuery({
+        queryKey: adminUserKeys.user(subject, userId),
+        queryFn: () => fetchAdminUser(client, userId),
+        staleTime: 0,
+      }),
+    [client, queryClient, subject]
+  );
 }
 
 export function useUserTypeChanges(userId: string) {
@@ -49,6 +95,7 @@ export function useUserTypeChanges(userId: string) {
   return useQuery({
     queryKey: adminUserKeys.typeChanges(subject, userId),
     queryFn: () => fetchUserTypeChanges(client, userId),
+    ...ALWAYS_READ_AGAIN,
   });
 }
 

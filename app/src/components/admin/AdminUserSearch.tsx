@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import type { AdminUserItem, AdminUserPageResult } from '@/api/v2AdminUsers';
 import {
   Button,
   Input,
@@ -14,11 +15,28 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
-import { useAdminUserSearch } from '@/hooks/useAdminUsers';
+import { useAdminUserSearch, useStartAdminUserSearch } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { adminUserName, formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
 
 const EMAIL_INPUT_ID = 'admin-user-email';
+
+/**
+ * The users of every page read so far, each once. The API pages by offset
+ * over the newest users first, so a user who signs up between two pages
+ * shifts the rest by one and would be read twice; the first copy is kept.
+ * A user deleted between two pages shifts them the other way, and one user
+ * can then be missing until the search is run again.
+ */
+function usersOfPages(pages: readonly AdminUserPageResult[]): AdminUserItem[] {
+  const usersById = new Map<string, AdminUserItem>();
+  for (const user of pages.flatMap((page) => page.items)) {
+    if (!usersById.has(user.id)) {
+      usersById.set(user.id, user);
+    }
+  }
+  return [...usersById.values()];
+}
 
 interface AdminUserSearchProps {
   selectedUserId: string | null;
@@ -34,22 +52,20 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
   const [emailDraft, setEmailDraft] = useState('');
   const [searchedEmail, setSearchedEmail] = useState('');
   const search = useAdminUserSearch(searchedEmail);
-  const users = search.data?.pages.flatMap((page) => page.items) ?? [];
+  const startSearch = useStartAdminUserSearch();
+  const users = search.data ? usersOfPages(search.data.pages) : [];
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSearchedEmail(emailDraft.trim());
+    const email = emailDraft.trim();
+    // Every submit reads afresh, including the same text again.
+    void startSearch(email);
+    setSearchedEmail(email);
   };
 
   let results: React.ReactNode;
-  if (search.isPending) {
-    results = (
-      <Stack role="status" aria-live="polite" align="center" gap="md">
-        <Spinner size="sm" />
-        <Text style={{ margin: 0, color: colors.text.secondary }}>Loading users…</Text>
-      </Stack>
-    );
-  } else if (search.isError) {
+  // Users already read stay on the screen when a later read fails.
+  if (search.data === undefined && search.isError) {
     results = (
       <Stack gap="sm" align="start">
         <Text role="alert" style={{ margin: 0, color: colors.error }}>
@@ -58,6 +74,13 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
         <Button variant="outline" onClick={() => search.refetch()}>
           Try again
         </Button>
+      </Stack>
+    );
+  } else if (search.data === undefined) {
+    results = (
+      <Stack role="status" aria-live="polite" align="center" gap="md">
+        <Spinner size="sm" />
+        <Text style={{ margin: 0, color: colors.text.secondary }}>Loading users…</Text>
       </Stack>
     );
   } else if (users.length === 0) {
@@ -119,6 +142,11 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
             Load more
           </Button>
         )}
+        {search.isFetchNextPageError && (
+          <Text role="alert" size="sm" style={{ margin: 0, color: colors.error }}>
+            We could not load more users: {search.error.message}
+          </Text>
+        )}
       </Stack>
     );
   }
@@ -130,7 +158,7 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
         onSubmit={handleSubmit}
         style={{ display: 'flex', gap: spacing.sm, alignItems: 'flex-end', flexWrap: 'wrap' }}
       >
-        <Stack gap="xs" style={{ flex: '1 1 240px' }}>
+        <Stack gap="xs" style={{ flex: '1 1 auto' }}>
           <Label htmlFor={EMAIL_INPUT_ID}>Email</Label>
           <Input
             id={EMAIL_INPUT_ID}

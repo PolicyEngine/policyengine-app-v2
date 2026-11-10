@@ -134,7 +134,8 @@ describe('AdminUsersPage', () => {
     renderAdminPage();
 
     // Then
-    expect(await screen.findByRole('status')).toHaveTextContent('Loading…');
+    expect(await screen.findByText('Loading…')).toBeInTheDocument();
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
   });
 
   test('given /v2/me fails then the page shows the error, and trying again shows the page', async () => {
