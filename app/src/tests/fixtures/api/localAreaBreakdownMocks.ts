@@ -272,7 +272,13 @@ export const BREAKDOWN_ERROR_RESPONSE = {
 
 /** An HTTP error response whose body the test chooses. */
 export function mockErrorResponseWithBody(status: number, statusText: string, body: string) {
-  return { ok: false, status, statusText, text: vi.fn().mockResolvedValue(body) };
+  return {
+    ok: false,
+    status,
+    statusText,
+    headers: new Headers(),
+    text: vi.fn().mockResolvedValue(body),
+  };
 }
 
 /** A Public API error body with a message, as JSON. */

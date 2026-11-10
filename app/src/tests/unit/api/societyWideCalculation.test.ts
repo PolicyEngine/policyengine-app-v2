@@ -1032,6 +1032,31 @@ describe('deleteFailedSocietyWideCalculation', () => {
     expect(deletion).toEqual({ outcome: 'nothing-stored' });
   });
 
+  test.each([
+    [HTTP_STATUS.NOT_FOUND, { status: 'error', message: 'Unknown route.', result: null }],
+    [
+      HTTP_STATUS.CONFLICT,
+      { status: 'error', message: 'Conflict.', result: null, delete_after_seconds: 5 },
+    ],
+  ])(
+    "given the calculator route's own %i then the DELETE failed, whatever the body says",
+    async (status, body) => {
+      // Given
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockDeleteResponse(status, JSON.stringify(body), {
+          'X-PolicyEngine-Route-Error': 'true',
+        }) as any
+      );
+
+      // When
+      const outcome = await deleteFailure().catch((caught: unknown) => caught);
+
+      // Then
+      expect(outcome).toBeInstanceOf(EconomyCalculationError);
+      expect((outcome as EconomyCalculationError).status).toBe(status);
+    }
+  );
+
   test('given 409 with delete_after_seconds then the DELETE was too soon, with the seconds left', async () => {
     // Given
     vi.mocked(global.fetch).mockResolvedValue(
