@@ -1,19 +1,25 @@
-import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { isUserType, type UserType } from '@/types/v2User';
-import { useMe } from './useMe';
+import { useMe, useMeRequestCountry } from './useMe';
 
 /**
- * The current user's type: the signed-in user's stored type from
- * `GET /v2/me`. Until that is known the type is `unauthenticated`, below
- * every signed-in type: while signed out or with sign-in off, outside the
- * countries with accounts, while the request is pending, when it fails, and
- * when the API sends a type this app does not know.
+ * The current user's type, or null while it is not known yet.
+ *
+ * - Signed out, with sign-in off, or outside the countries with accounts:
+ *   `unauthenticated`, with no request.
+ * - Signed in: the type `GET /v2/me` last returned for this session and
+ *   country. A refetch that fails keeps it, as react-query keeps the data.
+ *   A type this app does not know reads as `unauthenticated`.
+ * - Signed in, before /v2/me has answered (while it is pending, or after it
+ *   failed without an answer): null.
  */
-export function useUserType(): UserType {
-  const auth = useAuthStatus();
+export function useUserType(): UserType | null {
+  const requestCountryId = useMeRequestCountry();
   const me = useMe();
-  if (auth.status !== 'signed_in' || !me.isSuccess) {
+  if (requestCountryId === null) {
     return 'unauthenticated';
+  }
+  if (me.data === undefined) {
+    return null;
   }
   return isUserType(me.data.user_type) ? me.data.user_type : 'unauthenticated';
 }

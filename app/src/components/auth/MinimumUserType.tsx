@@ -5,16 +5,23 @@ import { userTypeMeetsMinimum, type UserType } from '@/types/v2User';
 interface MinimumUserTypeProps {
   /** The lowest user type that sees `children`. */
   minimum: UserType;
-  /** Shown instead of `children` to every other user. Nothing by default. */
+  /** Shown instead of `children` to a user whose type is known and below `minimum`. Nothing by default. */
   fallback?: ReactNode;
   children: ReactNode;
 }
 
 /**
  * Shows `children` only to users whose type is `minimum` or above it, as
- * `useUserType` reads it. While `GET /v2/me` is pending or has failed the
- * user counts as unauthenticated, so `children` never show before the
- * user's type is known.
+ * `useUserType` reads it, and `fallback` to users whose type is below it.
+ * While a signed-in user's type is not known yet (`GET /v2/me` is pending,
+ * or failed without an answer) it shows nothing: neither `children` nor
+ * `fallback`.
+ *
+ * Do not render it on the sign-in callback route (`/{country}/callback`,
+ * `AuthCallback.page.tsx`). Signed in, it requests `GET /v2/me`, and on a
+ * first sign-in that request creates the account before
+ * `POST /v2/me/upgrade` runs, so the upgrade merges this browser's
+ * unauthenticated user into that new account instead of converting it.
  */
 export default function MinimumUserType({
   minimum,
@@ -22,5 +29,8 @@ export default function MinimumUserType({
   children,
 }: MinimumUserTypeProps) {
   const userType = useUserType();
+  if (userType === null) {
+    return null;
+  }
   return <>{userTypeMeetsMinimum(userType, minimum) ? children : fallback}</>;
 }

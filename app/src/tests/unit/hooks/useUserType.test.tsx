@@ -22,12 +22,19 @@ vi.mock('@/types/v2User', async (importOriginal) => {
 
 const fetchMock = vi.fn();
 
-/** Renders the user type beside the `/v2/me` query it reads, so a test can wait for the request. */
+/**
+ * Renders the user type beside the status of the `/v2/me` query it reads, so
+ * a test can wait for the request. The status is read while rendering:
+ * react-query re-renders only for the result fields a render read.
+ */
 function renderUserType(auth: AuthContextValue) {
-  return renderHookInSession(() => ({ userType: useUserType(), me: useMe() }), {
-    auth,
-    countryId: 'us',
-  });
+  return renderHookInSession(
+    () => {
+      const me = useMe();
+      return { userType: useUserType(), meStatus: me.status, refetchMe: me.refetch };
+    },
+    { auth, countryId: 'us' }
+  );
 }
 
 /** Lets queued promises and timers run, so a request the hook would send has been sent. */
@@ -127,7 +134,7 @@ describe('useUserType', () => {
 
     // When
     const { result } = renderUserType(signedInAuthValue());
-    await waitFor(() => expect(result.current.me.isError).toBe(true));
+    await waitFor(() => expect(result.current.meStatus).toBe('error'));
 
     // Then
     expect(result.current.userType).toBeNull();
@@ -143,8 +150,8 @@ describe('useUserType', () => {
     });
 
     // When
-    await act(() => result.current.me.refetch());
-    await waitFor(() => expect(result.current.me.isError).toBe(true));
+    await act(() => result.current.refetchMe());
+    await waitFor(() => expect(result.current.meStatus).toBe('error'));
 
     // Then
     expect(result.current.userType).toBe('author');
@@ -156,7 +163,7 @@ describe('useUserType', () => {
 
     // When
     const { result } = renderUserType(signedInAuthValue());
-    await waitFor(() => expect(result.current.me.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.meStatus).toBe('success'));
 
     // Then
     expect(result.current.userType).toBe('unauthenticated');

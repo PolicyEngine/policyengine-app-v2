@@ -51,10 +51,13 @@ export function isUserType(value: unknown): value is UserType {
 /**
  * Whether `userType` has every permission of `minimum`: it is `minimum` or
  * comes after it in `USER_TYPES`. The Public API's
- * `user_type_meets_minimum` decides the same way.
+ * `user_type_meets_minimum` decides the same way. False when either is not
+ * in `USER_TYPES`.
  */
 export function userTypeMeetsMinimum(userType: UserType, minimum: UserType): boolean {
-  return USER_TYPES.indexOf(userType) >= USER_TYPES.indexOf(minimum);
+  const userTypeRank = USER_TYPES.indexOf(userType);
+  const minimumRank = USER_TYPES.indexOf(minimum);
+  return userTypeRank !== -1 && minimumRank !== -1 && userTypeRank >= minimumRank;
 }
 
 export interface MeItem {
