@@ -9,11 +9,11 @@
  * Path segments are letters, digits, "-" and "_" only, so an encoded slash,
  * a dot segment or a query can never widen a match.
  *
- * Free of imports, so both the route (in calculator-app) and its tests (in
- * app) can load it.
+ * Imports only the route's prefix, so both the route (in calculator-app)
+ * and its tests (in app) can load it.
  */
 
-export const PUBLIC_API_ROUTE_PREFIX = '/api/policyengine';
+export { PUBLIC_API_ROUTE_PREFIX } from './routePrefix';
 
 export type ForwardedMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
@@ -48,7 +48,13 @@ const UUID = '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-
 const OPAQUE_ID = '[A-Za-z0-9_-]{1,64}';
 
 const DEFAULT_TIMEOUT_MILLISECONDS = 60_000;
-const CALCULATION_TIMEOUT_MILLISECONDS = 280_000;
+/**
+ * The Public API's Cloud Run services end every request at 300 seconds
+ * (read 2026-11-10), so a calculation can never answer later than that.
+ * The route's `maxDuration` leaves room for the token request and the body
+ * on top of this wait.
+ */
+export const CALCULATION_TIMEOUT_MILLISECONDS = 300_000;
 
 function exactPath(pattern: string): RegExp {
   return new RegExp(`^${pattern}$`);

@@ -32,8 +32,11 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// A household calculation can take minutes.
-export const maxDuration = 300;
+// A household calculation can take minutes: the route waits up to 300 s
+// (CALCULATION_TIMEOUT_MILLISECONDS, the Public API's own request limit),
+// after a token request of up to 10 s, and then streams the answer. The
+// project runs on Fluid compute, whose Pro limit is 800 s.
+export const maxDuration = 360;
 
 const calculatorPublicApi = createPublicApiForwarder({
   environment: process.env,

@@ -1,12 +1,13 @@
+import { PUBLIC_API_ROUTE_PREFIX } from '@/libs/publicApiRoute/routePrefix';
+
 export const FOREVER = '2100-12-31';
-// PolicyEngine API origin. Builds set VITE_API_URL (Vite) or
-// NEXT_PUBLIC_API_URL (calculator-app, mapped onto VITE_API_URL in
-// next.config.ts) so staging talks to the staging API; production falls
-// back to the public API.
-export const BASE_URL = (import.meta.env.VITE_API_URL || 'https://api.policyengine.org').replace(
-  /\/+$/,
-  ''
-);
+// Where the browser reaches the Public API: app.policyengine.org's own
+// same-origin route, /api/policyengine/{Public API path}. The route adds the
+// calculator's server credential and calls the Public API that its
+// deployment names (POLICYENGINE_API_URL): production for production, the
+// staging service for previews and local work. Browsers never call the
+// Public API directly.
+export const BASE_URL = PUBLIC_API_ROUTE_PREFIX;
 export const CURRENT_YEAR = '2026';
 
 // Certified default US microdata dataset URI, pinned to the revision that

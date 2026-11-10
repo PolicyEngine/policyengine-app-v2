@@ -4,7 +4,7 @@ Server-side code that sends requests to the PolicyEngine Public API (api.policye
 
 Its users are the website's dashboard API (`website/src/app/api/`) and the calculator's own route, `/api/policyengine/{Public API path}` in `calculator-app`, whose allow list is `app/src/libs/publicApiRoute/allowList.ts`.
 
-Browser pages will reach the Public API only through these routes, and the routes send PolicyEngine's own server credential. Each route keeps its own allow list of operations; this package only forwards a request the route has already checked.
+The calculator's pages reach the Public API only through its route (`BASE_URL` in `app/src/constants.ts`), and dashboards are to use the website's API. The routes send PolicyEngine's own server credential. Each route keeps its own allow list of operations; this package only forwards a request the route has already checked.
 
 ## What it does
 
