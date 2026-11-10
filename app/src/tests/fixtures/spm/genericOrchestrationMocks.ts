@@ -2,6 +2,7 @@ import { ReportAdapter } from '@/adapters/ReportAdapter';
 import { SimulationAdapter } from '@/adapters/SimulationAdapter';
 import type { HouseholdCalculationResult } from '@/api/householdCalculation';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import { mockUSReportOutput } from '@/tests/fixtures/api/societyWideMocks';
 import {
   REPRODUCTION_HOUSEHOLDS,
@@ -145,7 +146,7 @@ export class GenericOrchestrationHTTP {
     return new Response(JSON.stringify({ status: 'ok', ...GENERIC_ENVELOPES[index] }));
   }
   fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const pathname = new URL(String(input)).pathname;
+    const pathname = publicApiPathOf(String(input));
     const method = init?.method ?? 'GET';
     const payload = init?.body ? JSON.parse(String(init.body)) : undefined;
     if (pathname === '/us/economy/12/over/11') {

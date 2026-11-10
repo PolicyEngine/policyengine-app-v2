@@ -14,6 +14,7 @@ import {
   TEST_TAX_BENEFIT_MODEL_ID as V2_MODEL_ID,
   TEST_POLICYENGINE_VERSION as V2_POLICYENGINE_VERSION,
 } from '@/tests/fixtures/api/publicApi/modelCatalogMocks';
+import { publicApiPathOf, requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   ASSOCIATION_IDS,
   itemResponse,
@@ -69,7 +70,11 @@ const V2_POLICY_ITEM = {
 const fetchMock = vi.fn();
 
 function requestUrl(input: unknown): URL {
-  return new URL(input instanceof Request ? input.url : String(input));
+  return requestUrlOf(input instanceof Request ? input : String(input));
+}
+
+function publicApiPath(input: unknown): string {
+  return publicApiPathOf(input instanceof Request ? input : String(input));
 }
 
 function requestMethod(input: unknown, init?: RequestInit): string {
@@ -78,7 +83,7 @@ function requestMethod(input: unknown, init?: RequestInit): string {
 
 /** Answers the account's reform list and saves, and the reform's v2 policy. */
 function respond(input: unknown, init?: RequestInit): Response {
-  const { pathname } = requestUrl(input);
+  const pathname = publicApiPath(input);
   const method = requestMethod(input, init);
   if (method === 'POST' && pathname === '/v2/policies') {
     return okResponse({ item: V2_POLICY_ITEM }, 201);
@@ -103,13 +108,13 @@ function policyCreationRequest(): Request | undefined {
       (input): input is Request =>
         input instanceof Request &&
         input.method === 'POST' &&
-        requestUrl(input).pathname === '/v2/policies'
+        publicApiPath(input) === '/v2/policies'
     );
 }
 
 function v2PolicyRequests(): number {
   return fetchMock.mock.calls.filter(
-    ([input]) => requestUrl(input).pathname === `/v2/policies/${V2_POLICY_ID}`
+    ([input]) => publicApiPath(input) === `/v2/policies/${V2_POLICY_ID}`
   ).length;
 }
 

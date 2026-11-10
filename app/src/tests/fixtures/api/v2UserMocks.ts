@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import type { ApiStoreContext } from '@/api/v2Associations';
 import { createV2UserClient } from '@/api/v2UserClient';
+import { publicApiPathOf, requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import type {
   MeItem,
   SharedReportItem,
@@ -179,10 +180,10 @@ export function createTestApiContext(countryId: 'us' | 'uk' = 'us'): {
 /** The (url, init) of the nth fetch call, with the parsed URL and JSON body. */
 export function fetchCall(fetchMock: ReturnType<typeof vi.fn>, index = 0) {
   const [url, init] = fetchMock.mock.calls[index] as [string, RequestInit];
-  const parsed = new URL(url);
+  const parsed = requestUrlOf(url);
   return {
     url: parsed,
-    path: parsed.pathname,
+    path: publicApiPathOf(url),
     query: Object.fromEntries(parsed.searchParams.entries()),
     method: init.method,
     headers: init.headers as Record<string, string>,

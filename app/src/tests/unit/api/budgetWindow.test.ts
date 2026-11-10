@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { fetchBudgetWindow } from '@/api/budgetWindow';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   LEGACY_NORTHERN_IRELAND_REGION_CODE,
   NORTHERN_IRELAND_REGION_CODE,
@@ -43,7 +44,7 @@ describe('fetchBudgetWindow', () => {
       windowSize: 10,
     });
 
-    const requestUrl = new URL(fetchMock.mock.calls[0][0]);
+    const requestUrl = requestUrlOf(fetchMock.mock.calls[0][0]);
     expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 

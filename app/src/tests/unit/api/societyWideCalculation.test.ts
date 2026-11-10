@@ -38,6 +38,7 @@ import {
   OLDER_UK_BODY_WITH_AREAS,
   PLAIN_TEXT_ERROR_BODY,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   DELETABLE_FAILED_CALCULATION_BODY,
   DELETE_FAILED_MESSAGE,
@@ -952,7 +953,7 @@ describe('deleteFailedSocietyWideCalculation', () => {
     );
 
     // Then
-    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    const requestUrl = requestUrlOf(String(mockFetch.mock.calls[0][0]));
     expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 
@@ -1075,7 +1076,7 @@ describe('societyWide API Northern Ireland region', () => {
     );
 
     // Then
-    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    const requestUrl = requestUrlOf(String(mockFetch.mock.calls[0][0]));
     expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 
@@ -1093,7 +1094,7 @@ describe('societyWide API Northern Ireland region', () => {
     );
 
     // Then
-    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    const requestUrl = requestUrlOf(String(mockFetch.mock.calls[0][0]));
     expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 });

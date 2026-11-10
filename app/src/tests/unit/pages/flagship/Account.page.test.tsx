@@ -3,6 +3,7 @@ import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import AccountPage from '@/pages/flagship/Account.page';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   errorResponse,
   itemResponse,
@@ -40,7 +41,7 @@ function renderPage(auth: AuthContextValue, countryId = 'us') {
 /** Answers GET /v2/me with the user, and everything else with `other`. */
 function answerMe(other: () => Response = () => noContentResponse()) {
   fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
-    new URL(url).pathname === '/v2/me' && init.method === 'GET' ? itemResponse(mockMeItem) : other()
+    publicApiPathOf(url) === '/v2/me' && init.method === 'GET' ? itemResponse(mockMeItem) : other()
   );
 }
 
