@@ -73,6 +73,52 @@ describe("withPublicApiCredential", () => {
   });
 });
 
+describe("withPublicApiCredential request options", () => {
+  test.each([
+    ["headers", { headers: { "X-Extra": "1" } }],
+    ["a signal", { signal: new AbortController().signal }],
+    ["a cache mode", { cache: "no-store" as RequestCache }],
+    ["a body that is not a string", { method: "POST", body: new Blob(["{}"]) }],
+  ])(
+    "given %s for a Public API request then it refuses rather than dropping them",
+    async (_label, requestInit) => {
+      // Given
+      const { publicApi, fetchFromServer } = fakePublicApi();
+      const fetchWithCredential = withPublicApiCredential(
+        vi.fn(async () => new Response("unused")),
+        publicApi,
+      );
+
+      // When
+      const failure = await fetchWithCredential(
+        `${API_ORIGIN}/deployment`,
+        requestInit as Parameters<typeof fetchWithCredential>[1],
+      ).catch((error: unknown) => error);
+
+      // Then
+      expect(failure).toBeInstanceOf(TypeError);
+      expect(fetchFromServer).not.toHaveBeenCalled();
+    },
+  );
+
+  test("given the same options for another host then they are passed on as they are", async () => {
+    // Given
+    const underlyingFetch = vi.fn(async () => new Response("{}"));
+    const { publicApi } = fakePublicApi();
+    const fetchWithCredential = withPublicApiCredential(
+      underlyingFetch,
+      publicApi,
+    );
+    const requestInit = { headers: { "X-Extra": "1" } };
+
+    // When
+    await fetchWithCredential(PYPI_URL, requestInit);
+
+    // Then
+    expect(underlyingFetch).toHaveBeenCalledWith(PYPI_URL, requestInit);
+  });
+});
+
 describe("GET /api/deployments", () => {
   const fetchMock = vi.fn<typeof fetch>();
 
@@ -144,6 +190,34 @@ describe("GET /api/deployments", () => {
     expect(requestedUrls.filter((url) => url.startsWith(API_ORIGIN))).toEqual(
       [],
     );
+  });
+
+  test("given a preview reading the Public API's staging service then the Public API rows name the address read", async () => {
+    // When
+    const response = await getDeployments(
+      new NextRequest(
+        "https://www.policyengine.org/api/deployments?country=us",
+      ),
+    );
+
+    // Then
+    const body = (await response.json()) as {
+      rows: Array<{
+        surface: { serves: string; served?: { origin: string } };
+        served: { source_url?: string | null };
+      }>;
+    };
+    const publicApiRows = body.rows.filter(
+      (row) => row.surface.served?.origin === STAGING_PUBLIC_API_URL,
+    );
+    expect(publicApiRows.length).toBeGreaterThan(0);
+    for (const row of publicApiRows) {
+      expect(row.surface.serves).toBe(new URL(STAGING_PUBLIC_API_URL).host);
+      expect(row.served.source_url?.startsWith(STAGING_PUBLIC_API_URL)).toBe(
+        true,
+      );
+    }
+    expect(JSON.stringify(body)).not.toContain(API_ORIGIN);
   });
 
   test("given the website's credential is configured then no other host receives it", async () => {
