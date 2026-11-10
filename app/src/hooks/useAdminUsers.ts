@@ -199,19 +199,27 @@ export function useAdminUser(userId: string) {
   });
 }
 
-/** Reads the user from the API now, whatever is cached, and stores the answer in the cache. */
+/**
+ * Reads the user from the API now, whatever is cached, and stores the
+ * answer in the cache. A read of the user already under way is cancelled
+ * first: `fetchQuery` would join it, and it may have been answered before
+ * a change made since.
+ */
 export function useReadAdminUserNow() {
   const { subject } = useAuthStatus();
   const client = useV2UserClient();
   const queryClient = useQueryClient();
   const readMeAgainOnRefusal = useReadMeAgainOnRefusal();
   return useCallback(
-    (userId: string): Promise<AdminUserItem> =>
-      queryClient.fetchQuery({
-        queryKey: adminUserKeys.user(subject, userId),
+    async (userId: string): Promise<AdminUserItem> => {
+      const queryKey = adminUserKeys.user(subject, userId);
+      await queryClient.cancelQueries({ queryKey, exact: true });
+      return queryClient.fetchQuery({
+        queryKey,
         queryFn: () => readMeAgainOnRefusal(fetchAdminUser(client, userId)),
         staleTime: 0,
-      }),
+      });
+    },
     [client, queryClient, subject, readMeAgainOnRefusal]
   );
 }

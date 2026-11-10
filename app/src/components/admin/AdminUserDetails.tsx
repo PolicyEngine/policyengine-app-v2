@@ -61,6 +61,19 @@ function DetailList({ details }: { details: ReadonlyArray<[label: string, value:
   );
 }
 
+/** What the dialog says when the API refused a change because the user's type changed since. */
+function typeChangedSentence(
+  userLabel: string,
+  typeNow: SignedInUserType,
+  newType: SignedInUserType
+): string {
+  const changedTo = `The type of ${userLabel} changed to ${USER_TYPE_LABELS[typeNow]} since you opened this`;
+  if (typeNow === newType) {
+    return `${changedTo}, so nothing will change.`;
+  }
+  return `${changedTo}. Confirm to change it from ${USER_TYPE_LABELS[typeNow]} to ${USER_TYPE_LABELS[newType]}, or cancel.`;
+}
+
 /** Whether nothing has focus: what a dialog leaves behind when it unmounts with what opened it. */
 function focusWasLost(): boolean {
   return document.activeElement === null || document.activeElement === document.body;
@@ -103,6 +116,8 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   // Kept after the dialog closes, so it reads the same while it animates away.
   const [confirmation, setConfirmation] = useState<UserTypeConfirmation | null>(null);
+  // Said in place of the API's 409 when the user's type changed since the dialog's read.
+  const [typeChangedNotice, setTypeChangedNotice] = useState<string | null>(null);
   // Counts the confirmation's reads, so only the latest one's answer is shown.
   const latestReadNumber = useRef(0);
   // Set when a change is saved, so the closing dialog hands focus to the type control.
@@ -150,16 +165,21 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
   const user = adminUser.data;
   const selectedType = chosenType ?? user.user_type;
 
-  /** Reads the user's type again, since the cached one may be out of date. */
-  const readCurrentType = async (newType: SignedInUserType) => {
+  /**
+   * Reads the user's type again, since the cached one may be out of date,
+   * and returns it (null when the read failed, or a later one replaced it).
+   */
+  const readCurrentType = async (newType: SignedInUserType): Promise<SignedInUserType | null> => {
     latestReadNumber.current += 1;
     const readNumber = latestReadNumber.current;
     setConfirmation({ newType, currentType: null, readErrorMessage: null });
     try {
       const currentUser = await readUserNow(userId);
-      if (readNumber === latestReadNumber.current) {
-        setConfirmation({ newType, currentType: currentUser.user_type, readErrorMessage: null });
+      if (readNumber !== latestReadNumber.current) {
+        return null;
       }
+      setConfirmation({ newType, currentType: currentUser.user_type, readErrorMessage: null });
+      return currentUser.user_type;
     } catch (error) {
       if (readNumber === latestReadNumber.current) {
         setConfirmation({
@@ -168,11 +188,13 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           readErrorMessage: error instanceof Error ? error.message : 'The user could not be read.',
         });
       }
+      return null;
     }
   };
 
   const openConfirmation = () => {
     changeUserType.reset();
+    setTypeChangedNotice(null);
     setConfirmationOpen(true);
     void readCurrentType(selectedType);
   };
@@ -181,6 +203,7 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
     latestReadNumber.current += 1;
     setConfirmationOpen(false);
     changeUserType.reset();
+    setTypeChangedNotice(null);
   };
 
   const confirmChange = () => {
@@ -188,6 +211,7 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
       return;
     }
     const { newType, currentType } = confirmation;
+    setTypeChangedNotice(null);
     changeUserType.mutate(
       // The type the dialog names, so the API refuses if someone changed it since.
       { userId, userType: newType, expectedUserType: currentType },
@@ -197,13 +221,18 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           setConfirmationOpen(false);
           setChosenType(null);
         },
-        onError: (error) => {
+        onError: async (error) => {
           // A 409 is either a type changed since the dialog's read or a
-          // last-admin refusal. Reading the user again tells them apart: the
-          // dialog then names the current type (unchanged after a last-admin
-          // refusal), and the API's message stays above it.
-          if (isV2ApiError(error, 409)) {
-            void readCurrentType(newType);
+          // last-admin refusal; reading the user again tells them apart. The
+          // dialog's description then names the current type. Below it, the
+          // API's message stays after a last-admin refusal (the type read is
+          // the same), and is replaced by the app's own after a changed type.
+          if (!isV2ApiError(error, 409)) {
+            return;
+          }
+          const typeNow = await readCurrentType(newType);
+          if (typeNow !== null && typeNow !== currentType) {
+            setTypeChangedNotice(typeChangedSentence(adminUserLabel(user), typeNow, newType));
           }
         },
       }
@@ -277,7 +306,7 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           confirmation={confirmation}
           isOwnAccount={user.id === signedInUserId}
           changing={changeUserType.isPending}
-          errorMessage={changeUserType.error?.message ?? null}
+          errorMessage={typeChangedNotice ?? changeUserType.error?.message ?? null}
           onConfirm={confirmChange}
           onCancel={closeConfirmation}
           onReadAgain={() => void readCurrentType(confirmation.newType)}

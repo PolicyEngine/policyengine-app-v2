@@ -45,8 +45,9 @@ export async function fetchAdminUser(client: V2UserClient, userId: string): Prom
 export interface UserTypeChange {
   userType: SignedInUserType;
   /**
-   * The user's type as the admin last read it. When the stored type is no
-   * longer that, someone changed it since, and the API refuses (409).
+   * The user's type as the admin last read it. The API refuses (409) a
+   * change to another type when the stored type is no longer this; asking
+   * for the type the user already has is a 200 that changes nothing.
    */
   expectedUserType: SignedInUserType;
 }
