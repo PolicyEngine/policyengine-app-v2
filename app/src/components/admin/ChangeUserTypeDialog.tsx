@@ -38,6 +38,8 @@ interface ChangeUserTypeDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   onReadAgain: () => void;
+  /** Where focus goes when the dialog has closed; by default back to what opened it. */
+  onCloseAutoFocus?: (event: Event) => void;
 }
 
 function confirmationText(userLabel: string, confirmation: UserTypeConfirmation): string {
@@ -69,13 +71,14 @@ export default function ChangeUserTypeDialog({
   onConfirm,
   onCancel,
   onReadAgain,
+  onCloseAutoFocus,
 }: ChangeUserTypeDialogProps) {
   const { currentType, newType, readErrorMessage } = confirmation;
   const unchanged = currentType !== null && currentType === newType;
   const losesAdmin = isOwnAccount && currentType === 'admin' && newType !== 'admin';
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !changing && onCancel()}>
-      <DialogContent showCloseButton={!changing}>
+      <DialogContent showCloseButton={!changing} onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>Change this user&apos;s type?</DialogTitle>
           <DialogDescription>{confirmationText(userLabel, confirmation)}</DialogDescription>

@@ -1,5 +1,6 @@
 import { Fragment, useRef, useState } from 'react';
 import type { SignedInUserType } from '@/api/v2AdminUsers';
+import { isV2ApiError } from '@/api/v2UserClient';
 import {
   Button,
   Card,
@@ -15,7 +16,12 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
-import { useAdminUser, useChangeUserType, useReadAdminUserNow } from '@/hooks/useAdminUsers';
+import {
+  isRefusedOrMissing,
+  useAdminUser,
+  useChangeUserType,
+  useReadAdminUserNow,
+} from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMe } from '@/hooks/useMe';
 import { getCountryLabel } from '@/utils/geographyUtils';
@@ -30,6 +36,10 @@ import ChangeUserTypeDialog, { type UserTypeConfirmation } from './ChangeUserTyp
 import UserTypeChangeHistory from './UserTypeChangeHistory';
 
 const TYPE_GROUP_LABEL_ID = 'admin-user-type-label';
+
+function typeOptionId(userType: SignedInUserType): string {
+  return `admin-user-type-${userType}`;
+}
 
 /** Labels and values in two columns, the labels as wide as the widest. */
 function DetailList({ details }: { details: ReadonlyArray<[label: string, value: string]> }) {
@@ -70,9 +80,18 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
   const [confirmation, setConfirmation] = useState<UserTypeConfirmation | null>(null);
   // Counts the confirmation's reads, so only the latest one's answer is shown.
   const latestReadNumber = useRef(0);
+  // Set when a change is saved, so the closing dialog hands focus to the type control.
+  const savedTypeToFocus = useRef<SignedInUserType | null>(null);
 
-  // A user already read stays on the screen when a later read fails.
-  if (adminUser.data === undefined) {
+  if (adminUser.isError && isV2ApiError(adminUser.error, 404)) {
+    return (
+      <Text style={{ margin: 0, color: colors.text.secondary }}>This user no longer exists.</Text>
+    );
+  }
+
+  // A user already read stays on the screen when a later read fails for a
+  // while (a network error, a 5xx), but not after a 403.
+  if (adminUser.data === undefined || (adminUser.isError && isRefusedOrMissing(adminUser.error))) {
     if (adminUser.isError) {
       return (
         <Stack gap="sm" align="start">
@@ -136,7 +155,8 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
     changeUserType.mutate(
       { userId, userType: confirmation.newType },
       {
-        onSuccess: () => {
+        onSuccess: (changedUser) => {
+          savedTypeToFocus.current = changedUser.user_type;
           setConfirmationOpen(false);
           setChosenType(null);
         },
@@ -183,10 +203,8 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
                   key={userType}
                   style={{ display: 'flex', gap: spacing.sm, alignItems: 'center' }}
                 >
-                  <RadioGroupItem value={userType} id={`admin-user-type-${userType}`} />
-                  <Label htmlFor={`admin-user-type-${userType}`}>
-                    {USER_TYPE_LABELS[userType]}
-                  </Label>
+                  <RadioGroupItem value={userType} id={typeOptionId(userType)} />
+                  <Label htmlFor={typeOptionId(userType)}>{USER_TYPE_LABELS[userType]}</Label>
                 </div>
               ))}
             </RadioGroup>
@@ -214,6 +232,15 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           onConfirm={confirmChange}
           onCancel={closeConfirmation}
           onReadAgain={() => void readCurrentType(confirmation.newType)}
+          onCloseAutoFocus={(event) => {
+            const savedType = savedTypeToFocus.current;
+            if (savedType) {
+              // "Change type" is disabled once the change is saved; focus the type instead.
+              savedTypeToFocus.current = null;
+              event.preventDefault();
+              document.getElementById(typeOptionId(savedType))?.focus();
+            }
+          }}
         />
       )}
     </Card>

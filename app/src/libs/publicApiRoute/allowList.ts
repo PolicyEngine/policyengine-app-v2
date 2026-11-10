@@ -134,8 +134,8 @@ export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
   // The signed-in account (api/v2Me.ts).
   // The admin user routes (`/v2/admin/users*`, api/v2AdminUsers.ts) are
   // left out on purpose: they carry the signed-in admin's own token, and
-  // the admin page calls the Public API directly rather than through this
-  // route, which sends the server's credential.
+  // the client calls the Public API at BASE_URL directly, so this route
+  // never sees those requests.
   operation('account', ['GET', 'DELETE'], '/v2/me'),
   operation('account export', ['GET'], '/v2/me/export'),
   operation('account upgrade', ['POST'], '/v2/me/upgrade'),

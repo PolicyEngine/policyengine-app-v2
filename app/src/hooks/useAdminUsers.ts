@@ -1,17 +1,28 @@
-import { useCallback } from 'react';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect } from 'react';
+import {
+  focusManager,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+  type QueryClient,
+} from '@tanstack/react-query';
 import {
   changeAdminUserType,
   fetchAdminUser,
   fetchUserTypeChanges,
   searchAdminUsers,
   type AdminUserItem,
+  type AdminUserPageResult,
   type SignedInUserType,
 } from '@/api/v2AdminUsers';
+import { isV2ApiError } from '@/api/v2UserClient';
 import { useCountryContext } from '@/contexts/CountryContext';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { adminUserKeys } from '@/libs/queryKeys';
+import type { MeItem } from '@/types/v2User';
 import { meQueryKey } from './useMe';
 
 /**
@@ -22,30 +33,113 @@ import { meQueryKey } from './useMe';
 /** How many users one page of the list or a search reads. */
 export const ADMIN_USER_PAGE_SIZE = 50;
 
-/**
- * Admin data is never kept fresh: another admin, or the type script, can
- * change it at any time. Each mount and each return to the window reads it
- * again, whatever the calculator's defaults (five minutes fresh).
- */
-const ALWAYS_READ_AGAIN = {
-  staleTime: 0,
-  refetchOnMount: true,
-  refetchOnWindowFocus: true,
-} as const;
+/** react-query's own number of retries, when the query client sets none. */
+const REACT_QUERY_DEFAULT_RETRIES = 3;
 
-/** Signed-in users whose email contains `email` (every user when empty), newest first, a page at a time. */
+type UserSearchData = InfiniteData<AdminUserPageResult, number>;
+
+/**
+ * Whether an admin route refused (403: the signed-in user is no longer an
+ * admin) or found no such user (404). Reading again answers the same, so
+ * these are not retried and earlier data is not shown in their place.
+ */
+export function isRefusedOrMissing(error: unknown): boolean {
+  return isV2ApiError(error, 403) || isV2ApiError(error, 404);
+}
+
+/** Retries temporary failures only (network errors, 5xx), as often as the client's default would. */
+function retryTemporaryFailures(queryClient: QueryClient) {
+  const defaultRetry = queryClient.getDefaultOptions().queries?.retry;
+  return (failureCount: number, error: Error): boolean => {
+    if (isRefusedOrMissing(error)) {
+      return false;
+    }
+    if (typeof defaultRetry === 'function') {
+      return defaultRetry(failureCount, error);
+    }
+    if (typeof defaultRetry === 'number') {
+      return failureCount < defaultRetry;
+    }
+    if (typeof defaultRetry === 'boolean') {
+      return defaultRetry;
+    }
+    return failureCount < REACT_QUERY_DEFAULT_RETRIES;
+  };
+}
+
+/**
+ * Wraps an admin request so that a 403 reads `/v2/me` again: the signed-in
+ * user may have been demoted, and once `/v2/me` says so the page shows
+ * "Page not found".
+ */
+function useReadMeAgainOnRefusal() {
+  const { subject } = useAuthStatus();
+  const countryId = useCountryContext();
+  const queryClient = useQueryClient();
+  return useCallback(
+    <Result>(request: Promise<Result>): Promise<Result> =>
+      request.catch((error: unknown) => {
+        if (isV2ApiError(error, 403)) {
+          void queryClient.invalidateQueries({ queryKey: meQueryKey(subject, countryId) });
+        }
+        throw error;
+      }),
+    [queryClient, subject, countryId]
+  );
+}
+
+/**
+ * Signed-in users whose email contains `email` (every user when empty),
+ * newest first, a page at a time.
+ *
+ * It is read again when the page shows it again and when the window
+ * regains focus, but only its first page: what was loaded after it is
+ * dropped, and "Load more" continues from the first page. react-query's
+ * own re-read would read every loaded page again, one after another.
+ */
 export function useAdminUserSearch(email: string) {
   const { subject } = useAuthStatus();
   const client = useV2UserClient();
-  return useInfiniteQuery({
+  const queryClient = useQueryClient();
+  const readMeAgainOnRefusal = useReadMeAgainOnRefusal();
+  const search = useInfiniteQuery({
     queryKey: adminUserKeys.search(subject, email),
     queryFn: ({ pageParam }) =>
-      searchAdminUsers(client, { email, offset: pageParam, limit: ADMIN_USER_PAGE_SIZE }),
+      readMeAgainOnRefusal(
+        searchAdminUsers(client, { email, offset: pageParam, limit: ADMIN_USER_PAGE_SIZE })
+      ),
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
       lastPage.has_more ? lastPage.offset + lastPage.items.length : undefined,
-    ...ALWAYS_READ_AGAIN,
+    staleTime: 0,
+    // The effect below reads the first page again instead.
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    retry: retryTemporaryFailures(queryClient),
   });
+
+  useEffect(() => {
+    const queryKey = adminUserKeys.search(subject, email);
+    const readFirstPageAgain = () => {
+      if (queryClient.getQueryData(queryKey) === undefined) {
+        return;
+      }
+      queryClient.setQueryData<UserSearchData>(
+        queryKey,
+        (data) => data && { pages: data.pages.slice(0, 1), pageParams: data.pageParams.slice(0, 1) }
+      );
+      void queryClient.invalidateQueries({ queryKey, exact: true });
+    };
+    // A search read before, shown again.
+    readFirstPageAgain();
+    return focusManager.subscribe((focused) => {
+      if (focused) {
+        readFirstPageAgain();
+      }
+    });
+  }, [queryClient, subject, email]);
+
+  return search;
 }
 
 /**
@@ -63,13 +157,23 @@ export function useStartAdminUserSearch() {
   );
 }
 
+/**
+ * One user. Admin data is never kept fresh: another admin, or the type
+ * script, can change it at any time, so each mount and each return to the
+ * window reads it again, whatever the calculator's defaults.
+ */
 export function useAdminUser(userId: string) {
   const { subject } = useAuthStatus();
   const client = useV2UserClient();
+  const queryClient = useQueryClient();
+  const readMeAgainOnRefusal = useReadMeAgainOnRefusal();
   return useQuery({
     queryKey: adminUserKeys.user(subject, userId),
-    queryFn: () => fetchAdminUser(client, userId),
-    ...ALWAYS_READ_AGAIN,
+    queryFn: () => readMeAgainOnRefusal(fetchAdminUser(client, userId)),
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    retry: retryTemporaryFailures(queryClient),
   });
 }
 
@@ -78,44 +182,77 @@ export function useReadAdminUserNow() {
   const { subject } = useAuthStatus();
   const client = useV2UserClient();
   const queryClient = useQueryClient();
+  const readMeAgainOnRefusal = useReadMeAgainOnRefusal();
   return useCallback(
     (userId: string): Promise<AdminUserItem> =>
       queryClient.fetchQuery({
         queryKey: adminUserKeys.user(subject, userId),
-        queryFn: () => fetchAdminUser(client, userId),
+        queryFn: () => readMeAgainOnRefusal(fetchAdminUser(client, userId)),
         staleTime: 0,
       }),
-    [client, queryClient, subject]
+    [client, queryClient, subject, readMeAgainOnRefusal]
   );
 }
 
+/** The user's type changes, read again like `useAdminUser`. */
 export function useUserTypeChanges(userId: string) {
   const { subject } = useAuthStatus();
   const client = useV2UserClient();
+  const queryClient = useQueryClient();
+  const readMeAgainOnRefusal = useReadMeAgainOnRefusal();
   return useQuery({
     queryKey: adminUserKeys.typeChanges(subject, userId),
-    queryFn: () => fetchUserTypeChanges(client, userId),
-    ...ALWAYS_READ_AGAIN,
+    queryFn: () => readMeAgainOnRefusal(fetchUserTypeChanges(client, userId)),
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    retry: retryTemporaryFailures(queryClient),
   });
 }
 
 /**
- * Changes a user's type. Afterwards it reads the admin routes again (the
- * user, the lists and the history), and `/v2/me`, since an admin can
- * change their own type.
+ * Changes a user's type. It resolves as soon as the PATCH answers: the
+ * answer is written into the user's cache entry and into the user's row
+ * in every loaded list, and the user's type changes are read again without
+ * waiting. `/v2/me` is read again only when the changed user is the
+ * signed-in admin. After a 404 the user is read again, to show it is gone.
  */
 export function useChangeUserType() {
   const { subject } = useAuthStatus();
   const countryId = useCountryContext();
   const client = useV2UserClient();
   const queryClient = useQueryClient();
+  const readMeAgainOnRefusal = useReadMeAgainOnRefusal();
   return useMutation({
     mutationFn: ({ userId, userType }: { userId: string; userType: SignedInUserType }) =>
-      changeAdminUserType(client, userId, userType),
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: adminUserKeys.all(subject) }),
-        queryClient.invalidateQueries({ queryKey: meQueryKey(subject, countryId) }),
-      ]),
+      readMeAgainOnRefusal(changeAdminUserType(client, userId, userType)),
+    onSuccess: (changedUser) => {
+      queryClient.setQueryData(adminUserKeys.user(subject, changedUser.id), changedUser);
+      queryClient.setQueriesData<UserSearchData>(
+        { queryKey: adminUserKeys.searches(subject) },
+        (data) =>
+          data && {
+            ...data,
+            pages: data.pages.map((page) => ({
+              ...page,
+              items: page.items.map((listedUser) =>
+                listedUser.id === changedUser.id ? changedUser : listedUser
+              ),
+            })),
+          }
+      );
+      void queryClient.invalidateQueries({
+        queryKey: adminUserKeys.typeChanges(subject, changedUser.id),
+      });
+      const signedInUser = queryClient.getQueryData<MeItem>(meQueryKey(subject, countryId));
+      if (signedInUser?.id === changedUser.id) {
+        void queryClient.invalidateQueries({ queryKey: meQueryKey(subject, countryId) });
+      }
+    },
+    onError: (error, { userId }) => {
+      if (isV2ApiError(error, 404)) {
+        void queryClient.invalidateQueries({ queryKey: adminUserKeys.user(subject, userId) });
+      }
+    },
   });
 }

@@ -1,7 +1,7 @@
 import type { UserTypeChangeItem } from '@/api/v2AdminUsers';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { useUserTypeChanges } from '@/hooks/useAdminUsers';
+import { isRefusedOrMissing, useUserTypeChanges } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { formatAdminDateTime, USER_TYPE_LABELS } from './adminUserFormat';
 
@@ -22,8 +22,9 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
   const changes = useUserTypeChanges(userId);
 
   let content: React.ReactNode;
-  // Changes already read stay on the screen when a later read fails.
-  if (changes.data === undefined && changes.isError) {
+  // Changes already read stay on the screen when a later read fails for a
+  // while (a network error, a 5xx), but not after a 403 or 404.
+  if (changes.isError && (changes.data === undefined || isRefusedOrMissing(changes.error))) {
     content = (
       <Stack gap="sm" align="start">
         <Text role="alert" size="sm" style={{ margin: 0, color: colors.error }}>

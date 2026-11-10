@@ -15,11 +15,17 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
-import { useAdminUserSearch, useStartAdminUserSearch } from '@/hooks/useAdminUsers';
+import {
+  isRefusedOrMissing,
+  useAdminUserSearch,
+  useStartAdminUserSearch,
+} from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { adminUserName, formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
 
 const EMAIL_INPUT_ID = 'admin-user-email';
+/** The longest email part the API's `email` filter accepts. */
+const EMAIL_SEARCH_MAX_LENGTH = 320;
 
 /**
  * The users of every page read so far, each once. The API pages by offset
@@ -64,8 +70,9 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
   };
 
   let results: React.ReactNode;
-  // Users already read stay on the screen when a later read fails.
-  if (search.data === undefined && search.isError) {
+  // Users already read stay on the screen when a later read fails for a
+  // while (a network error, a 5xx), but not after a 403 or 404.
+  if (search.isError && (search.data === undefined || isRefusedOrMissing(search.error))) {
     results = (
       <Stack gap="sm" align="start">
         <Text role="alert" style={{ margin: 0, color: colors.error }}>
@@ -164,6 +171,7 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
             id={EMAIL_INPUT_ID}
             type="search"
             value={emailDraft}
+            maxLength={EMAIL_SEARCH_MAX_LENGTH}
             onChange={(event) => setEmailDraft(event.target.value)}
             placeholder="Part of an email address"
           />
