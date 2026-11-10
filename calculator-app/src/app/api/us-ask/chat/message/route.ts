@@ -5,6 +5,10 @@ import {
 } from "@/libs/flagship/apiGate";
 import Anthropic from "@anthropic-ai/sdk";
 import {
+  createPublicApiForwarder,
+  vercelRuntimeTokenStore,
+} from "@policyengine/public-api-forwarding";
+import {
   buildUsAskContext,
   executeUsAskTool,
   US_ASK_SYSTEM_PROMPT,
@@ -25,15 +29,28 @@ import {
 //
 // Requires ANTHROPIC_API_KEY; without it the route returns 503 and the
 // Ask page falls back to keyword matching.
+//
+// US metadata comes from the Public API that the deployment names
+// (POLICYENGINE_API_URL: production for production, the staging service
+// for previews and local work), through the shared forwarding package with
+// the calculator's own server credential.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const METADATA_URL =
-  process.env.US_METADATA_URL ?? "https://api.policyengine.org/us/metadata";
+// US metadata is large (about 10 MB compressed): allow time to read it.
+const METADATA_TIMEOUT_MILLISECONDS = 120_000;
 const MODEL = process.env.US_ASK_MODEL ?? "claude-opus-5";
 const MAX_TOOL_TURNS = 10;
 const CONTEXT_TTL_MS = 6 * 60 * 60 * 1000;
+
+const calculatorPublicApi = createPublicApiForwarder({
+  environment: process.env,
+  callerName: "policyengine-calculator",
+  sharedTokenStore: vercelRuntimeTokenStore(),
+  // Sent for the server itself, not for a browser, so no browser address.
+  clientAddress: () => undefined,
+});
 
 let cachedContext: {
   promise: Promise<UsAskContext>;
@@ -43,7 +60,12 @@ let cachedContext: {
 function getUsAskContext(): Promise<UsAskContext> {
   if (!cachedContext || Date.now() - cachedContext.fetchedAt > CONTEXT_TTL_MS) {
     const promise = (async () => {
-      const response = await fetch(METADATA_URL);
+      // Throws PublicApiUnavailableError when the deployment names no
+      // Public API or the credential cannot be obtained.
+      const response = await calculatorPublicApi.fetchFromServer(
+        { method: "GET", path: "/us/metadata" },
+        { timeoutMilliseconds: METADATA_TIMEOUT_MILLISECONDS },
+      );
       if (!response.ok) {
         throw new Error(`US metadata fetch failed: ${response.status}`);
       }
