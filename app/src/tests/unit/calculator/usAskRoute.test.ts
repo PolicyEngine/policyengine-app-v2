@@ -98,6 +98,51 @@ describe('calculator /api/us-ask/chat/message', () => {
     ).toEqual([]);
   });
 
+  test('given the Public API fails once then the route answers 502 and reads the metadata again next time', async () => {
+    // Given
+    const { POST } = await askRoute();
+    // Keyed by address, since a token may already be cached from an earlier test.
+    let metadataReadsToFail = 1;
+    fetchMock.mockImplementation(async (input) => {
+      if (String(input) === TOKEN_ENDPOINT) {
+        return Response.json({ access_token: CALCULATOR_SERVER_TOKEN, expires_in: 86_400 });
+      }
+      if (metadataReadsToFail > 0) {
+        metadataReadsToFail -= 1;
+        return Response.json({ status: 'error', message: 'Unavailable' }, { status: 503 });
+      }
+      return Response.json(US_METADATA_ANSWER);
+    });
+
+    // When
+    const firstResponse = await POST(askRequest());
+    await POST(askRequest());
+
+    // Then
+    expect(firstResponse.status).toBe(502);
+    expect(metadataRequests().map((request) => request.url)).toEqual([
+      `${STAGING_PUBLIC_API_URL}/us/metadata`,
+      `${STAGING_PUBLIC_API_URL}/us/metadata`,
+    ]);
+  });
+
+  test("given a browser's identity on the request then the metadata read carries none of it", async () => {
+    // Given
+    const { POST } = await askRoute();
+    const request = askRequest();
+    request.headers.set('Authorization', 'Bearer signed-in-user-access-token');
+    request.headers.set('Cookie', 'appSession=secret-session');
+
+    // When
+    await POST(request);
+
+    // Then
+    const [metadataRequest] = metadataRequests();
+    expect(metadataRequest.headers.get('authorization')).toBe(`Bearer ${CALCULATOR_SERVER_TOKEN}`);
+    expect(metadataRequest.headers.get('policyengine-user-authorization')).toBeNull();
+    expect(metadataRequest.headers.get('cookie')).toBeNull();
+  });
+
   test('given US_METADATA_URL names another address then the metadata still comes from the Public API with the credential', async () => {
     // Given
     vi.stubEnv('US_METADATA_URL', OTHER_METADATA_URL);

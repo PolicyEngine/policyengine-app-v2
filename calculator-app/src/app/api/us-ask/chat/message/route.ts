@@ -5,10 +5,6 @@ import {
 } from "@/libs/flagship/apiGate";
 import Anthropic from "@anthropic-ai/sdk";
 import {
-  createPublicApiForwarder,
-  vercelRuntimeTokenStore,
-} from "@policyengine/public-api-forwarding";
-import {
   buildUsAskContext,
   executeUsAskTool,
   US_ASK_SYSTEM_PROMPT,
@@ -19,6 +15,8 @@ import {
   buildConceptClusters,
   buildParameterSearchEntries,
 } from "@/libs/parameterSearch";
+
+import { calculatorPublicApi } from "../../../calculatorPublicApi";
 
 // The US ask agent: Claude with deterministic parameter-search tools over
 // live policyengine-us metadata, streaming the same SSE event shapes as
@@ -44,14 +42,6 @@ const MODEL = process.env.US_ASK_MODEL ?? "claude-opus-5";
 const MAX_TOOL_TURNS = 10;
 const CONTEXT_TTL_MS = 6 * 60 * 60 * 1000;
 
-const calculatorPublicApi = createPublicApiForwarder({
-  environment: process.env,
-  callerName: "policyengine-calculator",
-  sharedTokenStore: vercelRuntimeTokenStore(),
-  // Sent for the server itself, not for a browser, so no browser address.
-  clientAddress: () => undefined,
-});
-
 let cachedContext: {
   promise: Promise<UsAskContext>;
   fetchedAt: number;
@@ -60,8 +50,10 @@ let cachedContext: {
 function getUsAskContext(): Promise<UsAskContext> {
   if (!cachedContext || Date.now() - cachedContext.fetchedAt > CONTEXT_TTL_MS) {
     const promise = (async () => {
-      // Throws PublicApiUnavailableError when the deployment names no
-      // Public API or the credential cannot be obtained.
+      // Sent as the server's own request, with no browser headers. Throws
+      // PublicApiUnavailableError when it cannot be sent: no Public API
+      // named for this deployment, no credential, or the Public API
+      // unreachable or too slow.
       const response = await calculatorPublicApi.fetchFromServer(
         { method: "GET", path: "/us/metadata" },
         { timeoutMilliseconds: METADATA_TIMEOUT_MILLISECONDS },
@@ -128,7 +120,11 @@ export async function POST(request: Request): Promise<Response> {
   let context: UsAskContext;
   try {
     context = await getUsAskContext();
-  } catch {
+  } catch (error) {
+    console.error(
+      "Could not read US parameter metadata:",
+      error instanceof Error ? error.message : error,
+    );
     return json({ error: "US parameter metadata unavailable" }, 502);
   }
 
