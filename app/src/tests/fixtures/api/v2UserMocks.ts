@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 import type { ApiStoreContext } from '@/api/v2Associations';
 import { createV2UserClient } from '@/api/v2UserClient';
 import type {
@@ -172,6 +172,43 @@ export function errorResponse(status: number, message: string): Response {
 
 export function noContentResponse(): Response {
   return new Response(null, { status: 204 });
+}
+
+/**
+ * Makes `fetchMock` answer GET /v2/me with `meResponse` (by default
+ * `mockMeItem`) and every other request with `otherResponse` (by default
+ * 204 No Content).
+ */
+export function answerMe(
+  fetchMock: Mock,
+  {
+    meResponse = () => itemResponse(mockMeItem),
+    otherResponse = () => noContentResponse(),
+  }: {
+    meResponse?: () => Response | Promise<Response>;
+    otherResponse?: () => Response;
+  } = {}
+): void {
+  fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
+    new URL(url).pathname === '/v2/me' && init.method === 'GET' ? meResponse() : otherResponse()
+  );
+}
+
+/** Makes `fetchMock` answer GET /v2/me with `meItem`. */
+export function answerMeWithUser(fetchMock: Mock, meItem: MeItem): void {
+  answerMe(fetchMock, { meResponse: () => itemResponse(meItem) });
+}
+
+/** A response that stays pending until the test calls `answer`. */
+export function deferredResponse(): {
+  response: Promise<Response>;
+  answer: (response: Response) => void;
+} {
+  let resolveResponse: (response: Response) => void = () => {};
+  const response = new Promise<Response>((resolve) => {
+    resolveResponse = resolve;
+  });
+  return { response, answer: (answeredResponse) => resolveResponse(answeredResponse) };
 }
 
 /** A fetch mock plus an API store context that uses it. */

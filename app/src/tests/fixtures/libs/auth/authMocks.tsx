@@ -9,6 +9,8 @@ export const TEST_AUTH0_CONFIG = {
 } as const;
 
 export const TEST_AUTH0_SUBJECT = 'google-oauth2|1234';
+/** A second account that signs in on the same browser. */
+export const OTHER_AUTH0_SUBJECT = 'google-oauth2|5678';
 
 export const TEST_PROFILE = {
   name: 'Ada Lovelace',
