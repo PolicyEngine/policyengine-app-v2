@@ -28,7 +28,7 @@ export function createTestQueryClient(): QueryClient {
  * A query client with the calculator's query defaults (calculator-app's
  * providers.tsx: data stays fresh for five minutes and is read again when
  * the window regains focus), and react-query's default of three retries.
- * Only the wait between retries is cut to nothing, so a test does not
+ * Only the wait between retries is set to zero, so a test does not
  * wait the seconds production would.
  */
 export function createProductionLikeQueryClient(): QueryClient {
