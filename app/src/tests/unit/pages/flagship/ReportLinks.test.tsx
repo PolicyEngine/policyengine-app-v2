@@ -6,6 +6,7 @@ import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   ASSOCIATION_IDS,
   errorResponse,
@@ -123,7 +124,7 @@ describe('FlagshipReportPage links', () => {
         : reportData()
     );
     fetchMock.mockImplementation(async (url: string) =>
-      new URL(url).pathname === SHARED_PATH
+      publicApiPathOf(url) === SHARED_PATH
         ? itemResponse(sharedReportItem())
         : errorResponse(404, 'not found')
     );
@@ -141,7 +142,7 @@ describe('FlagshipReportPage links', () => {
     // Then: the owner's title, over the v1 report the saved report names
     expect(await screen.findByRole('heading', { name: 'CTC to $3,600' })).toBeInTheDocument();
     expect(mockUseFlagshipReport).toHaveBeenLastCalledWith(String(LEGACY_IDS.REPORT));
-    const sharedRead = fetchMock.mock.calls.find(([url]) => new URL(url).pathname === SHARED_PATH)!;
+    const sharedRead = fetchMock.mock.calls.find(([url]) => publicApiPathOf(url) === SHARED_PATH)!;
     expect(sharedRead[1].headers).not.toHaveProperty('Authorization');
     expect(sharedRead[1].headers).not.toHaveProperty('PolicyEngine-Unauthenticated-User');
   });
@@ -196,7 +197,7 @@ describe('FlagshipReportPage links', () => {
     beforeEach(() => {
       mockCalcStatus.mockReturnValue(COMPLETE_RUN);
       fetchMock.mockImplementation(async (url: string) =>
-        new URL(url).pathname === SHARED_PATH
+        publicApiPathOf(url) === SHARED_PATH
           ? itemResponse(sharedReportItem({ budget_window_years: 3 }))
           : errorResponse(404, 'not found')
       );

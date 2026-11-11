@@ -2,9 +2,9 @@
 
 Server-side code that sends requests to the PolicyEngine Public API (api.policyengine.org) for the website's and the calculator's route handlers. It is a private workspace package; it is not published.
 
-Its users are the website's dashboard API (`website/src/app/api/`) and the calculator's own route, `/api/policyengine/{Public API path}` in `calculator-app`, whose allow list is `app/src/libs/publicApiRoute/allowList.ts`.
+Its users are the website's dashboard API (`website/src/app/api/`), the calculator's own route, `/api/policyengine/{Public API path}` in `calculator-app`, whose allow list is `app/src/libs/publicApiRoute/allowList.ts`, and the calculator's US ask route, which reads `/us/metadata` with `fetchFromServer`. The calculator's two routes share one forwarder, in `calculator-app/src/app/api/calculatorPublicApi.ts`.
 
-Browser pages will reach the Public API only through these routes, and the routes send PolicyEngine's own server credential. Each route keeps its own allow list of operations; this package only forwards a request the route has already checked.
+The calculator's pages reach the Public API only through its route (`BASE_URL` in `app/src/constants.ts`), and dashboards are to use the website's API. The routes send PolicyEngine's own server credential. Each route keeps its own allow list of operations; this package only forwards a request the route has already checked.
 
 ## What it does
 
@@ -20,7 +20,7 @@ Browser pages will reach the Public API only through these routes, and the route
   Cookies, `Origin`, `Referer` and any `PolicyEngine-User-Authorization` the browser sends are dropped.
 - **Streams the answer back** with an allow list of response headers (`Content-Type`, `ETag`, `Last-Modified`, `Retry-After`, `WWW-Authenticate` and the Public API's request IDs). `Content-Encoding` and `Content-Length` are dropped, because `fetch` has already decompressed the body. Streaming matters because Vercel caps a buffered function answer at 4.5 MB.
 - **Caches nothing it should not**: the route's `cacheControl` applies only to 2xx and 304 answers; every other answer is `no-store`, and so is every answer when the route gives none.
-- **Maps failures to JSON** in the Public API's own error shape, `{"status": "error", "message": ..., "result": null}`:
+- **Maps failures to JSON** in the Public API's own error shape, `{"status": "error", "message": ..., "result": null}`, marked with `X-PolicyEngine-Route-Error: true` (`ROUTE_ERROR_HEADER`) so a same-origin caller, such as the calculator's pages, can tell them from the Public API's own errors, such as its 502 for a failed calculation. A cross-origin caller sees the header only if the route's CORS policy exposes it, and the website's dashboard API doesn't:
 
   | Failure | Status |
   | --- | --- |

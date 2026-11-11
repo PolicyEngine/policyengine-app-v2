@@ -5,6 +5,7 @@ import type { FlagshipReportMeta } from '@/libs/flagship/runReport';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   DATASET_YEAR_UNAVAILABLE_BODY,
   DATASET_YEAR_UNAVAILABLE_MESSAGE,
@@ -103,7 +104,7 @@ vi.mock('@/api/metadata', async (importOriginal) => ({
  */
 function answerUnsupportedYearWith(httpStatus: number, body: object) {
   fetchMock.mockImplementation(async (url: string) => {
-    const requestUrl = new URL(url);
+    const requestUrl = requestUrlOf(url);
     const isUnsupportedYear =
       requestUrl.pathname.includes('/economy/') &&
       requestUrl.searchParams.get('time_period') === String(UK_UNSUPPORTED_YEAR);

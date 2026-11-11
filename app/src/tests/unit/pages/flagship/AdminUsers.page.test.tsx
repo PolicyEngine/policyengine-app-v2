@@ -5,6 +5,7 @@ import type { SignedInUserType } from '@/api/v2AdminUsers';
 import { ADMIN_USER_PAGE_SIZE } from '@/hooks/useAdminUsers';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import AdminUsersPage from '@/pages/flagship/AdminUsers.page';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   ADMIN_API_MESSAGES,
   ADMIN_USER_IDS,
@@ -392,7 +393,7 @@ describe('AdminUsersPage', () => {
     answerAdminApi(fetchMock);
     const answerAsTheApi = fetchMock.getMockImplementation()!;
     fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
-      new URL(url).pathname === `/v2/admin/users/${GRACE.id}`
+      publicApiPathOf(url) === `/v2/admin/users/${GRACE.id}`
         ? errorResponse(503, 'Saved work is temporarily unavailable.')
         : answerAsTheApi(url, init)
     );
@@ -414,7 +415,7 @@ describe('AdminUsersPage', () => {
     answerAdminApi(fetchMock, { changes: [SCRIPT_CHANGE] });
     const answerAsTheApi = fetchMock.getMockImplementation()!;
     fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
-      new URL(url).pathname.endsWith('/user-type-changes')
+      publicApiPathOf(url).endsWith('/user-type-changes')
         ? errorResponse(503, 'Saved work is temporarily unavailable.')
         : answerAsTheApi(url, init)
     );
@@ -536,7 +537,7 @@ describe('AdminUsersPage', () => {
     expect(within(history).getByText(`Changed by ${SIGNED_IN_ADMIN.email}`)).toBeInTheDocument();
     const patchCall = fetchMock.mock.calls.find(([, init]) => init.method === 'PATCH')!;
     expect([patchCall[0], JSON.parse(patchCall[1].body)]).toEqual([
-      `https://api.policyengine.org/v2/admin/users/${ADMIN_USER_IDS.GRACE}`,
+      `/api/policyengine/v2/admin/users/${ADMIN_USER_IDS.GRACE}`,
       { user_type: 'author', expected_user_type: 'standard' },
     ]);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -569,7 +570,7 @@ describe('AdminUsersPage', () => {
     let userReadFailuresLeft = 1;
     fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
       const isReadOfGrace =
-        (init.method ?? 'GET') === 'GET' && new URL(url).pathname === `/v2/admin/users/${GRACE.id}`;
+        (init.method ?? 'GET') === 'GET' && publicApiPathOf(url) === `/v2/admin/users/${GRACE.id}`;
       if (isReadOfGrace && userReadFailuresLeft > 0) {
         userReadFailuresLeft -= 1;
         return errorResponse(503, 'Saved work is temporarily unavailable.');
@@ -637,7 +638,7 @@ describe('AdminUsersPage', () => {
     let userReadFailuresLeft = 1;
     fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
       const isReadOfGrace =
-        (init.method ?? 'GET') === 'GET' && new URL(url).pathname === `/v2/admin/users/${GRACE.id}`;
+        (init.method ?? 'GET') === 'GET' && publicApiPathOf(url) === `/v2/admin/users/${GRACE.id}`;
       if (isReadOfGrace && userReadFailuresLeft > 0) {
         userReadFailuresLeft -= 1;
         return errorResponse(503, 'Saved work is temporarily unavailable.');
@@ -851,7 +852,7 @@ describe('AdminUsersPage', () => {
     await screen.findByRole('button', { name: GRACE.email! });
     // The admin routes refuse, and /v2/me cannot be read, so it still says admin.
     fetchMock.mockImplementation(async (url: string) =>
-      new URL(url).pathname === '/v2/me'
+      publicApiPathOf(url) === '/v2/me'
         ? errorResponse(503, 'Saved work is temporarily unavailable.')
         : errorResponse(403, ADMIN_API_MESSAGES.ADMINS_ONLY)
     );
@@ -954,7 +955,7 @@ describe('AdminUsersPage', () => {
     const answerAsTheApi = fetchMock.getMockImplementation()!;
     let listFailuresLeft = 1;
     fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
-      if (new URL(url).pathname === '/v2/admin/users' && listFailuresLeft > 0) {
+      if (publicApiPathOf(url) === '/v2/admin/users' && listFailuresLeft > 0) {
         listFailuresLeft -= 1;
         return errorResponse(503, 'Saved work is temporarily unavailable.');
       }

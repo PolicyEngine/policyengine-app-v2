@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { fetchBudgetWindow } from '@/api/budgetWindow';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   LEGACY_NORTHERN_IRELAND_REGION_CODE,
   NORTHERN_IRELAND_REGION_CODE,
@@ -28,7 +29,7 @@ describe('fetchBudgetWindow', () => {
     });
 
     expect(fetchMock.mock.calls[0][0]).toBe(
-      'https://api.policyengine.org/us/economy/123/over/2/budget-window?region=state%2Fde&start_year=2026&window_size=10'
+      '/api/policyengine/us/economy/123/over/2/budget-window?region=state%2Fde&start_year=2026&window_size=10'
     );
     expect(response).toEqual(COMPUTING);
   });
@@ -43,7 +44,7 @@ describe('fetchBudgetWindow', () => {
       windowSize: 10,
     });
 
-    const requestUrl = new URL(fetchMock.mock.calls[0][0]);
+    const requestUrl = requestUrlOf(fetchMock.mock.calls[0][0]);
     expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 

@@ -50,6 +50,10 @@ const CALCULATOR_OPERATIONS: ReadonlyArray<[string, string, string]> = [
   ['PATCH', `/v2/user-reports/${SAVED_RECORD_ID}`, 'saved report'],
   ['GET', '/v2/user-households', 'saved households'],
   ['POST', '/v2/user-households', 'saved households'],
+  ['GET', '/v2/admin/users', 'admin users'],
+  ['GET', `/v2/admin/users/${SAVED_RECORD_ID}`, 'admin user'],
+  ['PATCH', `/v2/admin/users/${SAVED_RECORD_ID}`, 'admin user'],
+  ['GET', `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`, 'admin user type changes'],
 ];
 
 // Requests the calculator never sends, many of them neighbours of ones it
@@ -84,6 +88,11 @@ const REFUSED_REQUESTS: ReadonlyArray<[string, string]> = [
   ['GET', '/us/metadata/'],
   ['GET', '/us%2Fmetadata'],
   ['GET', '/v2/model-catalog?country_id=us'],
+  ['POST', '/v2/admin/users'],
+  ['DELETE', `/v2/admin/users/${SAVED_RECORD_ID}`],
+  ['GET', `/v2/admin/users/${SAVED_RECORD_ID}/saved-items`],
+  ['GET', '/v2/admin/users/not-a-uuid'],
+  ['PATCH', `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`],
 ];
 
 describe('matchAllowedOperation', () => {

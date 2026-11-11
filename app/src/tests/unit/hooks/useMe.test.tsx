@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useMe } from '@/hooks/useMe';
 import AccountPage from '@/pages/flagship/Account.page';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   answerMe,
   answerMeWithUser,
@@ -23,7 +24,7 @@ const fetchMock = vi.fn();
 /** The `country_id` of the nth request sent (counting from 0). */
 function requestedCountry(requestIndex: number): string | null {
   const [url] = fetchMock.mock.calls[requestIndex];
-  return new URL(url).searchParams.get('country_id');
+  return requestUrlOf(url).searchParams.get('country_id');
 }
 
 beforeEach(() => {

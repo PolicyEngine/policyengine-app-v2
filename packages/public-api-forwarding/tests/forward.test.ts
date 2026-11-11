@@ -521,6 +521,82 @@ describe("createPublicApiForwarder when the browser has gone", () => {
   });
 });
 
+// A caller tells an error the route wrote, such as "could not be reached",
+// from the Public API's own error of the same status by this header.
+const ROUTE_ERROR_HEADER = "X-PolicyEngine-Route-Error";
+
+describe("createPublicApiForwarder errors it writes itself", () => {
+  test.each<[string, ForwarderSetup]>([
+    [
+      "the Public API cannot be reached",
+      {
+        publicApiAnswer: () => {
+          throw new TypeError("fetch failed");
+        },
+      },
+    ],
+    [
+      "the Public API redirects",
+      {
+        publicApiAnswer: () =>
+          new Response(null, {
+            status: 302,
+            headers: { Location: "https://elsewhere.example.test/" },
+          }),
+      },
+    ],
+    [
+      "a non-JSON 502 from in front of the Public API",
+      {
+        publicApiAnswer: () =>
+          new Response("<html>Bad gateway</html>", {
+            status: 502,
+            headers: { "Content-Type": "text/html" },
+          }),
+      },
+    ],
+    [
+      "the token request fails",
+      { tokenAnswer: () => jsonResponse({ error: "access_denied" }, 403) },
+    ],
+    ["no Public API configured", { environment: { VERCEL_ENV: "preview" } }],
+  ])(
+    "given %s then the answer says the route wrote it",
+    async (_label, setup) => {
+      // Given
+      const { forwarder } = forwarderWith(setup);
+
+      // When
+      const response = await forwarder.forward(CALCULATE_REQUEST, {
+        incomingRequest: browserRequest(),
+      });
+
+      // Then
+      expect(response.headers.get(ROUTE_ERROR_HEADER)).toBe("true");
+    },
+  );
+
+  test("given the Public API's own JSON error then the answer does not say the route wrote it", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      publicApiAnswer: () =>
+        jsonResponse(
+          { status: "error", message: "Simulation failed.", result: null },
+          502,
+        ),
+    });
+
+    // When
+    const response = await forwarder.forward(CALCULATE_REQUEST, {
+      incomingRequest: browserRequest(),
+    });
+
+    // Then
+    expect(response.status).toBe(502);
+    expect(response.headers.get(ROUTE_ERROR_HEADER)).toBeNull();
+  });
+});
+
 describe("isForwardablePath", () => {
   test.each([
     ["/us/calculate", true],

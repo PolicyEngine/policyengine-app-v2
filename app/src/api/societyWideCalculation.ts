@@ -1,5 +1,6 @@
 import { normalizeSocietyWideOutput } from '@/adapters/societyWideOutputNormalizer';
 import { BASE_URL } from '@/constants';
+import { ROUTE_ERROR_HEADER } from '@/libs/publicApiRoute/sameOriginRoute';
 import { canonicalRegionCode } from '@/models/region';
 import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
@@ -186,12 +187,19 @@ export class EconomyCalculationError extends Error {
   readonly status: number;
   /** The answer's body parsed as JSON, or null when it is not JSON. */
   readonly body: unknown;
+  /**
+   * Whether the calculator's route wrote the answer itself (ROUTE_ERROR_HEADER),
+   * for example because the Public API could not be reached, rather than
+   * passing on the Public API's own answer.
+   */
+  readonly writtenByRoute: boolean;
 
-  constructor(message: string, status: number, body: unknown) {
+  constructor(message: string, status: number, body: unknown, writtenByRoute = false) {
     super(message);
     this.name = 'EconomyCalculationError';
     this.status = status;
     this.body = body;
+    this.writtenByRoute = writtenByRoute;
   }
 }
 
@@ -231,12 +239,13 @@ function isErrorBody(body: unknown): body is object {
  * Whether an economy request's error is a failed calculation: the Public API
  * answers one with 502 and `{ status: "error", message, result: null,
  * retry_after_seconds, delete_after_seconds }`. Null for anything else, such
- * as a proxy's 502 page, another status or a network error, which are failed
- * requests instead. Only for an economy GET's error: a DELETE's error is the
+ * as a proxy's 502 page, a 502 the calculator's route wrote itself (the
+ * Public API unreachable, no credential), another status or a network
+ * error, which are failed requests instead. Only for an economy GET's error: a DELETE's error is the
  * same class, but a 502 from it is not a failed calculation.
  */
 export function failedCalculationOf(error: unknown): FailedCalculation | null {
-  if (!(error instanceof EconomyCalculationError) || error.status !== 502) {
+  if (!(error instanceof EconomyCalculationError) || error.status !== 502 || error.writtenByRoute) {
     return null;
   }
   const body = error.body;
@@ -271,8 +280,11 @@ const DELETE_REQUEST: EconomyRequestKind = {
  * economy request (fetchSocietyWideCalculation) with the same arguments
  * answers with, so the next such request submits a new run. It sends DELETE
  * to that request's own URL, and reads the answer's status and
- * `delete_after_seconds`, never its message. Any other answer throws an
- * EconomyCalculationError; a network error propagates.
+ * `delete_after_seconds`, never its message. An answer the calculator's
+ * route wrote itself (ROUTE_ERROR_HEADER) throws an EconomyCalculationError
+ * with `writtenByRoute` set, whatever its status, since it says nothing
+ * about what the Public API stores. Any other answer throws an
+ * EconomyCalculationError too; a network error propagates.
  */
 export async function deleteFailedSocietyWideCalculation(
   countryId: string,
@@ -291,6 +303,11 @@ export async function deleteFailedSocietyWideCalculation(
 
   const body = await responseText(response);
   const parsed = parsedBody(body);
+  // An answer the calculator's route wrote itself says nothing about what
+  // the Public API stores: the DELETE failed.
+  if (response.headers.get(ROUTE_ERROR_HEADER) === 'true') {
+    throw economyRequestError(response, url, body, parsed, DELETE_REQUEST);
+  }
   if (response.status === 404 && isErrorBody(parsed)) {
     return { outcome: 'nothing-stored' };
   }
@@ -371,7 +388,8 @@ function economyRequestError(
   return new EconomyCalculationError(
     `${kind.label} failed (${response.status}): ${detail}`,
     response.status,
-    parsed
+    parsed,
+    response.headers.get(ROUTE_ERROR_HEADER) === 'true'
   );
 }
 

@@ -1,5 +1,6 @@
 import type { Mock } from 'vitest';
 import type { AdminUserItem, SignedInUserType, UserTypeChangeItem } from '@/api/v2AdminUsers';
+import { publicApiPathOf, requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   errorResponse,
   itemResponse,
@@ -178,8 +179,8 @@ export function answerAdminApi(
   }
 
   fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
-    const requestUrl = new URL(url);
-    const path = requestUrl.pathname;
+    const requestUrl = requestUrlOf(url);
+    const path = publicApiPathOf(url);
     const method = init.method ?? 'GET';
     if (path === '/v2/me' && method === 'GET') {
       return itemResponse(signedInUser);
@@ -247,8 +248,7 @@ export function answerAdminApi(
 export function sentRequests(fetchMock: Mock): string[] {
   return fetchMock.mock.calls.map((call) => {
     const [url, init] = call as [string, RequestInit];
-    const requestUrl = new URL(url);
-    return `${init.method ?? 'GET'} ${requestUrl.pathname}${requestUrl.search}`;
+    return `${init.method ?? 'GET'} ${publicApiPathOf(url)}${requestUrlOf(url).search}`;
   });
 }
 
@@ -264,7 +264,7 @@ export function holdRequests(
   const answerAsBefore = fetchMock.getMockImplementation()!;
   const heldRequests: Array<() => void> = [];
   fetchMock.mockImplementation((url: string, init: RequestInit) => {
-    if (!shouldHold(init.method ?? 'GET', new URL(url).pathname)) {
+    if (!shouldHold(init.method ?? 'GET', publicApiPathOf(url))) {
       return answerAsBefore(url, init);
     }
     return new Promise<Response>((resolve) => {
@@ -289,7 +289,7 @@ export function holdUserReads(fetchMock: Mock) {
 /** Makes every admin route answer 403 and `/v2/me` return a standard user, as after a demotion. */
 export function answerAsDemotedAdmin(fetchMock: Mock) {
   fetchMock.mockImplementation(async (url: string) =>
-    new URL(url).pathname === '/v2/me'
+    publicApiPathOf(url) === '/v2/me'
       ? itemResponse(meItemOfType('standard'))
       : errorResponse(403, ADMIN_API_MESSAGES.ADMINS_ONLY)
   );
@@ -306,7 +306,7 @@ export function holdAnswersOfUserReads(fetchMock: Mock, userId: string) {
   const heldDeliveries: Array<() => void> = [];
   fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
     const isReadOfTheUser =
-      (init.method ?? 'GET') === 'GET' && new URL(url).pathname === `/v2/admin/users/${userId}`;
+      (init.method ?? 'GET') === 'GET' && publicApiPathOf(url) === `/v2/admin/users/${userId}`;
     if (!isReadOfTheUser) {
       return answerAsBefore(url, init);
     }
