@@ -2,7 +2,7 @@
 
 Server-side code that sends requests to the PolicyEngine Public API (api.policyengine.org) for the website's and the calculator's route handlers. It is a private workspace package; it is not published.
 
-Its users are the website's dashboard API (`website/src/app/api/`) and the calculator's own route, `/api/policyengine/{Public API path}` in `calculator-app`, whose allow list is `app/src/libs/publicApiRoute/allowList.ts`.
+Its users are the website's dashboard API (`website/src/app/api/`), the calculator's own route, `/api/policyengine/{Public API path}` in `calculator-app`, whose allow list is `app/src/libs/publicApiRoute/allowList.ts`, and the calculator's US ask route, which reads `/us/metadata` with `fetchFromServer`. The calculator's two routes share one forwarder, in `calculator-app/src/app/api/calculatorPublicApi.ts`.
 
 Browser pages will reach the Public API only through these routes, and the routes send PolicyEngine's own server credential. Each route keeps its own allow list of operations; this package only forwards a request the route has already checked.
 

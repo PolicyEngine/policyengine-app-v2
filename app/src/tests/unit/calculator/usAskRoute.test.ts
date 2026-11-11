@@ -18,6 +18,7 @@ const STAGING_PUBLIC_API_URL = 'https://public-api-staging.example.test';
 const OTHER_METADATA_URL = 'https://metadata-copy.example.test/us/metadata';
 const TOKEN_ENDPOINT = 'https://auth.example.test/oauth/token';
 const CALCULATOR_SERVER_TOKEN = 'calculator-server-token';
+const BROWSER_ADDRESS = '203.0.113.7';
 const US_METADATA_ANSWER = { status: 'ok', message: null, result: { parameters: {} } };
 
 const fetchMock = vi.fn<typeof fetch>();
@@ -120,6 +121,10 @@ describe('calculator /api/us-ask/chat/message', () => {
 
     // Then
     expect(firstResponse.status).toBe(502);
+    expect(console.error).toHaveBeenCalledWith(
+      'Could not read US parameter metadata:',
+      'US metadata fetch failed: 503'
+    );
     expect(metadataRequests().map((request) => request.url)).toEqual([
       `${STAGING_PUBLIC_API_URL}/us/metadata`,
       `${STAGING_PUBLIC_API_URL}/us/metadata`,
@@ -132,6 +137,9 @@ describe('calculator /api/us-ask/chat/message', () => {
     const request = askRequest();
     request.headers.set('Authorization', 'Bearer signed-in-user-access-token');
     request.headers.set('Cookie', 'appSession=secret-session');
+    // A documentation address (RFC 5737); Vercel sets x-real-ip for browsers.
+    request.headers.set('x-real-ip', BROWSER_ADDRESS);
+    request.headers.set('X-Forwarded-For', BROWSER_ADDRESS);
 
     // When
     await POST(request);
@@ -141,6 +149,8 @@ describe('calculator /api/us-ask/chat/message', () => {
     expect(metadataRequest.headers.get('authorization')).toBe(`Bearer ${CALCULATOR_SERVER_TOKEN}`);
     expect(metadataRequest.headers.get('policyengine-user-authorization')).toBeNull();
     expect(metadataRequest.headers.get('cookie')).toBeNull();
+    expect(metadataRequest.headers.get('x-forwarded-for')).toBeNull();
+    expect(metadataRequest.headers.get('x-real-ip')).toBeNull();
   });
 
   test('given US_METADATA_URL names another address then the metadata still comes from the Public API with the credential', async () => {

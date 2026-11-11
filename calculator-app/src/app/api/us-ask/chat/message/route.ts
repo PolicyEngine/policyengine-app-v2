@@ -52,8 +52,11 @@ function getUsAskContext(): Promise<UsAskContext> {
     const promise = (async () => {
       // Sent as the server's own request, with no browser headers. Throws
       // PublicApiUnavailableError when it cannot be sent: no Public API
-      // named for this deployment, no credential, or the Public API
-      // unreachable or too slow.
+      // named for this deployment, a credential that is only partly
+      // configured, no token from Auth0, or the Public API unreachable or
+      // too slow. With no credential configured at all, it is sent without
+      // one. A non-2xx answer, or a body that cannot be read or parsed,
+      // throws below.
       const response = await calculatorPublicApi.fetchFromServer(
         { method: "GET", path: "/us/metadata" },
         { timeoutMilliseconds: METADATA_TIMEOUT_MILLISECONDS },
