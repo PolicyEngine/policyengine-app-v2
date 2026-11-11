@@ -41,6 +41,10 @@ export const dynamic = "force-dynamic";
 // calculator-app/vercel.json turns on Vercel's request cancellation for
 // this route, so a browser that goes away stops the function and its
 // request to the Public API, rather than holding them for that long.
+// Cancellation applies to every method: a write the browser has fully sent
+// is dropped if the browser goes away before the route forwards it, which
+// is usually milliseconds and at most the token request. Browsers calling
+// the Public API directly had no such window.
 export const maxDuration = 800;
 
 const calculatorPublicApi = createPublicApiForwarder({

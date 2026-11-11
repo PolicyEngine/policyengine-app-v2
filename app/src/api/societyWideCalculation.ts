@@ -280,8 +280,11 @@ const DELETE_REQUEST: EconomyRequestKind = {
  * economy request (fetchSocietyWideCalculation) with the same arguments
  * answers with, so the next such request submits a new run. It sends DELETE
  * to that request's own URL, and reads the answer's status and
- * `delete_after_seconds`, never its message. Any other answer throws an
- * EconomyCalculationError; a network error propagates.
+ * `delete_after_seconds`, never its message. An answer the calculator's
+ * route wrote itself (ROUTE_ERROR_HEADER) throws an EconomyCalculationError
+ * with `writtenByRoute` set, whatever its status, since it says nothing
+ * about what the Public API stores. Any other answer throws an
+ * EconomyCalculationError too; a network error propagates.
  */
 export async function deleteFailedSocietyWideCalculation(
   countryId: string,

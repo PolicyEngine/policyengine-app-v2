@@ -48,9 +48,9 @@ const OPAQUE_ID = '[A-Za-z0-9_-]{1,64}';
 /**
  * How long the route waits for the Public API's response headers, for every
  * operation: as long as the route's function may run (`maxDuration`, 800 s,
- * the Pro limit on Fluid compute), less 50 s for a token request and the
- * body. The Public API has no shorter limit to match: its Cloud Run
- * services end a request 300 s after an instance takes it (read
+ * Vercel Pro's standard limit on Fluid compute), less 50 s for a token
+ * request and the body. The Public API has no shorter limit to match: its
+ * Cloud Run services end a request 300 s after an instance takes it (read
  * 2026-11-10), but a request can first wait for an instance to start. Its
  * load balancer recorded answers after up to 396 s, and slow answers are
  * not only calculations: country metadata took up to 246 s and a v1 policy

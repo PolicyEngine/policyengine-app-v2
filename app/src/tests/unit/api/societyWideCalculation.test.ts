@@ -1054,6 +1054,7 @@ describe('deleteFailedSocietyWideCalculation', () => {
       // Then
       expect(outcome).toBeInstanceOf(EconomyCalculationError);
       expect((outcome as EconomyCalculationError).status).toBe(status);
+      expect((outcome as EconomyCalculationError).writtenByRoute).toBe(true);
     }
   );
 
