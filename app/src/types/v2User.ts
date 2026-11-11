@@ -35,8 +35,30 @@ export interface V2PageResult<T> {
   has_more: boolean;
 }
 
-/** An unauthenticated user is this browser's; a standard user signs in with Auth0. */
-export type UserType = 'unauthenticated' | 'standard';
+/**
+ * Every user type, from fewest permissions to most: each type has every
+ * permission of the types before it. An unauthenticated user is this
+ * browser's; a signed-in user (Auth0) is standard, author or admin, as the
+ * API stores it.
+ */
+export const USER_TYPES = ['unauthenticated', 'standard', 'author', 'admin'] as const;
+export type UserType = (typeof USER_TYPES)[number];
+
+export function isUserType(value: unknown): value is UserType {
+  return typeof value === 'string' && (USER_TYPES as readonly string[]).includes(value);
+}
+
+/**
+ * Whether `userType` has every permission of `minimum`: it is `minimum` or
+ * comes after it in `USER_TYPES`. The Public API's
+ * `user_type_meets_minimum` decides the same way. False when either is not
+ * in `USER_TYPES`.
+ */
+export function userTypeMeetsMinimum(userType: UserType, minimum: UserType): boolean {
+  const userTypeRank = USER_TYPES.indexOf(userType);
+  const minimumRank = USER_TYPES.indexOf(minimum);
+  return userTypeRank !== -1 && minimumRank !== -1 && userTypeRank >= minimumRank;
+}
 
 export interface MeItem {
   /** The PolicyEngine user ID that owns every association. */
