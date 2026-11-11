@@ -1,7 +1,0 @@
-year,scenario,extra_income_tax_bn,extra_income_tax_outside_scottish_income_tax_bn,extra_ni_bn,extra_income_tax_and_ni_bn,extra_other_tax_bn,extra_uc_bn,extra_housing_benefit_bn,extra_pension_credit_bn,extra_ctr_bn,extra_income_support_bn,extra_working_tax_credit_bn,extra_child_tax_credit_bn,extra_benefits_bn,extra_other_benefits_bn,net_income_change_bn,gini_frozen,gini_raised
-2026-27,ni_tracks_allowance,30.038,27.382,6.883,36.921,0.023,0.803,0.07,0.085,0.021,0.0,0.0,0.0,0.989,0.011,-35.955,0.28271,0.28197
-2026-27,allowance_only,30.038,27.382,0.0,30.038,0.023,0.61,0.07,0.085,0.021,0.0,0.0,0.0,0.798,0.013,-29.263,0.28271,0.28214
-2026-27,obr_thresholds,41.678,39.012,-4.993,36.685,0.116,0.591,0.07,0.085,0.021,0.0,0.0,0.0,0.774,0.008,-36.027,0.28271,0.28396
-2027-28,ni_tracks_allowance,35.476,32.33,8.066,43.542,0.027,0.942,0.083,0.109,0.025,0.0,0.0,0.0,1.174,0.015,-42.395,0.28468,0.28377
-2027-28,allowance_only,35.476,32.33,0.0,35.476,0.027,0.719,0.083,0.109,0.025,0.0,0.0,0.0,0.951,0.015,-34.552,0.28468,0.28396
-2027-28,obr_thresholds,48.431,45.321,-4.976,43.455,0.132,0.716,0.082,0.108,0.025,0.0,0.0,0.0,0.94,0.01,-42.647,0.28468,0.28595

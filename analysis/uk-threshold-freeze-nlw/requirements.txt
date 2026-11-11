@@ -3,3 +3,4 @@ policyengine-core==3.34.7
 hypothesis
 numpy
 pytest
+scipy

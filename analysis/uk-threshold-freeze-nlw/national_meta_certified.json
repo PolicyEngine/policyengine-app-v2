@@ -1,19 +1,50 @@
 {
- "policyengine_uk": "2.151.0",
+ "policyengine_uk": "2.174.1",
  "policyengine_core": "3.33.3",
- "dataset": "microcosm-uk-2024-25-national-20261025T091414Z-a6299504",
- "dataset_sha256": "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e",
- "forecast": {
-  "dashboard_commit": "640426575270224db9b04d6c94d30e264a347be2",
-  "source": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/640426575270224db9b04d6c94d30e264a347be2/src/uk_budget_data/forecast/obr_october_2026.json",
-  "forecast_file_git_blob": "b504a48fffb93714ff358d869cad712b6daea20e",
-  "forecast_module_git_blob": "b2ca186b6fd514f334ced11934d38b256e6d2127",
-  "forecast_file_sha256": "dc039d30660d17f30a45e49538dbd22953e02bd4f6b63eda2eaebcf8252baf54",
-  "baseline_and_reform": true,
-  "nominal_household_inputs": "Held fixed in 2027; the forecast updates model parameters, not the supplied income amounts.",
-  "remaining_series": "March paths remain for cpih, non-labour income, private rent, mortgage interest, per-capita series, council tax and fuel volumes/prices, as recorded by this forecast vintage."
+ "dataset": "microcosm-uk-2024-25-national-20261107T020434Z-eeb6093e",
+ "dataset_sha256": "0a9b77db1c0dee2693cb2d47bad68da34cb662916eee4829942bcd45de581f25",
+ "disclosure": {
+  "rules": {
+   "minimum_survey_households": 10,
+   "maximum_share_of_one_household": 0.5,
+   "minimum_error_for_one_household_p_percent_rule": 0.1,
+   "change_of_at_most_counts_as_none_gbp": 1.0
+  },
+  "decimal_places": {
+   "totals_in_gbp_bn": 2,
+   "counts_in_millions": 3,
+   "shares_and_rates": 3,
+   "averages_in_gbp": 0,
+   "percentage_changes": 2,
+   "gini_indexes": 5
+  },
+  "comparison_scenarios": {
+   "scenarios": [
+    "obr_thresholds",
+    "hmrc_ten_percent"
+   ],
+   "decimal_places_fewer": 1
+  },
+  "protection": "A reader's bounds on each withheld figure that fails the rules, and on the withheld figures of each link together where they fail, lie at least one survey household's largest part from the true value on each failing side.",
+  "figures": {
+   "2026-27": {
+    "figures": 1049,
+    "withheld": 95,
+    "withheld_failing_the_rules": 22,
+    "withheld_by_policyengines_share_rule": 0,
+    "withheld_to_keep_a_failing_figure_out_of_reach": 73,
+    "shown_on_fewer_than_30_effective_survey_households": 88
+   },
+   "2027-28": {
+    "figures": 1049,
+    "withheld": 95,
+    "withheld_failing_the_rules": 23,
+    "withheld_by_policyengines_share_rule": 0,
+    "withheld_to_keep_a_failing_figure_out_of_reach": 72,
+    "shown_on_fewer_than_30_effective_survey_households": 82
+   }
+  }
  },
- "survey_household_floor": 10,
  "scenarios": {
   "ni_tracks_allowance": {
    "gov.hmrc.income_tax.allowances.personal_allowance.amount": {

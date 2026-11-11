@@ -1,6 +1,6 @@
 # The threshold freeze and the National Living Wage
 
-This folder holds the scripts, results and tests behind [the post](../../app/src/data/posts/articles/uk-threshold-freeze-national-living-wage.md) on how much more income tax and National Insurance workers on the National Living Wage pay under the threshold freeze, what the freeze does to net income after Universal Credit and Council Tax Reduction, and what it costs households across the UK.
+We use these scripts, results and tests for [the post](../../app/src/data/posts/articles/uk-threshold-freeze-national-living-wage.md) on the threshold freeze. With them we calculate how much more income tax and National Insurance workers on the National Living Wage pay with thresholds frozen, their net income after Universal Credit and Council Tax Reduction, and what the freeze costs households across the UK.
 
 ## Reproduce the figures
 
@@ -14,111 +14,109 @@ analysis/uk-threshold-freeze-nlw/.venv/bin/python analysis/uk-threshold-freeze-n
 analysis/uk-threshold-freeze-nlw/.venv/bin/python -m pytest analysis/uk-threshold-freeze-nlw
 ```
 
-The tests need only `hypothesis`, `numpy` and `pytest`, and two of them rerun rows on the live model in an environment that has PolicyEngine UK.
+You need only `hypothesis`, `numpy`, `pytest` and `scipy` to run the tests. In an environment with PolicyEngine UK, ⟦live-count⟧ of them also rerun rows on the live model, and with `policyengine` 6.16.1 installed, ⟦layer-count⟧ more compare `disclosure.py` with PolicyEngine's disclosure layer.
 
-The national figures need a separate environment, from `requirements-national.txt`, and the Microcosm UK file, which sits in a private Hugging Face repository because it derives from the Family Resources Survey. With that file at `DATA` and a private folder at `ARRAYS`, run each scenario in its own process, then add the results up:
+For the national figures, install `requirements-national.txt` in a separate environment and download the Microcosm UK file, which PolicyEngine keeps in a private Hugging Face repository because it derives from the Family Resources Survey. With that file at `DATA` and a private folder at `ARRAYS`, run each scenario in its own process, then add the results up:
 
 ```sh
 for scenario in baseline ni_tracks_allowance ni_sep_cpi_from_jul22 ni_p2p_from_jul22 allowance_only ni_sep_cpi_from_2021 obr_thresholds hmrc_ten_percent; do
-  python analysis/uk-threshold-freeze-nlw/national_freeze.py run --scenario "$scenario" --data "$DATA" --arrays "$ARRAYS" --label certified --overlay
+  python analysis/uk-threshold-freeze-nlw/national_freeze.py run --scenario "$scenario" --data "$DATA" --arrays "$ARRAYS" --label certified
 done
-python analysis/uk-threshold-freeze-nlw/national_freeze.py tables --arrays "$ARRAYS" --label certified --out analysis/uk-threshold-freeze-nlw --private "$ARRAYS" --data "$DATA" --dataset-name microcosm-uk-2024-25-national-20261025T091414Z-a6299504 --overlay
+python analysis/uk-threshold-freeze-nlw/national_freeze.py tables --arrays "$ARRAYS" --label certified --out analysis/uk-threshold-freeze-nlw --private "$ARRAYS" --data "$DATA" --dataset-name microcosm-uk-2024-25-national-20261107T020434Z-eeb6093e
 ```
-
-The sensitivity runs use the environment from `requirements.txt`, with `--label latest`, no `--overlay`, the scenarios `baseline`, `ni_tracks_allowance`, `allowance_only` and `obr_thresholds`, and `--scenarios ni_tracks_allowance allowance_only obr_thresholds` on `tables`.
 
 ## Files
 
-- `thresholds.py` holds the CPI series, threshold paths and council tax bills, and needs no model code.
-- `nlw_freeze.py` runs PolicyEngine UK on hypothetical households and writes `results.csv` and `meta.json`. It uses no microdata.
-- `hours_net_income.py` runs single workers and lone parents from 15 to 40 hours a week through UC and Council Tax Reduction, and writes `hours.csv` and `hours_meta.json`. It uses no microdata.
-- `national_freeze.py` runs the national scenarios and writes the `national_*_certified` tables. Its record-level arrays stay outside this repository. `national_totals_latest.csv`, `national_counts_latest.csv` and `national_meta_latest.json` hold the sensitivity runs on PolicyEngine UK 2.175.5.
-- `test_freeze.py`, `test_hours.py` and `test_national.py` check the invariants below and compare every table, chart and key prose figure in the post with the results.
+- `thresholds.py` holds the CPI series, threshold paths and council tax bills, and imports no model code.
+- `nlw_freeze.py` runs PolicyEngine UK on hypothetical households and writes `results.csv` and `meta.json`, with no microdata.
+- `hours_net_income.py` runs single workers and lone parents from 15 to 40 hours a week through UC and Council Tax Reduction, and writes `hours.csv` and `hours_meta.json`, with no microdata.
+- `national_freeze.py` runs the national scenarios and writes the `national_*_certified` tables, leaving blank each figure that `disclosure.py` withholds. It keeps its record-level arrays outside this repository.
+- `disclosure.py` decides which national figures we publish, and imports no model code.
+- `test_freeze.py`, `test_hours.py`, `test_national.py` and `test_disclosure.py` check the invariants below and compare the post's tables, charts and selected prose figures with the results.
 
 ## Versions
 
-We run the household scripts on PolicyEngine UK 2.175.5 and policyengine-core 3.34.7, both from PyPI. PolicyEngine UK 2.170.0 and later carry the Budget baseline from [policyengine-uk#2719](https://github.com/PolicyEngine/policyengine-uk/pull/2719), and `nlw_freeze.py` gives a byte-identical `results.csv` on 2.170.0, 2.175.3, 2.175.4, 2.175.5 and 2.175.6. `hours_net_income.py` gives a byte-identical `hours.csv` on 2.175.5 and 2.175.6.
+We run the household scripts on PolicyEngine UK 2.175.5 and policyengine-core 3.34.7, both from PyPI. PolicyEngine UK 2.170.0 and later carry the Budget baseline from [policyengine-uk#2719](https://github.com/PolicyEngine/policyengine-uk/pull/2719), and `nlw_freeze.py` writes a byte-identical `results.csv` on 2.170.0, 2.174.1, 2.175.3, 2.175.4, 2.175.5, 2.175.6 and 2.177.0. `hours_net_income.py` writes a byte-identical `hours.csv` on 2.175.5, 2.175.6 and 2.177.0. On 2.174.1, its results differ only for the Oxford lone parent, because PolicyEngine UK assesses a UC claimant in Oxford under Appendix 3 of the council's scheme from 2.174.8.
 
-We run the national figures on the certified pair behind PolicyEngine's Autumn Budget 2026 dashboard: PolicyEngine UK 2.151.0 and the Microcosm UK file `microcosm-uk-2024-25-national-20261025T091414Z-a6299504`, which `policyengine` 6.11.1 pins, with the OBR's October 2026 forecast from [`../uk-budget-2026-income-tax/forecast.py`](../uk-budget-2026-income-tax/forecast.py). `national_meta_certified.json` records the file's hash, the forecast's provenance and the thresholds each run held. PolicyEngine UK 2.151.0 predates the Budget, so it has no Pension Tax Allowance. [Decisions](#decisions) summarises our national sensitivity runs on 2.175.5, which has one.
+We run the national figures on the pair that `policyengine` 6.16.1 pins: PolicyEngine UK 2.174.1 with policyengine-core 3.33.3, and the Microcosm UK file `microcosm-uk-2024-25-national-20261107T020434Z-eeb6093e`. PolicyEngine UK 2.174.1 carries the OBR's October 2026 forecast and the Pension Tax Allowance. `national_meta_certified.json` records the file's hash and the thresholds each run held.
 
 ## Comparisons
 
-Each path overrides the Personal Allowance and the Class 1 primary threshold for one tax year. The basic rate band stays at £37,700, so the higher rate threshold rises with the allowance, and the upper earnings limit, Class 4 limits and employer thresholds stay put.
+On each path, we change the Personal Allowance and the Class 1 primary threshold for one tax year. We keep the basic rate band at £37,700, so the higher rate threshold rises with the allowance, and leave the upper earnings limit, Class 4 limits and employer thresholds as they stand.
 
 | `scenario` | NI primary threshold |
 | --- | --- |
 | `ni_tracks_allowance` | Equal to the allowance |
-| `ni_sep_cpi_from_jul22` | £242 a week, uprated each April from 2023 by the previous September's CPI, to the nearest £1 a week |
-| `ni_p2p_from_jul22` | £242 a week, multiplied by the CPI index from July 2022 to the September before the tax year, to the nearest £1 a week |
-| `allowance_only` | As it stands |
-| `ni_sep_cpi_from_2021` | £184 a week from 2021-22, uprated by September CPI to the nearest £1 a week, with no July 2022 rise |
+| `ni_sep_cpi_from_jul22` | We raise £242 a week each April from 2023 by the previous September's CPI, to the nearest £1 a week |
+| `ni_p2p_from_jul22` | We multiply £242 a week by the rise in the CPI index from July 2022 to the September before the tax year, to the nearest £1 a week |
+| `allowance_only` | £12,570 a year, as it stands |
+| `ni_sep_cpi_from_2021` | We raise £184 a week each April from 2021-22 by the previous September's CPI, to the nearest £1 a week, with no July 2022 rise |
 
-`allowance_path` takes two values. `s57` applies Income Tax Act 2007 section 57 each April from 2022, rounding each increase up to £10, which gives £16,080 and £16,650. `alternative` uses assumed allowances of £16,070 and £16,632.
+In `results.csv`, `allowance_path` takes two values. With `s57`, we apply Income Tax Act 2007 section 57 each April from 2022 and round each increase up to a multiple of £10, which gives £16,080 and £16,650. With `alternative`, we assume allowances of £16,070 and £16,632, and we leave those rows out of the post.
 
-Two more national scenarios exist for comparison with outside estimates:
+We run two more national scenarios to compare our estimates with published ones:
 
-- `obr_thresholds` takes the OBR's "with indexation" levels from Table 4.19 of the receipts tables of its October 2026 outlook: Personal Allowance, higher rate threshold, upper earnings limit, upper profits limit and primary threshold, with the additional rate threshold back at £150,000 and the lower profits limit equal to the primary threshold.
-- `hmrc_ten_percent` raises the Personal Allowance, basic rate band and starting rate limit for savings by 10%, to compare with HMRC's row "Increase all main allowances, starting and basic rate limits by 10%".
+- In `obr_thresholds`, we set the Personal Allowance, higher rate threshold, upper earnings limit, upper profits limit and primary threshold to the OBR's "with indexation" levels from Table 4.19 of the receipts tables of its October 2026 outlook. We also put the additional rate threshold back at £150,000 and set the lower profits limit equal to the primary threshold.
+- In `hmrc_ten_percent`, we raise the Personal Allowance, basic rate band and starting rate limit for savings by 10%, as HMRC does in its row "Increase all main allowances, starting and basic rate limits by 10%".
 
-Every comparison runs one way: frozen less raised. Extra income tax of £100 means a person pays £100 more with thresholds frozen, and a net income change of −£45 means they have £45 less with thresholds frozen.
+We subtract each result under raised thresholds from the same result under the freeze. We record extra income tax of £100 when someone pays £100 more with thresholds frozen, and a net income change of −£45 when they have £45 less.
 
 ## Decisions
 
-- **Allowance basis.** We use the section 57 path in the post. Section 57 has the Treasury round each CPI increase up to a multiple of £10, and the government uses the same rule as its Personal Allowance default in Annex A of its Budget 2026 policy costings. We take the post's sensitivity sentence from the `alternative` rows.
+- **Allowance basis.** We use the section 57 path in the post. Under section 57, the Treasury rounds each CPI increase up to a multiple of £10, and the government uses the same rule as its Personal Allowance default in Annex A of its Budget 2026 policy costings.
 - **NI rounding.** We round the rows from £242 a week to the nearest £1 a week, the government's Primary Threshold default in the same annex.
-- **Pay bands, with no count of National Living Wage workers.** In the Microcosm UK national file, implied hourly pay (employment income divided by hours, adults aged 21 or over) shows no spike at the data year's £11.44 wage floor, and about 23% of 28.5 million employees sit more than 5% below it. The Low Pay Commission puts coverage at about 6% of jobs. A count of workers at the wage floor would therefore reflect noise in reported hours and pay. Annual pay holds up better, so we report employees by pay band, with £20,000 to £25,000 holding full-time National Living Wage pay of £23,132 and £24,042.
-- **Disclosure.** We hold every published cell to 10 survey households behind its change, the level the dashboard's binned and area results keep, and the level the UK Data Service advises against secondary disclosure. A row below that floor keeps its labels and its group's size and loses its values, which happens once: `hmrc_ten_percent`, absolute poverty before housing costs, children, 2026-27. The post reports national poverty rates, the Gini index and taxpayer counts where every cell clears the floor, as the Pension Tax Allowance post does on the same pair. The checks' shares of records rest on few records, so they stay private.
-- **Decile percentages.** We divide each decile's change in net income by its net income on the raised side, so a figure such as "2.6% less than if the government had" reads against the net income in that comparison.
-- **Model version.** We keep the national headline on the certified pair, so the post matches the dashboard. We also ran `ni_tracks_allowance`, `allowance_only` and `obr_thresholds` on PolicyEngine UK 2.175.5 and policyengine-core 3.34.7, on the same file with no forecast overlay, since 2.175.x carries nearly the same forecast. `national_totals_latest.csv`, `national_counts_latest.csv` and `national_meta_latest.json` hold the results. Net income changes by −£36.0 billion and −£42.4 billion on the first path, against −£36.3 billion and −£42.9 billion on the certified pair, and every recorded check holds on both.
-- **Council Tax Reduction, households.** PolicyEngine UK simulates the working-age schemes of Merton, Kingston upon Thames, Newham, Westminster and Oxford. `hours_net_income.py` names each council and uses its Band D figure for 2026-27 from MHCLG's Table 10, as PolicyEngine UK stores it, times 8/9 for Band C and 3/4 for the single person discount. Merton and Kingston express the taper as 2 6/7 per cent of the weekly difference for each day, which comes to 20% a week. Newham's parameters come from the model, and we state no rate for it. `results.csv` names no council, so its `council_tax_benefit` falls back to a reported £0.
-- **Council Tax Reduction, national.** In a data-built simulation, PolicyEngine UK 2.151.0 counts only families who report Council Tax Reduction, and it gives working-age families in other English councils their reported amount. So the national figures show no change for those families. [policyengine-uk#1966](https://github.com/PolicyEngine/policyengine-uk/pull/1966) covers the working-age rules in Scotland and Wales, and we state no Scottish or Welsh Council Tax Reduction effect.
+- **Pay bands, with no count of National Living Wage workers.** In the Microcosm UK file, 13% of the 27.8 million employees aged 21 or over with pay and hours earn more than 5% below the data year's £11.44 wage floor when we divide their pay by their hours. Another 8.2% earn within half a penny of it, where [Microcosm's build](https://github.com/PolicyEngine/microcosm/blob/95a51edb981fcba962db48fba06caaf402bb34a7/packages/microcosm-build/src/microcosm/build/uk/spec/sources.yaml#L1862) lifts pay it draws from HMRC's Survey of Personal Incomes when the draw falls short of the minimum wage for the record's usual hours. The Low Pay Commission projected that 5.9% of jobs for people aged 21 or over would pay the National Living Wage or up to 5p more in April 2026. If we counted workers at the wage floor, we would count records that rule placed there along with noise in reported hours and pay, so we group employees by annual pay. Full-time National Living Wage pay of £23,132 and £24,042 falls in the £20,000 to £25,000 band.
+- **Disclosure.** We publish a national figure only when it passes the rules of [PolicyEngine's disclosure layer](https://github.com/PolicyEngine/policyengine.py/tree/6.16.1/src/policyengine/disclosure) in `policyengine` 6.16.1. At least 10 survey households must stand behind it, no one household may hold more than half of it, and no reader, nor a household that knows its own part, may estimate one household's part to within 10%. A share must pass on both the records it counts and the rest of its group, and copies of one survey household count once. Our figures add up in ways a reader knows, so we record each identity among them, work out what a reader could recover from the published figures, and withhold further figures until nothing a reader recovers fails the rules. When we must withhold one more figure to protect another, we take it from the scenario furthest down our list first: HMRC's, then the OBR's, then the five paths from the last to the first, so the path the post leads with keeps its figures, and the figures the same in every scenario go last. A reader can also subtract one scenario's figure from another's, and the OBR's and HMRC's levels often differ from a path's for few survey households, such as those with income between the OBR's £16,070 allowance and our £16,080. We publish those two scenarios' own figures to one decimal place fewer than the paths', so those differences stay out of reach without blanking the figures we compare with the OBR and HMRC. We find a reader's bounds with SciPy's HiGHS solver. HiGHS can call an unbounded programme infeasible, so we accept either verdict only once we find a direction that lowers the bound without limit. In 2026-27, we withhold 95 of 1,049 figures: 22 that fail the rules and 73 that would let a reader work one of those out. In 2027-28, we withhold 95: 23 and 72. We leave each withheld figure blank and name it in its row's `suppressed` column. Where fewer than 30 effective survey households stand behind a published figure, PolicyEngine's layer marks it approximate, and we name it in the row's `approximate` column: 88 figures in 2026-27 and 82 in 2027-28. `disclosure.py` sets out the rules in full.
+- **Decile ranking.** PolicyEngine UK sets each household's HBAI income before housing costs to zero where it falls below zero, adjusts it for household size and ranks people into deciles by it. We take the deciles with thresholds frozen. Our changes in net income, decile percentages and Gini index use household net income, which also counts capital gains, free childcare hours and the value of public services such as the NHS, and takes off fuel, alcohol and tobacco duty. The HBAI measure counts none of those. For the Gini index, PolicyEngine UK adjusts household net income for household size, and we weight each household by its people and count income below zero as zero.
+- **Decile percentages.** We divide each decile's change in net income by its net income on the raised side.
+- **Council Tax Reduction, households.** PolicyEngine UK simulates the working-age schemes of Merton, Kingston upon Thames, Newham, Westminster and Oxford. `hours_net_income.py` names each council and uses its Band D figure for 2026-27 from MHCLG's Table 10, as PolicyEngine UK stores it, times 8/9 for Band C and 3/4 for the single person discount. Merton and Kingston express the taper as 2 6/7 per cent of the weekly difference for each day, which comes to 20% a week. We take Newham's parameters from the model and state no rate for it. `nlw_freeze.py` names no council, so PolicyEngine UK falls back to a reported £0 of Council Tax Reduction in `results.csv`.
+- **Council Tax Reduction, national.** In a data-built simulation, PolicyEngine UK 2.174.1 counts only the families who report Council Tax Reduction. It simulates the Scottish and Welsh schemes for families of every age, the English scheme for pension-age families, and the five councils above for working-age families. For working-age families in other English councils, it generally keeps the reported amount, so we estimate no change for them. It can cap that amount where another family shares the bill and receives a simulated reduction. From 2.175.8, PolicyEngine UK gives working-age families in Scotland and Wales their own rules ([policyengine-uk#1966](https://github.com/PolicyEngine/policyengine-uk/pull/1966)).
 - **UC pay pattern.** PolicyEngine UK calculates UC over a year, which matches 12 equal monthly assessments, so we assume in the post that employers pay workers the same amount each month. In 2026-27, the single renter's maximum award of £902 a month falls short of 55% of their £1,681 monthly net pay at 35 hours, so they receive no UC. If their employer paid them every four weeks, they would net £1,552 in a month with one payday and receive about £48 of UC that month.
-- **UC's minimum income floor.** Regulation 62 of the Universal Credit Regulations 2013 treats a gainfully self-employed claimant under all work-related requirements as earning a set amount after "deducting such amount for income tax and national insurance contributions as the Secretary of State considers appropriate". PolicyEngine UK works out those deductions from the standard Personal Allowance and NI thresholds, so frozen thresholds lower the net floor and raise UC, even for someone who pays no more tax. More than 90% of the households with higher net income when frozen, on the first path in both years, include such a claimant. `hours_meta.json` records the worked case.
+- **UC's minimum income floor.** Under regulation 62 of the Universal Credit Regulations 2013, DWP counts a gainfully self-employed claimant past any start-up period who faces all work-related requirements as earning a set amount, after "deducting such amount for income tax and national insurance contributions as the Secretary of State considers appropriate". PolicyEngine UK works out those deductions from the standard Personal Allowance and NI thresholds, so we calculate a lower net floor and more UC under the freeze, even for someone who pays no more tax. We estimate that more than 90% of the households with more net income when frozen, on the first path in both years, include such a claimant, though that share rests on fewer than 30 effective survey households. `hours_meta.json` records a worked case.
 - **Marriage Allowance.** Our main household figures cover a single worker. The `couple_two_children` rows give the one-earner couple's income tax figures, which we state separately in the post.
-- **Capital gains.** PolicyEngine UK's main capital gains elasticity defaults to 1 from 2.134.0, and the forecast overlay counts as a change of rules. `national_freeze.py` sets both elasticities to 0 in every scenario, baseline included, so the runs hold gains fixed like everything else.
-- **Benefits by pay band.** We share each family's change in benefits among its members in proportion to the extra income tax and NI each pays.
-- **Chart points.** We add 19.02, 23.6 and 24.33 hours to the charts' half-hour grid, where pay reaches £12,570, £15,600 and £16,080. The net income chart also adds the hours at which UC and Council Tax Reduction run out on either side, found on a grid of 0.01 hours, so its straight segments stay within £3 of the model.
+- **Capital gains.** When a reform changes someone's marginal rate on gains, PolicyEngine UK 2.174.1 scales their realised gains with an elasticity of 1 by default. `national_freeze.py` sets that elasticity and the marginal-rate elasticity to 0, with no separate elasticity for Business Asset Disposal Relief, in every scenario including the baseline, so we hold gains fixed in every run.
+- **Benefits by pay band.** For the pay band figures, we share each family's change in benefits among its members in proportion to the extra income tax and NI each pays, and leave out changes to other taxes.
+- **Chart points.** We add 19.02, 23.6 and 24.33 hours to the charts' half-hour grid, where pay reaches £12,570, £15,600 and £16,080. We also add the hours at which UC and Council Tax Reduction run out on either side to the net income chart, locating them on a grid of 0.01 hours, so its straight segments stay within £3 of the model.
 
 ## Comparison with the OBR and HMRC
 
-The post sets our national estimates beside published ones. Every comparison below takes frozen less raised.
+We compare our national estimates with published OBR and HMRC figures, each taking frozen less raised.
 
 | £ billion | 2026-27 | 2027-28 |
 | --- | --- | --- |
 | OBR Table 4.17, "PA and HRT freezes" plus "Additional rate threshold: reduction" | 33.6 | 39.2 |
-| Ours, `obr_thresholds`, extra income tax | 42.3 | 49.2 |
+| Ours, `obr_thresholds`, extra income tax | 43.5 | 50.5 |
 | OBR Table A.5, income tax receipts | 365.4 | 392.2 |
-| Ours, baseline income tax | 342.6 | 361.8 |
+| Ours, baseline income tax | 352.63 | 372.31 |
 | OBR November 2025, Box 3.3 Table A, employee NI | −1.3 | −0.5 |
-| Ours, `obr_thresholds`, extra NI | −5.1 | −5.1 |
-| Ours, `ni_sep_cpi_from_2021`, extra NI | −0.6 | 0.2 |
+| Ours, `obr_thresholds`, extra NI | withheld | −5.2 |
+| Ours, `ni_sep_cpi_from_2021`, extra NI | −0.63 | 0.25 |
 | OBR November 2025, Box 3.3 Table A, income tax and employee NI | 33.9 | 39.3 |
-| Ours, `obr_thresholds`, extra income tax and NI | 37.1 | 44.1 |
+| Ours, `obr_thresholds`, extra income tax and NI | withheld | 45.3 |
 | HMRC reckoner, all main allowances, starting and basic rate limits +10% | 14.4 | 17.7 |
-| Ours, `hmrc_ten_percent`, extra income tax outside Scottish income tax | 15.2 | 15.9 |
+| Ours, `hmrc_ten_percent`, extra income tax outside Scottish income tax | 15.5 | 16.2 |
 
-HMRC's row includes behavioural responses and leaves out the income tax devolved to Scotland and Wales, according to notes 1 and 3 of the reckoner. Our row includes no behavioural response and leaves out Scottish income tax. Table 4.17 carries no note on behavioural responses, so we state nothing about them.
+HMRC includes behavioural responses and excludes the income tax devolved to Scotland and Wales, according to notes 1 and 3 of the reckoner. We include no behavioural response and exclude Scottish income tax. The OBR gives no note on behavioural responses in Table 4.17.
 
-`obr_thresholds` and `ni_sep_cpi_from_2021` hold the same primary threshold in 2026-27, £236 a week. `obr_thresholds` also raises the upper earnings and profits limits to the OBR's higher rate threshold and moves the lower profits limit to its primary threshold, and those limits account for the £4.5 billion between the two. Table 4.19 sets the upper earnings limit on the same indexed path as the higher rate threshold, while Box 3.3's text names only the primary threshold and lower profits limit under employee NI and its table shows one row with no split by threshold. So we report both of our figures and can't say which one its row matches. Our run's income tax and NI together exceed Box 3.3's by 10% and 12%, and our run uses the OBR's later forecast.
+In `obr_thresholds`, we raise the upper earnings and profits limits to the OBR's higher rate threshold and move the lower profits limit to its primary threshold. We withhold our 2026-27 NI figure for `obr_thresholds`, because a reader could combine it with our other figures to work out too much about a few survey households. In 2027-28, the fifth path's primary threshold of £244 a week exceeds the OBR's £243, and both exceed £12,570 a year. On the primary threshold alone, our NI figure against the OBR's levels would therefore fall between zero and the fifth path's £0.25 billion, and the OBR's lower profits limit of £12,636 would add to it. We estimate £5.2 billion less, so the upper limits, above which the NI rate falls, turn its sign. The OBR indexes the upper earnings limit with the higher rate threshold in Table 4.19. In Box 3.3, it names the primary threshold and lower profits limit under employee NI and gives one row with no split by threshold, so we report both of our figures and can't say which one its row matches. Our income tax and NI together exceed Box 3.3's by 15% in 2027-28, and our run uses the OBR's later forecast.
 
 | Millions of people | 2026-27 | 2027-28 |
 | --- | --- | --- |
 | OBR Table 4.18, brought into income tax | 4.83 | 5.3 |
-| Ours, `obr_thresholds`, income taxpayers frozen less raised | 4.77 | 5.48 |
 | OBR Table 4.18, memo, removed through the Pension Tax Allowance | 0 | 0.289 |
-| Ours on PolicyEngine UK 2.175.5, which has that allowance, `obr_thresholds`, income taxpayers frozen less raised | 4.79 | 5.04 |
+| Ours, `obr_thresholds`, income taxpayers frozen less raised | 4.703 | 4.994 |
 | OBR Table 4.18, higher and additional rate taxpayers without indexation | 8.97 | 9.46 |
-| Ours, total income above £50,270 | 9.21 | 9.86 |
+| Ours, total income above £50,270 | 9.155 | 9.592 |
 | OBR Table 4.18, higher and additional rate taxpayers with indexation | 4.93 | 4.88 |
-| Ours, total income above the OBR's indexed higher rate threshold | 5.24 | 5.24 |
+| Ours, total income above the OBR's indexed higher rate threshold | 5.360 | 5.358 |
 | OBR Table 4.18, additional rate taxpayers with the threshold at the end of the taper | 1.26 | 1.33 |
-| Ours, total income above £125,140 | 1.23 | 1.30 |
+| Ours, total income above £125,140 | 1.198 | 1.245 |
 | OBR Table 4.18, additional rate taxpayers with the threshold at £150,000 | 0.78 | 0.82 |
-| Ours, total income above £150,000 | 0.88 | 0.93 |
+| Ours, total income above £150,000 | 0.857 | 0.909 |
 
-Our rows count people by total income, and the OBR's count taxpayers by band, so the two definitions differ.
+For the rows by rate, we count people by total income, and the OBR counts taxpayers by the band they reach.
 
-Our counts stay close to the OBR's, while our income tax yield exceeds its yield by 26% in each year. To size the yield from the OBR's own counts, we multiply each group by what plain arithmetic says it pays more on the OBR's thresholds in 2026-27:
+Our estimate against the OBR's levels exceeds its yield by 30% in 2026-27 and 29% in 2027-28. We multiply each of the OBR's groups by the extra income tax that plain arithmetic gives on its thresholds in 2026-27:
 
 | Group, on the OBR's counts | Millions | Extra income tax each | £ billion |
 | --- | --- | --- | --- |
@@ -130,7 +128,7 @@ Our counts stay close to the OBR's, while our income tax yield exceeds its yield
 | Brought into the additional rate, on top of their £3,540 | 0.48 | about £621, half of 5% of £24,860 | 0.3 |
 | Total | | | about 46 |
 
-HMRC's +10% row, scaled by 2.8 for the OBR's roughly 28% rise in the Personal Allowance, gives about £40 billion. These sums ignore other income and reliefs, so they give orders of magnitude, and both exceed the OBR's £33.6 billion. The OBR publishes the yield by measure with no split by income, so we can't reconcile the two.
+Multiplying HMRC's +10% row by 2.8, for the OBR's roughly 28% rise in the Personal Allowance, gives about £40 billion. We ignore other income and reliefs in these sums, so they give orders of magnitude, and both exceed the OBR's £33.6 billion. The OBR publishes the yield by measure with no split by income, so we can't reconcile the two.
 
 ## Invariants
 
@@ -140,32 +138,34 @@ Household results (`test_freeze.py`, `test_hours.py`):
 
 - Each section 57 step equals the CPI step rounded up to £10, for any CPI path of zero or more.
 - Each weekly NI step stays within 50p of the exact CPI step.
-- Extra tax and NI sit between zero and 20% of the allowance gap plus 8% of the threshold gap, for any thresholds at or above £12,570.
+- Extra tax and NI stay between zero and 20% of the allowance gap plus 8% of the threshold gap, for any thresholds at or above £12,570.
 - Extra income tax plus extra NI equals the total, and the net loss equals the total plus the UC change within £1, for every row.
-- The model matches plain arithmetic within £1 for every single worker row. `nlw_freeze.py` also asserts this during the run.
-- The extra amount never falls as hours rise on the four rows with thresholds at or above £12,570, and stays at zero up to 19 hours in 2026-27 and 18 hours in 2027-28.
-- UC rises by 55% of the extra tax and NI wherever UC stays in payment.
-- Where a 20% scheme's reduction and UC both stay in payment, Council Tax Reduction rises by 20% of the 45p UC leaves, and net income falls by 36p for each £1.
+- The model matches plain arithmetic within £1 for every single worker row, and `nlw_freeze.py` asserts the same check during the run.
+- On the four paths whose NI thresholds stand at or above £12,570, the extra amount never falls as hours rise, and stays at zero up to 19 hours in 2026-27 and 18 hours in 2027-28.
+- UC rises by 55% of the extra tax and NI wherever UC stays in payment on both sides.
+- Where a 20% scheme's reduction and UC both stay in payment on both sides, Council Tax Reduction rises by 20% of the 45p UC leaves, and net income falls by 36p for each £1.
 - A worker with no benefits loses all of the extra tax and NI, and no one who pays more loses more than they pay.
 - At 35 hours, the net income rows match `results.csv`.
 
-National results (`test_national.py`, and the checks `national_freeze.py` records in `national_meta_certified.json`):
+National results (`test_national.py`, `test_disclosure.py`, and the checks `national_freeze.py` records in `national_meta_certified.json`):
 
-- Net income changes by the change in benefits less the change in tax, within 32-bit float rounding, for every household. Market income and pension contributions stay fixed.
+- Net income changes by the change in benefits less the change in tax, within 32-bit float rounding, for every household, while market income and pension contributions stay the same.
 - The benefit components add up to `household_benefits`, within 32-bit float rounding, for every household.
 - All five paths give each person the same income tax, and a higher primary threshold never gives anyone less extra NI.
-- Employees whose income tax and NI plain arithmetic can state match it within £1.
+- For employees in the simple cases we identify, the model's income tax and NI match plain arithmetic within £1.
 - `allocate` conserves each family's change in benefits.
 - `gini` stays between 0 and 1, ignores scale, treats a weight as that many records, falls after a transfer from richer to poorer, and matches microdf.
 - Each pay falls in one pay band, and deciles and bands add up to the totals.
-- No published cell rests on fewer than 10 survey households behind its change.
+- `disclosure.py` counts survey households, top shares and the 10% rule as PolicyEngine's layer does, and passes, withholds and marks approximate the same figures.
+- Every identity we record between published figures holds record by record.
+- No published figure fails the rules, no figure a reader can work out from the published ones through those identities fails them, and withholding gives the same result each time.
 
-Some results go against the headline, as intended:
+Some households gain, and relative poverty falls:
 
-- Extra NI turns negative in 2026-27 on the path without the July 2022 rise, because £12,570 exceeds the £12,272 that path reaches. A worker between those levels pays less NI with thresholds frozen, and UC takes back 55p of each £1.
-- On the same path, someone on more than £132,160 has no allowance on either side, so they pay £24 less NI and no more income tax with thresholds frozen. Most of the 1.7% of households with more net income on that path in 2026-27 include such a person, and `share_of_those_higher_with_no_allowance_and_less_ni` records the share.
-- In Oxford, a fall in income can keep a lone parent in a higher band of support, so they gain from 23.5 to 24.5 hours.
-- On UC's minimum income floor, frozen thresholds raise UC for a self-employed claimant.
+- Extra NI turns negative in 2026-27 on the path without the July 2022 rise, because £12,570 exceeds the £12,272 that path reaches. A worker between those levels pays less NI with thresholds frozen, and DWP pays them 55p less UC for each £1.
+- On the same path, someone on more than £132,160 has no allowance on either side, so they pay up to £24 less NI and no more income tax with thresholds frozen. We estimate 1.6% of households have more net income on that path in 2026-27, and 60% of them include such a person (`share_of_those_higher_with_no_allowance_and_less_ni`, which rests on fewer than 30 effective survey households).
+- Oxford's council awards support in weekly-income bands, so a fall in income can keep a lone parent in a band with more support, and they gain from 23.5 to 24.5 hours.
+- In our calculations, DWP pays more UC to a self-employed claimant on the minimum income floor under the freeze.
 - Relative poverty falls with the freeze, because the median falls.
 
 ## Sources
@@ -180,3 +180,4 @@ Some results go against the headline, as intended:
 - [Low Pay Commission, The National Minimum Wage in 2026](https://assets.publishing.service.gov.uk/media/69cbe06e024cdf09254f3f92/2026_Uprating_report_v2.pdf), pages 7 and 8.
 - OBR [October 2026 detailed forecast tables, receipts](https://obr.uk/download/october-2026-economic-and-fiscal-outlook-detailed-forecast-tables-receipts/), Tables 4.17, 4.18 and 4.19; [October 2026 Economic and fiscal outlook](https://obr.uk/efo/economic-and-fiscal-outlook-october-2026/), Table A.5; and [November 2025 Economic and fiscal outlook](https://obr.uk/docs/dlm_uploads/OBR_Economic_and_fiscal_outlook_November_2025.pdf), Box 3.3, Table A.
 - HMRC [ready reckoner, June 2025](https://assets.publishing.service.gov.uk/media/68552862b46781eacfd71d71/June_2025_TRR_ODS__1_.ods) and its [bulletin](https://www.gov.uk/government/statistics/direct-effects-of-illustrative-tax-changes/direct-effects-of-illustrative-tax-changes-bulletin-january-2025).
+- PolicyEngine's [disclosure layer](https://github.com/PolicyEngine/policyengine.py/tree/6.16.1/src/policyengine/disclosure) in `policyengine` 6.16.1, and Microcosm's [minimum wage floor](https://github.com/PolicyEngine/microcosm/blob/95a51edb981fcba962db48fba06caaf402bb34a7/packages/microcosm-build/src/microcosm/build/uk/spec/sources.yaml#L1862) for drawn pay.
