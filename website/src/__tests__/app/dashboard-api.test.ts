@@ -525,6 +525,7 @@ describe("dashboard API origins", () => {
   // dashboard API once their phase 4.1 changes ship, and that the zone
   // routes' *.vercel.app hosts don't cover, with the repository each serves.
   test.each([
+    ["autumn-budget-2025-in-review", "autumn-budget-2025-in-review.vercel.app"],
     ["nc-stein-2027-tax-proposals", "nc-governor-tax-proposals.vercel.app"],
     [
       "nc-stein-2027-tax-proposals",
@@ -562,15 +563,8 @@ describe("dashboard API origins", () => {
   // Dashboards with their own Vercel host whose pages don't call the
   // dashboard API, so they get no entry of their own: aspen-eitc-ctc's
   // production build calls its Modal backend while its Vercel project sets
-  // NEXT_PUBLIC_HOUSEHOLD_API_URL, and autumn-budget-2025-in-review calls the
-  // Public API from its server. A later zone route may still allow either.
-  test.each([
-    ["aspen-eitc-ctc", "https://aspen-eitc-ctc.vercel.app"],
-    [
-      "autumn-budget-2025-in-review",
-      "https://autumn-budget-2025-in-review.vercel.app",
-    ],
-  ])(
+  // NEXT_PUBLIC_HOUSEHOLD_API_URL. A later zone route may still allow it.
+  test.each([["aspen-eitc-ctc", "https://aspen-eitc-ctc.vercel.app"]])(
     "given %s, whose pages don't call the dashboard API, then its host is not listed",
     (_repository, origin) => {
       // Then
