@@ -507,6 +507,7 @@ describe("dashboard API origins", () => {
     // Then
     expect(DASHBOARD_VERCEL_HOSTS.size).toBeGreaterThan(50);
     for (const host of DASHBOARD_VERCEL_HOSTS) {
+      expect(host).toMatch(/\.vercel\.app$/);
       expect(isAllowedDashboardOrigin(new URL(`https://${host}`))).toBe(true);
     }
     expect(
@@ -519,11 +520,10 @@ describe("dashboard API origins", () => {
     ).toBe(false);
   });
 
-  // The production hosts of phase 4.1 dashboards that the zone routes'
-  // *.vercel.app hosts don't cover, with the repository each one serves.
+  // The production hosts of phase 4.1 dashboards whose pages call the
+  // dashboard API and that the zone routes' *.vercel.app hosts don't cover,
+  // with the repository each one serves.
   test.each([
-    ["aspen-eitc-ctc", "aspen-eitc-ctc.vercel.app"],
-    ["autumn-budget-2025-in-review", "autumn-budget-2025-in-review.vercel.app"],
     ["nc-stein-2027-tax-proposals", "nc-governor-tax-proposals.vercel.app"],
     [
       "nc-stein-2027-tax-proposals",
@@ -558,12 +558,32 @@ describe("dashboard API origins", () => {
     },
   );
 
+  // Dashboards with their own Vercel host whose pages don't call the
+  // dashboard API: aspen-eitc-ctc's production build calls its Modal backend,
+  // and autumn-budget-2025-in-review calls the Public API from its server.
   test.each([
-    ["plain http", "http://aspen-eitc-ctc.vercel.app"],
-    ["another port", "https://aspen-eitc-ctc.vercel.app:8443"],
-    ["a subdomain", "https://preview.aspen-eitc-ctc.vercel.app"],
-    ["a longer name", "https://aspen-eitc-ctc-copy.vercel.app"],
-    ["another domain", "https://aspen-eitc-ctc.vercel.app.example.test"],
+    ["aspen-eitc-ctc", "https://aspen-eitc-ctc.vercel.app"],
+    [
+      "autumn-budget-2025-in-review",
+      "https://autumn-budget-2025-in-review.vercel.app",
+    ],
+  ])(
+    "given %s, whose pages don't call the dashboard API, then its host is refused",
+    (_repository, origin) => {
+      // Then
+      expect(isAllowedDashboardOrigin(new URL(origin))).toBe(false);
+    },
+  );
+
+  test.each([
+    ["plain http", "http://policyengine-model-phi.vercel.app"],
+    ["another port", "https://policyengine-model-phi.vercel.app:8443"],
+    ["a subdomain", "https://preview.policyengine-model-phi.vercel.app"],
+    ["a longer name", "https://policyengine-model-phi-copy.vercel.app"],
+    [
+      "another domain",
+      "https://policyengine-model-phi.vercel.app.example.test",
+    ],
     [
       "another Modal workspace",
       "https://someone-else--state-legislative-tracker.modal.run",
