@@ -1,36 +1,22 @@
-Of the 41 states with a broad income tax, 28 exempt all military retired pay in 2026, including Utah, which offsets its tax on the pay with a credit. The other 13 tax some or all of it, depending on the amount of pay, the retiree's age, income, earnings and residency, and how long and when the retiree served. The District of Columbia taxes all of it. Alaska, Florida, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Washington and Wyoming levy no broad income tax.
+Twenty-eight states exempt all military retired pay from income tax in 2026, including Utah, which offsets its tax on the pay with a credit. Another 13 exempt part of it, or all of it for some retirees, depending on the amount of pay, the retiree's age, income, earnings and residency, and how long and when the retiree served. The District of Columbia taxes all of it, and nine states levy no broad income tax.
 
-For example, take a married couple in which one spouse is 45, draws $30,000 of military retired pay and earns $60,000 in a civilian job. The couple owes more state income tax because of the pay in nine states and DC, from $60 in Maine to $2,310 in Oregon. Maine, South Carolina and Utah exempt the pay but count it as income when they set a credit or deduction. A retired couple aged 67 and 65, living on $45,000 of military retired pay and $30,000 of Social Security, owes more in ten states, up to $440 in Hawaii. In seven of them, the couple owes no tax on the pay itself but loses a credit that the state gives to households with income under a limit.
+**Table 1: How states treat military retired pay in 2026**
 
-## Where states tax the pay
-
-| State | Military retired pay the state exempts in 2026 | Law |
-| --- | --- | --- |
-| California | Up to $20,000 per return, for filers with federal adjusted gross income (AGI) up to $125,000, or $250,000 on a joint return | [R&TC § 17132.9](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?sectionNum=17132.9.&lawCode=RTC) |
-| Colorado | Up to $15,000 for a retiree under 55. From 55, Colorado counts the pay toward its retirement income subtraction: $20,000 at 55 to 64 and $24,000 at 65 or older | [C.R.S. 39-22-104(4)(y) and (4)(f)](https://content.leg.colorado.gov/sites/default/files/images/olls/crs2024-title-39.pdf#page=397) |
-| Delaware | Up to $12,500 for a retiree under 60. From 60, Delaware exempts up to $12,500 of the pay, other pensions and retirement income combined | [30 Del. C. § 1106(b)(3)](https://delcode.delaware.gov/title30/c011/sc02/index.html) |
-| Georgia | Up to $17,500 for a retiree under 62, plus $17,500 more for one with over $17,500 of Georgia earnings. From 62, Georgia counts the pay toward its retirement income exclusion: $35,000 at 62 to 64 and $65,000 at 65 or older | O.C.G.A. § 48-7-27(a)(5.1) and (a)(5); [2025 IT-511 booklet, p. 21](https://dor.georgia.gov/document/document/2025-it-511-individual-income-tax-booklet/download#page=21) |
-| Idaho | Up to the maximum Social Security benefit, half again as much on a joint return, less the filers' Social Security, for a retiree aged 62 or older, with a disability, or with earnings high enough to require a federal return | [Idaho Code § 63-3022A](https://legislature.idaho.gov/statutesrules/idstat/title63/t63ch30/sect63-3022a/) |
-| Kentucky | The share from service before 1998. Kentucky counts the rest toward its $31,110 pension exclusion, which also covers other pensions and retirement income | [KRS 141.019(1)(g)](https://apps.legislature.ky.gov/law/statutes/statute.aspx?id=57914); [2025 Schedule P](https://revenue.ky.gov/Forms/Schedule%20P%20%282025%29.pdf) |
-| Maryland | Up to $12,500 for a retiree under 55 and $20,000 from 55. From 65, Maryland counts the rest toward its pension exclusion | [Tax–General § 10-207(q)](https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gtg&section=10-207&enactments=false) |
-| Montana | Half of the pay, up to the Montana earnings on the return, for five years, for a retiree who meets a residency test | [MCA 15-30-2120(3)(n), (8) and (9)](https://archive.legmt.gov/bills/mca/title_0150/chapter_0300/part_0210/section_0200/0150-0300-0210-0200.html) |
-| New Mexico | Up to $30,000 | [2024 House Bill 252, section 32](https://www.nmlegis.gov/Sessions/24%20Regular/final/HB0252.PDF#page=102) (NMSA § 7-2-5.13) |
-| North Carolina | All of it, for a retiree who served at least 20 years, retired for medical reasons, or had five years of service by August 12, 1989 | [G.S. 105-153.5(b)(5) and (b)(5a)](https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_105/GS_105-153.5.html) |
-| Oregon | The share from service before October 1991 | [ORS 316.680(1)(e)](https://www.oregonlegislature.gov/bills_laws/ors/ors316.html) |
-| Vermont | All of it for filers with federal AGI up to $125,000, and a share that falls to zero at $175,000 | [32 V.S.A. § 5830e(d)](https://legislature.vermont.gov/statutes/section/32/151/05830e) |
-| Virginia | Up to $40,000 | [Va. Code § 58.1-322.02(18)](https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-322.02/) |
-| District of Columbia | None | [D.C. Code § 47-1803.02(a)(2)(N)](https://code.dccouncil.gov/us/dc/council/code/sections/47-1803.02) |
-
-The other 28 states with a broad income tax exempt all of the pay: Alabama, Arizona, Arkansas, Connecticut, Hawaii, Illinois, Indiana, Iowa, Kansas, Louisiana, Maine, Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Nebraska, New Jersey, New York, North Dakota, Ohio, Oklahoma, Pennsylvania, Rhode Island, South Carolina, Utah, West Virginia and Wisconsin.
+| Treatment | States |
+| --- | --- |
+| Exempt all of it (28) | Alabama, Arizona, Arkansas, Connecticut, Hawaii, Illinois, Indiana, Iowa, Kansas, Louisiana, Maine, Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Nebraska, New Jersey, New York, North Dakota, Ohio, Oklahoma, Pennsylvania, Rhode Island, South Carolina, Utah, West Virginia and Wisconsin |
+| Exempt part of it, or all of it for some retirees (13) | California, Colorado, Delaware, Georgia, Idaho, Kentucky, Maryland, Montana, New Mexico, North Carolina, Oregon, Vermont and Virginia |
+| Exempt none of it | District of Columbia |
+| Levy no broad income tax (9) | Alaska, Florida, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Washington and Wyoming |
 
 ## A retiree with a second career
 
-The retiree in the first couple served 20 years, from 2001 through 2020, and the spouse has no income.
+Take a married couple in which one spouse is 45, draws $30,000 of military retired pay and earns $60,000 in a civilian job. The couple owes more state income tax because of the pay in nine states and DC, from $60 in Maine to $2,310 in Oregon. The retiree served 20 years, from 2001 through 2020, and the spouse has no income.
 
 ```chart
 {
   "type": "stateMap",
-  "title": "How $30,000 of military retired pay changes state income tax",
+  "title": "Figure 1: How $30,000 of military retired pay changes state income tax",
   "subtitle": "Extra state income tax a married couple owes when one spouse, age 45, receives $30,000 of military retired pay on top of $60,000 of wages, 2026",
   "stateKey": "state",
   "valueKey": "tax",
@@ -91,24 +77,24 @@ The retiree in the first couple served 20 years, from 2001 through 2020, and the
 }
 ```
 
-Oregon and DC tax all of this couple's pay, so the couple owes $2,310 more in Oregon and $1,900 more in DC. Delaware, Maryland, Montana, Colorado and California each exempt $12,500 to $20,000 of it, and the couple owes $1,087 more in Delaware, $831 in Maryland before county income tax, $705 in Montana, $660 in Colorado and $278 in California. The other seven states in the table exempt all $30,000. For example, Georgia exempts up to $35,000 for a retiree under 62 who earns more than $17,500 in Georgia.
+Oregon and DC tax all of this couple's pay, so the couple owes $2,310 more in Oregon and $1,900 more in DC. Delaware, Maryland, Montana, Colorado and California each exempt $12,500 to $20,000 of it, and the couple owes $1,087 more in Delaware, $831 in Maryland before county income tax, $705 in Montana, $660 in Colorado and $278 in California. The other seven states that exempt part of the pay exempt all $30,000 of this couple's.[^1] For example, Georgia exempts up to $35,000 for a retiree under 62 who earns more than $17,500 in Georgia.
 
 Utah, South Carolina and Maine exempt the pay but collect more from this couple, because each counts the pay as income when it sets a credit or deduction:
 
 - Utah offsets its tax on the pay with a credit ([Utah Code § 59-10-1043](https://le.utah.gov/xcode/Title59/Chapter10/59-10-S1043.html)), but it shrinks its taxpayer tax credit by 1.3% of income above a base amount ([2025 TC-40 instructions, p. 8](https://files.tax.utah.gov/tax/forms/2025/tc-40inst.pdf#page=10)). The pay adds $30,000 to that income, so the couple loses $390 of that credit.
-- South Carolina shrinks its $30,000 Income Adjusted Deduction for married couples whose federal AGI exceeds $80,000 ([Act 110 of 2026](https://www.scstatehouse.gov/sess126_2025-2026/bills/4216.htm), section 3). The pay lifts the couple's federal AGI to $90,000, and the couple owes $142 more.
+- South Carolina shrinks its $30,000 Income Adjusted Deduction for married couples whose federal adjusted gross income (AGI) exceeds $80,000 ([Act 110 of 2026](https://www.scstatehouse.gov/sess126_2025-2026/bills/4216.htm), section 3). The pay lifts the couple's federal AGI to $90,000, and the couple owes $142 more.
 - Maine counts the pay as income for its sales tax fairness credit ([36 M.R.S. § 5213-A](https://legislature.maine.gov/statutes/36/title36sec5213-A.html)), and the couple loses a $60 credit.
 
 In Alabama and Missouri, the couple owes less state income tax with the pay than without it: $180 less in Alabama and $25 less in Missouri. Both states exempt the pay and let filers deduct federal income tax, which rises by $3,600 with the pay. Alabama lets filers deduct all of it ([2025 Form 40 booklet, p. 8](https://www.revenue.alabama.gov/wp-content/uploads/2026/01/25f40bk.pdf#page=8)), and Missouri lets this couple deduct 15% of it ([RSMo 143.171](https://revisor.mo.gov/main/OneSection.aspx?section=143.171)).
 
 ## A retired couple
 
-The retiree in the second couple served 20 years, from 1977 through 1996.
+A retired couple aged 67 and 65, living on $45,000 of military retired pay and $30,000 of Social Security, owes more in ten states, up to $440 in Hawaii. The retiree served 20 years, from 1977 through 1996.
 
 ```chart
 {
   "type": "bar",
-  "title": "Where $45,000 of military retired pay raises state income tax",
+  "title": "Figure 2: Where $45,000 of military retired pay raises state income tax",
   "subtitle": "Extra state income tax a married couple, ages 67 and 65, owes because of $45,000 of military retired pay, with $30,000 of Social Security, 2026",
   "orientation": "horizontal",
   "legend": false,
@@ -139,6 +125,8 @@ Montana exempts none of this couple's pay, because it exempts no more than the M
 
 In seven other states, the couple loses a credit:
 
+**Table 2: Credits the retired couple loses because of the pay**
+
 | State | Credit the couple loses | Amount | Law |
 | --- | --- | --- | --- |
 | Hawaii | Food/excise tax credit, for married couples with federal AGI under $60,000 | $440 | [2025 Form N-311](https://files.hawaii.gov/tax/forms/2025/n311_i.pdf) |
@@ -155,6 +143,8 @@ Idaho charges $10, its permanent building fund tax, on each return it requires (
 
 PolicyEngine also models rules in benefit programs and state income taxes that turn on military service or veteran status, such as these:
 
+**Table 3: Other rules for veterans that PolicyEngine models**
+
 | Program | Rule | Law |
 | --- | --- | --- |
 | SNAP | Congress exempted veterans from SNAP's time limit for adults without dependents in 2023, then ended the exemption in July 2025. | [P.L. 118-5, sec. 311](https://www.govinfo.gov/content/pkg/PLAW-118publ5/html/PLAW-118publ5.htm); [P.L. 119-21, sec. 10102](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=11) |
@@ -167,3 +157,26 @@ PolicyEngine also models rules in benefit programs and state income taxes that t
 We calculated each couple's 2026 state income tax in every state twice with [PolicyEngine-US](https://github.com/PolicyEngine/policyengine-us), once with the military retired pay and once without it. Both couples file jointly, claim no dependents and live in the state all year. Neither retiree has a service-connected disability. The second couple's retiree served entirely before 1998, and 177 of those 240 months fall before October 1991. In Montana, we assume the retiree meets the exemption's residency test and that 2026 falls within its five consecutive years. We count state credits, including refundable ones, in state income tax and leave out local income taxes, such as those Maryland's counties levy. Most states have yet to publish their 2026 forms, so we estimate some inflation-adjusted amounts, and the final amounts can differ by a few dollars. We ran PolicyEngine-US with updates we haven't yet released, such as DC's 2026 deductions, and until we release them, the PolicyEngine web calculator can show different amounts.
 
 PolicyEngine's microdata don't record veteran status or military retired pay, so we don't estimate how many retirees each state's rules reach. We publish the code and full results, including a wider grid of pay and wages for both ages, at [github.com/PolicyEngine/veterans-day-2026](https://github.com/PolicyEngine/veterans-day-2026).
+
+## Appendix: where states tax the pay
+
+**Table 4: Military retired pay each state exempts in 2026**
+
+| State | Military retired pay the state exempts in 2026 | Law |
+| --- | --- | --- |
+| California | Up to $20,000 per return, for filers with federal adjusted gross income (AGI) up to $125,000, or $250,000 on a joint return | [R&TC § 17132.9](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?sectionNum=17132.9.&lawCode=RTC) |
+| Colorado | Up to $15,000 for a retiree under 55. From 55, Colorado counts the pay toward its retirement income subtraction: $20,000 at 55 to 64 and $24,000 at 65 or older | [C.R.S. 39-22-104(4)(y) and (4)(f)](https://content.leg.colorado.gov/sites/default/files/images/olls/crs2024-title-39.pdf#page=397) |
+| Delaware | Up to $12,500 for a retiree under 60. From 60, Delaware exempts up to $12,500 of the pay, other pensions and retirement income combined | [30 Del. C. § 1106(b)(3)](https://delcode.delaware.gov/title30/c011/sc02/index.html) |
+| Georgia | Up to $17,500 for a retiree under 62, plus $17,500 more for one with over $17,500 of Georgia earnings. From 62, Georgia counts the pay toward its retirement income exclusion: $35,000 at 62 to 64 and $65,000 at 65 or older | O.C.G.A. § 48-7-27(a)(5.1) and (a)(5); [2025 IT-511 booklet, p. 21](https://dor.georgia.gov/document/document/2025-it-511-individual-income-tax-booklet/download#page=21) |
+| Idaho | Up to the maximum Social Security benefit, half again as much on a joint return, less the filers' Social Security, for a retiree aged 62 or older, with a disability, or with earnings high enough to require a federal return | [Idaho Code § 63-3022A](https://legislature.idaho.gov/statutesrules/idstat/title63/t63ch30/sect63-3022a/) |
+| Kentucky | The share from service before 1998. Kentucky counts the rest toward its $31,110 pension exclusion, which also covers other pensions and retirement income | [KRS 141.019(1)(g)](https://apps.legislature.ky.gov/law/statutes/statute.aspx?id=57914); [2025 Schedule P](https://revenue.ky.gov/Forms/Schedule%20P%20%282025%29.pdf) |
+| Maryland | Up to $12,500 for a retiree under 55 and $20,000 from 55. From 65, Maryland counts the rest toward its pension exclusion | [Tax–General § 10-207(q)](https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gtg&section=10-207&enactments=false) |
+| Montana | Half of the pay, up to the Montana earnings on the return, for five years, for a retiree who meets a residency test | [MCA 15-30-2120(3)(n), (8) and (9)](https://archive.legmt.gov/bills/mca/title_0150/chapter_0300/part_0210/section_0200/0150-0300-0210-0200.html) |
+| New Mexico | Up to $30,000 | [2024 House Bill 252, section 32](https://www.nmlegis.gov/Sessions/24%20Regular/final/HB0252.PDF#page=102) (NMSA § 7-2-5.13) |
+| North Carolina | All of it, for a retiree who served at least 20 years, retired for medical reasons, or had five years of service by August 12, 1989 | [G.S. 105-153.5(b)(5) and (b)(5a)](https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_105/GS_105-153.5.html) |
+| Oregon | The share from service before October 1991 | [ORS 316.680(1)(e)](https://www.oregonlegislature.gov/bills_laws/ors/ors316.html) |
+| Vermont | All of it for filers with federal AGI up to $125,000, and a share that falls to zero at $175,000 | [32 V.S.A. § 5830e(d)](https://legislature.vermont.gov/statutes/section/32/151/05830e) |
+| Virginia | Up to $40,000 | [Va. Code § 58.1-322.02(18)](https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-322.02/) |
+| District of Columbia | None | [D.C. Code § 47-1803.02(a)(2)(N)](https://code.dccouncil.gov/us/dc/council/code/sections/47-1803.02) |
+
+[^1]: Table 4 in the appendix lists the rule in each of the 13 states and DC, with its source in law.
