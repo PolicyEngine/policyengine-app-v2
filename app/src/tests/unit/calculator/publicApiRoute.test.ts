@@ -1,5 +1,7 @@
 // @vitest-environment node
+import { TOKEN_REQUEST_TIMEOUT_MILLISECONDS } from '@policyengine/public-api-forwarding';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { PUBLIC_API_WAIT_MILLISECONDS } from '@/libs/publicApiRoute/allowList';
 import * as publicApiRoute from '../../../../../calculator-app/src/app/api/policyengine/[...path]/route';
 
 const APP_URL = 'https://app.policyengine.org';
@@ -67,6 +69,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
@@ -316,6 +319,57 @@ describe('calculator /api/policyengine/{Public API path}', () => {
 
     // Then
     expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+  });
+
+  // A starting Public API instance can take minutes to answer any request:
+  // its load balancer's records for 2026-11-03 to 2026-11-10 show country
+  // metadata answered after up to 246 s, a v1 policy after 242 s, and a
+  // household under a policy after 396 s, Cloud Run's 300 s counting only
+  // from when an instance took the request.
+  test.each([
+    ['country metadata', '/us/metadata', 246],
+    ['a v1 policy', '/us/policy/98765', 242],
+    ['a household under a policy', '/us/household/12345/policy/2', 396],
+  ])(
+    'given %s (GET %s) that a starting Public API instance answers after %i seconds then the route still forwards the answer',
+    async (_label, path, answerSeconds) => {
+      // Given
+      vi.useFakeTimers();
+      fetchMock.mockImplementation(
+        (_input, init) =>
+          new Promise<Response>((resolve, reject) => {
+            const answerTimer = setTimeout(
+              () => resolve(Response.json(OK_ANSWER)),
+              answerSeconds * 1000
+            );
+            init?.signal?.addEventListener('abort', () => {
+              clearTimeout(answerTimer);
+              reject(new DOMException('The request was aborted.', 'AbortError'));
+            });
+          })
+      );
+
+      // When
+      const pendingResponse = publicApiRoute.GET(routeRequest(path));
+      await vi.advanceTimersByTimeAsync(answerSeconds * 1000);
+      const response = await pendingResponse;
+
+      // Then
+      expect(response.status).toBe(HTTP_STATUS.OK);
+    }
+  );
+
+  test("given the route's wait for the Public API then the function may run long enough to get a token, wait and stream the answer", () => {
+    // Given
+    // The forwarding package's limit on a token request.
+    const tokenRequestMilliseconds = TOKEN_REQUEST_TIMEOUT_MILLISECONDS;
+    // Reading the request and streaming a large answer back.
+    const bodyTransferMilliseconds = 30_000;
+
+    // Then
+    expect(publicApiRoute.maxDuration * 1000).toBeGreaterThanOrEqual(
+      PUBLIC_API_WAIT_MILLISECONDS + tokenRequestMilliseconds + bodyTransferMilliseconds
+    );
   });
 
   test('given a preview deployment without POLICYENGINE_API_URL then it refuses rather than calling the production Public API', async () => {

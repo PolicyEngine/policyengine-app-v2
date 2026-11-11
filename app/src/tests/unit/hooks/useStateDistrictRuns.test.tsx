@@ -8,6 +8,7 @@ import { useRegions } from '@/hooks/useRegions';
 import { stateDistrictRunQueryKey, useStateDistrictRuns } from '@/hooks/useStateDistrictRuns';
 import { MAX_FAILED_POLLS } from '@/libs/calculations/polledRun';
 import { reportKeys } from '@/libs/queryKeys';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import { ALL_US_STATE_CODES } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 import {
   allStatesComplete,
@@ -364,7 +365,7 @@ describe('useStateDistrictRuns compute', () => {
     expect(result.current.status).toBe('computing');
     expect(api.economyRequestsFor(UTAH)).toEqual([stateEconomyUrl(UTAH)]);
     for (const url of api.economyRequests()) {
-      expect([...new URL(url).searchParams.keys()]).toEqual(['region', 'time_period']);
+      expect([...requestUrlOf(url).searchParams.keys()]).toEqual(['region', 'time_period']);
     }
   });
 
@@ -1580,7 +1581,9 @@ describe('useStateDistrictRuns compute', () => {
     expect(
       api
         .economyRequests()
-        .filter((url) => new URL(url).searchParams.get('time_period') === OTHER_STATE_RUNS_YEAR)
+        .filter(
+          (url) => requestUrlOf(url).searchParams.get('time_period') === OTHER_STATE_RUNS_YEAR
+        )
     ).toHaveLength(0);
 
     // When

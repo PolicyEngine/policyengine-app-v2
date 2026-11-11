@@ -87,7 +87,7 @@ export const DEPLOYMENT_SURFACES: readonly DeploymentSurface[] = [
     repository: "PolicyEngine/policyengine-app-v2",
     branch: "main",
     via: "api",
-    note: "The frontend pins no model; it calls api.policyengine.org.",
+    note: "The frontend pins no model; it calls api.policyengine.org through its own route, /api/policyengine.",
   },
   {
     id: "sim-api",

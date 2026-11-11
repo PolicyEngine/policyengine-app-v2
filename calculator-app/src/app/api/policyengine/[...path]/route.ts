@@ -16,6 +16,7 @@ import {
   createPublicApiForwarder,
   errorResponse,
   isJsonMediaType,
+  ROUTE_ERROR_HEADER,
   isLocalDevelopmentOrigin,
   preflightResponse,
   vercelClientAddress,
@@ -26,14 +27,25 @@ import {
 import {
   CACHE_CONTROL,
   FORWARDED_METHODS,
+  PUBLIC_API_WAIT_MILLISECONDS,
   PUBLIC_API_ROUTE_PREFIX,
   matchAllowedOperation,
 } from "@/libs/publicApiRoute/allowList";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// A household calculation can take minutes.
-export const maxDuration = 300;
+// A household calculation, or any answer from a starting Public API
+// instance, can take minutes. The route may run for 800 s, Vercel Pro's
+// standard limit on Fluid compute: a token request of up to 10 s, a wait of
+// up to 750 s (PUBLIC_API_WAIT_MILLISECONDS) and then the streamed answer.
+// calculator-app/vercel.json turns on Vercel's request cancellation for
+// this route, so a browser that goes away stops the function and its
+// request to the Public API, rather than holding them for that long.
+// Cancellation applies to every method: a write the browser has fully sent
+// is dropped if the browser goes away before the route forwards it, which
+// is usually milliseconds and at most the token request. Browsers calling
+// the Public API directly had no such window.
+export const maxDuration = 800;
 
 const calculatorPublicApi = createPublicApiForwarder({
   environment: process.env,
@@ -56,6 +68,7 @@ const LOCAL_DEVELOPMENT_CORS_POLICY: CorsPolicy = {
     "Retry-After",
     "X-PolicyEngine-Request-Id",
     "X-PolicyEngine-Observability-Id",
+    ROUTE_ERROR_HEADER,
   ],
   preflightMaxAgeSeconds: 600,
 };
@@ -112,8 +125,7 @@ async function forwardAllowedOperation(request: Request): Promise<Response> {
       incomingRequest: request,
       responseHeaders: corsHeaders,
       cacheControl: CACHE_CONTROL[operation.cache],
-      responseHeadersTimeoutMilliseconds:
-        operation.responseHeadersTimeoutMilliseconds,
+      responseHeadersTimeoutMilliseconds: PUBLIC_API_WAIT_MILLISECONDS,
     },
   );
 }

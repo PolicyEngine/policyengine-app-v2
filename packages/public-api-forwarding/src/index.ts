@@ -1,6 +1,7 @@
 export {
   AccessTokenError,
   TOKEN_REFRESH_MARGIN_SECONDS,
+  TOKEN_REQUEST_TIMEOUT_MILLISECONDS,
   createAccessTokenProvider,
   type AccessTokenProvider,
   type CachedAccessToken,
@@ -31,7 +32,7 @@ export {
   type ServerRequestOptions,
 } from "./forward";
 export { isJsonMediaType } from "./mediaType";
-export { errorResponse } from "./responses";
+export { ROUTE_ERROR_HEADER, errorResponse } from "./responses";
 export {
   CREDENTIAL_VARIABLES,
   PRODUCTION_PUBLIC_API_URL,

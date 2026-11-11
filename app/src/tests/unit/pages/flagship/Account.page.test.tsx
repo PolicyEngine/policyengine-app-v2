@@ -75,7 +75,7 @@ describe('AccountPage', () => {
     expect(await screen.findByText(mockMeItem.id)).toBeInTheDocument();
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe('https://api.policyengine.org/v2/me?country_id=us');
+    expect(url).toBe('/api/policyengine/v2/me?country_id=us');
     expect(init.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
   });
 
@@ -125,7 +125,7 @@ describe('AccountPage', () => {
     // Then
     await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
     const [url, init] = fetchMock.mock.calls[1];
-    expect(url).toBe('https://api.policyengine.org/v2/me/export?country_id=us');
+    expect(url).toBe('/api/policyengine/v2/me/export?country_id=us');
     expect(init.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:export');
   });
@@ -149,7 +149,7 @@ describe('AccountPage', () => {
     // Then
     await waitFor(() => expect(auth.signOut).toHaveBeenCalled());
     const [url, init] = fetchMock.mock.calls[1];
-    expect(url).toBe('https://api.policyengine.org/v2/me?country_id=us');
+    expect(url).toBe('/api/policyengine/v2/me?country_id=us');
     expect(init.method).toBe('DELETE');
   });
 
