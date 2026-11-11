@@ -1,6 +1,6 @@
 {
   "name": "@policyengine/api-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Browser client for www.policyengine.org's dashboard API: household calculations, policies, economy comparisons and country metadata.",
   "license": "MIT",
   "type": "module",

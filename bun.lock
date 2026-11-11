@@ -144,7 +144,7 @@
     },
     "packages/api-client": {
       "name": "@policyengine/api-client",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "devDependencies": {
         "prettier": "^3.5.3",
         "typescript": "^5.8.0",
