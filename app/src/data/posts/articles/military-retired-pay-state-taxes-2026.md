@@ -151,7 +151,7 @@ We calculated each couple's 2026 federal and state income tax in every state twi
 
 PolicyEngine's microdata don't record veteran status or military retired pay, so we don't estimate how many retirees each state's rules reach. We publish the code and full results, including a wider grid of pay and wages for both ages, at [github.com/PolicyEngine/veterans-day-2026](https://github.com/PolicyEngine/veterans-day-2026).
 
-PolicyEngine also models rules in benefit programs and state income taxes that turn on military service or veteran status. Table 4 in the appendix lists four of them.
+PolicyEngine also models rules in benefit programs and state income taxes that depend on military service or veteran status. Table 4 in the appendix lists four of them.
 
 ## Appendix
 
