@@ -119,7 +119,7 @@ That answer has no CORS headers. A page on www.policyengine.org reads it as abov
 
 ## Which pages may call it
 
-The dashboard API answers browser requests from www.policyengine.org itself, from `http://localhost` and `http://127.0.0.1` on any port, from the PolicyEngine team's Vercel previews (`*-policy-engine.vercel.app`), and from the dashboards' own `*.vercel.app` hosts that www.policyengine.org serves. It refuses other sites' pages with 403.
+The dashboard API answers browser requests from www.policyengine.org itself, from `http://localhost` and `http://127.0.0.1` on any port, from the PolicyEngine team's Vercel previews (`*-policy-engine.vercel.app`), from the dashboards' own `*.vercel.app` hosts that www.policyengine.org serves, and from the exact hosts of a few other PolicyEngine dashboards, listed in the website's `src/lib/dashboardApi/cors.ts`. It refuses other sites' pages with 403.
 
 ## Releases
 
