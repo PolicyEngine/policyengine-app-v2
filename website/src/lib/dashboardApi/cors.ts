@@ -29,10 +29,6 @@ export const DASHBOARD_VERCEL_HOSTS: ReadonlySet<string> = new Set(
  * never a pattern.
  */
 export const OTHER_DASHBOARD_HOSTS: ReadonlySet<string> = new Set([
-  // aspen-eitc-ctc's Vercel project. The website has no path for it.
-  "aspen-eitc-ctc.vercel.app",
-  // autumn-budget-2025-in-review's Vercel project. Not on the website yet.
-  "autumn-budget-2025-in-review.vercel.app",
   // nc-stein-2027-tax-proposals: both production domains of its Vercel
   // project, nc-governor-tax-proposals. Not on the website yet.
   "nc-governor-tax-proposals.vercel.app",
