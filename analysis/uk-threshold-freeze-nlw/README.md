@@ -14,7 +14,7 @@ analysis/uk-threshold-freeze-nlw/.venv/bin/python analysis/uk-threshold-freeze-n
 analysis/uk-threshold-freeze-nlw/.venv/bin/python -m pytest analysis/uk-threshold-freeze-nlw
 ```
 
-You need only `hypothesis`, `numpy`, `pytest` and `scipy` to run the tests. In an environment with PolicyEngine UK, ⟦live-count⟧ of them also rerun rows on the live model, and with `policyengine` 6.16.1 installed, ⟦layer-count⟧ more compare `disclosure.py` with PolicyEngine's disclosure layer.
+You need only `hypothesis`, `numpy`, `pytest` and `scipy` to run the tests; with only those, pytest skips seven. If you install PolicyEngine UK, two of the seven rerun rows on the live model and one checks our Gini index against microdf's. If you also install `policyengine` 6.16.1, the other four compare `disclosure.py` with PolicyEngine's disclosure layer.
 
 For the national figures, install `requirements-national.txt` in a separate environment and download the Microcosm UK file, which PolicyEngine keeps in a private Hugging Face repository because it derives from the Family Resources Survey. With that file at `DATA` and a private folder at `ARRAYS`, run each scenario in its own process, then add the results up:
 
