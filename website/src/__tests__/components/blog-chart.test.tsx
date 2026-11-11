@@ -206,6 +206,67 @@ describe("BlogChart", () => {
     ).toBeNull();
   });
 
+  test("rejects an unknown orientation or a non-boolean legend", () => {
+    for (const orientation of ["sideways", 3, true]) {
+      expect(
+        parseBlogChartSpec(JSON.stringify({ ...SPEC, orientation })),
+      ).toBeNull();
+    }
+    expect(
+      parseBlogChartSpec(JSON.stringify({ ...SPEC, legend: "no" })),
+    ).toBeNull();
+    const spec = parseBlogChartSpec(
+      JSON.stringify({ ...SPEC, orientation: "horizontal", legend: false }),
+    );
+    expect(spec?.type === "bar" && spec.orientation).toBe("horizontal");
+    expect(spec?.type === "bar" && spec.legend).toBe(false);
+  });
+
+  test("horizontal bars put the categories down the left and the values on the x-axis", () => {
+    const { container } = render(
+      <BlogChart
+        data={JSON.stringify({ ...SPEC, orientation: "horizontal" })}
+      />,
+    );
+    const texts = [...container.querySelectorAll("svg text")];
+    const label = (t: string) => texts.find((el) => el.textContent === t);
+    const xTicks = [
+      ...container.querySelectorAll(".recharts-xAxis-tick-labels text"),
+    ].map((el) => el.textContent);
+    const yTicks = [
+      ...container.querySelectorAll(".recharts-yAxis-tick-labels text"),
+    ].map((el) => el.textContent);
+    expect(xTicks).toEqual(
+      expect.arrayContaining(["−0.25 pp", "0.00 pp", "+1.00 pp"]),
+    );
+    expect(yTicks).toEqual(["All people", "Under 18"]);
+    // The zero line runs vertically, and each value label sits past its bar's end.
+    const zero = container.querySelector(
+      'line[stroke="var(--border-dark)"]',
+    ) as SVGLineElement;
+    const zeroX = Number(zero.getAttribute("x1"));
+    expect(Number(zero.getAttribute("x2"))).toBe(zeroX);
+    for (const t of ["+0.07", "+0.22", "+0.86"]) {
+      expect(Number(label(t)?.getAttribute("x"))).toBeGreaterThan(zeroX);
+      expect(label(t)?.getAttribute("text-anchor")).toBe("start");
+    }
+    expect(Number(label("−0.06")?.getAttribute("x"))).toBeLessThan(zeroX);
+    expect(label("−0.06")?.getAttribute("text-anchor")).toBe("end");
+    expect(container.querySelectorAll(".recharts-bar-rectangle")).toHaveLength(
+      4,
+    );
+  });
+
+  test("legend false leaves the legend out and keeps the bars", () => {
+    const { container } = render(
+      <BlogChart data={JSON.stringify({ ...SPEC, legend: false })} />,
+    );
+    expect(container.querySelector(".recharts-legend-wrapper")).toBeNull();
+    expect(container.querySelectorAll(".recharts-bar-rectangle")).toHaveLength(
+      4,
+    );
+  });
+
   test("names the figure by its title", () => {
     render(<BlogChart data={JSON.stringify(SPEC)} />);
     expect(

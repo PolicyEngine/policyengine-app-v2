@@ -110,21 +110,23 @@ The retiree in the second couple served 20 years, from 1977 through 1996.
   "type": "bar",
   "title": "Where $45,000 of military retired pay raises state income tax",
   "subtitle": "Extra state income tax a married couple, ages 67 and 65, owes because of $45,000 of military retired pay, with $30,000 of Social Security, 2026",
+  "orientation": "horizontal",
+  "legend": false,
   "xKey": "state",
   "series": [
     {"key": "tax", "name": "Extra state income tax", "color": "primary"}
   ],
   "data": [
-    {"state": "HI", "tax": 440},
-    {"state": "DE", "tax": 353},
-    {"state": "MT", "tax": 258},
-    {"state": "VT", "tax": 250},
-    {"state": "ME", "tax": 220},
-    {"state": "NM", "tax": 152},
-    {"state": "IN", "tax": 140},
-    {"state": "OK", "tax": 80},
-    {"state": "AZ", "tax": 50},
-    {"state": "ID", "tax": 10}
+    {"state": "Hawaii", "tax": 440},
+    {"state": "Delaware", "tax": 353},
+    {"state": "Montana", "tax": 258},
+    {"state": "Vermont", "tax": 250},
+    {"state": "Maine", "tax": 220},
+    {"state": "New Mexico", "tax": 152},
+    {"state": "Indiana", "tax": 140},
+    {"state": "Oklahoma", "tax": 80},
+    {"state": "Arizona", "tax": 50},
+    {"state": "Idaho", "tax": 10}
   ],
   "format": {"decimals": 0, "prefix": "$", "separator": true},
   "source": "Source: PolicyEngine-US household calculations for 2026; github.com/PolicyEngine/veterans-day-2026."
