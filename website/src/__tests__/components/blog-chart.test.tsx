@@ -184,6 +184,28 @@ describe("BlogChart", () => {
     expect(legend).toEqual(["Census", "PolicyEngine prediction"]);
   });
 
+  test("valueLabels false draws the bars without value labels", () => {
+    const { container } = render(
+      <BlogChart data={JSON.stringify({ ...SPEC, valueLabels: false })} />,
+    );
+    const texts = [...container.querySelectorAll("svg text")].map(
+      (el) => el.textContent,
+    );
+    for (const t of ["+0.07", "+0.22", "−0.06", "+0.86"]) {
+      expect(texts).not.toContain(t);
+    }
+    expect(texts).toContain("+1.00 pp");
+    expect(container.querySelectorAll(".recharts-bar-rectangle")).toHaveLength(
+      4,
+    );
+  });
+
+  test("rejects a non-boolean valueLabels", () => {
+    expect(
+      parseBlogChartSpec(JSON.stringify({ ...SPEC, valueLabels: "no" })),
+    ).toBeNull();
+  });
+
   test("names the figure by its title", () => {
     render(<BlogChart data={JSON.stringify(SPEC)} />);
     expect(

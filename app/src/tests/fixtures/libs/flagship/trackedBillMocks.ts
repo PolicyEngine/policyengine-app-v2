@@ -1,4 +1,5 @@
 import type { TrackedBill } from '@/api/billFeed';
+import { TRACKER_HOME } from '@/tests/fixtures/libs/flagship/billTrackerMocks';
 
 const DECILE_SHARES = {
   gainMore5Pct: 0.2,
@@ -18,7 +19,7 @@ export const TRACKED_BILL: TrackedBill = {
   provisions: [{ path: 'gov.irs.credits.ctc.amount.base[0].amount', value: 5000 }],
   keyFindings: ['External check (cost): within CRFB band.'],
   sourceUrl: 'https://www.congress.gov/bill/119th-congress/house-bill/1425',
-  author: 'Rep. Mackenzie, Ryan [R-PA-7]',
+  trackerUrl: `${TRACKER_HOME}/us/us-hr1425`,
   date: '2026-07-06',
   provenance: {
     modelVersion: '1.729.3',
@@ -58,3 +59,6 @@ export const TRACKED_BILL: TrackedBill = {
     },
   },
 };
+
+/** A tracker bill that the feed does not list, and its tracker page. */
+export const UNLISTED_BILL = { id: 'ks-hb2620', trackerUrl: `${TRACKER_HOME}/ks/ks-hb2620` };

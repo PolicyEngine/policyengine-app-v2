@@ -94,6 +94,49 @@ function Tr({ children }: { children?: React.ReactNode }) {
   );
 }
 
+/**
+ * Horizontal scroll container for a markdown table, so a table wider than
+ * the column scrolls on its own instead of widening the page. It carries the
+ * table's vertical margins (so they still collapse with neighbouring
+ * paragraphs) and its shadow (which a scroll container would otherwise clip).
+ */
+export function TableScroll({ children }: { children?: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [overflowing, setOverflowing] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const update = () => setOverflowing(el.scrollWidth > el.clientWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      data-table-scroll=""
+      // Only a table that scrolls needs a tab stop, so keyboard users can
+      // reach its hidden columns.
+      tabIndex={overflowing ? 0 : undefined}
+      role={overflowing ? "region" : undefined}
+      aria-label={overflowing ? "Scrollable table" : undefined}
+      style={{
+        overflowX: "auto",
+        maxWidth: "100%",
+        marginTop: blogSpacing.marginTop.table,
+        marginBottom: blogSpacing.marginBottom.table,
+        boxShadow: blogShadows.table,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 function Th({ children }: { children?: React.ReactNode }) {
   const displayCategory = useDisplayCategory();
   const mobile = displayCategory === "mobile";
@@ -274,6 +317,102 @@ export function PlotlyChartCode({
 /*  Main MarkdownFormatter                                             */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  Copy button for code blocks                                        */
+/* ------------------------------------------------------------------ */
+
+/** Copies the code block's text, e.g. a citation, and says so for two seconds. */
+function CopyCodeButton({ getText }: { getText: () => string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(getText());
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          setCopied(false);
+        }
+      }}
+      aria-label={copied ? "Copied" : "Copy to clipboard"}
+      style={{
+        fontSize: blogTypography.smallMobile,
+        color: blogColors.textTertiary,
+        padding: blogSpacing.padding.code,
+        backgroundColor: blogColors.backgroundCodeLabel,
+        border: "none",
+        borderLeft: `1px solid ${blogColors.borderDark}`,
+        cursor: "pointer",
+      }}
+    >
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+/** A code block's frame with a copy button and, when given, its language label. */
+function CodeBlockFrame({
+  language,
+  children,
+}: {
+  language?: string;
+  children: React.ReactNode;
+}) {
+  const bodyRef = useRef<HTMLDivElement>(null);
+  return (
+    <div
+      style={{
+        margin: `${blogSpacing.marginBottom.code}px 0`,
+        overflow: "hidden",
+        backgroundColor: blogColors.backgroundCode,
+        border: `1px solid ${blogColors.borderMedium}`,
+        boxShadow: blogShadows.codeBlock,
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          display: "flex",
+          borderBottom: `1px solid ${blogColors.borderDark}`,
+        }}
+      >
+        {language && (
+          <div
+            style={{
+              fontSize: blogTypography.smallMobile,
+              color: blogColors.textTertiary,
+              padding: blogSpacing.padding.code,
+              backgroundColor: blogColors.backgroundCodeLabel,
+              borderRadius: blogRadius.none,
+              borderLeft: `1px solid ${blogColors.borderDark}`,
+            }}
+          >
+            {language}
+          </div>
+        )}
+        <CopyCodeButton
+          getText={() => bodyRef.current?.innerText.trim() ?? ""}
+        />
+      </div>
+      <div
+        ref={bodyRef}
+        style={{
+          padding: blogSpacing.padding.codeBlock,
+          whiteSpace: "pre-wrap",
+          overflowX: "auto",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function MarkdownFormatter({
   markdown,
   backgroundColor,
@@ -380,6 +519,8 @@ export function MarkdownFormatter({
     ul: ({ children }) => (
       <ul
         style={{
+          // Tailwind's preflight removes list markers; restore them.
+          listStyleType: "disc",
           paddingLeft: blogSpacing.lg,
           marginBottom: blogSpacing.marginBottom.list,
           marginTop: blogSpacing.marginTop.list,
@@ -398,6 +539,8 @@ export function MarkdownFormatter({
     ol: ({ children }) => (
       <ol
         style={{
+          // Tailwind's preflight removes list markers; restore them.
+          listStyleType: "decimal",
           paddingLeft: blogSpacing.lg,
           marginBottom: blogSpacing.marginBottom.list,
           marginTop: blogSpacing.marginTop.list,
@@ -768,20 +911,19 @@ export function MarkdownFormatter({
     },
 
     table: ({ children }) => (
-      <table
-        style={{
-          marginTop: blogSpacing.marginTop.table,
-          marginBottom: blogSpacing.marginBottom.table,
-          display: "table",
-          width: "100%",
-          borderCollapse: "separate",
-          borderSpacing: 0,
-          overflow: "hidden",
-          boxShadow: blogShadows.table,
-        }}
-      >
-        {children}
-      </table>
+      <TableScroll>
+        <table
+          style={{
+            display: "table",
+            width: "100%",
+            borderCollapse: "separate",
+            borderSpacing: 0,
+            overflow: "hidden",
+          }}
+        >
+          {children}
+        </table>
+      </TableScroll>
     ),
 
     th: Th,
@@ -835,42 +977,11 @@ export function MarkdownFormatter({
         return <>{children}</>;
       }
 
-      return (
-        <div
-          style={{
-            margin: `${blogSpacing.marginBottom.code}px 0`,
-            overflow: "hidden",
-            backgroundColor: blogColors.backgroundCode,
-            border: `1px solid ${blogColors.borderMedium}`,
-            boxShadow: blogShadows.codeBlock,
-            position: "relative",
-          }}
-        >
-          {language &&
-            language !== "highlighted-block" &&
-            language !== "plotly" && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  fontSize: blogTypography.smallMobile,
-                  color: blogColors.textTertiary,
-                  padding: blogSpacing.padding.code,
-                  backgroundColor: blogColors.backgroundCodeLabel,
-                  borderRadius: blogRadius.none,
-                  borderLeft: `1px solid ${blogColors.borderDark}`,
-                  borderBottom: `1px solid ${blogColors.borderDark}`,
-                }}
-              >
-                {language}
-              </div>
-            )}
-          <div style={{ padding: blogSpacing.padding.codeBlock }}>
-            {children}
-          </div>
-        </div>
-      );
+      const label =
+        language && language !== "highlighted-block" && language !== "plotly"
+          ? language
+          : undefined;
+      return <CodeBlockFrame language={label}>{children}</CodeBlockFrame>;
     },
   };
 

@@ -1,0 +1,338 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, userEvent, waitFor } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { fetchLocalAreaBreakdown } from '@/api/societyWideCalculation';
+import UKLocalAreaSection from '@/components/flagship/report/UKLocalAreaSection';
+import {
+  BREAKDOWN_CONSTITUENCY_NAME,
+  BREAKDOWN_LOCAL_AUTHORITY_NAME,
+  BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
+  NATIONAL_OUTPUT_WITHOUT_AREAS,
+  OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
+  STORED_CONSTITUENCY_DETAILS,
+  STORED_OUTPUT_WITH_AREAS,
+  UK_SECTION_PROPS,
+  UNVERSIONED_OUTPUT_WITHOUT_AREAS,
+} from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import {
+  COMPUTE_BUTTON_LABEL,
+  COMPUTING_MESSAGE,
+  ERROR_MESSAGE,
+} from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
+import {
+  boundariesReading,
+  HEX_MAP_TAB,
+  MAP_LEGEND_NAME,
+  mockUKBoundaryFetch,
+  NOT_REPORTED_TEXT,
+} from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import { NO_DATA_TEXT } from '@/tests/fixtures/components/visualization/hexMapMocks';
+import { EXPECTED_CONSTITUENCY_COUNT } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
+import {
+  COMPLETE_RESPONSE,
+  COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN,
+  COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
+  COMPLETE_RESPONSE_WITH_WITHHELD_LISTS,
+  FAILED_RESPONSE,
+  QUEUED_RESPONSE,
+  UK_LISTED_WITHHELD_CONSTITUENCY_CODES,
+  UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES,
+  WITHHELD_LOCAL_AUTHORITIES_WITH_ARDS_AND_NORTH_DOWN,
+} from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
+import {
+  hatchedAreaCodes,
+  noDataHexagons,
+} from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
+
+vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
+  fetchLocalAreaBreakdown: vi.fn(),
+}));
+
+const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
+
+function renderSection(output = NATIONAL_OUTPUT_WITHOUT_AREAS, props = UK_SECTION_PROPS) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <UKLocalAreaSection output={output} {...props} />
+    </QueryClientProvider>,
+    'uk'
+  );
+}
+
+describe('UKLocalAreaSection', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', mockUKBoundaryFetch());
+    vi.clearAllMocks();
+  });
+
+  test('given a result without area impacts then it offers to compute them and sends nothing', () => {
+    // When
+    renderSection();
+
+    // Then
+    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+
+  test('given compute clicked then it sends one breakdown request for the report region and year', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(QUEUED_RESPONSE);
+    renderSection();
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then
+    await waitFor(() => expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(1));
+    expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledWith(
+      'uk',
+      UK_SECTION_PROPS.reformPolicyId,
+      UK_SECTION_PROPS.baselinePolicyId,
+      { region: UK_SECTION_PROPS.region, time_period: UK_SECTION_PROPS.year }
+    );
+  });
+
+  test('given the breakdown computing then it shows its progress', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(QUEUED_RESPONSE);
+    renderSection();
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then
+    expect(await screen.findByText(COMPUTING_MESSAGE)).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('given the breakdown complete then the maps show its areas', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    const { container } = renderSection();
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then
+    expect(
+      await screen.findByText('Absolute household income change by constituency')
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+    expect(
+      container.querySelector(`[data-area-id="${BREAKDOWN_CONSTITUENCY_NAME}"]`)
+    ).not.toBeNull();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+  });
+
+  test('given the breakdown failed then it offers retry, which sends the request again', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown
+      .mockResolvedValueOnce(FAILED_RESPONSE)
+      .mockResolvedValueOnce(COMPLETE_RESPONSE);
+    renderSection();
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    expect(await screen.findByText(ERROR_MESSAGE)).toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+
+    // Then
+    await waitFor(() => expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(2));
+  });
+
+  test('given a saved result with area impacts then it shows the maps with no button', async () => {
+    // When
+    const user = userEvent.setup();
+    renderSection(STORED_OUTPUT_WITH_AREAS);
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+
+    // Then
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: STORED_CONSTITUENCY_DETAILS })).toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+
+  test('given a UK-wide breakdown complete then the map says how many constituencies were not reported', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    renderSection();
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then
+    expect(
+      await screen.findByText(/^649 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+  });
+
+  test('given a UK-wide breakdown complete then the local authority map says how many local authorities were not reported', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    renderSection();
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    expect(
+      await screen.findByText(/^649 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(
+      screen.getByText(/^360 of 361 local authorities are not reported\./)
+    ).toBeInTheDocument();
+  });
+
+  test('given a breakdown that publishes a local authority under a name the region list lacks then that map counts it by its code', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY);
+    renderSection();
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    expect(
+      await screen.findByText(/^649 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(
+      screen.getByText(/^359 of 361 local authorities are not reported\./)
+    ).toBeInTheDocument();
+  });
+
+  test('given a UK-wide breakdown that publishes Ards and North Down then the note counts the local authorities the hex map draws as withheld', async () => {
+    // Given: Ards and North Down, which a region list before PolicyEngine/policyengine-api#4024 lacks
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_ARDS_AND_NORTH_DOWN);
+    const { container } = renderSection();
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    await user.click(await screen.findByRole('tab', { name: 'Local authorities' }));
+
+    // When
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+
+    // Then
+    const hatched = container.querySelectorAll('[data-missing-area-id]').length;
+    expect(hatched).toBe(WITHHELD_LOCAL_AUTHORITIES_WITH_ARDS_AND_NORTH_DOWN);
+    expect(
+      screen.getByText(new RegExp(`^${hatched} of 361 local authorities are not reported\\.`))
+    ).toBeInTheDocument();
+  });
+
+  test('given a breakdown that lists its withheld codes then each map’s note counts its list and the hex map hatches only those', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_WITHHELD_LISTS);
+    const { container } = renderSection();
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // When
+    expect(
+      await screen.findByText(/^2 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+
+    // Then
+    expect(hatchedAreaCodes(container)).toEqual(UK_LISTED_WITHHELD_CONSTITUENCY_CODES);
+    expect(noDataHexagons(container)).toHaveLength(
+      EXPECTED_CONSTITUENCY_COUNT - 1 - UK_LISTED_WITHHELD_CONSTITUENCY_CODES.length
+    );
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(screen.getByText(/^1 of 361 local authorities is not reported\./)).toBeInTheDocument();
+    expect(hatchedAreaCodes(container)).toEqual(UK_LISTED_WITHHELD_LOCAL_AUTHORITY_CODES);
+  });
+
+  test('given a breakdown that lists its withheld codes then the geographic map reads not reported for as many boundaries as the note counts', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_WITHHELD_LISTS);
+    renderSection();
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then: the boundary fixture holds both listed constituencies and five unlisted ones
+    expect(
+      await screen.findByText(/^2 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(UK_LISTED_WITHHELD_CONSTITUENCY_CODES);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(5);
+  });
+
+  test('given saved area data then no disclosure note shows', async () => {
+    // When
+    renderSection(STORED_OUTPUT_WITH_AREAS);
+
+    // Then
+    expect(screen.queryByText(/not reported/)).not.toBeInTheDocument();
+
+    // The geographic map has loaded its boundaries.
+    expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
+  });
+
+  test('given a breakdown release result with constituencies only then the local authority map offers to compute, and the constituency map stays', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    const { container } = renderSection(BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY);
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+    expect(screen.getByRole('button', { name: STORED_CONSTITUENCY_DETAILS })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then
+    await waitFor(() =>
+      expect(
+        container.querySelector(`[data-area-id="${BREAKDOWN_LOCAL_AUTHORITY_NAME}"]`)
+      ).not.toBeNull()
+    );
+    await user.click(screen.getByRole('tab', { name: 'Constituencies' }));
+    expect(screen.getByRole('button', { name: STORED_CONSTITUENCY_DETAILS })).toBeInTheDocument();
+    expect(screen.queryByText(/constituencies are not reported/)).not.toBeInTheDocument();
+  });
+
+  test('given an older stored result with constituencies but no local authorities then it says there is no local authority data and offers no compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderSection(OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES);
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+    expect(screen.getByRole('button', { name: STORED_CONSTITUENCY_DETAILS })).toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(screen.getByText('No local authority data available')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+
+  test('given a stored result with no version and no area data then it says there is no data and offers no compute', () => {
+    // When
+    renderSection(UNVERSIONED_OUTPUT_WITHOUT_AREAS);
+
+    // Then
+    expect(screen.getByText('No constituency data available')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+});

@@ -10,13 +10,17 @@ model: sonnet
 
 You are a validation agent that runs TypeScript type checking and automatically fixes all errors, iterating until the check passes cleanly.
 
+Run every command below from the repository root.
+
 ## Workflow
 
 ### 1. Run type checking via the Makefile
 
 ```bash
-cd /Users/administrator/Documents/PolicyEngine/policyengine-app-v2 && make typecheck 2>&1
+make typecheck 2>&1
 ```
+
+This runs `tsc --noEmit` in `app/`, `website/` and `calculator-app/`, the same three checks as CI's Type checking job. `make` stops at the first project with errors, so a project after it is only checked once the ones before it pass.
 
 ### 2. If the check passes with no errors, report success and stop.
 
@@ -36,7 +40,7 @@ For each type error reported:
 ### 4. Re-run type checking
 
 ```bash
-cd /Users/administrator/Documents/PolicyEngine/policyengine-app-v2 && make typecheck 2>&1
+make typecheck 2>&1
 ```
 
 ### 5. Repeat steps 3-4 until there are zero errors.

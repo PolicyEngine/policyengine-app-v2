@@ -17,7 +17,7 @@ export const WINNERS_LOSERS_CATEGORIES = [
   'Lose more than 5%',
 ] as const;
 
-type DecileBreakdown = 'income' | 'wealth';
+export type DecileBreakdown = 'income' | 'wealth';
 type WinnersLosersCategory = (typeof WINNERS_LOSERS_CATEGORIES)[number];
 
 function sortedDecileEntries(values: Record<string, number> | null | undefined) {

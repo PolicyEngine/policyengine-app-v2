@@ -16,7 +16,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
     <>
       {/* Mobile Burger Menu with Country Selector */}
       <div className="tw:flex tw:lg:hidden tw:items-center" style={{ gap: spacing.md }}>
-        <CountrySelector />
+        <CountrySelector variant="inverse" />
         <button
           type="button"
           className="tw:p-1 tw:rounded tw:bg-transparent tw:border-none tw:cursor-pointer"
@@ -31,7 +31,8 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
       <Sheet open={opened} onOpenChange={(open) => !open && onClose()}>
         <SheetContent
           side="right"
-          className="tw:w-[300px]"
+          // Scroll when the links outgrow a short phone screen.
+          className="tw:w-[300px] tw:overflow-y-auto"
           style={{ backgroundColor: colors.primary[600] }}
         >
           <SheetHeader>

@@ -4,10 +4,12 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
+import { useSyntheticProgress } from '@/hooks/useSyntheticProgress';
 import { calculationKeys } from '@/libs/queryKeys';
 import {
   createTestQueryClient,
   HOOK_TEST_CONSTANTS,
+  TEST_ESTIMATED_DURATIONS_MS,
 } from '@/tests/fixtures/hooks/calculationHookFixtures';
 import {
   mockCalcStatusComplete,
@@ -358,6 +360,69 @@ describe('useCalculationStatus', () => {
         expect(result.current.message).toBe('Loading population data...'); // Mocked synthetic message
         // Server data still available
         expect(result.current.queuePosition).toBe(3);
+      });
+    });
+
+    test('given a pending status with a region estimate then the bar follows it', async () => {
+      // Given
+      vi.mocked(useSyntheticProgress).mockClear();
+      queryClient.setQueryData<CalcStatus>(
+        calculationKeys.byReportId(HOOK_TEST_CONSTANTS.TEST_REPORT_ID),
+        mockCalcStatusComputing({
+          metadata: {
+            calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
+            calcType: 'societyWide',
+            targetType: 'report',
+            startedAt: Date.now(),
+          },
+          estimatedDurationMs: TEST_ESTIMATED_DURATIONS_MS.US_STATE,
+        })
+      );
+
+      // When
+      renderHook(() => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'), {
+        wrapper,
+      });
+
+      // Then
+      await waitFor(() => {
+        expect(useSyntheticProgress).toHaveBeenCalledWith(
+          true,
+          'societyWide',
+          expect.objectContaining({ estimatedDurationMs: TEST_ESTIMATED_DURATIONS_MS.US_STATE })
+        );
+      });
+    });
+
+    test('given a pending status without an estimate then the default applies', async () => {
+      // Given
+      vi.mocked(useSyntheticProgress).mockClear();
+      queryClient.setQueryData<CalcStatus>(
+        calculationKeys.byReportId(HOOK_TEST_CONSTANTS.TEST_REPORT_ID),
+        mockCalcStatusComputing({
+          metadata: {
+            calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
+            calcType: 'societyWide',
+            targetType: 'report',
+            startedAt: Date.now(),
+          },
+        })
+      );
+
+      // When
+      const { result } = renderHook(
+        () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'),
+        { wrapper }
+      );
+
+      // Then - every active call leaves the estimate unset
+      await waitFor(() => expect(result.current.isPending).toBe(true));
+      const activeCalls = vi
+        .mocked(useSyntheticProgress)
+        .mock.calls.filter(([isActive]) => isActive);
+      expect(activeCalls.length).toBeGreaterThan(0);
+      activeCalls.forEach(([, , serverProgress]) => {
+        expect(serverProgress?.estimatedDurationMs).toBeUndefined();
       });
     });
 

@@ -1,10 +1,6 @@
 import { ReactNode } from "react";
 import { Container, Title } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export interface ContentSectionProps {
   title?: string;

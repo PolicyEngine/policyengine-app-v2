@@ -2,11 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 import HeroCTA from "./HeroCTA";
 import HouseholdGraph, {
   generateGraph,

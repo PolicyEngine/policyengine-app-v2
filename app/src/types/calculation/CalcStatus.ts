@@ -60,6 +60,19 @@ export type CalcStatusValue = 'initializing' | 'idle' | 'pending' | 'complete' |
  * Unified calculation status interface
  * Works for both economy and household calculations
  */
+/**
+ * A computing run's stage from the API. `floor` and `max` bound its
+ * progress: the percent at which the stage starts, and the highest
+ * percent before the next stage starts.
+ */
+export interface RunStage {
+  /** e.g. 'queued', 'loading_data', 'reform'; later API versions may add stages */
+  stage?: string;
+  floor?: number;
+  max?: number;
+  segments?: { completed: number; total: number };
+}
+
 export interface CalcStatus {
   /**
    * Current status of the calculation
@@ -86,6 +99,19 @@ export interface CalcStatus {
    * Queue position for economy calculations
    */
   queuePosition?: number;
+
+  /**
+   * Typical duration of this calculation in milliseconds, for time-based
+   * progress. Set only for pending society-wide calculations whose caller
+   * opted into the region estimate (CalcParams.estimateByRegion, v3).
+   */
+  estimatedDurationMs?: number;
+
+  /**
+   * The run's stage as the API reports it while computing, for v3 bars
+   * (CalcParams.estimateByRegion). Absent when the API reports no stages.
+   */
+  runStage?: RunStage;
 
   /**
    * The calculation result (only present when status is 'complete')

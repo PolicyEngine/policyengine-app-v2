@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useDeferredValue, useMemo, useState, type ReactNode } from 'react';
 import { IconCheck, IconChevronDown, IconSearch } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
@@ -38,6 +38,12 @@ interface Props {
   households?: HouseholdCalculationOutput[];
   baselineVariation?: HouseholdCalculationOutput | null;
   reformVariation?: HouseholdCalculationOutput | null;
+  /** What shows while the variation calculates; a spinner and a line by default. */
+  renderLoading?: () => ReactNode;
+  /** Leave out the SPM methodology footnote under the chart; shown by default. */
+  hideSpmFootnote?: boolean;
+  /** Tidy the chart's legend and axis title (the v3 report); the v2 report keeps its own. */
+  tidyChart?: boolean;
 }
 
 /**
@@ -54,6 +60,9 @@ export default function EarningsVariationSubPage({
   households: _households,
   baselineVariation: providedBaselineVariation = null,
   reformVariation: providedReformVariation = null,
+  renderLoading,
+  hideSpmFootnote = false,
+  tidyChart = false,
 }: Props) {
   const [selectedVariable, setSelectedVariable] = useState('household_net_income');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -234,6 +243,9 @@ export default function EarningsVariationSubPage({
   }
 
   if (isLoading) {
+    if (renderLoading) {
+      return <>{renderLoading()}</>;
+    }
     return (
       <Group className="tw:gap-sm tw:items-center">
         <Spinner size="sm" />
@@ -368,6 +380,7 @@ export default function EarningsVariationSubPage({
           reformVariation={resolvedReformVariation!}
           variableName={selectedVariable}
           year={normalizedReportYear}
+          tidyChart={tidyChart}
         />
       ) : (
         <BaselineOnlyChart
@@ -376,12 +389,15 @@ export default function EarningsVariationSubPage({
           focusPersonName={baselineFocusPersonName}
           variableName={selectedVariable}
           year={normalizedReportYear}
+          tidyChart={tidyChart}
         />
       )}
-      <SPMMethodologyFootnote
-        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
-        context="variation"
-      />
+      {!hideSpmFootnote && (
+        <SPMMethodologyFootnote
+          output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+          context="variation"
+        />
+      )}
     </Stack>
   );
 }

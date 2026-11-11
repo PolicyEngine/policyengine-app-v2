@@ -3,8 +3,12 @@
  * Renders the results list in normal document flow so parent layouts can expand.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconChevronDown, IconSearch, IconX } from '@tabler/icons-react';
+import VariablePickerDialog, {
+  type CommonInput,
+  type VariablePickSource,
+} from '@/components/household/VariablePickerDialog';
 import { Button, Spinner, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { VariableInfo } from '@/utils/VariableResolver';
@@ -14,7 +18,8 @@ export interface VariableSearchDropdownProps {
   onSearchChange: (value: string) => void;
   onFocusChange: (focused: boolean) => void;
   filteredVariables: VariableInfo[];
-  onSelect: (variable: VariableInfo) => void;
+  /** The pick, and the list it came from (the inline list counts as the search). */
+  onSelect: (variable: VariableInfo, source: VariablePickSource) => void;
   /** Function to get entity hint for a variable (e.g., "Person" or "Household") */
   getEntityHint?: (variable: VariableInfo) => { show: boolean; label: string } | null;
   disabled?: boolean;
@@ -25,6 +30,29 @@ export interface VariableSearchDropdownProps {
   onClose?: () => void;
   /** Whether results were truncated (more available than displayed) */
   truncated?: boolean;
+  /** Variables listed first under their own heading; the rest follow under "All variables". */
+  suggested?: ReadonlyMap<string, number>;
+  suggestedLabel?: string;
+  /**
+   * With `groupOf`: a group's parts, shown as subheadings when that group
+   * is chosen (Income → wages, investments, …), in `subgroupOrder`.
+   */
+  subgroupOf?: (variable: VariableInfo) => string | null;
+  subgroupOrder?: readonly string[];
+  /** With `groupOf`: the picker's tiles, topic icons and display names. */
+  common?: CommonInput[];
+  groupIcon?: (group: string) => ReactNode;
+  nameOf?: (variable: VariableInfo) => string;
+  describe?: (variable: VariableInfo) => string | undefined;
+  /** With `groupOf`: the dialog's title. */
+  title?: string;
+  /**
+   * Opens the search as a picker dialog (VariablePickerDialog), its inputs
+   * in these groups, when given; the plain inline list otherwise. The
+   * order names the groups in the order they show.
+   */
+  groupOf?: (variable: VariableInfo) => string;
+  groupOrder?: readonly string[];
 }
 
 // Fixed width for close button column (matches VariableRow's REMOVE_COLUMN_WIDTH)
@@ -53,28 +81,53 @@ export default function VariableSearchDropdown({
   placeholder = 'Search for a variable...',
   loading = false,
   onClose,
+  suggested,
+  suggestedLabel = 'Suggested',
+  groupOf,
+  title = 'Add a variable',
+  subgroupOf,
+  subgroupOrder = [],
+  common,
+  groupIcon,
+  nameOf,
+  describe,
+  groupOrder = [],
 }: VariableSearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Sort so matching-context variables appear first
+  // Sort so matching-context variables appear first (within the suggested ones, then the rest)
   const sortedVariables = useMemo(() => {
-    if (!getEntityHint) {
-      return filteredVariables;
-    }
-    const matching: VariableInfo[] = [];
-    const different: VariableInfo[] = [];
-    for (const v of filteredVariables) {
-      if (getEntityHint(v)?.show) {
-        different.push(v);
-      } else {
-        matching.push(v);
+    const byContext = (list: VariableInfo[]) => {
+      if (!getEntityHint) {
+        return list;
       }
+      const matching: VariableInfo[] = [];
+      const different: VariableInfo[] = [];
+      for (const v of list) {
+        if (getEntityHint(v)?.show) {
+          different.push(v);
+        } else {
+          matching.push(v);
+        }
+      }
+      return [...matching, ...different];
+    };
+    if (!suggested) {
+      return byContext(filteredVariables);
     }
-    return [...matching, ...different];
-  }, [filteredVariables, getEntityHint]);
+    return [
+      ...byContext(filteredVariables.filter((v) => suggested.has(v.name))),
+      ...byContext(filteredVariables.filter((v) => !suggested.has(v.name))),
+    ];
+  }, [filteredVariables, getEntityHint, suggested]);
+  const suggestedCount = suggested
+    ? sortedVariables.filter((v) => suggested.has(v.name)).length
+    : 0;
+
+  const displayVariables = sortedVariables;
 
   // Reset selected index when list changes
   useEffect(() => {
@@ -92,8 +145,20 @@ export default function VariableSearchDropdown({
     onFocusChange(false);
   };
 
-  const handleSelect = (variable: VariableInfo) => {
-    onSelect(variable);
+  // Delayed to let a click on an option land; focus that moved into the
+  // list (the phone's category choice) keeps it open.
+  const closeUnlessFocusInside = () => {
+    setTimeout(() => {
+      const focused = document.activeElement;
+      if (focused && (focused === inputRef.current || listRef.current?.contains(focused))) {
+        return;
+      }
+      closeDropdown();
+    }, 150);
+  };
+
+  const handleSelect = (variable: VariableInfo, source: VariablePickSource = 'search') => {
+    onSelect(variable, source);
     closeDropdown();
   };
 
@@ -109,13 +174,13 @@ export default function VariableSearchDropdown({
     }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, sortedVariables.length - 1));
+      setSelectedIndex((prev) => Math.min(prev + 1, displayVariables.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex((prev) => Math.max(prev - 1, 0));
     } else if (e.key === 'Enter' && selectedIndex >= 0) {
       e.preventDefault();
-      handleSelect(sortedVariables[selectedIndex]);
+      handleSelect(displayVariables[selectedIndex]);
     }
   };
 
@@ -131,6 +196,32 @@ export default function VariableSearchDropdown({
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // Grouped, the search is a dialog of its own, centered over the page.
+  if (groupOf) {
+    return (
+      <VariablePickerDialog
+        title={title}
+        searchValue={searchValue}
+        onSearchChange={onSearchChange}
+        variables={filteredVariables}
+        onSelect={handleSelect}
+        onClose={handleClose}
+        groupOf={groupOf}
+        groupOrder={groupOrder}
+        groupIcon={groupIcon}
+        subgroupOf={subgroupOf}
+        subgroupOrder={subgroupOrder}
+        common={common}
+        suggested={suggested}
+        suggestedLabel={suggestedLabel}
+        nameOf={nameOf}
+        describe={describe}
+        loading={loading}
+        disabled={disabled}
+      />
+    );
+  }
 
   return (
     <div className="tw:flex tw:items-start tw:gap-xs tw:flex-nowrap">
@@ -157,10 +248,7 @@ export default function VariableSearchDropdown({
             }}
             onClick={openDropdown}
             onFocus={openDropdown}
-            onBlur={() => {
-              // Delay to allow click on option
-              setTimeout(closeDropdown, 150);
-            }}
+            onBlur={closeUnlessFocusInside}
             onKeyDown={handleKeyDown}
             disabled={disabled}
             autoFocus
@@ -184,40 +272,55 @@ export default function VariableSearchDropdown({
               <>
                 {sortedVariables.map((variable, index) => {
                   const entityHint = getEntityHint?.(variable);
+                  const heading =
+                    suggestedCount > 0 && index === 0
+                      ? suggestedLabel
+                      : suggestedCount > 0 && index === suggestedCount
+                        ? 'All variables'
+                        : null;
                   return (
-                    <div
-                      key={variable.name}
-                      data-option
-                      role="option"
-                      tabIndex={-1}
-                      aria-selected={index === selectedIndex}
-                      className={cn(
-                        'tw:px-sm tw:py-xs tw:cursor-pointer tw:text-sm',
-                        index === selectedIndex ? 'tw:bg-primary-100' : 'tw:hover:bg-gray-50'
+                    <Fragment key={variable.name}>
+                      {heading && (
+                        <p
+                          role="presentation"
+                          className="tw:px-sm tw:pt-sm tw:pb-xs tw:text-xs tw:font-semibold tw:text-gray-500"
+                        >
+                          {heading}
+                        </p>
                       )}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleSelect(variable);
-                      }}
-                    >
-                      <div className="tw:flex tw:items-start tw:gap-xs tw:justify-between tw:flex-nowrap">
-                        <div className="tw:flex-1 tw:min-w-0">
-                          <p className="tw:text-sm tw:truncate">
-                            {sentenceCaseLabel(variable.label)}
-                          </p>
-                          {variable.documentation && (
-                            <p className="tw:text-xs tw:text-gray-500 tw:line-clamp-1">
-                              {variable.documentation}
+                      <div
+                        data-option
+                        role="option"
+                        tabIndex={-1}
+                        aria-selected={index === selectedIndex}
+                        className={cn(
+                          'tw:px-sm tw:py-xs tw:cursor-pointer tw:text-sm',
+                          index === selectedIndex ? 'tw:bg-primary-100' : 'tw:hover:bg-gray-50'
+                        )}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelect(variable);
+                        }}
+                      >
+                        <div className="tw:flex tw:items-start tw:gap-xs tw:justify-between tw:flex-nowrap">
+                          <div className="tw:flex-1 tw:min-w-0">
+                            <p className="tw:text-sm tw:truncate">
+                              {sentenceCaseLabel(variable.label)}
                             </p>
+                            {variable.documentation && (
+                              <p className="tw:text-xs tw:text-gray-500 tw:line-clamp-1">
+                                {variable.documentation}
+                              </p>
+                            )}
+                          </div>
+                          {entityHint?.show && (
+                            <span className="tw:text-xs tw:text-gray-500 tw:italic tw:shrink-0">
+                              {entityHint.label}
+                            </span>
                           )}
                         </div>
-                        {entityHint?.show && (
-                          <span className="tw:text-xs tw:text-gray-500 tw:italic tw:shrink-0">
-                            {entityHint.label}
-                          </span>
-                        )}
                       </div>
-                    </div>
+                    </Fragment>
                   );
                 })}
                 {truncated && (

@@ -2,13 +2,32 @@ import {
   flagshipApiDisabledResponse,
   isFlagshipApiEnabled,
 } from "@/libs/flagship/apiGate";
+import {
+  type CalibrationCountry,
+  type CalibrationTargetRow,
+  isCalibrationCountry,
+  nationalGeography,
+  normalizeCalibrationTarget,
+  targetsForGeography,
+  targetsForVariables,
+} from "@/libs/flagship/calibrationTargets";
 
 // Calibration targets for a set of model variables in one geography, from
 // the calibration dashboard's per-target diagnostics for the current
 // populace release. The dashboard filters by its own label keys, not by
 // PolicyEngine variable names, so this route pulls the full target set
 // once (a dozen 500-row pages), caches it, and indexes it by
-// `policyengine_variables` — the join key the validation layer uses.
+// `policyengine_variables` — the join key the validation layer uses (or
+// the target's role, when that is a model variable and the dashboard
+// lists none). With `all`, it answers every target of one geography
+// instead: a state's overall data fit, whatever the reform changes.
+//
+// `country` picks the dashboard's country: "us" (the default, asked
+// without a country parameter, as before) or "uk" (asked with
+// country=uk). Each country's set is fetched and cached on its own. UK
+// targets name their area ("Wales", "Great Britain"), so a UK request
+// passes names, and may pass several (`geographies`): a nation report
+// reads the nation's targets and those of the UK and Great Britain.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -25,104 +44,78 @@ const CACHE_CONTROL =
   process.env.NODE_ENV === "production" ? "public, max-age=3600" : "no-store";
 const MAX_ROWS_PER_VARIABLE = 500;
 
-interface TargetRow {
-  name: string;
-  source: string;
-  sourceLabel: string | null;
-  variable: string;
-  policyengineVariables: string[];
-  measure: string | null;
-  level: "national" | "state";
-  geography: string;
-  period: number | string | null;
-  target: number | null;
-  estimate: number | null;
-  relativeError: number | null;
-  targetRole: string | null;
-  sourceUrl: string | null;
-}
-
 interface TargetSet {
   releaseId: string | null;
-  rows: TargetRow[];
+  rows: CalibrationTargetRow[];
 }
 
-function normalize(raw: any): TargetRow | null {
-  if (typeof raw?.name !== "string") {
-    return null;
-  }
-  const level = raw.level === "national" ? "national" : "state";
-  return {
-    name: raw.name,
-    source: String(raw.source ?? ""),
-    sourceLabel: typeof raw.source_label === "string" ? raw.source_label : null,
-    variable: String(raw.variable ?? ""),
-    policyengineVariables: Array.isArray(raw.policyengine_variables)
-      ? raw.policyengine_variables.filter((v: unknown) => typeof v === "string")
-      : [],
-    measure: typeof raw.measure === "string" ? raw.measure : null,
-    level,
-    geography:
-      level === "national" ? "US" : String(raw.state ?? raw.geography ?? ""),
-    period: raw.period ?? null,
-    target: typeof raw.target === "number" ? raw.target : null,
-    estimate:
-      typeof raw.final_estimate === "number" ? raw.final_estimate : null,
-    relativeError:
-      typeof raw.relative_error === "number" ? raw.relative_error : null,
-    targetRole: typeof raw.target_role === "string" ? raw.target_role : null,
-    sourceUrl: typeof raw.source_url === "string" ? raw.source_url : null,
-  };
+const cache = new Map<
+  CalibrationCountry,
+  { promise: Promise<TargetSet>; fetchedAt: number }
+>();
+
+function pageUrl(country: CalibrationCountry, page: number): string {
+  const url = `${BASE_URL}/target-diagnostics?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`;
+  // The dashboard serves the US without a country parameter.
+  return country === "us" ? url : `${url}&country=${country}`;
 }
 
-let cached: { promise: Promise<TargetSet>; fetchedAt: number } | null = null;
-
-function getTargets(): Promise<TargetSet> {
-  if (!cached || Date.now() - cached.fetchedAt > CACHE_TTL_MS) {
-    const promise = (async () => {
-      const rows: TargetRow[] = [];
-      let releaseId: string | null = null;
-      for (let page = 0; page < MAX_PAGES; page++) {
-        const response = await fetch(
-          `${BASE_URL}/target-diagnostics?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`,
-        );
-        if (!response.ok) {
-          throw new Error(`calibration fetch failed: ${response.status}`);
-        }
-        const payload = await response.json();
-        if (page === 0 && typeof payload?.release_id === "string") {
-          releaseId = payload.release_id;
-        }
-        for (const raw of payload?.targets ?? []) {
-          const row = normalize(raw);
-          if (row) {
-            rows.push(row);
-          }
-        }
-        if (!payload?.has_next) {
-          break;
-        }
-      }
-      if (rows.length === 0) {
-        throw new Error("calibration payload had no targets");
-      }
-      return { releaseId, rows };
-    })();
-    promise.catch(() => {
-      cached = null;
-    });
-    cached = { promise, fetchedAt: Date.now() };
+function getTargets(country: CalibrationCountry): Promise<TargetSet> {
+  const cached = cache.get(country);
+  if (cached && Date.now() - cached.fetchedAt <= CACHE_TTL_MS) {
+    return cached.promise;
   }
-  return cached.promise;
+  const promise = (async () => {
+    const rows: CalibrationTargetRow[] = [];
+    let releaseId: string | null = null;
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const response = await fetch(pageUrl(country, page));
+      if (!response.ok) {
+        throw new Error(`calibration fetch failed: ${response.status}`);
+      }
+      const payload = await response.json();
+      if (page === 0 && typeof payload?.release_id === "string") {
+        releaseId = payload.release_id;
+      }
+      for (const raw of payload?.targets ?? []) {
+        const row = normalizeCalibrationTarget(raw, country);
+        if (row) {
+          rows.push(row);
+        }
+      }
+      if (!payload?.has_next) {
+        break;
+      }
+    }
+    if (rows.length === 0) {
+      throw new Error("calibration payload had no targets");
+    }
+    return { releaseId, rows };
+  })();
+  promise.catch(() => {
+    if (cache.get(country)?.promise === promise) {
+      cache.delete(country);
+    }
+  });
+  cache.set(country, { promise, fetchedAt: Date.now() });
+  return promise;
 }
 
 // A reform reaches a few hundred variables, more than a query string
-// should carry, so the client POSTs; GET stays for hand checks.
+// should carry, so the client POSTs; GET stays for hand checks
+// (?variables=a,b&geography=DC, or ?geography=DC&all=1; for the UK
+// ?country=uk&geography=Wales,United Kingdom&variables=income_tax).
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
+  const all = url.searchParams.get("all");
+  const country = url.searchParams.get("country") ?? "us";
+  const geography = url.searchParams.get("geography");
   return respond(
     (url.searchParams.get("variables") ?? "").split(","),
-    url.searchParams.get("geography"),
+    // A UK area name has no comma, so a UK list is comma-separated.
+    country === "uk" && geography ? geography.split(",") : geography,
+    all === "1" || all === "true",
+    country,
   );
 }
 
@@ -135,29 +128,58 @@ export async function POST(request: Request): Promise<Response> {
   }
   return respond(
     Array.isArray(body?.variables) ? body.variables : [],
-    typeof body?.geography === "string" ? body.geography : null,
+    // A list is for UK reports only; the US reads one geography.
+    body?.country === "uk" && Array.isArray(body?.geographies)
+      ? body.geographies
+      : typeof body?.geography === "string"
+        ? body.geography
+        : null,
+    body?.all === true,
+    body?.country ?? "us",
   );
 }
 
 async function respond(
   rawVariables: unknown[],
-  rawGeography: string | null,
+  rawGeography: string | unknown[] | null,
+  all: boolean,
+  rawCountry: unknown,
 ): Promise<Response> {
   if (!isFlagshipApiEnabled()) {
     return flagshipApiDisabledResponse();
+  }
+  const country =
+    typeof rawCountry === "string" ? rawCountry.toLowerCase() : rawCountry;
+  if (!isCalibrationCountry(country)) {
+    return Response.json(
+      { error: "country must be us or uk" },
+      { status: 400 },
+    );
   }
   const variables = rawVariables
     .filter((v): v is string => typeof v === "string")
     .map((v) => v.trim())
     .filter(Boolean);
-  if (variables.length === 0) {
+  if (!all && variables.length === 0) {
     return Response.json({ error: "variables is required" }, { status: 400 });
   }
-  const geography = (rawGeography ?? "US").toUpperCase();
+  // US geographies are one code ("US", "DC"); UK ones are area names, kept as given.
+  const geographies =
+    country === "us"
+      ? [(typeof rawGeography === "string" ? rawGeography : "US").toUpperCase()]
+      : (Array.isArray(rawGeography) ? rawGeography : [rawGeography])
+          .filter((g): g is string => typeof g === "string")
+          .map((g) => g.trim())
+          .filter(Boolean);
+  if (geographies.length === 0) {
+    geographies.push(nationalGeography(country));
+  }
+  const geography = geographies[0];
+  const where = geographies.length === 1 ? geography : geographies;
 
   let targets: TargetSet;
   try {
-    targets = await getTargets();
+    targets = await getTargets(country);
   } catch {
     return Response.json(
       { error: "calibration data unavailable" },
@@ -165,32 +187,22 @@ async function respond(
     );
   }
 
-  const wanted = new Set(variables);
-  const matched = targets.rows.filter(
-    (row) =>
-      row.geography === geography &&
-      typeof row.relativeError === "number" &&
-      row.policyengineVariables.some((v) => wanted.has(v)),
-  );
-  // Worst fit first, then cap per variable so a dense SOI family
-  // (hundreds of AGI-band rows) cannot crowd out the rest of the payload
-  // while the worst rows always survive the cut.
-  matched.sort(
-    (a, b) => Math.abs(b.relativeError!) - Math.abs(a.relativeError!),
-  );
-  const perVariable = new Map<string, number>();
-  const rows = matched.filter((row) => {
-    const key = row.policyengineVariables.find((v) => wanted.has(v))!;
-    const count = perVariable.get(key) ?? 0;
-    if (count >= MAX_ROWS_PER_VARIABLE) {
-      return false;
-    }
-    perVariable.set(key, count + 1);
-    return true;
-  });
+  const rows = all
+    ? targetsForGeography(targets.rows, where)
+    : targetsForVariables(
+        targets.rows,
+        variables,
+        where,
+        MAX_ROWS_PER_VARIABLE,
+      );
 
   return Response.json(
-    { releaseId: targets.releaseId, geography, rows },
+    {
+      releaseId: targets.releaseId,
+      geography,
+      ...(geographies.length > 1 ? { geographies } : {}),
+      rows,
+    },
     { headers: { "Cache-Control": CACHE_CONTROL } },
   );
 }

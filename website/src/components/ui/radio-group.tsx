@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { CircleIcon } from 'lucide-react';
-import { RadioGroup as RadioGroupPrimitive } from 'radix-ui';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { CircleIcon } from "lucide-react";
+import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
+import { cn } from "@/lib/utils";
 
 function RadioGroup({
   className,
@@ -10,7 +10,7 @@ function RadioGroup({
   return (
     <RadioGroupPrimitive.Root
       data-slot="radio-group"
-      className={cn('tw:grid tw:gap-3', className)}
+      className={cn("tw:grid tw:gap-3", className)}
       {...props}
     />
   );
@@ -24,8 +24,8 @@ function RadioGroupItem({
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        'tw:border-input tw:text-primary tw:focus-visible:border-ring tw:focus-visible:ring-ring/50 tw:aria-invalid:ring-destructive/20 tw:aria-invalid:border-destructive tw:aspect-square tw:size-4 tw:shrink-0 tw:rounded-full tw:border tw:shadow-xs tw:transition-[color,box-shadow] tw:outline-none tw:focus-visible:ring-[3px] tw:disabled:cursor-not-allowed tw:disabled:opacity-50',
-        className
+        "tw:border-input tw:text-primary tw:focus-visible:border-ring tw:focus-visible:ring-ring/50 tw:aria-invalid:ring-destructive/20 tw:aria-invalid:border-destructive tw:aspect-square tw:size-4 tw:shrink-0 tw:rounded-full tw:border tw:shadow-xs tw:transition-[color,box-shadow] tw:outline-none tw:focus-visible:ring-[3px] tw:disabled:cursor-not-allowed tw:disabled:opacity-50",
+        className,
       )}
       {...props}
     >

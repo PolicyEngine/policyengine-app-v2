@@ -67,6 +67,34 @@ export class ResultPersister {
     this.cacheReport(reportId, report);
   }
 
+  /**
+   * Marks a report whose society-wide run failed as failed, with why. Used
+   * only by callers that opt in (CalcStartConfig.recordReportErrors, v3):
+   * persist() never writes a failed report run.
+   */
+  async persistReportError(status: CalcStatus, countryId: string, year: string): Promise<void> {
+    const reportId = status.metadata.calcId;
+    const previous = this.queryClient.getQueryData<Report>(reportKeys.byId(reportId));
+    // A record that already says so is not written again on every open.
+    if (previous?.status === 'error') {
+      return;
+    }
+    const report: Report = {
+      id: reportId,
+      countryId: countryId as Report['countryId'],
+      year,
+      apiVersion: null,
+      simulationIds: [],
+      ...previous,
+      status: 'error',
+      output: null,
+    };
+    const error = status.error;
+    const message = error?.code ? `[${error.code}] ${error.message}` : error?.message;
+    await markReportError(report.countryId, reportId, report, message);
+    this.cacheReport(reportId, report);
+  }
+
   private async persistToSimulation(status: CalcStatus, countryId: string): Promise<void> {
     const simulationId = status.metadata.calcId;
     const key = calculationKeys.bySimulationId(simulationId);

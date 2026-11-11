@@ -52,4 +52,55 @@ export const utahBaselineClaim = scorecardClaim({
   reform_framework: 'baseline',
   name: 'Utah Child Tax Credit',
   metric: 'benefit_cost',
+  program: 'ut_ctc',
+  geography: 'UT',
+});
+
+export const UK_PA_PATH = 'gov.hmrc.income_tax.allowances.personal_allowance.amount';
+export const ukMeasureClaim = (overrides: Partial<ScorecardClaim> = {}): ScorecardClaim =>
+  scorecardClaim({
+    claim_id: 'uk-pa-freeze-2028',
+    country: 'UK',
+    source: 'obr',
+    name: 'Personal allowance freeze',
+    unit_concept: 'gbp',
+    reform_framework: 'policy_ref',
+    reform_key: 'ab2025',
+    latest: { value: null, status: 'not_computed' },
+    measure: {
+      key: 'income_tax_threshold_freeze',
+      program: 'income_tax',
+      computability: 'parametric',
+      head_variables: ['income_tax'],
+      parameter_paths: [UK_PA_PATH],
+    },
+    ...overrides,
+  });
+
+/** HM Treasury's two-child-limit costing: a static and a post-behavioural leg for each year. */
+export const TWO_CHILD_LIMIT_HINT =
+  'Universal Credit Child Element: Remove the two child limit from April 2026, taking 450,000 children out of poverty';
+export const twoChildLimitClaim = (
+  period: number,
+  scoringMethod: 'static' | 'post_behavioural',
+  externalValue: number,
+  peValue: number
+): ScorecardClaim => ({
+  ...scorecardClaim({
+    claim_id: `two-child-${period}-${scoringMethod}`,
+    country: 'UK',
+    source: 'hm_treasury',
+    unit_concept: 'gbp',
+    name: 'Budget 2025: Policy costings (PU 3595)',
+    period,
+    external_value: externalValue,
+    claim_baseline: 'current_law',
+    conditions: { scoring_method: scoringMethod, reform_hint: TWO_CHILD_LIMIT_HINT },
+    measure: { key: 'ab2025__uc_child_element_remove_two_child_limit' },
+    latest: {
+      value: peValue,
+      status: scoringMethod === 'static' ? 'comparable' : 'concept_mismatch',
+      baseline: 'pre_ab2025',
+    },
+  }),
 });

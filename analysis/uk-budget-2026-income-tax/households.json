@@ -1,0 +1,2786 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-10-28T16:18:33.153156+00:00",
+    "tax_year": "2027–28",
+    "model_year": 2027,
+    "versions": {
+      "policyengine": "6.11.1",
+      "policyengine-uk": "2.151.0",
+      "policyengine-core": "3.33.3"
+    },
+    "python": "3.13.14",
+    "dashboard_comparison": {
+      "pull_request": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/pull/290",
+      "commit": "b50787aa75ef5aed36b822c973afa6b569464d55",
+      "source_file_url": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/b50787aa75ef5aed36b822c973afa6b569464d55/src/uk_budget_data/reforms.py",
+      "compared_file": "src/uk_budget_data/reforms.py",
+      "baseline_parameters": {
+        "gov.hmrc.income_tax.rates.savings.basic": 0.22,
+        "gov.hmrc.income_tax.rates.savings.higher": 0.42,
+        "gov.hmrc.income_tax.rates.savings.additional": 0.47,
+        "gov.hmrc.income_tax.rates.property.basic": 0.22,
+        "gov.hmrc.income_tax.rates.property.higher": 0.42,
+        "gov.hmrc.income_tax.rates.property.additional": 0.47,
+        "gov.hmrc.income_tax.allowances.trading_allowance": 1000
+      },
+      "reform_parameters": {
+        "gov.hmrc.income_tax.rates.savings.basic": 0.24,
+        "gov.hmrc.income_tax.rates.savings.higher": 0.44,
+        "gov.hmrc.income_tax.rates.savings.additional": 0.49,
+        "gov.hmrc.income_tax.rates.property.basic": 0.24,
+        "gov.hmrc.income_tax.rates.property.higher": 0.44,
+        "gov.hmrc.income_tax.rates.property.additional": 0.49,
+        "gov.hmrc.income_tax.allowances.trading_allowance": 3000
+      },
+      "dashboard_builder_verified": false,
+      "comparison": "Independent reform dictionaries and baseline parameters verified. Optional dashboard-builder comparison not requested; immutable source reference recorded above."
+    },
+    "scope": "Synthetic single adults age 35; no microdata, no behavioural responses or national estimates. Income and expenses held fixed; tax liabilities, not full household net-income changes.",
+    "assumptions": "No children, pensions, Gift Aid, student loans, capital gains, other tax reliefs, property losses or carried-forward finance costs. Savings are outside ISAs. Trading receipts and profit are both supplied; no connected-party receipts or partnership income. All example benefit totals are checked to be zero.",
+    "oracle_tolerance_gbp": 0.02,
+    "forecast": {
+      "dashboard_commit": "640426575270224db9b04d6c94d30e264a347be2",
+      "source": "https://github.com/PolicyEngine/uk-autumn-budget-dashboard-2026/blob/640426575270224db9b04d6c94d30e264a347be2/src/uk_budget_data/forecast/obr_october_2026.json",
+      "forecast_file_git_blob": "b504a48fffb93714ff358d869cad712b6daea20e",
+      "forecast_module_git_blob": "b2ca186b6fd514f334ced11934d38b256e6d2127",
+      "forecast_file_sha256": "dc039d30660d17f30a45e49538dbd22953e02bd4f6b63eda2eaebcf8252baf54",
+      "baseline_and_reform": true,
+      "nominal_household_inputs": "Held fixed in 2027; the forecast updates model parameters, not the supplied income amounts.",
+      "remaining_series": "March paths remain for cpih, non-labour income, private rent, mortgage interest, per-capita series, council tax and fuel volumes/prices, as recorded by this forecast vintage."
+    },
+    "warning_filters": "Known household divide/invalid RuntimeWarnings and single-household model decile .values warnings only; no population weights are accessed by this generator."
+  },
+  "reforms": {
+    "savings_property": {
+      "gov.hmrc.income_tax.rates.savings.basic": 0.24,
+      "gov.hmrc.income_tax.rates.savings.higher": 0.44,
+      "gov.hmrc.income_tax.rates.savings.additional": 0.49,
+      "gov.hmrc.income_tax.rates.property.basic": 0.24,
+      "gov.hmrc.income_tax.rates.property.higher": 0.44,
+      "gov.hmrc.income_tax.rates.property.additional": 0.49
+    },
+    "trading": {
+      "gov.hmrc.income_tax.allowances.trading_allowance": 3000
+    }
+  },
+  "households": [
+    {
+      "id": "saver_below_allowance",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 30000,
+        "savings_interest_income": 500
+      },
+      "independent_oracle": {
+        "baseline": {
+          "savings_allowance": 1000,
+          "savings_income_tax": 0
+        },
+        "reform": {
+          "savings_allowance": 1000,
+          "savings_income_tax": 0
+        },
+        "change": {
+          "income_tax": 0
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 3486.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 3486.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 0.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "saver_basic",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 30000,
+        "savings_interest_income": 2000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "savings_allowance": 1000,
+          "savings_income_tax": 220
+        },
+        "reform": {
+          "savings_allowance": 1000,
+          "savings_income_tax": 240
+        },
+        "change": {
+          "income_tax": 20
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 3706.0,
+        "savings_income_tax": 220.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 1000.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 3726.0,
+        "savings_income_tax": 240.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 1000.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 20.0,
+        "savings_income_tax": 20.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "saver_higher",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 60000,
+        "savings_interest_income": 2000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "savings_allowance": 500,
+          "savings_income_tax": 630
+        },
+        "reform": {
+          "savings_allowance": 500,
+          "savings_income_tax": 660
+        },
+        "change": {
+          "income_tax": 30
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 12062.0,
+        "savings_income_tax": 630.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 1500.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 12092.0,
+        "savings_income_tax": 660.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 1500.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 30.0,
+        "savings_income_tax": 30.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "saver_additional",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 150000,
+        "savings_interest_income": 2000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "savings_allowance": 0,
+          "savings_income_tax": 940
+        },
+        "reform": {
+          "savings_allowance": 0,
+          "savings_income_tax": 980
+        },
+        "change": {
+          "income_tax": 40
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 54643.0,
+        "savings_income_tax": 940.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 2000.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 5010.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 54683.0,
+        "savings_income_tax": 980.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 2000.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 5010.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 40.0,
+        "savings_income_tax": 40.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "saver_crosses_basic_higher",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 49270,
+        "savings_interest_income": 2000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "savings_allowance": 500,
+          "savings_income_tax": 530
+        },
+        "reform": {
+          "savings_allowance": 500,
+          "savings_income_tax": 560
+        },
+        "change": {
+          "income_tax": 30
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 7870.0,
+        "savings_income_tax": 530.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 500.0,
+        "higher_rate_savings_income": 1000.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 2936.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 7900.0,
+        "savings_income_tax": 560.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 500.0,
+        "higher_rate_savings_income": 1000.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 2936.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 30.0,
+        "savings_income_tax": 30.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "saver_starting_rate",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 15000,
+        "savings_interest_income": 4000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "savings_allowance": 1000,
+          "savings_income_tax": 94.6
+        },
+        "reform": {
+          "savings_allowance": 1000,
+          "savings_income_tax": 103.2
+        },
+        "change": {
+          "income_tax": 8.600000000000009
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 580.6,
+        "savings_income_tax": 94.6,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 2570.0,
+        "basic_rate_savings_income": 430.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 194.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 589.2,
+        "savings_income_tax": 103.2,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 2570.0,
+        "basic_rate_savings_income": 430.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 194.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 8.6,
+        "savings_income_tax": 8.6,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "saver_scotland_higher",
+      "policy": "savings_property",
+      "region": "SCOTLAND",
+      "person": {
+        "employment_income": 60000,
+        "savings_interest_income": 2000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "savings_income_tax": 630
+        },
+        "reform": {
+          "savings_income_tax": 660
+        },
+        "change": {
+          "income_tax": 30
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 13804.94,
+        "savings_income_tax": 630.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 1500.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 13834.94,
+        "savings_income_tax": 660.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 1500.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 30.0,
+        "savings_income_tax": 30.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "landlord_basic_mortgage",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 30000,
+        "property_income": 10000,
+        "property_finance_costs": 4000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "property_income_tax": 2200,
+          "property_finance_cost_relief": 880,
+          "income_tax": 4806
+        },
+        "reform": {
+          "property_income_tax": 2400,
+          "property_finance_cost_relief": 960,
+          "income_tax": 4926
+        },
+        "change": {
+          "income_tax": 120
+        }
+      },
+      "detail": {
+        "gross_rent": 12000,
+        "actual_non_finance_expenses": 2000
+      },
+      "baseline": {
+        "income_tax": 4806.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 2200.0,
+        "property_finance_cost_relief": 880.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 4926.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 2400.0,
+        "property_finance_cost_relief": 960.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 120.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 200.0,
+        "property_finance_cost_relief": 80.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "landlord_higher_mortgage",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 60000,
+        "property_income": 10000,
+        "property_finance_costs": 4000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "property_income_tax": 4200,
+          "property_finance_cost_relief": 880,
+          "income_tax": 14752
+        },
+        "reform": {
+          "property_income_tax": 4400,
+          "property_finance_cost_relief": 960,
+          "income_tax": 14872
+        },
+        "change": {
+          "income_tax": 120
+        }
+      },
+      "detail": {
+        "gross_rent": 12000,
+        "actual_non_finance_expenses": 2000
+      },
+      "baseline": {
+        "income_tax": 14752.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 4200.0,
+        "property_finance_cost_relief": 880.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 14872.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 4400.0,
+        "property_finance_cost_relief": 960.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 120.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 200.0,
+        "property_finance_cost_relief": 80.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "landlord_additional_mortgage",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 150000,
+        "property_income": 10000,
+        "property_finance_costs": 4000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "property_income_tax": 4700,
+          "property_finance_cost_relief": 880,
+          "income_tax": 57523
+        },
+        "reform": {
+          "property_income_tax": 4900,
+          "property_finance_cost_relief": 960,
+          "income_tax": 57643
+        },
+        "change": {
+          "income_tax": 120
+        }
+      },
+      "detail": {
+        "gross_rent": 12000,
+        "actual_non_finance_expenses": 2000
+      },
+      "baseline": {
+        "income_tax": 57523.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 4700.0,
+        "property_finance_cost_relief": 880.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 5010.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 57643.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 4900.0,
+        "property_finance_cost_relief": 960.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 5010.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 120.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 200.0,
+        "property_finance_cost_relief": 80.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "landlord_crosses_basic_higher_mortgage",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 45000,
+        "property_income": 10000,
+        "property_finance_costs": 4000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "property_income_tax": 3146,
+          "property_finance_cost_relief": 880,
+          "income_tax": 8752
+        },
+        "reform": {
+          "property_income_tax": 3346,
+          "property_finance_cost_relief": 960,
+          "income_tax": 8872
+        },
+        "change": {
+          "income_tax": 120
+        }
+      },
+      "detail": {
+        "gross_rent": 12000,
+        "actual_non_finance_expenses": 2000
+      },
+      "baseline": {
+        "income_tax": 8752.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 3146.0,
+        "property_finance_cost_relief": 880.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 2594.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 8872.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 3346.0,
+        "property_finance_cost_relief": 960.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 2594.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 120.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 200.0,
+        "property_finance_cost_relief": 80.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "landlord_mortgage_free_london",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 30000,
+        "property_income": 10000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "property_income_tax": 2200
+        },
+        "reform": {
+          "property_income_tax": 2400
+        },
+        "change": {
+          "income_tax": 200
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 5686.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 2200.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 5886.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 2400.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 200.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 200.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "landlord_mortgage_free_wales",
+      "policy": "savings_property",
+      "region": "WALES",
+      "person": {
+        "employment_income": 30000,
+        "property_income": 10000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "property_income_tax": 2200
+        },
+        "reform": {
+          "property_income_tax": 2400
+        },
+        "change": {
+          "income_tax": 200
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 5686.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 2200.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 5886.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 2400.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 200.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 200.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "landlord_mortgage_free_northern_ireland",
+      "policy": "savings_property",
+      "region": "NORTHERN_IRELAND",
+      "person": {
+        "employment_income": 30000,
+        "property_income": 10000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "property_income_tax": 2200
+        },
+        "reform": {
+          "property_income_tax": 2400
+        },
+        "change": {
+          "income_tax": 200
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 5686.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 2200.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 5886.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 2400.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 200.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 200.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "landlord_scotland_finance_0",
+      "policy": "savings_property",
+      "region": "SCOTLAND",
+      "person": {
+        "employment_income": 60000,
+        "property_income": 10000,
+        "property_finance_costs": 0
+      },
+      "independent_oracle": {
+        "change": {
+          "property_income_tax": 0,
+          "property_finance_cost_relief": 0.0,
+          "income_tax": 0
+        }
+      },
+      "detail": "Scottish property rates do not change; the UK-wide finance-cost credit rate does.",
+      "baseline": {
+        "income_tax": 17374.94,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 4200.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 17374.94,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 4200.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 0.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "landlord_scotland_finance_4000",
+      "policy": "savings_property",
+      "region": "SCOTLAND",
+      "person": {
+        "employment_income": 60000,
+        "property_income": 10000,
+        "property_finance_costs": 4000
+      },
+      "independent_oracle": {
+        "change": {
+          "property_income_tax": 0,
+          "property_finance_cost_relief": 80.0,
+          "income_tax": -80
+        }
+      },
+      "detail": "Scottish property rates do not change; the UK-wide finance-cost credit rate does.",
+      "baseline": {
+        "income_tax": 16494.94,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 4200.0,
+        "property_finance_cost_relief": 880.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 16414.94,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 4200.0,
+        "property_finance_cost_relief": 960.0,
+        "taxable_property_income": 10000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": -80.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 80.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "property_then_savings_order",
+      "policy": "savings_property",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 45000,
+        "property_income": 6000,
+        "savings_interest_income": 2000
+      },
+      "independent_oracle": {
+        "baseline": {
+          "property_income_tax": 1466,
+          "savings_income_tax": 630,
+          "income_tax": 8582
+        },
+        "reform": {
+          "property_income_tax": 1586,
+          "savings_income_tax": 660,
+          "income_tax": 8732
+        },
+        "change": {
+          "income_tax": 150
+        }
+      },
+      "detail": null,
+      "baseline": {
+        "income_tax": 8582.0,
+        "savings_income_tax": 630.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 1500.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 1466.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 6000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 2594.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 8732.0,
+        "savings_income_tax": 660.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 1500.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 1586.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 6000.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 2594.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 150.0,
+        "savings_income_tax": 30.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 120.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "trader_salary_30000_expenses_500",
+      "policy": "trading",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 30000,
+        "self_employment_gross_receipts": 4000,
+        "self_employment_income": 3500
+      },
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 3000,
+          "income_tax": 4086.0,
+          "ni_class_4": 0
+        },
+        "reform": {
+          "taxable_self_employment_income": 1000,
+          "income_tax": 3686.0,
+          "ni_class_4": 0
+        },
+        "change": {
+          "income_tax": -400.0,
+          "national_insurance": 0
+        }
+      },
+      "detail": {
+        "gross_receipts": 4000,
+        "actual_expenses": 500
+      },
+      "baseline": {
+        "income_tax": 4086.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 500.0,
+        "taxable_self_employment_income": 3000.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 3686.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 2500.0,
+        "taxable_self_employment_income": 1000.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": -400.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 2000.0,
+        "taxable_self_employment_income": -2000.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "trader_salary_30000_expenses_2500",
+      "policy": "trading",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 30000,
+        "self_employment_gross_receipts": 4000,
+        "self_employment_income": 1500
+      },
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 1500,
+          "income_tax": 3786.0,
+          "ni_class_4": 0
+        },
+        "reform": {
+          "taxable_self_employment_income": 1000,
+          "income_tax": 3686.0,
+          "ni_class_4": 0
+        },
+        "change": {
+          "income_tax": -100.0,
+          "national_insurance": 0
+        }
+      },
+      "detail": {
+        "gross_receipts": 4000,
+        "actual_expenses": 2500
+      },
+      "baseline": {
+        "income_tax": 3786.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 1500.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 3686.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 500.0,
+        "taxable_self_employment_income": 1000.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": -100.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 500.0,
+        "taxable_self_employment_income": -500.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "trader_salary_30000_expenses_3500",
+      "policy": "trading",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 30000,
+        "self_employment_gross_receipts": 4000,
+        "self_employment_income": 500
+      },
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 500,
+          "income_tax": 3586.0,
+          "ni_class_4": 0
+        },
+        "reform": {
+          "taxable_self_employment_income": 500,
+          "income_tax": 3586.0,
+          "ni_class_4": 0
+        },
+        "change": {
+          "income_tax": 0.0,
+          "national_insurance": 0
+        }
+      },
+      "detail": {
+        "gross_receipts": 4000,
+        "actual_expenses": 3500
+      },
+      "baseline": {
+        "income_tax": 3586.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 500.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 3586.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 1000.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 500.0,
+        "national_insurance": 1394.4,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 0.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "trader_salary_60000_expenses_500",
+      "policy": "trading",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 60000,
+        "self_employment_gross_receipts": 4000,
+        "self_employment_income": 3500
+      },
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 3000,
+          "income_tax": 12632.0,
+          "ni_class_4": 0
+        },
+        "reform": {
+          "taxable_self_employment_income": 1000,
+          "income_tax": 11832.0,
+          "ni_class_4": 0
+        },
+        "change": {
+          "income_tax": -800.0,
+          "national_insurance": 0
+        }
+      },
+      "detail": {
+        "gross_receipts": 4000,
+        "actual_expenses": 500
+      },
+      "baseline": {
+        "income_tax": 12632.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 500.0,
+        "taxable_self_employment_income": 3000.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 11832.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 2500.0,
+        "taxable_self_employment_income": 1000.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": -800.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 2000.0,
+        "taxable_self_employment_income": -2000.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "trader_salary_60000_expenses_2500",
+      "policy": "trading",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 60000,
+        "self_employment_gross_receipts": 4000,
+        "self_employment_income": 1500
+      },
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 1500,
+          "income_tax": 12032.0,
+          "ni_class_4": 0
+        },
+        "reform": {
+          "taxable_self_employment_income": 1000,
+          "income_tax": 11832.0,
+          "ni_class_4": 0
+        },
+        "change": {
+          "income_tax": -200.0,
+          "national_insurance": 0
+        }
+      },
+      "detail": {
+        "gross_receipts": 4000,
+        "actual_expenses": 2500
+      },
+      "baseline": {
+        "income_tax": 12032.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 1500.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 11832.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 500.0,
+        "taxable_self_employment_income": 1000.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": -200.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 500.0,
+        "taxable_self_employment_income": -500.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    },
+    {
+      "id": "trader_salary_60000_expenses_3500",
+      "policy": "trading",
+      "region": "LONDON",
+      "person": {
+        "employment_income": 60000,
+        "self_employment_gross_receipts": 4000,
+        "self_employment_income": 500
+      },
+      "independent_oracle": {
+        "baseline": {
+          "taxable_self_employment_income": 500,
+          "income_tax": 11632.0,
+          "ni_class_4": 0
+        },
+        "reform": {
+          "taxable_self_employment_income": 500,
+          "income_tax": 11632.0,
+          "ni_class_4": 0
+        },
+        "change": {
+          "income_tax": 0.0,
+          "national_insurance": 0
+        }
+      },
+      "detail": {
+        "gross_receipts": 4000,
+        "actual_expenses": 3500
+      },
+      "baseline": {
+        "income_tax": 11632.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 500.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "reform": {
+        "income_tax": 11632.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 500.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 500.0,
+        "national_insurance": 3210.6,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      },
+      "change": {
+        "income_tax": 0.0,
+        "savings_income_tax": 0.0,
+        "savings_allowance": 0.0,
+        "savings_starter_rate_income": 0.0,
+        "basic_rate_savings_income": 0.0,
+        "higher_rate_savings_income": 0.0,
+        "add_rate_savings_income": 0.0,
+        "property_income_tax": 0.0,
+        "property_finance_cost_relief": 0.0,
+        "taxable_property_income": 0.0,
+        "trading_allowance_deduction": 0.0,
+        "taxable_self_employment_income": 0.0,
+        "national_insurance": 0.0,
+        "ni_class_4": 0.0,
+        "household_benefits": 0.0
+      }
+    }
+  ],
+  "savings_interest_curve": [
+    {
+      "interest": 500,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 0.0,
+      "higher_reform_tax": 0.0,
+      "higher_tax_increase": 0.0
+    },
+    {
+      "interest": 600,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 42.0,
+      "higher_reform_tax": 44.0,
+      "higher_tax_increase": 2.0
+    },
+    {
+      "interest": 700,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 84.0,
+      "higher_reform_tax": 88.0,
+      "higher_tax_increase": 4.0
+    },
+    {
+      "interest": 800,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 126.0,
+      "higher_reform_tax": 132.0,
+      "higher_tax_increase": 6.0
+    },
+    {
+      "interest": 900,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 168.0,
+      "higher_reform_tax": 176.0,
+      "higher_tax_increase": 8.0
+    },
+    {
+      "interest": 1000,
+      "basic_baseline_tax": 0.0,
+      "basic_reform_tax": 0.0,
+      "basic_tax_increase": 0.0,
+      "higher_baseline_tax": 210.0,
+      "higher_reform_tax": 220.0,
+      "higher_tax_increase": 10.0
+    },
+    {
+      "interest": 1100,
+      "basic_baseline_tax": 22.0,
+      "basic_reform_tax": 24.0,
+      "basic_tax_increase": 2.0,
+      "higher_baseline_tax": 252.0,
+      "higher_reform_tax": 264.0,
+      "higher_tax_increase": 12.0
+    },
+    {
+      "interest": 1200,
+      "basic_baseline_tax": 44.0,
+      "basic_reform_tax": 48.0,
+      "basic_tax_increase": 4.0,
+      "higher_baseline_tax": 294.0,
+      "higher_reform_tax": 308.0,
+      "higher_tax_increase": 14.0
+    },
+    {
+      "interest": 1300,
+      "basic_baseline_tax": 66.0,
+      "basic_reform_tax": 72.0,
+      "basic_tax_increase": 6.0,
+      "higher_baseline_tax": 336.0,
+      "higher_reform_tax": 352.0,
+      "higher_tax_increase": 16.0
+    },
+    {
+      "interest": 1400,
+      "basic_baseline_tax": 88.0,
+      "basic_reform_tax": 96.0,
+      "basic_tax_increase": 8.0,
+      "higher_baseline_tax": 378.0,
+      "higher_reform_tax": 396.0,
+      "higher_tax_increase": 18.0
+    },
+    {
+      "interest": 1500,
+      "basic_baseline_tax": 110.0,
+      "basic_reform_tax": 120.0,
+      "basic_tax_increase": 10.0,
+      "higher_baseline_tax": 420.0,
+      "higher_reform_tax": 440.0,
+      "higher_tax_increase": 20.0
+    },
+    {
+      "interest": 1600,
+      "basic_baseline_tax": 132.0,
+      "basic_reform_tax": 144.0,
+      "basic_tax_increase": 12.0,
+      "higher_baseline_tax": 462.0,
+      "higher_reform_tax": 484.0,
+      "higher_tax_increase": 22.0
+    },
+    {
+      "interest": 1700,
+      "basic_baseline_tax": 154.0,
+      "basic_reform_tax": 168.0,
+      "basic_tax_increase": 14.0,
+      "higher_baseline_tax": 504.0,
+      "higher_reform_tax": 528.0,
+      "higher_tax_increase": 24.0
+    },
+    {
+      "interest": 1800,
+      "basic_baseline_tax": 176.0,
+      "basic_reform_tax": 192.0,
+      "basic_tax_increase": 16.0,
+      "higher_baseline_tax": 546.0,
+      "higher_reform_tax": 572.0,
+      "higher_tax_increase": 26.0
+    },
+    {
+      "interest": 1900,
+      "basic_baseline_tax": 198.0,
+      "basic_reform_tax": 216.0,
+      "basic_tax_increase": 18.0,
+      "higher_baseline_tax": 588.0,
+      "higher_reform_tax": 616.0,
+      "higher_tax_increase": 28.0
+    },
+    {
+      "interest": 2000,
+      "basic_baseline_tax": 220.0,
+      "basic_reform_tax": 240.0,
+      "basic_tax_increase": 20.0,
+      "higher_baseline_tax": 630.0,
+      "higher_reform_tax": 660.0,
+      "higher_tax_increase": 30.0
+    },
+    {
+      "interest": 2100,
+      "basic_baseline_tax": 242.0,
+      "basic_reform_tax": 264.0,
+      "basic_tax_increase": 22.0,
+      "higher_baseline_tax": 672.0,
+      "higher_reform_tax": 704.0,
+      "higher_tax_increase": 32.0
+    },
+    {
+      "interest": 2200,
+      "basic_baseline_tax": 264.0,
+      "basic_reform_tax": 288.0,
+      "basic_tax_increase": 24.0,
+      "higher_baseline_tax": 714.0,
+      "higher_reform_tax": 748.0,
+      "higher_tax_increase": 34.0
+    },
+    {
+      "interest": 2300,
+      "basic_baseline_tax": 286.0,
+      "basic_reform_tax": 312.0,
+      "basic_tax_increase": 26.0,
+      "higher_baseline_tax": 756.0,
+      "higher_reform_tax": 792.0,
+      "higher_tax_increase": 36.0
+    },
+    {
+      "interest": 2400,
+      "basic_baseline_tax": 308.0,
+      "basic_reform_tax": 336.0,
+      "basic_tax_increase": 28.0,
+      "higher_baseline_tax": 798.0,
+      "higher_reform_tax": 836.0,
+      "higher_tax_increase": 38.0
+    },
+    {
+      "interest": 2500,
+      "basic_baseline_tax": 330.0,
+      "basic_reform_tax": 360.0,
+      "basic_tax_increase": 30.0,
+      "higher_baseline_tax": 840.0,
+      "higher_reform_tax": 880.0,
+      "higher_tax_increase": 40.0
+    },
+    {
+      "interest": 2600,
+      "basic_baseline_tax": 352.0,
+      "basic_reform_tax": 384.0,
+      "basic_tax_increase": 32.0,
+      "higher_baseline_tax": 882.0,
+      "higher_reform_tax": 924.0,
+      "higher_tax_increase": 42.0
+    },
+    {
+      "interest": 2700,
+      "basic_baseline_tax": 374.0,
+      "basic_reform_tax": 408.0,
+      "basic_tax_increase": 34.0,
+      "higher_baseline_tax": 924.0,
+      "higher_reform_tax": 968.0,
+      "higher_tax_increase": 44.0
+    },
+    {
+      "interest": 2800,
+      "basic_baseline_tax": 396.0,
+      "basic_reform_tax": 432.0,
+      "basic_tax_increase": 36.0,
+      "higher_baseline_tax": 966.0,
+      "higher_reform_tax": 1012.0,
+      "higher_tax_increase": 46.0
+    },
+    {
+      "interest": 2900,
+      "basic_baseline_tax": 418.0,
+      "basic_reform_tax": 456.0,
+      "basic_tax_increase": 38.0,
+      "higher_baseline_tax": 1008.0,
+      "higher_reform_tax": 1056.0,
+      "higher_tax_increase": 48.0
+    },
+    {
+      "interest": 3000,
+      "basic_baseline_tax": 440.0,
+      "basic_reform_tax": 480.0,
+      "basic_tax_increase": 40.0,
+      "higher_baseline_tax": 1050.0,
+      "higher_reform_tax": 1100.0,
+      "higher_tax_increase": 50.0
+    },
+    {
+      "interest": 3100,
+      "basic_baseline_tax": 462.0,
+      "basic_reform_tax": 504.0,
+      "basic_tax_increase": 42.0,
+      "higher_baseline_tax": 1092.0,
+      "higher_reform_tax": 1144.0,
+      "higher_tax_increase": 52.0
+    },
+    {
+      "interest": 3200,
+      "basic_baseline_tax": 484.0,
+      "basic_reform_tax": 528.0,
+      "basic_tax_increase": 44.0,
+      "higher_baseline_tax": 1134.0,
+      "higher_reform_tax": 1188.0,
+      "higher_tax_increase": 54.0
+    },
+    {
+      "interest": 3300,
+      "basic_baseline_tax": 506.0,
+      "basic_reform_tax": 552.0,
+      "basic_tax_increase": 46.0,
+      "higher_baseline_tax": 1176.0,
+      "higher_reform_tax": 1232.0,
+      "higher_tax_increase": 56.0
+    },
+    {
+      "interest": 3400,
+      "basic_baseline_tax": 528.0,
+      "basic_reform_tax": 576.0,
+      "basic_tax_increase": 48.0,
+      "higher_baseline_tax": 1218.0,
+      "higher_reform_tax": 1276.0,
+      "higher_tax_increase": 58.0
+    },
+    {
+      "interest": 3500,
+      "basic_baseline_tax": 550.0,
+      "basic_reform_tax": 600.0,
+      "basic_tax_increase": 50.0,
+      "higher_baseline_tax": 1260.0,
+      "higher_reform_tax": 1320.0,
+      "higher_tax_increase": 60.0
+    },
+    {
+      "interest": 3600,
+      "basic_baseline_tax": 572.0,
+      "basic_reform_tax": 624.0,
+      "basic_tax_increase": 52.0,
+      "higher_baseline_tax": 1302.0,
+      "higher_reform_tax": 1364.0,
+      "higher_tax_increase": 62.0
+    },
+    {
+      "interest": 3700,
+      "basic_baseline_tax": 594.0,
+      "basic_reform_tax": 648.0,
+      "basic_tax_increase": 54.0,
+      "higher_baseline_tax": 1344.0,
+      "higher_reform_tax": 1408.0,
+      "higher_tax_increase": 64.0
+    },
+    {
+      "interest": 3800,
+      "basic_baseline_tax": 616.0,
+      "basic_reform_tax": 672.0,
+      "basic_tax_increase": 56.0,
+      "higher_baseline_tax": 1386.0,
+      "higher_reform_tax": 1452.0,
+      "higher_tax_increase": 66.0
+    },
+    {
+      "interest": 3900,
+      "basic_baseline_tax": 638.0,
+      "basic_reform_tax": 696.0,
+      "basic_tax_increase": 58.0,
+      "higher_baseline_tax": 1428.0,
+      "higher_reform_tax": 1496.0,
+      "higher_tax_increase": 68.0
+    },
+    {
+      "interest": 4000,
+      "basic_baseline_tax": 660.0,
+      "basic_reform_tax": 720.0,
+      "basic_tax_increase": 60.0,
+      "higher_baseline_tax": 1470.0,
+      "higher_reform_tax": 1540.0,
+      "higher_tax_increase": 70.0
+    },
+    {
+      "interest": 4100,
+      "basic_baseline_tax": 682.0,
+      "basic_reform_tax": 744.0,
+      "basic_tax_increase": 62.0,
+      "higher_baseline_tax": 1512.0,
+      "higher_reform_tax": 1584.0,
+      "higher_tax_increase": 72.0
+    },
+    {
+      "interest": 4200,
+      "basic_baseline_tax": 704.0,
+      "basic_reform_tax": 768.0,
+      "basic_tax_increase": 64.0,
+      "higher_baseline_tax": 1554.0,
+      "higher_reform_tax": 1628.0,
+      "higher_tax_increase": 74.0
+    },
+    {
+      "interest": 4300,
+      "basic_baseline_tax": 726.0,
+      "basic_reform_tax": 792.0,
+      "basic_tax_increase": 66.0,
+      "higher_baseline_tax": 1596.0,
+      "higher_reform_tax": 1672.0,
+      "higher_tax_increase": 76.0
+    },
+    {
+      "interest": 4400,
+      "basic_baseline_tax": 748.0,
+      "basic_reform_tax": 816.0,
+      "basic_tax_increase": 68.0,
+      "higher_baseline_tax": 1638.0,
+      "higher_reform_tax": 1716.0,
+      "higher_tax_increase": 78.0
+    },
+    {
+      "interest": 4500,
+      "basic_baseline_tax": 770.0,
+      "basic_reform_tax": 840.0,
+      "basic_tax_increase": 70.0,
+      "higher_baseline_tax": 1680.0,
+      "higher_reform_tax": 1760.0,
+      "higher_tax_increase": 80.0
+    },
+    {
+      "interest": 4600,
+      "basic_baseline_tax": 792.0,
+      "basic_reform_tax": 864.0,
+      "basic_tax_increase": 72.0,
+      "higher_baseline_tax": 1722.0,
+      "higher_reform_tax": 1804.0,
+      "higher_tax_increase": 82.0
+    },
+    {
+      "interest": 4700,
+      "basic_baseline_tax": 814.0,
+      "basic_reform_tax": 888.0,
+      "basic_tax_increase": 74.0,
+      "higher_baseline_tax": 1764.0,
+      "higher_reform_tax": 1848.0,
+      "higher_tax_increase": 84.0
+    },
+    {
+      "interest": 4800,
+      "basic_baseline_tax": 836.0,
+      "basic_reform_tax": 912.0,
+      "basic_tax_increase": 76.0,
+      "higher_baseline_tax": 1806.0,
+      "higher_reform_tax": 1892.0,
+      "higher_tax_increase": 86.0
+    },
+    {
+      "interest": 4900,
+      "basic_baseline_tax": 858.0,
+      "basic_reform_tax": 936.0,
+      "basic_tax_increase": 78.0,
+      "higher_baseline_tax": 1848.0,
+      "higher_reform_tax": 1936.0,
+      "higher_tax_increase": 88.0
+    },
+    {
+      "interest": 5000,
+      "basic_baseline_tax": 880.0,
+      "basic_reform_tax": 960.0,
+      "basic_tax_increase": 80.0,
+      "higher_baseline_tax": 1890.0,
+      "higher_reform_tax": 1980.0,
+      "higher_tax_increase": 90.0
+    }
+  ],
+  "trading_receipts_curve": [
+    {
+      "receipts": 500,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 375.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 450.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 525.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 600.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 675.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 1000,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 0,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 0.0,
+      "expenses_75_percent_actual_expenses": 750.0,
+      "expenses_75_percent_baseline_taxable_profit": 0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 1100,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 100,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 20.0,
+      "expenses_75_percent_actual_expenses": 825.0,
+      "expenses_75_percent_baseline_taxable_profit": 100,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 20.0
+    },
+    {
+      "receipts": 1200,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 200,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 40.0,
+      "expenses_75_percent_actual_expenses": 900.0,
+      "expenses_75_percent_baseline_taxable_profit": 200,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 40.0
+    },
+    {
+      "receipts": 1300,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 300,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 60.0,
+      "expenses_75_percent_actual_expenses": 975.0,
+      "expenses_75_percent_baseline_taxable_profit": 300,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 60.0
+    },
+    {
+      "receipts": 1333.3333333333333,
+      "no_expenses_actual_expenses": 0.0,
+      "no_expenses_baseline_taxable_profit": 333.33333333333326,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 66.67,
+      "expenses_75_percent_actual_expenses": 1000.0,
+      "expenses_75_percent_baseline_taxable_profit": 333.33333333333326,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 66.67
+    },
+    {
+      "receipts": 1400,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 400,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 80.0,
+      "expenses_75_percent_actual_expenses": 1050.0,
+      "expenses_75_percent_baseline_taxable_profit": 350.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 70.0
+    },
+    {
+      "receipts": 1500,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 500,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 100.0,
+      "expenses_75_percent_actual_expenses": 1125.0,
+      "expenses_75_percent_baseline_taxable_profit": 375.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 75.0
+    },
+    {
+      "receipts": 1600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 600,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 120.0,
+      "expenses_75_percent_actual_expenses": 1200.0,
+      "expenses_75_percent_baseline_taxable_profit": 400.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 80.0
+    },
+    {
+      "receipts": 1700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 700,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 140.0,
+      "expenses_75_percent_actual_expenses": 1275.0,
+      "expenses_75_percent_baseline_taxable_profit": 425.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 85.0
+    },
+    {
+      "receipts": 1800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 800,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 160.0,
+      "expenses_75_percent_actual_expenses": 1350.0,
+      "expenses_75_percent_baseline_taxable_profit": 450.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 90.0
+    },
+    {
+      "receipts": 1900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 900,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 180.0,
+      "expenses_75_percent_actual_expenses": 1425.0,
+      "expenses_75_percent_baseline_taxable_profit": 475.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 95.0
+    },
+    {
+      "receipts": 2000,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1000,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 200.0,
+      "expenses_75_percent_actual_expenses": 1500.0,
+      "expenses_75_percent_baseline_taxable_profit": 500.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 100.0
+    },
+    {
+      "receipts": 2100,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1100,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 220.0,
+      "expenses_75_percent_actual_expenses": 1575.0,
+      "expenses_75_percent_baseline_taxable_profit": 525.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 105.0
+    },
+    {
+      "receipts": 2200,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1200,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 240.0,
+      "expenses_75_percent_actual_expenses": 1650.0,
+      "expenses_75_percent_baseline_taxable_profit": 550.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 110.0
+    },
+    {
+      "receipts": 2300,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1300,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 260.0,
+      "expenses_75_percent_actual_expenses": 1725.0,
+      "expenses_75_percent_baseline_taxable_profit": 575.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 115.0
+    },
+    {
+      "receipts": 2400,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1400,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 280.0,
+      "expenses_75_percent_actual_expenses": 1800.0,
+      "expenses_75_percent_baseline_taxable_profit": 600.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 120.0
+    },
+    {
+      "receipts": 2500,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1500,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 300.0,
+      "expenses_75_percent_actual_expenses": 1875.0,
+      "expenses_75_percent_baseline_taxable_profit": 625.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 125.0
+    },
+    {
+      "receipts": 2600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1600,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 320.0,
+      "expenses_75_percent_actual_expenses": 1950.0,
+      "expenses_75_percent_baseline_taxable_profit": 650.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 130.0
+    },
+    {
+      "receipts": 2700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1700,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 340.0,
+      "expenses_75_percent_actual_expenses": 2025.0,
+      "expenses_75_percent_baseline_taxable_profit": 675.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 135.0
+    },
+    {
+      "receipts": 2800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1800,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 360.0,
+      "expenses_75_percent_actual_expenses": 2100.0,
+      "expenses_75_percent_baseline_taxable_profit": 700.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 140.0
+    },
+    {
+      "receipts": 2900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 1900,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 380.0,
+      "expenses_75_percent_actual_expenses": 2175.0,
+      "expenses_75_percent_baseline_taxable_profit": 725.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 145.0
+    },
+    {
+      "receipts": 3000,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2000,
+      "no_expenses_reform_taxable_profit": 0,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2250.0,
+      "expenses_75_percent_baseline_taxable_profit": 750.0,
+      "expenses_75_percent_reform_taxable_profit": 0,
+      "expenses_75_percent_tax_reduction": 150.0
+    },
+    {
+      "receipts": 3100,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2100,
+      "no_expenses_reform_taxable_profit": 100,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2325.0,
+      "expenses_75_percent_baseline_taxable_profit": 775.0,
+      "expenses_75_percent_reform_taxable_profit": 100,
+      "expenses_75_percent_tax_reduction": 135.0
+    },
+    {
+      "receipts": 3200,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2200,
+      "no_expenses_reform_taxable_profit": 200,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2400.0,
+      "expenses_75_percent_baseline_taxable_profit": 800.0,
+      "expenses_75_percent_reform_taxable_profit": 200,
+      "expenses_75_percent_tax_reduction": 120.0
+    },
+    {
+      "receipts": 3300,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2300,
+      "no_expenses_reform_taxable_profit": 300,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2475.0,
+      "expenses_75_percent_baseline_taxable_profit": 825.0,
+      "expenses_75_percent_reform_taxable_profit": 300,
+      "expenses_75_percent_tax_reduction": 105.0
+    },
+    {
+      "receipts": 3400,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2400,
+      "no_expenses_reform_taxable_profit": 400,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2550.0,
+      "expenses_75_percent_baseline_taxable_profit": 850.0,
+      "expenses_75_percent_reform_taxable_profit": 400,
+      "expenses_75_percent_tax_reduction": 90.0
+    },
+    {
+      "receipts": 3500,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2500,
+      "no_expenses_reform_taxable_profit": 500,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2625.0,
+      "expenses_75_percent_baseline_taxable_profit": 875.0,
+      "expenses_75_percent_reform_taxable_profit": 500,
+      "expenses_75_percent_tax_reduction": 75.0
+    },
+    {
+      "receipts": 3600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2600,
+      "no_expenses_reform_taxable_profit": 600,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2700.0,
+      "expenses_75_percent_baseline_taxable_profit": 900.0,
+      "expenses_75_percent_reform_taxable_profit": 600,
+      "expenses_75_percent_tax_reduction": 60.0
+    },
+    {
+      "receipts": 3700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2700,
+      "no_expenses_reform_taxable_profit": 700,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2775.0,
+      "expenses_75_percent_baseline_taxable_profit": 925.0,
+      "expenses_75_percent_reform_taxable_profit": 700,
+      "expenses_75_percent_tax_reduction": 45.0
+    },
+    {
+      "receipts": 3800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2800,
+      "no_expenses_reform_taxable_profit": 800,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2850.0,
+      "expenses_75_percent_baseline_taxable_profit": 950.0,
+      "expenses_75_percent_reform_taxable_profit": 800,
+      "expenses_75_percent_tax_reduction": 30.0
+    },
+    {
+      "receipts": 3900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 2900,
+      "no_expenses_reform_taxable_profit": 900,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 2925.0,
+      "expenses_75_percent_baseline_taxable_profit": 975.0,
+      "expenses_75_percent_reform_taxable_profit": 900,
+      "expenses_75_percent_tax_reduction": 15.0
+    },
+    {
+      "receipts": 4000,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3000,
+      "no_expenses_reform_taxable_profit": 1000,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3000.0,
+      "expenses_75_percent_baseline_taxable_profit": 1000.0,
+      "expenses_75_percent_reform_taxable_profit": 1000.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4100,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3100,
+      "no_expenses_reform_taxable_profit": 1100,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3075.0,
+      "expenses_75_percent_baseline_taxable_profit": 1025.0,
+      "expenses_75_percent_reform_taxable_profit": 1025.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4200,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3200,
+      "no_expenses_reform_taxable_profit": 1200,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3150.0,
+      "expenses_75_percent_baseline_taxable_profit": 1050.0,
+      "expenses_75_percent_reform_taxable_profit": 1050.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4300,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3300,
+      "no_expenses_reform_taxable_profit": 1300,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3225.0,
+      "expenses_75_percent_baseline_taxable_profit": 1075.0,
+      "expenses_75_percent_reform_taxable_profit": 1075.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4400,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3400,
+      "no_expenses_reform_taxable_profit": 1400,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3300.0,
+      "expenses_75_percent_baseline_taxable_profit": 1100.0,
+      "expenses_75_percent_reform_taxable_profit": 1100.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4500,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3500,
+      "no_expenses_reform_taxable_profit": 1500,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3375.0,
+      "expenses_75_percent_baseline_taxable_profit": 1125.0,
+      "expenses_75_percent_reform_taxable_profit": 1125.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4600,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3600,
+      "no_expenses_reform_taxable_profit": 1600,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3450.0,
+      "expenses_75_percent_baseline_taxable_profit": 1150.0,
+      "expenses_75_percent_reform_taxable_profit": 1150.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4700,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3700,
+      "no_expenses_reform_taxable_profit": 1700,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3525.0,
+      "expenses_75_percent_baseline_taxable_profit": 1175.0,
+      "expenses_75_percent_reform_taxable_profit": 1175.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4800,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3800,
+      "no_expenses_reform_taxable_profit": 1800,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3600.0,
+      "expenses_75_percent_baseline_taxable_profit": 1200.0,
+      "expenses_75_percent_reform_taxable_profit": 1200.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 4900,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 3900,
+      "no_expenses_reform_taxable_profit": 1900,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3675.0,
+      "expenses_75_percent_baseline_taxable_profit": 1225.0,
+      "expenses_75_percent_reform_taxable_profit": 1225.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    },
+    {
+      "receipts": 5000,
+      "no_expenses_actual_expenses": 0,
+      "no_expenses_baseline_taxable_profit": 4000,
+      "no_expenses_reform_taxable_profit": 2000,
+      "no_expenses_tax_reduction": 400.0,
+      "expenses_75_percent_actual_expenses": 3750.0,
+      "expenses_75_percent_baseline_taxable_profit": 1250.0,
+      "expenses_75_percent_reform_taxable_profit": 1250.0,
+      "expenses_75_percent_tax_reduction": 0.0
+    }
+  ],
+  "curve_validation": {
+    "range_gbp": [
+      500,
+      5000
+    ],
+    "validation_interval_gbp": 2,
+    "points_per_series": 2251,
+    "series": 4,
+    "liability_checks": 18008,
+    "interpolation_checks": 9004,
+    "chart_interval_gbp": 100,
+    "savings_breakpoints_gbp": [
+      500,
+      1000
+    ],
+    "trading_breakpoints_gbp": [
+      1000,
+      1333.3333333333333,
+      3000,
+      4000
+    ],
+    "chart_rows": {
+      "savings": 46,
+      "trading": 47
+    },
+    "maximum_model_error_gbp": 2.2737367544323206e-13,
+    "maximum_chart_interpolation_error_gbp": 0.0033000000000242835,
+    "tolerance_gbp": 0.01,
+    "method": "All four series checked against pe.uk at every £2; both scenarios compared with independent tax arithmetic; plotted linear interpolation compared with the engine tax changes. The non-integer expense-choice breakpoint is additionally calculated with pe.uk."
+  }
+}

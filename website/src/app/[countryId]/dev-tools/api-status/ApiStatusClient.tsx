@@ -6,7 +6,13 @@ import {
   IconCircleCheck,
   IconCircleX,
 } from "@tabler/icons-react";
-import { Alert, AlertDescription, AlertTitle, Spinner, Text } from "@/components/ui";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Spinner,
+  Text,
+} from "@/components/ui";
 import { colors, spacing, typography } from "@/designTokens";
 import type {
   DayRecord,
@@ -149,9 +155,7 @@ function formatDowntime(minutes: number): string {
 
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = Math.round(minutes % 60);
-  return remainingMinutes > 0
-    ? `${hours}h ${remainingMinutes}m`
-    : `${hours}h`;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
 }
 
 function formatDate(dateStr: string): string {
@@ -175,9 +179,10 @@ function formatLastUpdated(timestamp: string): string {
   });
 }
 
-function formatMonitorStatus(
-  status: MonitorStatus,
-): { label: string; color: string } {
+function formatMonitorStatus(status: MonitorStatus): {
+  label: string;
+  color: string;
+} {
   if (status === "up") {
     return { label: "Operational", color: colors.primary[500] };
   }
@@ -457,7 +462,9 @@ function useStatusData(): {
         const response = await fetch(
           `/api/betterstack?monitors=${MONITOR_IDS.join(",")}`,
         );
-        const data = (await response.json()) as StatusPageData | { error: string };
+        const data = (await response.json()) as
+          | StatusPageData
+          | { error: string };
 
         if (!response.ok) {
           throw new Error(

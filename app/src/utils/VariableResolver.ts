@@ -27,6 +27,10 @@ export interface VariableInfo {
   moduleName: string;
   possibleValues?: Array<{ value: string; label: string }>;
   documentation?: string;
+  /** "year", "month", "day" or "eternity" */
+  definitionPeriod?: string;
+  /** "stock" for a balance or value at one point in time, "flow" for an amount over a period. */
+  quantityType?: string;
 }
 
 /**

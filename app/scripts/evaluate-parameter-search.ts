@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /**
- * Score parameter search against the tracker-derived cases.
+ * Score parameter search against the evaluation cases.
  *
  * Search ranking is easy to change and hard to judge by eye — one query
  * improving says nothing about the other seventy-six. This runs the whole
@@ -12,8 +12,12 @@
  *   bun run evaluate-search -- --update-baseline
  *   bun run evaluate-search -- --country uk
  *
- * Metadata is fetched once and cached under node_modules/.cache; pass
- * --metadata <path> to score against a local snapshot instead.
+ * Each country has its own baseline (parameterSearchEvalBaseline.<country>.json)
+ * and, optionally, hand-written queries (parameterSearchEvalCases.<country>.json).
+ *
+ * Metadata is cached under node_modules/.cache for a day (see
+ * loadParameterMetadata); pass --refresh to refetch, or --metadata <path>
+ * to score against a local snapshot instead.
  */
 
 import * as fs from 'fs';
@@ -39,16 +43,21 @@ import { loadParameterMetadata } from './loadParameterMetadata';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.join(__dirname, '../src/tests/fixtures/libs');
-const CASES_PATH = path.join(FIXTURES, 'parameterSearchEvalCases.json');
-const BASELINE_PATH = path.join(FIXTURES, 'parameterSearchEvalBaseline.json');
+/** Tracker bills — US only: the tracker follows US legislation. */
+const TRACKER_CASES_PATH = path.join(FIXTURES, 'parameterSearchEvalCases.json');
+const queryCasesPath = (country: string) =>
+  path.join(FIXTURES, `parameterSearchEvalCases.${country}.json`);
+const baselinePath = (country: string) =>
+  path.join(FIXTURES, `parameterSearchEvalBaseline.${country}.json`);
 
 /**
- * Two suites, never averaged: the tracker cases are one analyst's exact
- * parameter in one policy area, the program cases are shallow coverage
- * across everything the model implements. A single blended number would
- * hide whichever one moved.
+ * Suites, never averaged: the tracker cases are one analyst's exact
+ * parameter in one policy area, the hand-written queries are what a
+ * searcher types for a country's best-known parameters, and the program
+ * cases are shallow coverage across everything the model implements. A
+ * single blended number would hide whichever one moved.
  */
-type SuiteName = 'tracker' | 'programs';
+type SuiteName = 'tracker' | 'queries' | 'programs';
 
 interface Baseline {
   /** Model version the baseline was recorded against, for context on drift. */
@@ -88,7 +97,8 @@ async function main(): Promise<void> {
   const country = readFlag('country') ?? 'us';
   const { parameters, version, programs } = await loadParameterMetadata(
     country,
-    readFlag('metadata')
+    readFlag('metadata'),
+    { refresh: process.argv.includes('--refresh') }
   );
 
   const buildStart = performance.now();
@@ -123,7 +133,7 @@ async function main(): Promise<void> {
   // deep in one policy area (US state income tax).
   if (country === 'us') {
     const trackerCases: ParameterSearchEvalCase[] = JSON.parse(
-      fs.readFileSync(CASES_PATH, 'utf-8')
+      fs.readFileSync(TRACKER_CASES_PATH, 'utf-8')
     );
     const expected = trackerCases.flatMap((testCase) => testCase.expectedPaths ?? []);
     const stateOf = /^gov\.(?:contrib\.)?states\.([a-z]{2})\./;
@@ -139,7 +149,23 @@ async function main(): Promise<void> {
     );
   }
 
-  // Suite 2 — every program the model implements, queried by the names
+  // Suite 2 — hand-written queries for the parameters a country's users
+  // reach for first, each with the parameter it should land on.
+  if (fs.existsSync(queryCasesPath(country))) {
+    const queryCases: ParameterSearchEvalCase[] = JSON.parse(
+      fs.readFileSync(queryCasesPath(country), 'utf-8')
+    );
+    const { metrics, msPerQuery } = score(queryCases);
+    suites.queries = metrics;
+    reportSuite(
+      'Common queries — what a searcher types for well-known parameters',
+      `${queryCases.length} hand-written queries`,
+      metrics,
+      msPerQuery
+    );
+  }
+
+  // Suite 3 — every program the model implements, queried by the names
   // the model itself gives them. Shallow (any parameter in the program
   // counts) but broad, and each program contributes both its acronym and
   // its spelled-out name.
@@ -210,20 +236,29 @@ async function main(): Promise<void> {
         Object.entries(suites).map(([name, metrics]) => [name, { ...metrics, misses: [] }])
       ),
     };
-    fs.writeFileSync(BASELINE_PATH, `${JSON.stringify(baseline, null, 2)}\n`);
-    console.log(`\nBaseline updated: ${BASELINE_PATH}`);
+    fs.writeFileSync(baselinePath(country), `${JSON.stringify(baseline, null, 2)}\n`);
+    console.log(`\nBaseline updated: ${baselinePath(country)}`);
     return;
   }
 
-  if (!fs.existsSync(BASELINE_PATH)) {
-    console.log('\nNo baseline recorded yet — run with --update-baseline to record this run.');
+  if (Object.keys(suites).length === 0) {
+    console.error(`\nNo suite measured anything for ${country}.`);
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(baselinePath(country))) {
+    console.log(
+      `\nNo ${country} baseline recorded yet — run with --update-baseline to record this run.`
+    );
     return;
   }
 
-  const baseline: Baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf-8'));
-  if (baseline.country !== country) {
-    console.log(`\nBaseline is for ${baseline.country}; skipping comparison.`);
-    return;
+  const baseline: Baseline = JSON.parse(fs.readFileSync(baselinePath(country), 'utf-8'));
+  if (baseline.metadataVersion !== version) {
+    console.log(
+      `\nNote: baseline recorded against model ${baseline.metadataVersion}, scoring ${version}; ` +
+        'some movement may be the model, not the search.'
+    );
   }
   let regressedAnywhere = false;
   console.log(`\nAgainst baseline (model ${baseline.metadataVersion}):`);

@@ -1,45 +1,11 @@
 import type { NextConfig } from "next";
 import { appZoneRewrites } from "./src/data/appZoneRoutes";
-
-const tealSquareLogoPath = "/assets/logos/policyengine/teal-square.png";
-
-const policyEngineIconRewrites = [
-  { source: "/favicon.ico", destination: tealSquareLogoPath },
-  { source: "/apple-touch-icon.png", destination: tealSquareLogoPath },
-  { source: "/logo192.png", destination: tealSquareLogoPath },
-  { source: "/logo512.png", destination: tealSquareLogoPath },
-  { source: "/policyengine-logo.png", destination: tealSquareLogoPath },
-  { source: "/icon.svg", destination: "/favicon.svg" },
-  { source: "/policyengine-favicon.svg", destination: "/favicon.svg" },
-  {
-    source: "/:countryId/:appSlug/favicon.ico",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/apple-touch-icon.png",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/logo192.png",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/logo512.png",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/policyengine-logo.png",
-    destination: tealSquareLogoPath,
-  },
-  { source: "/:countryId/:appSlug/favicon.svg", destination: "/favicon.svg" },
-  { source: "/:countryId/:appSlug/icon.svg", destination: "/favicon.svg" },
-  {
-    source: "/:countryId/:appSlug/policyengine-favicon.svg",
-    destination: "/favicon.svg",
-  },
-];
+import { policyEngineIconRewrites } from "./src/data/policyEngineIconRewrites";
 
 const nextConfig: NextConfig = {
+  // Workspace packages that ship TypeScript source rather than a build.
+  transpilePackages: ["@policyengine/public-api-forwarding"],
+
   // Vercel's image optimiser (/_vercel/image) only accepts widths from this
   // allowlist (imageSizes ∪ deviceSizes). For Next.js projects this config is
   // the source of truth — the `images` block in vercel.json is ignored — and
@@ -74,6 +40,14 @@ const nextConfig: NextConfig = {
         destination: "/:countryId/ai-agents",
         permanent: true,
       },
+      // Childcare cliff edge dashboard: taken down temporarily while its
+      // costing is revised (uk-childcare-100k-threshold#8). Temporary so the
+      // URL can come back unchanged.
+      {
+        source: "/uk/childcare-100k-threshold/:path*",
+        destination: "/uk/research",
+        permanent: false,
+      },
       // Retired Citizens' Economic Council simulator, still embedded by
       // citizensecon.org.uk/policymodelling → main UK simulator
       {
@@ -90,6 +64,12 @@ const nextConfig: NextConfig = {
       {
         source: "/:countryId/blog",
         destination: "/:countryId/research",
+        permanent: true,
+      },
+      // Legacy /methodology → the model documentation
+      {
+        source: "/:countryId/methodology",
+        destination: "/:countryId/model",
         permanent: true,
       },
       // OBBBA household explorer: every older slug, and the misspelled or
@@ -147,6 +127,19 @@ const nextConfig: NextConfig = {
         destination: "/us/pe84",
         permanent: true,
       },
+      // The Autumn Budget 2026 dashboard's chosen address. The dashboard
+      // serves /uk/autumn-budget-2026 until its basePath moves (dashboard
+      // #212, after Budget day); then this pair is reversed.
+      {
+        source: "/uk/budgets/autumn-2026",
+        destination: "/uk/autumn-budget-2026",
+        permanent: false,
+      },
+      {
+        source: "/uk/budgets/autumn-2026/:path*",
+        destination: "/uk/autumn-budget-2026/:path*",
+        permanent: false,
+      },
       // Vanity redirects to the standalone PolicyBench site (external).
       // policybench.org is country-agnostic, so both the bare and
       // country-prefixed paths land on its root.
@@ -175,7 +168,27 @@ const nextConfig: NextConfig = {
         destination: "/us/california-wealth-tax/:path*",
         permanent: true,
       },
-      // CliffWatch renamed from cliff-watch → cliffwatch
+      // The CliffWatch zone is US-only, so UK slugs go to UK CliffWatch, ahead
+      // of the rename below (one hop), suffix kept for the UK zone's og:image.
+      // US share links minted when /uk/cliffwatch proxied the US tool carry
+      // ?s=<state code> (UK CliffWatch never uses s), so they go to /us/.
+      ...["/uk/cliffwatch", "/uk/cliff-watch"].flatMap((source) => [
+        {
+          source,
+          has: [{ type: "query" as const, key: "s", value: "[A-Za-z]{2}" }],
+          destination: "/us/cliffwatch",
+          permanent: true,
+        },
+        { source, destination: "/uk/uk-cliff-watch", permanent: true },
+        {
+          source: `${source}/:path*`,
+          destination: "/uk/uk-cliff-watch/:path*",
+          permanent: true,
+        },
+      ]),
+      // CliffWatch renamed from cliff-watch → cliffwatch. The US zone is
+      // built with basePath /us/cliff-watch, so its _next assets and /api
+      // calls also arrive through this redirect.
       {
         source: "/:countryId/cliff-watch",
         destination: "/:countryId/cliffwatch",
@@ -347,6 +360,30 @@ const nextConfig: NextConfig = {
         },
       ],
     };
+  },
+
+  // Production builds skip webpack's persistent cache, which served stale CSS.
+  // Tailwind makes src/ a context dependency of globals.css, and the webpack
+  // bundled with Next 15.5 can't snapshot a directory that holds symlinks to
+  // files (src/data/*.json point into app/src/data). The CSS module is then
+  // cached with no record of its inputs, so a build that restores the cache,
+  // as Vercel's builds do, reuses the old CSS whatever changed, client
+  // components and globals.css included. scripts/check-built-css.mjs fails a
+  // build whose CSS lacks a class of a fresh compile, or has a Tailwind
+  // utility the fresh compile lacks. It compares class names, not values.
+  //
+  // A webpack hook also turns off Next's build workers unless they're asked
+  // for, hence experimental.webpackBuildWorker. `next dev` runs on Turbopack,
+  // which ignores the hook; its "Webpack is configured while Turbopack is not"
+  // warning is expected.
+  experimental: {
+    webpackBuildWorker: true,
+  },
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      config.cache = false;
+    }
+    return config;
   },
 
   async headers() {

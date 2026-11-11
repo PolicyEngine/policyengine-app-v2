@@ -27,6 +27,12 @@ import starlight from "../../../app/src/images/logos/orgs/starlight.png";
 import ubicenterLogo from "../../../app/src/images/logos/orgs/ubicenter.png";
 import ubilabs from "../../../app/src/images/logos/orgs/ubilabs.png";
 import ukeu from "../../../app/src/images/logos/orgs/ukeu.svg";
+import ggf from "../../../app/src/images/logos/orgs/good-growth-foundation.png";
+import houseOfLords from "../../../app/src/images/logos/orgs/house-of-lords.svg";
+import nef from "../../../app/src/images/logos/orgs/new-economics-foundation.png";
+import no10 from "../../../app/src/images/logos/orgs/no10-data-science.svg";
+import tpa from "../../../app/src/images/logos/orgs/tax-policy-associates.svg";
+import wpi from "../../../app/src/images/logos/orgs/wpi-economics.svg";
 import umich from "../../../app/src/images/logos/orgs/umich.png";
 import usc from "../../../app/src/images/logos/orgs/usc.png";
 
@@ -37,6 +43,10 @@ export interface Organization {
   logo: { src: string };
   link: string;
   countries: CountryId[];
+  /** Render a white-on-transparent logo in black. */
+  darkenLogo?: boolean;
+  /** Shown first in the logo strip, in ascending order; the rest are shuffled. */
+  priority?: number;
 }
 
 export const organizations: Record<string, Organization> = {
@@ -55,6 +65,55 @@ export const organizations: Record<string, Organization> = {
   },
 
   // UK only
+  no10: {
+    name: "No 10 data science team",
+    logo: no10,
+    link: "https://www.policyengine.org/uk/research/policyengine-10-downing-street",
+    countries: ["uk"],
+
+    priority: 1,
+  },
+  houseOfLords: {
+    name: "House of Lords",
+    logo: houseOfLords,
+    link: "https://hansard.parliament.uk/Lords/2026-02-24/debates/A381F7D6-0A3C-48FD-8D9E-67751E25877A/NationalInsuranceContributions(EmployerPensionsContributions)Bill",
+    countries: ["uk"],
+
+    priority: 2,
+  },
+  tpa: {
+    name: "Tax Policy Associates",
+    logo: tpa,
+    link: "https://taxpolicy.org.uk/2026/09/10/universities-uk-national-insurance-proposal/",
+    countries: ["uk"],
+
+    priority: 3,
+  },
+  nef: {
+    name: "New Economics Foundation",
+    logo: nef,
+    link: "https://neweconomics.org/2026/07/insecure-low-quality-work-a-major-driver-of-uks-neets-and-inactivity-crisis",
+    countries: ["uk"],
+
+    priority: 5,
+  },
+  ggf: {
+    name: "Good Growth Foundation",
+    logo: ggf,
+    link: "https://www.goodgrowthfoundation.org/",
+    countries: ["uk"],
+    darkenLogo: true,
+
+    priority: 6,
+  },
+  wpi: {
+    name: "WPI Economics",
+    logo: wpi,
+    link: "https://wpieconomics.com/",
+    countries: ["uk"],
+
+    priority: 7,
+  },
   ukeu: {
     name: "UK in a Changing Europe",
     logo: ukeu,
@@ -90,6 +149,8 @@ export const organizations: Record<string, Organization> = {
     logo: cps,
     link: "https://www.cps.org.uk/",
     countries: ["uk"],
+
+    priority: 4,
   },
   ubilabs: {
     name: "UBILabs",

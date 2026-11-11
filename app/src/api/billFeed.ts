@@ -1,4 +1,7 @@
+import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import { trackerBillUrl, trackerPlace, withTrackerTitle } from '@/libs/flagship/billTracker';
+import type { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 /**
  * The bill feed behind the Reforms surface.
@@ -11,9 +14,40 @@ import { CountryId } from '@/libs/countries';
  */
 export interface TrackedBillProvision {
   path: string;
+  /** The value in effect when the bill's run year starts (see billRunYear). */
   value: any;
+  /** Every dated value the bill sets, as scored; absent for an undated value. */
+  intervals?: ValueInterval[];
+  /**
+   * The law the tracker compared the bill with, by the same dates
+   * (reform_impacts.baseline_params), when it stored it. Once a bill is
+   * law, today's values include it, so only this says what it changed.
+   */
+  baselineIntervals?: ValueInterval[];
   /** Used when the parameter is missing from loaded metadata. */
   fallbackBreadcrumb?: string;
+}
+
+/**
+ * One change as the tracker described it when it scored the bill: what
+ * the law was then and what the bill makes it. Once a bill is enacted,
+ * today's parameter values already include it, so only these say what
+ * it changed.
+ */
+export interface BillChange {
+  label: string;
+  /** The law before the bill, as the tracker wrote it, e.g. "5.09%". */
+  before: string;
+  /** The bill's value, e.g. "4.99%" or "Under 7 (2026) to Under 16 (2035)". */
+  after: string;
+  explanation?: string;
+  /** Where in the bill, e.g. "Section 1, amending C.G.S. § 12-700". */
+  section?: string;
+  /**
+   * The model parameter the change sets, when the tracker named it; it
+   * can hold a placeholder ("main.{filing_status}.brackets[7].rate").
+   */
+  parameter?: string;
 }
 
 /** Shares of households by outcome, as fractions of 1. */
@@ -71,16 +105,22 @@ export interface TrackedBill {
   /** Two-letter state code for state bills; absent for federal ones. */
   state?: string;
   title: string;
+  /**
+   * The bill's stage in the tracker's words ("In Committee"), or
+   * "Analyzed" when the tracker follows no stage for it.
+   */
   status: string;
   summary: string;
   provisions: TrackedBillProvision[];
+  /** The changes as scored, before and after, when the tracker wrote them up. */
+  changes?: BillChange[];
   /** Headline findings from the tracker's analysis, when available. */
   keyFindings?: string[];
   legiscanUrl?: string;
   /** The bill's source page (congress.gov / state legislature), when known. */
   sourceUrl?: string;
-  /** Bill sponsor, e.g. "Rep. Mackenzie, Ryan [R-PA-7]". */
-  author?: string;
+  /** The bill's page in the bill tracker. */
+  trackerUrl?: string;
   /** Analysis date (ISO), for newest-first ordering. */
   date?: string;
   /** Model and data versions behind the stored analysis. */
@@ -133,25 +173,65 @@ function trackerConfig(): { url: string; anonKey: string } | null {
   return url && anonKey ? { url, anonKey } : null;
 }
 
-async function trackerSelect(table: string, select: string): Promise<any[] | null> {
+/**
+ * The most rows the tracker's API returns for one request: Supabase caps
+ * a read at 1,000 rows, and the bill-status table alone holds more.
+ */
+const TRACKER_PAGE_SIZE = 1000;
+
+/** The table's row count from a Content-Range header ("0-999/1418"), when given. */
+function totalRows(response: Response): number | undefined {
+  const range = response.headers?.get?.('content-range');
+  const total = range?.split('/')[1];
+  return total && total !== '*' ? Number(total) : undefined;
+}
+
+async function trackerSelect(
+  table: string,
+  select: string,
+  /**
+   * A unique column that puts the rows in one fixed order ("bill_id").
+   * With no order, the database can give each page its rows in another
+   * order, so the pages repeat some rows and drop others, and different
+   * ones on each load.
+   */
+  order: string,
+  /** A PostgREST row filter, e.g. "id=eq.ks-hb2620". */
+  filter?: string
+): Promise<any[] | null> {
   const config = trackerConfig();
   if (!config) {
     return null;
   }
-  const response = await fetch(`${config.url}/rest/v1/${table}?select=${select}`, {
-    headers: {
-      apikey: config.anonKey,
-      Authorization: `Bearer ${config.anonKey}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`Tracker feed ${table} failed: ${response.status}`);
+  // Read page by page: one request stops at the cap and drops the rest.
+  const rows: any[] = [];
+  for (;;) {
+    const query = `select=${select}${filter ? `&${filter}` : ''}&order=${order}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
+    const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+      headers: {
+        apikey: config.anonKey,
+        Authorization: `Bearer ${config.anonKey}`,
+        Prefer: 'count=exact',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Tracker feed ${table} failed: ${response.status}`);
+    }
+    const page = await response.json();
+    if (!Array.isArray(page)) {
+      return page;
+    }
+    rows.push(...page);
+    const total = totalRows(response);
+    const more = total !== undefined ? rows.length < total : page.length === TRACKER_PAGE_SIZE;
+    if (!more || page.length === 0) {
+      return rows;
+    }
   }
-  return response.json();
 }
 
-/** Full state names for the tracker's two-letter state codes. */
-const STATE_NAMES: Record<string, string> = {
+/** Full state names for two-letter state codes. */
+export const STATE_NAMES: Record<string, string> = {
   AL: 'Alabama',
   AK: 'Alaska',
   AZ: 'Arizona',
@@ -159,6 +239,7 @@ const STATE_NAMES: Record<string, string> = {
   CA: 'California',
   CO: 'Colorado',
   CT: 'Connecticut',
+  DC: 'District of Columbia',
   DE: 'Delaware',
   FL: 'Florida',
   GA: 'Georgia',
@@ -204,21 +285,160 @@ const STATE_NAMES: Record<string, string> = {
   WY: 'Wyoming',
 };
 
-/** Reform-params dict ({path: {"date.date": value}} or {path: value}) → provisions. */
-export function provisionsFromReformParams(reformParams: unknown): TrackedBillProvision[] {
+/**
+ * A tracker period key as dates: "2026-01-01.2026-12-31", a lone start
+ * date, or a bare year ("2026", which the tracker reads as from Jan 1).
+ */
+function periodDates(key: string): { startDate: string; endDate: string } {
+  const [start, endDate] = key.split('.');
+  return {
+    startDate: /^\d{4}$/.test(start) ? `${start}-01-01` : start,
+    endDate: endDate || FOREVER,
+  };
+}
+
+/** The value a set of dated values holds on a date, if any covers it. */
+export function intervalValueAt(intervals: ValueInterval[], date: string): unknown {
+  return intervals.find((interval) => interval.startDate <= date && date <= interval.endDate)
+    ?.value;
+}
+
+/**
+ * The year a bill's full run scores: this year, or the year the bill
+ * first takes effect when that is later — a bill from 2027 changes
+ * nothing in 2026.
+ */
+export function billRunYear(provisions: Array<Pick<TrackedBillProvision, 'intervals'>>): number {
+  const starts = provisions.flatMap((provision) =>
+    (provision.intervals ?? []).map((interval) => Number(interval.startDate.slice(0, 4)))
+  );
+  return Math.max(Number(CURRENT_YEAR), starts.length > 0 ? Math.min(...starts) : 0);
+}
+
+/** A parameter path as the model's metadata and the API name it. */
+const modelPath = (path: string) => path.replace(/\.brackets\[/g, '[');
+
+/** A tracker params value ({"date.date": value} or a bare value) as dated values. */
+function datedValues(raw: unknown): ValueInterval[] | undefined {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return undefined;
+  }
+  return Object.entries(raw)
+    .map(([key, value]) => ({ ...periodDates(key), value: value as any }))
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
+}
+
+/**
+ * Reform-params dict ({path: {"date.date": value}} or {path: value}) →
+ * provisions, each with every dated value it sets. Keys starting with "_"
+ * are the tracker's run settings ("_use_reform"), not parameters, and
+ * scale paths lose the tracker's ".brackets" ("rates.brackets[0].rate"
+ * is "rates[0].rate" in the model's metadata and the API). The baseline
+ * params, in the same shape, are the law the tracker compared with.
+ */
+export function provisionsFromReformParams(
+  reformParams: unknown,
+  baselineParams?: unknown
+): TrackedBillProvision[] {
   if (!reformParams || typeof reformParams !== 'object') {
     return [];
   }
-  return Object.entries(reformParams as Record<string, any>).map(([path, raw]) => {
-    const value =
-      raw && typeof raw === 'object' && !Array.isArray(raw) ? Object.values(raw)[0] : raw;
-    return { path, value };
+  const params = reformParams as Record<string, any>;
+  const baselines = new Map(
+    baselineParams && typeof baselineParams === 'object'
+      ? Object.entries(baselineParams as Record<string, unknown>).map(([path, raw]) => [
+          modelPath(path),
+          datedValues(raw) ?? [
+            { startDate: `${CURRENT_YEAR}-01-01`, endDate: FOREVER, value: raw as any },
+          ],
+        ])
+      : []
+  );
+  const parsed: TrackedBillProvision[] = Object.entries(params)
+    .filter(([path]) => !path.startsWith('_'))
+    .map(([path, raw]) => {
+      const intervals = datedValues(raw);
+      const baselineIntervals = baselines.get(modelPath(path));
+      return {
+        path: modelPath(path),
+        value: intervals ? intervals[0]?.value : raw,
+        ...(intervals ? { intervals } : {}),
+        ...(baselineIntervals ? { baselineIntervals } : {}),
+      };
+    });
+  // The tracker can turn a bill's model change on by name ("_use_reform":
+  // "ut_hb210"); the API turns it on with its switch, so add the switch
+  // when the reform leaves it out.
+  const reformName = typeof params._use_reform === 'string' ? params._use_reform : '';
+  const [, state, bill] = reformName.match(/^([a-z]{2})_([a-z0-9_]+)$/) ?? [];
+  if (state && !parsed.some((provision) => provision.path.endsWith('.in_effect'))) {
+    const starts = parsed.flatMap((provision) => provision.intervals ?? []);
+    const startDate = starts.reduce(
+      (earliest, interval) => (interval.startDate < earliest ? interval.startDate : earliest),
+      `${CURRENT_YEAR}-01-01`
+    );
+    parsed.push({
+      path: `gov.contrib.states.${state}.${bill}.in_effect`,
+      value: true,
+      intervals: [{ startDate, endDate: FOREVER, value: true }],
+    });
+  }
+  const runStart = `${billRunYear(parsed)}-01-01`;
+  return parsed.map((provision) => {
+    if (!provision.intervals) {
+      return provision;
+    }
+    const inRunYear = intervalValueAt(provision.intervals, runStart);
+    return { ...provision, value: inRunYear === undefined ? provision.value : inRunYear };
+  });
+}
+
+/**
+ * The tracker's write-up of a bill's changes (reform_impacts.provisions:
+ * [{label, baseline, reform, explanation, bill_section}], stored as a list or as its
+ * JSON) → the changes it scored. Entries missing a label or a value drop.
+ */
+export function changesFromTrackerProvisions(raw: unknown): BillChange[] {
+  let list = raw;
+  if (typeof raw === 'string') {
+    try {
+      list = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  const text = (value: unknown) =>
+    typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
+  return list.flatMap((entry): BillChange[] => {
+    const label = text(entry?.label);
+    const before = text(entry?.baseline);
+    const after = text(entry?.reform);
+    if (!label || !before || !after) {
+      return [];
+    }
+    const explanation = text(entry?.explanation);
+    const section = text(entry?.bill_section);
+    const parameter = text(entry?.parameter);
+    return [
+      {
+        label,
+        before,
+        after,
+        ...(explanation ? { explanation } : {}),
+        ...(section ? { section } : {}),
+        ...(parameter ? { parameter: modelPath(parameter) } : {}),
+      },
+    ];
   });
 }
 
 /** Headline numbers from a reform_impacts row, when present and numeric. */
 function extractImpacts(impact: any): TrackedBill['impacts'] {
-  const revenue = impact?.budgetary_impact?.stateRevenueImpact;
+  // As the tracker reads it: net cost stands in where no revenue change is stored.
+  const revenue = impact?.budgetary_impact?.stateRevenueImpact ?? impact?.budgetary_impact?.netCost;
   const poverty = impact?.poverty_impact?.percentChange;
   const result: NonNullable<TrackedBill['impacts']> = {};
   if (typeof revenue === 'number' && Number.isFinite(revenue) && revenue !== 0) {
@@ -265,70 +485,279 @@ function extractImpactData(impact: any): TrackedBill['impactData'] {
   return Object.keys(data).length > 0 ? data : undefined;
 }
 
+/** One district's stored result, in the API's district-breakdown shape. */
+export interface StoredDistrictImpact {
+  /** "KS-01", as the API and the district map name it. */
+  district: string;
+  average_household_income_change: number;
+  winner_percentage?: number;
+  loser_percentage?: number;
+}
+
+/**
+ * The tracker's stored congressional-district results for one bill
+ * (reform_impacts.district_impacts: {"KS-1": {avgBenefit, winnersShare,
+ * losersShare, ...}}). Fetched for a single bill, as its report opens:
+ * every bill's districts would weigh down the whole feed. Null when the
+ * feed is not configured or the bill has none.
+ */
+export async function fetchTrackerBillDistricts(
+  billId: string
+): Promise<StoredDistrictImpact[] | null> {
+  const rows = await trackerSelect(
+    'reform_impacts',
+    'district_impacts',
+    'id',
+    `id=eq.${encodeURIComponent(billId)}`
+  );
+  const raw = rows?.[0]?.district_impacts;
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const districts = Object.entries(raw as Record<string, any>).flatMap(
+    ([key, entry]): StoredDistrictImpact[] => {
+      const [state, number] = key.split('-');
+      if (!state || !/^\d+$/.test(number ?? '') || typeof entry?.avgBenefit !== 'number') {
+        return [];
+      }
+      return [
+        {
+          district: `${state.toUpperCase()}-${number.padStart(2, '0')}`,
+          average_household_income_change: entry.avgBenefit,
+          ...(typeof entry.winnersShare === 'number'
+            ? { winner_percentage: entry.winnersShare }
+            : {}),
+          ...(typeof entry.losersShare === 'number' ? { loser_percentage: entry.losersShare } : {}),
+        },
+      ];
+    }
+  );
+  return districts.length > 0 ? districts : null;
+}
+
+/**
+ * Whether a tracker research entry is a bill, as the tracker's own bill
+ * lists read it (type "bill", status not "in_review"). The research
+ * table also files dashboards and tools (the OBBBA Household Explorer,
+ * MyFriendBen), which are apps, and blog posts, which are write-ups: a
+ * post that carries a reform to score (UT SB 60) is about a bill, not
+ * the bill, so it stays out too. An analysis still in review is not
+ * published yet. The type and status read without case or spacing; an
+ * entry with no type is a bill.
+ */
+function isBillRecord(record: any): boolean {
+  const word = (value: unknown) => (typeof value === 'string' ? value.trim().toLowerCase() : '');
+  const type = word(record?.type);
+  return (type === '' || type === 'bill') && word(record?.status) !== 'in_review';
+}
+
+/** A bill's status when the tracker follows none for it. */
+export const UNTRACKED_BILL_STATUS = 'Analyzed';
+
+/**
+ * A bill number as the tracker compares them: no spaces, dashes or dots,
+ * upper case, and no zeros before the number ("SB 0060" is "SB60").
+ */
+function normalizeBillNumber(value: string): string {
+  return value
+    .replace(/[\s.-]+/g, '')
+    .toUpperCase()
+    .replace(/^([A-Z]+)0+(\d)/, '$1$2');
+}
+
+const processedBillKey = (state: string, billNumber: string) =>
+  `${state.toUpperCase()}:${normalizeBillNumber(billNumber)}`;
+
+/** A status row's last action day ("2026-03-04"), or "" when it has none. */
+const lastActionDay = (bill: any): string => {
+  const day = typeof bill.last_action_date === 'string' ? bill.last_action_date.slice(0, 10) : '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : '';
+};
+
+/**
+ * Whether a status row came from LegiScan, read from its link: the
+ * OpenStates and Congress monitors store their own sites' links in the
+ * same column, and the row's source column defaults to "legiscan".
+ */
+const isLegiscanRow = (bill: any): boolean =>
+  /^https?:\/\/(www\.)?legiscan\.com\//i.test(String(bill.legiscan_url ?? ''));
+
+/** A status row's bill id as a number, lowest when it has none. */
+const statusRowId = (bill: any): number => {
+  const id = Number(bill.bill_id ?? NaN);
+  return Number.isFinite(id) ? id : -Infinity;
+};
+
+const statusRowText = (bill: any) =>
+  JSON.stringify([
+    bill.bill_id,
+    bill.state,
+    bill.bill_number,
+    bill.status,
+    bill.legiscan_url,
+    bill.last_action_date,
+  ]);
+
+const ascending = (a: number | string, b: number | string) => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * Orders two status rows for one bill number, the preferred row last.
+ * The tracker can hold a bill twice under two spellings of its number:
+ * LegiScan's (NY "S04487") and OpenStates' ("S 4487"). The row with the
+ * later last action wins. On the same day, or with no dates, the LegiScan
+ * row wins: it names the stage more finely ("In Committee", where
+ * OpenStates says "Introduced") and links to LegiScan. The bill id and
+ * then the row's contents only fix the order of what is left. They do
+ * not date a bill: OpenStates and Congress ids are hashes, all above
+ * LegiScan's. The same row wins in any read order.
+ */
+function compareStatusRows(a: any, b: any): number {
+  return (
+    ascending(lastActionDay(a), lastActionDay(b)) ||
+    ascending(Number(isLegiscanRow(a)), Number(isLegiscanRow(b))) ||
+    ascending(statusRowId(a), statusRowId(b)) ||
+    ascending(statusRowText(a), statusRowText(b))
+  );
+}
+
+/**
+ * The bill number a title names, as the tracker reads it: the first
+ * letters-then-number ("SB3125", "H. 3492", "A 1185"), not a fiscal year.
+ */
+function titleBillNumber(title: unknown): string | undefined {
+  return typeof title === 'string' ? title.match(/\b(?!FY)([A-Z]{1,3}\.?\s*\d+)/i)?.[1] : undefined;
+}
+
+/**
+ * The tracker's status row (processed_bills) for a research entry. The
+ * entry's LegiScan link (legiscan_bill_id) names the row when it is set.
+ * Otherwise the entry's id names the bill: "ut-sb0060", "ny-s-4487", or
+ * "ga-hb463-2026", where a trailing year names the session, not the bill.
+ * An id with words after the number ("hi-sb3125-hd1", "ut-sb60-bill")
+ * finds its row as the tracker does: by the bill number in the title,
+ * then by the id's first part.
+ */
+function processedBillFor(
+  record: any,
+  byBillId: Map<string, any>,
+  byKey: Map<string, any>
+): any | undefined {
+  if (record.legiscan_bill_id !== null && record.legiscan_bill_id !== undefined) {
+    const linked = byBillId.get(String(record.legiscan_bill_id));
+    if (linked) {
+      return linked;
+    }
+  }
+  const [state, ...parts] = String(record.id ?? '').split('-');
+  if (!state || parts.length === 0) {
+    return undefined;
+  }
+  const candidates = [parts.join('')];
+  if (parts.length >= 2 && /^\d{4}$/.test(parts[parts.length - 1])) {
+    candidates.push(parts.slice(0, -1).join(''));
+  }
+  const titled = titleBillNumber(record.title);
+  if (titled) {
+    candidates.push(titled);
+  }
+  if (parts.length >= 2 && /^[a-z]+\d+$/i.test(parts[0])) {
+    candidates.push(parts[0]);
+  }
+  for (const billNumber of candidates) {
+    const row = byKey.get(processedBillKey(state, billNumber));
+    if (row) {
+      return row;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Fetches analyzed bills from the tracker's Supabase project. Returns
  * null when the feed is not configured (callers fall back to samples).
  */
 export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
-  const [research, impacts, processed, validations] = await Promise.all([
-    trackerSelect('research', '*'),
+  const [research, impacts, processed, validations, baselines] = await Promise.all([
+    // Titled as the tracker shows them: an entry with no title reads as its bill number.
+    trackerSelect('research', '*', 'id').then((rows) => rows?.map(withTrackerTitle) ?? null),
     trackerSelect(
       'reform_impacts',
-      'id,reform_params,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
+      'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at',
+      'id'
     ),
-    trackerSelect('processed_bills', 'state,bill_number,status,legiscan_url'),
+    trackerSelect(
+      'processed_bills',
+      'bill_id,state,bill_number,status,legiscan_url,last_action_date',
+      'bill_id'
+    ),
     trackerSelect(
       'validation_metadata',
-      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against'
+      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against',
+      'id'
     ),
+    // The law each bill was compared with. Read on its own, so a tracker
+    // without the column yet still serves the rest of the feed.
+    trackerSelect('reform_impacts', 'id,baseline_params', 'id').catch(() => null),
   ]);
   if (!research) {
     return null;
   }
 
   const impactsById = new Map((impacts ?? []).map((impact) => [impact.id, impact]));
+  const baselineById = new Map((baselines ?? []).map((row) => [row.id, row.baseline_params]));
   const validationById = new Map((validations ?? []).map((row) => [row.id, row]));
-  const processedByKey = new Map(
-    (processed ?? []).map((bill) => [
-      `${String(bill.state).toLowerCase()}-${String(bill.bill_number).toLowerCase().replace(/\s+/g, '')}`,
-      bill,
-    ])
+  const processedByBillId = new Map(
+    (processed ?? []).flatMap((bill) =>
+      bill.bill_id === null || bill.bill_id === undefined ? [] : [[String(bill.bill_id), bill]]
+    )
   );
+  // Two rows can share a bill number's key: the preferred one holds it.
+  const processedByKey = new Map<string, any>();
+  for (const bill of processed ?? []) {
+    const key = processedBillKey(String(bill.state), String(bill.bill_number));
+    const held = processedByKey.get(key);
+    if (!held || compareStatusRows(held, bill) < 0) {
+      processedByKey.set(key, bill);
+    }
+  }
 
-  return research.map((record): TrackedBill => {
-    const impact = impactsById.get(record.id);
-    const status = processedByKey.get(record.id)?.status;
-    return {
-      id: record.id,
-      countryId: 'us',
-      jurisdiction: STATE_NAMES[record.state] ?? record.state ?? 'Federal',
-      // The tracker files federal bills under "US", which is not a state.
-      state:
-        /^[a-z]{2}$/i.test(record.state ?? '') && record.state.toUpperCase() !== 'US'
-          ? record.state.toUpperCase()
+  return research
+    .filter((record) => isBillRecord(record))
+    .map((record): TrackedBill => {
+      const impact = impactsById.get(record.id);
+      const processedBill = processedBillFor(record, processedByBillId, processedByKey);
+      return {
+        id: record.id,
+        countryId: 'us',
+        jurisdiction: trackerPlace(record.state, STATE_NAMES),
+        // The tracker files federal bills under "US", which is not a state.
+        state:
+          /^[a-z]{2}$/i.test(record.state ?? '') && record.state.toUpperCase() !== 'US'
+            ? record.state.toUpperCase()
+            : undefined,
+        title: record.title ?? record.id,
+        status: processedBill?.status || UNTRACKED_BILL_STATUS,
+        summary: record.description ?? '',
+        provisions: provisionsFromReformParams(impact?.reform_params, baselineById.get(record.id)),
+        changes: changesFromTrackerProvisions(impact?.provisions),
+        keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
+        legiscanUrl: processedBill?.legiscan_url ?? undefined,
+        sourceUrl: record.url ?? undefined,
+        trackerUrl: trackerBillUrl(record),
+        date: record.date ?? undefined,
+        provenance: impact
+          ? {
+              modelVersion: impact.policyengine_us_version ?? undefined,
+              dataset: impact.dataset_name ?? undefined,
+              datasetVersion: impact.dataset_version ?? undefined,
+              computedAt: impact.computed_at ?? undefined,
+            }
           : undefined,
-      title: record.title ?? record.id,
-      status: status || 'Analyzed',
-      summary: record.description ?? '',
-      provisions: provisionsFromReformParams(impact?.reform_params),
-      keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
-      legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
-      sourceUrl: record.url ?? undefined,
-      author: record.author ?? undefined,
-      date: record.date ?? undefined,
-      provenance: impact
-        ? {
-            modelVersion: impact.policyengine_us_version ?? undefined,
-            dataset: impact.dataset_name ?? undefined,
-            datasetVersion: impact.dataset_version ?? undefined,
-            computedAt: impact.computed_at ?? undefined,
-          }
-        : undefined,
-      validation: extractValidation(validationById.get(record.id), impact),
-      impacts: extractImpacts(impact),
-      impactData: extractImpactData(impact),
-    };
-  });
+        validation: extractValidation(validationById.get(record.id), impact),
+        impacts: extractImpacts(impact),
+        impactData: extractImpactData(impact),
+      };
+    });
 }
 
 /**
@@ -344,7 +773,9 @@ function detectValidationDrift(row: any, impact: any): BillValidation['drift'] {
   }
   const reasons: string[] = [];
   const snapEstimate = snapshot.pe_estimate;
-  const currentEstimate = impact.budgetary_impact?.stateRevenueImpact;
+  // The estimate the feed headlines (see extractImpacts).
+  const currentEstimate =
+    impact.budgetary_impact?.stateRevenueImpact ?? impact.budgetary_impact?.netCost;
   if (
     typeof snapEstimate === 'number' &&
     typeof currentEstimate === 'number' &&

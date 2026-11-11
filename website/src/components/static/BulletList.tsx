@@ -1,9 +1,5 @@
 import { Text } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export interface BulletItem {
   title: string;

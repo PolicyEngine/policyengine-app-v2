@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { useParams } from "next/navigation";
 import { colors } from "@/designTokens";
+import { reportsHref } from "../../reportsHref";
 
 export default function CountryError({
   error,
@@ -10,6 +12,9 @@ export default function CountryError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { countryId } = useParams<{ countryId: string }>();
+  const reportsPath = reportsHref(countryId);
+
   useEffect(() => {
     console.error("[Calculator] Route error:", error);
   }, [error]);
@@ -33,10 +38,15 @@ export default function CountryError({
         >
           Try again
         </button>
+        {/* A full page load rather than a client-side navigation, so the
+            client state that may have caused the error is discarded. */}
         <a
-          href="/us/reports"
+          href={reportsPath}
           className="tw:px-4 tw:py-2 tw:text-sm tw:font-medium tw:border tw:rounded-md"
-          style={{ borderColor: colors.border.light, color: colors.text.primary }}
+          style={{
+            borderColor: colors.border.light,
+            color: colors.text.primary,
+          }}
         >
           Go to reports
         </a>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   IconArrowLeft,
   IconCheck,
@@ -7,7 +7,8 @@ import {
   IconInfoCircle,
   IconSearch,
 } from '@tabler/icons-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { EmptyState } from '@/components/flagship/states';
+import { Button, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useParameterSearch } from '@/hooks/useParameterSearch';
 import {
@@ -18,12 +19,24 @@ import {
   ParameterSearchEntry,
   ParameterSearchFilters,
   ParameterSearchIndex,
+  scheduleMemberOf,
 } from '@/libs/parameterSearch';
 import ScopePicker from './ScopePicker';
 
+/** Where a picked result sat, for analytics: never the query text. */
+export interface ParameterSearchPick {
+  /** Its place in the list shown, from 1. */
+  rank: number;
+  /** A breakdown row (one parameter per state, say), not one parameter. */
+  isBreakdown: boolean;
+  /** Picked from an opened folder rather than from the search's results. */
+  inFolder: boolean;
+  queryLength: number;
+}
+
 interface ParameterSearchBoxProps {
   entries: ParameterSearchEntry[];
-  onSelect: (entry: ParameterSearchEntry) => void;
+  onSelect: (entry: ParameterSearchEntry, pick: ParameterSearchPick) => void;
   /** Prebuilt index (e.g. the store-memoized one); skips a rebuild per mount */
   index?: ParameterSearchIndex;
   placeholder?: string;
@@ -49,6 +62,8 @@ interface ParameterSearchBoxProps {
   backgroundSearch?: boolean;
   /** Told whether anything is typed or a folder is open, so the page can make room. */
   onActiveChange?: (active: boolean) => void;
+  /** Told each time the user changes the query by typing. */
+  onQueryChange?: (query: string) => void;
   /**
    * Opens a result's folder somewhere else — the page's own browser —
    * instead of in place. The query stays, so coming back to search
@@ -111,6 +126,14 @@ function groupFolderPath(entries: ParameterSearchEntry[]): string | null {
     shared = shared.slice(0, depth);
   }
   return shared && shared.length >= 2 ? shared.join('.') : null;
+}
+
+/** A row in a schedule's group names its bracket: "Bracket 2 · Amount". */
+function scheduleRowLabel(schedule: string | undefined, entry: ParameterSearchEntry): string {
+  const member = schedule ? scheduleMemberOf(entry.path) : null;
+  return member
+    ? `Bracket ${member.bracket + 1} · ${capitalizeFirst(entry.label)}`
+    : capitalizeFirst(entry.label);
 }
 
 const CONTRIB_EXPLANATION =
@@ -265,6 +288,18 @@ function EntryBadges({
           in draft
         </span>
       )}
+      {entry.jurisdictionCount && (
+        <span
+          style={{
+            ...badgeStyle,
+            color: colors.text.secondary,
+            background: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+          }}
+        >
+          {entry.jurisdictionCount} jurisdictions
+        </span>
+      )}
       {entry.stateCode && (
         <span
           style={{
@@ -304,6 +339,7 @@ export default function ParameterSearchBox({
   index: providedIndex,
   labelFor,
   onActiveChange,
+  onQueryChange,
   onOpenFolder,
   keepResultsOnSelect = false,
   inDraft,
@@ -312,7 +348,11 @@ export default function ParameterSearchBox({
   autoFocus = false,
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
   const [highlighted, setHighlighted] = useState(0);
+  // Option ids, so the input can name the highlighted row while focus stays in it.
+  const optionIdPrefix = useId();
+  const optionId = (index: number) => `${optionIdPrefix}-option-${index}`;
   const [hoveredFolder, setHoveredFolder] = useState<string | null>(null);
   /**
    * A folder opened from the results: the dropdown shows everything the
@@ -412,7 +452,12 @@ export default function ParameterSearchBox({
     if (!browsing && search.stale) {
       return;
     }
-    onSelect(entry);
+    onSelect(entry, {
+      rank: flatEntries.indexOf(entry) + 1,
+      isBreakdown: !!entry.breakdownPath,
+      inFolder: browsing !== null,
+      queryLength: query.trim().length,
+    });
     if (keepResultsOnSelect) {
       return;
     }
@@ -472,6 +517,18 @@ export default function ParameterSearchBox({
   };
 
   let runningIndex = -1;
+
+  const resultsShown =
+    !hideResults && (browsing !== null || (flatEntries.length > 0 && !widerOnly));
+  // The row the arrow keys point at, for screen readers: none while a
+  // folder is pointed at or the list is out of date.
+  const activeOptionId =
+    resultsShown &&
+    !(!browsing && search.stale) &&
+    highlighted >= 0 &&
+    highlighted < flatEntries.length
+      ? optionId(highlighted)
+      : undefined;
 
   const active = query.trim().length > 0 || browsing !== null;
   const noMatches =
@@ -541,19 +598,25 @@ export default function ParameterSearchBox({
       >
         <IconSearch size={20} color={colors.primary[500]} style={{ flexShrink: 0 }} />
         <input
+          ref={inputRef}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
             setBrowsing(null);
             setHighlighted(0);
+            onQueryChange?.(event.target.value);
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           aria-label="Search parameters"
+          // A fingertip tall on a phone, in the bar's own height.
+          className="tw:max-sm:-my-1.5 tw:max-sm:min-h-10"
           autoFocus={autoFocus}
           role="combobox"
           aria-expanded={Boolean(browsing) || flatEntries.length > 0}
           aria-controls="parameter-search-results"
+          aria-autocomplete="list"
+          aria-activedescendant={activeOptionId}
           style={{
             flex: 1,
             minWidth: 0,
@@ -589,8 +652,10 @@ export default function ParameterSearchBox({
             triggerStyle={controlShell}
           />
         )}
-        <div style={controlShell}>
+        {/* A fingertip tall on a phone, the whole height a tap on the label. */}
+        <div className="tw:max-sm:min-h-10" style={controlShell}>
           <label
+            className="tw:max-sm:self-stretch"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -662,30 +727,30 @@ export default function ParameterSearchBox({
       </div>
 
       {noMatches && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: spacing.sm,
-            marginTop: spacing.md,
-            padding: `${spacing['2xl']} ${spacing.lg}`,
-            border: `1px dashed ${colors.border.medium}`,
-            borderRadius: spacing.radius.feature,
-            textAlign: 'center',
-            fontSize: typography.fontSize.sm,
-            fontFamily: typography.fontFamily.primary,
-            color: colors.text.secondary,
-          }}
-        >
-          <span>
-            No parameters match{' '}
-            <strong style={{ color: colors.text.primary }}>“{query.trim()}”</strong>
-            {scopePhrase}.
-          </span>
-          <span style={{ fontSize: typography.fontSize.xs }}>
-            Nothing matches anywhere else either — check the spelling, or try fewer words.
-          </span>
+        <div style={{ marginTop: spacing.md }}>
+          <EmptyState
+            compact
+            title={
+              <>
+                No parameters match{' '}
+                <strong style={{ color: colors.text.primary }}>“{query.trim()}”</strong>
+                {scopePhrase}.
+              </>
+            }
+            action={
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setQuery('');
+                  setHighlighted(0);
+                  inputRef.current?.focus();
+                }}
+              >
+                Clear search
+              </Button>
+            }
+          />
         </div>
       )}
 
@@ -729,7 +794,7 @@ export default function ParameterSearchBox({
         </div>
       )}
 
-      {!hideResults && (browsing || (flatEntries.length > 0 && !widerOnly)) && (
+      {resultsShown && (
         <div
           id="parameter-search-results"
           role="listbox"
@@ -878,6 +943,7 @@ export default function ParameterSearchBox({
               {(folderView?.direct ?? []).map((entry, i) => (
                 <button
                   key={entry.path}
+                  id={optionId(i)}
                   type="button"
                   role="option"
                   aria-selected={i === highlighted}
@@ -1030,7 +1096,7 @@ export default function ParameterSearchBox({
             groups.map((group, groupIndex) => {
               const isFolder = group.entries.length > 1 && group.folder;
               return (
-                <div key={group.folder || group.entries[0].path}>
+                <div key={group.schedule ?? (group.folder || group.entries[0].path)}>
                   {isFolder &&
                     (() => {
                       const folderPath = groupFolderPath(group.entries);
@@ -1123,6 +1189,7 @@ export default function ParameterSearchBox({
                     return (
                       <button
                         key={entry.path}
+                        id={optionId(i)}
                         type="button"
                         role="option"
                         aria-selected={i === highlighted}
@@ -1162,7 +1229,7 @@ export default function ParameterSearchBox({
                             }}
                           >
                             {isFolder
-                              ? capitalizeFirst(entry.label)
+                              ? scheduleRowLabel(group.schedule, entry)
                               : entry.breadcrumb || entry.label}
                           </span>
                           <span
@@ -1176,7 +1243,8 @@ export default function ParameterSearchBox({
                               maxWidth: '45%',
                             }}
                           >
-                            {currentValueFor?.(entry) && (
+                            {/* A breakdown's row stands for every state: no one value is its own. */}
+                            {!entry.jurisdictionCount && currentValueFor?.(entry) && (
                               <span
                                 title={currentValueFor(entry) ?? undefined}
                                 style={{
@@ -1192,7 +1260,10 @@ export default function ParameterSearchBox({
                                 {currentValueFor(entry)}
                               </span>
                             )}
-                            <EntryBadges entry={entry} inDraft={inDraft?.(entry.path)} />
+                            <EntryBadges
+                              entry={entry}
+                              inDraft={inDraft?.(entry.breakdownPath ?? entry.path)}
+                            />
                           </span>
                         </div>
                         <div
@@ -1205,7 +1276,7 @@ export default function ParameterSearchBox({
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          {entry.path}
+                          {entry.breakdownPath ? `${entry.breakdownPath}.*` : entry.path}
                         </div>
                       </button>
                     );

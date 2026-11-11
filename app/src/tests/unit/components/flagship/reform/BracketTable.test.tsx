@@ -52,4 +52,39 @@ describe('BracketTable', () => {
 
     expect(screen.getByRole('columnheader', { name: 'Threshold' })).toBeInTheDocument();
   });
+
+  test('given a named bracket then its row says the name; an unnamed one its number', () => {
+    const root = 'gov.hmrc.income_tax.rates.uk';
+    const parameters: ParameterMetadataCollection = {
+      ...param(`${root}[0].threshold`, 'currency-GBP'),
+      ...param(`${root}[0].rate`, '/1'),
+      ...param(`${root}[1].threshold`, 'currency-GBP'),
+      ...param(`${root}[1].rate`, '/1'),
+    };
+    render(
+      <BracketTable
+        brackets={{
+          fields: ['threshold', 'rate'],
+          rows: [
+            {
+              index: 0,
+              cells: { threshold: `${root}[0].threshold`, rate: `${root}[0].rate` },
+              name: 'Basic rate',
+            },
+            { index: 1, cells: { threshold: `${root}[1].threshold`, rate: `${root}[1].rate` } },
+          ],
+        }}
+        members={[]}
+        period="2026"
+        parameters={parameters}
+        valueAt={() => 0}
+        baselineAt={() => 0}
+        onChange={vi.fn()}
+        onFocus={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('rowheader', { name: 'Basic rate' })).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'Bracket 2' })).toBeInTheDocument();
+  });
 });

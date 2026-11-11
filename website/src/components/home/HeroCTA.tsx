@@ -1,13 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-const CALCULATOR_URL =
-  process.env.NEXT_PUBLIC_CALCULATOR_URL || "https://app.policyengine.org";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
+import { isCalculatorCountry } from "@/lib/countries";
+import { getMainAppHref } from "@/lib/toolsMenu";
 
 const ctaVariant = {
   hidden: { opacity: 0, y: 20 },
@@ -24,6 +20,12 @@ const ctaVariant = {
 };
 
 export default function HeroCTA({ countryId }: { countryId: string }) {
+  // The website has home pages for countries the calculator does not offer;
+  // a button to their calculator would lead to its not-found page.
+  if (!isCalculatorCountry(countryId)) {
+    return null;
+  }
+
   return (
     <motion.div
       variants={ctaVariant}
@@ -34,7 +36,7 @@ export default function HeroCTA({ countryId }: { countryId: string }) {
       }}
     >
       <motion.a
-        href={`${CALCULATOR_URL}/${countryId}/reports`}
+        href={getMainAppHref(countryId)}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.98 }}
         style={{

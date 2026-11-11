@@ -106,3 +106,76 @@ export interface ColorRange {
   min: number;
   max: number;
 }
+
+/** A UK area level with boundaries: 2024 constituencies or April 2023 local authorities. */
+export type UKBoundaryLevel = 'constituency' | 'local_authority';
+
+/** A UK nation, which a nation's report shows on its own. */
+export type UKNation = 'england' | 'wales' | 'scotland' | 'northern_ireland';
+
+/**
+ * One UK area's result, for the geographic map and, placed by
+ * placeOnUKHexLayout, the hex map: what the v2 adapters and v3's local-area
+ * map build from each area.
+ */
+export interface UKAreaChoroplethDataPoint {
+  /** The caller's identifier for the area, e.g. its name: what selection and clicks use. */
+  id: string;
+  /** Display label for the tooltip */
+  label: string;
+  /** Value to visualize (determines color) */
+  value: number;
+  /**
+   * The area's ONS code (e.g. W07000097), which joins it to its boundary. An
+   * area without one (an older saved result) joins its boundary by name.
+   */
+  code?: string;
+  /** The value is an approximate estimate (UK disclosure control's `approximate` tier). */
+  approximate?: boolean;
+  /** The value's 90% interval, when the data gives one. */
+  lower?: number;
+  upper?: number;
+}
+
+/**
+ * Props for the UKAreaChoroplethMap component. The first five follow the
+ * US district maps' props; the rest are the flagship district map's.
+ */
+export interface UKAreaChoroplethMapProps {
+  /** One point per area with a result */
+  data: UKAreaChoroplethDataPoint[];
+  /** Which areas' boundaries to draw */
+  level: UKBoundaryLevel;
+  /** Configuration for the map */
+  config?: PartialChoroplethMapConfig;
+  /** Path to the GeoJSON file (optional, defaults to the level's boundary file) */
+  geoDataPath?: string;
+  /** A nation to draw alone, fitted to the frame, as `focusState` does for a US state. */
+  focusNation?: UKNation | null;
+  /** Optional ref for image export: the map's frame with the boundaries' licence credit under it */
+  exportRef?: React.Ref<HTMLDivElement>;
+  /**
+   * What an area with no result reads in its tooltip, e.g. "Not reported"
+   * for one disclosure control withheld. Defaults to "No data".
+   */
+  missingAreaText?: string;
+  /**
+   * Opt-in: the ONS codes of the areas with no result that
+   * `missingAreaText` describes, e.g. the codes a breakdown lists as
+   * withheld. Any other boundary with no result reads "No data". Null or
+   * absent: every boundary with no result reads `missingAreaText`.
+   */
+  missingAreaTextCodes?: readonly string[] | null;
+  /**
+   * Opt-in, as the flagship district map: zoom buttons and a reset, trackpad
+   * pinch, and a fixed height. Without it the map scales with its width, as
+   * the v2 district map does.
+   */
+  navigable?: boolean;
+  /** The area to outline, by its `id`, e.g. the one whose details show. */
+  selectedId?: string | null;
+  /** Called with an area's `id` when it is clicked; areas with no result are not clickable. */
+  onAreaClick?: (id: string) => void;
+  /** The map's name for screen readers, as one image; without it the map has none. */
+  ariaLabel?: string;
+}

@@ -1,151 +1,124 @@
-import { ReformAdapter } from '@/adapters/ReformAdapter';
-import { getStoreBackend } from '@/libs/storeBackend';
-import { Reform } from '@/types/ingredients/Reform';
-import { ReformMetadata } from '@/types/metadata/reformMetadata';
+import { convertDateRangeMapToValueIntervals } from '@/adapters/conversionHelpers';
+import {
+  createPublicApiClient,
+  publicApiCountryId,
+  requireResult,
+  type PublicApiClient,
+} from '@/api/publicApi/client';
+import { finiteJsonValueForApi, parameterValueFromApi } from '@/api/publicApi/jsonValues';
+import type { components } from '@/api/publicApi/schema';
+import {
+  AccountAssociationRoutes,
+  BrowserOnlyIdError,
+  isAccountId,
+  isLegacyId,
+  type ApiStoreContext,
+} from '@/api/v2Associations';
+import { FOREVER } from '@/constants';
+import { policyMissingParameters } from '@/libs/flagship/missingParameters';
+import { fetchV1Policy } from '@/libs/flagship/policyChecks';
+import { createReformPolicy } from '@/libs/flagship/runReport';
+import { clampStoreText } from '@/libs/flagship/storeText';
+import { V3_API_ROUTES, type V3ApiRoutes } from '@/libs/flagship/v3ApiRoutes';
+import { Reform, ReformBaseline, ReformProvenance } from '@/types/ingredients/Reform';
+import type { V2CatalogReference } from '@/types/metadata';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import type { PolicyMetadataParams, V1PolicyContent } from '@/types/metadata/policyMetadata';
+import { Parameter } from '@/types/subIngredients/parameter';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import type { ProvenanceWire, UserPolicyItem } from '@/types/v2User';
+import { coercePolicyParameterValue, resolvePolicyParameterValueSpec } from '@/utils/valueCoercion';
 
 /**
- * Store for the flagship app's canonical reform objects.
- *
- * Reforms are user-owned, mutable content persisted centrally (unlike
- * canonical Policy records, which live in the main PolicyEngine API and
- * are immutable). The API implementation talks to /api/reforms, served
- * by Next.js route handlers backed by Postgres.
+ * The `/v2/user-policies` bodies, as the Public API's OpenAPI document gives
+ * them. The API refuses a row that names neither `policy_id` nor
+ * `legacy_policy_id`.
  */
+type UserPolicyCreateRequest = components['schemas']['UserPolicyCreateRequest'];
+type UserPolicyPatchRequest = components['schemas']['UserPolicyPatchRequest'];
+
+/**
+ * Store for the flagship app's reform objects.
+ *
+ * Saving a reform first makes its parameters a policy, and a save that
+ * cannot create the policy fails. Where saved work is in the browser
+ * (sign-in not configured, or outside the US and UK) the reform, with the
+ * ID of its v1 policy (`POST /{country}/policy`), lives in localStorage.
+ * Where it is in the account, signed in or signed out, the reform is a row
+ * in `/v2/user-policies` carrying the name, the baseline, the provenance
+ * and the policy: a v1 policy (`legacy_policy_id`, ApiReformStore) before
+ * the switch, and a `/v2/policies` policy (`policy_id`, ApiV2ReformStore)
+ * after it. V3_API_ROUTES picks the account store. Both APIs deduplicate
+ * identical policies.
+ */
+export type NewReform = Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>;
+export type ReformUpdates = Partial<Omit<Reform, 'id' | 'countryId' | 'createdAt' | 'updatedAt'>>;
+
 export interface ReformStore {
-  create: (reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Reform>;
-  findByUser: (userId: string, countryId?: string) => Promise<Reform[]>;
+  create: (reform: NewReform) => Promise<Reform>;
+  /** This session's reforms, most recently updated first. */
+  findMine: (countryId?: string) => Promise<Reform[]>;
   findById: (reformId: string) => Promise<Reform | null>;
-  update: (
-    reformId: string,
-    updates: Partial<Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>>
-  ) => Promise<Reform>;
+  update: (reformId: string, updates: ReformUpdates) => Promise<Reform>;
   delete: (reformId: string) => Promise<void>;
 }
 
-/**
- * The central store reported itself unconfigured (503, e.g. no
- * DATABASE_URL) or absent (collection-level 404). Distinct from real
- * failures so the resilient store knows falling back is safe.
- */
-export class ReformStoreUnavailableError extends Error {
+/** Most recently updated first. */
+function byRecentUpdate(reforms: Reform[]): Reform[] {
+  return [...reforms].sort((first, second) =>
+    (second.updatedAt ?? second.createdAt ?? '').localeCompare(
+      first.updatedAt ?? first.createdAt ?? ''
+    )
+  );
+}
+
+/** The reform is not in this store: deleted, or saved in the other sign-in state. */
+export class ReformNotFoundError extends Error {
   constructor() {
-    super('Reform store unavailable');
-    this.name = 'ReformStoreUnavailableError';
+    super('Failed to update reform');
+    this.name = 'ReformNotFoundError';
   }
 }
 
-function throwIfUnavailable(response: Response): void {
-  if (response.status === 503 || response.status === 404) {
-    throw new ReformStoreUnavailableError();
-  }
+/** The reform with the parameters its v1 policy sets that the model no longer has, if any. */
+function withMissingParameters(reform: Reform, policy: V1PolicyContent): Reform {
+  const missingParameters = policyMissingParameters(policy);
+  return missingParameters.length > 0 ? { ...reform, missingParameters } : reform;
 }
 
-export class ApiReformStore implements ReformStore {
-  private readonly BASE_URL = '/api/reforms';
-
-  async create(reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>): Promise<Reform> {
-    const payload = ReformAdapter.toCreationPayload(reform);
-
-    const response = await fetch(this.BASE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to create reform');
-    }
-
-    const apiData: ReformMetadata = await response.json();
-    return ReformAdapter.fromApiResponse(apiData);
-  }
-
-  async findByUser(userId: string, countryId?: string): Promise<Reform[]> {
-    const params = new URLSearchParams({ user_id: userId });
-    if (countryId) {
-      params.set('country_id', countryId);
-    }
-
-    const response = await fetch(`${this.BASE_URL}?${params.toString()}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to fetch reforms');
-    }
-
-    const apiData: ReformMetadata[] = await response.json();
-    return apiData.map((item) => ReformAdapter.fromApiResponse(item));
-  }
-
-  async findById(reformId: string): Promise<Reform | null> {
-    const response = await fetch(`${this.BASE_URL}/${reformId}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    // Item-level 404 legitimately means "not found", so only 503
-    // signals an unconfigured store here.
-    if (response.status === 503) {
-      throw new ReformStoreUnavailableError();
-    }
-
-    if (response.status === 404) {
-      return null;
-    }
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch reform');
-    }
-
-    const apiData: ReformMetadata = await response.json();
-    return ReformAdapter.fromApiResponse(apiData);
-  }
-
-  async update(
-    reformId: string,
-    updates: Partial<Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>>
-  ): Promise<Reform> {
-    const payload = ReformAdapter.toUpdatePayload(updates);
-
-    const response = await fetch(`${this.BASE_URL}/${reformId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.status === 503) {
-      throw new ReformStoreUnavailableError();
-    }
-
-    if (!response.ok) {
-      throw new Error('Failed to update reform');
-    }
-
-    const apiData: ReformMetadata = await response.json();
-    return ReformAdapter.fromApiResponse(apiData);
-  }
-
-  async delete(reformId: string): Promise<void> {
-    const response = await fetch(`${this.BASE_URL}/${reformId}`, {
-      method: 'DELETE',
-    });
-
-    if (response.status === 503) {
-      throw new ReformStoreUnavailableError();
-    }
-
-    if (!response.ok) {
-      throw new Error('Failed to delete reform');
-    }
-  }
-}
-
+/**
+ * Reforms saved in this browser, each with the ID of its v1 policy. Given
+ * `fetchPolicy`, listing them also reads each v1 policy, for the parameters
+ * the model no longer has; a policy that cannot be read lists as saved.
+ */
 export class LocalStorageReformStore implements ReformStore {
   private readonly STORAGE_KEY = 'reforms';
+  private readonly materializePolicy: MaterializeReformPolicy;
+  private readonly getParameterMetadata: NonNullable<ApiReformStoreOptions['getParameterMetadata']>;
+  private readonly fetchPolicy: ApiReformStoreOptions['fetchPolicy'];
 
-  async create(reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>): Promise<Reform> {
+  constructor(
+    options: Pick<
+      ApiReformStoreOptions,
+      'materializePolicy' | 'getParameterMetadata' | 'fetchPolicy'
+    > = {}
+  ) {
+    this.materializePolicy = options.materializePolicy ?? materializeReformPolicy;
+    this.getParameterMetadata = options.getParameterMetadata ?? (() => null);
+    this.fetchPolicy = options.fetchPolicy;
+  }
+
+  async create(reform: NewReform): Promise<Reform> {
+    const policyId = isLegacyId(reform.policyId)
+      ? String(reform.policyId)
+      : String(
+          await this.materializePolicy(
+            reform.countryId,
+            reform.parameters,
+            this.getParameterMetadata() ?? undefined
+          )
+        );
+
     // Generate a unique ID for local storage
     // Format: "rf-[short-timestamp][random]"
     // Use base36 encoding for compactness
@@ -156,6 +129,7 @@ export class LocalStorageReformStore implements ReformStore {
     const now = new Date().toISOString();
     const newReform: Reform = {
       ...reform,
+      policyId,
       id: uniqueId,
       createdAt: now,
       updatedAt: now,
@@ -165,30 +139,61 @@ export class LocalStorageReformStore implements ReformStore {
     return newReform;
   }
 
-  async findByUser(userId: string, countryId?: string): Promise<Reform[]> {
-    return this.getStoredReforms().filter(
-      (r) => r.userId === userId && (!countryId || r.countryId === countryId)
+  async findMine(countryId?: string): Promise<Reform[]> {
+    const reforms = this.getStoredReforms().filter(
+      (reform) => !countryId || reform.countryId === countryId
     );
+    return byRecentUpdate(await Promise.all(reforms.map((reform) => this.checked(reform))));
+  }
+
+  /** The reform as its v1 policy stands now: unchanged when that cannot be read. */
+  private async checked(reform: Reform): Promise<Reform> {
+    if (!this.fetchPolicy || !isLegacyId(reform.policyId)) {
+      return reform;
+    }
+    try {
+      return withMissingParameters(
+        reform,
+        await this.fetchPolicy(reform.countryId, String(reform.policyId))
+      );
+    } catch {
+      return reform;
+    }
   }
 
   async findById(reformId: string): Promise<Reform | null> {
-    return this.getStoredReforms().find((r) => r.id === reformId) || null;
+    const reform = this.getStoredReforms().find((r) => r.id === reformId);
+    return reform ? this.checked(reform) : null;
   }
 
-  async update(
-    reformId: string,
-    updates: Partial<Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>>
-  ): Promise<Reform> {
+  async update(reformId: string, updates: ReformUpdates): Promise<Reform> {
+    const existing = this.getStoredReforms().find((reform) => reform.id === reformId);
+    if (!existing) {
+      throw new ReformNotFoundError();
+    }
+    // Changed parameters are a new v1 policy; a rename keeps the policy.
+    const policyId =
+      updates.parameters !== undefined
+        ? String(
+            await this.materializePolicy(
+              existing.countryId,
+              updates.parameters,
+              this.getParameterMetadata() ?? undefined
+            )
+          )
+        : (updates.policyId ?? existing.policyId);
+
+    // Read again after the request, so a change made meanwhile is kept.
     const reforms = this.getStoredReforms();
     const index = reforms.findIndex((r) => r.id === reformId);
-
     if (index === -1) {
-      throw new Error('Failed to update reform');
+      throw new ReformNotFoundError();
     }
 
     const updated: Reform = {
       ...reforms[index],
       ...updates,
+      policyId,
       updatedAt: new Date().toISOString(),
     };
     reforms[index] = updated;
@@ -218,83 +223,564 @@ export class LocalStorageReformStore implements ReformStore {
   }
 }
 
-// Once the central store reports itself unavailable, stay on
-// localStorage for the rest of the session rather than hammering it.
-let centralStoreUnavailable = false;
-
-/** Test hook: reset the session-level availability flag. */
-export function resetReformStoreAvailabilityForTesting(): void {
-  centralStoreUnavailable = false;
+/** A v1 policy's date-range map back to dated values, without metadata coercion. */
+function rawIntervals(dateValueMap: Record<string, unknown>): ValueInterval[] {
+  return Object.entries(dateValueMap).map(([dateRange, value]) => {
+    const [startDate, endDate] = dateRange.split('.');
+    return { startDate, endDate, value: value as ValueInterval['value'] };
+  });
 }
 
 /**
- * Tries the central store first and falls back to localStorage when it
- * is unconfigured (503) or absent — so the flagship shell works before
- * the database is provisioned. Real failures (500s, validation) still
- * surface to the caller.
+ * A v1 policy's `policy_json` as reform parameters. Uses the app's
+ * policy → parameter conversion (with value coercion) when the parameter's
+ * metadata is loaded, and the stored values as-is otherwise.
  */
-export class ResilientReformStore implements ReformStore {
-  constructor(
-    private readonly api: ReformStore = new ApiReformStore(),
-    private readonly local: ReformStore = new LocalStorageReformStore()
-  ) {}
-
-  private async withFallback<T>(
-    viaApi: (store: ReformStore) => Promise<T>,
-    viaLocal: (store: ReformStore) => Promise<T>
-  ): Promise<T> {
-    if (!centralStoreUnavailable) {
-      try {
-        return await viaApi(this.api);
-      } catch (error) {
-        if (!(error instanceof ReformStoreUnavailableError)) {
-          throw error;
-        }
-        centralStoreUnavailable = true;
-      }
+export function parametersFromPolicyJson(
+  policyJson: PolicyMetadataParams,
+  parameterMetadata?: ParameterMetadataCollection | null
+): Parameter[] {
+  return Object.entries(policyJson ?? {}).map(([name, dateValueMap]) => {
+    let values: ValueInterval[];
+    try {
+      values = parameterMetadata?.[name]
+        ? convertDateRangeMapToValueIntervals(name, dateValueMap, parameterMetadata)
+        : rawIntervals(dateValueMap);
+    } catch {
+      values = rawIntervals(dateValueMap);
     }
-    return viaLocal(this.local);
+    return { name, values };
+  });
+}
+
+function provenanceToWire(provenance: ReformProvenance): ProvenanceWire {
+  return {
+    source: provenance.source,
+    ref: provenance.ref ?? null,
+    confidence: provenance.confidence ?? null,
+  };
+}
+
+/**
+ * Whether an account policy row is a v3 reform. Reforms always carry
+ * provenance; policies saved from the legacy builder never do.
+ */
+function isAccountReform(item: UserPolicyItem): boolean {
+  return isLegacyId(item.legacy_policy_id) && item.provenance !== null;
+}
+
+function provenanceFromWire(wire: ProvenanceWire | null): ReformProvenance {
+  if (!wire) {
+    return { source: 'manual' };
+  }
+  return {
+    source: wire.source,
+    ...(wire.ref ? { ref: wire.ref } : {}),
+    ...(wire.confidence ? { confidence: wire.confidence } : {}),
+  };
+}
+
+/** Materializes parameters as an unlabelled v1 policy; returns its ID. */
+export type MaterializeReformPolicy = (
+  countryId: string,
+  parameters: Parameter[],
+  /** The model's parameters, to type each value as a run types it. */
+  metadata?: ParameterMetadataCollection
+) => Promise<number>;
+
+export interface ApiReformStoreOptions {
+  /**
+   * Current parameter metadata: it types the values a saved policy sends,
+   * as a run sends them, and coerces values read back from v1 policies.
+   */
+  getParameterMetadata?: () => ParameterMetadataCollection | null | undefined;
+  materializePolicy?: MaterializeReformPolicy;
+  /** Reads a v1 policy's parameter map and the parameters the model no longer has. */
+  fetchPolicy?: (countryId: string, policyId: string) => Promise<V1PolicyContent>;
+}
+
+/**
+ * The v1 policy for a set of parameters, via the run bridge's policy
+ * creation. The reform's name stays on its user record, never the policy.
+ * With the metadata, each value is typed as a run types it ("15000" →
+ * 15000, Infinity as the API spells it), so the saved policy and the
+ * run's are the same one.
+ */
+export function materializeReformPolicy(
+  countryId: string,
+  parameters: Parameter[],
+  metadata?: ParameterMetadataCollection
+): Promise<number> {
+  return createReformPolicy(
+    countryId as Reform['countryId'],
+    parameters.map((parameter) => ({
+      path: parameter.name,
+      value: parameter.values[0]?.value,
+      intervals: parameter.values,
+    })),
+    metadata
+  );
+}
+
+/**
+ * Reforms in the account (`/v2/user-policies`). Parameter edits create a
+ * new v1 policy and repoint the row (`legacy_policy_id`); a rename only
+ * patches the name. Only account IDs open: a reform saved in this browser
+ * while signed out (`rf-…`) answers BrowserOnlyIdError.
+ */
+export class ApiReformStore implements ReformStore {
+  private readonly routes: AccountAssociationRoutes<UserPolicyItem>;
+  private readonly getParameterMetadata: NonNullable<ApiReformStoreOptions['getParameterMetadata']>;
+  private readonly materializePolicy: MaterializeReformPolicy;
+  private readonly fetchPolicy: NonNullable<ApiReformStoreOptions['fetchPolicy']>;
+
+  constructor(
+    private readonly context: ApiStoreContext,
+    options: ApiReformStoreOptions = {}
+  ) {
+    this.routes = new AccountAssociationRoutes(context, 'user-policies', 'Reform');
+    this.getParameterMetadata = options.getParameterMetadata ?? (() => null);
+    this.materializePolicy = options.materializePolicy ?? materializeReformPolicy;
+    this.fetchPolicy = options.fetchPolicy ?? fetchV1Policy;
   }
 
-  create(reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>): Promise<Reform> {
-    return this.withFallback(
-      (store) => store.create(reform),
-      (store) => store.create(reform)
+  /** The row for a reform; its parameters become a v1 policy first when they are not one yet. */
+  private async creationBody(reform: NewReform): Promise<UserPolicyCreateRequest> {
+    const countryId = this.routes.writeCountry(reform.countryId);
+    const legacyPolicyId = isLegacyId(reform.policyId)
+      ? Number(reform.policyId)
+      : await this.materializePolicy(
+          countryId,
+          reform.parameters,
+          this.getParameterMetadata() ?? undefined
+        );
+    return {
+      country_id: countryId,
+      legacy_policy_id: legacyPolicyId,
+      ...(reform.label ? { name: clampStoreText(reform.label) } : {}),
+      baseline: reform.baseline,
+      provenance: provenanceToWire(reform.provenance),
+    };
+  }
+
+  async create(reform: NewReform): Promise<Reform> {
+    const item = await this.routes.create(await this.creationBody(reform));
+    return this.toReform(item, reform.parameters);
+  }
+
+  async findMine(countryId?: string): Promise<Reform[]> {
+    if (countryId && countryId !== this.context.countryId) {
+      return [];
+    }
+    const items = (await this.routes.list()).filter(isAccountReform);
+    // Each reform's changes come from its own v1 policy. One that fails to
+    // load is listed without them (flagged), rather than failing the list.
+    const loaded = await Promise.allSettled(items.map((item) => this.toReform(item)));
+    return byRecentUpdate(
+      loaded.map((outcome, index) =>
+        outcome.status === 'fulfilled'
+          ? outcome.value
+          : { ...this.reformFromItem(items[index], []), parametersUnavailable: true }
+      )
     );
   }
 
-  findByUser(userId: string, countryId?: string): Promise<Reform[]> {
-    return this.withFallback(
-      (store) => store.findByUser(userId, countryId),
-      (store) => store.findByUser(userId, countryId)
-    );
+  async findById(reformId: string): Promise<Reform | null> {
+    const item = await this.routes.get(reformId);
+    return item && isAccountReform(item) ? this.toReform(item) : null;
   }
 
-  findById(reformId: string): Promise<Reform | null> {
-    return this.withFallback(
-      (store) => store.findById(reformId),
-      (store) => store.findById(reformId)
-    );
-  }
-
-  update(
-    reformId: string,
-    updates: Partial<Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>>
-  ): Promise<Reform> {
-    return this.withFallback(
-      (store) => store.update(reformId, updates),
-      (store) => store.update(reformId, updates)
-    );
+  async update(reformId: string, updates: ReformUpdates): Promise<Reform> {
+    // Refuse a browser ID before creating a v1 policy for it.
+    if (!isAccountId(reformId)) {
+      throw new BrowserOnlyIdError();
+    }
+    const body: UserPolicyPatchRequest = {};
+    if (updates.label !== undefined) {
+      body.name = clampStoreText(updates.label) || null;
+    }
+    if (updates.baseline !== undefined) {
+      body.baseline = updates.baseline;
+    }
+    if (updates.provenance !== undefined) {
+      body.provenance = provenanceToWire(updates.provenance);
+    }
+    if (updates.parameters !== undefined) {
+      body.legacy_policy_id = await this.materializePolicy(
+        this.context.countryId,
+        updates.parameters,
+        this.getParameterMetadata() ?? undefined
+      );
+    } else if (updates.policyId !== undefined && isLegacyId(updates.policyId)) {
+      body.legacy_policy_id = Number(updates.policyId);
+    }
+    const item = await this.routes.patch(reformId, body);
+    return this.toReform(item, updates.parameters);
   }
 
   delete(reformId: string): Promise<void> {
-    return this.withFallback(
-      (store) => store.delete(reformId),
-      (store) => store.delete(reformId)
+    return this.routes.delete(reformId);
+  }
+
+  private async toReform(item: UserPolicyItem, knownParameters?: Parameter[]): Promise<Reform> {
+    if (knownParameters) {
+      return this.reformFromItem(item, knownParameters);
+    }
+    const policy = await this.fetchPolicy(item.country_id, String(item.legacy_policy_id));
+    return withMissingParameters(
+      this.reformFromItem(
+        item,
+        parametersFromPolicyJson(policy.policy_json, this.getParameterMetadata())
+      ),
+      policy
     );
+  }
+
+  private reformFromItem(item: UserPolicyItem, parameters: Parameter[]): Reform {
+    return {
+      id: item.id,
+      countryId: item.country_id,
+      label: item.name ?? undefined,
+      policyId: String(item.legacy_policy_id),
+      parameters,
+      baseline: (item.baseline ?? 'current-law') as ReformBaseline,
+      provenance: provenanceFromWire(item.provenance),
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    };
   }
 }
 
-export function getReformStore(): ReformStore {
-  return getStoreBackend() === 'api' ? new ResilientReformStore() : new LocalStorageReformStore();
+/* Saved reforms on the v2 routes (V3_API_ROUTES 'v2'). */
+
+type V2PolicyItem = components['schemas']['PolicyItem'];
+type V2PolicyCreateBody = components['schemas']['PolicyCreateRequest'];
+
+/** A v2 policy's JSON value: infinities as the API spells them (JSON has none). */
+function v2PolicyValue(value: unknown): unknown {
+  if (value === Infinity) {
+    return 'Infinity';
+  }
+  if (value === -Infinity) {
+    return '-Infinity';
+  }
+  return value;
+}
+
+/** A date as the UTC midnight the v2 API stores (v1 periods are whole days). */
+function utcMidnight(date: string): string {
+  return `${date}T00:00:00Z`;
+}
+
+/**
+ * The `POST /v2/policies` body for a reform's parameters: each dated value
+ * names its parameter's catalog UUID (`parameterIds`, from the parameters
+ * loaded on demand), and is typed as a v1 run types it when the
+ * parameter's metadata is loaded. Dates keep v1's whole-day periods
+ * (including its 2100-12-31 "forever"), as the dual-write copies of v1
+ * policies do, so identical changes deduplicate to one v2 policy.
+ */
+export function v2ReformPolicyBody(
+  countryId: string,
+  parameters: Parameter[],
+  catalog: V2CatalogReference,
+  parameterIds: Record<string, string>,
+  metadata?: ParameterMetadataCollection
+): V2PolicyCreateBody {
+  return {
+    country_id: publicApiCountryId(countryId),
+    tax_benefit_model_id: catalog.taxBenefitModelId,
+    parameter_values: parameters.flatMap((parameter) => {
+      const parameterId = parameterIds[parameter.name];
+      if (!parameterId) {
+        throw new Error(
+          `${parameter.name} is not a parameter of the PolicyEngine model ${catalog.policyengineVersion}`
+        );
+      }
+      const valueSpec =
+        metadata?.[parameter.name]?.type === 'parameter'
+          ? resolvePolicyParameterValueSpec(parameter.name, metadata)
+          : null;
+      return parameter.values.map((interval) => ({
+        parameter_id: parameterId,
+        value: finiteJsonValueForApi(
+          v2PolicyValue(
+            valueSpec
+              ? coercePolicyParameterValue(interval.value, valueSpec, parameter.name)
+              : interval.value
+          ),
+          parameter.name
+        ),
+        start_date: utcMidnight(interval.startDate),
+        end_date: utcMidnight(interval.endDate),
+      }));
+    }),
+  };
+}
+
+/** Creates (or, as the API deduplicates, finds) a reform's v2 policy; returns its ID. */
+export type CreateV2ReformPolicy = (
+  countryId: string,
+  parameters: Parameter[],
+  catalog: V2CatalogReference,
+  parameterIds: Record<string, string>,
+  metadata?: ParameterMetadataCollection
+) => Promise<string>;
+
+export async function createV2ReformPolicy(
+  countryId: string,
+  parameters: Parameter[],
+  catalog: V2CatalogReference,
+  parameterIds: Record<string, string>,
+  metadata?: ParameterMetadataCollection,
+  client: PublicApiClient = createPublicApiClient()
+): Promise<string> {
+  const body = v2ReformPolicyBody(countryId, parameters, catalog, parameterIds, metadata);
+  const result = await requireResult(
+    client.POST('/v2/policies', {
+      params: {
+        query: {
+          country_id: body.country_id,
+          policyengine_version: catalog.policyengineVersion,
+        },
+      },
+      body,
+    })
+  );
+  return result.item.id;
+}
+
+/** A v2 policy. Policies never change, so callers may cache them. */
+export async function fetchV2PolicyItem(
+  countryId: string,
+  policyId: string,
+  client: PublicApiClient = createPublicApiClient()
+): Promise<V2PolicyItem> {
+  const result = await requireResult(
+    client.GET('/v2/policies/{policy_id}', {
+      params: {
+        path: { policy_id: policyId },
+        query: { country_id: publicApiCountryId(countryId) },
+      },
+    })
+  );
+  return result.item;
+}
+
+/** A v2 policy's values as reform parameters, each oldest first; an open end is v1's forever. */
+export function parametersFromV2Policy(
+  policy: Pick<V2PolicyItem, 'parameter_values'>
+): Parameter[] {
+  const byName = new Map<string, ValueInterval[]>();
+  for (const parameterValue of policy.parameter_values) {
+    const intervals = byName.get(parameterValue.parameter_name) ?? [];
+    intervals.push({
+      startDate: parameterValue.start_date.slice(0, 10),
+      endDate: parameterValue.end_date ? parameterValue.end_date.slice(0, 10) : FOREVER,
+      value: parameterValueFromApi(parameterValue.value, parameterValue.parameter_name),
+    });
+    byName.set(parameterValue.parameter_name, intervals);
+  }
+  return [...byName].map(([name, values]) => ({
+    name,
+    values: values.sort((first, second) => first.startDate.localeCompare(second.startDate)),
+  }));
+}
+
+export interface ApiV2ReformStoreOptions extends ApiReformStoreOptions {
+  /** The loaded v2 catalog version: its PolicyEngine.py version and model ID. */
+  getV2Catalog?: () => V2CatalogReference | null | undefined;
+  /**
+   * The catalog IDs of the named parameters, loading any not loaded yet
+   * (they come with each parameter loaded on demand); names the catalog
+   * version does not have are left out.
+   */
+  resolveParameterIds?: (
+    countryId: string,
+    names: readonly string[]
+  ) => Promise<Record<string, string>>;
+  createV2Policy?: CreateV2ReformPolicy;
+  /** Reads a v2 policy. */
+  fetchV2Policy?: (countryId: string, policyId: string) => Promise<V2PolicyItem>;
+}
+
+/** The model catalog must be loaded from the v2 routes before a v2 policy can be made. */
+export class V2CatalogUnavailableError extends Error {
+  constructor() {
+    super('The PolicyEngine model has not loaded yet, so this reform cannot be saved.');
+    this.name = 'V2CatalogUnavailableError';
+  }
+}
+
+/** Whether an account row is a v3 reform: reforms always carry provenance. */
+function isV3Reform(item: UserPolicyItem): boolean {
+  return item.provenance !== null && (item.policy_id !== null || isLegacyId(item.legacy_policy_id));
+}
+
+/**
+ * Reforms in the account (`/v2/user-policies`) on v2 policies. A save makes
+ * the parameters a `/v2/policies` policy and the row points at it with
+ * `policy_id`; parameter edits make a new policy and repoint the row (the
+ * API then clears any `legacy_policy_id`); a rename only patches the name.
+ * Rows saved before the switch that hold only a v1 policy
+ * (`legacy_policy_id`) still open: their parameters are read from
+ * `GET /{country}/policy/{id}` until the one-time migration links them to
+ * v2 policies.
+ */
+export class ApiV2ReformStore implements ReformStore {
+  private readonly routes: AccountAssociationRoutes<UserPolicyItem>;
+  private readonly getParameterMetadata: NonNullable<ApiReformStoreOptions['getParameterMetadata']>;
+  private readonly getV2Catalog: NonNullable<ApiV2ReformStoreOptions['getV2Catalog']>;
+  private readonly resolveParameterIds: NonNullable<ApiV2ReformStoreOptions['resolveParameterIds']>;
+  private readonly createV2Policy: CreateV2ReformPolicy;
+  private readonly fetchV2Policy: NonNullable<ApiV2ReformStoreOptions['fetchV2Policy']>;
+  private readonly fetchPolicy: NonNullable<ApiReformStoreOptions['fetchPolicy']>;
+
+  constructor(
+    private readonly context: ApiStoreContext,
+    options: ApiV2ReformStoreOptions = {}
+  ) {
+    this.routes = new AccountAssociationRoutes(context, 'user-policies', 'Reform');
+    this.getParameterMetadata = options.getParameterMetadata ?? (() => null);
+    this.getV2Catalog = options.getV2Catalog ?? (() => null);
+    this.resolveParameterIds = options.resolveParameterIds ?? (async () => ({}));
+    this.createV2Policy = options.createV2Policy ?? createV2ReformPolicy;
+    this.fetchV2Policy = options.fetchV2Policy ?? fetchV2PolicyItem;
+    this.fetchPolicy = options.fetchPolicy ?? fetchV1Policy;
+  }
+
+  /** The v2 policy for a set of parameters, created for the loaded catalog version. */
+  private async materialize(countryId: string, parameters: Parameter[]): Promise<string> {
+    const catalog = this.getV2Catalog();
+    if (!catalog) {
+      throw new V2CatalogUnavailableError();
+    }
+    const parameterIds = await this.resolveParameterIds(
+      countryId,
+      parameters.map((parameter) => parameter.name)
+    );
+    return this.createV2Policy(
+      countryId,
+      parameters,
+      catalog,
+      parameterIds,
+      this.getParameterMetadata() ?? undefined
+    );
+  }
+
+  async create(reform: NewReform): Promise<Reform> {
+    const countryId = this.routes.writeCountry(reform.countryId);
+    const policyId = isAccountId(reform.v2PolicyId)
+      ? reform.v2PolicyId
+      : await this.materialize(countryId, reform.parameters);
+    const item = await this.routes.create<UserPolicyCreateRequest>({
+      country_id: countryId,
+      policy_id: policyId,
+      ...(reform.label ? { name: clampStoreText(reform.label) } : {}),
+      baseline: reform.baseline,
+      provenance: provenanceToWire(reform.provenance),
+    });
+    return this.reformFromItem(item, reform.parameters);
+  }
+
+  async findMine(countryId?: string): Promise<Reform[]> {
+    if (countryId && countryId !== this.context.countryId) {
+      return [];
+    }
+    const items = (await this.routes.list()).filter(isV3Reform);
+    const loaded = await Promise.allSettled(items.map((item) => this.toReform(item)));
+    return byRecentUpdate(
+      loaded.map((outcome, index) =>
+        outcome.status === 'fulfilled'
+          ? outcome.value
+          : { ...this.reformFromItem(items[index], []), parametersUnavailable: true }
+      )
+    );
+  }
+
+  async findById(reformId: string): Promise<Reform | null> {
+    const item = await this.routes.get(reformId);
+    return item && isV3Reform(item) ? this.toReform(item) : null;
+  }
+
+  async update(reformId: string, updates: ReformUpdates): Promise<Reform> {
+    // Refuse a browser ID before creating a policy for it.
+    if (!isAccountId(reformId)) {
+      throw new BrowserOnlyIdError();
+    }
+    const body: UserPolicyPatchRequest = {};
+    if (updates.label !== undefined) {
+      body.name = clampStoreText(updates.label) || null;
+    }
+    if (updates.baseline !== undefined) {
+      body.baseline = updates.baseline;
+    }
+    if (updates.provenance !== undefined) {
+      body.provenance = provenanceToWire(updates.provenance);
+    }
+    if (updates.parameters !== undefined) {
+      body.policy_id = await this.materialize(this.context.countryId, updates.parameters);
+    } else if (isAccountId(updates.v2PolicyId)) {
+      body.policy_id = updates.v2PolicyId;
+    }
+    const item = await this.routes.patch(reformId, body);
+    return updates.parameters !== undefined
+      ? this.reformFromItem(item, updates.parameters)
+      : this.toReform(item);
+  }
+
+  delete(reformId: string): Promise<void> {
+    return this.routes.delete(reformId);
+  }
+
+  private async toReform(item: UserPolicyItem): Promise<Reform> {
+    if (item.policy_id) {
+      return this.reformFromItem(
+        item,
+        parametersFromV2Policy(await this.fetchV2Policy(item.country_id, item.policy_id))
+      );
+    }
+    const policy = await this.fetchPolicy(item.country_id, String(item.legacy_policy_id));
+    return withMissingParameters(
+      this.reformFromItem(
+        item,
+        parametersFromPolicyJson(policy.policy_json, this.getParameterMetadata())
+      ),
+      policy
+    );
+  }
+
+  private reformFromItem(item: UserPolicyItem, parameters: Parameter[]): Reform {
+    return {
+      id: item.id,
+      countryId: item.country_id,
+      label: item.name ?? undefined,
+      policyId: isLegacyId(item.legacy_policy_id) ? String(item.legacy_policy_id) : null,
+      v2PolicyId: item.policy_id,
+      parameters,
+      baseline: (item.baseline ?? 'current-law') as ReformBaseline,
+      provenance: provenanceFromWire(item.provenance),
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    };
+  }
+}
+
+/**
+ * The reform store for a session: the account's when given one, else
+ * localStorage. With an account, `routes` (V3_API_ROUTES unless a caller
+ * says otherwise) picks v1 or v2 policies; reforms kept in this browser
+ * make v1 policies either way.
+ */
+export function getReformStore(
+  account?: ApiStoreContext | null,
+  options?: ApiV2ReformStoreOptions,
+  routes: V3ApiRoutes = V3_API_ROUTES
+): ReformStore {
+  if (!account) {
+    return new LocalStorageReformStore(options);
+  }
+  return routes === 'v2'
+    ? new ApiV2ReformStore(account, options)
+    : new ApiReformStore(account, options);
 }

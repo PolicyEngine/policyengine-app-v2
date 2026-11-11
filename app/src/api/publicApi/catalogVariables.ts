@@ -1,0 +1,148 @@
+import {
+  createPublicApiClient,
+  publicApiCountryId,
+  requireResult,
+  type PublicApiClient,
+} from '@/api/publicApi/client';
+import { v1DatedValues } from '@/api/publicApi/datedValues';
+import type { components } from '@/api/publicApi/schema';
+import type { ValuesList } from '@/types/subIngredients/valueInterval';
+
+/**
+ * Every variable of a catalog version, from the Public API's
+ * `GET /v2/model-catalog/variables`, in the shape v1's
+ * `GET /{country}/metadata` gave each variable, so the household builder,
+ * its variable picker and the household breakdown read them unchanged.
+ *
+ * Where a variable's `adds` or `subtracts` names a parameter, v1 gave the
+ * parameter's path as the value, and the breakdown read that parameter
+ * from the whole parameter list for the report's year. On v2 the path is
+ * kept the same way, and the parameter's dated values come with the
+ * variables (`part_parameter_values`), so the breakdown never needs the
+ * whole parameter list.
+ *
+ * The catalog does not publish a variable's category or position in its
+ * module, so those stay unset.
+ */
+
+type Schemas = components['schemas'];
+
+export interface LoadedCatalogVariables {
+  /** Each variable by name, as v1's metadata described it. */
+  variables: Record<string, V1ShapedVariable>;
+  /** The dated values of each parameter a variable's adds or subtracts names. */
+  partParameterValues: Record<string, ValuesList>;
+}
+
+/** The fields of a v1 metadata variable that the catalog publishes. */
+export interface V1ShapedVariable {
+  name: string;
+  label: string;
+  entity: string;
+  documentation: string | null;
+  valueType: string | null;
+  /** Such as 'currency-USD' or '/1'; null for a variable without one, as on v1. */
+  unit: string | null;
+  /** 'year', 'month', 'day' or 'eternity'; null for versions before catalog format 2. */
+  definitionPeriod: string | null;
+  defaultValue: unknown;
+  /** A list of variable names, or the path of a parameter whose value is that list. */
+  adds: string[] | string | null;
+  subtracts: string[] | string | null;
+  isInputVariable: boolean;
+  hidden_input: boolean;
+  moduleName: string | null;
+  possibleValues?: Array<{ value: string; label: Schemas['MetadataEnumValue']['label'] }>;
+}
+
+/**
+ * v1's type name for a variable. The catalog stores the Python type's name,
+ * and .py publishes every Enum variable as "str" with its values, so a
+ * variable with enum values is v1's "Enum".
+ */
+function v1ValueType(variable: Schemas['MetadataVariable']): string | null {
+  return variable.enum_values ? 'Enum' : variable.data_type;
+}
+
+/**
+ * v1 gave a default only for numbers, yes-or-no values and enums (the
+ * default value's name); a text or date variable had none.
+ */
+function v1DefaultValue(valueType: string | null, defaultValue: unknown): unknown {
+  if (valueType === 'Enum') {
+    return defaultValue;
+  }
+  return typeof defaultValue === 'number' || typeof defaultValue === 'boolean'
+    ? defaultValue
+    : null;
+}
+
+export function v1ShapedVariable(variable: Schemas['MetadataVariable']): V1ShapedVariable {
+  const valueType = v1ValueType(variable);
+  const shaped: V1ShapedVariable = {
+    name: variable.name,
+    // v1 always had a label; a variable without one reads as its name.
+    label: variable.label ?? variable.name,
+    entity: variable.entity,
+    documentation: variable.description,
+    valueType,
+    unit: variable.unit,
+    definitionPeriod: variable.definition_period,
+    defaultValue: v1DefaultValue(valueType, variable.default_value),
+    adds: variable.adds_parameter_path ?? variable.adds,
+    subtracts: variable.subtracts_parameter_path ?? variable.subtracts,
+    isInputVariable: variable.is_input_variable ?? false,
+    hidden_input: variable.hidden_input ?? false,
+    moduleName: variable.module_name ?? null,
+  };
+  if (variable.enum_values) {
+    shaped.possibleValues = variable.enum_values.map((enumValue) => ({
+      value: enumValue.value,
+      label: enumValue.label,
+    }));
+  }
+  return shaped;
+}
+
+/** The catalog format whose variables carry the input flags, enum labels, modules and parts v3 reads. */
+const CATALOG_FORMAT_WITH_VARIABLE_FIELDS = 2;
+
+/**
+ * All of a catalog version's variables, with the values their
+ * parameter-named parts read. A version published before catalog format 2
+ * fails, rather than giving variables without what v3 reads.
+ */
+export async function fetchCatalogVariables(
+  countryId: string,
+  policyengineVersion: string,
+  client: PublicApiClient = createPublicApiClient()
+): Promise<LoadedCatalogVariables> {
+  const result = await requireResult(
+    client.GET('/v2/model-catalog/variables', {
+      params: {
+        query: {
+          country_id: publicApiCountryId(countryId),
+          policyengine_version: policyengineVersion,
+        },
+      },
+    })
+  );
+  if (result.catalog_format !== CATALOG_FORMAT_WITH_VARIABLE_FIELDS) {
+    // Without format 2's fields there are no input flags, enum labels or
+    // parameter-named parts, so v3's builder and breakdown cannot use them.
+    throw new Error(
+      `The catalog version ${result.policyengine_version} was published before catalog format 2, so it has no variable details v3 can use.`
+    );
+  }
+  return {
+    variables: Object.fromEntries(
+      result.variables.map((variable) => [variable.name, v1ShapedVariable(variable)])
+    ),
+    partParameterValues: Object.fromEntries(
+      Object.entries(result.part_parameter_values).map(([path, values]) => [
+        path,
+        v1DatedValues(path, values),
+      ])
+    ),
+  };
+}

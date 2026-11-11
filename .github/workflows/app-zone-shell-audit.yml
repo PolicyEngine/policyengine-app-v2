@@ -21,9 +21,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # This job connects to production sites over HTTPS, and Node.js checks
+      # certificates against a CA list compiled into its binary. Node 20 gets
+      # no release that drops the compromised eMudhra (emSign) CAs, so this
+      # uses Node 24. check-latest skips the runner's cached 24.x, which can
+      # be older than 24.22.1, the first 24.x release without them.
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
+          check-latest: true
 
       - name: Run app-zone audit unit tests
         run: node --test .github/scripts/audit-app-zone-shell.test.mjs

@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { Household } from '@/models/Household';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { Household, UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
 import { HouseholdCreationModal } from '@/pages/reportBuilder/modals/HouseholdCreationModal';
+import {
+  BUILDER_PEOPLE,
+  ROLE_TEST_YEAR,
+  singleParentWithAdultDependant,
+  UK_METADATA_WITH_CLAIMANT_ROLES,
+} from '@/tests/fixtures/models/builderClaimantRolesMocks';
 import type { PopulationStateProps } from '@/types/pathwayState';
 
 const mockCreateHouseholdWithLabel = vi.hoisted(() => vi.fn());
@@ -9,16 +15,18 @@ const mockUpdateHouseholdAssociation = vi.hoisted(() => vi.fn());
 const mockHouseholdAssociationRefetch = vi.hoisted(() => vi.fn());
 const MODAL_TEST_TIMEOUT_MS = 20_000;
 
+const US_MODAL_METADATA = {
+  currentCountry: 'us',
+  loading: false,
+  error: null,
+  version: 'test-model',
+  basicInputs: [],
+  variables: {} as Record<string, unknown>,
+  entities: {},
+};
+
 const mockReduxState = {
-  metadata: {
-    currentCountry: 'us',
-    loading: false,
-    error: null,
-    version: 'test-model',
-    basicInputs: [],
-    variables: {},
-    entities: {},
-  },
+  metadata: US_MODAL_METADATA,
 };
 
 vi.mock('react-redux', async () => {
@@ -30,7 +38,7 @@ vi.mock('react-redux', async () => {
 });
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
-  useCurrentCountry: () => 'us',
+  useCurrentCountry: () => mockReduxState.metadata.currentCountry,
 }));
 
 vi.mock('@/hooks/useCreateHousehold', () => ({
@@ -220,4 +228,106 @@ describe('HouseholdCreationModal', () => {
     },
     MODAL_TEST_TIMEOUT_MS
   );
+
+  describe('given a UK lone parent with a dependant aged 25', () => {
+    const ukPopulation: PopulationStateProps = {
+      type: 'household',
+      household: singleParentWithAdultDependant().withId('hh-uk').withLabel('Lone parent'),
+      geography: null,
+      label: 'Lone parent',
+    };
+    const roleOf = (household: Household, personName: string) =>
+      household.getPersonVariableAtYear(
+        personName,
+        UK_CLAIMANT_OR_PARTNER_VARIABLE,
+        ROLE_TEST_YEAR
+      );
+
+    beforeEach(() => {
+      mockReduxState.metadata = {
+        ...US_MODAL_METADATA,
+        currentCountry: 'uk',
+        variables: UK_METADATA_WITH_CLAIMANT_ROLES.variables,
+      };
+    });
+
+    afterEach(() => {
+      mockReduxState.metadata = US_MODAL_METADATA;
+    });
+
+    const renderUKModal = (onHouseholdSaved = vi.fn()) =>
+      render(
+        <HouseholdCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onHouseholdSaved={onHouseholdSaved}
+          reportYear={ROLE_TEST_YEAR}
+          initialPopulation={ukPopulation}
+          initialEditorMode="edit"
+        />
+      );
+
+    test(
+      'given save as new household then saves one claimant and a dependant who is not a partner',
+      async () => {
+        const onHouseholdSaved = vi.fn();
+        renderUKModal(onHouseholdSaved);
+
+        fireEvent.click(screen.getByRole('button', { name: /make household change/i }));
+        const saveAsNewButton = screen.getByRole('button', { name: /save as new household/i });
+        await waitFor(() => expect(saveAsNewButton).not.toBeDisabled());
+        fireEvent.click(saveAsNewButton);
+        fireEvent.click(screen.getByRole('button', { name: /keep same name/i }));
+
+        await waitFor(() => expect(mockCreateHouseholdWithLabel).toHaveBeenCalled());
+        const [payload] = mockCreateHouseholdWithLabel.mock.calls[0];
+        expect(payload.data.people[BUILDER_PEOPLE.YOU][UK_CLAIMANT_OR_PARTNER_VARIABLE]).toEqual({
+          [ROLE_TEST_YEAR]: true,
+        });
+        expect(
+          payload.data.people[BUILDER_PEOPLE.FIRST_DEPENDANT][UK_CLAIMANT_OR_PARTNER_VARIABLE]
+        ).toEqual({ [ROLE_TEST_YEAR]: false });
+        const savedHousehold: Household = onHouseholdSaved.mock.calls[0][0].household;
+        expect(roleOf(savedHousehold, BUILDER_PEOPLE.YOU)).toBe(true);
+        expect(roleOf(savedHousehold, BUILDER_PEOPLE.FIRST_DEPENDANT)).toBe(false);
+      },
+      MODAL_TEST_TIMEOUT_MS
+    );
+
+    test(
+      'given update existing household then replaces it with the roles recorded',
+      async () => {
+        mockUpdateHouseholdAssociation.mockResolvedValue({
+          id: 'uhh-uk',
+          type: 'household',
+          userId: 'user-1',
+          householdId: 'hh-uk-replacement',
+          countryId: 'uk',
+          label: 'Changed household',
+        });
+        mockHouseholdAssociationRefetch.mockResolvedValue({
+          data: {
+            id: 'uhh-uk',
+            type: 'household',
+            userId: 'user-1',
+            householdId: 'hh-uk',
+            countryId: 'uk',
+            label: 'Lone parent',
+          },
+        });
+        renderUKModal();
+
+        fireEvent.click(screen.getByRole('button', { name: /make household change/i }));
+        const updateButton = screen.getByRole('button', { name: /update existing household/i });
+        await waitFor(() => expect(updateButton).not.toBeDisabled());
+        fireEvent.click(updateButton);
+
+        await waitFor(() => expect(mockUpdateHouseholdAssociation).toHaveBeenCalled());
+        const { nextHousehold } = mockUpdateHouseholdAssociation.mock.calls[0][0];
+        expect(roleOf(nextHousehold, BUILDER_PEOPLE.YOU)).toBe(true);
+        expect(roleOf(nextHousehold, BUILDER_PEOPLE.FIRST_DEPENDANT)).toBe(false);
+      },
+      MODAL_TEST_TIMEOUT_MS
+    );
+  });
 });

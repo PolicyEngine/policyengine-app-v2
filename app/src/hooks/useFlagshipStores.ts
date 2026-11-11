@@ -1,0 +1,196 @@
+import { useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useStore } from 'react-redux';
+import {
+  findReportRecordByLink,
+  getFlagshipReportStore,
+  parseSharedReportItem,
+  type FlagshipReportRecord,
+  type FlagshipReportStore,
+} from '@/api/flagshipReportStore';
+import { fetchV2PolicyItem, getReformStore, type ReformStore } from '@/api/reformStore';
+import { fetchSharedReport } from '@/api/sharedReport';
+import { isAccountId, type ApiStoreContext } from '@/api/v2Associations';
+import { useCountryContext } from '@/contexts/CountryContext';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useLoadV3Parameters } from '@/hooks/useV3Parameters';
+import { useAuthStatus } from '@/libs/auth/AuthContext';
+import { getBrowserUserId } from '@/libs/auth/browserUser';
+import { useV2UserClient } from '@/libs/auth/useV2UserClient';
+import { readV1Policy } from '@/libs/flagship/policyChecks';
+import { unwrapReport } from '@/libs/flagship/reportSchema';
+import { selectV2Catalog, selectV2ParameterIds } from '@/reducers/metadataReducer';
+import type { RootState } from '@/store';
+import { isAssociationCountry } from '@/types/v2User';
+
+/**
+ * Where the v3 workspace keeps saved work. Wherever accounts exist (sign-in
+ * configured, US and UK) it is the PolicyEngine API: as the signed-in
+ * account, or signed out as this browser's unauthenticated user. Without
+ * sign-in (and outside the US and UK) it stays in this browser. Nothing
+ * else decides it, and nothing falls back: a request that fails is an
+ * ordinary error.
+ */
+export interface V3SavedWork {
+  /** The API routes for this session's user; null keeps saved work in this browser. */
+  account: ApiStoreContext | null;
+  /**
+   * Scopes cached saved work to whose it is: the Auth0 subject when signed
+   * in, this browser's unauthenticated user when signed out, 'browser'
+   * otherwise. A session that ends without a reload moves every query keyed
+   * by it to new keys. (A calculated household's save is not keyed by it:
+   * see useSaveCalculatedHousehold.)
+   */
+  scope: string;
+}
+
+export function useV3SavedWork(): V3SavedWork {
+  const { status, subject } = useAuthStatus();
+  const countryId = useCountryContext();
+  const client = useV2UserClient();
+  // Made only where it is sent: signed out in the US or UK.
+  const browserUserId =
+    status === 'signed_out' && isAssociationCountry(countryId) ? getBrowserUserId() : null;
+  return useMemo(() => {
+    if (!isAssociationCountry(countryId)) {
+      return { account: null, scope: 'browser' };
+    }
+    if (status === 'signed_in' && subject) {
+      return { account: { client, countryId }, scope: `account:${subject}` };
+    }
+    if (browserUserId) {
+      return { account: { client, countryId }, scope: `browser-user:${browserUserId}` };
+    }
+    return { account: null, scope: 'browser' };
+  }, [status, subject, browserUserId, countryId, client]);
+}
+
+/** A v2 policy (`GET /v2/policies/{id}`), per country. */
+const v2PolicyKey = (countryId: string, policyId: string) =>
+  ['v2-policy', countryId, policyId] as const;
+
+/** How long a fetched v2 policy stays cached without a reader. */
+const SAVED_POLICY_GC_TIME = 30 * 60 * 1000;
+
+/**
+ * The reform store for this session. Which policies an account's reforms
+ * point at (v1 or `/v2/policies`) follows V3_API_ROUTES (see
+ * libs/flagship/v3ApiRoutes); on v2, the catalog IDs a policy names come
+ * with the parameters loaded on demand.
+ */
+export function useReformStore(): ReformStore {
+  const { account } = useV3SavedWork();
+  const loadParameters = useLoadV3Parameters();
+  const reduxStore = useStore<RootState>();
+  const queryClient = useQueryClient();
+
+  // Metadata is read from the store when the store asks for it, so
+  // metadata arriving later does not rebuild the store.
+  return useMemo(
+    () =>
+      getReformStore(account, {
+        getParameterMetadata: () => reduxStore.getState().metadata?.parameters,
+        getV2Catalog: () => selectV2Catalog(reduxStore.getState()),
+        resolveParameterIds: async (_countryId, names) => {
+          await loadParameters(names);
+          const ids = selectV2ParameterIds(reduxStore.getState());
+          return Object.fromEntries(
+            names.filter((name) => ids[name]).map((name) => [name, ids[name]])
+          );
+        },
+        // Policies never change, so each is fetched once per session
+        // rather than on every list of the account's reforms.
+        fetchPolicy: (countryId, policyId) => readV1Policy(queryClient, countryId, policyId),
+        fetchV2Policy: (countryId, policyId) =>
+          queryClient.fetchQuery({
+            queryKey: v2PolicyKey(countryId, policyId),
+            queryFn: () => fetchV2PolicyItem(countryId, policyId),
+            staleTime: Infinity,
+            gcTime: SAVED_POLICY_GC_TIME,
+          }),
+      }),
+    [account, loadParameters, queryClient, reduxStore]
+  );
+}
+
+/** The query keys a saved report's page reads it under, without the session and link. */
+export const savedReportQueryKeys = {
+  /** This session's record a report link names. */
+  record: ['flagship-report-record'] as const,
+  /** A saved report as anyone holding its link reads it. */
+  shared: ['shared-report'] as const,
+};
+
+export interface FlagshipReportStoreSelection {
+  store: FlagshipReportStore;
+  /**
+   * True when records go to the account: one `/v2/user-reports` row per
+   * saved report, which a transfer repoints at its new run.
+   */
+  isAccount: boolean;
+  /** The session scope for cached records (see V3SavedWork). */
+  scope: string;
+}
+
+export function useFlagshipReportStore(): FlagshipReportStoreSelection {
+  const { account, scope } = useV3SavedWork();
+  return useMemo(
+    () => ({
+      store: getFlagshipReportStore(account),
+      isAccount: !!account,
+      scope,
+    }),
+    [account, scope]
+  );
+}
+
+/**
+ * This session's record a report link names — the account's row when
+ * signed in (US/UK), signed out this browser's unauthenticated user's, and
+ * otherwise this browser's — with the saved reform it was run from. Null
+ * when there is none: a report someone else ran.
+ */
+export function useReportRecord(link: string | undefined) {
+  const { store, scope } = useFlagshipReportStore();
+  const { data } = useQuery({
+    queryKey: [...savedReportQueryKeys.record, scope, link ?? ''],
+    queryFn: () => findReportRecordByLink(store, link!),
+    enabled: !!link,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+  return data ?? null;
+}
+
+/** A saved report as anyone holding its link reads it. */
+export interface SharedReport {
+  /** The owner's title, source note, provisions, budget window and validation. */
+  record: FlagshipReportRecord;
+  /** The owner's saved reform the report was compared with; null for current law. */
+  baselineReform: { name: string | null } | null;
+}
+
+/**
+ * The saved report a link names (an account row's ID), read with no
+ * credential, so whoever opens the link sees the report as its owner ran
+ * it. Null data when no saved report has that ID; an unreadable one is an
+ * error.
+ */
+export function useSharedReport(link: string | undefined) {
+  const countryId = useCurrentCountry();
+  return useQuery({
+    queryKey: [...savedReportQueryKeys.shared, countryId, link ?? ''],
+    queryFn: async (): Promise<SharedReport | null> => {
+      const item = await fetchSharedReport(countryId, link!);
+      return item
+        ? {
+            record: unwrapReport(parseSharedReportItem(item)),
+            baselineReform: item.baseline_reform,
+          }
+        : null;
+    },
+    enabled: !!link && isAccountId(link),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+}

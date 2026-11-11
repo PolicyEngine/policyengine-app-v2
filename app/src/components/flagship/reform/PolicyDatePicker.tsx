@@ -9,6 +9,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui';
 import { FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { dayLabel } from '@/libs/flagship/draftLabels';
 
 export interface DatePreset {
   label: string;
@@ -32,10 +34,17 @@ interface PolicyDatePickerProps {
 }
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+/** Countries whose calendars start the week on Monday; the rest start on Sunday, as the US does. */
+const MONDAY_FIRST = new Set(['uk']);
+
+/** The first day of a calendar week, as dayjs numbers it: 0 Sunday, 1 Monday. */
+export const weekStartFor = (countryId: string): 0 | 1 => (MONDAY_FIRST.has(countryId) ? 1 : 0);
 const MONTHS = Array.from({ length: 12 }, (_, month) => dayjs().month(month).format('MMMM'));
 
-export const formatPolicyDate = (value: string) =>
-  value === FOREVER ? 'No end date' : dayjs(value).format('MMM D, YYYY');
+/** A policy date as the country writes it: "Jan 1, 2026" in the US, "1 Jan 2026" in the UK. */
+export const formatPolicyDate = (value: string, countryId: string = 'us') =>
+  value === FOREVER ? 'No end date' : dayLabel(value, countryId);
 
 const selectStyle: React.CSSProperties = {
   height: 28,
@@ -77,6 +86,7 @@ export default function PolicyDatePicker({
   rangeEnd,
   presets,
 }: PolicyDatePickerProps) {
+  const countryId = useCurrentCountry();
   const [open, setOpen] = useState(false);
   const anchor = value === FOREVER ? rangeStart : value;
   const [view, setView] = useState<Dayjs>(dayjs(anchor).startOf('month'));
@@ -87,10 +97,12 @@ export default function PolicyDatePicker({
   const shadeEnd = rangeEnd === FOREVER ? max : dayjs(rangeEnd);
   const start = dayjs(rangeStart);
 
+  const weekStart = weekStartFor(countryId);
+  const weekdays = [...WEEKDAYS.slice(weekStart), ...WEEKDAYS.slice(0, weekStart)];
   const first = view.startOf('month');
-  const days = Array.from({ length: 42 }, (_, i) =>
-    first.subtract(first.day(), 'day').add(i, 'day')
-  );
+  // Days shown before the 1st: back to the week's first day.
+  const lead = (first.day() - weekStart + 7) % 7;
+  const days = Array.from({ length: 42 }, (_, i) => first.subtract(lead, 'day').add(i, 'day'));
   const canBack = view.isAfter(min, 'month');
   const canForward = view.isBefore(max, 'month');
 
@@ -113,7 +125,7 @@ export default function PolicyDatePicker({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`${label}: ${formatPolicyDate(value)}`}
+          aria-label={`${label}: ${formatPolicyDate(value, countryId)}`}
           className="tw:cursor-pointer tw:transition-colors tw:hover:border-primary-500"
           style={{
             display: 'flex',
@@ -132,7 +144,7 @@ export default function PolicyDatePicker({
           }}
         >
           <IconCalendarEvent size={16} color={colors.text.tertiary} aria-hidden />
-          <span style={{ flex: 1 }}>{formatPolicyDate(value)}</span>
+          <span style={{ flex: 1 }}>{formatPolicyDate(value, countryId)}</span>
           <IconChevronDown size={14} color={colors.text.tertiary} aria-hidden />
         </button>
       </PopoverTrigger>
@@ -192,7 +204,7 @@ export default function PolicyDatePicker({
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: 2 }}>
-          {WEEKDAYS.map((day) => (
+          {weekdays.map((day) => (
             <span
               key={day}
               style={{
@@ -222,7 +234,7 @@ export default function PolicyDatePicker({
                 <button
                   type="button"
                   disabled={disabled}
-                  aria-label={day.format('MMMM D, YYYY')}
+                  aria-label={dayLabel(day, countryId, { long: true })}
                   aria-pressed={selected}
                   onClick={() => choose(iso)}
                   className={selected ? undefined : 'tw:cursor-pointer tw:hover:bg-primary-100'}

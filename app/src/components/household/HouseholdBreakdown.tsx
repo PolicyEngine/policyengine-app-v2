@@ -7,6 +7,8 @@ interface HouseholdBreakdownProps {
   baseline: HouseholdCalculationOutput;
   reform: HouseholdCalculationOutput | null;
   borderColor: string;
+  /** Unchanged lines show their value, not a change of 0; off by default. */
+  unchangedShowsValue?: boolean;
 }
 
 /**
@@ -17,6 +19,7 @@ export default function HouseholdBreakdown({
   baseline,
   reform,
   borderColor,
+  unchangedShowsValue = false,
 }: HouseholdBreakdownProps) {
   const variables = useSelector((state: RootState) => state.metadata.variables);
 
@@ -39,6 +42,7 @@ export default function HouseholdBreakdown({
         defaultExpanded={false}
         childrenOnly
         childVisibility="all"
+        unchangedShowsValue={unchangedShowsValue}
       />
     </div>
   );

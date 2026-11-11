@@ -1,14 +1,89 @@
-import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test } from 'vitest';
-import { HexagonalMap } from '@/components/visualization/HexagonalMap';
+import { fireEvent, render, screen, userEvent } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
+import { HexagonalMap, zoomAbout } from '@/components/visualization/HexagonalMap';
 import {
+  FIXED_MAP_WIDTH,
+  MIN_MISSING_AREA_STRIPE_PIXELS,
+  MISSING_AREA_EDGE_COLOR,
+  MISSING_FAR_EAST,
+  MISSING_NORTH_EAST,
+  MISSING_UK_SHAPED_AREA,
   MOCK_HEX_MAP_DATA,
   MOCK_MIXED_VALUES,
   MOCK_NEGATIVE_VALUES,
   MOCK_POSITIVE_VALUES,
+  MOCK_TILED_HEX_DATA,
+  MOCK_UK_SHAPED_HEX_DATA,
+  mockRenderedSvgWidth,
+  NO_DATA_AREA_FILL,
+  NO_DATA_NORTH_WEST,
+  NO_DATA_TEXT,
+  NOT_REPORTED_TEXT,
+  PHONE_WIDTH_PIXELS,
+  stripeSpacingOnScreen,
 } from '@/tests/fixtures/components/visualization/hexMapMocks';
 
+/** A hexagon polygon's vertices, in drawing order. */
+function vertices(polygon: Element): [number, number][] {
+  return (polygon.getAttribute('points') ?? '')
+    .trim()
+    .split(' ')
+    .map((pair) => pair.split(',').map(Number) as [number, number]);
+}
+
+/** A hexagon polygon's centre. */
+function centre(polygon: Element): [number, number] {
+  const points = vertices(polygon);
+  return [
+    points.reduce((sum, [x]) => sum + x, 0) / points.length,
+    points.reduce((sum, [, y]) => sum + y, 0) / points.length,
+  ];
+}
+
+// jsdom has no PointerEvent; a MouseEvent with a pointer id is enough for the map's drag.
+if (typeof window.PointerEvent === 'undefined') {
+  class TestPointerEvent extends MouseEvent {
+    pointerId: number;
+    constructor(type: string, init: PointerEventInit = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 1;
+    }
+  }
+  window.PointerEvent = TestPointerEvent as unknown as typeof PointerEvent;
+}
+
 describe('HexagonalMap', () => {
+  test('given data then hexagons are pointy-topped and rows sit √3/2 of a column apart', () => {
+    // When: the map's only layout, the tiled odd-r grid
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
+
+    // Then
+    const [west, east, north] = ['west', 'east', 'north'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const column = centre(east)[0] - centre(west)[0];
+    const row = centre(west)[1] - centre(north)[1];
+    expect(row / column).toBeCloseTo(Math.sqrt(3) / 2, 5);
+    const points = vertices(west);
+    // A pointy-top hexagon's top and bottom vertices share an x.
+    expect(points[1][0]).toBeCloseTo(points[4][0], 5);
+  });
+
+  test('given data then neighbouring hexagons in a row touch', () => {
+    // When
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
+
+    // Then: the gap between west's right edge and east's left edge is a hairline
+    const [west, east] = ['west', 'east'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const westRight = Math.max(...vertices(west).map(([vertexX]) => vertexX));
+    const eastLeft = Math.min(...vertices(east).map(([vertexX]) => vertexX));
+    const column = centre(east)[0] - centre(west)[0];
+    expect((eastLeft - westRight) / column).toBeGreaterThan(0);
+    expect((eastLeft - westRight) / column).toBeLessThan(0.1);
+  });
+
   test('given minimal data then renders SVG with one hexagon', () => {
     // Given
     const data = [{ id: '1', label: 'Test', value: 100, x: 0, y: 0 }];
@@ -196,16 +271,601 @@ describe('HexagonalMap', () => {
     expect(polygons).toHaveLength(3);
   });
 
-  test('given custom hex size then renders hexagons', () => {
-    // Given
-    const data = MOCK_HEX_MAP_DATA;
-    const config = { hexSize: 20 };
+  test('given no selection props then hexagons carry no selection attributes', () => {
+    const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} />);
 
-    // When
-    const { container } = render(<HexagonalMap data={data} config={config} />);
+    expect(container.querySelector('[data-area-id]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-selected]')).not.toBeInTheDocument();
+  });
+
+  test('given onSelect then clicking a hexagon passes its id', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} onSelect={onSelect} />);
+
+    await user.click(container.querySelector('[data-area-id="edinburgh-central"]')!);
+
+    expect(onSelect).toHaveBeenCalledWith('edinburgh-central');
+  });
+
+  test('given a selected id then that hexagon is outlined and drawn last', () => {
+    const { container } = render(
+      <HexagonalMap data={MOCK_HEX_MAP_DATA} selectedId="westminster-north" onSelect={vi.fn()} />
+    );
+
+    const hexagons = container.querySelectorAll('polygon[data-area-id]');
+    const selected = container.querySelector('[data-selected]')!;
+    expect(selected).toHaveAttribute('data-area-id', 'westminster-north');
+    expect(selected).toHaveAttribute('stroke-width', '1.5');
+    expect(hexagons[hexagons.length - 1]).toBe(selected);
+    expect(screen.getByTestId('hex-selection-ring')).toBeInTheDocument();
+  });
+
+  test('given no selected id then no selection ring is drawn', () => {
+    render(<HexagonalMap data={MOCK_HEX_MAP_DATA} onSelect={vi.fn()} />);
+
+    expect(screen.queryByTestId('hex-selection-ring')).not.toBeInTheDocument();
+  });
+
+  test('given insetWatermark then the logo has padding clear of the frame', () => {
+    const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} insetWatermark />);
+
+    const logoWrapper = container.querySelector('img')!.parentElement!;
+    expect(logoWrapper.style.padding).toBe('4px 8px');
+  });
+  test('given no zoomable prop then the map renders as before, with no zoom controls', () => {
+    const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} />);
+
+    expect(screen.queryByRole('button', { name: 'Zoom in' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reset view' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('hex-map-zoom-layer')).not.toBeInTheDocument();
+    const svg = container.querySelector('svg')!;
+    // The hexagons sit directly in the SVG, with no zoom or clip group around them.
+    expect([...svg.children].filter((child) => child.tagName === 'polygon')).toHaveLength(4);
+    expect(svg.querySelector('clipPath')).not.toBeInTheDocument();
+    expect(svg.getAttribute('style')).toBe('display: block;');
+  });
+
+  test('given zoomable then zoom in, zoom out and reset change the view', async () => {
+    const user = userEvent.setup();
+    render(<HexagonalMap data={MOCK_HEX_MAP_DATA} zoomable />);
+    const layer = () => screen.getByTestId('hex-map-zoom-layer').getAttribute('transform');
+
+    expect(layer()).toContain('scale(1)');
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(layer()).toContain('scale(1.5)');
+    await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(screen.getByRole('button', { name: 'Zoom out' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Reset view' }));
+    expect(layer()).toBe('translate(0 0) scale(1)');
+  });
+
+  test('given zoomable then a drag pans the map and does not select the hexagon under it', () => {
+    const onSelect = vi.fn();
+    const { container } = render(
+      <HexagonalMap data={MOCK_HEX_MAP_DATA} zoomable onSelect={onSelect} />
+    );
+    const svg = container.querySelector('svg')!;
+    const hexagon = container.querySelector('[data-area-id="westminster-north"]')!;
+
+    fireEvent.pointerDown(svg, { pointerId: 1, button: 0, clientX: 10, clientY: 10 });
+    fireEvent.pointerMove(svg, { pointerId: 1, clientX: 40, clientY: 30 });
+    fireEvent.pointerUp(svg, { pointerId: 1, clientX: 40, clientY: 30 });
+    fireEvent.click(hexagon);
+
+    expect(screen.getByTestId('hex-map-zoom-layer')).toHaveAttribute(
+      'transform',
+      'translate(30 20) scale(1)'
+    );
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  test('given zoomed in then a click still selects a hexagon', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { container } = render(
+      <HexagonalMap data={MOCK_HEX_MAP_DATA} zoomable onSelect={onSelect} />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    await user.click(container.querySelector('[data-area-id="belfast-east"]')!);
+
+    expect(onSelect).toHaveBeenCalledWith('belfast-east');
+  });
+
+  test('given zoomable and a selection then the outline keeps its screen width', () => {
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_HEX_MAP_DATA}
+        zoomable
+        selectedId="cardiff-south"
+        onSelect={vi.fn()}
+      />
+    );
+
+    expect(container.querySelector('[data-selected]')).toHaveAttribute(
+      'vector-effect',
+      'non-scaling-stroke'
+    );
+    screen
+      .getByTestId('hex-selection-ring')
+      .querySelectorAll('polygon')
+      .forEach((ring) => expect(ring).toHaveAttribute('vector-effect', 'non-scaling-stroke'));
+  });
+
+  test('given formatColorBarTick then the legend ticks use it, and plain numbers without it', () => {
+    const { container, unmount } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} />);
+    const ticks = () => [...container.querySelectorAll('text')].map((text) => text.textContent);
+    expect(ticks()).not.toContain('£1235');
+    unmount();
+
+    const formatted = render(
+      <HexagonalMap
+        data={MOCK_HEX_MAP_DATA}
+        config={{ formatColorBarTick: (value) => `£${Math.round(value)}` }}
+      />
+    );
+    const labels = [...formatted.container.querySelectorAll('text')].map((t) => t.textContent);
+    expect(labels).toContain('£1235');
+    expect(labels).toContain('£0');
+  });
+});
+
+/** The extent of every hexagon's corners, in SVG units, before any zoom. */
+function hexagonExtent(container: HTMLElement) {
+  const corners = [...container.querySelectorAll('polygon[data-area-id], svg > polygon')].flatMap(
+    (polygon) =>
+      (polygon.getAttribute('points') ?? '')
+        .trim()
+        .split(/\s+/)
+        .map((pair) => pair.split(',').map(Number))
+  );
+  const xs = corners.map(([x]) => x);
+  const ys = corners.map(([, y]) => y);
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  };
+}
+
+describe('zoomAbout', () => {
+  test('given a zoom about a point then that point stays where it is', () => {
+    const view = zoomAbout({ k: 1, x: 0, y: 0 }, 2, 100, 50);
+
+    expect(view).toEqual({ k: 2, x: -100, y: -50 });
+    // The point (100, 50) maps to 100 * 2 - 100 = 100 and 50 * 2 - 50 = 50.
+  });
+
+  test('given a zoom past the limits then it stops at 0.5 and 20', () => {
+    expect(zoomAbout({ k: 1, x: 0, y: 0 }, 100, 0, 0).k).toBe(20);
+    expect(zoomAbout({ k: 1, x: 0, y: 0 }, 0.1, 0, 0).k).toBe(0.5);
+  });
+});
+
+describe('HexagonalMap default view', () => {
+  test('given a centred zoomable map then the default view holds the whole map inside the clip area, centred', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} zoomable centered onSelect={vi.fn()} />
+    );
+    const clip = container.querySelector('clipPath rect')!;
+    const clipWidth = Number(clip.getAttribute('width'));
+    const clipHeight = Number(clip.getAttribute('height'));
+
+    const extent = hexagonExtent(container);
+    expect(screen.getByTestId('hex-map-zoom-layer')).toHaveAttribute(
+      'transform',
+      'translate(0 0) scale(1)'
+    );
+    expect(extent.minX).toBeGreaterThan(0);
+    expect(extent.maxX).toBeLessThan(clipWidth);
+    expect(extent.minY).toBeGreaterThan(0);
+    expect(extent.maxY).toBeLessThan(clipHeight);
+    // Equal margins left and right, and top and bottom.
+    expect(extent.minX).toBeCloseTo(clipWidth - extent.maxX, 5);
+    expect(extent.minY).toBeCloseTo(clipHeight - extent.maxY, 5);
+
+    // Reset view returns to that view after a zoom.
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    await user.click(screen.getByRole('button', { name: 'Reset view' }));
+    expect(screen.getByTestId('hex-map-zoom-layer')).toHaveAttribute(
+      'transform',
+      'translate(0 0) scale(1)'
+    );
+  });
+
+  test('given no centered prop then the map keeps its top-left placement, as in v2', () => {
+    const { container } = render(<HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} />);
+
+    const extent = hexagonExtent(container);
+    // The hexagons' edges start one margin (16) in from the left and top.
+    expect(extent.minX).toBeCloseTo(16, 5);
+    expect(extent.minY).toBeCloseTo(16, 5);
+  });
+});
+
+describe('HexagonalMap frame', () => {
+  test('given a map of a few areas then every hexagon stays inside the frame', () => {
+    // When: three areas, so each hexagon is drawn large
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
 
     // Then
-    const polygons = container.querySelectorAll('polygon');
-    expect(polygons).toHaveLength(4);
+    const extent = hexagonExtent(container);
+    expect(extent.minY).toBeGreaterThanOrEqual(0);
+    expect(extent.maxY).toBeLessThanOrEqual(380);
+    expect(extent.minX).toBeGreaterThanOrEqual(0);
+  });
+
+  test('given a UK-shaped map then every hexagon stays inside the frame', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} onSelect={vi.fn()} />
+    );
+
+    // Then
+    const extent = hexagonExtent(container);
+    expect(extent.minY).toBeGreaterThanOrEqual(0);
+    expect(extent.maxY).toBeLessThanOrEqual(380);
+    expect(extent.minX).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('HexagonalMap fillWidth', () => {
+  test('given fillWidth then the map takes the frame width and the legend ends at the logo inset', () => {
+    // Given a frame 1000 pixels wide
+    const original = window.ResizeObserver;
+    window.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+    const widthSpy = vi
+      .spyOn(SVGElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ width: 1000 } as DOMRect);
+
+    try {
+      // When
+      const { container } = render(
+        <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} zoomable centered fillWidth />
+      );
+
+      // Then
+      const svg = container.querySelector('svg')!;
+      expect(svg.getAttribute('viewBox')).toBe('0 0 1000 380');
+      const bar = container.querySelector('rect[fill^="url(#hex-color-bar"]')!;
+      expect(Number(bar.getAttribute('x'))).toBeGreaterThan(900);
+    } finally {
+      window.ResizeObserver = original;
+      widthSpy.mockRestore();
+    }
+  });
+
+  test('given no fillWidth then the map keeps its fixed 600-unit width, as in v2', () => {
+    const { container } = render(<HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} />);
+
+    expect(container.querySelector('svg')!.getAttribute('viewBox')).toBe('0 0 600 380');
+  });
+});
+
+describe('HexagonalMap missing areas', () => {
+  /** A missing area's hexagon, by its id. */
+  function missingHexagon(container: HTMLElement, id: string): Element | null {
+    return container.querySelector(`[data-missing-area-id="${id}"]`);
+  }
+
+  test('given a missing area then it is drawn in its place, hatched rather than a colour on the scale', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_NORTH_EAST]} />
+    );
+
+    // Then
+    const hexagon = missingHexagon(container, MISSING_NORTH_EAST.id)!;
+    const hatching = container.querySelector('pattern')!;
+    expect(hexagon).toBeInTheDocument();
+    expect(hexagon.getAttribute('fill')).toBe(`url(#${hatching.id})`);
+    expect(container.querySelectorAll('svg polygon')).toHaveLength(4);
+  });
+
+  test('given a missing area then it sits in the row above, beside the area west of it', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then: one column east of North, in North's row
+    const [west, east, north] = ['west', 'east', 'north'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const northEast = missingHexagon(container, MISSING_NORTH_EAST.id)!;
+    expect(centre(northEast)[1]).toBeCloseTo(centre(north)[1], 5);
+    expect(centre(northEast)[0] - centre(north)[0]).toBeCloseTo(
+      centre(east)[0] - centre(west)[0],
+      5
+    );
+  });
+
+  test('given a missing area hovered then its tooltip gives its name and why it has no value', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        missingAreaText={NOT_REPORTED_TEXT}
+      />
+    );
+
+    // When
+    await user.hover(missingHexagon(container, MISSING_NORTH_EAST.id)!);
+
+    // Then
+    expect(screen.getByText(`North East: ${NOT_REPORTED_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given no missing-area text then a missing area reads no data', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_NORTH_EAST]} />
+    );
+
+    // When
+    await user.hover(missingHexagon(container, MISSING_NORTH_EAST.id)!);
+
+    // Then
+    expect(screen.getByText('North East: No data')).toBeInTheDocument();
+  });
+
+  test('given a selectable map then a missing area is not selectable', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={onSelect}
+      />
+    );
+    const hexagon = missingHexagon(container, MISSING_NORTH_EAST.id)!;
+
+    // When
+    await user.click(hexagon);
+
+    // Then
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(hexagon).not.toHaveAttribute('data-area-id');
+  });
+
+  test('given a missing area far from the valued ones then the map fits it in its frame too', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} missingAreas={[MISSING_FAR_EAST]} />
+    );
+
+    // Then
+    const svg = container.querySelector('svg')!;
+    const [, , frameWidth, frameHeight] = svg.getAttribute('viewBox')!.split(' ').map(Number);
+    const hexagons = [...container.querySelectorAll('svg polygon')];
+    const allVertices = hexagons.flatMap(vertices);
+    expect(missingHexagon(container, MISSING_FAR_EAST.id)).toBeInTheDocument();
+    expect(Math.min(...allVertices.map(([vertexX]) => vertexX))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...allVertices.map(([vertexX]) => vertexX))).toBeLessThanOrEqual(frameWidth);
+    expect(Math.min(...allVertices.map(([, vertexY]) => vertexY))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...allVertices.map(([, vertexY]) => vertexY))).toBeLessThanOrEqual(frameHeight);
+  });
+
+  test('given a map as dense as the UK constituency map then the hatching’s stripes are at least 4 pixels apart', () => {
+    // When: hexagons about 4.7 pixels across their radius, whose stripes would otherwise blend into a grey on the scale
+    const { container } = render(
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} missingAreas={[MISSING_UK_SHAPED_AREA]} />
+    );
+
+    // Then
+    const hatching = container.querySelector('pattern')!;
+    expect(Number(hatching.getAttribute('width'))).toBeGreaterThanOrEqual(
+      MIN_MISSING_AREA_STRIPE_PIXELS
+    );
+  });
+
+  test('given a missing area then its edge is grey, unlike the valued hexagons’ edges', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then
+    const valuedEdge = container.querySelector('[data-area-id="west"]')!.getAttribute('stroke');
+    const missingEdge = missingHexagon(container, MISSING_NORTH_EAST.id)!.getAttribute('stroke');
+    expect(missingEdge).toBe(MISSING_AREA_EDGE_COLOR);
+    expect(missingEdge).not.toBe(valuedEdge);
+  });
+
+  test('given a fixed-width map drawn on a phone then the stripes are at least 4 screen pixels apart', () => {
+    // Given: the 600-unit map drawn 375 pixels wide, so one unit is 0.625 pixels
+    const restoreWidth = mockRenderedSvgWidth(PHONE_WIDTH_PIXELS);
+
+    try {
+      // When
+      const { container } = render(
+        <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} missingAreas={[MISSING_UK_SHAPED_AREA]} />
+      );
+
+      // Then
+      expect(stripeSpacingOnScreen(container, PHONE_WIDTH_PIXELS)).toBeGreaterThanOrEqual(
+        MIN_MISSING_AREA_STRIPE_PIXELS
+      );
+    } finally {
+      restoreWidth();
+    }
+  });
+
+  test('given a zoomable map zoomed from 1 to 20 then the stripes keep their spacing on screen', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_UK_SHAPED_HEX_DATA}
+        missingAreas={[MISSING_UK_SHAPED_AREA]}
+        zoomable
+      />
+    );
+    const spacingAtZoomOne = stripeSpacingOnScreen(container, FIXED_MAP_WIDTH);
+
+    // When: eight steps of 1.5 reach the zoom limit, 20
+    for (let step = 0; step < 8; step++) {
+      await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    }
+
+    // Then
+    expect(screen.getByTestId('hex-map-zoom-layer').getAttribute('transform')).toContain(
+      'scale(20)'
+    );
+    expect(stripeSpacingOnScreen(container, FIXED_MAP_WIDTH)).toBeCloseTo(spacingAtZoomOne, 6);
+  });
+
+  test('given no missing areas then the map draws no hatching', () => {
+    // When
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} />);
+
+    // Then
+    expect(container.querySelector('pattern')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-missing-area-id]')).not.toBeInTheDocument();
+  });
+});
+
+describe('HexagonalMap no-data areas', () => {
+  /** A no-data area's hexagon, by its id. */
+  function noDataHexagon(container: HTMLElement, id: string): Element | null {
+    return container.querySelector(`[data-no-data-area-id="${id}"]`);
+  }
+
+  test('given a no-data area then it is drawn in its place with a plain neutral fill, not hatched', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} noDataAreas={[NO_DATA_NORTH_WEST]} />
+    );
+
+    // Then
+    const hexagon = noDataHexagon(container, NO_DATA_NORTH_WEST.id)!;
+    expect(hexagon).toBeInTheDocument();
+    expect(hexagon.getAttribute('fill')).toBe(NO_DATA_AREA_FILL);
+    expect(container.querySelector('pattern')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('svg polygon')).toHaveLength(4);
+  });
+
+  test('given a no-data area beside a missing area then its fill is neither the hatching nor a valued colour', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        noDataAreas={[NO_DATA_NORTH_WEST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then
+    const noDataFill = noDataHexagon(container, NO_DATA_NORTH_WEST.id)!.getAttribute('fill');
+    const hatchedFill = container
+      .querySelector(`[data-missing-area-id="${MISSING_NORTH_EAST.id}"]`)!
+      .getAttribute('fill');
+    const valuedFills = [...container.querySelectorAll('[data-area-id]')].map((hexagon) =>
+      hexagon.getAttribute('fill')
+    );
+    expect(noDataFill).not.toBe(hatchedFill);
+    expect(valuedFills).not.toContain(noDataFill);
+  });
+
+  test('given a no-data area then it sits in the row above, beside the area east of it', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        noDataAreas={[NO_DATA_NORTH_WEST]}
+        onSelect={vi.fn()}
+      />
+    );
+
+    // Then: one column west of North, in North's row
+    const [west, east, north] = ['west', 'east', 'north'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const northWest = noDataHexagon(container, NO_DATA_NORTH_WEST.id)!;
+    expect(centre(northWest)[1]).toBeCloseTo(centre(north)[1], 5);
+    expect(centre(north)[0] - centre(northWest)[0]).toBeCloseTo(
+      centre(east)[0] - centre(west)[0],
+      5
+    );
+  });
+
+  test('given a no-data area hovered then its tooltip reads no data, whatever the missing areas read', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        missingAreas={[MISSING_NORTH_EAST]}
+        missingAreaText={NOT_REPORTED_TEXT}
+        noDataAreas={[NO_DATA_NORTH_WEST]}
+      />
+    );
+
+    // When
+    await user.hover(noDataHexagon(container, NO_DATA_NORTH_WEST.id)!);
+
+    // Then
+    expect(screen.getByText(`${NO_DATA_NORTH_WEST.label}: ${NO_DATA_TEXT}`)).toBeInTheDocument();
+  });
+
+  test('given a selectable map then a no-data area is not selectable', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_TILED_HEX_DATA}
+        noDataAreas={[NO_DATA_NORTH_WEST]}
+        onSelect={onSelect}
+      />
+    );
+    const hexagon = noDataHexagon(container, NO_DATA_NORTH_WEST.id)!;
+
+    // When
+    await user.click(hexagon);
+
+    // Then
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(hexagon).not.toHaveAttribute('data-area-id');
+  });
+
+  test('given a no-data area far from the valued ones then the map fits it in its frame too', () => {
+    // Given: twenty columns east of the valued areas
+    const farEast = { ...MISSING_FAR_EAST, id: 'far-east-no-data' };
+
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} noDataAreas={[farEast]} />
+    );
+
+    // Then
+    const svg = container.querySelector('svg')!;
+    const [, , frameWidth] = svg.getAttribute('viewBox')!.split(' ').map(Number);
+    const allVertices = [...container.querySelectorAll('svg polygon')].flatMap(vertices);
+    expect(noDataHexagon(container, farEast.id)).toBeInTheDocument();
+    expect(Math.max(...allVertices.map(([vertexX]) => vertexX))).toBeLessThanOrEqual(frameWidth);
   });
 });

@@ -1,4 +1,8 @@
 import { vi } from 'vitest';
+import {
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_REGION_CODE,
+} from '@/tests/fixtures/models/regionMocks';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/payloads';
 
@@ -163,3 +167,37 @@ export const ERROR_MESSAGES = {
   MARK_ERROR_FAILED_WITH_STATUS: (id: string, status: number, statusText: string) =>
     `Failed to mark simulation ${id} as error: ${status} ${statusText}`,
 } as const;
+
+// Northern Ireland simulations saved while the Public API listed it as "country/ni"
+
+export const mockLegacyNorthernIrelandSimulationPayload: SimulationCreationPayload = {
+  population_id: LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  population_type: 'geography',
+  policy_id: 1,
+};
+
+export const mockLegacyNorthernIrelandSimulationMetadata: SimulationMetadata = {
+  id: parseInt(SIMULATION_IDS.VALID, 10),
+  country_id: TEST_COUNTRIES.UK,
+  api_version: '1.0.0',
+  population_id: LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  population_type: 'geography',
+  policy_id: '1',
+};
+
+export const mockNorthernIrelandSimulationMetadata: SimulationMetadata = {
+  ...mockLegacyNorthernIrelandSimulationMetadata,
+  population_id: NORTHERN_IRELAND_REGION_CODE,
+};
+
+/** A household simulation whose household ID happens to read like a region code. */
+export const mockHouseholdSimulationMetadataWithRegionLikeId: SimulationMetadata = {
+  ...mockLegacyNorthernIrelandSimulationMetadata,
+  population_type: 'household',
+};
+
+export const mockSimulationResponse = (metadata: SimulationMetadata) => ({
+  status: 'ok',
+  message: null,
+  result: metadata,
+});

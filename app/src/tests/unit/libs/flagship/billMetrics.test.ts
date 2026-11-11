@@ -6,9 +6,28 @@ describe('storedBillMetrics', () => {
   test('given full stored impacts then returns the overview metrics in report form', () => {
     expect(storedBillMetrics(TRACKED_BILL, 'us')).toEqual([
       { value: '$225.5bn', label: 'Annual revenue loss' },
-      { value: '43.5%', label: 'Households gaining' },
+      { value: '43.5%', label: 'People gaining income' },
       { value: '39.9% decrease', label: 'Child poverty · relative change' },
     ]);
+  });
+
+  test('given more people lose than gain then the stored figure is the share losing', () => {
+    expect(
+      storedBillMetrics(
+        {
+          impactData: {
+            winnersLosers: {
+              gainMore5Pct: 0,
+              gainLess5Pct: 0.02,
+              noChange: 0.68,
+              loseLess5Pct: 0.25,
+              loseMore5Pct: 0.05,
+            },
+          },
+        },
+        'us'
+      )
+    ).toEqual([{ value: '30.0%', label: 'People losing income' }]);
   });
 
   test('given only headline impacts then falls back to overall poverty', () => {

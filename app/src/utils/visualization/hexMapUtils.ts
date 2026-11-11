@@ -25,7 +25,9 @@ import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
  * // positioned[2].x === 0 (odd row unchanged)
  * ```
  */
-export function applyHexagonalPositioning(points: HexMapDataPoint[]): HexMapDataPoint[] {
+export function applyHexagonalPositioning<Point extends { x: number; y: number }>(
+  points: Point[]
+): Point[] {
   return points.map((point) => ({
     ...point,
     x: point.y % 2 === 0 ? point.x + 0.5 : point.x,
@@ -77,5 +79,13 @@ export function generateHoverText(
   point: HexMapDataPoint,
   formatValue: (value: number) => string
 ): string {
-  return `${point.label}: ${formatValue(point.value)}`;
+  const text = `${point.label}: ${formatValue(point.value)}`;
+  // An approximate estimate says so, and a value with an interval gives it.
+  const notes = [
+    point.approximate ? 'approximate' : null,
+    typeof point.lower === 'number' && typeof point.upper === 'number'
+      ? `90% range ${formatValue(point.lower)} to ${formatValue(point.upper)}`
+      : null,
+  ].filter((note): note is string => note !== null);
+  return notes.length > 0 ? `${text} (${notes.join('; ')})` : text;
 }

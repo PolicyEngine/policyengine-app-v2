@@ -76,10 +76,11 @@ describe('ReportComputingScreen', () => {
 });
 
 describe('ReportUnresolvable', () => {
-  test('given a local-only link then the page says so and how to get a shareable one', () => {
+  test('given an old link then the page says the report is not found and how to get a link', () => {
     render(<ReportUnresolvable />);
 
-    expect(screen.getByText(/only opens in the browser that ran the report/i)).toBeInTheDocument();
-    expect(screen.getByText(/shareable id/i)).toBeInTheDocument();
+    expect(screen.getByText('Report not found.')).toBeInTheDocument();
+    expect(screen.getByText(/old report link, which no longer opens/i)).toBeInTheDocument();
+    expect(screen.getByText(/run the reform again from build/i)).toBeInTheDocument();
   });
 });

@@ -5,7 +5,9 @@
  * from app load to report output. Uses the browser Performance API to generate
  * marks visible in Chrome DevTools Performance panel (Timings lane).
  *
- * Dev-only tool: disabled in production builds via import.meta.env.DEV.
+ * Dev-only tool: disabled in production builds via import.meta.env.DEV. In
+ * development, calculator-app's CalculatorProviders imports this module, which
+ * exposes it as window.__journeyProfiler.
  */
 
 import { BASE_URL } from '@/constants';
@@ -59,7 +61,7 @@ class JourneyProfiler {
   /**
    * Initialize the journey profiler.
    * Installs the global fetch interceptor and marks app initialization.
-   * Should be called once at app startup (module level in CalculatorApp.tsx).
+   * Should be called once at app startup.
    */
   init(): void {
     if (!this.config.enabled || this.initialized) {

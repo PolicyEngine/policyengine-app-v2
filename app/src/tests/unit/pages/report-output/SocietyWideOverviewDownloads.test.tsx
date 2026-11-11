@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SocietyWideOverview from '@/pages/report-output/SocietyWideOverview';
+import { createMockContextValue } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const { dashboardCardProps, mockUseCongressionalDistrictData } = vi.hoisted(() => ({
@@ -71,28 +72,12 @@ vi.mock('@/utils/formatPowers', () => ({
 }));
 
 function createCongressionalDistrictContextMock() {
-  return {
+  return createMockContextValue({
     reformPolicyId: '96491',
     baselinePolicyId: '2',
     year: '2026',
-    stateResponses: new Map(),
-    completedCount: 0,
-    loadingCount: 0,
-    totalDistrictsLoaded: 0,
-    totalStates: 51,
-    isComplete: false,
-    isLoading: false,
-    hasStarted: false,
-    errorCount: 0,
-    erroredStates: new Set(),
     labelLookup: new Map([['AL-01', "Alabama's 1st congressional district"]]),
-    isStateLevelReport: false,
-    stateCode: null,
-    startFetch: vi.fn(),
-    validateAllLoaded: vi.fn(),
-    getCompletedStates: vi.fn(),
-    getLoadingStates: vi.fn(),
-  };
+  });
 }
 
 describe('SocietyWideOverview chart downloads', () => {

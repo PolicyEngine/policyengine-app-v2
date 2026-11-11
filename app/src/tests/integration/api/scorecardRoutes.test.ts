@@ -47,7 +47,7 @@ describe('published scorecard route', () => {
     expect((await POST(request({ country: 'us', paths: [CTC_PATH] }))).status).toBe(502);
   });
   test('given the flagship is disabled then does not fetch external data', async () => {
-    vi.stubEnv('NEXT_PUBLIC_FLAGSHIP_SHELL', '');
+    vi.stubEnv('NEXT_PUBLIC_FLAGSHIP_SHELL', 'false');
     const fetch = vi.fn();
     vi.stubGlobal('fetch', fetch);
     const { POST } =

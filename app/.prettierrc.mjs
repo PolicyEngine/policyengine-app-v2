@@ -1,5 +1,8 @@
 /** @type {import("@ianvs/prettier-plugin-sort-imports").PrettierConfig} */
 const config = {
+  // Set explicitly so an .editorconfig in a parent folder can't change them.
+  useTabs: false,
+  tabWidth: 2,
   endOfLine: 'lf',
   printWidth: 100,
   singleQuote: true,

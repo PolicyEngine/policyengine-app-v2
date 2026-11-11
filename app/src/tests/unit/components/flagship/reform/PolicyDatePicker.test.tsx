@@ -36,6 +36,55 @@ describe('PolicyDatePicker', () => {
     expect(screen.getByRole('button', { name: 'From: Oct 1, 2030' })).toBeInTheDocument();
   });
 
+  test('given the UK then dates read day first', async () => {
+    const user = userEvent.setup();
+    render(<Harness />, 'uk');
+
+    await user.click(screen.getByRole('button', { name: 'From: 1 Jan 2026' }));
+    await user.selectOptions(screen.getByLabelText('Month'), '3');
+    await user.click(screen.getByRole('button', { name: '6 April 2026' }));
+
+    expect(screen.getByRole('button', { name: 'From: 6 Apr 2026' })).toBeInTheDocument();
+  });
+
+  test('given the US then weeks start on Sunday', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.click(screen.getByRole('button', { name: 'From: Jan 1, 2026' }));
+
+    expect(screen.getAllByText(/^(Su|Mo|Tu|We|Th|Fr|Sa)$/).map((cell) => cell.textContent)).toEqual(
+      ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+    );
+    // January 2026 opens on a Thursday: the grid starts on the Sunday before.
+    expect(screen.getByRole('button', { name: 'December 28, 2025' })).toBeInTheDocument();
+  });
+
+  test('given the UK then weeks start on Monday', async () => {
+    const user = userEvent.setup();
+    render(<Harness />, 'uk');
+
+    await user.click(screen.getByRole('button', { name: 'From: 1 Jan 2026' }));
+
+    expect(screen.getAllByText(/^(Su|Mo|Tu|We|Th|Fr|Sa)$/).map((cell) => cell.textContent)).toEqual(
+      ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+    );
+    expect(screen.getByRole('button', { name: '29 December 2025' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '28 December 2025' })).not.toBeInTheDocument();
+  });
+
+  test('given the UK and a month that opens on a Monday then no earlier week shows', async () => {
+    const user = userEvent.setup();
+    render(<Harness />, 'uk');
+
+    await user.click(screen.getByRole('button', { name: 'From: 1 Jan 2026' }));
+    // June 2026 opens on a Monday.
+    await user.selectOptions(screen.getByLabelText('Month'), '5');
+
+    expect(screen.getByRole('button', { name: '1 June 2026' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '31 May 2026' })).not.toBeInTheDocument();
+  });
+
   test('given a preset then it is chosen in one click', async () => {
     const user = userEvent.setup();
     render(<Harness />);

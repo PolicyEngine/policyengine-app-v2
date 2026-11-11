@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import {
   Area,
@@ -35,6 +35,8 @@ import {
   getClampedChartHeight,
   getNiceTicks,
   getYAxisLayout,
+  householdChartLabelDx,
+  householdChartLegendProps,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
@@ -55,9 +57,46 @@ interface Props {
   households?: HouseholdCalculationOutput[];
   baselineVariation?: HouseholdCalculationOutput | null;
   reformVariation?: HouseholdCalculationOutput | null;
+  /** What shows while the variation calculates; a spinner and a line by default. */
+  renderLoading?: () => ReactNode;
+  /** Leave out the SPM methodology footnote under the chart; shown by default. */
+  hideSpmFootnote?: boolean;
+  /** Name the country's currency in the explainer ("next pound" in the UK); "dollar" by default. */
+  currencyAwareText?: boolean;
+  /**
+   * Tidy the chart (the v3 report): the legend above the plot on the right,
+   * in the ticks' size, the axis title closer, and the rate axis fitted to
+   * the rates shown (0% always in view). The v2 report keeps -200% to 200%.
+   */
+  tidyChart?: boolean;
 }
 
 type ViewMode = 'both' | 'difference';
+
+/**
+ * Rate ticks that fit the rates shown, with a little room above and below,
+ * and 0% always in view. The rates are already clipped to -200% to 200%.
+ */
+export function fittedRateTicks(rows: { baseline: number; reform?: number }[]): number[] {
+  const rates = rows.flatMap((row) =>
+    row.reform === undefined ? [row.baseline] : [row.baseline, row.reform]
+  );
+  const low = Math.min(0, ...rates);
+  const high = Math.max(0, ...rates);
+  const pad = (high - low || 1) * 0.05;
+  // Rates all at 0% still get an axis above it.
+  const top = high > 0 || low === 0 ? high + pad : 0;
+  return getNiceTicks([low < 0 ? low - pad : 0, top]);
+}
+
+/**
+ * The line above the chart. It says "dollar" unless the caller opts in
+ * to the country's currency, which names the pound for the UK.
+ */
+export function marginalTaxRateExplainer(countryId: string, currencyAware = false): string {
+  const unit = currencyAware && countryId === 'uk' ? 'pound' : 'dollar';
+  return `Marginal tax rates show the percentage of the next ${unit} earned that goes to taxes. Values are clipped to the range -200% to +200% for display purposes.`;
+}
 function MTRTooltip({ active, payload, label, symbol }: any) {
   if (!active || !payload?.length) {
     return null;
@@ -94,6 +133,10 @@ export default function MarginalTaxRatesSubPage({
   households: _households,
   baselineVariation: providedBaselineVariation = null,
   reformVariation: providedReformVariation = null,
+  renderLoading,
+  hideSpmFootnote = false,
+  currencyAwareText = false,
+  tidyChart = false,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
@@ -225,7 +268,7 @@ export default function MarginalTaxRatesSubPage({
             metadata
           )
         : null;
-    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings, countryId);
+    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings);
     const xValues = buildHouseholdVariationEarningsAxis(maxEarnings);
     const currentIndex = getHouseholdVariationIndexForEarnings(currentEarnings, maxEarnings);
     const mtrDifference = reformMTRClipped
@@ -255,19 +298,19 @@ export default function MarginalTaxRatesSubPage({
       diffTicks: getNiceTicks([Math.min(0, ...diffValues), Math.max(0, ...diffValues)]),
       maxEarnings,
       mtrDifference,
-      mtrTicks: getNiceTicks([-2, 2]),
+      mtrTicks: tidyChart ? fittedRateTicks(chartData) : getNiceTicks([-2, 2]),
       reformMTRClipped,
       xTicks: getNiceTicks([0, maxEarnings]),
     };
   }, [
     baseline,
-    countryId,
     metadata,
     normalizedReportYear,
     reform,
     reportYear,
     resolvedBaselineVariation,
     resolvedReformVariation,
+    tidyChart,
   ]);
 
   const isLoading = shouldFetchInternally && (baselineLoading || (reform && reformLoading));
@@ -289,6 +332,9 @@ export default function MarginalTaxRatesSubPage({
   }
 
   if (isLoading) {
+    if (renderLoading) {
+      return <>{renderLoading()}</>;
+    }
     return (
       <Group className="tw:gap-sm tw:items-center">
         <Spinner size="sm" />
@@ -353,7 +399,11 @@ export default function MarginalTaxRatesSubPage({
               />
             </XAxis>
             <YAxis
-              domain={[-2, 2]}
+              domain={
+                tidyChart
+                  ? [chartSeries.mtrTicks[0], chartSeries.mtrTicks[chartSeries.mtrTicks.length - 1]]
+                  : [-2, 2]
+              }
               ticks={chartSeries.mtrTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={formatMTRTick}
@@ -363,12 +413,12 @@ export default function MarginalTaxRatesSubPage({
                 value="Marginal tax rate"
                 angle={-90}
                 position="center"
-                dx={mtrYAxis.labelDx}
+                dx={householdChartLabelDx(mtrYAxis.labelDx, tidyChart)}
                 style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
               />
             </YAxis>
             <Tooltip content={<MTRTooltip symbol={symbol} />} />
-            <Legend verticalAlign="top" align="left" />
+            <Legend {...householdChartLegendProps(tidyChart)} />
             <Line
               type="monotone"
               dataKey="baseline"
@@ -449,7 +499,7 @@ export default function MarginalTaxRatesSubPage({
               value="Change in marginal tax rate"
               angle={-90}
               position="center"
-              dx={diffYAxis.labelDx}
+              dx={householdChartLabelDx(diffYAxis.labelDx, tidyChart)}
               style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
             />
           </YAxis>
@@ -471,8 +521,7 @@ export default function MarginalTaxRatesSubPage({
   return (
     <Stack gap="lg">
       <Text size="sm" c="dimmed">
-        Marginal tax rates show the percentage of the next dollar earned that goes to taxes. Values
-        are clipped to the range -200% to +200% for display purposes.
+        {marginalTaxRateExplainer(countryId, currencyAwareText)}
       </Text>
 
       {reform && (
@@ -494,10 +543,12 @@ export default function MarginalTaxRatesSubPage({
         {renderChart()}
         <ChartWatermark />
       </div>
-      <SPMMethodologyFootnote
-        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
-        context="variation"
-      />
+      {!hideSpmFootnote && (
+        <SPMMethodologyFootnote
+          output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+          context="variation"
+        />
+      )}
     </Stack>
   );
 }

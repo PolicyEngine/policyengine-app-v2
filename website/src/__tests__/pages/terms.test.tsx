@@ -91,7 +91,7 @@ describe("terms page licensing", () => {
       }),
     ).toHaveAttribute(
       "href",
-      "https://github.com/PolicyEngine/policyengine-app-v2/commits/main/app/src/pages/Terms.page.tsx",
+      "https://github.com/PolicyEngine/policyengine-app-v2/commits/28f1cb8f79071a4bbf825678411c4e8969262ae7/app/src/pages/Terms.page.tsx",
     );
     expect(
       screen.getByRole("link", { name: "policyengine-app repository" }),

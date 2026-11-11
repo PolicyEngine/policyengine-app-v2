@@ -1,10 +1,10 @@
 "use client";
-import { useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
-import { DatePicker } from './date-picker';
+import { useState } from "react";
+import type { Meta, StoryObj } from "@storybook/react";
+import { DatePicker } from "./date-picker";
 
 const meta: Meta<typeof DatePicker> = {
-  title: 'UI/DatePicker',
+  title: "UI/DatePicker",
   component: DatePicker,
   decorators: [
     (Story) => (

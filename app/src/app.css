@@ -1,5 +1,22 @@
 @import 'tailwindcss' prefix(tw);
 
+/* A short fade for content that swaps in place: a chart's mode, a report tab. */
+@keyframes pe-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility fade-in-soft {
+  animation: pe-fade-in 180ms ease-out;
+}
+
 @theme {
   /* Primary brand colors - teal */
   --color-primary-50: #e6fffa;

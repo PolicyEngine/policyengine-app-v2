@@ -1,71 +1,27 @@
-"use client";
-
-import { use, useEffect, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalculatorProviders } from "./providers";
-import { CountryProvider } from "@/contexts/CountryContext";
-import { LocationProvider } from "@/contexts/LocationContext";
-import { NavigationProvider } from "@/contexts/NavigationContext";
-import { countryIds, type CountryId } from "@/libs/countries";
+import { notFound } from "next/navigation";
+import { isCountryId } from "@/libs/countries";
+import { CountryShell } from "./CountryShell";
 
 /**
  * Layout for extracted Next.js pages under /:countryId/*.
- * Provides CountryContext, NavigationContext, and LocationContext
- * so shared components work identically in both router contexts.
- * This comment exists to force calculator-next redeploys when needed.
- * This line is a no-op touch for the calculator-app Vercel project.
- * This additional comment exists only to retrigger calculator-next deployment.
- * This comment-only change is here to keep calculator-next preview deploys in sync.
- * This extra no-op comment is another forced touch for calculator-next previews.
+ *
+ * Runs on the server so that a first path segment which is not a supported
+ * country (a stray file name such as /llms.txt, or a country the calculator
+ * does not serve) is an HTTP 404 rendered by app/not-found.tsx, rather than
+ * a 200 calculator shell that redirects in the browser.
  */
-export default function CountryLayout({
+export default async function CountryLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: Promise<{ countryId: string }>;
 }) {
-  const { countryId } = use(params);
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const isValid = countryIds.includes(countryId as CountryId);
+  const { countryId } = await params;
 
-  const navValue = useMemo(
-    () => ({
-      push: (path: string) => router.push(path),
-      replace: (path: string) => router.replace(path),
-      back: () => router.back(),
-      prefetch: (path: string) => router.prefetch(path),
-    }),
-    [router],
-  );
-
-  const locationValue = useMemo(
-    () => ({
-      pathname,
-      search: searchParams.toString() ? `?${searchParams.toString()}` : "",
-    }),
-    [pathname, searchParams],
-  );
-
-  useEffect(() => {
-    if (!isValid) {
-      router.replace("/");
-    }
-  }, [isValid, router]);
-
-  if (!isValid) {
-    return null;
+  if (!isCountryId(countryId)) {
+    notFound();
   }
 
-  return (
-    <CountryProvider value={countryId as CountryId}>
-      <NavigationProvider value={navValue}>
-        <LocationProvider value={locationValue}>
-          <CalculatorProviders>{children}</CalculatorProviders>
-        </LocationProvider>
-      </NavigationProvider>
-    </CountryProvider>
-  );
+  return <CountryShell countryId={countryId}>{children}</CountryShell>;
 }

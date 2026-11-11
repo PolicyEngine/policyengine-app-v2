@@ -1,10 +1,10 @@
 /**
- * Server-side gate for flagship API routes. The flagship shell ships
- * dark; its routes must not exist on deployments where the flag is off,
- * so production exposes no new surface until go-live flips the env.
+ * Server-side gate for flagship API routes. They are on with the flagship
+ * shell, the default; a deployment that sets the flag to "false" (back to
+ * the v2 app) exposes none of them.
  */
 export function isFlagshipApiEnabled(): boolean {
-  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL === 'true';
+  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL !== 'false';
 }
 
 /** 404 response for flagship routes on flag-off deployments. */

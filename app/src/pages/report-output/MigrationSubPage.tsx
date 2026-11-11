@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import {
+  hasConstituencyImpacts,
+  hasLocalAuthorityImpacts,
+} from '@/adapters/societyWideOutputNormalizer';
+import { ukLocalAreaBreakdownRequest } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import UKLocalAreaComputePanel, {
+  UKLocalAreaComputeButton,
+} from '@/components/report/UKLocalAreaComputePanel';
 import {
   Collapsible,
   CollapsibleContent,
@@ -9,9 +17,11 @@ import {
   Stack,
   Text,
 } from '@/components/ui';
+import { congressionalDistrictScope } from '@/contexts/congressional-district/utils';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUKLocalAreaOutput } from '@/hooks/useUKLocalAreaOutput';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -113,13 +123,72 @@ export function canShowCongressionalDistrictImpactCard({
   if (countryId !== 'us' || !reformPolicyId || !baselinePolicyId || !year) {
     return false;
   }
+  return congressionalDistrictScope(region) !== null;
+}
 
-  if (!region) {
-    return true;
-  }
+/**
+ * The UK constituency and local authority sections. A result that holds
+ * its area impacts (an older saved report), or comes from a release before
+ * .py 6.10.0, shows what it holds. One without them (.py 6.10.0 on) puts
+ * the compute button in each opened section's header:
+ * a click in either sends the report's one breakdown request, both
+ * sections show its progress, and both show the maps when it completes.
+ */
+function UKLocalAreaSections({
+  output,
+  report,
+  simulations,
+}: {
+  output: SocietyWideReportOutput;
+  report?: Report;
+  simulations?: Simulation[];
+}) {
+  const request = ukLocalAreaBreakdownRequest({ report, simulations });
+  const { canCompute, breakdown, areaOutput, withheld } = useUKLocalAreaOutput(output, request);
+  // Each section decides on its own level: a missing level offers the
+  // breakdown when the result's release serves one. Otherwise the section
+  // shows its subpage as before.
+  const shownOutput = areaOutput ?? output;
+  const offerConstituencies = canCompute && !hasConstituencyImpacts(shownOutput);
+  const offerLocalAuthorities = canCompute && !hasLocalAuthorityImpacts(shownOutput);
+  const computeButton = <UKLocalAreaComputeButton breakdown={breakdown} />;
+  const computePanel = <UKLocalAreaComputePanel breakdown={breakdown} showStartButton={false} />;
 
-  const normalizedRegion = region.toLowerCase();
-  return normalizedRegion === 'us' || normalizedRegion.startsWith('state/');
+  return (
+    <>
+      <CollapsibleSection
+        label="Constituency impact"
+        defaultOpen={false}
+        right={offerConstituencies ? computeButton : undefined}
+      >
+        {offerConstituencies ? (
+          computePanel
+        ) : (
+          <ConstituencySubPage
+            output={shownOutput}
+            withheld={withheld?.constituency}
+            region={request?.region}
+          />
+        )}
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        label="Local authority impact"
+        defaultOpen={false}
+        right={offerLocalAuthorities ? computeButton : undefined}
+      >
+        {offerLocalAuthorities ? (
+          computePanel
+        ) : (
+          <LocalAuthoritySubPage
+            output={shownOutput}
+            withheld={withheld?.local_authority}
+            region={request?.region}
+          />
+        )}
+      </CollapsibleSection>
+    </>
+  );
 }
 
 export default function MigrationSubPage({
@@ -182,15 +251,7 @@ export default function MigrationSubPage({
       )}
 
       {showUKGeographySections && (
-        <>
-          <CollapsibleSection label="Constituency impact" defaultOpen={false}>
-            <ConstituencySubPage output={output} />
-          </CollapsibleSection>
-
-          <CollapsibleSection label="Local authority impact" defaultOpen={false}>
-            <LocalAuthoritySubPage output={output} />
-          </CollapsibleSection>
-        </>
+        <UKLocalAreaSections output={output} report={report} simulations={simulations} />
       )}
     </>
   );

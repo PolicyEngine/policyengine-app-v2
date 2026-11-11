@@ -3,8 +3,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
+import { LocalAuthoritySubPage } from '@/pages/report-output/LocalAuthoritySubPage';
 import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReportOutput';
 import { mockUSReportOutput } from '@/tests/fixtures/api/societyWideMocks';
+import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import {
   MOCK_CALC_STATUS_COMPLETE,
   MOCK_CALC_STATUS_ERROR,
@@ -19,6 +22,11 @@ import {
   MOCK_SIMULATION_REFORM,
   MOCK_USER_POLICY,
 } from '@/tests/fixtures/pages/report-output/SocietyWideReportOutput';
+import {
+  V2_UK_LOCAL_AREA_REQUEST_PROPS,
+  V2_UK_REPORT,
+  v2UKSimulations,
+} from '@/tests/fixtures/pages/report-output/ukLocalAreaBreakdownPageMocks';
 
 // Mock hooks
 vi.mock('@/hooks/useCalculationStatus');
@@ -59,6 +67,14 @@ vi.mock('@/pages/report-output/PopulationSubPage', () => ({
 
 vi.mock('@/pages/report-output/DynamicsSubPage', () => ({
   default: vi.fn(() => <div data-testid="dynamics-page">Dynamics</div>),
+}));
+
+vi.mock('@/pages/report-output/ConstituencySubPage', () => ({
+  ConstituencySubPage: vi.fn(() => <div data-testid="constituency-page" />),
+}));
+
+vi.mock('@/pages/report-output/LocalAuthoritySubPage', () => ({
+  LocalAuthoritySubPage: vi.fn(() => <div data-testid="local-authority-page" />),
 }));
 
 const mockUseCalculationStatus = useCalculationStatus as ReturnType<typeof vi.fn>;
@@ -404,4 +420,35 @@ describe('SocietyWideReportOutput', () => {
       })
     );
   });
+
+  test.each([
+    ['constituency', ConstituencySubPage],
+    ['local-authority', LocalAuthoritySubPage],
+  ])(
+    'given a UK report on the %s tab then the tab gets the report policies, region and year',
+    (subpage, SubPage) => {
+      // Given
+      mockUseCalculationStatus.mockReturnValue({
+        ...MOCK_CALC_STATUS_COMPLETE,
+        result: NATIONAL_OUTPUT_WITHOUT_AREAS,
+      });
+
+      // When
+      render(
+        <SocietyWideReportOutput
+          reportId={V2_UK_REPORT.id!}
+          subpage={subpage}
+          report={V2_UK_REPORT}
+          simulations={v2UKSimulations()}
+        />,
+        'uk'
+      );
+
+      // Then
+      expect(vi.mocked(SubPage).mock.lastCall?.[0]).toMatchObject({
+        output: NATIONAL_OUTPUT_WITHOUT_AREAS,
+        ...V2_UK_LOCAL_AREA_REQUEST_PROPS,
+      });
+    }
+  );
 });

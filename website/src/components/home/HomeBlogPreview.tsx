@@ -7,6 +7,7 @@ import { formatPostDate } from "@/lib/postDate";
 import { cn } from "@/lib/utils";
 import { colors, spacing, typography } from "@/designTokens";
 import {
+  getResearchItemKey,
   getResearchItems,
   type ResearchItem,
 } from "@/data/posts/postTransformers";
@@ -89,7 +90,6 @@ function PrimaryCard({ item, countryId, flex }: PrimaryCardProps) {
           "tw:rounded-feature tw:overflow-hidden tw:bg-white tw:border tw:border-border-light",
           "tw:transition-all tw:duration-300 tw:ease-out",
           "tw:hover:shadow-[0_8px_30px_rgba(16,24,40,0.1)] tw:hover:-translate-y-0.5",
-          "tw:focus-within:shadow-[0_0_0_2px_var(--color-primary-500)] tw:focus-within:outline-none",
         )}
       >
         {imageUrl && (
@@ -154,7 +154,6 @@ function SecondaryCard({ item, countryId }: SecondaryCardProps) {
           "tw:rounded-feature tw:overflow-hidden tw:bg-white tw:border tw:border-border-light",
           "tw:transition-all tw:duration-300 tw:ease-out",
           "tw:hover:shadow-[0_6px_24px_rgba(16,24,40,0.1)] tw:hover:-translate-y-0.5",
-          "tw:focus-within:shadow-[0_0_0_2px_var(--color-primary-500)] tw:focus-within:outline-none",
         )}
       >
         {imageUrl && (
@@ -263,7 +262,7 @@ export default function HomeBlogPreview({ countryId }: { countryId: string }) {
           <div className="tw:flex tw:flex-col" style={{ gap: spacing["2xl"] }}>
             {leftItems.map((item) => (
               <PrimaryCard
-                key={`${item.isApp ? "app" : "post"}-${item.slug}`}
+                key={getResearchItemKey(item)}
                 item={item}
                 countryId={countryId}
                 flex={1}
@@ -275,7 +274,7 @@ export default function HomeBlogPreview({ countryId }: { countryId: string }) {
           <div className="tw:flex tw:flex-col" style={{ gap: spacing["2xl"] }}>
             {rightItems.map((item) => (
               <SecondaryCard
-                key={`${item.isApp ? "app" : "post"}-${item.slug}`}
+                key={getResearchItemKey(item)}
                 item={item}
                 countryId={countryId}
               />

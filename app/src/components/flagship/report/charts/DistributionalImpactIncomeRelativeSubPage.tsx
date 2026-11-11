@@ -13,31 +13,43 @@ import {
 } from 'recharts';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
-import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import { ChartWatermark, ImpactTooltip } from '@/components/charts';
 import ChartExplanation from '@/components/flagship/report/ChartExplanation';
+import {
+  fitAxisTitle,
+  fixedPlotHeight,
+  getValueBarLayout,
+  tickDecimals,
+} from '@/components/flagship/report/charts/barLayout';
+import { ReportBarLabel } from '@/components/flagship/report/charts/ReportBarLabel';
+import { usePlotSize } from '@/components/flagship/report/charts/usePlotSize';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
-import { getDecileRelativeCsvRows } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
+import { tooltipText } from '@/libs/flagship/tooltipText';
+import {
+  getDecileRelativeCsvRows,
+  type DecileBreakdown,
+} from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import {
-  getClampedChartHeight,
-  getNiceTicks,
-  getYAxisLayout,
-  RECHARTS_FONT_STYLE,
-} from '@/utils/chartUtils';
+import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+
+/** Margins around the plot; value labels stay inside it, so the top needs little. */
+const CHART_MARGIN = { top: 12, right: 20, bottom: 30 };
 
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
   compact?: boolean;
+  /** Households ranked by wealth rather than income: the UK's wealth deciles. */
+  breakdown?: DecileBreakdown;
 }
 
 export default function DistributionalImpactIncomeRelativeSubPage({
@@ -45,6 +57,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   chartHeight: chartHeightProp,
   fillHeight = false,
   compact = false,
+  breakdown = 'income',
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -53,7 +66,8 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data - object with keys "1", "2", ..., "10"
-  const decileRelative = output.decile.relative;
+  const wealth = breakdown === 'wealth';
+  const decileRelative = (wealth ? output.wealth_decile?.relative : output.decile.relative) ?? {};
 
   // Convert to arrays for plotting
   const xArray = Object.keys(decileRelative);
@@ -70,7 +84,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
 
   // Generate hover message
   const hoverMessage = (x: string, y: number) => {
-    const obj = `the income of households in the ${ordinal(Number(x))} decile`;
+    const obj = `the income of households in the ${ordinal(Number(x))}${wealth ? ' wealth' : ''} decile`;
     return relativeChangeMessage('This reform', obj, y, 0.001, countryId);
   };
 
@@ -96,19 +110,38 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   const chartData = xArray.map((x, i) => ({
     name: x,
     value: yArray[i],
-    label: (yArray[i] >= 0 ? '+' : '') + formatPer(yArray[i]),
-    hoverText: hoverMessage(x, yArray[i]),
+    label: (yArray[i] > 0 ? '+' : '') + formatPer(yArray[i]),
+    hoverText: tooltipText(hoverMessage(x, yArray[i])),
   }));
 
-  const values = chartData.map((d) => d.value);
-  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
-  const yTicks = getNiceTicks(yDomain);
+  const { plotWidth, plotHeight, probe } = usePlotSize(
+    fillHeight ? undefined : fixedPlotHeight(chartHeight, CHART_MARGIN)
+  );
+  const layout = getValueBarLayout(
+    chartData.map((d) => d.value),
+    chartData.map((d) => d.label),
+    { width: plotWidth, height: plotHeight }
+  );
+  const { domain: yDomain, ticks: yTicks } = layout;
 
-  const yTickFormatter = (v: number) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`;
-  const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
+  // Enough decimals that a 0.25% step does not read as 0.3%.
+  const tickDigits = Math.max(1, tickDecimals(yTicks.map((v) => v * 100)));
+  const yTickFormatter = (v: number) => `${v > 0 ? '+' : ''}${(v * 100).toFixed(tickDigits)}%`;
+  const axisTitle = fitAxisTitle(
+    compact
+      ? ['Income change (%)', 'Change (%)']
+      : ['Relative change in household income', 'Income change (%)', 'Change (%)'],
+    plotHeight
+  );
+  const yAxis = getYAxisLayout(yTicks, !!axisTitle, yTickFormatter);
 
   // Description text
-  const description = (
+  const description = wealth ? (
+    <Text size="sm" c="dimmed">
+      PolicyEngine reports net income as the income a household takes home in a year, after taxes
+      and transfers. Wealth deciles contain an equal number of people (ranked by wealth).
+    </Text>
+  ) : (
     <Text size="sm" c="dimmed">
       PolicyEngine sorts households into ten equally-populated groups according to their baseline{' '}
       {countryId === 'uk' ? 'equivalised' : 'equivalized'} household net income.
@@ -116,30 +149,42 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   );
 
   const barChart = (
-    <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: yAxis.marginLeft }}>
-      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+    <BarChart data={chartData} margin={{ ...CHART_MARGIN, left: yAxis.marginLeft }}>
+      {probe}
+      <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
       <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} tickLine={false}>
-        <Label value="Income decile" position="bottom" offset={10} style={RECHARTS_FONT_STYLE} />
+        <Label
+          value={wealth ? 'Wealth decile' : 'Income decile'}
+          position="bottom"
+          offset={10}
+          style={RECHARTS_FONT_STYLE}
+        />
       </XAxis>
       <YAxis
         ticks={yTicks}
-        domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+        domain={yDomain}
         tick={RECHARTS_FONT_STYLE}
         tickLine={false}
         tickFormatter={yTickFormatter}
         width={yAxis.yAxisWidth}
       >
-        <Label
-          value={compact ? 'Income change (%)' : 'Relative change in household income'}
-          angle={-90}
-          position="center"
-          dx={yAxis.labelDx}
-          style={{ ...RECHARTS_FONT_STYLE, textAnchor: 'middle' }}
-        />
+        {axisTitle && (
+          <Label
+            value={axisTitle}
+            angle={-90}
+            position="center"
+            dx={yAxis.labelDx}
+            style={{ ...RECHARTS_FONT_STYLE, textAnchor: 'middle' }}
+          />
+        )}
       </YAxis>
       <ReferenceLine y={0} stroke={colors.gray[600]} strokeWidth={1} />
       <Tooltip content={<ImpactTooltip />} />
-      <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />} isAnimationActive={false}>
+      <Bar
+        dataKey="value"
+        label={<ReportBarLabel data={chartData} layout={layout} />}
+        isAnimationActive={false}
+      >
         {chartData.map((entry, index) => (
           <Cell key={index} fill={entry.value < 0 ? colors.gray[600] : colors.primary[500]} />
         ))}
@@ -166,9 +211,9 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   return (
     <ChartContainer
       title={getChartTitle()}
-      downloadFilename="distributional-impact-income-relative.svg"
-      csvFilename="distributional-impact-income-relative.csv"
-      csvData={getDecileRelativeCsvRows(output)}
+      downloadFilename={`distributional-impact-${breakdown}-relative.svg`}
+      csvFilename={`distributional-impact-${breakdown}-relative.csv`}
+      csvData={getDecileRelativeCsvRows(output, breakdown)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

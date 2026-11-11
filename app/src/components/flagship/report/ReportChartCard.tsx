@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { IconArrowsMaximize, IconDownload } from '@tabler/icons-react';
 import {
   Button,
@@ -30,6 +30,11 @@ interface ReportChartCardProps {
   csvData?: CsvData;
   /** CSV download filename; renders a CSV download button when csvData is provided. */
   csvFilename?: string;
+  /**
+   * Why the CSV cannot be downloaded yet (its labels are loading, or failed
+   * to): the button shows, disabled, with this as its tooltip.
+   */
+  csvUnavailableReason?: string;
 }
 
 /**
@@ -46,6 +51,7 @@ export default function ReportChartCard({
   downloadFilename,
   csvData,
   csvFilename,
+  csvUnavailableReason,
 }: ReportChartCardProps) {
   const [focused, setFocused] = useState(false);
   const chart = (enlarged: boolean) => (
@@ -54,6 +60,7 @@ export default function ReportChartCard({
       downloadFilename={downloadFilename}
       csvFilename={csvFilename}
       csvData={csvData}
+      csvUnavailableReason={csvUnavailableReason}
       headerActions={
         !enlarged && (
           <Tooltip>
@@ -79,22 +86,40 @@ export default function ReportChartCard({
           {controls}
         </div>
       )}
-      <div
-        style={{
-          height: enlarged
-            ? `min(55dvh, ${focusedChartHeight}px)`
-            : fullWidth
-              ? '280px'
-              : 'clamp(210px, calc((100vh - 620px) / 2), 280px)',
-          minWidth: 0,
-        }}
-      >
-        {enlarged ? (focusedContent ?? children) : children}
-      </div>
+      {enlarged ? (
+        <div style={{ height: `min(55dvh, ${focusedChartHeight}px)`, minWidth: 0 }}>
+          {focusedContent ?? children}
+        </div>
+      ) : (
+        // In the grid, the chart grows into the height its row leaves beyond
+        // this minimum, so cards side by side end at the same height. It sits
+        // in an absolutely positioned box so its measured size never adds to
+        // the row's height, which would keep the row tall after a resize.
+        <div
+          style={{
+            position: 'relative',
+            flex: '1 1 auto',
+            minHeight: fullWidth ? '280px' : 'clamp(210px, calc((100vh - 620px) / 2), 280px)',
+            minWidth: 0,
+          }}
+        >
+          <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}>
+            {children}
+          </div>
+        </div>
+      )}
     </ChartFrame>
   );
   return (
-    <section style={{ minWidth: 0, gridColumn: fullWidth ? '1 / -1' : undefined }}>
+    <section
+      style={{
+        minWidth: 0,
+        gridColumn: fullWidth ? '1 / -1' : undefined,
+        // The grid stretches each card to its row's height; the frame fills it.
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {chart(false)}
       <Dialog open={focused} onOpenChange={setFocused}>
         <DialogContent
@@ -123,6 +148,7 @@ function ChartFrame({
   downloadFilename,
   csvData,
   csvFilename,
+  csvUnavailableReason,
 }: {
   children: ReactNode;
   headerActions?: ReactNode;
@@ -130,12 +156,16 @@ function ChartFrame({
   downloadFilename?: string;
   csvData?: CsvData;
   csvFilename?: string;
+  csvUnavailableReason?: string;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const hasCsvDownload = !!csvFilename && !!csvData;
+  const csvReasonId = useId();
+  const csvUnavailable = !!csvFilename && !!csvUnavailableReason;
+  const hasCsvDownload = !!csvFilename && (!!csvData || csvUnavailable);
 
   return (
-    <Stack gap="sm">
+    // Fills the card, so the bordered body below can take the rest of its height.
+    <Stack gap="sm" className="tw:flex-1">
       <Group justify="space-between" align="start" wrap="nowrap">
         <Text size="lg" fw={typography.fontWeight.medium} className="tw:flex-1 tw:break-words">
           {title}
@@ -145,20 +175,34 @@ function ChartFrame({
           {hasCsvDownload && (
             <Tooltip>
               <TooltipTrigger asChild>
+                {/* While unavailable it stays focusable (aria-disabled, not disabled), so its
+                    tooltip opens, and the reason is also its description. */}
                 <Button
                   variant="ghost"
                   size="icon"
                   className="tw:shrink-0"
+                  aria-disabled={csvUnavailable || undefined}
+                  aria-describedby={csvUnavailable ? csvReasonId : undefined}
                   onClick={() => {
+                    if (csvUnavailable) {
+                      return;
+                    }
                     trackChartCsvDownloaded();
                     downloadCsv(csvData!, csvFilename!);
                   }}
                   aria-label="Download CSV"
                 >
                   <IconDownload size={18} />
+                  {csvUnavailable && (
+                    <span id={csvReasonId} className="tw:sr-only">
+                      {csvUnavailableReason}
+                    </span>
+                  )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left">Download CSV</TooltipContent>
+              <TooltipContent side="left">
+                {csvUnavailable ? csvUnavailableReason : 'Download CSV'}
+              </TooltipContent>
             </Tooltip>
           )}
           {downloadFilename && (
@@ -190,7 +234,7 @@ function ChartFrame({
 
       <div
         ref={contentRef}
-        className="tw:p-md tw:border tw:border-border-light tw:rounded-container tw:bg-white"
+        className="tw:flex tw:flex-1 tw:flex-col tw:p-md tw:border tw:border-border-light tw:rounded-container tw:bg-white"
       >
         {children}
       </div>

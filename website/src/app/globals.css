@@ -1,4 +1,4 @@
-@import 'tailwindcss' prefix(tw);
+@import "tailwindcss" prefix(tw);
 @import "@policyengine/ui-kit/styles.css";
 
 @theme {
@@ -83,8 +83,9 @@
   --color-ring: #319795;
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
 
   --font-size-xs: 12px;
   --font-size-sm: 14px;
@@ -166,7 +167,7 @@
     width: 100%;
   }
 
-  [data-slot='table-container'],
+  [data-slot="table-container"],
   tr {
     background-color: var(--tw-color-bg-primary);
   }
@@ -185,13 +186,13 @@
     background-color: var(--tw-color-bg-primary);
   }
 
-  input[type='number']::-webkit-inner-spin-button,
-  input[type='number']::-webkit-outer-spin-button {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
 
-  input[type='number'] {
+  input[type="number"] {
     -moz-appearance: textfield;
   }
 }

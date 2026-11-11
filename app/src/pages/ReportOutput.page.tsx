@@ -350,10 +350,3 @@ export default function ReportOutputPage({
 export function isUSSocietyWideOutput(output: SocietyWideOutput): boolean {
   return 'poverty_by_race' in output && output.poverty_by_race !== null;
 }
-
-/**
- * Type guard to check if society-wide output is UK-specific
- */
-export function isUKSocietyWideOutput(output: SocietyWideOutput): boolean {
-  return 'constituency_impact' in output && output.constituency_impact !== null;
-}

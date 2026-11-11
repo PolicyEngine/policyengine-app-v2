@@ -1,5 +1,9 @@
 import { vi } from 'vitest';
-import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
+import {
+  EconomyCalculationError,
+  SocietyWideCalculationResponse,
+} from '@/api/societyWideCalculation';
+import { CURRENT_YEAR } from '@/constants';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test IDs and constants
@@ -23,9 +27,14 @@ export const TEST_REGIONS = {
 
 export const HTTP_STATUS = {
   OK: 200,
+  NO_CONTENT: 204,
   BAD_REQUEST: 400,
   NOT_FOUND: 404,
+  METHOD_NOT_ALLOWED: 405,
+  CONFLICT: 409,
   INTERNAL_SERVER_ERROR: 500,
+  BAD_GATEWAY: 502,
+  SERVICE_UNAVAILABLE: 503,
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -49,6 +58,158 @@ export const mockErrorResponse = (status: number) => ({
   status,
   statusText: status === HTTP_STATUS.NOT_FOUND ? 'Not Found' : 'Error',
 });
+
+/** The Public API's message for a failed US state run, with the note it ends with. */
+export const FAILED_CALCULATION_MESSAGE =
+  'Simulation entrypoint execution failed: out of memory. A new run for this state can be requested 2 minutes after this failure.';
+
+/** The Public API's 502 body for a failed calculation, with the seconds it keeps the failure. */
+export const FAILED_CALCULATION_BODY = {
+  status: 'error',
+  message: FAILED_CALCULATION_MESSAGE,
+  result: null,
+  retry_after_seconds: 120,
+};
+
+/** An economy error as the fetch throws it, for a given status and parsed body. */
+export const economyCalculationError = (status: number, body: unknown) =>
+  new EconomyCalculationError(`Society-wide calculation failed (${status})`, status, body);
+
+/** retry_after_seconds values read as they are: no wait, and a fraction of a second. */
+export const READ_RETRY_AFTER_SECONDS: Array<[string, number]> = [
+  ['0', 0],
+  ['a fraction', 1.5],
+];
+
+/** Error bodies whose retry_after_seconds is not read: missing, null, negative or a string. */
+export const UNREAD_RETRY_AFTER_SECONDS_BODIES: Array<[string, object]> = [
+  ['missing', { status: 'error', message: FAILED_CALCULATION_MESSAGE, result: null }],
+  ['null', { ...FAILED_CALCULATION_BODY, retry_after_seconds: null }],
+  ['negative', { ...FAILED_CALCULATION_BODY, retry_after_seconds: -1 }],
+  ['a string', { ...FAILED_CALCULATION_BODY, retry_after_seconds: '120' }],
+];
+
+/** The Public API's answer for a failed calculation: 502 with an error body. */
+export const mockFailedCalculationResponse = (body: object = FAILED_CALCULATION_BODY) => ({
+  ok: false,
+  status: HTTP_STATUS.BAD_GATEWAY,
+  statusText: 'Bad Gateway',
+  text: vi.fn().mockResolvedValue(JSON.stringify(body)),
+});
+
+/**
+ * A 502 body from a Public API that lets the app delete the stored failure:
+ * it also says in how many seconds a DELETE will be accepted.
+ */
+export const DELETABLE_FAILED_CALCULATION_BODY = {
+  ...FAILED_CALCULATION_BODY,
+  delete_after_seconds: 7,
+};
+
+/** delete_after_seconds values read as they are, as retry_after_seconds are: 0 and 1.5 seconds. */
+export const READ_DELETE_AFTER_SECONDS = READ_RETRY_AFTER_SECONDS;
+
+/**
+ * 502 bodies whose delete_after_seconds is not read: missing (a Public API
+ * deploy from before the DELETE), null (no failure stored for the next
+ * request), negative or a string.
+ */
+export const UNREAD_DELETE_AFTER_SECONDS_BODIES: Array<[string, object]> = [
+  ['missing', FAILED_CALCULATION_BODY],
+  ['null', { ...FAILED_CALCULATION_BODY, delete_after_seconds: null }],
+  ['negative', { ...FAILED_CALCULATION_BODY, delete_after_seconds: -1 }],
+  ['a string', { ...FAILED_CALCULATION_BODY, delete_after_seconds: '7' }],
+];
+
+/** The seconds a refused DELETE says are left before the Public API will accept one. */
+export const DELETE_REFUSED_SECONDS = 4;
+
+/** The Public API's 409 body for a DELETE sent less than 10 seconds after the failure. */
+export const DELETE_TOO_SOON_BODY = {
+  status: 'error',
+  message: 'This failure was recorded less than 10 seconds ago.',
+  result: null,
+  delete_after_seconds: DELETE_REFUSED_SECONDS,
+};
+
+/** The Public API's 409 body for a DELETE of a stored result that is computing or ok. */
+export const DELETE_NOT_A_FAILURE_BODY = {
+  status: 'error',
+  message: 'The stored result is not a failure.',
+  result: null,
+  delete_after_seconds: null,
+};
+
+/** The Public API's 404 body for a DELETE when nothing is stored. */
+export const DELETE_NOTHING_STORED_BODY = {
+  status: 'error',
+  message: 'No stored result for this economy request.',
+  result: null,
+};
+
+const REFUSAL_WITHOUT_SECONDS = { status: 'error', message: 'Refused.', result: null };
+const REFUSAL_WITH_STRING_SECONDS = { ...DELETE_TOO_SOON_BODY, delete_after_seconds: '4' };
+const REFUSAL_WITH_NEGATIVE_SECONDS = { ...DELETE_TOO_SOON_BODY, delete_after_seconds: -1 };
+
+/**
+ * 409 answers that do not say whether the DELETE may be sent again, each
+ * with its raw body and the body as the error carries it: no
+ * delete_after_seconds, one that is a string or negative, or a body that is
+ * not JSON.
+ */
+export const UNREADABLE_DELETE_REFUSAL_BODIES: Array<[string, string, unknown]> = [
+  [
+    'without delete_after_seconds',
+    JSON.stringify(REFUSAL_WITHOUT_SECONDS),
+    REFUSAL_WITHOUT_SECONDS,
+  ],
+  [
+    'with delete_after_seconds as a string',
+    JSON.stringify(REFUSAL_WITH_STRING_SECONDS),
+    REFUSAL_WITH_STRING_SECONDS,
+  ],
+  [
+    'with negative delete_after_seconds',
+    JSON.stringify(REFUSAL_WITH_NEGATIVE_SECONDS),
+    REFUSAL_WITH_NEGATIVE_SECONDS,
+  ],
+  ['that is not JSON', '<html><body>Conflict</body></html>', null],
+];
+
+/** A 404 body in another service's shape, without the Public API's error envelope. */
+const NOT_FOUND_WITHOUT_ENVELOPE = { detail: 'Not Found' };
+
+/** A state's economy query, as a state run sends it. */
+export const STATE_ECONOMY_PARAMS = { region: 'state/ca', time_period: CURRENT_YEAR };
+
+/**
+ * DELETE answers outside the contract, each with its status, raw body and
+ * the body as the error carries it.
+ */
+export const UNEXPECTED_DELETE_ANSWERS: Array<[string, number, string, unknown]> = [
+  ['404 with an error page', HTTP_STATUS.NOT_FOUND, '<html><body>Not Found</body></html>', null],
+  [
+    '404 without the error envelope',
+    HTTP_STATUS.NOT_FOUND,
+    JSON.stringify(NOT_FOUND_WITHOUT_ENVELOPE),
+    NOT_FOUND_WITHOUT_ENVELOPE,
+  ],
+  ['405 from a deploy without the DELETE', HTTP_STATUS.METHOD_NOT_ALLOWED, '', null],
+  ['500', HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error', null],
+  ['200 in place of 204', HTTP_STATUS.OK, JSON.stringify({ status: 'ok' }), { status: 'ok' }],
+];
+
+/** An answer to a DELETE of a stored failure, for a status and a raw body. */
+export const mockDeleteResponse = (status: number, body = '') => ({
+  ok: status >= 200 && status < 300,
+  status,
+  statusText: String(status),
+  text: vi.fn().mockResolvedValue(body),
+});
+
+/** A DELETE error's message, as the fetch throws it. */
+export const DELETE_FAILED_MESSAGE = (status: number, detail: string) =>
+  `Economy DELETE failed (${status}): ${detail}`;
 
 // Mock US report output
 export const mockUSReportOutput: ReportOutputSocietyWideUS = {
@@ -1264,6 +1425,35 @@ export const mockPendingResponse: SocietyWideCalculationResponse = {
 export const mockCompletedResponse: SocietyWideCalculationResponse = {
   status: 'ok',
   result: mockUSReportOutput,
+};
+
+// A US result's bundle: the .py, model and data versions and the dataset
+export const mockUSPolicyEngineBundle = {
+  model_version: '1.634.4',
+  policyengine_version: '3.4.0',
+  data_version: '1.77.0',
+  dataset: 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
+};
+
+// A result with model and data versions of its own, which the bundle replaces
+const mockUSReportOutputWithOwnVersions = {
+  ...mockUSReportOutput,
+  model_version: 'old-model-version',
+  data_version: 'old-data-version',
+};
+
+// Completed response as the Public API returns it: the bundle inside the result
+export const mockCompletedResponseWithBundleInResult = {
+  status: 'ok',
+  message: null,
+  result: { ...mockUSReportOutputWithOwnVersions, policyengine_bundle: mockUSPolicyEngineBundle },
+};
+
+// Completed response with the bundle beside the result, which the app also reads
+export const mockCompletedResponseWithBundleBesideResult = {
+  status: 'ok',
+  result: mockUSReportOutputWithOwnVersions,
+  policyengine_bundle: mockUSPolicyEngineBundle,
 };
 
 // Error response

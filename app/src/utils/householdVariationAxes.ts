@@ -13,11 +13,8 @@ import type {
 export const HOUSEHOLD_VARIATION_POINT_COUNT = PYTHON_PACKAGE_HOUSEHOLD_VARIATION_POINT_COUNT;
 export type HouseholdVariationAxis = PythonPackageHouseholdVariationAxis;
 
-export function getHouseholdVariationMaxEarnings(
-  currentEarnings: number,
-  countryId: string
-): number {
-  return getPythonPackageHouseholdVariationMaxEarnings(currentEarnings, countryId);
+export function getHouseholdVariationMaxEarnings(currentEarnings: number): number {
+  return getPythonPackageHouseholdVariationMaxEarnings(currentEarnings);
 }
 
 export function buildHouseholdVariationEarningsAxis(maxEarnings: number): number[] {
@@ -42,10 +39,9 @@ export function getHouseholdVariationIndexForEarnings(
 export function addHouseholdVariationAxesToPythonPackageData(
   householdInput: PythonPackageHouseholdData,
   year: string,
-  countryId: string,
   personName?: string | null
 ): PythonPackageHouseholdWithAxes {
-  return addVariationAxesToPythonPackageHouseholdData(householdInput, year, countryId, personName);
+  return addVariationAxesToPythonPackageHouseholdData(householdInput, year, personName);
 }
 
 /**
@@ -65,7 +61,6 @@ export function buildHouseholdVariationAxes(
   return addHouseholdVariationAxesToPythonPackageData(
     household.toPythonPackage(),
     year,
-    household.countryId,
     personName
   );
 }

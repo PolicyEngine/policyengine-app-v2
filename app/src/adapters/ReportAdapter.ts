@@ -3,6 +3,7 @@ import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload } from '@/types/payloads/ReportCreationPayload';
 import { ReportSetOutputPayload } from '@/types/payloads/ReportSetOutputPayload';
 import { convertJsonToReportOutput, convertReportOutputToJson } from './conversionHelpers';
+import { normalizeSocietyWideOutput } from './societyWideOutputNormalizer';
 
 /**
  * Adapter for converting between Report and API formats
@@ -47,7 +48,8 @@ export class ReportAdapter {
       ...(metadata.requested_at ? { requestedAt: metadata.requested_at } : {}),
       ...(metadata.started_at ? { startedAt: metadata.started_at } : {}),
       ...(metadata.finished_at ? { finishedAt: metadata.finished_at } : {}),
-      output: convertJsonToReportOutput(metadata.output) as any, // Can be economy or household output
+      // Can be economy or household output; a stored UK result may hold the list shape.
+      output: normalizeSocietyWideOutput(convertJsonToReportOutput(metadata.output)) as any,
     };
   }
 
