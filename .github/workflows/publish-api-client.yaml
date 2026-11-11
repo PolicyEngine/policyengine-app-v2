@@ -3,20 +3,22 @@
 # Started by hand only (Actions → "Publish @policyengine/api-client" → Run
 # workflow), never by a push. It publishes the version in
 # packages/api-client/package.json, and does nothing if npm already has it.
+# It publishes directly with npm publish, not npm stage publish, so the
+# version is public when the run finishes.
 #
 # It uses npm trusted publishing: GitHub's OIDC token proves the workflow
 # runs in PolicyEngine/policyengine-app-v2, so no npm token is stored. The
 # package's trusted publisher on npmjs.com is to name this repository, this
-# workflow file and the environment npm-publish. npm checks only those, and
-# this file's main-only conditions are not among them: a copy of this file
-# run from another branch could leave them out. So the publish job runs in
-# npm-publish, an environment whose deployment branches the repository's
-# settings limit to main. Create that environment, with its branch rule,
-# before the trusted publisher names it: a run that names a missing
-# environment creates it with no restrictions. The steps are under
-# "Releases" in packages/api-client/README.md. The first version, 0.1.0,
-# was published by hand, since npm needs a package to exist before it can
-# trust a workflow.
+# workflow file and the environment npm-publish, and to allow npm publish.
+# This file's main-only conditions are not among what npm checks: a copy of
+# this file run from another branch could leave them out. So the publish
+# job runs in the environment npm-publish, whose deployment branches the
+# repository's settings are to limit to main. Set that branch rule before
+# the trusted publisher names the environment: a run that names a missing
+# environment creates it with no restrictions. The steps, in order, are
+# under "Releases" in packages/api-client/README.md. The first version,
+# 0.1.0, was published by hand, since npm needs a package to exist before
+# it can trust a workflow.
 
 name: Publish @policyengine/api-client
 
@@ -29,7 +31,7 @@ permissions:
 jobs:
   build:
     name: Test, build and pack
-    # Only what has merged is published.
+    # Only main is published.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
@@ -83,8 +85,9 @@ jobs:
 
   # Holds the OIDC permission, so it runs no install and no repository
   # code: it only publishes the tarball the build job made. It runs in the
-  # npm-publish environment, so that npm's trusted publisher, which names
-  # that environment, accepts only tokens from main (see the header).
+  # npm-publish environment because npm's trusted publisher is to name that
+  # environment, and the environment's branch rule is to allow only main
+  # (see the header).
   publish:
     name: Publish
     needs: build
