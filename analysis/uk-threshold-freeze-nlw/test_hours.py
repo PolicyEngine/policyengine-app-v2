@@ -275,9 +275,9 @@ def test_uc_and_council_tax_reduction_prose_matches_the_results():
     kingston = META["benefit_runs_out_at_hours"]["single_kingston_upon_thames"]
     expected = [
         "Compared with raising the allowance and NI threshold together, they have "
-        f"{gbp(net('single_social_rent', 24.33))} less net income from about 24.3 hours.",
-        f"On that path, their UC would have run out at {about(renter['uc_raised'])}, against "
-        f"{about(renter['uc_frozen'])} with thresholds frozen, and from {about(renter['uc_frozen'])} they have the full "
+        f"{gbp(net('single_social_rent', 24.33))} less net income from about 24.3 hours to {about(renter['uc_raised'])}, "
+        "where their UC would have run out on that path. "
+        f"With thresholds frozen, their UC runs out at {about(renter['uc_frozen'])}, and from there they have the full "
         f"{gbp(net('single_social_rent', 34.0))} less.",
         f"Band C bill of {gbp(META['council_bills']['KINGSTON_UPON_THAMES'])}",
         f"has {gbp(net('single_kingston_upon_thames', 25.0))} less net income from about 24.3 hours to {about(kingston['ctr_raised'])}",

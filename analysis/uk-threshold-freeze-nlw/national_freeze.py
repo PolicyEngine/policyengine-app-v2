@@ -1283,7 +1283,7 @@ def run_tables(args) -> None:
                 "minimum_survey_households": disclosure.FLOOR,
                 "maximum_share_of_one_household": disclosure.MAX_TOP_SHARE,
                 "minimum_error_for_one_household_p_percent_rule": disclosure.MIN_REST_SHARE,
-                "change_of_at_most_counts_as_none_gbp": disclosure.CHANGE_TOLERANCE,
+                "change_of_at_most_counts_as_none_gbp": CHANGE_TOLERANCE,
             },
             "decimal_places": {
                 "totals_in_gbp_bn": decimals("x_bn"),

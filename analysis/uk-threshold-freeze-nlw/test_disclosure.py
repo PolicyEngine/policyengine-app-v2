@@ -86,6 +86,7 @@ records = st.integers(1, 40).flatmap(
 )
 
 
+@settings(deadline=None, suppress_health_check=[HealthCheck.too_slow])
 @given(records, st.sampled_from([0.0, 0.5, 1.0, 2.5]))
 def test_support_matches_one_household_at_a_time(data, tolerance):
     weights, contributions, sources = (np.array(x, dtype=float) for x in data)
@@ -127,6 +128,7 @@ def test_a_tolerance_matches_policyengine_on_changes_it_sets_to_zero(layer, data
         assert a == pytest.approx(b, rel=1e-12, abs=1e-12)
 
 
+@settings(deadline=None, suppress_health_check=[HealthCheck.too_slow])
 @given(st.lists(st.integers(-50, 50).map(float), max_size=12))
 def test_rest_share_matches_every_attacker(parts):
     assert rest_share(np.array(parts)) == pytest.approx(brute_rest_share(parts), rel=1e-12)
@@ -165,6 +167,7 @@ sides = st.lists(
 )
 
 
+@settings(deadline=None, suppress_health_check=[HealthCheck.too_slow])
 @given(sides)
 def test_passes_and_approximate_match_policyengines_tiers(layer, cell_sides):
     """Each record of a national figure sits in one area, the UK, so the layer's
@@ -429,6 +432,39 @@ def test_a_share_stays_between_none_and_all_of_its_group():
     assert (below, above) == (pytest.approx(3.0), pytest.approx(37.0))
 
 
+def test_a_share_stays_within_its_group_when_its_group_size_is_withheld_too():
+    """The link few + rest = all bounds neither share once we withhold all three,
+    so only the group caps them: few lies between none and all of the 40."""
+    sources = np.arange(40)
+    group = np.ones(40, dtype=bool)
+    few = np.arange(40) < 3
+    cells = {
+        "few": share_cell(SPACE, few, group),
+        "rest": share_cell(SPACE, ~few, group),
+        "all": count_cell(SPACE, group),
+    }
+    spaces = spaces_for(sources)
+    cells, figures = publish(cells, spaces, 3)
+    reader = Reader(cells, [(("few", 1), ("rest", 1), ("all", -1))], spaces, figures)
+    below, above, _, _ = reader.reach((("few", 1),), {"few", "rest", "all"})
+    assert (below, above) == (pytest.approx(3.0), pytest.approx(37.0))
+
+
+def test_a_reader_keeps_the_sign_of_a_figure_that_rounds_to_zero():
+    """T = A + B. A adds up changes that never fall below zero and rounds to 0 at
+    the nearest 100, so a reader knows it lies between 0 and 50, and with T
+    published, that B lies between T - 50 and T."""
+    a = np.where(np.arange(30) < 20, 2.0, 0.0)
+    b = np.where(np.arange(30) >= 20, 15.0, 0.0)
+    cells = {"A": change_cell(SPACE, a), "B": change_cell(SPACE, b), "T": change_cell(SPACE, a + b)}
+    cells = {key: replace(cell, decimals=-2 if key == "A" else 3) for key, cell in cells.items()}
+    figures = {"A": 0.0, "B": 150.0, "T": 190.0}
+    reader = Reader(cells, [(("T", 1), ("A", -1), ("B", -1))], spaces_for(np.arange(30)), figures)
+    assert reader.shown_bounds[reader.column["A"]].tolist() == [pytest.approx(-40.0), pytest.approx(10.0)]
+    below, above, _, _ = reader.reach((("B", 1),), {"B"})
+    assert below == pytest.approx(10.0, abs=1e-3)
+    assert above == pytest.approx(40.0, abs=1e-3)
+
 def grid(rows, columns, values, cell_of, sources, weights=None, decimals=6):
     """A table of sums with row, column and grand totals, all published, and the
     links among them."""
@@ -490,6 +526,30 @@ def test_two_withheld_parts_that_fail_together_become_a_target():
     assert a in withheld
     check_withheld(cells, links, spaces, figures, withheld)
 
+
+def test_parts_of_opposite_signs_that_fail_together_become_a_target():
+    """T = A - B + C. A, B and A + B each rest on at least 19 households, but A - B
+    rests on one. With A and B withheld, T and C give A - B away, so one of them
+    goes blank too."""
+    index = np.arange(40)
+    a = np.where(index < 20, 10.0, 0.0)
+    b = np.where((index >= 1) & (index < 20), 10.0, 0.0)
+    c = np.where(index >= 20, 10.0, 0.0)
+    cells = {
+        "A": change_cell(SPACE, a),
+        "B": change_cell(SPACE, b),
+        "C": change_cell(SPACE, c),
+        "T": change_cell(SPACE, a - b + c),
+    }
+    spaces = spaces_for(index)
+    cells, figures = publish(cells, spaces, 6)
+    links = [(("T", 1), ("A", -1), ("B", 1), ("C", -1))]
+    assert all(passes(supports_of(cell, spaces)) for cell in cells.values())
+    assert passes(supports_of(remainder([("A", 1), ("B", 1)], cells), spaces))
+    assert not passes(supports_of(remainder([("A", 1), ("B", -1)], cells), spaces))
+    withheld, _ = withhold(cells, links, spaces, figures, first={"A", "B"})
+    assert {"A", "B"} <= withheld and withheld & {"T", "C"}
+    check_withheld(cells, links, spaces, figures, withheld)
 
 def corner_table(decimals: int):
     """Three rows and three columns. Thirty survey households stand in each cell
@@ -642,45 +702,125 @@ def test_a_readers_bounds_always_hold_the_true_value(seed, decimals):
         assert below >= 0 and above >= 0
 
 
-def bounds_in_levels(cells, links, spaces, figures, members, hidden):
+def mixed_table(seed: int, rows: int, columns: int, n: int, households: int):
+    """A made-up table like the national ones. It holds a grid of sums of changes
+    with its totals, and for each row and for all rows, a mean change, a count,
+    the shares with less and more, a count with the same that we never publish,
+    and a sum of amounts that never fall below zero. Some rows hold changes of one
+    sign. Each figure takes its own rounding.
+
+    Also returns, for each cell, its level and what a reader knows of it without
+    its figure, worked out from the records alone, without disclosure.py, and the
+    families of cells that share links."""
+    rng = np.random.default_rng(seed)
+    row_of, column_of = rng.integers(0, rows, n), rng.integers(0, columns, n)
+    sources = rng.integers(0, households, n)
+    weights = rng.choice([0.5, 1.0, 3.0, 8.0], n)
+    sign_of_row = rng.choice([-1.0, 0.0, 1.0], rows)
+    signs = np.where(sign_of_row[row_of] == 0, rng.choice([-1.0, 1.0], n), sign_of_row[row_of])
+    values = signs * rng.choice([0.0, 0.0, 0.5, 1.0, 3.0, 25.0, 400.0], n)
+    amounts = rng.choice([0.0, 0.0, 5.0, 60.0, 300.0], n)
+    cells, truth = {}, {}
+
+    def add(key, cell, parts, group=None, share=False):
+        """`parts` gives what each record adds to the cell, and zero for a record
+        it leaves out. A share or a mean also names its group."""
+        some = parts[parts != 0]
+        group_weight = float(weights[group].sum()) if group is not None else None
+        published = cell.published
+        decimals = int(rng.choice([-2, -1, 0, 1, 3])) if published else None
+        cells[key] = replace(cell, decimals=decimals) if published else cell
+        truth[key] = {
+            "level": float(np.dot(weights, parts)),
+            # A reader knows a figure's sign when all its parts share one, and
+            # that a share cannot exceed its group.
+            "low": 0.0 if np.all(some >= 0) else -math.inf,
+            "high": min(0.0 if np.all(some <= 0) else math.inf, group_weight if share else math.inf),
+            "denominator": group_weight if group is not None else 1.0,
+            "decimals": decimals,
+        }
+
+    sums = lambda mask: np.where(mask, values, 0.0)
+    for r in range(rows):
+        for c in range(columns):
+            m = (row_of == r) & (column_of == c)
+            add((r, c), change_cell(SPACE, values, m), sums(m))
+        add((r, "total"), change_cell(SPACE, values, row_of == r), sums(row_of == r))
+    for c in range(columns):
+        add(("total", c), change_cell(SPACE, values, column_of == c), sums(column_of == c))
+    add(("total", "total"), change_cell(SPACE, values), values.copy())
+    links = [((((r, "total"), 1),) + tuple(((r, c), -1) for c in range(columns))) for r in range(rows)]
+    links += [((("total", c), 1),) + tuple(((r, c), -1) for r in range(rows)) for c in range(columns)]
+    links.append(((("total", "total"), 1),) + tuple((("total", c), -1) for c in range(columns)))
+    links.append(((("total", "total"), 1),) + tuple(((r, "total"), -1) for r in range(rows)))
+
+    less, more = values < -disclosure.CHANGE_TOLERANCE, values > disclosure.CHANGE_TOLERANCE
+    same = ~less & ~more
+    groups = {r: row_of == r for r in range(rows)} | {"all": np.ones(n, dtype=bool)}
+    for g, m in groups.items():
+        add(("mean", g), mean_cell(SPACE, values, m), sums(m), group=m)
+        add(("n", g), count_cell(SPACE, m), m.astype(float))
+        add(("less", g), share_cell(SPACE, less, m), (less & m).astype(float), group=m, share=True)
+        add(("more", g), share_cell(SPACE, more, m), (more & m).astype(float), group=m, share=True)
+        add(("same", g), count_cell(SPACE, same & m, published=False), (same & m).astype(float))
+        add(("amount", g), disclosure.level_cell(SPACE, amounts, m), np.where(m, amounts, 0.0))
+        links.append(((("less", g), 1), (("more", g), 1), (("same", g), 1), (("n", g), -1)))
+        links.append(((("mean", g), 1), ((g, "total") if g != "all" else ("total", "total"), -1)))
+    for column in ("n", "less", "more", "same", "amount"):
+        links.append((((column, "all"), 1), *(((column, r), -1) for r in range(rows))))
+
+    spaces = spaces_for(sources, weights)
+    figures = {}
+    for key, t in truth.items():
+        if t["decimals"] is not None:
+            figures[key] = round(t["level"] / t["denominator"], t["decimals"]) if t["denominator"] else None
+    changes = [key for key in cells if key[0] not in ("mean", "n", "less", "more", "same", "amount")]
+    changes += [("mean", g) for g in groups]
+    counts = [(column, g) for column in ("n", "less", "more", "same") for g in groups]
+    families = [changes, counts, [("amount", g) for g in groups]]
+    return cells, links, spaces, figures, truth, families
+
+
+def bounds_in_levels(truth, links, figures, members, hidden):
     """How far below and above its true value a reader can push a signed sum of
     cells, from a linear programme in the cells' levels over every cell at once.
-    Reader.reach works in shifts from the true values, one linked component at a
-    time, and widens each interval to hold the truth. This programme does none of
-    those things, so the two agree only if both bound what the reader knows."""
+    It takes each cell's level, sign, cap and denominator from `truth`, which
+    mixed_table works out from the records without disclosure.py. Reader.reach
+    works in shifts from the true values, one linked component at a time, and
+    widens each interval to hold the truth. This programme works in levels over
+    every component at once, and moves a bound only by float noise, so the two
+    agree only if both bound what the reader knows."""
     keys = sorted({key for link in links for key, _ in link}, key=str)
     column = {key: i for i, key in enumerate(keys)}
     matrix = np.zeros((len(links), len(keys)))
     for r, link in enumerate(links):
         for key, sign in link:
             matrix[r, column[key]] += sign
-    levels = np.array([disclosure.total(cells[key], spaces) for key in keys])
+    levels = np.array([truth[key]["level"] for key in keys])
     # The true levels meet every link and every bound below, so the programme
     # always has a solution.
     assert np.all(np.abs(matrix @ levels) <= 1e-9 * (1 + np.abs(matrix) @ np.abs(levels)))
     bounds = []
     for key in keys:
-        cell = cells[key]
-        # A reader knows a cell's sign when all its records' parts share one.
-        low = 0.0 if not len(cell.parts) or cell.parts.min() >= 0 else -math.inf
-        high = 0.0 if not len(cell.parts) or cell.parts.max() <= 0 else math.inf
-        if cell.published and key not in hidden:
+        t = truth[key]
+        low, high = t["low"], t["high"]
+        if t["decimals"] is not None and key not in hidden:
             figure = figures[key]
             if figure is None:
                 shown_low = shown_high = 0.0
             else:
-                den = disclosure.denominator(cell, spaces)
-                half = 0.5 * 10.0 ** (-cell.decimals)
-                shown_low, shown_high = sorted(((figure - half) * den, (figure + half) * den))
+                half = 0.5 * 10.0 ** (-t["decimals"])
+                shown_low, shown_high = sorted(((figure - half) * t["denominator"], (figure + half) * t["denominator"]))
             low, high = max(low, shown_low), min(high, shown_high)
-        value = levels[column[key]]
+        value = t["level"]
         slack = 1e-9 * (1 + abs(value))
         assert low - slack <= value <= high + slack, key
+        low, high = min(low, value), max(high, value)
         bounds.append((None if math.isinf(low) else low, None if math.isinf(high) else high))
     objective = np.zeros(len(keys))
     for key, sign in members:
         objective[column[key]] += sign
-    truth = float(objective @ levels)
+    truth_of_sum = float(objective @ levels)
     extremes = []
     for direction in (1, -1):
         result = linprog(direction * objective, A_eq=matrix, b_eq=np.zeros(len(links)), bounds=bounds, method="highs")
@@ -692,25 +832,63 @@ def bounds_in_levels(cells, links, spaces, figures, members, hidden):
         assert result.status == 0, result.message
         extremes.append(direction * float(result.fun))
     lowest, highest = extremes
-    return max(0.0, truth - lowest), max(0.0, highest - truth), float(np.abs(levels).max())
+    return max(0.0, truth_of_sum - lowest), max(0.0, highest - truth_of_sum), float(np.abs(levels).max())
 
 
-@settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
-@given(seed=st.integers(0, 2**16), decimals=st.sampled_from([-2, -1, 0, 3]), data=st.data())
-def test_a_readers_bounds_match_a_programme_in_levels(seed, decimals, data):
-    cells, links, spaces, figures = random_grid(seed, 3, 3, 90, 40, decimals)
+@settings(max_examples=80, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@given(
+    seed=st.integers(0, 2**16),
+    rows=st.integers(1, 3),
+    columns=st.integers(1, 3),
+    n=st.integers(5, 60),
+    households=st.integers(3, 40),
+    data=st.data(),
+)
+def test_a_readers_bounds_match_a_programme_in_levels(seed, rows, columns, n, households, data):
+    cells, links, spaces, figures, truth, families = mixed_table(seed, rows, columns, n, households)
     reader = Reader(cells, links, spaces, figures)
-    keys = sorted(cells, key=str)
-    hidden = set(data.draw(st.lists(st.sampled_from(keys), max_size=5)))
-    chosen = data.draw(st.lists(st.sampled_from(keys), min_size=1, max_size=3, unique=True))
+    published = sorted((key for key, cell in cells.items() if cell.published), key=str)
+    hidden = set(data.draw(st.lists(st.sampled_from(published), max_size=6)))
+    family = data.draw(st.sampled_from(families))
+    chosen = data.draw(st.lists(st.sampled_from(family), min_size=1, max_size=3, unique=True))
     members = tuple((key, data.draw(st.sampled_from([1, -1]))) for key in chosen)
     below, above, _, _ = reader.reach(members, hidden)
-    level_below, level_above, scale = bounds_in_levels(cells, links, spaces, figures, members, hidden)
+    level_below, level_above, scale = bounds_in_levels(truth, links, figures, members, hidden)
+    # Below half the finest rounding we draw, half of 0.001, so a reader who
+    # widened or narrowed any rounding interval would fail.
+    tolerance = 1e-9 * (1 + scale)
+    assert tolerance < 2.5e-4
     for ours, theirs in ((below, level_below), (above, level_above)):
         if math.isinf(theirs):
             assert math.isinf(ours)
         else:
-            assert ours == pytest.approx(theirs, rel=1e-6, abs=1e-6 * (1 + scale))
+            assert ours == pytest.approx(theirs, rel=0, abs=tolerance)
+
+
+def test_a_made_up_table_reaches_every_kind_of_figure():
+    """Across seeds, mixed_table gives figures blank for an empty group, figures
+    whose sign a reader knows that round to zero, shares and means at every
+    rounding, and sums of changes of every sign."""
+    seen = set()
+    for seed in range(40):
+        cells, _, _, figures, truth, families = mixed_table(seed, 3, 2, 4 + seed % 20, 20)
+        changes = set(families[0])
+        for key, t in truth.items():
+            kind = cells[key].kind
+            if t["decimals"] is None:
+                seen.add("never published")
+                continue
+            seen.add((kind, t["decimals"]))
+            if figures[key] is None:
+                seen.add("blank")
+            elif figures[key] == 0 and t["level"] != 0 and (t["low"] == 0 or t["high"] == 0):
+                seen.add("signed zero")
+            if key in changes and kind == disclosure.SUM and t["level"] != 0:
+                seen.add(("sign", t["low"] == 0, t["high"] == 0))
+    assert {"never published", "blank", "signed zero"} <= seen
+    assert {(SHARE, d) for d in (-2, -1, 0, 1, 3)} <= seen
+    assert {(disclosure.MEAN, d) for d in (-2, -1, 0, 1, 3)} <= seen
+    assert {("sign", True, False), ("sign", False, True), ("sign", False, False)} <= seen
 
 
 def test_withholding_succeeds_on_most_tables():
