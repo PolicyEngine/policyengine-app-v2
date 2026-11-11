@@ -48,11 +48,10 @@ const nextConfig: NextConfig = {
         "import.meta.env.VITE_FLAGSHIP_SHELL_UK": JSON.stringify(
           process.env.NEXT_PUBLIC_FLAGSHIP_SHELL_UK || "",
         ),
-        // Sign-in and the PolicyEngine API origin. Shared code reads the
-        // VITE_* names; either spelling may be set on the deployment.
-        "import.meta.env.VITE_API_URL": JSON.stringify(
-          envValue("NEXT_PUBLIC_API_URL", "VITE_API_URL"),
-        ),
+        // Sign-in. Shared code reads the VITE_* names; either spelling may
+        // be set on the deployment. The browser reaches the Public API
+        // through the calculator's own route, so no Public API address is
+        // built in.
         "import.meta.env.VITE_AUTH_ENABLED": JSON.stringify(
           envValue("NEXT_PUBLIC_AUTH_ENABLED", "VITE_AUTH_ENABLED"),
         ),

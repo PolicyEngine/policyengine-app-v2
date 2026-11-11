@@ -9,7 +9,7 @@ import type { ServerCredentialSettings } from "./settings";
 /** A token is replaced this long before it expires, at most. */
 export const TOKEN_REFRESH_MARGIN_SECONDS = 300;
 
-const TOKEN_REQUEST_TIMEOUT_MILLISECONDS = 10_000;
+export const TOKEN_REQUEST_TIMEOUT_MILLISECONDS = 10_000;
 
 export interface CachedAccessToken {
   readonly accessToken: string;

@@ -4,10 +4,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import AccountPage from '@/pages/flagship/Account.page';
 import {
+  answerMe,
   errorResponse,
-  itemResponse,
   mockMeItem,
-  noContentResponse,
   okResponse,
   TEST_ACCESS_TOKEN,
 } from '@/tests/fixtures/api/v2UserMocks';
@@ -34,13 +33,6 @@ function renderPage(auth: AuthContextValue, countryId = 'us') {
       </AuthTestProvider>
     </QueryClientProvider>,
     countryId
-  );
-}
-
-/** Answers GET /v2/me with the user, and everything else with `other`. */
-function answerMe(other: () => Response = () => noContentResponse()) {
-  fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
-    new URL(url).pathname === '/v2/me' && init.method === 'GET' ? itemResponse(mockMeItem) : other()
   );
 }
 
@@ -74,7 +66,7 @@ describe('AccountPage', () => {
 
   test('given a signed-in user then the page loads their PolicyEngine user from /v2/me', async () => {
     // Given
-    answerMe();
+    answerMe(fetchMock);
 
     // When
     renderPage(signedInAuthValue());
@@ -83,7 +75,7 @@ describe('AccountPage', () => {
     expect(await screen.findByText(mockMeItem.id)).toBeInTheDocument();
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe('https://api.policyengine.org/v2/me?country_id=us');
+    expect(url).toBe('/api/policyengine/v2/me?country_id=us');
     expect(init.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
   });
 
@@ -97,7 +89,7 @@ describe('AccountPage', () => {
     );
 
     // When
-    answerMe();
+    answerMe(fetchMock);
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
     // Then
@@ -115,9 +107,16 @@ describe('AccountPage', () => {
       writable: true,
       value: revokeObjectURL,
     });
-    answerMe(() =>
-      okResponse({ user: mockMeItem, policies: [], households: [], simulations: [], reports: [] })
-    );
+    answerMe(fetchMock, {
+      otherResponse: () =>
+        okResponse({
+          user: mockMeItem,
+          policies: [],
+          households: [],
+          simulations: [],
+          reports: [],
+        }),
+    });
     renderPage(signedInAuthValue());
 
     // When
@@ -126,7 +125,7 @@ describe('AccountPage', () => {
     // Then
     await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
     const [url, init] = fetchMock.mock.calls[1];
-    expect(url).toBe('https://api.policyengine.org/v2/me/export?country_id=us');
+    expect(url).toBe('/api/policyengine/v2/me/export?country_id=us');
     expect(init.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:export');
   });
@@ -135,7 +134,7 @@ describe('AccountPage', () => {
     // Given
     const user = userEvent.setup();
     const auth = signedInAuthValue();
-    answerMe();
+    answerMe(fetchMock);
     renderPage(auth);
 
     // When
@@ -150,7 +149,7 @@ describe('AccountPage', () => {
     // Then
     await waitFor(() => expect(auth.signOut).toHaveBeenCalled());
     const [url, init] = fetchMock.mock.calls[1];
-    expect(url).toBe('https://api.policyengine.org/v2/me?country_id=us');
+    expect(url).toBe('/api/policyengine/v2/me?country_id=us');
     expect(init.method).toBe('DELETE');
   });
 

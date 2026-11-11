@@ -328,6 +328,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v2/countries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List the served countries and the calculations each supports */
+    get: operations['list_countries_v2_countries_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v2/tax-benefit-models': {
     parameters: {
       query?: never;
@@ -730,6 +747,63 @@ export interface components {
       /** Primary Country */
       primary_country?: ('us' | 'uk') | null;
     };
+    /**
+     * CountryItem
+     * @description One served country and the calculations it supports.
+     *
+     *     ``id`` is the value other v2 resources take as ``country_id``.
+     *     ``household_enabled`` means household calculations and saved households
+     *     are available; ``society_wide_enabled`` means society-wide reports are,
+     *     and is only set for a country that is also household enabled.
+     */
+    CountryItem: {
+      /** Id */
+      id: string;
+      /** Household Enabled */
+      household_enabled: boolean;
+      /** Society Wide Enabled */
+      society_wide_enabled: boolean;
+    };
+    /**
+     * CountryListResponse
+     * @description Success envelope: ``status`` "ok", a null ``message`` and the countries.
+     */
+    CountryListResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['CountryListResult'];
+    };
+    /**
+     * CountryListResult
+     * @description Every served country, ordered by ``id``.
+     */
+    CountryListResult: {
+      /** Items */
+      items: components['schemas']['CountryItem'][];
+    };
+    /**
+     * DeploymentResponse
+     * @description The policyengine.py version this revision serves, and since when.
+     *
+     *     ``policyengine_version_live_since`` is when this .py version first went
+     *     live: redeploys that keep the version keep the date. It is null on a
+     *     revision deployed before the deploy recorded it, outside Cloud Run, or
+     *     when the version the deploy dated is not the installed one.
+     */
+    DeploymentResponse: {
+      /** Policyengine Version */
+      policyengine_version: string;
+      /** Policyengine Version Live Since */
+      policyengine_version_live_since: string | null;
+      /** Revision */
+      revision: string | null;
+    };
     FiniteJsonValue:
       | components['schemas']['FiniteJsonValue'][]
       | {
@@ -740,8 +814,19 @@ export interface components {
       | number
       | null;
     /**
+     * HealthNotReadyResponse
+     * @description Health-check result while warmup runs or the configuration is invalid.
+     */
+    HealthNotReadyResponse: {
+      /**
+       * Status
+       * @constant
+       */
+      status: 'not_ready';
+    };
+    /**
      * HealthResponse
-     * @description Health-check result showing that the API is up and serving requests.
+     * @description Health-check result showing that the API has warmed up and can serve requests.
      */
     HealthResponse: {
       /**
@@ -959,8 +1044,11 @@ export interface components {
      * MeItem
      * @description The current user: a signed-in account or a browser's unauthenticated user.
      *
-     *     ``user_type`` says which. An unauthenticated user has no primary country, and
-     *     only a signed-in user can set its names or primary country.
+     *     ``user_type`` says which: ``unauthenticated``, or the signed-in user's
+     *     stored type, ``standard``, ``author`` or ``admin``, where each type has
+     *     every permission of the types before it. An unauthenticated user has no
+     *     primary country, and only a signed-in user can set its names or primary
+     *     country.
      */
     MeItem: {
       /**
@@ -972,7 +1060,7 @@ export interface components {
        * User Type
        * @enum {string}
        */
-      user_type: 'unauthenticated' | 'standard';
+      user_type: 'unauthenticated' | 'standard' | 'author' | 'admin';
       /** Primary Country */
       primary_country: ('us' | 'uk') | null;
       /** First Name */
@@ -2095,6 +2183,11 @@ export interface components {
       updated_at: string;
       /** Parameter Values */
       parameter_values: components['schemas']['PolicyParameterValueItem'][];
+      /**
+       * Missing Parameters
+       * @description The parameter paths this policy sets that the current tax-benefit model (the catalog of the running PolicyEngine.py version) no longer has, sorted; empty when it has them all. Null when that catalog is not published, so nothing could be checked. A policy with missing parameters cannot be run on the current model.
+       */
+      missing_parameters: string[] | null;
     };
     /**
      * PolicyPageResponse
@@ -6481,6 +6574,62 @@ export interface operations {
       };
     };
   };
+  list_countries_v2_countries_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CountryListResponse'];
+        };
+      };
+      /** @description The countries list supports GET only. */
+      405: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request has query parameters; the list takes none. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The countries query failed internally. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The v2 database is not configured or cannot be reached. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
   list_models_v2_tax_benefit_models_get: {
     parameters: {
       query: {
@@ -7271,7 +7420,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The requested catalog resource is absent. */
+      /** @description The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version. */
       404: {
         headers: {
           [name: string]: unknown;
@@ -7307,7 +7456,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The initialized v2 catalog is unavailable, or the catalog version has no parameter tree (publication writes trees only for the versions it publishes and for the installed version with catalog format 2); the message then names the version. */
+      /** @description The initialized v2 catalog is unavailable, or the catalog version has no parameter tree (publication writes trees only for the versions it publishes and for the installed version with catalog format 2); the message then names the version. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version. */
       503: {
         headers: {
           [name: string]: unknown;
@@ -7361,7 +7510,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The requested catalog resource is absent. */
+      /** @description The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version. */
       404: {
         headers: {
           [name: string]: unknown;
@@ -7397,7 +7546,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The initialized v2 catalog is unavailable, or the catalog version has no parameter search file: only catalog format 2 versions that publication has published, or run with installed, since search files were added have one. The message then names the version. */
+      /** @description The initialized v2 catalog is unavailable, or the catalog version has no parameter search file: only catalog format 2 versions that publication has published, or run with installed, since search files were added have one. The message then names the version. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version. */
       503: {
         headers: {
           [name: string]: unknown;
@@ -7548,7 +7697,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The requested catalog resource is absent. */
+      /** @description The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version. */
       404: {
         headers: {
           [name: string]: unknown;
@@ -7584,7 +7733,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The initialized v2 catalog is unavailable. */
+      /** @description The initialized v2 catalog is unavailable. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version. */
       503: {
         headers: {
           [name: string]: unknown;
@@ -7638,7 +7787,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The requested catalog resource is absent. */
+      /** @description The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version. */
       404: {
         headers: {
           [name: string]: unknown;
@@ -7674,7 +7823,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The initialized v2 catalog is unavailable. */
+      /** @description The initialized v2 catalog is unavailable. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version. */
       503: {
         headers: {
           [name: string]: unknown;
@@ -8358,7 +8507,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The requested catalog resource is absent. */
+      /** @description The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version. */
       404: {
         headers: {
           [name: string]: unknown;
@@ -8394,7 +8543,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The initialized v2 catalog is unavailable. */
+      /** @description The initialized v2 catalog is unavailable. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version. */
       503: {
         headers: {
           [name: string]: unknown;
@@ -8448,7 +8597,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The requested catalog resource is absent. */
+      /** @description The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version. */
       404: {
         headers: {
           [name: string]: unknown;
@@ -8484,7 +8633,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The initialized v2 catalog is unavailable. */
+      /** @description The initialized v2 catalog is unavailable. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version. */
       503: {
         headers: {
           [name: string]: unknown;

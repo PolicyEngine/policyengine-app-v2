@@ -38,6 +38,7 @@ import {
   OLDER_UK_BODY_WITH_AREAS,
   PLAIN_TEXT_ERROR_BODY,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   DELETABLE_FAILED_CALCULATION_BODY,
   DELETE_FAILED_MESSAGE,
@@ -806,6 +807,57 @@ describe('societyWide API', () => {
   });
 });
 
+describe('failedCalculationOf through the calculator route', () => {
+  const ECONOMY_PARAMETERS = { region: 'us', time_period: CURRENT_YEAR };
+
+  test("given the route's own 502, such as the Public API being unreachable, then it is a failed request, not a failed calculation", async () => {
+    // Given
+    (global.fetch as any).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: 'error',
+          message: 'The Public API could not be reached.',
+          result: null,
+        }),
+        {
+          status: HTTP_STATUS.BAD_GATEWAY,
+          headers: { 'Content-Type': 'application/json', 'X-PolicyEngine-Route-Error': 'true' },
+        }
+      )
+    );
+
+    // When
+    const error = await fetchSocietyWideCalculation('us', '2', '1', ECONOMY_PARAMETERS).catch(
+      (caught: unknown) => caught
+    );
+
+    // Then
+    expect(error).toBeInstanceOf(EconomyCalculationError);
+    expect(failedCalculationOf(error)).toBeNull();
+  });
+
+  test("given the Public API's own 502 for a failed calculation, passed on by the route, then it is a failed calculation", async () => {
+    // Given
+    (global.fetch as any).mockResolvedValue(
+      new Response(JSON.stringify(FAILED_CALCULATION_BODY), {
+        status: HTTP_STATUS.BAD_GATEWAY,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    // When
+    const error = await fetchSocietyWideCalculation('us', '2', '1', ECONOMY_PARAMETERS).catch(
+      (caught: unknown) => caught
+    );
+
+    // Then
+    expect(failedCalculationOf(error)).toEqual({
+      retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds,
+      deleteAfterSeconds: null,
+    });
+  });
+});
+
 describe('failedCalculationOf', () => {
   test('given a 502 with the Public API error body then gives the seconds it keeps the failure', () => {
     // When
@@ -952,7 +1004,7 @@ describe('deleteFailedSocietyWideCalculation', () => {
     );
 
     // Then
-    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    const requestUrl = requestUrlOf(String(mockFetch.mock.calls[0][0]));
     expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 
@@ -979,6 +1031,32 @@ describe('deleteFailedSocietyWideCalculation', () => {
     // Then
     expect(deletion).toEqual({ outcome: 'nothing-stored' });
   });
+
+  test.each([
+    [HTTP_STATUS.NOT_FOUND, { status: 'error', message: 'Unknown route.', result: null }],
+    [
+      HTTP_STATUS.CONFLICT,
+      { status: 'error', message: 'Conflict.', result: null, delete_after_seconds: 5 },
+    ],
+  ])(
+    "given the calculator route's own %i then the DELETE failed, whatever the body says",
+    async (status, body) => {
+      // Given
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockDeleteResponse(status, JSON.stringify(body), {
+          'X-PolicyEngine-Route-Error': 'true',
+        }) as any
+      );
+
+      // When
+      const outcome = await deleteFailure().catch((caught: unknown) => caught);
+
+      // Then
+      expect(outcome).toBeInstanceOf(EconomyCalculationError);
+      expect((outcome as EconomyCalculationError).status).toBe(status);
+      expect((outcome as EconomyCalculationError).writtenByRoute).toBe(true);
+    }
+  );
 
   test('given 409 with delete_after_seconds then the DELETE was too soon, with the seconds left', async () => {
     // Given
@@ -1075,7 +1153,7 @@ describe('societyWide API Northern Ireland region', () => {
     );
 
     // Then
-    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    const requestUrl = requestUrlOf(String(mockFetch.mock.calls[0][0]));
     expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 
@@ -1093,7 +1171,7 @@ describe('societyWide API Northern Ireland region', () => {
     );
 
     // Then
-    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    const requestUrl = requestUrlOf(String(mockFetch.mock.calls[0][0]));
     expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 });

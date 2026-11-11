@@ -9,11 +9,11 @@
  * Path segments are letters, digits, "-" and "_" only, so an encoded slash,
  * a dot segment or a query can never widen a match.
  *
- * Free of imports, so both the route (in calculator-app) and its tests (in
- * app) can load it.
+ * Imports only the route's prefix, so both the route (in calculator-app)
+ * and its tests (in app) can load it.
  */
 
-export const PUBLIC_API_ROUTE_PREFIX = '/api/policyengine';
+export { PUBLIC_API_ROUTE_PREFIX } from './sameOriginRoute';
 
 export type ForwardedMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
@@ -26,8 +26,6 @@ export interface AllowedOperation {
   readonly methods: readonly ForwardedMethod[];
   readonly pathPattern: RegExp;
   readonly cache: CachePolicy;
-  /** How long to wait for the Public API's response headers. */
-  readonly responseHeadersTimeoutMilliseconds: number;
 }
 
 export const CACHE_CONTROL: Readonly<Record<CachePolicy, string | undefined>> = {
@@ -47,8 +45,21 @@ const UUID = '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-
 /** v2 policy IDs, which the schema types only as strings. */
 const OPAQUE_ID = '[A-Za-z0-9_-]{1,64}';
 
-const DEFAULT_TIMEOUT_MILLISECONDS = 60_000;
-const CALCULATION_TIMEOUT_MILLISECONDS = 280_000;
+/**
+ * How long the route waits for the Public API's response headers, for every
+ * operation: as long as the route's function may run (`maxDuration`, 800 s,
+ * Vercel Pro's standard limit on Fluid compute), less 50 s for a token
+ * request and the body. The Public API has no shorter limit to match: its
+ * Cloud Run services end a request 300 s after an instance takes it (read
+ * 2026-11-10), but a request can first wait for an instance to start. Its
+ * load balancer recorded answers after up to 396 s, and slow answers are
+ * not only calculations: country metadata took up to 246 s and a v1 policy
+ * read 242 s (2026-11-03 to 2026-11-10). Browsers calling it directly
+ * waited as long as their own timers allowed (none for most calls, 240 s
+ * for a household under a policy, 10 minutes for calculate-full), so a
+ * shorter wait here would turn answers into errors.
+ */
+export const PUBLIC_API_WAIT_MILLISECONDS = 750_000;
 
 function exactPath(pattern: string): RegExp {
   return new RegExp(`^${pattern}$`);
@@ -58,16 +69,9 @@ function operation(
   name: string,
   methods: readonly ForwardedMethod[],
   pathPattern: string,
-  cache: CachePolicy = 'never',
-  responseHeadersTimeoutMilliseconds = DEFAULT_TIMEOUT_MILLISECONDS
+  cache: CachePolicy = 'never'
 ): AllowedOperation {
-  return {
-    name,
-    methods,
-    pathPattern: exactPath(pathPattern),
-    cache,
-    responseHeadersTimeoutMilliseconds,
-  };
+  return { name, methods, pathPattern: exactPath(pathPattern), cache };
 }
 
 /**
@@ -86,17 +90,9 @@ export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
   operation(
     'household under a policy',
     ['GET'],
-    `/${COUNTRY}/household/${NUMERIC_ID}/policy/${NUMERIC_ID}`,
-    'never',
-    CALCULATION_TIMEOUT_MILLISECONDS
+    `/${COUNTRY}/household/${NUMERIC_ID}/policy/${NUMERIC_ID}`
   ),
-  operation(
-    'household calculation with variations',
-    ['POST'],
-    `/${COUNTRY}/calculate-full`,
-    'never',
-    CALCULATION_TIMEOUT_MILLISECONDS
-  ),
+  operation('household calculation with variations', ['POST'], `/${COUNTRY}/calculate-full`),
 
   // v1 policies, simulations and reports (api/policy.ts, simulation.ts,
   // report.ts). Updates send the ID in the body.
