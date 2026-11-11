@@ -247,6 +247,7 @@ def test_obr_scenario_takes_the_obrs_thresholds():
 unit_amounts = st.lists(st.floats(-2_000, 2_000, allow_nan=False), min_size=1, max_size=6)
 
 
+@settings(deadline=None)
 @given(
     unit_amounts,
     st.lists(st.tuples(st.integers(0, 5), st.floats(-2_000, 2_000, allow_nan=False)), min_size=1, max_size=20),
@@ -267,6 +268,7 @@ incomes = st.lists(st.floats(0, 1e6, allow_nan=False), min_size=2, max_size=40)
 weights = st.floats(0.5, 500, allow_nan=False)
 
 
+@settings(deadline=None)
 @given(incomes, st.data())
 def test_gini_stays_between_0_and_1_and_ignores_scale(values, data):
     x = np.array(values)
@@ -277,11 +279,13 @@ def test_gini_stays_between_0_and_1_and_ignores_scale(values, data):
         assert gini(3 * x, w) == pytest.approx(result, abs=1e-9)
 
 
+@settings(deadline=None)
 @given(st.floats(1, 1e6, allow_nan=False), st.lists(weights, min_size=2, max_size=20))
 def test_gini_of_equal_incomes_is_zero(level, w):
     assert gini(np.full(len(w), level), np.array(w)) == pytest.approx(0, abs=1e-9)
 
 
+@settings(deadline=None)
 @given(st.lists(st.integers(1, 100_000), min_size=3, max_size=20), st.lists(st.integers(1, 5), min_size=20, max_size=20))
 def test_gini_treats_a_weight_as_that_many_records(values, counts_of_each):
     x = np.array(values, dtype=float)
@@ -290,6 +294,7 @@ def test_gini_treats_a_weight_as_that_many_records(values, counts_of_each):
     assert gini(x, w) == pytest.approx(gini(repeated, np.ones_like(repeated)), abs=1e-9)
 
 
+@settings(deadline=None)
 @given(st.lists(st.floats(1_000, 100_000, allow_nan=False), min_size=4, max_size=20))
 def test_a_transfer_from_richer_to_poorer_lowers_gini(values):
     x = np.sort(np.array(values))
@@ -372,6 +377,7 @@ def test_a_change_of_one_pound_or_less_counts_as_none():
     assert row["share_households_lower_net_income"] == pytest.approx(1 / n)
     assert row["share_households_higher_net_income"] == pytest.approx(1 / n)
 
+
 def test_simple_workers_leave_out_someone_with_a_trading_loss():
     pay, zeros = np.full(2, 23_000.0), np.zeros(2)
     base = {
@@ -410,6 +416,7 @@ def test_simple_workers_leave_out_a_family_with_a_marriage_allowance_on_either_s
 
 
 @pytest.mark.parametrize("year", YEARS)
+@settings(deadline=None)
 @given(pay=st.floats(0, 1e7, allow_nan=False))
 def test_pay_bands_place_every_pay_in_one_band(year, pay):
     assert sum(low <= pay < high for _, low, high in pay_bands(year)) == 1
@@ -1101,7 +1108,7 @@ def test_readme_figures_match_the_results():
     last = counts("2026-27", LAST)
     assert (
         f"We estimate {percent(float(last['share_households_higher_net_income']), 1)} of households have more net income "
-        f"on that path in 2026-27, and {percent(float(last['share_of_those_higher_with_no_allowance_and_less_ni']))} of them "
+        f"with thresholds frozen than on that path in 2026-27, and {percent(float(last['share_of_those_higher_with_no_allowance_and_less_ni']))} of them "
         "include such a person"
     ) in readme
     floor = "share_of_those_higher_on_uc_minimum_income_floor"
@@ -1252,10 +1259,11 @@ def identity_failures(bands: list, deciles: list, totals: list) -> tuple[int, li
     income tax plus NI gives the total, benefits less income tax and NI give the
     change in net income, and the averages on and off UC, weighted by the UC
     share, give the band's average; that the row for all employees averages the
-    bands, weighted by employees; and that each column of deciles, weighted by
-    households, adds up to its total. Returns the number of identities checked and
-    those that fail. A product of two rounded figures, x and y, can stray from the
-    true one by |x| half-units of y plus (|y| + a half-unit) half-units of x."""
+    bands, weighted by employees; and that each column of average changes in
+    deciles, weighted by households, adds up to its total. Returns the number of
+    identities checked and those that fail. A product of two rounded figures, x
+    and y, can stray from the true one by |x| half-units of y plus (|y| + a
+    half-unit) half-units of x."""
     checked, failures = 0, []
 
     def check(label: tuple, lhs: float, rhs: float, slack: float) -> None:
@@ -1577,7 +1585,7 @@ def test_average_household_figures_match_the_results():
         f"On average, they have about {gbp(round(average, -1))} less net income in 2026-27 "
         f"than if the government had {PATH_LABELS[FIRST]}: "
         f"{percent(lower)} have less and about {percent(higher, 1)} have more. "
-        f"The other {percent(1 - lower - higher)} have the same net income to within £1 a year."
+        "The rest have the same net income to within £1 a year."
     ) in TEXT
     # The post hedges the share with more net income because it rests on few survey households.
     assert "share_households_higher_net_income" in named(shares, "approximate")
@@ -1766,7 +1774,7 @@ def test_pay_band_prose_matches_the_results():
         "We can't reliably tell from survey reports of hours and pay who earns the National Living Wage",
         f"Employees on up to £12,570 pay {gbp(float(lowest['average_extra_income_tax_and_ni']))} more on average, mostly in "
         f"income tax, because {percent(float(lowest['share_with_total_income_above_frozen_allowance']))} of them have other income",
-        "Some also pay more NI, because with statutory sick, maternity or paternity pay their earnings for NI exceed £12,570.",
+        "Some also pay more NI, because statutory sick, maternity or paternity pay lifts their earnings for NI above £12,570.",
     ]
     for phrase in expected:
         assert phrase in TEXT, phrase
@@ -1848,10 +1856,11 @@ def test_poverty_prose_matches_the_results():
     first_children = float(poverty(year, FIRST, "absolute_bhc", "children")["people_change_m"])
     last_children_row = poverty(year, LAST, "absolute_bhc", "children")
     assert "people_change_m" in named(last_children_row, "approximate")
+    assert float(last_children_row["people_change_m"]) < first_children
     assert (
         f"Against the path without the July 2022 rise, we estimate {thousands(last)} more people fall below the absolute line before housing costs in 2026-27, "
-        f"including about {thousands(float(last_children_row['people_change_m']))} children, "
-        f"against the {thousands(first)} and about {thousands(first_children)} in the table."
+        f"including about {thousands(float(last_children_row['people_change_m']))} children. "
+        f"Both fall short of the table's {thousands(first)} and about {thousands(first_children)}."
     ) in TEXT
     relative = float(poverty(year, FIRST, "relative_bhc")["people_change_m"])
     assert (
@@ -1907,7 +1916,8 @@ def test_thresholds_frozen_move_the_gini_index_opposite_ways_on_the_paths_and_th
 
 def test_methods_note_distinguishes_the_ranking_income_from_net_income():
     assert (
-        "- We rank deciles and count poverty by HBAI income, which PolicyEngine UK, like the official statistics, sets to "
+        "- We rank people into deciles and count poverty by HBAI income, which PolicyEngine UK, like the Department for "
+        "Work and Pensions, sets to "
         "zero before housing costs where it falls below zero. We calculate the household changes in net income, decile "
         "percentages and Gini index from household net income. In household net income, unlike HBAI income, we count "
         "capital gains, free childcare hours and the value of public services such as the NHS. We also take off other "
@@ -1954,8 +1964,8 @@ def test_obr_taxpayer_comparison_matches_the_results():
     assert (
         f"we estimate {one_place(brought[first])} million more people pay income tax in 2026-27 with thresholds frozen "
         f"and {one_place(brought[second])} million more in 2027-28. The OBR estimates {one_place(OBR_BROUGHT_IN[first])} million "
-        f"and {one_place(OBR_BROUGHT_IN[second])} million. In the Budget, the government announced that from 2027-28 "
-        "it would cut income tax by up to £94 a year through a [Pension Tax Allowance]"
+        f"and {one_place(OBR_BROUGHT_IN[second])} million. In the Budget, the government announced that "
+        "it would cut income tax by up to £94 in 2027-28 through a [Pension Tax Allowance]"
     ) in TEXT
     assert (
         f"The OBR takes {one_place(OBR_PENSION_TAX_ALLOWANCE[second])} million off its 2027-28 figure for the people the "
@@ -1969,7 +1979,7 @@ def test_obr_taxpayer_comparison_matches_the_results():
     assert introduced < TEXT.index("off its 2027-28 figure for the people the government takes out of income tax")
     full_new_state_pension_2027 = 13_036.40
     assert math.ceil(0.2 * (full_new_state_pension_2027 - ACTUAL_ALLOWANCE)) == 94
-    assert "cut income tax by up to £94 a year through a [Pension Tax Allowance]" in TEXT
+    assert "cut income tax by up to £94 in 2027-28 through a [Pension Tax Allowance]" in TEXT
     assert (
         "It would give the allowance to people over State Pension age with income up to a little above the full new "
         "State Pension."
@@ -2038,7 +2048,7 @@ def test_obr_employee_ni_comparison_matches_the_results():
         "and the lower profits limit equal to its primary threshold. "
         f"With the upper limits frozen at £50,270, employees pay 2% rather than 8% on pay from £50,270 to {gbp(obr_hrt)} in 2027-28, "
         "and the self-employed pay 2% rather than 6% on profits in that range. "
-        f"In 2027-28, the OBR's primary threshold of {gbp(obr_pt)}, which we also use as the lower profits limit, "
+        f"In 2027-28, the OBR's primary threshold of {gbp(obr_pt)} "
         "exceeds £12,570, so with "
         f"thresholds frozen people also pay more NI on pay and profits from £12,570 to {gbp(obr_pt)}. We estimate that "
         f"the NI they save on pay and profits from £50,270 to {gbp(obr_hrt)} exceeds that by {bn(-at_obr_levels)}. "

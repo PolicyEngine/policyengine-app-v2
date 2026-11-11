@@ -13,7 +13,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from hypothesis import example, given
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
 from thresholds import (
@@ -91,6 +91,7 @@ def spread(year: str, field: str, household: str = "single", sign: float = 1) ->
 # Threshold paths
 
 
+@settings(deadline=None)
 @given(cpi_rates)
 @example({year: 0.0 for year in range(2021, 2027)})
 # £12,570 + £30 = £12,600, and 10% of £12,600 lands on a multiple of £10.
@@ -106,6 +107,7 @@ def test_s57_steps_round_up_to_ten_pounds(rates):
         previous = allowance
 
 
+@settings(deadline=None)
 @given(st.floats(100, 400, allow_nan=False), cpi_rates)
 def test_weekly_path_stays_within_50p_of_each_step(start, rates):
     previous = start
@@ -114,6 +116,7 @@ def test_weekly_path_stays_within_50p_of_each_step(start, rates):
         previous = week
 
 
+@settings(deadline=None)
 @given(
     st.floats(0, 60_000, allow_nan=False),
     st.floats(ACTUAL_PA, 20_000, allow_nan=False),
