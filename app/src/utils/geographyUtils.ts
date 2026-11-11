@@ -1,3 +1,5 @@
+import { isCountryId } from '@/libs/countries';
+import { getCountryDisplayName } from '@/models/geography';
 import { getRegionCodeCandidates, normalizeRegionCode } from '@/models/region';
 import type { Geography } from '@/types/ingredients/Geography';
 import { MetadataState } from '@/types/metadata';
@@ -59,19 +61,27 @@ export function isUKLocalLevelGeography(geography: Geography): boolean {
   );
 }
 
-const countryLabels: Record<string, string> = {
-  us: 'United States',
-  uk: 'United Kingdom',
-  ca: 'Canada',
-  ng: 'Nigeria',
-  il: 'Israel',
-};
+/**
+ * Checks if a UK region code, e.g. "constituency/Bedford", is a constituency
+ * or local authority: the same rule as isUKLocalLevelGeography, for a code.
+ *
+ * @param regionCode - The region as the API takes it; empty or "uk" for the UK
+ * @returns true if it's a constituency or local authority, false otherwise
+ */
+export function isUKLocalLevelRegion(regionCode: string | null | undefined): boolean {
+  if (!regionCode) {
+    return false;
+  }
+  return isUKLocalLevelGeography({
+    id: `uk-${regionCode}`,
+    countryId: 'uk',
+    scope: 'subnational',
+    geographyId: regionCode,
+  });
+}
 
 export function getCountryLabel(countryCode: string): string {
-  if (!(countryCode in countryLabels)) {
-    return 'Unknown Country';
-  }
-  return countryLabels[countryCode];
+  return isCountryId(countryCode) ? getCountryDisplayName(countryCode) : 'Unknown country';
 }
 
 export function getRegionLabel(regionCode: string, metadata: MetadataState): string {

@@ -1,5 +1,5 @@
 import { CURRENT_YEAR } from '@/constants';
-import { MetadataApiPayload } from '@/types/metadata';
+import { MetadataApiPayload, MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
 
 export const mockMetadataResponse: MetadataApiPayload = {
@@ -8,6 +8,8 @@ export const mockMetadataResponse: MetadataApiPayload = {
   result: {
     parameters: {
       income_tax: {
+        type: 'parameter',
+        parameter: 'income_tax',
         description: 'Income tax',
         label: 'Income tax',
         unit: 'currency-GBP',
@@ -17,6 +19,8 @@ export const mockMetadataResponse: MetadataApiPayload = {
         },
       },
       national_insurance: {
+        type: 'parameter',
+        parameter: 'national_insurance',
         description: 'National Insurance contributions',
         label: 'National Insurance',
         unit: 'currency-GBP',
@@ -123,7 +127,14 @@ export const mockCustomResponse: MetadataApiPayload = {
   status: 'ok',
   message: null,
   result: {
-    parameters: { [TEST_PARAMETER_KEY]: TEST_PARAMETER_VALUE },
+    parameters: {
+      [TEST_PARAMETER_KEY]: {
+        type: 'parameter',
+        parameter: TEST_PARAMETER_KEY,
+        label: TEST_PARAMETER_KEY,
+        values: { '2024-01-01': TEST_PARAMETER_VALUE },
+      },
+    },
     variables: {},
     entities: {},
     variableModules: {},
@@ -179,3 +190,21 @@ export const mockCustomSuccessResponse = {
 // Expected error messages
 export const getExpectedFetchError = (countryId: string) =>
   `Failed to fetch metadata for ${countryId}`;
+
+/** The metadata response, listing these regions. */
+export const mockMetadataResponseWithRegions = (
+  regions: MetadataRegionEntry[]
+): MetadataApiPayload => ({
+  ...mockMetadataResponse,
+  result: {
+    ...mockMetadataResponse.result,
+    economy_options: { ...mockMetadataResponse.result.economy_options, region: regions },
+  },
+});
+
+/** A successful fetch answering with this metadata. */
+export const mockMetadataSuccessResponse = (payload: MetadataApiPayload) =>
+  ({
+    ok: true,
+    json: async () => payload,
+  }) as Response;

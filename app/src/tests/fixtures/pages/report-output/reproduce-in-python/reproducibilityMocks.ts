@@ -5,6 +5,7 @@
 import { Household } from '@/models/Household';
 import type { V1HouseholdData } from '@/models/household/v1Types';
 import { TEST_COUNTRIES } from '@/tests/fixtures/constants';
+import type { HouseholdReproduction } from '@/utils/reproducibilityCode';
 
 /**
  * Mock policy in v1 format for testing components
@@ -87,11 +88,15 @@ export const MOCK_UK_HOUSEHOLD = Household.fromV1CreationPayload(
  */
 export const DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS = {
   countryId: TEST_COUNTRIES.US,
-  policy: MOCK_POLICY_V1,
-  household: MOCK_HOUSEHOLD,
-  region: TEST_COUNTRIES.US,
-  dataset: null,
-  policyengineVersion: null,
+  year: '2024',
+  simulations: [
+    {
+      role: 'reform',
+      modelVersion: '8.1.0',
+      household: MOCK_HOUSEHOLD,
+      policy: MOCK_POLICY_V1.reform.data,
+    },
+  ] satisfies HouseholdReproduction[],
 };
 
 /**
@@ -111,11 +116,15 @@ export const DEFAULT_POLICY_REPRODUCIBILITY_PROPS = {
  */
 export const UK_HOUSEHOLD_REPRODUCIBILITY_PROPS = {
   countryId: TEST_COUNTRIES.UK,
-  policy: MOCK_POLICY_V1,
-  household: MOCK_UK_HOUSEHOLD,
-  region: TEST_COUNTRIES.UK,
-  dataset: null,
-  policyengineVersion: null,
+  year: '2024',
+  simulations: [
+    {
+      role: 'reform',
+      modelVersion: '8.1.0',
+      household: MOCK_UK_HOUSEHOLD,
+      policy: MOCK_POLICY_V1.reform.data,
+    },
+  ] satisfies HouseholdReproduction[],
 };
 
 /**

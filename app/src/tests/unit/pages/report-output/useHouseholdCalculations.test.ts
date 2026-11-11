@@ -24,7 +24,7 @@ describe('useHouseholdCalculations', () => {
     const viewModel = mockViewModelShouldStart();
 
     // When
-    renderHook(() => useHouseholdCalculations(viewModel));
+    renderHook(() => useHouseholdCalculations(viewModel, true));
 
     // Then
     expect(mockOrchestrator.startReport).toHaveBeenCalledWith(mockCalcConfig);
@@ -35,7 +35,7 @@ describe('useHouseholdCalculations', () => {
     const viewModel = mockViewModelShouldNotStart();
 
     // When
-    renderHook(() => useHouseholdCalculations(viewModel));
+    renderHook(() => useHouseholdCalculations(viewModel, true));
 
     // Then
     expect(mockOrchestrator.startReport).not.toHaveBeenCalled();
@@ -46,7 +46,7 @@ describe('useHouseholdCalculations', () => {
     const viewModel = mockViewModelNoConfig();
 
     // When
-    renderHook(() => useHouseholdCalculations(viewModel));
+    renderHook(() => useHouseholdCalculations(viewModel, true));
 
     // Then
     expect(mockOrchestrator.startReport).not.toHaveBeenCalled();
@@ -57,7 +57,7 @@ describe('useHouseholdCalculations', () => {
     const viewModel = mockViewModelShouldNotStart();
 
     // When
-    const { result } = renderHook(() => useHouseholdCalculations(viewModel));
+    const { result } = renderHook(() => useHouseholdCalculations(viewModel, true));
 
     // Then
     expect(result.current.orchestrator).toBe(mockOrchestrator);
@@ -68,7 +68,7 @@ describe('useHouseholdCalculations', () => {
     const viewModel = mockViewModelShouldStart();
 
     // When
-    const { rerender } = renderHook(() => useHouseholdCalculations(viewModel));
+    const { rerender } = renderHook(() => useHouseholdCalculations(viewModel, true));
 
     // Change the state
     viewModel.simulationStates.isPending = true;

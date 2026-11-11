@@ -60,37 +60,37 @@ describe('coerceByUnit', () => {
       expect(result).toBe(false);
     });
 
-    test('given empty string then returns false', () => {
+    test('given empty string then throws', () => {
       // Given
       const value = '';
 
       // When
-      const result = coerceByUnit(value, BOOL_UNIT);
-
-      // Then
-      expect(result).toBe(false);
+      // When / Then
+      expect(() => coerceByUnit(value, BOOL_UNIT)).toThrow(
+        'Invalid boolean policy parameter value'
+      );
     });
 
-    test('given null then returns false', () => {
+    test('given null then throws', () => {
       // Given
       const value = null;
 
       // When
-      const result = coerceByUnit(value, BOOL_UNIT);
-
-      // Then
-      expect(result).toBe(false);
+      // When / Then
+      expect(() => coerceByUnit(value, BOOL_UNIT)).toThrow(
+        'Invalid boolean policy parameter value'
+      );
     });
 
-    test('given undefined then returns false', () => {
+    test('given undefined then throws', () => {
       // Given
       const value = undefined;
 
       // When
-      const result = coerceByUnit(value, BOOL_UNIT);
-
-      // Then
-      expect(result).toBe(false);
+      // When / Then
+      expect(() => coerceByUnit(value, BOOL_UNIT)).toThrow(
+        'Invalid boolean policy parameter value'
+      );
     });
   });
 
@@ -165,59 +165,59 @@ describe('coerceByUnit', () => {
       expect(result).toBe(0);
     });
 
-    test('given empty string then returns zero', () => {
+    test('given empty string then throws', () => {
       // Given
       const value = '';
 
       // When
-      const result = coerceByUnit(value, CURRENCY_UNIT);
-
-      // Then
-      expect(result).toBe(0);
+      // When / Then
+      expect(() => coerceByUnit(value, CURRENCY_UNIT)).toThrow(
+        'Invalid numeric policy parameter value'
+      );
     });
 
-    test('given non-numeric string then returns zero', () => {
+    test('given non-numeric string then throws', () => {
       // Given
       const value = 'abc';
 
       // When
-      const result = coerceByUnit(value, CURRENCY_UNIT);
-
-      // Then
-      expect(result).toBe(0);
+      // When / Then
+      expect(() => coerceByUnit(value, CURRENCY_UNIT)).toThrow(
+        'Invalid numeric policy parameter value'
+      );
     });
 
-    test('given null then returns zero', () => {
+    test('given null then throws', () => {
       // Given
       const value = null;
 
       // When
-      const result = coerceByUnit(value, YEAR_UNIT);
-
-      // Then
-      expect(result).toBe(0);
+      // When / Then
+      expect(() => coerceByUnit(value, YEAR_UNIT)).toThrow(
+        'Invalid numeric policy parameter value'
+      );
     });
 
-    test('given undefined then returns zero', () => {
+    test('given undefined then throws', () => {
       // Given
       const value = undefined;
 
       // When
-      const result = coerceByUnit(value, YEAR_UNIT);
-
-      // Then
-      expect(result).toBe(0);
+      // When / Then
+      expect(() => coerceByUnit(value, YEAR_UNIT)).toThrow(
+        'Invalid numeric policy parameter value'
+      );
     });
 
-    test('given NaN then returns zero', () => {
+    test('given NaN then throws', () => {
       // Given
       const value = NaN;
 
       // When
-      const result = coerceByUnit(value, CURRENCY_UNIT);
-
-      // Then
-      expect(result).toBe(0);
+      // When / Then
+      expect(() => coerceByUnit(value, CURRENCY_UNIT)).toThrow(
+        'Policy parameter values must be finite'
+      );
     });
   });
 

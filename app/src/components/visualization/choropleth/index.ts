@@ -1,12 +1,14 @@
 /**
- * US District Choropleth Map module
+ * Choropleth map module
  *
- * Provides components and utilities for rendering choropleth maps
- * of US congressional districts.
+ * Provides components and utilities for rendering choropleth maps of US
+ * congressional districts and of UK constituencies and local authorities.
  */
 
 export { MapTypeToggle } from './MapTypeToggle';
+export { UKAreaChoroplethMap } from './UKAreaChoroplethMap';
 export { USDistrictChoroplethMap } from './USDistrictChoroplethMap';
+export { ukNationFromRegion } from './ukAreaBoundaries';
 
 export type {
   ChoroplethDataPoint,
@@ -17,6 +19,10 @@ export type {
   GeoJSONFeature,
   GeoJSONFeatureCollection,
   ColorRange,
+  UKAreaChoroplethDataPoint,
+  UKAreaChoroplethMapProps,
+  UKBoundaryLevel,
+  UKNation,
 } from './types';
 
 export {

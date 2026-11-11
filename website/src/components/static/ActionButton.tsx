@@ -2,11 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Text } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export interface ActionButtonProps {
   text: string;

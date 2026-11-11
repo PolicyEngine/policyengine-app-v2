@@ -14,6 +14,11 @@ import { getCountryDisplayName, getGeographyRegionTypeLabel } from '@/models/geo
 import { Household } from '@/models/Household';
 import { Geography } from '@/types/ingredients/Geography';
 import { formatDate } from '@/utils/dateUtils';
+import {
+  getLoadErrorAvailability,
+  getUserHouseholdAvailability,
+  POPULATION_LOAD_ERROR_MESSAGE,
+} from '@/utils/ingredientAvailability';
 
 export default function PopulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -202,6 +207,7 @@ export default function PopulationsPage() {
 
       return {
         id: item.association.id || item.association.householdId.toString(),
+        ...getUserHouseholdAvailability(item),
         type: 'household',
         userId: item.association.userId,
         populationName: {
@@ -230,6 +236,7 @@ export default function PopulationsPage() {
 
       return {
         id: association.association.geographyId,
+        ...getLoadErrorAvailability(association.error, POPULATION_LOAD_ERROR_MESSAGE),
         type: 'geography',
         userId: association.association.userId,
         geographyId: association.geography?.geographyId ?? association.association.geographyId,

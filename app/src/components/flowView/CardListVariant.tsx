@@ -1,3 +1,4 @@
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Stack, Text } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ export interface CardListItem {
   onClick: () => void;
   isSelected?: boolean;
   isDisabled?: boolean;
+  errorMessage?: string;
 }
 
 interface CardListVariantProps {
@@ -37,7 +39,9 @@ export default function CardListVariant({
           type="button"
           key={item.id || index}
           onClick={item.isDisabled ? undefined : item.onClick}
-          disabled={item.isDisabled}
+          disabled={item.isDisabled && !item.errorMessage}
+          aria-disabled={item.isDisabled || undefined}
+          tabIndex={item.isDisabled ? -1 : 0}
           className={cn(
             'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-sm tw:transition-all',
             item.isDisabled
@@ -47,14 +51,17 @@ export default function CardListVariant({
                 : 'tw:border-border-light tw:bg-white tw:cursor-pointer tw:hover:bg-gray-50 tw:hover:border-border-medium'
           )}
         >
-          <Stack gap="xs">
-            <Text fw={typography.fontWeight.semibold}>{item.title}</Text>
-            {item.subtitle && (
-              <Text size="sm" style={{ color: colors.gray[600] }}>
-                {item.subtitle}
-              </Text>
-            )}
-          </Stack>
+          <div className="tw:flex tw:items-start tw:justify-between tw:gap-sm">
+            <Stack gap="xs">
+              <Text fw={typography.fontWeight.semibold}>{item.title}</Text>
+              {item.subtitle && (
+                <Text size="sm" style={{ color: colors.gray[600] }}>
+                  {item.subtitle}
+                </Text>
+              )}
+            </Stack>
+            {item.errorMessage && <IngredientErrorIcon message={item.errorMessage} />}
+          </div>
         </button>
       ))}
     </Stack>

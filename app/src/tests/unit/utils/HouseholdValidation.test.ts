@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { Household } from '@/models/Household';
+import { REMOVED_COUNTRY_AS_COUNTRY_ID } from '@/tests/fixtures/libs/countriesMocks';
+import { RESOLVED_LEGACY_METADATA } from '@/tests/fixtures/spm/spmMocks';
 import {
   mockBoolMetadata,
   mockEmptyHousehold,
@@ -131,11 +133,11 @@ describe('HouseholdValidation', () => {
       );
     });
 
-    test('given Canada household when validating then uses default group strategy', () => {
+    test('given a country without group definitions of its own when validating then uses default group strategy', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUSHousehold,
-        VALIDATION_COUNTRIES.CA,
+        REMOVED_COUNTRY_AS_COUNTRY_ID,
         VALIDATION_YEARS.DEFAULT
       );
 
@@ -538,7 +540,8 @@ describe('HouseholdValidation', () => {
       const result = HouseholdValidation.isReadyForSimulation(
         mockValidUSHousehold,
         VALIDATION_COUNTRIES.US,
-        VALIDATION_YEARS.DEFAULT
+        VALIDATION_YEARS.DEFAULT,
+        RESOLVED_LEGACY_METADATA
       );
 
       // Then
@@ -550,7 +553,8 @@ describe('HouseholdValidation', () => {
       const result = HouseholdValidation.isReadyForSimulation(
         mockEmptyHousehold,
         VALIDATION_COUNTRIES.US,
-        VALIDATION_YEARS.DEFAULT
+        VALIDATION_YEARS.DEFAULT,
+        RESOLVED_LEGACY_METADATA
       );
 
       // Then
@@ -563,7 +567,8 @@ describe('HouseholdValidation', () => {
       const result = HouseholdValidation.isReadyForSimulation(
         mockHouseholdMissingAge,
         VALIDATION_COUNTRIES.US,
-        VALIDATION_YEARS.DEFAULT
+        VALIDATION_YEARS.DEFAULT,
+        RESOLVED_LEGACY_METADATA
       );
 
       // Then

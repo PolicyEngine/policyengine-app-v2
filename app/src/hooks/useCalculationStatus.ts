@@ -58,9 +58,16 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
       return;
     }
 
-    // Create observer that watches this query key
+    // Create observer that watches this query key. Cache-only: the
+    // orchestrator writes status into the cache and nothing fetches it.
+    // Left enabled, the observer would fetch on a fresh page through
+    // whatever query function last registered on this key (the progress
+    // hook's placeholder returns undefined) and React Query would log
+    // "Query data cannot be undefined" for every report opened.
     const observer = new QueryObserver<CalcStatus>(queryClient, {
       queryKey,
+      enabled: false,
+      staleTime: Infinity,
     });
 
     // Subscribe to cache updates
@@ -93,6 +100,7 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
   // Generate synthetic progress
   const synthetic = useSyntheticProgress(needsSyntheticProgress, calcType, {
     queuePosition: status?.queuePosition,
+    estimatedDurationMs: status?.estimatedDurationMs,
   });
 
   const currentStatus = status?.status || 'initializing';
@@ -113,6 +121,7 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
 
     // Keep server data available
     queuePosition: status?.queuePosition,
+    runStage: status?.runStage,
     result: status?.result,
     error: status?.error,
     metadata: status?.metadata,

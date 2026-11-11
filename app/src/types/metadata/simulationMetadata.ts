@@ -17,5 +17,6 @@ export interface SimulationMetadata {
   population_type: 'household' | 'geography';
   policy_id: string;
   output?: unknown | null;
+  error_message?: string | null;
   status?: 'pending' | 'complete' | 'error' | 'ok' | 'computing'; // Supports legacy API values
 }

@@ -1,4 +1,9 @@
 import { MetadataApiPayload } from '@/types/metadata';
+import type {
+  ParameterMetadata,
+  ParameterMetadataCollection,
+} from '@/types/metadata/parameterMetadata';
+import type { ValuesList } from '@/types/subIngredients/valueInterval';
 
 export interface ParameterTreeNode {
   name: string;
@@ -11,7 +16,7 @@ export interface ParameterTreeNode {
   description?: string | null;
   unit?: string | null;
   period?: string | null;
-  values?: Record<string, any>;
+  values?: ValuesList;
   economy?: boolean;
   household?: boolean;
 }
@@ -47,11 +52,13 @@ function sortTreeInPlace(tree: ParameterTreeNode[]): ParameterTreeNode[] {
  * Builds a hierarchical parameter tree from flat metadata parameters
  * Adapted from policyengine-app/src/api/parameters.js
  */
-export function buildParameterTree(parameters: Record<string, any>): ParameterTreeNode | undefined {
+export function buildParameterTree(
+  parameters: ParameterMetadataCollection
+): ParameterTreeNode | undefined {
   const tree: { children?: ParameterTreeNode[] } = {};
 
   for (const parameter of Object.values(parameters).filter(
-    (param: any) =>
+    (param: ParameterMetadata) =>
       (param.economy || param.household) &&
       !param.parameter.includes('taxsim') &&
       !param.parameter.includes('gov.abolitions') &&
@@ -60,7 +67,11 @@ export function buildParameterTree(parameters: Record<string, any>): ParameterTr
     const nodeToInsert: ParameterTreeNode = {
       name: parameter.parameter,
       label: capitalize(
-        (parameter.label || parameter.parameter.split(/\.|\[/).pop()).replaceAll('_', ' ')
+        (
+          parameter.label ||
+          parameter.parameter.split(/\.|\[/).pop() ||
+          parameter.parameter
+        ).replaceAll('_', ' ')
       ),
       index: parameter.indexInModule || 0,
       type: parameter.type,

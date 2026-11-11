@@ -1,0 +1,341 @@
+import { beforeEach, describe, expect, test } from 'vitest';
+import { CURRENT_YEAR, FOREVER } from '@/constants';
+import {
+  addDraftProvision,
+  clearDraftAfterRun,
+  clearDraftReform,
+  currentLawForYear,
+  draftToReform,
+  draftYear,
+  getDraftReform,
+  isEditableCurrentLaw,
+  isEditableValue,
+  loadProvisionsIntoDraft,
+  loadReformIntoDraft,
+  markDraftRun,
+  provisionAdjusts,
+  provisionChanged,
+  provisionIntervals,
+  provisionsForYear,
+  provisionsToRun,
+  provisionValueInYear,
+  provisionVariesOverTime,
+  setDraftProvisionIntervals,
+  setDraftYear,
+  startDraftReform,
+  updateDraftProvisionValue,
+  yearReadDate,
+} from '@/libs/draftReform';
+import { Reform } from '@/types/ingredients/Reform';
+
+const SINGLE = {
+  path: 'gov.irs.deductions.standard.amount.SINGLE',
+  breadcrumb: 'IRS → Deductions → Standard → SINGLE',
+  unit: 'currency-USD',
+  baselineValue: 16100,
+  value: 16100,
+};
+
+describe('draft provisions over time', () => {
+  beforeEach(() => {
+    clearDraftReform();
+  });
+
+  test('given a single value then it applies from the current year on', () => {
+    expect(provisionIntervals({ value: 18000 })).toEqual([
+      { startDate: `${CURRENT_YEAR}-01-01`, endDate: FOREVER, value: 18000 },
+    ]);
+    expect(provisionVariesOverTime({})).toBe(false);
+  });
+
+  test('given dated changes then the value in a year is the one in effect, or null', () => {
+    const provision = {
+      value: 16100,
+      intervals: [{ startDate: '2027-01-01', endDate: '2027-12-31', value: 17000 }],
+    };
+
+    expect(provisionValueInYear(provision, 2027)).toBe(17000);
+    expect(provisionValueInYear(provision, 2026)).toBeNull();
+    expect(provisionVariesOverTime(provision)).toBe(true);
+  });
+
+  test('given a country then a year reads on 1 January in the US and 30 April in the UK', () => {
+    expect(yearReadDate(2027)).toBe('2027-01-01');
+    expect(yearReadDate(2027, 'us')).toBe('2027-01-01');
+    expect(yearReadDate(2027, 'uk')).toBe('2027-04-30');
+  });
+
+  test('given a UK rate uprated in April then its year reads the uprated rate', () => {
+    // UC single allowance (25 or over): £400.14 from April 2025, £424.90 from April 2026.
+    const currentLaw = { '2025-04-01': 400.14, '2026-04-01': 424.9 };
+    const provision = {
+      path: 'gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD',
+      breadcrumb: 'UC → Standard allowance → Single, 25 or over',
+      unit: 'currency-GBP',
+      baselineValue: 400.14,
+      value: 430,
+      intervals: [{ startDate: '2026-01-01', endDate: FOREVER, value: 430 }],
+    };
+    const parameters = { [provision.path]: { values: currentLaw } } as any;
+
+    const [uk] = provisionsToRun([provision], 2026, parameters, 'uk');
+    const [us] = provisionsToRun([provision], 2026, parameters);
+
+    expect(uk.baselineValue).toBe(424.9);
+    expect(uk.value).toBe(430);
+    expect(us.baselineValue).toBe(400.14);
+  });
+
+  test('given intervals for a parameter not in the draft then it is added with them', () => {
+    startDraftReform('us', 'manual');
+    const intervals = [{ startDate: '2026-01-01', endDate: FOREVER, value: 18000 }];
+
+    setDraftProvisionIntervals('us', SINGLE, intervals);
+
+    const [provision] = getDraftReform()!.provisions;
+    expect(provision.intervals).toEqual(intervals);
+    // The single-value mirror follows the draft's year.
+    expect(provision.value).toBe(18000);
+  });
+
+  test('given empty intervals then the provision resets to current law', () => {
+    startDraftReform('us', 'manual');
+    setDraftProvisionIntervals('us', SINGLE, [
+      { startDate: '2026-01-01', endDate: FOREVER, value: 18000 },
+    ]);
+
+    setDraftProvisionIntervals('us', SINGLE, []);
+
+    const [provision] = getDraftReform()!.provisions;
+    expect(provision.intervals).toBeUndefined();
+    expect(provision.value).toBe(16100);
+  });
+
+  test('given a single value is set then any dated changes give way to it', () => {
+    startDraftReform('us', 'manual');
+    setDraftProvisionIntervals('us', SINGLE, [
+      { startDate: '2027-01-01', endDate: '2027-12-31', value: 17000 },
+    ]);
+
+    updateDraftProvisionValue(SINGLE.path, 19000);
+
+    const [provision] = getDraftReform()!.provisions;
+    expect(provision.value).toBe(19000);
+    expect(provision.intervals).toBeUndefined();
+  });
+
+  test('given a year is chosen then the draft carries it', () => {
+    startDraftReform('us', 'manual');
+    expect(draftYear(getDraftReform())).toBe(Number(CURRENT_YEAR));
+
+    setDraftYear(2028);
+
+    expect(draftYear(getDraftReform())).toBe(2028);
+  });
+
+  test('given dated changes then saving keeps every interval', () => {
+    startDraftReform('us', 'manual');
+    const intervals = [
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 17000 },
+      { startDate: '2027-01-01', endDate: FOREVER, value: 18000 },
+    ];
+    setDraftProvisionIntervals('us', SINGLE, intervals);
+
+    const reform = draftToReform(getDraftReform()!);
+
+    expect(reform.parameters).toEqual([{ name: SINGLE.path, values: intervals }]);
+  });
+
+  test('given a saved reform with dated values then loading it keeps the dates', () => {
+    const values = [
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 17000 },
+      { startDate: '2027-01-01', endDate: FOREVER, value: 18000 },
+    ];
+    loadReformIntoDraft(
+      {
+        id: 'rf-1',
+        countryId: 'us',
+        label: 'Schedule',
+        parameters: [{ name: SINGLE.path, values }],
+        provenance: { source: 'manual' },
+      } as unknown as Reform,
+      () => ({ breadcrumb: SINGLE.breadcrumb, unit: SINGLE.unit, baselineValue: 16100 })
+    );
+
+    expect(getDraftReform()!.provisions[0].intervals).toEqual(values);
+  });
+
+  test('given a list value reloaded as a new array then it still matches current law', () => {
+    const list = ['employee_social_security_tax', 'employee_medicare_tax'];
+
+    expect(provisionChanged({ value: [...list], baselineValue: list })).toBe(false);
+    expect(provisionChanged({ value: ['employee_medicare_tax'], baselineValue: list })).toBe(true);
+  });
+
+  test('given a value then only numbers and switches are editable', () => {
+    expect(isEditableValue(2000)).toBe(true);
+    expect(isEditableValue(false)).toBe(true);
+    expect(isEditableValue(['employee_medicare_tax'])).toBe(false);
+  });
+
+  test('given a report year then each provision reads as it stands that year', () => {
+    const provisions = [
+      {
+        ...SINGLE,
+        intervals: [{ startDate: '2027-01-01', endDate: '2027-12-31', value: 17000 }],
+      },
+      { ...SINGLE, path: 'gov.untouched', value: 16100 },
+    ];
+    const currentLaw = (_path: string, year: number) => (year === 2027 ? 16500 : 16100);
+
+    const [dated, untouched] = provisionsForYear(provisions, 2027, currentLaw);
+
+    expect([dated.baselineValue, dated.value]).toEqual([16500, 17000]);
+    // Unchanged stays current law — in that year, not the year it was added.
+    expect([untouched.baselineValue, untouched.value]).toEqual([16500, 16500]);
+  });
+
+  test('given the draft year changes then dated provisions mirror that year', () => {
+    startDraftReform('us', 'manual');
+    setDraftProvisionIntervals('us', SINGLE, [
+      { startDate: '2027-01-01', endDate: '2027-12-31', value: 17000 },
+    ]);
+    expect(getDraftReform()!.provisions[0].value).toBe(16100);
+
+    setDraftYear(2027);
+
+    expect(getDraftReform()!.provisions[0].value).toBe(17000);
+  });
+});
+
+describe('provisionAdjusts', () => {
+  const CURRENT_LAW = { '2025-01-01': 15750, '2026-01-01': 16100, '2027-01-01': 16500 };
+  const withIntervals = (intervals: any[]) => ({ ...SINGLE, intervals });
+
+  test('given a parameter left at current law then it changes nothing', () => {
+    expect(provisionAdjusts(SINGLE, CURRENT_LAW)).toBe(false);
+  });
+
+  test('given a value typed back to current law then it changes nothing', () => {
+    const typedBack = withIntervals([
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 16100 },
+    ]);
+
+    expect(provisionAdjusts(typedBack, CURRENT_LAW)).toBe(false);
+  });
+
+  test('given a value held while current law moves on then it changes something', () => {
+    // 16,100 from 2026 on matches 2026, but freezes the 2027 rise.
+    const frozen = withIntervals([{ startDate: '2026-01-01', endDate: FOREVER, value: 16100 }]);
+
+    expect(provisionAdjusts(frozen, CURRENT_LAW)).toBe(true);
+  });
+
+  test('given a rate typed as a percentage then float noise is no change', () => {
+    const rate = {
+      path: 'gov.irs.credits.eitc.phase_in_rate[0].amount',
+      breadcrumb: '',
+      unit: '/1',
+      baselineValue: 0.0765,
+      value: 0.0765,
+      intervals: [{ startDate: '2026-01-01', endDate: '2026-12-31', value: 7.65 / 100 }],
+    };
+
+    expect(provisionAdjusts(rate, { '2026-01-01': 0.0765 })).toBe(false);
+  });
+
+  test('given no current law to compare then any set value counts', () => {
+    expect(provisionAdjusts({ ...SINGLE, value: 18000 }, undefined)).toBe(true);
+  });
+});
+
+describe('a run hands the draft over to its report', () => {
+  beforeEach(() => {
+    clearDraftReform();
+    addDraftProvision('us', { ...SINGLE, value: 18000 });
+  });
+
+  test('given its report opens then the draft clears, so Build starts blank', () => {
+    markDraftRun('report-1');
+
+    clearDraftAfterRun('report-1');
+
+    expect(getDraftReform()).toBeNull();
+  });
+
+  test('given another report opens then the draft stays', () => {
+    markDraftRun('report-1');
+
+    clearDraftAfterRun('report-2');
+
+    expect(getDraftReform()?.provisions).toHaveLength(1);
+  });
+
+  test("given edit after a run then the report's reform is the draft again", () => {
+    clearDraftReform();
+
+    loadProvisionsIntoDraft('us', [{ ...SINGLE, value: 18000 }], { label: 'Bigger', year: 2027 });
+
+    expect(getDraftReform()).toMatchObject({
+      countryId: 'us',
+      label: 'Bigger',
+      year: 2027,
+      provisions: [{ path: SINGLE.path, value: 18000 }],
+    });
+  });
+});
+
+// The UC protected LCWRA element as metadata sends it: 2027's amount is
+// not legislated, so policyengine-uk sets it from a formula.
+const PROTECTED = 'gov.dwp.universal_credit.rebalancing.protected_health_element';
+const PROTECTED_VALUES = { '2015-01-01': 429.8, '2026-04-01': 429.8, '2027-04-01': null };
+
+describe('current law left to a formula', () => {
+  test('given a null value during the year then current law is null', () => {
+    expect(currentLawForYear(PROTECTED_VALUES, 2027)).toBeNull();
+    expect(currentLawForYear(PROTECTED_VALUES, 2030)).toBeNull();
+  });
+
+  test('given a year before the null value then current law is the set value', () => {
+    expect(currentLawForYear(PROTECTED_VALUES, 2026)).toBe(429.8);
+  });
+
+  test('given a UK year then current law is read in April, after the uprating', () => {
+    const UC_SINGLE = { '2025-04-01': 400.14, '2026-04-01': 424.9 };
+
+    expect(currentLawForYear(UC_SINGLE, 2026, 'uk')).toBe(424.9);
+    expect(currentLawForYear(UC_SINGLE, 2026, 'us')).toBe(400.14);
+    expect(currentLawForYear(PROTECTED_VALUES, 2027, 'uk')).toBeNull();
+  });
+
+  test('given no values or a year before the first then current law is undefined', () => {
+    expect(currentLawForYear(undefined, 2027)).toBeUndefined();
+    expect(currentLawForYear(PROTECTED_VALUES, 2010)).toBeUndefined();
+  });
+
+  test('given a formula current law then a box can still set a value', () => {
+    expect(isEditableCurrentLaw(null)).toBe(true);
+    expect(isEditableCurrentLaw(undefined)).toBe(false);
+    expect(isEditableCurrentLaw('text')).toBe(false);
+  });
+
+  test('given the last set value typed for a formula year then the report runs it as a change', () => {
+    // Given: 429.8 typed from 2027, the value current law last set.
+    const frozen = {
+      path: PROTECTED,
+      breadcrumb: 'Protected LCWRA element',
+      unit: 'currency-GBP',
+      baselineValue: 429.8,
+      value: 429.8,
+      intervals: [{ startDate: '2027-01-01', endDate: FOREVER, value: 429.8 }],
+    };
+    const parameters = { [PROTECTED]: { values: PROTECTED_VALUES } } as any;
+
+    // When
+    const [run] = provisionsToRun([frozen], 2027, parameters);
+
+    // Then: current law reads as a formula, not as the value typed.
+    expect(run.baselineValue).toBeNull();
+    expect(run.value).toBe(429.8);
+  });
+});

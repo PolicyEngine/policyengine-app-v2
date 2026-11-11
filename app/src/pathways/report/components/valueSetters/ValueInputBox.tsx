@@ -2,13 +2,14 @@ import { Input, Switch } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { cn } from '@/lib/utils';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import type { PolicyInputValue } from '@/types/metadata/policyMetadata';
 import { coerceByUnit } from '@/utils/valueCoercion';
 
 interface ValueInputBoxProps {
   label?: string;
   param: ParameterMetadata;
-  value?: any;
-  onChange?: (value: any) => void;
+  value?: PolicyInputValue;
+  onChange?: (value: PolicyInputValue) => void;
   onSubmit?: () => void;
 }
 
@@ -34,14 +35,14 @@ export function ValueInputBox(props: ValueInputBoxProps) {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onChange) {
-      const newValue = e.target.value === '' ? 0 : parseFloat(e.target.value);
-      // Coerce to proper type
-      const coerced = coerceByUnit(newValue, param.unit);
-      // Convert percentage display value (0-100) to decimal (0-1) for storage
-      const valueToStore = isPercentage ? (coerced as number) / 100 : coerced;
-      onChange(valueToStore);
+    if (!onChange || e.target.value === '') {
+      return;
     }
+
+    const coerced = coerceByUnit(e.target.value, param.unit);
+    // Convert percentage display value (0-100) to decimal (0-1) for storage
+    const valueToStore = isPercentage ? (coerced as number) / 100 : coerced;
+    onChange(valueToStore);
   };
 
   const handleBoolChange = (checked: boolean) => {
@@ -74,7 +75,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
           >
             False
           </span>
-          <Switch checked={value || false} onCheckedChange={handleBoolChange} />
+          <Switch checked={value === true} onCheckedChange={handleBoolChange} />
           <span
             className={`tw:text-sm ${value ? 'tw:text-gray-900 tw:font-semibold' : 'tw:text-gray-400'}`}
           >

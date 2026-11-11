@@ -1,10 +1,6 @@
 import { ReactNode } from "react";
 import { Container, Title } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 import ActionButton, { ActionButtonProps } from "./ActionButton";
 
 export interface CTASectionProps {
@@ -63,9 +59,7 @@ export default function CTASection({
           </Title>
         )}
         <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:gap-6 tw:md:gap-12">
-          <div style={{ flex: 1.5, color: textColors[variant] }}>
-            {content}
-          </div>
+          <div style={{ flex: 1.5, color: textColors[variant] }}>{content}</div>
           <div className="tw:flex tw:flex-1 tw:flex-col tw:items-center tw:justify-center">
             <ActionButton
               {...cta}

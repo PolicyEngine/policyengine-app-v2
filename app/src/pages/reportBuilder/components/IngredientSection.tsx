@@ -11,6 +11,7 @@ import {
   IconSparkles,
   IconUsers,
 } from '@tabler/icons-react';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Group, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
@@ -38,6 +39,7 @@ export function IngredientSection({
   inheritedPopulationLabel: _inheritedPopulationLabel,
   savedPolicies = [],
   recentPopulations = [],
+  selectedErrorMessage,
 }: IngredientSectionProps) {
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const colorConfig = INGREDIENT_COLORS[type];
@@ -54,6 +56,9 @@ export function IngredientSection({
   };
 
   const iconSize = 16;
+  const isSelectedErrorVisible =
+    (type === 'policy' && savedPolicies.slice(0, 3).some((item) => item.id === currentId)) ||
+    (type === 'population' && recentPopulations.slice(0, 4).some((item) => item.id === currentId));
 
   return (
     <div
@@ -82,6 +87,9 @@ export function IngredientSection({
           {typeLabels[type]}
         </Text>
         {isInherited && <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>}
+        {selectedErrorMessage && !isSelectedErrorVisible && (
+          <IngredientErrorIcon message={selectedErrorMessage} />
+        )}
       </div>
 
       {/* Chips container */}
@@ -119,7 +127,11 @@ export function IngredientSection({
                   />
                 }
                 label={policy.label}
-                description={`${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''} changed`}
+                description={
+                  policy.isDisabled
+                    ? 'Failed to load'
+                    : `${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''} changed`
+                }
                 isSelected={currentId === policy.id}
                 onClick={() => {
                   if (currentId === policy.id && onDeselectPolicy) {
@@ -129,6 +141,8 @@ export function IngredientSection({
                   }
                 }}
                 colorConfig={colorConfig}
+                isDisabled={policy.isDisabled}
+                errorMessage={policy.errorMessage}
               />
             ))}
             {/* More options - always shown for searching/browsing all policies */}
@@ -187,9 +201,18 @@ export function IngredientSection({
                   )
                 }
                 label={pop.label}
-                description={pop.type === 'household' ? 'Household' : 'Geography'}
+                description={
+                  pop.isDisabled
+                    ? 'Failed to load'
+                    : pop.type === 'household'
+                      ? 'Household'
+                      : 'Geography'
+                }
                 isSelected={currentId === pop.id}
                 onClick={() => {
+                  if (pop.isDisabled || !pop.population) {
+                    return;
+                  }
                   if (currentId === pop.id && onDeselectPopulation) {
                     onDeselectPopulation();
                   } else {
@@ -197,6 +220,8 @@ export function IngredientSection({
                   }
                 }}
                 colorConfig={colorConfig}
+                isDisabled={pop.isDisabled}
+                errorMessage={pop.errorMessage}
               />
             ))}
             {/* More options - always shown for searching/browsing all populations */}

@@ -55,9 +55,9 @@ The reform affects households differently based on family composition, income le
 Our analysis shows that the childcare hours extension will reduce government revenue by the following amounts:
 
 | Revenue impact (£bn) | 2024/25 | 2025/26 | 2026/27 | 2027/28 | 2028/29 | 2029/30 |
-| :-------------------- | ------: | ------: | ------: | ------: | ------: | ------: |
-| PolicyEngine           |    -1.3 |    -3.9 |    -4.3 |    -4.4 |    -4.6 |    -4.7 |
-| HM Treasury            |    -1.7 |    -3.3 |    -4.1 |    -4.1 |       - |       - |
+| :------------------- | ------: | ------: | ------: | ------: | ------: | ------: |
+| PolicyEngine         |    -1.3 |    -3.9 |    -4.3 |    -4.4 |    -4.6 |    -4.7 |
+| HM Treasury          |    -1.7 |    -3.3 |    -4.1 |    -4.1 |       - |       - |
 
 ## Conclusion
 

@@ -12,10 +12,8 @@
 import { useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { ReportAdapter, SimulationAdapter } from '@/adapters';
+import { ReportAdapter } from '@/adapters';
 import { createReport as createBaseReport, createReportAndAssociateWithUser } from '@/api/report';
-import { createSimulation } from '@/api/simulation';
-import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -23,8 +21,10 @@ import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { toApiPolicyId } from '../currentLaw';
+import type { SimulationStateProps } from '@/types/pathwayState';
 import { ReportBuilderState } from '../types';
+import { createReportSimulations } from '../utils/createReportSimulations';
+import { useReportIngredientAvailability } from './useReportIngredientAvailability';
 
 interface UseModifyReportSubmissionArgs {
   reportState: ReportBuilderState;
@@ -38,6 +38,8 @@ interface UseModifyReportSubmissionReturn {
   handleReplace: () => Promise<void>;
   isSavingNew: boolean;
   isReplacing: boolean;
+  isReportSubmissionBlocked: boolean;
+  submissionError: Error | null;
 }
 
 export function useModifyReportSubmission({
@@ -47,82 +49,28 @@ export function useModifyReportSubmission({
   onSuccess,
 }: UseModifyReportSubmissionArgs): UseModifyReportSubmissionReturn {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const metadata = useSelector((state: RootState) => state.metadata);
   const manager = useCalcOrchestratorManager();
   const updateReportAssociation = useUpdateReportAssociation();
   const queryClient = useQueryClient();
+  const [submissionError, setSubmissionError] = useState<Error | null>(null);
   const [isSavingNew, setIsSavingNew] = useState(false);
   const [isReplacing, setIsReplacing] = useState(false);
+  const { isReportConfigured } = useReportIngredientAvailability(reportState);
+  const isReportSubmissionBlocked = !isReportConfigured;
 
   /**
    * Shared logic: create simulations via API and build the report payload.
    * Returns the created simulation IDs, domain-model simulations, and report payload.
    */
   const createSimulationsAndReport = useCallback(async () => {
-    const simulationIds: string[] = [];
-    const simulations: (Simulation | null)[] = [];
-
-    for (const simState of reportState.simulations) {
-      const policyId = simState.policy?.id
-        ? toApiPolicyId(simState.policy.id, currentLawId)
-        : undefined;
-
-      if (!policyId) {
-        console.error('[useModifyReportSubmission] Simulation missing policy ID');
-        continue;
-      }
-
-      let populationId: string | undefined;
-      let populationType: 'household' | 'geography' | undefined;
-
-      if (simState.population?.household?.id) {
-        populationId = simState.population.household.id;
-        populationType = 'household';
-      } else if (simState.population?.geography?.geographyId) {
-        populationId = simState.population.geography.geographyId;
-        populationType = 'geography';
-      }
-
-      if (!populationId || !populationType) {
-        console.error('[useModifyReportSubmission] Simulation missing population');
-        continue;
-      }
-
-      const payload = SimulationAdapter.toCreationPayload({
-        populationId,
-        policyId,
-        populationType,
-      });
-      const result = await createSimulation(countryId, payload);
-      const simulationId = result.result.simulation_id;
-      simulationIds.push(simulationId);
-
-      // Create UserSimulation association in localStorage so sharing works
-      const simulationStore = new LocalStorageSimulationStore();
-      await simulationStore.create({
-        userId: MOCK_USER_ID,
-        simulationId,
-        countryId,
-        label: simState.label ?? undefined,
-        isCreated: true,
-      });
-
-      simulations.push({
-        id: simulationId,
-        countryId,
-        apiVersion: undefined,
-        policyId,
-        populationId,
-        populationType,
-        label: simState.label,
-        isCreated: true,
-        output: null,
-        status: 'pending',
-      });
-    }
-
-    if (simulationIds.length === 0) {
-      throw new Error('No simulations created');
-    }
+    const { simulationIds, simulations, simulationStates } = await createReportSimulations({
+      simulationStates: reportState.simulations,
+      countryId,
+      currentLawId,
+      reportYear: reportState.year,
+      metadata,
+    });
 
     const reportPayload = ReportAdapter.toCreationPayload({
       countryId,
@@ -131,15 +79,20 @@ export function useModifyReportSubmission({
       apiVersion: null,
     } as Report);
 
-    return { simulationIds, simulations, reportPayload };
-  }, [reportState, countryId, currentLawId]);
+    return { simulationIds, simulations, simulationStates, reportPayload };
+  }, [reportState, countryId, currentLawId, metadata]);
 
   /**
    * Shared logic: start calculation after a report is created.
    * Mirrors the logic in useCreateReport.onSuccess.
    */
   const startCalculation = useCallback(
-    async (report: Report, simulations: (Simulation | null)[]) => {
+    async (
+      report: Report,
+      simulations: (Simulation | null)[],
+      simulationStates: SimulationStateProps[]
+    ) => {
+      queryClient.setQueryData(reportKeys.byId(String(report.id)), report);
       const simulation1 = simulations[0];
       if (!simulation1) {
         return;
@@ -154,11 +107,15 @@ export function useModifyReportSubmission({
             .startCalculation({
               calcId: sim.id!,
               targetType: 'simulation',
+              reportId: String(report.id),
               countryId: report.countryId,
               year: report.year,
               simulations: { simulation1: sim, simulation2: null },
               populations: {
-                household1: reportState.simulations[0]?.population?.household || null,
+                household1:
+                  simulationStates.find(
+                    (candidate) => candidate.population?.household?.id === sim.populationId
+                  )?.population?.household || null,
                 household2: null,
                 geography1: null,
                 geography2: null,
@@ -184,13 +141,13 @@ export function useModifyReportSubmission({
           populations: {
             household1: null,
             household2: null,
-            geography1: reportState.simulations[0]?.population?.geography || null,
+            geography1: simulationStates[0]?.population?.geography || null,
             geography2: null,
           },
         });
       }
     },
-    [manager, reportState]
+    [manager, queryClient]
   );
 
   /**
@@ -199,13 +156,14 @@ export function useModifyReportSubmission({
    */
   const handleSaveAsNew = useCallback(
     async (label: string) => {
-      if (isSavingNew || isReplacing) {
+      if (isSavingNew || isReplacing || isReportSubmissionBlocked) {
         return;
       }
       setIsSavingNew(true);
+      setSubmissionError(null);
 
       try {
-        const { simulations, reportPayload } = await createSimulationsAndReport();
+        const { simulations, simulationStates, reportPayload } = await createSimulationsAndReport();
 
         const result = await createReportAndAssociateWithUser({
           countryId,
@@ -217,16 +175,20 @@ export function useModifyReportSubmission({
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
         queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
-        await startCalculation(result.report, simulations);
+        await startCalculation(result.report, simulations, simulationStates);
         onSuccess(result.userReport.id);
       } catch (error) {
         console.error('[useModifyReportSubmission] Save as new failed:', error);
+        setSubmissionError(
+          error instanceof Error ? error : new Error('Unable to save this report.')
+        );
         setIsSavingNew(false);
       }
     },
     [
       isSavingNew,
       isReplacing,
+      isReportSubmissionBlocked,
       createSimulationsAndReport,
       countryId,
       queryClient,
@@ -240,13 +202,14 @@ export function useModifyReportSubmission({
    * existing UserReport association to point to the new base report ID.
    */
   const handleReplace = useCallback(async () => {
-    if (isSavingNew || isReplacing) {
+    if (isSavingNew || isReplacing || isReportSubmissionBlocked) {
       return;
     }
     setIsReplacing(true);
+    setSubmissionError(null);
 
     try {
-      const { simulations, reportPayload } = await createSimulationsAndReport();
+      const { simulations, simulationStates, reportPayload } = await createSimulationsAndReport();
 
       const reportMetadata = await createBaseReport(countryId, reportPayload);
       const report = ReportAdapter.fromMetadata(reportMetadata);
@@ -259,15 +222,19 @@ export function useModifyReportSubmission({
       queryClient.invalidateQueries({ queryKey: reportKeys.all });
       queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
-      await startCalculation(report, simulations);
+      await startCalculation(report, simulations, simulationStates);
       onSuccess(existingUserReportId);
     } catch (error) {
       console.error('[useModifyReportSubmission] Replace failed:', error);
+      setSubmissionError(
+        error instanceof Error ? error : new Error('Unable to update this report.')
+      );
       setIsReplacing(false);
     }
   }, [
     isSavingNew,
     isReplacing,
+    isReportSubmissionBlocked,
     createSimulationsAndReport,
     countryId,
     existingUserReportId,
@@ -277,5 +244,12 @@ export function useModifyReportSubmission({
     onSuccess,
   ]);
 
-  return { handleSaveAsNew, handleReplace, isSavingNew, isReplacing };
+  return {
+    handleSaveAsNew,
+    handleReplace,
+    isSavingNew,
+    isReplacing,
+    isReportSubmissionBlocked,
+    submissionError,
+  };
 }

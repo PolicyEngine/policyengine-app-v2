@@ -1,4 +1,5 @@
 import { UserGeographicAdapter } from '@/adapters/UserGeographicAdapter';
+import { canonicalRegionCode } from '@/models/region';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 export interface UserGeographicStore {
@@ -133,7 +134,13 @@ export class LocalStorageGeographicStore implements UserGeographicStore {
 
   async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
     const populations = this.getStoredPopulations();
-    return populations.find((p) => p.userId === userId && p.geographyId === geographyId) || null;
+    const canonicalGeographyId = canonicalRegionCode(geographyId);
+    return (
+      populations.find(
+        (population) =>
+          population.userId === userId && population.geographyId === canonicalGeographyId
+      ) || null
+    );
   }
 
   async update(
@@ -142,10 +149,12 @@ export class LocalStorageGeographicStore implements UserGeographicStore {
     updates: Partial<UserGeographyPopulation>
   ): Promise<UserGeographyPopulation> {
     const populations = this.getStoredPopulations();
+    const canonicalGeographyId = canonicalRegionCode(geographyId);
 
     // Find by userId and geographyId composite key
     const index = populations.findIndex(
-      (g) => g.userId === userId && g.geographyId === geographyId
+      (population) =>
+        population.userId === userId && population.geographyId === canonicalGeographyId
     );
 
     if (index === -1) {
@@ -189,12 +198,13 @@ export class LocalStorageGeographicStore implements UserGeographicStore {
       }
 
       const parsed = JSON.parse(stored);
-      // Data is already in application format (UserGeographyPopulation), just ensure type coercion
+      // Data is already in application format (UserGeographyPopulation), just ensure type
+      // coercion; a geography saved for "country/ni" reads as "country/northern_ireland".
       return parsed.map((data: any) => ({
         ...data,
         id: String(data.id),
         userId: String(data.userId),
-        geographyId: String(data.geographyId),
+        geographyId: canonicalRegionCode(String(data.geographyId)),
       }));
     } catch {
       return [];

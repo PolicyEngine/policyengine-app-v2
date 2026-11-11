@@ -7,6 +7,7 @@ export interface ButtonConfig {
   variant?: 'filled' | 'outline' | 'disabled' | 'default';
   onClick: () => void;
   isLoading?: boolean;
+  isDisabled?: boolean;
 }
 
 export type { PaginationConfig };
@@ -89,7 +90,7 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
         <Button
           key={index}
           variant={button.variant === 'filled' ? 'default' : 'outline'}
-          disabled={button.variant === 'disabled' || button.isLoading}
+          disabled={button.variant === 'disabled' || button.isLoading || button.isDisabled}
           onClick={button.onClick}
         >
           {button.isLoading && <Spinner size="sm" />}

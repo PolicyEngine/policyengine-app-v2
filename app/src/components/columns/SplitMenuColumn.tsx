@@ -25,12 +25,15 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
   const secondaryActions = config.actions.slice(1);
 
   const handlePrimaryAction = () => {
-    if (primaryAction) {
+    if (primaryAction && !record.isDisabled) {
       config.onAction(primaryAction.action, record.id);
     }
   };
 
   const handleSecondaryAction = (action: string) => {
+    if (record.isDisabled) {
+      return;
+    }
     config.onAction(action, record.id);
     setOpened(false);
   };

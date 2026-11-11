@@ -1,0 +1,109 @@
+import { describe, expect, it } from 'vitest';
+import {
+  currencySymbolForUnit,
+  formatCurrentLaw,
+  formatValue,
+  getCurrentValue,
+  isPercentageUnit,
+  parseValueFromQuestion,
+} from '@/utils/parameterValues';
+
+describe('getCurrentValue', () => {
+  it('given dated values then returns the latest not-in-the-future value', () => {
+    expect(getCurrentValue({ '2020-01-01': 1000, '2025-01-01': 1500, '2099-01-01': 9999 })).toBe(
+      1500
+    );
+  });
+
+  it('given only future values then falls back to the earliest', () => {
+    expect(getCurrentValue({ '2098-01-01': 5, '2099-01-01': 7 })).toBe(5);
+  });
+
+  it('given no values then returns undefined', () => {
+    expect(getCurrentValue(undefined)).toBeUndefined();
+    expect(getCurrentValue(null)).toBeUndefined();
+  });
+});
+
+describe('parseValueFromQuestion', () => {
+  it.each([
+    ['raise the child tax credit to $3,600', 'currency-USD', 3600],
+    ['raise the personal allowance to £15,000', 'currency-GBP', 15000],
+    ['cut the rate to 4.45%', '/1', 0.0445],
+    ['set the limit to 3 children', 'child', 3],
+    ['raise the CTC from $2,000 to $3,600', 'currency-USD', 3600],
+  ])('given "%s" with unit %s then parses %s', (question, unit, expected) => {
+    expect(parseValueFromQuestion(question, unit)).toBe(expected);
+  });
+
+  it.each([
+    ['remove the two-child limit entirely', 'currency-USD'],
+    ['cut the rate to 4.45%', 'currency-USD'],
+    ['raise it to $3,600', '/1'],
+  ])('given "%s" with unit %s then does not guess', (question, unit) => {
+    expect(parseValueFromQuestion(question, unit)).toBeUndefined();
+  });
+});
+
+describe('formatValue', () => {
+  it.each([
+    [2000, 'currency-USD', '$2,000'],
+    [12570, 'currency-GBP', '£12,570'],
+    [0.0445, '/1', '4.45%'],
+    [true, null, 'true'],
+    [false, null, 'false'],
+    [undefined, null, '—'],
+    ['text', null, 'text'],
+    // UK parameters spell pounds three ways.
+    [16000, 'GBP', '£16,000'],
+    [1, 'currency_GBP', '£1'],
+    [2000, 'USD', '$2,000'],
+    // The sign goes before the symbol.
+    [-500, 'currency-GBP', '−£500'],
+    [-500, 'currency-USD', '−$500'],
+    [0.5, 'marginal-rate', '50%'],
+    // Money shows pence or cents, not the raw float.
+    [346.366589511, 'currency-GBP', '£346.37'],
+    [424.9, 'currency-GBP', '£424.90'],
+    [-12.5, 'currency-USD', '−$12.50'],
+    // An amount under 1 keeps its third decimal.
+    [0.655, 'currency-USD', '$0.655'],
+  ])('given %s with unit %s then renders %s', (value, unit, expected) => {
+    expect(formatValue(value, unit as string | null)).toBe(expected);
+  });
+});
+
+describe('currencySymbolForUnit', () => {
+  it.each([
+    ['currency-GBP', '£'],
+    ['GBP', '£'],
+    ['currency_GBP', '£'],
+    ['currency-USD', '$'],
+    ['/1', null],
+    [null, null],
+  ])('given unit %s then %s', (unit, expected) => {
+    expect(currencySymbolForUnit(unit)).toBe(expected);
+  });
+});
+
+describe('isPercentageUnit', () => {
+  it('given a rate unit then true; money then false', () => {
+    expect(isPercentageUnit('/1')).toBe(true);
+    expect(isPercentageUnit('marginal-rate')).toBe(true);
+    expect(isPercentageUnit('GBP')).toBe(false);
+  });
+});
+
+describe('formatCurrentLaw', () => {
+  it('given null then reads as an amount set by formula', () => {
+    expect(formatCurrentLaw(null, 'currency-GBP')).toBe('Set by formula (not legislated)');
+  });
+
+  it('given a number then formats it as formatValue does', () => {
+    expect(formatCurrentLaw(429.8, 'currency-GBP')).toBe(formatValue(429.8, 'currency-GBP'));
+  });
+
+  it('given no value then reads as a dash', () => {
+    expect(formatCurrentLaw(undefined, 'currency-GBP')).toBe('—');
+  });
+});

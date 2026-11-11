@@ -1,12 +1,20 @@
-import { render, screen } from '@test-utils';
+import { act, render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
+import { Household } from '@/models/Household';
 import ModifyReportPage from '@/pages/reportBuilder/ModifyReportPage';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
+import {
+  OWNERSHIP_HYDRATION_ERRORS,
+  ownershipReportState,
+} from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
 
 const mockUseAppLocation = vi.fn();
 const mockUseReportBuilderState = vi.fn();
 const mockReportBuilderShell = vi.fn();
+const { mockUseModifyReportSubmission } = vi.hoisted(() => ({
+  mockUseModifyReportSubmission: vi.fn(),
+}));
 
 const baseReportState: ReportBuilderState = {
   id: 'sur-123',
@@ -46,12 +54,7 @@ vi.mock('@/pages/reportBuilder/hooks/useReportBuilderState', () => ({
 }));
 
 vi.mock('@/pages/reportBuilder/hooks/useModifyReportSubmission', () => ({
-  useModifyReportSubmission: () => ({
-    handleSaveAsNew: vi.fn(),
-    handleReplace: vi.fn(),
-    isSavingNew: false,
-    isReplacing: false,
-  }),
+  useModifyReportSubmission: () => mockUseModifyReportSubmission(),
 }));
 
 vi.mock('@/pages/reportBuilder/components', () => ({
@@ -76,6 +79,14 @@ describe('ModifyReportPage', () => {
       isLoading: false,
       error: null,
     });
+    mockUseModifyReportSubmission.mockReturnValue({
+      handleSaveAsNew: vi.fn(),
+      handleReplace: vi.fn(),
+      isSavingNew: false,
+      isReplacing: false,
+      isReportSubmissionBlocked: false,
+      submissionError: null,
+    });
   });
 
   test('given owned report then edit action is available', () => {
@@ -87,6 +98,54 @@ describe('ModifyReportPage', () => {
     expect(shellProps.isReadOnly).toBe(true);
     expect(shellProps.backPath).toBe('/us/report-output/sur-123');
     expect(shellProps.backLabel).toBe('Test report');
+  });
+
+  test.each(Object.values(OWNERSHIP_HYDRATION_ERRORS))(
+    'given a terminal loading error then displays %s without rendering editable report actions',
+    (message) => {
+      mockUseReportBuilderState.mockReturnValue({
+        reportState: null,
+        setReportState: vi.fn(),
+        originalState: null,
+        isLoading: false,
+        error: new Error(message),
+      });
+
+      render(<ModifyReportPage userReportId="sur-123" />);
+
+      expect(screen.getByText(`Error loading report: ${message}`)).toBeInTheDocument();
+      expect(screen.queryByText('Loading report...')).not.toBeInTheDocument();
+      expect(mockReportBuilderShell).not.toHaveBeenCalled();
+    }
+  );
+
+  test('given independent household edits then cancel restores callable household models and each original population', () => {
+    const original = ownershipReportState();
+    const setReportState = vi.fn();
+    mockUseReportBuilderState.mockReturnValue({
+      reportState: { ...original, year: '2023' },
+      setReportState,
+      originalState: original,
+      isLoading: false,
+      error: null,
+    });
+    render(<ModifyReportPage userReportId="ownership-report" />);
+    act(() => mockReportBuilderShell.mock.lastCall?.[0].actions[0].onClick());
+    const cancel = mockReportBuilderShell.mock.lastCall?.[0].actions.find(
+      (action: { key: string }) => action.key === 'cancel'
+    );
+
+    act(() => cancel.onClick());
+
+    const restored = setReportState.mock.lastCall?.[0] as ReportBuilderState;
+    expect(restored.year).toBe(original.year);
+    restored.simulations.forEach((simulation, index) => {
+      expect(simulation.population.household).toBeInstanceOf(Household);
+      expect(simulation.population.household!.toJSON()).toEqual(
+        original.simulations[index].population.household!.toJSON()
+      );
+      expect(simulation.policy).toEqual(original.simulations[index].policy);
+    });
   });
 
   test('given share query then builder stays read-only and hides edit actions', () => {
@@ -137,5 +196,43 @@ describe('ModifyReportPage', () => {
 
     const shellProps = mockReportBuilderShell.mock.calls[0]?.[0];
     expect(shellProps.backLabel).toBe('sur-123');
+  });
+
+  test('given report submission is blocked then update and save actions are disabled', () => {
+    mockUseModifyReportSubmission.mockReturnValue({
+      handleSaveAsNew: vi.fn(),
+      handleReplace: vi.fn(),
+      isSavingNew: false,
+      isReplacing: false,
+      isReportSubmissionBlocked: true,
+    });
+    render(<ModifyReportPage userReportId="sur-123" />);
+
+    const initialShellProps = mockReportBuilderShell.mock.calls[0]?.[0];
+    act(() => initialShellProps.actions[0].onClick());
+
+    const editShellProps = mockReportBuilderShell.mock.lastCall?.[0];
+    expect(editShellProps.actions.find((action: any) => action.key === 'replace')).toMatchObject({
+      disabled: true,
+    });
+    expect(editShellProps.actions.find((action: any) => action.key === 'save-new')).toMatchObject({
+      disabled: true,
+    });
+  });
+
+  test('given corrected household persistence fails then forwards the submission error to the visible builder shell', () => {
+    const error = new Error('Could not save the corrected household');
+    mockUseModifyReportSubmission.mockReturnValue({
+      handleSaveAsNew: vi.fn(),
+      handleReplace: vi.fn(),
+      isSavingNew: false,
+      isReplacing: false,
+      isReportSubmissionBlocked: false,
+      submissionError: error,
+    });
+
+    render(<ModifyReportPage userReportId="sur-123" />);
+
+    expect(mockReportBuilderShell.mock.lastCall?.[0].submissionError).toBe(error);
   });
 });

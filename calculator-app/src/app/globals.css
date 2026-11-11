@@ -3,3 +3,42 @@
 
 /* Scan shared components for Tailwind class usage */
 @source "../../../app/src/**/*.{ts,tsx}";
+
+/* Transform the finished chart rather than resizing it on every animation frame. */
+.report-chart-dialog[data-state="open"] {
+  animation: report-chart-expand 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.report-chart-dialog[data-state="closed"] {
+  animation: report-chart-collapse 160ms ease-in both;
+}
+
+@keyframes report-chart-expand {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes report-chart-collapse {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report-chart-dialog[data-state] {
+    animation: none;
+  }
+}

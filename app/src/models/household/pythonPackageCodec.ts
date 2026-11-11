@@ -111,11 +111,14 @@ export function buildPythonPackageHouseholdDataFromAppInput(args: {
   return householdData;
 }
 
-export function getPythonPackageHouseholdVariationMaxEarnings(
-  currentEarnings: number,
-  countryId: string
-): number {
-  return Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
+/**
+ * The lowest upper end of the earnings variation range, in the household's
+ * currency. Every country the app offers uses the same floor.
+ */
+const VARIATION_EARNINGS_FLOOR = 200_000;
+
+export function getPythonPackageHouseholdVariationMaxEarnings(currentEarnings: number): number {
+  return Math.max(VARIATION_EARNINGS_FLOOR, 2 * currentEarnings);
 }
 
 function getPythonPackageVariationPersonKey(
@@ -155,7 +158,6 @@ function getPythonPackageEarningsForYear(
 export function addVariationAxesToPythonPackageHouseholdData(
   householdInput: PythonPackageHouseholdData,
   year: string,
-  countryId: string,
   personName?: string | null
 ): PythonPackageHouseholdWithAxes {
   if (Object.keys(householdInput.people).length === 0) {
@@ -173,7 +175,7 @@ export function addVariationAxesToPythonPackageHouseholdData(
     targetPersonKey,
     year
   );
-  const maxEarnings = getPythonPackageHouseholdVariationMaxEarnings(currentEarnings, countryId);
+  const maxEarnings = getPythonPackageHouseholdVariationMaxEarnings(currentEarnings);
   const existingEmploymentIncome = isYearValueMap(targetPerson.employment_income)
     ? targetPerson.employment_income
     : {};
@@ -200,9 +202,8 @@ export function addVariationAxesToPythonPackageHouseholdData(
 
 export function cleanPythonPackageHouseholdNullValuesForYear(
   householdInput: PythonPackageHouseholdData,
-  year: number
+  _year: number
 ): PythonPackageHouseholdSituation {
-  const yearKey = String(year);
   const householdInputCopy = cloneValue(householdInput) as PythonPackageHouseholdSituation;
   const entityCollections = Object.values(householdInputCopy) as Array<
     Record<string, PythonPackageHouseholdPersonData | PythonPackageHouseholdGroupData> | undefined
@@ -219,8 +220,15 @@ export function cleanPythonPackageHouseholdNullValuesForYear(
           continue;
         }
 
-        if (isYearValueMap(value) && value[yearKey] === null) {
-          delete entity[variable];
+        if (isYearValueMap(value)) {
+          for (const [period, periodValue] of Object.entries(value)) {
+            if (periodValue === null) {
+              delete value[period];
+            }
+          }
+          if (Object.keys(value).length === 0) {
+            delete entity[variable];
+          }
         }
       }
     }

@@ -27,6 +27,8 @@ import {
   getClampedChartHeight,
   getNiceTicks,
   getYAxisLayout,
+  householdChartLabelDx,
+  householdChartLegendProps,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
 import { formatChartValueForVariable } from '@/utils/chartValueFormatting';
@@ -47,6 +49,8 @@ interface Props {
   reformVariation: HouseholdCalculationOutput;
   variableName: string;
   year: string;
+  /** The legend above the plot on the right, in the ticks' size, and the axis title closer (the v3 report). */
+  tidyChart?: boolean;
 }
 
 type ViewMode = 'both' | 'absolute' | 'relative';
@@ -108,6 +112,7 @@ export default function BaselineAndReformChart({
   reformVariation,
   variableName,
   year,
+  tidyChart = false,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
@@ -146,7 +151,7 @@ export default function BaselineAndReformChart({
       metadata
     ) as number;
 
-    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings, countryId);
+    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings);
     const xValues = buildHouseholdVariationEarningsAxis(maxEarnings);
     const currentIndex = getHouseholdVariationIndexForEarnings(currentEarnings, maxEarnings);
     const absoluteDiff = baselineYValues.map(
@@ -199,7 +204,7 @@ export default function BaselineAndReformChart({
       relativeDiff,
       xTicks: getNiceTicks([0, maxEarnings]),
     };
-  }, [baseline, baselineVariation, countryId, metadata, reformVariation, variableName, year]);
+  }, [baseline, baselineVariation, metadata, reformVariation, variableName, year]);
 
   if (!variable) {
     return <div>Variable not found</div>;
@@ -267,12 +272,12 @@ export default function BaselineAndReformChart({
                 value={variable.label}
                 angle={-90}
                 position="center"
-                dx={bothYAxis.labelDx}
+                dx={householdChartLabelDx(bothYAxis.labelDx, tidyChart)}
                 style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
               />
             </YAxis>
             <Tooltip content={<EarningsTooltip symbol={symbol} formatValue={formatValue} />} />
-            <Legend verticalAlign="top" align="left" />
+            <Legend {...householdChartLegendProps(tidyChart)} />
             <Line
               type="monotone"
               dataKey="baseline"
@@ -346,7 +351,7 @@ export default function BaselineAndReformChart({
                 value={`Change in ${variable.label}`}
                 angle={-90}
                 position="center"
-                dx={absoluteYAxis.labelDx}
+                dx={householdChartLabelDx(absoluteYAxis.labelDx, tidyChart)}
                 style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
               />
             </YAxis>
@@ -398,7 +403,7 @@ export default function BaselineAndReformChart({
               value={`% change in ${variable.label}`}
               angle={-90}
               position="center"
-              dx={relativeYAxis.labelDx}
+              dx={householdChartLabelDx(relativeYAxis.labelDx, tidyChart)}
               style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
             />
           </YAxis>

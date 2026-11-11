@@ -1,0 +1,289 @@
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { createHousehold } from '@/api/household';
+import { Household, UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
+import { createReportSimulations } from '@/pages/reportBuilder/utils/createReportSimulations';
+import {
+  BUILDER_PEOPLE,
+  CREATED_HOUSEHOLD_ID,
+  ROLE_TEST_YEAR,
+  singleParentWithAdultDependant,
+  UK_METADATA_WITH_CLAIMANT_ROLES,
+  UK_METADATA_WITHOUT_CLAIMANT_ROLES,
+} from '@/tests/fixtures/models/builderClaimantRolesMocks';
+import {
+  CORRECTED_REPORT_YEAR,
+  CURRENT_LAW_ID,
+  mixedPopulationReportState,
+  mockCreateSimulationFn,
+  mockDraftHouseholdSimulation,
+  mockLocalStorageCreateFn,
+  mockSingleSimReportState,
+  mockTwoSimReportState,
+  setupDefaultMocks,
+  TEST_LABELS,
+  TEST_POLICY_IDS,
+  TEST_POPULATION,
+  TEST_SIMULATION_IDS,
+} from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
+import { ownershipReportState } from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
+
+vi.mock('@/api/household', () => ({ createHousehold: vi.fn() }));
+
+vi.mock('@/api/simulation', () => ({
+  createSimulation: (...args: any[]) => mockCreateSimulationFn(...args),
+}));
+
+vi.mock('@/api/simulationAssociation', () => ({
+  LocalStorageSimulationStore: vi.fn().mockImplementation(() => ({
+    create: mockLocalStorageCreateFn,
+  })),
+}));
+
+vi.mock('@/adapters', () => ({
+  SimulationAdapter: {
+    toCreationPayload: (data: any) => ({
+      population_id: data.populationId,
+      policy_id: data.policyId,
+      population_type: data.populationType,
+    }),
+  },
+}));
+
+vi.mock('@/constants', () => ({
+  MOCK_USER_ID: 'anonymous',
+  CURRENT_YEAR: '2026',
+}));
+
+describe('createReportSimulations', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDefaultMocks();
+  });
+
+  test.each([true, false])(
+    'given household baseline is %s when mixed populations bypass selection then rejects before every write',
+    async (householdFirst) => {
+      const reportState = mixedPopulationReportState(householdFirst);
+      const originalState = JSON.stringify(reportState);
+
+      await expect(
+        createReportSimulations({
+          simulationStates: reportState.simulations,
+          countryId: 'us',
+          currentLawId: CURRENT_LAW_ID,
+          reportYear: reportState.year,
+        })
+      ).rejects.toThrow('Baseline and reform must use the same population type');
+
+      expect(createHousehold).not.toHaveBeenCalled();
+      expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+      expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+      expect(JSON.stringify(reportState)).toBe(originalState);
+    }
+  );
+
+  test('given independent same-type households and policies when saved then retains each input and its dates', async () => {
+    const reportState = ownershipReportState();
+    const originalState = JSON.stringify(reportState);
+
+    const result = await createReportSimulations({
+      simulationStates: reportState.simulations,
+      countryId: 'us',
+      currentLawId: CURRENT_LAW_ID,
+      reportYear: reportState.year,
+    });
+
+    expect(result.simulations.map((simulation) => simulation.populationId)).toEqual(
+      reportState.simulations.map((simulation) => simulation.population.household!.id)
+    );
+    expect(result.simulations.map((simulation) => simulation.policyId)).toEqual(
+      reportState.simulations.map((simulation) => simulation.policy.id)
+    );
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(JSON.stringify(reportState)).toBe(originalState);
+  });
+
+  test('creates API simulations, local associations, and domain simulations', async () => {
+    const result = await createReportSimulations({
+      simulationStates: mockTwoSimReportState.simulations,
+      countryId: 'us',
+      currentLawId: CURRENT_LAW_ID,
+    });
+
+    expect(result.simulationIds).toEqual([
+      TEST_SIMULATION_IDS.SIM_NEW_1,
+      TEST_SIMULATION_IDS.SIM_NEW_2,
+    ]);
+    expect(result.simulations).toEqual([
+      expect.objectContaining({
+        id: TEST_SIMULATION_IDS.SIM_NEW_1,
+        policyId: CURRENT_LAW_ID.toString(),
+        populationId: TEST_POPULATION.GEOGRAPHY_ID,
+        populationType: 'geography',
+        label: TEST_LABELS.BASELINE,
+      }),
+      expect.objectContaining({
+        id: TEST_SIMULATION_IDS.SIM_NEW_2,
+        policyId: TEST_POLICY_IDS.REFORM_POLICY,
+        populationId: TEST_POPULATION.GEOGRAPHY_ID,
+        populationType: 'geography',
+        label: TEST_LABELS.REFORM,
+      }),
+    ]);
+    expect(mockCreateSimulationFn).toHaveBeenCalledTimes(2);
+    expect(mockLocalStorageCreateFn).toHaveBeenCalledTimes(2);
+  });
+
+  test('creates a household simulation with the household population type', async () => {
+    const householdSimulation = {
+      ...mockTwoSimReportState.simulations[0],
+      population: {
+        label: 'Test household',
+        type: 'household',
+        household: Household.starter('us', mockTwoSimReportState.year).withId(
+          TEST_POPULATION.HOUSEHOLD_ID
+        ),
+        geography: null,
+      },
+    };
+
+    const result = await createReportSimulations({
+      simulationStates: [householdSimulation] as any,
+      countryId: 'us',
+      currentLawId: CURRENT_LAW_ID,
+    });
+
+    expect(mockCreateSimulationFn).toHaveBeenCalledWith(
+      'us',
+      expect.objectContaining({
+        population_id: TEST_POPULATION.HOUSEHOLD_ID,
+        population_type: 'household',
+      })
+    );
+    expect(result.simulations[0]).toEqual(
+      expect.objectContaining({
+        populationId: TEST_POPULATION.HOUSEHOLD_ID,
+        populationType: 'household',
+      })
+    );
+  });
+
+  test('validates every simulation before creating any of them', async () => {
+    const incompleteSimulations = [
+      mockTwoSimReportState.simulations[0],
+      {
+        ...mockTwoSimReportState.simulations[1],
+        population: {
+          ...mockTwoSimReportState.simulations[1].population,
+          geography: {
+            ...mockTwoSimReportState.simulations[1].population.geography!,
+            geographyId: '',
+          },
+        },
+      },
+    ];
+
+    await expect(
+      createReportSimulations({
+        simulationStates: incompleteSimulations as any,
+        countryId: 'us',
+        currentLawId: CURRENT_LAW_ID,
+      })
+    ).rejects.toThrow('Report has incomplete simulations');
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+    expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  test('given a draft from another country then rejects every write before preparing households', async () => {
+    await expect(
+      createReportSimulations({
+        simulationStates: [mockDraftHouseholdSimulation('us'), mockDraftHouseholdSimulation('uk')],
+        countryId: 'us',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: CORRECTED_REPORT_YEAR,
+      })
+    ).rejects.toThrow('original country');
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+    expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  test('given a draft period differs from the report year then rejects writes instead of calculating the wrong period', async () => {
+    await expect(
+      createReportSimulations({
+        simulationStates: [mockDraftHouseholdSimulation()],
+        countryId: 'us',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: mockSingleSimReportState.year,
+      })
+    ).rejects.toThrow('Household inputs do not match report year');
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+  });
+
+  test('does not persist an association when simulation creation returns no ID', async () => {
+    mockCreateSimulationFn.mockResolvedValue({ result: { simulation_id: '' } });
+
+    await expect(
+      createReportSimulations({
+        simulationStates: [mockTwoSimReportState.simulations[0]],
+        countryId: 'us',
+        currentLawId: CURRENT_LAW_ID,
+      })
+    ).rejects.toThrow('Simulation creation returned no ID');
+    expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  describe('given a UK draft household of a lone parent and their adult child', () => {
+    const ukDraftSimulation = () => ({
+      ...mockDraftHouseholdSimulation('uk'),
+      population: {
+        ...mockDraftHouseholdSimulation('uk').population,
+        household: singleParentWithAdultDependant(),
+      },
+    });
+    const createdPeople = () => vi.mocked(createHousehold).mock.calls[0][0].data.people;
+
+    beforeEach(() => {
+      vi.mocked(createHousehold).mockResolvedValue({
+        result: { household_id: CREATED_HOUSEHOLD_ID },
+      });
+    });
+
+    test('given the model defines claimant roles then the household is saved with a single claimant', async () => {
+      const result = await createReportSimulations({
+        simulationStates: [ukDraftSimulation()] as any,
+        countryId: 'uk',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: ROLE_TEST_YEAR,
+        metadata: UK_METADATA_WITH_CLAIMANT_ROLES,
+      });
+
+      expect(createdPeople()[BUILDER_PEOPLE.YOU][UK_CLAIMANT_OR_PARTNER_VARIABLE]).toEqual({
+        [ROLE_TEST_YEAR]: true,
+      });
+      expect(
+        createdPeople()[BUILDER_PEOPLE.FIRST_DEPENDANT][UK_CLAIMANT_OR_PARTNER_VARIABLE]
+      ).toEqual({ [ROLE_TEST_YEAR]: false });
+      const savedHousehold = result.simulationStates[0].population.household!;
+      expect(savedHousehold.id).toBe(CREATED_HOUSEHOLD_ID);
+      expect(savedHousehold.toV1CreationPayload().data.people).toEqual(createdPeople());
+    });
+
+    test('given the model predates claimant roles then the household is saved unchanged', async () => {
+      const draft = ukDraftSimulation();
+
+      await createReportSimulations({
+        simulationStates: [draft] as any,
+        countryId: 'uk',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: ROLE_TEST_YEAR,
+        metadata: UK_METADATA_WITHOUT_CLAIMANT_ROLES,
+      });
+
+      expect(vi.mocked(createHousehold)).toHaveBeenCalledWith(
+        draft.population.household.toV1CreationPayload()
+      );
+    });
+  });
+});

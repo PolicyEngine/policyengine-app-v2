@@ -1,3 +1,4 @@
+import type { HouseholdCalculationResult } from '@/api/householdCalculation';
 import type { HouseholdCalculationData } from './HouseholdCalculationOutput';
 
 /**
@@ -6,5 +7,5 @@ import type { HouseholdCalculationData } from './HouseholdCalculationOutput';
  * Simulation IDs are sorted alphabetically
  */
 export interface HouseholdReportOutput {
-  [simulationId: string]: HouseholdCalculationData;
+  [simulationId: string]: HouseholdCalculationData | HouseholdCalculationResult;
 }

@@ -1,0 +1,5 @@
+# Commits that only reformat code. To have `git blame` skip them, run
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Format the website and calculator with Prettier
+e8d04db611dc231e6c27fe178893f55e3bfc0435

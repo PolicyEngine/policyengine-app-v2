@@ -10,8 +10,10 @@ import {
   EXPECTED_RELATIVE_CHANGE_DATA,
   LARGE_CONSTITUENCY_DATA,
   MOCK_CONSTITUENCY_DATA,
+  SAVED_CONSTITUENCY_DATA_WITH_POSITIONS,
   SINGLE_CONSTITUENCY_DATA,
 } from '@/tests/fixtures/adapters/constituency/constituencyMocks';
+import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
 describe('constituencyDataAdapter', () => {
   describe('transformConstituencyData', () => {
@@ -39,18 +41,15 @@ describe('constituencyDataAdapter', () => {
       expect(result).toEqual(EXPECTED_RELATIVE_CHANGE_DATA);
     });
 
-    test('given data then preserves x and y coordinates', () => {
+    test('given saved areas that still carry x and y then the points leave them out', () => {
       // Given
-      const apiData = MOCK_CONSTITUENCY_DATA;
+      const apiData = SAVED_CONSTITUENCY_DATA_WITH_POSITIONS;
 
       // When
       const result = transformConstituencyData(apiData, 'average_household_income_change');
 
       // Then
-      expect(result[0].x).toBe(0);
-      expect(result[0].y).toBe(0);
-      expect(result[1].x).toBe(1);
-      expect(result[1].y).toBe(0);
+      expect(result.some((point) => 'x' in point || 'y' in point)).toBe(false);
     });
 
     test('given constituency names then creates unique IDs', () => {
@@ -101,8 +100,6 @@ describe('constituencyDataAdapter', () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('Test Constituency');
       expect(result[0].value).toBe(500.0);
-      expect(result[0].x).toBe(5);
-      expect(result[0].y).toBe(10);
     });
 
     test('given large dataset then transforms all constituencies', () => {
@@ -205,5 +202,53 @@ describe('constituencyDataAdapter', () => {
       expect(result[1].value).toBeLessThan(0); // Edinburgh Central
       expect(result[2].value).toBe(0); // Cardiff South
     });
+  });
+
+  test('given a breakdown area then its absolute points carry the tier and the 90% range', () => {
+    // When
+    const [point] = transformConstituencyAbsoluteChange(
+      NORMALIZED_BREAKDOWN.constituency_impact.by_constituency
+    );
+
+    // Then
+    expect(point).toMatchObject({
+      id: 'East Kilbride and Strathaven',
+      approximate: true,
+      lower: 40,
+      upper: 210,
+    });
+  });
+
+  test('given a breakdown area then its relative points carry the relative 90% range', () => {
+    // When
+    const [point] = transformConstituencyRelativeChange(
+      NORMALIZED_BREAKDOWN.constituency_impact.by_constituency
+    );
+
+    // Then
+    expect(point).toMatchObject({
+      id: 'East Kilbride and Strathaven',
+      approximate: true,
+      lower: 0.001,
+      upper: 0.007,
+    });
+  });
+
+  test('given an area with an ONS code then its point carries the code, which joins it to its boundary', () => {
+    // When
+    const [point] = transformConstituencyAbsoluteChange(
+      NORMALIZED_BREAKDOWN.constituency_impact.by_constituency
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: 'East Kilbride and Strathaven', code: 'S14000021' });
+  });
+
+  test('given areas without codes then their points have none', () => {
+    // When
+    const points = transformConstituencyAbsoluteChange(MOCK_CONSTITUENCY_DATA);
+
+    // Then
+    expect(points.every((point) => !('code' in point))).toBe(true);
   });
 });

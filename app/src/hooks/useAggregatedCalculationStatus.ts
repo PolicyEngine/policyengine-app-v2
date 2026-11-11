@@ -246,8 +246,13 @@ export function useAggregatedCalculationStatus(
     anyLoading || calculations.some((calc) => calc.status === 'pending');
 
   // Generate synthetic progress
+  // The longest pending estimate, so the bar does not finish before the slowest run
+  const pendingDurations = calculations
+    .filter((calc) => calc.status === 'pending' && calc.estimatedDurationMs !== undefined)
+    .map((calc) => calc.estimatedDurationMs as number);
   const synthetic = useSyntheticProgress(needsSyntheticProgress, calcType, {
     queuePosition: calculations.find((calc) => calc.queuePosition)?.queuePosition,
+    estimatedDurationMs: pendingDurations.length > 0 ? Math.max(...pendingDurations) : undefined,
   });
 
   // Check if any are initializing

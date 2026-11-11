@@ -52,7 +52,7 @@ export default function PopulationLabelView({
     if (population?.geography) {
       // Geographic population
       if (population.geography.scope === 'national') {
-        return 'National Households';
+        return 'National households';
       } else if (population.geography.geographyId) {
         const geographyId = population.geography.geographyId;
 
@@ -60,18 +60,18 @@ export default function PopulationLabelView({
         if (geographyId.startsWith('place/')) {
           const place = findPlaceFromRegionString(geographyId);
           if (place) {
-            return `${getPlaceDisplayName(place.name)} Households`;
+            return `${getPlaceDisplayName(place.name)} households`;
           }
         }
 
         // Use display value (strip prefix for UK regions and other types)
         const displayValue = extractRegionDisplayValue(geographyId);
-        return `${displayValue} Households`;
+        return `${displayValue} households`;
       }
-      return 'Regional Households';
+      return 'Regional households';
     }
     // Household population
-    return 'Custom Household';
+    return 'Custom household';
   };
 
   const [label, setLabel] = useState<string>(getDefaultLabel());
@@ -99,7 +99,7 @@ export default function PopulationLabelView({
 
       <div className="tw:flex tw:flex-col tw:gap-xs">
         <label className="tw:text-sm tw:font-medium">
-          Household Label <span className="tw:text-red-500">*</span>
+          Household label <span className="tw:text-red-500">*</span>
         </label>
         <Input
           placeholder="e.g., My Family 2025, All California Households, UK National Households"

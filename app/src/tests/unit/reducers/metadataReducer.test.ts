@@ -125,7 +125,7 @@ describe('metadataReducer', () => {
       expectVersion(state, TEST_VERSION);
     });
 
-    test('given setCurrentCountry then preserves loading and error states', () => {
+    test('given country changes then invalidates previous loading and error states', () => {
       // Given
       const initialState = createMockStateWithData({
         loading: true,
@@ -138,8 +138,8 @@ describe('metadataReducer', () => {
       const state = metadataReducer(initialState, action);
 
       // Then
-      expectLoadingState(state, true);
-      expectErrorState(state, TEST_ERROR_MESSAGE);
+      expectLoadingState(state, false);
+      expectErrorState(state, null);
     });
   });
 
@@ -173,7 +173,7 @@ describe('metadataReducer', () => {
     test('given pending action then sets loading state', () => {
       // Given
       const initialState = EXPECTED_INITIAL_STATE;
-      const action = { type: fetchMetadataThunk.pending.type };
+      const action = fetchMetadataThunk.pending('metadata-request', TEST_COUNTRY_US);
 
       // When
       const state = metadataReducer(initialState, action);
@@ -185,10 +185,14 @@ describe('metadataReducer', () => {
 
     test('given fulfilled action then updates all metadata fields', () => {
       // Given
-      const initialState = MOCK_LOADING_STATE;
+      const initialState = metadataReducer(
+        MOCK_LOADING_STATE,
+        fetchMetadataThunk.pending('metadata-request', TEST_COUNTRY_US)
+      );
       const apiPayload = createMockApiPayload();
       const action = {
         type: fetchMetadataThunk.fulfilled.type,
+        meta: { requestId: 'metadata-request', arg: TEST_COUNTRY_US },
         payload: { data: apiPayload, country: TEST_COUNTRY_US },
       };
 
@@ -216,10 +220,14 @@ describe('metadataReducer', () => {
 
     test('given fulfilled action when buildParameterTree returns undefined then sets null tree', () => {
       // Given
-      const initialState = MOCK_LOADING_STATE;
+      const initialState = metadataReducer(
+        MOCK_LOADING_STATE,
+        fetchMetadataThunk.pending('metadata-request', TEST_COUNTRY_US)
+      );
       const apiPayload = createMockApiPayload();
       const action = {
         type: fetchMetadataThunk.fulfilled.type,
+        meta: { requestId: 'metadata-request', arg: TEST_COUNTRY_US },
         payload: { data: apiPayload, country: TEST_COUNTRY_US },
       };
 
@@ -235,10 +243,14 @@ describe('metadataReducer', () => {
 
     test('given fulfilled action when buildParameterTree throws error then sets null tree', () => {
       // Given
-      const initialState = MOCK_LOADING_STATE;
+      const initialState = metadataReducer(
+        MOCK_LOADING_STATE,
+        fetchMetadataThunk.pending('metadata-request', TEST_COUNTRY_US)
+      );
       const apiPayload = createMockApiPayload();
       const action = {
         type: fetchMetadataThunk.fulfilled.type,
+        meta: { requestId: 'metadata-request', arg: TEST_COUNTRY_US },
         payload: { data: apiPayload, country: TEST_COUNTRY_US },
       };
 
@@ -256,9 +268,13 @@ describe('metadataReducer', () => {
 
     test('given rejected action then sets error state', () => {
       // Given
-      const initialState = MOCK_LOADING_STATE;
+      const initialState = metadataReducer(
+        MOCK_LOADING_STATE,
+        fetchMetadataThunk.pending('metadata-request', TEST_COUNTRY_US)
+      );
       const action = {
         type: fetchMetadataThunk.rejected.type,
+        meta: { requestId: 'metadata-request', arg: TEST_COUNTRY_US },
         payload: TEST_ERROR_MESSAGE,
       };
 
@@ -333,7 +349,10 @@ describe('metadataReducer', () => {
       expectCurrentCountry(state, TEST_COUNTRY_US);
 
       // When & Then - Start loading
-      state = metadataReducer(state, { type: fetchMetadataThunk.pending.type });
+      state = metadataReducer(
+        state,
+        fetchMetadataThunk.pending('metadata-request', TEST_COUNTRY_US)
+      );
       expectLoadingState(state, true);
 
       // When & Then - Receive data
@@ -341,6 +360,7 @@ describe('metadataReducer', () => {
       vi.mocked(buildParameterTreeModule.buildParameterTree).mockReturnValue(MOCK_PARAMETER_TREE);
       state = metadataReducer(state, {
         type: fetchMetadataThunk.fulfilled.type,
+        meta: { requestId: 'metadata-request', arg: TEST_COUNTRY_US },
         payload: { data: apiPayload, country: TEST_COUNTRY_US },
       });
       expectLoadingState(state, false);

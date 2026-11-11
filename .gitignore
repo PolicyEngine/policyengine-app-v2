@@ -13,6 +13,9 @@ coverage/
 dist/
 dist-*/
 build/
+# Next.js route segments named "build" are source code, not build output
+!calculator-app/src/app/**/build/
+!calculator-app/src/app/**/build/**
 *.local
 .vite/
 

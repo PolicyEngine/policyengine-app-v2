@@ -10,8 +10,11 @@ import {
   EXPECTED_RELATIVE_CHANGE_DATA,
   LARGE_LOCAL_AUTHORITY_DATA,
   MOCK_LOCAL_AUTHORITY_DATA,
+  SAVED_LOCAL_AUTHORITY_DATA_WITH_POSITIONS,
   SINGLE_LOCAL_AUTHORITY_DATA,
 } from '@/tests/fixtures/adapters/local-authority/localAuthorityMocks';
+import { BREAKDOWN_LOCAL_AUTHORITY_NAME } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
 describe('localAuthorityDataAdapter', () => {
   describe('transformLocalAuthorityData', () => {
@@ -39,18 +42,15 @@ describe('localAuthorityDataAdapter', () => {
       expect(result).toEqual(EXPECTED_RELATIVE_CHANGE_DATA);
     });
 
-    test('given data then preserves x and y coordinates', () => {
+    test('given saved areas that still carry x and y then the points leave them out', () => {
       // Given
-      const apiData = MOCK_LOCAL_AUTHORITY_DATA;
+      const apiData = SAVED_LOCAL_AUTHORITY_DATA_WITH_POSITIONS;
 
       // When
       const result = transformLocalAuthorityData(apiData, 'average_household_income_change');
 
       // Then
-      expect(result[0].x).toBe(0);
-      expect(result[0].y).toBe(0);
-      expect(result[1].x).toBe(1);
-      expect(result[1].y).toBe(0);
+      expect(result.some((point) => 'x' in point || 'y' in point)).toBe(false);
     });
 
     test('given local authority names then creates unique IDs', () => {
@@ -101,8 +101,6 @@ describe('localAuthorityDataAdapter', () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('Test Authority');
       expect(result[0].value).toBe(500.0);
-      expect(result[0].x).toBe(5);
-      expect(result[0].y).toBe(10);
     });
 
     test('given large dataset then transforms all local authorities', () => {
@@ -205,5 +203,57 @@ describe('localAuthorityDataAdapter', () => {
       expect(result[1].value).toBeLessThan(0); // Westminster
       expect(result[2].value).toBe(0); // Edinburgh
     });
+  });
+
+  test('given a breakdown area then its absolute points carry the tier and the 90% range', () => {
+    // When
+    const [point] = transformLocalAuthorityAbsoluteChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: BREAKDOWN_LOCAL_AUTHORITY_NAME, lower: 480, upper: 530 });
+  });
+
+  test('given a breakdown area then its relative points carry the relative 90% range', () => {
+    // When
+    const [point] = transformLocalAuthorityRelativeChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point).toMatchObject({
+      id: BREAKDOWN_LOCAL_AUTHORITY_NAME,
+      lower: 0.0125,
+      upper: 0.0139,
+    });
+  });
+
+  test('given a reported area then its points are not marked approximate', () => {
+    // When
+    const [point] = transformLocalAuthorityAbsoluteChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point.approximate).toBeUndefined();
+  });
+
+  test('given an area with an ONS code then its point carries the code, which joins it to its boundary', () => {
+    // When
+    const [point] = transformLocalAuthorityAbsoluteChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: BREAKDOWN_LOCAL_AUTHORITY_NAME, code: 'E06000001' });
+  });
+
+  test('given areas without codes then their points have none', () => {
+    // When
+    const points = transformLocalAuthorityAbsoluteChange(MOCK_LOCAL_AUTHORITY_DATA);
+
+    // Then
+    expect(points.every((point) => !('code' in point))).toBe(true);
   });
 });

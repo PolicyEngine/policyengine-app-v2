@@ -1,13 +1,16 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@test-utils';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createHousehold } from '@/api/household';
+import { createReport, createReportAndAssociateWithUser } from '@/api/report';
 import { useModifyReportSubmission } from '@/pages/reportBuilder/hooks/useModifyReportSubmission';
 import {
   createTestStore,
   CURRENT_LAW_ID,
+  mixedPopulationReportState,
   mockCreateSimulationFn,
   mockLocalStorageCreateFn,
   mockOnSuccess,
@@ -17,7 +20,13 @@ import {
   TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
 
+const { mockIngredientAvailability } = vi.hoisted(() => ({
+  mockIngredientAvailability: vi.fn(),
+}));
+
 // Mock modules
+vi.mock('@/api/household', () => ({ createHousehold: vi.fn() }));
+
 vi.mock('@/api/simulation', () => ({
   createSimulation: (...args: any[]) => mockCreateSimulationFn(...args),
 }));
@@ -74,6 +83,10 @@ vi.mock('@/constants', () => ({
   CURRENT_YEAR: '2026',
 }));
 
+vi.mock('@/pages/reportBuilder/hooks/useReportIngredientAvailability', () => ({
+  useReportIngredientAvailability: () => mockIngredientAvailability(),
+}));
+
 const mockMutateAsync = vi.fn().mockResolvedValue({});
 
 vi.mock('@/hooks/useUserReportAssociations', () => ({
@@ -89,7 +102,7 @@ vi.mock('@/contexts/CalcOrchestratorContext', () => ({
 }));
 
 vi.mock('@/libs/queryKeys', () => ({
-  reportKeys: { all: ['reports'] },
+  reportKeys: { all: ['reports'], byId: (id: string) => ['reports', id] },
   reportAssociationKeys: { all: ['reportAssociations'] },
 }));
 
@@ -103,6 +116,11 @@ describe('useModifyReportSubmission', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupDefaultMocks();
+    mockIngredientAvailability.mockReturnValue({
+      hasUnavailableIngredients: false,
+      isCheckingIngredientAvailability: false,
+      isReportConfigured: true,
+    });
 
     queryClient = new QueryClient({
       defaultOptions: {
@@ -130,6 +148,46 @@ describe('useModifyReportSubmission', () => {
       </QueryClientProvider>
     </Provider>
   );
+
+  describe.each([
+    [true, 'draft'],
+    [false, 'draft'],
+    [true, 'hydrated'],
+    [false, 'hydrated'],
+  ] as const)('given household baseline is %s in %s state', (householdFirst, source) => {
+    test.each(['replace', 'save-as-new'])(
+      'when %s bypasses selection and availability then rejects mixed populations before writes',
+      async (mode) => {
+        const { result } = renderHook(
+          () =>
+            useModifyReportSubmission({
+              reportState: mixedPopulationReportState(householdFirst, source),
+              countryId: 'us',
+              existingUserReportId: EXISTING_USER_REPORT_ID,
+              onSuccess: mockOnSuccess,
+            }),
+          { wrapper }
+        );
+
+        await act(() =>
+          mode === 'replace'
+            ? result.current.handleReplace()
+            : result.current.handleSaveAsNew('Mixed report')
+        );
+
+        expect(result.current.submissionError?.message).toContain(
+          'Baseline and reform must use the same population type'
+        );
+        expect(createHousehold).not.toHaveBeenCalled();
+        expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+        expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+        expect(createReport).not.toHaveBeenCalled();
+        expect(createReportAndAssociateWithUser).not.toHaveBeenCalled();
+        expect(mockMutateAsync).not.toHaveBeenCalled();
+        expect(mockOnSuccess).not.toHaveBeenCalled();
+      }
+    );
+  });
 
   describe('localStorage association creation via handleSaveAsNew', () => {
     test('given two simulations when saving as new then creates two localStorage associations', async () => {
@@ -231,5 +289,71 @@ describe('useModifyReportSubmission', () => {
         expect(mockOnSuccess).toHaveBeenCalledWith(EXISTING_USER_REPORT_ID);
       });
     });
+  });
+
+  test('given a selected ingredient has errored then save and replace are blocked', async () => {
+    // Given
+    mockIngredientAvailability.mockReturnValue({
+      hasUnavailableIngredients: true,
+      isCheckingIngredientAvailability: false,
+      isReportConfigured: false,
+    });
+    const { result } = renderHook(
+      () =>
+        useModifyReportSubmission({
+          reportState: mockTwoSimReportState,
+          countryId: 'us',
+          existingUserReportId: EXISTING_USER_REPORT_ID,
+          onSuccess: mockOnSuccess,
+        }),
+      { wrapper }
+    );
+
+    // When
+    await result.current.handleSaveAsNew('Blocked report');
+    await result.current.handleReplace();
+
+    // Then
+    expect(result.current.isReportSubmissionBlocked).toBe(true);
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+    expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  test('given an incomplete simulation then save and replace are blocked', async () => {
+    // Given
+    mockIngredientAvailability.mockReturnValue({
+      hasUnavailableIngredients: false,
+      isCheckingIngredientAvailability: false,
+      isReportConfigured: false,
+    });
+    const incompleteState = {
+      ...mockTwoSimReportState,
+      simulations: [
+        {
+          ...mockTwoSimReportState.simulations[0],
+          policy: { id: undefined, label: null, parameters: [] },
+        },
+        mockTwoSimReportState.simulations[1],
+      ],
+    };
+    const { result } = renderHook(
+      () =>
+        useModifyReportSubmission({
+          reportState: incompleteState as any,
+          countryId: 'us',
+          existingUserReportId: EXISTING_USER_REPORT_ID,
+          onSuccess: mockOnSuccess,
+        }),
+      { wrapper }
+    );
+
+    // When
+    await result.current.handleSaveAsNew('Incomplete report');
+    await result.current.handleReplace();
+
+    // Then
+    expect(result.current.isReportSubmissionBlocked).toBe(true);
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+    expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
   });
 });

@@ -4,6 +4,7 @@
  * Props-based instead of Redux-based
  */
 
+import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
 import IngredientSubmissionView, {
   DateIntervalValue,
@@ -12,11 +13,17 @@ import IngredientSubmissionView, {
 } from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { countryIds } from '@/libs/countries';
+import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
+import type { PolicyParameterValue } from '@/types/metadata/policyMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { trackPolicyCreated } from '@/utils/analytics';
 import { formatDate } from '@/utils/dateUtils';
+import {
+  isPolicyDuplicateOfCurrentLaw,
+  POLICY_MATCHES_CURRENT_LAW_MESSAGE,
+} from '@/utils/policyCurrentLaw';
 
 interface PolicySubmitViewProps {
   policy: PolicyStateProps;
@@ -24,6 +31,19 @@ interface PolicySubmitViewProps {
   onSubmitSuccess: (policyId: string) => void;
   onBack?: () => void;
   onCancel?: () => void;
+}
+
+function formatPolicyParameterValue(value: PolicyParameterValue): string | number {
+  if (typeof value === 'number' || typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'True' : 'False';
+  }
+  if (value === null) {
+    return 'null';
+  }
+  return JSON.stringify(value);
 }
 
 export default function PolicySubmitView({
@@ -34,23 +54,25 @@ export default function PolicySubmitView({
   onCancel,
 }: PolicySubmitViewProps) {
   const { createPolicy, isPending } = useCreatePolicy(policy?.label || undefined);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const isDupeOfCurrentLaw = isPolicyDuplicateOfCurrentLaw(policy.parameters, metadata, countryId);
 
   // Issue #605: Block empty policy creation
-  const hasNoParameters = !policy.parameters || policy.parameters.length === 0;
+  const startedEmpty = !policy.parameters || policy.parameters.length === 0;
 
   // Convert state to Policy type structure
   const policyData: Partial<Policy> = {
-    parameters: policy?.parameters,
+    parameters: policy.parameters,
   };
 
   function handleSubmit() {
-    if (!policy) {
-      console.error('No policy found');
+    if (isDupeOfCurrentLaw) {
       return;
     }
 
     const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
-      policyData as Policy
+      policyData as Policy,
+      metadata.parameters
     );
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {
@@ -69,25 +91,26 @@ export default function PolicySubmitView({
   };
 
   // Create hierarchical provisions list with header and date intervals
-  const provisions: TextListItem[] = hasNoParameters
-    ? []
-    : [
-        {
-          text: 'Provision',
-          isHeader: true,
-          subItems: policy.parameters.map((param) => {
-            const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
-              dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
-              value: valueInterval.value,
-            }));
+  const provisions: TextListItem[] =
+    policy.parameters.length === 0
+      ? []
+      : [
+          {
+            text: 'Provision',
+            isHeader: true,
+            subItems: policy.parameters.map((param) => {
+              const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
+                dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
+                value: formatPolicyParameterValue(valueInterval.value),
+              }));
 
-            return {
-              label: param.name,
-              dateIntervals,
-            } as TextListSubItem;
-          }),
-        },
-      ];
+              return {
+                label: param.name,
+                dateIntervals,
+              } as TextListSubItem;
+            }),
+          },
+        ];
 
   return (
     <IngredientSubmissionView
@@ -97,9 +120,13 @@ export default function PolicySubmitView({
       submitButtonText="Create policy"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
-      submitButtonDisabled={hasNoParameters}
+      submitButtonDisabled={isDupeOfCurrentLaw}
       warningMessage={
-        hasNoParameters ? 'Add at least one parameter change to create a policy.' : undefined
+        startedEmpty
+          ? 'Add at least one parameter change to create a policy.'
+          : isDupeOfCurrentLaw
+            ? POLICY_MATCHES_CURRENT_LAW_MESSAGE
+            : undefined
       }
       onBack={onBack}
       onCancel={onCancel}

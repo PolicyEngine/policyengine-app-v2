@@ -11,6 +11,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import type { AuthorsCollection, BlogPost, Notebook } from "@/types/blog";
+import { readingTimeLabel } from "@/components/blog/chartReadingText";
 import { MarkdownFormatter } from "@/components/blog/MarkdownFormatter";
 import { NotebookRenderer } from "@/components/blog/NotebookRenderer";
 import { useDisplayCategory } from "@/components/blog/useDisplayCategory";
@@ -24,21 +25,13 @@ import {
   topicLabels,
 } from "@/data/posts/postTransformers";
 import { extractMarkdownFromNotebook } from "@/lib/notebookUtils";
+import { formatPostDate } from "@/lib/postDate";
 import authorsData from "@/data/posts/authors.json";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 const authors = authorsData as AuthorsCollection;
 
 const SCROLL_OFFSET_PX = 72;
-
-function calculateReadingTime(text: string): string {
-  const words = text.trim().split(/\s+/).length;
-  return `${Math.ceil(words / 200)} min read`;
-}
 
 function formatAuthorName(authorId: string): string {
   return authorId
@@ -75,11 +68,7 @@ export default function ArticleClient({
     return { markdown: content, notebook: null };
   }, [content, isNotebook]);
 
-  const formattedDate = new Date(post.date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = formatPostDate(post.date, "long");
 
   const imageUrl = post.image
     ? post.image.startsWith("http")
@@ -146,7 +135,7 @@ function PostHeading({
   countryId: string;
   displayCategory: string;
 }) {
-  const readingTime = calculateReadingTime(markdown);
+  const readingTime = readingTimeLabel(markdown);
 
   if (displayCategory === "desktop") {
     return (
@@ -236,11 +225,7 @@ function PostHeading({
       >
         {post.title}
       </Text>
-      <Text
-        size="lg"
-        className="tw:mb-lg"
-        style={{ color: colors.gray[500] }}
-      >
+      <Text size="lg" className="tw:mb-lg" style={{ color: colors.gray[500] }}>
         {post.description}
       </Text>
       <div
@@ -371,7 +356,7 @@ function PostBody({
             <MoreOn post={post} countryId={countryId} />
           </div>
         </div>
-        <div style={{ flex: 3 }}>
+        <div style={{ flex: 3, minWidth: 0 }}>
           {bodyContent}
           <AuthorSection post={post} countryId={countryId} />
         </div>
@@ -591,8 +576,7 @@ function ShareLinks({
   post: BlogPost;
   displayCategory: string;
 }) {
-  const currentUrl =
-    typeof window !== "undefined" ? window.location.href : "";
+  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
   const desktop = displayCategory === "desktop";
 
   const links = [
@@ -661,9 +645,7 @@ function ShareLinks({
               justifyContent: "center",
               backgroundColor: desktop ? colors.gray[500] : "transparent",
               color: desktop ? colors.white : colors.gray[600],
-              border: desktop
-                ? "none"
-                : `1px solid ${colors.gray[400]}`,
+              border: desktop ? "none" : `1px solid ${colors.gray[400]}`,
               fontSize: typography.fontSize.xs,
               fontWeight: typography.fontWeight.semibold,
             }}

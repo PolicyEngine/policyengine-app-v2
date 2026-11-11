@@ -187,6 +187,32 @@ export const RECHARTS_FONT_STYLE = {
   fill: colors.gray[500],
 } as const;
 
+/**
+ * A household variation chart's legend. Tidied (the v3 report): above the
+ * plot on the right, in the ticks' size, with room under it. Otherwise as
+ * the v2 report has it: at the top left, in the page's size.
+ */
+export function householdChartLegendProps(tidy = false) {
+  return tidy
+    ? ({
+        verticalAlign: 'top',
+        align: 'right',
+        iconSize: 10,
+        wrapperStyle: {
+          fontFamily: RECHARTS_FONT_STYLE.fontFamily,
+          fontSize: RECHARTS_FONT_STYLE.fontSize,
+          lineHeight: '16px',
+          paddingBottom: 12,
+        },
+      } as const)
+    : ({ verticalAlign: 'top', align: 'left' } as const);
+}
+
+/** The y-axis title's offset from `getYAxisLayout`; tidied, it sits closer to the ticks. */
+export function householdChartLabelDx(labelDx: number, tidy = false): number {
+  return tidy ? labelDx + 8 : labelDx;
+}
+
 // ---------------------------------------------------------------------------
 // Y-axis layout (dynamic width, margin, and label offset)
 // ---------------------------------------------------------------------------
@@ -258,6 +284,13 @@ export interface ChartDownloadOptions {
   subtitle?: string;
   filename?: string;
 }
+
+/**
+ * Spread onto the element around a chart part that the SVG download must
+ * keep at any size, such as a one-row bar chart under 40px tall. Without
+ * it, the download skips an SVG that small as an icon.
+ */
+export const CHART_EXPORT_KEEP = { 'data-chart-export': 'keep' } as const;
 
 /** Resolve CSS var() references to concrete values. */
 function resolveVars(value: string, computed: CSSStyleDeclaration): string {
@@ -350,10 +383,14 @@ export function downloadChartAsSvg(
 ): void {
   const { title, subtitle, filename = 'chart.svg' } = options;
 
-  // Collect content SVGs — skip tiny icon SVGs (e.g. lucide icons in buttons)
+  // Collect content SVGs — skip tiny icon SVGs (e.g. lucide icons in buttons),
+  // except parts marked with CHART_EXPORT_KEEP, which stay at any visible size.
   const allSvgs = Array.from(container.querySelectorAll('svg'));
   const svgs = allSvgs.filter((s) => {
     const r = s.getBoundingClientRect();
+    if (s.closest('[data-chart-export="keep"]')) {
+      return r.width > 0 && r.height > 0;
+    }
     return r.width > 40 && r.height > 40;
   });
   if (svgs.length === 0) {

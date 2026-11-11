@@ -1,4 +1,4 @@
-PolicyEngine has received a $273,500 grant from [Arnold Ventures](https://www.arnoldventures.org/) to develop state and congressional district-level policy analysis capabilities. This funding will enable policymakers to see how tax and benefit reforms affect all 435 congressional districts and 50 states.
+PolicyEngine has received a $273,525 grant from [Arnold Ventures](https://www.arnoldventures.org/) to develop state and congressional district-level policy analysis capabilities. This funding will enable policymakers to see how tax and benefit reforms affect all 435 congressional districts and 50 states.
 
 ## Project goals
 

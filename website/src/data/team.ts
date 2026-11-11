@@ -8,7 +8,7 @@ export const founders: TeamMember[] = [
   },
   {
     name: "Nikhil Woodruff",
-    bio: "is the co-founder and CTO of PolicyEngine. He previously served as UK Research Director at the UBI Center, a think tank researching universal basic income policies, and worked at Caspian as a data scientist, improving anti-money laundering investigations. Nikhil earned a bachelor's degree in Computer Science from the University of Durham.",
+    bio: "was a co-founder of PolicyEngine. He previously served as UK Research Director at the UBI Center, a think tank researching universal basic income policies, and worked at Caspian as a data scientist, improving anti-money laundering investigations. Nikhil earned a bachelor's degree in Computer Science from the University of Durham.",
     image: "/assets/team/nikhil-woodruff.webp",
   },
 ];
@@ -30,18 +30,13 @@ export const staff: TeamMember[] = [
     image: "/assets/team/vahid-ahmadi.webp",
   },
   {
-    name: "Daphne Hansell",
-    bio: "is a research associate at PolicyEngine. She focuses on the intersection of healthcare and the tax code. Previously, she was a health policy intern at the Niskanen Center and a policy fellow at the Progressive Policy Institute. Daphne holds an B.A. in Public Health from Bryn Mawr College.",
-    image: "/assets/team/daphne-hansell.webp",
-  },
-  {
     name: "David Trimmer",
     bio: "is a research analyst at PolicyEngine. Previously, he was a contributor at the People's Policy Project and a social policy intern at the Niskanen Center. David holds an MPA from The George Washington University and a B.S. in Political Science from The Rochester Institute of Technology.",
     image: "/assets/team/david-trimmer.webp",
   },
   {
     name: "María Juaristi",
-    bio: "is a policy modeling intern at PolicyEngine. She is also pursuing an undergraduate degree in political science and data science at Minerva University. Previously, she was a research intern at the University of Chicago.",
+    bio: "is a research associate at PolicyEngine. She is also pursuing an undergraduate degree in political science and data science at Minerva University. Previously, she was a research intern at the University of Chicago.",
     image: "/assets/team/maria-juaristi.webp",
   },
   {

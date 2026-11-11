@@ -14,6 +14,7 @@
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId, countryIds } from '@/libs/countries';
 import type { SavedGeographySelection } from '@/models/geography';
+import { canonicalRegionCode } from '@/models/region';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
@@ -24,7 +25,12 @@ import { UserSimulation } from '@/types/ingredients/UserSimulation';
  * Uses URL-safe characters: + → -, / → _, removes = padding.
  */
 export function encodeShareData(data: ReportIngredientsInput): string {
-  const json = JSON.stringify(data);
+  // Escape non-Latin1 characters so btoa accepts Unicode labels. JSON.parse
+  // restores them, preserving compatibility with existing shared links.
+  const json = JSON.stringify(data).replace(
+    /[\u0100-\uffff]/g,
+    (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`
+  );
   const base64 = btoa(json);
   // Make URL-safe: replace + with -, / with _, remove = padding
   const urlSafe = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -65,7 +71,17 @@ export function decodeShareData(encoded: string): ReportIngredientsInput | null 
       return null;
     }
 
-    return data;
+    // A link shared for "country/ni" opens on "country/northern_ireland".
+    return {
+      ...data,
+      userGeographies: data.userGeographies.map((geography) => ({
+        ...geography,
+        geographyId:
+          typeof geography.geographyId === 'string'
+            ? canonicalRegionCode(geography.geographyId)
+            : geography.geographyId,
+      })),
+    };
   } catch (error) {
     console.error('[decodeShareData] Unexpected error:', error);
     return null;

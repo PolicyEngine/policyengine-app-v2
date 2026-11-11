@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { POVERTY_AGE_CSV_LABELS } from '@/components/flagship/report/charts/povertyAgeGroups';
 import {
   getBudgetCsvRows,
   getDetailedBudgetCsvRows,
@@ -142,6 +143,17 @@ describe('report output CSV exports', () => {
       'Change',
     ]);
     expect(getPovertyByAgeCsvRows(output)[1]).toEqual(['Children', 0.15, 0.13, 0.13 / 0.15 - 1]);
+    // v2 keeps its names; v3 names each group by its ages.
+    expect(getPovertyByAgeCsvRows(output).map((row) => row[0])).toEqual([
+      'Age group',
+      'Children',
+      'Working-age adults',
+      'Seniors',
+      'All',
+    ]);
+    expect(
+      getPovertyByAgeCsvRows(output, 'poverty', POVERTY_AGE_CSV_LABELS).map((row) => row[0])
+    ).toEqual(['Age group', 'Children', 'Adults 18 to 64', 'Adults 65 and over', 'All']);
     expect(getPovertyByGenderCsvRows(output)).toContainEqual(['Male', 0.1, 0.09, 0.09 / 0.1 - 1]);
     expect(getPovertyByRaceCsvRows(output)).toContainEqual([
       'White (non-Hispanic)',

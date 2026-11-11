@@ -1,0 +1,212 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - link "PolicyEngine" [ref=e6] [cursor=pointer]:
+            - /url: /us
+            - img "PolicyEngine" [ref=e7]
+          - generic [ref=e8]:
+            - link "Research" [ref=e9] [cursor=pointer]:
+              - /url: /us/research
+            - link "Model" [ref=e10] [cursor=pointer]:
+              - /url: /us/model
+            - link "API" [ref=e11] [cursor=pointer]:
+              - /url: /us/api
+            - link "Python" [ref=e12] [cursor=pointer]:
+              - /url: /us/python
+            - button "About" [ref=e14] [cursor=pointer]:
+              - generic [ref=e15]: About
+              - img [ref=e16]
+            - link "Donate" [ref=e18] [cursor=pointer]:
+              - /url: /us/donate
+        - button "Country selector" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+      - generic:
+        - generic:
+          - generic:
+            - generic: Menu
+            - button "Close menu":
+              - img
+          - generic:
+            - link "Research":
+              - /url: /us/research
+            - link "Model":
+              - /url: /us/model
+            - link "API":
+              - /url: /us/api
+            - link "Python":
+              - /url: /us/python
+            - generic:
+              - generic: About
+              - generic:
+                - link "Team":
+                  - /url: /us/team
+                - link "Supporters":
+                  - /url: /us/supporters
+                - link "Citations":
+                  - /url: /us/citations
+            - link "Donate":
+              - /url: /us/donate
+    - main [ref=e26]:
+      - generic [ref=e27]:
+        - paragraph [ref=e31]: Loading calculator...
+        - iframe [ref=e32]:
+          - generic [ref=f1e2]:
+            - banner [ref=f1e3]:
+              - generic [ref=f1e4]:
+                - img "PolicyEngine" [ref=f1e5]
+                - text: Taxation of benefits reforms
+            - generic [ref=f1e6]:
+              - complementary [ref=f1e7]:
+                - navigation [ref=f1e8]:
+                  - generic [ref=f1e9]:
+                    - heading "Benefit tax rules" [level=3] [ref=f1e10]
+                    - generic [ref=f1e11]:
+                      - button "Full repeal" [ref=f1e12]: Full repeal
+                      - button "85% taxation" [ref=f1e13]
+                      - button "85% + deduction" [ref=f1e14]
+                      - button "$500 credit" [ref=f1e15]
+                      - button "No senior deduction" [ref=f1e16]
+                      - button "100% taxation" [ref=f1e17]
+                      - button "90% taxation" [ref=f1e18]
+                      - button "95% taxation" [ref=f1e19]
+                      - button "$700 credit" [ref=f1e20]
+                  - generic [ref=f1e21]:
+                    - heading "Structural swaps" [level=3] [ref=f1e22]
+                    - generic [ref=f1e23]:
+                      - button "Roth swap" [ref=f1e24]
+                      - button "Phased Roth" [ref=f1e25]
+                      - button "Extended Roth" [ref=f1e26]
+                  - generic [ref=f1e27]:
+                    - heading "Publication" [level=3] [ref=f1e28]
+                    - button "Citable paper" [ref=f1e30]
+              - main [ref=f1e31]:
+                - generic [ref=f1e32]:
+                  - generic [ref=f1e33]:
+                    - generic [ref=f1e34]:
+                      - heading "Social Security taxation reform" [level=2] [ref=f1e35]
+                      - paragraph [ref=f1e36]: Policy options for reforming the taxation of Social Security benefits, with budgetary impacts through 2100. Analysis commissioned by the Committee for a Responsible Federal Budget.
+                    - generic [ref=f1e37]:
+                      - button "Read paper" [ref=f1e38]:
+                        - img [ref=f1e39]
+                        - text: Read paper
+                      - button "Export CSV" [ref=f1e41]:
+                        - img [ref=f1e42]
+                        - text: Export CSV
+                  - generic [ref=f1e46]:
+                    - button "TOB reform options" [ref=f1e47]
+                    - button "Balanced Fix baseline" [ref=f1e48]
+                    - button "Paper" [ref=f1e49]
+                - generic [ref=f1e50]:
+                  - generic [ref=f1e51]:
+                    - text: Reform option
+                    - combobox "Reform option" [ref=f1e52]:
+                      - option "Full repeal" [selected]
+                      - option "85% taxation"
+                      - option "85% + deduction"
+                      - option "$500 credit"
+                      - option "Roth swap"
+                      - option "Phased Roth"
+                      - option "No senior deduction"
+                      - option "100% taxation"
+                      - option "90% taxation"
+                      - option "95% taxation"
+                      - option "$700 credit"
+                      - option "Extended Roth"
+                  - generic [ref=f1e53]:
+                    - generic [ref=f1e54]:
+                      - generic [ref=f1e55]:
+                        - paragraph [ref=f1e56]: Scoring
+                        - generic [ref=f1e57]:
+                          - button "Static" [ref=f1e58]
+                          - button "Conventional" [ref=f1e59]
+                      - generic [ref=f1e60]:
+                        - paragraph [ref=f1e61]: Trust fund split
+                        - generic [ref=f1e62]:
+                          - button "Current law" [ref=f1e63]
+                          - button "Baseline shares" [ref=f1e64]
+                    - generic [ref=f1e65]:
+                      - generic [ref=f1e66]:
+                        - paragraph [ref=f1e67]: Unit
+                        - generic [ref=f1e68]:
+                          - button "$" [ref=f1e69]
+                          - button "% payroll" [ref=f1e70]
+                          - button "% GDP" [ref=f1e71]
+                      - generic [ref=f1e72]:
+                        - paragraph [ref=f1e73]: Period
+                        - generic [ref=f1e74]:
+                          - button "10-year" [ref=f1e75]
+                          - button "75-year" [ref=f1e76]
+                - generic [ref=f1e77]:
+                  - generic [ref=f1e78]:
+                    - generic [ref=f1e79]:
+                      - paragraph [ref=f1e80]: Selected reform · Direct taxability
+                      - heading "Full Repeal of Social Security Benefit Taxation" [level=3] [ref=f1e81]
+                      - paragraph [ref=f1e82]: Complete elimination of Social Security benefit income taxation starting in 2026.
+                    - generic [ref=f1e83]: Static view
+                  - generic [ref=f1e84]:
+                    - generic [ref=f1e85]:
+                      - paragraph [ref=f1e86]: What changes
+                      - paragraph [ref=f1e87]: Repeals federal income taxation of Social Security benefits beginning in 2026.
+                    - generic [ref=f1e88]:
+                      - paragraph [ref=f1e89]: Baseline context
+                      - paragraph [ref=f1e90]: Scored against current law, including the temporary senior deduction and its scheduled expiration after 2028.
+                    - generic [ref=f1e91]:
+                      - paragraph [ref=f1e92]: How to read it
+                      - paragraph [ref=f1e93]: Negative values represent lost income-tax revenue currently credited to the OASDI and HI trust funds. Static and conventional dynamic results are available for the full 2026-2100 window.
+                - generic [ref=f1e95]:
+                  - img [ref=f1e96]
+                  - text: Loading policy impact data...
+                - paragraph [ref=f1e99]:
+                  - text: Analysis by
+                  - link "PolicyEngine" [ref=f1e100] [cursor=pointer]:
+                    - /url: https://policyengine.org
+                  - text: ", commissioned by the Committee for a Responsible Federal Budget. Data: 2025 Social Security Trustees Report."
+    - contentinfo [ref=e33]:
+      - generic [ref=e34]:
+        - img "PolicyEngine" [ref=e35]
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - link "About us" [ref=e39] [cursor=pointer]:
+                - /url: /us/team
+              - link "Donate" [ref=e40] [cursor=pointer]:
+                - /url: /us/donate
+              - link "Developer tools" [ref=e41] [cursor=pointer]:
+                - /url: /us/dev-tools
+              - link "Privacy policy" [ref=e42] [cursor=pointer]:
+                - /url: /us/privacy
+              - link "Terms and conditions" [ref=e43] [cursor=pointer]:
+                - /url: /us/terms
+            - generic [ref=e44]:
+              - generic [ref=e45]:
+                - link "Email" [ref=e46] [cursor=pointer]:
+                  - /url: mailto:hello@policyengine.org
+                  - img [ref=e47]
+                - link "Twitter" [ref=e50] [cursor=pointer]:
+                  - /url: https://twitter.com/ThePolicyEngine
+                  - img [ref=e51]
+                - link "Facebook" [ref=e53] [cursor=pointer]:
+                  - /url: https://www.facebook.com/PolicyEngine
+                  - img [ref=e54]
+                - link "LinkedIn" [ref=e56] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/company/thepolicyengine
+                  - img [ref=e57]
+                - link "YouTube" [ref=e60] [cursor=pointer]:
+                  - /url: https://www.youtube.com/@policyengine
+                  - img [ref=e61]
+                - link "Instagram" [ref=e64] [cursor=pointer]:
+                  - /url: https://www.instagram.com/PolicyEngine/
+                  - img [ref=e65]
+                - link "GitHub" [ref=e68] [cursor=pointer]:
+                  - /url: https://github.com/PolicyEngine
+                  - img [ref=e69]
+              - paragraph [ref=e71]: © 2026 PolicyEngine. All rights reserved.
+          - generic [ref=e72]:
+            - paragraph [ref=e73]: Subscribe to PolicyEngine
+            - paragraph [ref=e74]: Get the latest posts delivered right to your inbox.
+            - generic [ref=e75]:
+              - textbox "Enter your email address" [ref=e76]
+              - button "SUBSCRIBE" [ref=e77] [cursor=pointer]
+  - alert [ref=e78]

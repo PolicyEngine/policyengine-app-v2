@@ -21,6 +21,10 @@ interface SimulationSetupViewProps {
   onNavigateToPolicy: () => void;
   onNavigateToPopulation: () => void;
   onNext: () => void;
+  isPolicyUnavailable?: boolean;
+  isPopulationUnavailable?: boolean;
+  policyErrorMessage?: string;
+  populationErrorMessage?: string;
   onBack?: () => void;
   onCancel?: () => void;
 }
@@ -32,6 +36,10 @@ export default function SimulationSetupView({
   onNavigateToPolicy,
   onNavigateToPopulation,
   onNext,
+  isPolicyUnavailable = false,
+  isPopulationUnavailable = false,
+  policyErrorMessage,
+  populationErrorMessage,
   onBack,
   onCancel,
 }: SimulationSetupViewProps) {
@@ -39,6 +47,8 @@ export default function SimulationSetupView({
 
   const policy = simulation.policy;
   const population = simulation.population;
+  const isPolicyReady = isPolicyConfigured(policy) && !isPolicyUnavailable;
+  const isPopulationReady = isPopulationConfigured(population) && !isPopulationUnavailable;
 
   // Detect if we're in report mode for simulation 2 (population will be inherited)
   const isSimulation2InReport = isReportMode && simulationIndex === 1;
@@ -52,17 +62,17 @@ export default function SimulationSetupView({
   };
 
   const handleNext = () => {
-    if (selectedCard === 'population' && !isPopulationConfigured(population)) {
+    if (selectedCard === 'population' && !isPopulationReady) {
       onNavigateToPopulation();
-    } else if (selectedCard === 'policy' && !isPolicyConfigured(policy)) {
+    } else if (selectedCard === 'policy' && !isPolicyReady) {
       onNavigateToPolicy();
-    } else if (isPolicyConfigured(policy) && isPopulationConfigured(population)) {
+    } else if (isPolicyReady && isPopulationReady) {
       // Both are fulfilled, proceed to next step
       onNext();
     }
   };
 
-  const canProceed: boolean = isPolicyConfigured(policy) && isPopulationConfigured(population);
+  const canProceed = isPolicyReady && isPopulationReady;
 
   function generatePopulationCardTitle() {
     if (!isPopulationConfigured(population)) {
@@ -87,6 +97,10 @@ export default function SimulationSetupView({
   }
 
   function generatePopulationCardDescription() {
+    if (isPopulationUnavailable) {
+      return populationErrorMessage ? 'Failed to load' : 'Population unavailable';
+    }
+
     if (!isPopulationConfigured(population)) {
       return 'Select a household collection or custom household';
     }
@@ -121,6 +135,10 @@ export default function SimulationSetupView({
   }
 
   function generatePolicyCardDescription() {
+    if (isPolicyUnavailable) {
+      return policyErrorMessage ? 'Failed to load' : 'Policy unavailable';
+    }
+
     if (!isPolicyConfigured(policy)) {
       return 'Select a policy to apply to the simulation';
     }
@@ -136,7 +154,8 @@ export default function SimulationSetupView({
       description: generatePopulationCardDescription(),
       onClick: handlePopulationSelect,
       isSelected: selectedCard === 'population',
-      isFulfilled: isPopulationConfigured(population),
+      isFulfilled: isPopulationReady,
+      errorMessage: populationErrorMessage,
       isDisabled: false,
     },
     {
@@ -144,20 +163,21 @@ export default function SimulationSetupView({
       description: generatePolicyCardDescription(),
       onClick: handlePolicySelect,
       isSelected: selectedCard === 'policy',
-      isFulfilled: isPolicyConfigured(policy),
+      isFulfilled: isPolicyReady,
+      errorMessage: policyErrorMessage,
       isDisabled: false,
     },
   ];
 
   // Determine the primary action label and state
   const getPrimaryAction = () => {
-    if (selectedCard === 'population' && !isPopulationConfigured(population)) {
+    if (selectedCard === 'population' && !isPopulationReady) {
       return {
         label: 'Configure household(s)',
         onClick: handleNext,
         isDisabled: false,
       };
-    } else if (selectedCard === 'policy' && !isPolicyConfigured(policy)) {
+    } else if (selectedCard === 'policy' && !isPolicyReady) {
       return {
         label: 'Configure policy',
         onClick: handleNext,

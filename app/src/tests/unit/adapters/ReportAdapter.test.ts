@@ -11,6 +11,10 @@ import {
   mockReportMetadataSingleSimulation,
   mockReportOutput,
 } from '@/tests/fixtures/adapters/reportMocks';
+import {
+  EXPECTED_BY_CONSTITUENCY,
+  LIST_SHAPE_UK_RESULT,
+} from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
 import { Report } from '@/types/ingredients/Report';
 
 describe('ReportAdapter', () => {
@@ -69,6 +73,19 @@ describe('ReportAdapter', () => {
       // Then
       expect(result.output).toBe(nullOutput);
       expect(result.status).toBe(pendingStatus);
+    });
+
+    test('given a stored UK output with list-shape area impacts then keys them by name', () => {
+      // Given
+      const metadata = { ...mockReportMetadata, output: JSON.stringify(LIST_SHAPE_UK_RESULT) };
+
+      // When
+      const result = ReportAdapter.fromMetadata(metadata);
+
+      // Then
+      expect((result.output as any).constituency_impact).toEqual({
+        by_constituency: EXPECTED_BY_CONSTITUENCY,
+      });
     });
 
     test('given metadata with error status then converts to Report with error status', () => {

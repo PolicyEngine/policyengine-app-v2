@@ -5,16 +5,18 @@
  * and callback logic lives in useSimulationCanvas.
  */
 
+import { IconAlertCircle, IconRefresh } from '@tabler/icons-react';
+import { Alert, AlertDescription, AlertTitle, Button, Spinner } from '@/components/ui';
 import { useSimulationCanvas } from '../hooks/useSimulationCanvas';
 import {
   HouseholdCreationModal,
-  IngredientPickerModal,
   PolicyBrowseModal,
   PolicyCreationModal,
   PopulationBrowseModal,
 } from '../modals';
 import { styles } from '../styles';
-import type { IngredientPickerState, ReportBuilderState, SimulationBlockProps } from '../types';
+import type { ReportBuilderState, SimulationBlockProps } from '../types';
+import { arePopulationsEqual } from '../utils/arePopulationsEqual';
 import { AddSimulationCard } from './AddSimulationCard';
 import { SimulationBlock } from './SimulationBlock';
 import { SimulationCanvasSkeleton } from './SimulationCanvasSkeleton';
@@ -23,8 +25,6 @@ interface SimulationCanvasProps {
   reportYear: string;
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
-  pickerState: IngredientPickerState;
-  setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
   BlockComponent?: React.ComponentType<SimulationBlockProps>;
   isReadOnly?: boolean;
 }
@@ -33,13 +33,28 @@ export function SimulationCanvas({
   reportYear,
   reportState,
   setReportState,
-  pickerState,
-  setPickerState,
   BlockComponent = SimulationBlock,
   isReadOnly,
 }: SimulationCanvasProps) {
-  const canvas = useSimulationCanvas({ reportState, setReportState, pickerState, setPickerState });
+  const canvas = useSimulationCanvas({ reportState, setReportState });
   const isViewOnly = Boolean(isReadOnly);
+  const reformSharesPopulation = arePopulationsEqual(
+    reportState.simulations[0]?.population,
+    reportState.simulations[1]?.population
+  );
+  // Changing a shared baseline updates both populations. Independent populations
+  // must instead match the other simulation's type without replacing its inputs.
+  const otherPopulation =
+    reportState.simulations[canvas.populationBrowseState?.simulationIndex === 0 ? 1 : 0]
+      ?.population;
+  const allowedPopulationType =
+    canvas.populationBrowseState?.simulationIndex === 0 && reformSharesPopulation
+      ? undefined
+      : otherPopulation?.household
+        ? 'household'
+        : otherPopulation?.geography
+          ? 'geography'
+          : undefined;
   const noop = () => {};
   const handleHouseholdModalBack =
     isViewOnly || !canvas.householdEditorState.returnToBrowseOnBack
@@ -52,6 +67,30 @@ export function SimulationCanvas({
 
   if (canvas.isInitialLoading) {
     return <SimulationCanvasSkeleton />;
+  }
+
+  if (canvas.catalogError) {
+    return (
+      <div style={styles.canvasContainer} className="tw:p-xl">
+        <Alert variant="destructive" className="tw:max-w-2xl">
+          <IconAlertCircle size={20} />
+          <AlertTitle>Saved ingredients unavailable</AlertTitle>
+          <AlertDescription>
+            <p>{canvas.catalogErrorMessage}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={canvas.retryCatalogs}
+              disabled={canvas.isRetryingCatalogs}
+              className="tw:mt-sm"
+            >
+              {canvas.isRetryingCatalogs ? <Spinner size="sm" /> : <IconRefresh size={16} />}
+              Try again
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
@@ -87,6 +126,10 @@ export function SimulationCanvas({
             canRemove={false}
             savedPolicies={canvas.savedPolicies}
             recentPopulations={canvas.recentPopulations}
+            policyErrorMessage={canvas.getPolicyErrorMessage(reportState.simulations[0]?.policy.id)}
+            populationErrorMessage={canvas.getPopulationErrorMessage(
+              reportState.simulations[0]?.population.household?.id
+            )}
             isReadOnly={isReadOnly}
           />
 
@@ -121,10 +164,16 @@ export function SimulationCanvas({
               onRemove={() => canvas.handleRemoveSimulation(1)}
               canRemove={!canvas.isGeographySelected}
               isRequired={canvas.isGeographySelected}
-              populationInherited
+              populationInherited={reformSharesPopulation}
               inheritedPopulation={reportState.simulations[0].population}
               savedPolicies={canvas.savedPolicies}
               recentPopulations={canvas.recentPopulations}
+              policyErrorMessage={canvas.getPolicyErrorMessage(
+                reportState.simulations[1]?.policy.id
+              )}
+              populationErrorMessage={canvas.getPopulationErrorMessage(
+                reportState.simulations[1]?.population.household?.id
+              )}
               isReadOnly={isReadOnly}
             />
           ) : (
@@ -135,19 +184,6 @@ export function SimulationCanvas({
           )}
         </div>
       </div>
-
-      <IngredientPickerModal
-        isOpen={canvas.pickerState.isOpen}
-        onClose={canvas.closeIngredientPicker}
-        type={canvas.pickerState.ingredientType}
-        onSelect={canvas.handleIngredientSelect}
-        onCreateNew={() =>
-          canvas.handleCreateCustom(
-            canvas.pickerState.simulationIndex,
-            canvas.pickerState.ingredientType
-          )
-        }
-      />
 
       <PolicyBrowseModal
         isOpen={canvas.policyBrowseState.isOpen}
@@ -163,6 +199,7 @@ export function SimulationCanvas({
         onClose={canvas.closePopulationBrowse}
         onSelect={canvas.handlePopulationSelectFromBrowse}
         reportYear={reportYear}
+        allowedPopulationType={allowedPopulationType}
         onCreateNew={() => {
           canvas.closePopulationBrowse();
           canvas.handleCreateCustom(canvas.populationBrowseState.simulationIndex, 'population');

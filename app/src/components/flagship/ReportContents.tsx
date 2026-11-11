@@ -1,0 +1,322 @@
+import { IconChartBar, IconMap2, IconRosetteDiscountCheck, IconUsers } from '@tabler/icons-react';
+import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { Stack } from '@/components/ui';
+import { colors, spacing, typography } from '@/designTokens';
+import { formatCurrencyAbbr } from '@/utils/formatters';
+
+function povertyChange(values: { baseline: number; reform: number }) {
+  const { baseline, reform } = values;
+  if (!Number.isFinite(baseline) || !Number.isFinite(reform)) {
+    return 'Unavailable';
+  }
+  if (reform === baseline) {
+    return 'No change';
+  }
+  if (baseline === 0) {
+    return 'Relative change unavailable';
+  }
+  const magnitude = Math.abs((reform - baseline) / baseline) * 100;
+  return `${magnitude < 0.1 ? '<0.1' : magnitude.toFixed(1)}% ${reform < baseline ? 'decrease' : 'increase'}`;
+}
+
+export interface ReportMetric {
+  value: string;
+  label: string;
+}
+
+/**
+ * The overview's winners figure: the share of people whose net income
+ * rises, or the share whose net income falls when more people lose than
+ * gain. The winner shares count people, not households: the API weights
+ * them by the people in each household.
+ */
+export function winnerShareMetric(gains: number, losses: number): ReportMetric {
+  const share = (value: number) => `${(value * 100).toFixed(1)}%`;
+  if (!Number.isFinite(gains)) {
+    return { value: 'Unavailable', label: 'People gaining income' };
+  }
+  if (Number.isFinite(losses) && losses > gains) {
+    return { value: share(losses), label: 'People losing income' };
+  }
+  return { value: share(gains), label: 'People gaining income' };
+}
+
+/**
+ * Whether a report leads with state revenue: a state reform (every
+ * provision a state parameter) run on part of the country. A federal
+ * reform run on one state leads with its full budget effect there; its
+ * state revenue change is mostly nil.
+ */
+export function leadsWithStateRevenue(
+  region: string | undefined,
+  provisions: Array<{ path: string }>
+): boolean {
+  const subnational =
+    !!region && (region.startsWith('state/') || region.startsWith('congressional_district/'));
+  return (
+    subnational &&
+    provisions.length > 0 &&
+    provisions.every((provision) => /^gov\.(contrib\.)?states\./.test(provision.path))
+  );
+}
+
+/**
+ * The overview's headline numbers from a completed society-wide run. A
+ * run on one state's data leads with that state's revenue, the figure
+ * state fiscal notes and the tracker report, rather than the combined
+ * federal and state budget effect.
+ */
+export function reportMetrics(
+  output: SocietyWideReportOutput,
+  countryId: Parameters<typeof formatCurrencyAbbr>[1],
+  { stateRevenue = false }: { stateRevenue?: boolean } = {}
+): ReportMetric[] {
+  const distribution = output.intra_decile.all;
+  const gains = distribution['Gain more than 5%'] + distribution['Gain less than 5%'];
+  const losses = distribution['Lose more than 5%'] + distribution['Lose less than 5%'];
+  const budget = stateRevenue
+    ? output.budget.state_tax_revenue_impact
+    : output.budget.budgetary_impact;
+  const format = (value: number) =>
+    Number.isFinite(value)
+      ? formatCurrencyAbbr(Math.abs(value), countryId, { maximumFractionDigits: 1 })
+      : 'Unavailable';
+  return [
+    stateRevenue
+      ? {
+          value: format(budget),
+          label:
+            budget < 0
+              ? 'Annual state revenue loss'
+              : budget > 0
+                ? 'Annual state revenue gain'
+                : 'Annual state revenue change',
+        }
+      : {
+          value: format(budget),
+          label:
+            budget < 0
+              ? 'Annual government cost'
+              : budget > 0
+                ? 'Annual government savings'
+                : 'Annual budget change',
+        },
+    winnerShareMetric(gains, losses),
+    {
+      value: povertyChange(output.poverty.poverty.child),
+      label: 'Child poverty · relative change',
+    },
+  ];
+}
+
+/** The districts card's words; a UK report's reads constituencies and local authorities. */
+export interface DistrictsCardCopy {
+  title: string;
+  action: string;
+  preview: string;
+}
+
+const DISTRICTS_CARD_COPY: DistrictsCardCopy = {
+  title: 'District impacts',
+  action: 'Explore districts',
+  preview: 'Compare income changes across districts on a map.',
+};
+
+export default function ReportContents({
+  metrics,
+  metricsNote,
+  districtAvailable,
+  districtsCopy = DISTRICTS_CARD_COPY,
+  showDistricts = true,
+  onOpen,
+}: {
+  metrics: ReportMetric[];
+  /** Shown under the headline numbers, e.g. that they are stored estimates. */
+  metricsNote?: React.ReactNode;
+  districtAvailable: boolean;
+  /** The districts card's words, when the country names its areas otherwise. */
+  districtsCopy?: DistrictsCardCopy;
+  /** Off, the overview has no districts card: the report has no districts section. */
+  showDistricts?: boolean;
+  onOpen: (section: string) => void;
+}) {
+  const allSections = [
+    {
+      id: 'economy',
+      title: 'Economic impacts',
+      icon: IconChartBar,
+      action: 'Explore economic impacts',
+      preview: '',
+    },
+    {
+      id: 'districts',
+      title: districtsCopy.title,
+      icon: IconMap2,
+      action: districtsCopy.action,
+      preview: districtAvailable
+        ? districtsCopy.preview
+        : 'District-level impacts are not available for this report’s scope.',
+    },
+    {
+      id: 'household',
+      title: 'Household impacts',
+      icon: IconUsers,
+      action: 'Explore household impacts',
+      preview: 'Add a household to see how its taxes and benefits change.',
+    },
+    {
+      id: 'validation',
+      title: 'Validation',
+      icon: IconRosetteDiscountCheck,
+      action: 'Review validation',
+      preview: 'Examine the data fit and evidence behind the estimates.',
+    },
+  ];
+  const sections = showDistricts
+    ? allSections
+    : allSections.filter((section) => section.id !== 'districts');
+  return (
+    <Stack style={{ gap: spacing.md }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))',
+          gap: spacing.lg,
+        }}
+      >
+        {sections.map((section) => (
+          <button
+            type="button"
+            key={section.id}
+            onClick={() => onOpen(section.id)}
+            aria-label={section.action}
+            className="tw:group tw:hover:shadow-md tw:transition-all tw:hover:-translate-y-0.5 tw:motion-reduce:transform-none tw:focus-visible:outline-2 tw:focus-visible:outline-offset-2"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gridColumn: section.id === 'economy' ? '1 / -1' : undefined,
+              width: '100%',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              color: colors.text.primary,
+              background:
+                section.id === 'districts'
+                  ? colors.primary[50]
+                  : section.id === 'household'
+                    ? colors.secondary[50]
+                    : colors.background.primary,
+              border: `1px solid ${colors.border.light}`,
+              borderRadius: spacing.radius.feature,
+              padding: spacing['2xl'],
+              boxShadow:
+                section.id === 'economy'
+                  ? `0 ${spacing.xs} ${spacing.xl} ${colors.gray[100]}`
+                  : undefined,
+              gap: spacing.lg,
+            }}
+          >
+            <span
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                alignSelf: 'flex-start',
+                gap: spacing.md,
+                fontSize: typography.fontSize.lg,
+                fontWeight: typography.fontWeight.semibold,
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  color: colors.primary[700],
+                  fontSize: typography.fontSize.sm,
+                  fontVariantNumeric: 'tabular-nums',
+                  fontWeight: typography.fontWeight.normal,
+                }}
+              >
+                <section.icon size={24} stroke={1.5} />
+              </span>
+              {section.title}
+            </span>
+            <span
+              style={{
+                flex: 1,
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: spacing.lg,
+              }}
+            >
+              {section.id === 'economy' ? (
+                <span style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xl }}>
+                  {metrics.map((metric) => (
+                    <span
+                      key={metric.label}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: spacing.sm,
+                        borderLeft: `2px solid ${colors.primary[200]}`,
+                        paddingLeft: spacing.lg,
+                        flex: '1 1 130px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: typography.fontSize['4xl'],
+                          color: colors.text.primary,
+                          fontWeight: typography.fontWeight.semibold,
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {metric.value}
+                      </span>
+                      <span
+                        style={{ color: colors.text.secondary, fontSize: typography.fontSize.xs }}
+                      >
+                        {metric.label}
+                      </span>
+                    </span>
+                  ))}
+                  {metricsNote && (
+                    <span
+                      style={{
+                        flexBasis: '100%',
+                        color: colors.text.secondary,
+                        fontSize: typography.fontSize.xs,
+                      }}
+                    >
+                      {metricsNote}
+                    </span>
+                  )}
+                </span>
+              ) : (
+                <span
+                  style={{
+                    color: colors.text.secondary,
+                    fontSize: typography.fontSize.sm,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {section.preview}
+                </span>
+              )}
+              <span
+                style={{
+                  marginTop: 'auto',
+                  color: colors.primary[700],
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.fontWeight.medium,
+                }}
+              >
+                {section.action} →
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </Stack>
+  );
+}

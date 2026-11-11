@@ -25,6 +25,7 @@ import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { Geography } from '@/types/ingredients/Geography';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
+import { getUserHouseholdAvailability } from '@/utils/ingredientAvailability';
 import {
   getUKConstituencies,
   getUKCountries,
@@ -44,6 +45,7 @@ interface PopulationBrowseModalProps {
   onSelect: (population: PopulationStateProps) => void;
   reportYear: string;
   onCreateNew: () => void;
+  allowedPopulationType?: 'household' | 'geography';
 }
 
 export function PopulationBrowseModal({
@@ -52,6 +54,7 @@ export function PopulationBrowseModal({
   onSelect,
   reportYear: _reportYear,
   onCreateNew,
+  allowedPopulationType,
 }: PopulationBrowseModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
@@ -64,9 +67,11 @@ export function PopulationBrowseModal({
   useEffect(() => {
     if (isOpen) {
       setSearchQuery('');
-      setActiveCategory('frequently-selected');
+      setActiveCategory(
+        allowedPopulationType === 'household' ? 'my-households' : 'frequently-selected'
+      );
     }
-  }, [isOpen, countryId]);
+  }, [isOpen, countryId, allowedPopulationType]);
 
   const geographyCategories = useMemo(() => {
     if (countryId === 'uk') {
@@ -139,7 +144,8 @@ export function PopulationBrowseModal({
         const usageTimestamp = householdUsageStore.getLastUsed(householdIdStr);
         const sortTimestamp =
           usageTimestamp || h.association.updatedAt || h.association.createdAt || '';
-        const isSelectable = Boolean(h.household);
+        const availability = getUserHouseholdAvailability(h);
+        const isSelectable = !availability.isDisabled;
         return {
           id: householdIdStr,
           label: h.association.label || `Household #${householdIdStr}`,
@@ -154,6 +160,7 @@ export function PopulationBrowseModal({
               : h.isLoading
                 ? 'Loading...'
                 : 'Failed to load',
+          errorMessage: availability.errorMessage,
         };
       })
       .sort((a, b) => b.sortTimestamp.localeCompare(a.sortTimestamp));
@@ -176,6 +183,9 @@ export function PopulationBrowseModal({
   }, [sortedHouseholds, searchQuery]);
 
   const handleSelectGeography = (region: RegionOption | null) => {
+    if (allowedPopulationType === 'household') {
+      return;
+    }
     const countryConfig = COUNTRY_CONFIG[countryId];
     const geography: Geography = region
       ? {
@@ -205,7 +215,7 @@ export function PopulationBrowseModal({
   };
 
   const handleSelectHousehold = (householdData: (typeof sortedHouseholds)[0]) => {
-    if (!householdData.household) {
+    if (allowedPopulationType === 'geography' || !householdData.household) {
       return;
     }
 
@@ -240,53 +250,67 @@ export function PopulationBrowseModal({
   const colorConfig = INGREDIENT_COLORS.population;
 
   const browseSidebarSections = useMemo(
-    () => [
-      {
-        id: 'geographies',
-        label: 'Geographies',
-        items: [
-          {
-            id: 'frequently-selected',
-            label: 'Frequently selected',
-            icon: <IconStar size={16} />,
-            isActive: activeCategory === 'frequently-selected',
-            onClick: () => setActiveCategory('frequently-selected'),
-          },
-          ...geographyCategories.map((category) => ({
-            id: category.id,
-            label: category.label,
-            icon: <IconFolder size={16} />,
-            badge: category.count,
-            isActive: activeCategory === category.id,
-            onClick: () => setActiveCategory(category.id),
-          })),
-        ],
-      },
-      {
-        id: 'households',
-        label: 'Households',
-        items: [
-          {
-            id: 'my-households',
-            label: 'My households',
-            icon: <IconHome size={16} />,
-            badge: sortedHouseholds.length,
-            isActive: activeCategory === 'my-households',
-            onClick: () => setActiveCategory('my-households'),
-          },
-          {
-            id: 'create-new',
-            label: 'Create new household',
-            icon: <IconPlus size={16} />,
-            onClick: () => {
-              onClose();
-              onCreateNew();
+    () =>
+      [
+        {
+          id: 'geographies',
+          label: 'Geographies',
+          items: [
+            {
+              id: 'frequently-selected',
+              label: 'Frequently selected',
+              icon: <IconStar size={16} />,
+              isActive: activeCategory === 'frequently-selected',
+              onClick: () => setActiveCategory('frequently-selected'),
             },
-          },
-        ],
-      },
-    ],
-    [activeCategory, geographyCategories, onClose, onCreateNew, sortedHouseholds.length]
+            ...geographyCategories.map((category) => ({
+              id: category.id,
+              label: category.label,
+              icon: <IconFolder size={16} />,
+              badge: category.count,
+              isActive: activeCategory === category.id,
+              onClick: () => setActiveCategory(category.id),
+            })),
+          ],
+        },
+        {
+          id: 'households',
+          label: 'Households',
+          items: [
+            {
+              id: 'my-households',
+              label: 'My households',
+              icon: <IconHome size={16} />,
+              badge: sortedHouseholds.length,
+              isActive: activeCategory === 'my-households',
+              onClick: () => setActiveCategory('my-households'),
+            },
+            {
+              id: 'create-new',
+              label: 'Create new household',
+              icon: <IconPlus size={16} />,
+              onClick: () => {
+                onClose();
+                onCreateNew();
+              },
+            },
+          ],
+        },
+      ].filter((section) =>
+        allowedPopulationType === 'household'
+          ? section.id === 'households'
+          : allowedPopulationType === 'geography'
+            ? section.id === 'geographies'
+            : true
+      ),
+    [
+      activeCategory,
+      allowedPopulationType,
+      geographyCategories,
+      onClose,
+      onCreateNew,
+      sortedHouseholds.length,
+    ]
   );
 
   const renderMainContent = useCallback(() => {
@@ -366,6 +390,7 @@ export function PopulationBrowseModal({
           memberCount: h.memberCount,
           disabled: !h.isSelectable,
           statusMessage: h.statusMessage,
+          errorMessage: h.errorMessage,
         }))}
         householdsLoading={householdsLoading}
         getSectionTitle={getSectionTitle}
@@ -381,6 +406,7 @@ export function PopulationBrowseModal({
     );
   }, [
     activeCategory,
+    allowedPopulationType,
     colorConfig.bg,
     countryConfig.nationwideSubtitle,
     countryConfig.nationwideTitle,
@@ -399,7 +425,13 @@ export function PopulationBrowseModal({
       onClose={onClose}
       headerIcon={<IconUsers size={20} color={colorConfig.icon} />}
       headerTitle="Household(s)"
-      headerSubtitle="Choose a geographic region or create a household"
+      headerSubtitle={
+        allowedPopulationType === 'household'
+          ? 'Choose or create a household to match the other simulation'
+          : allowedPopulationType === 'geography'
+            ? 'Choose a geographic region to match the other simulation'
+            : 'Choose a geographic region or create a household'
+      }
       colorConfig={colorConfig}
       sidebarSections={browseSidebarSections}
       renderMainContent={renderMainContent}

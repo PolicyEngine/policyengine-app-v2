@@ -1,6 +1,6 @@
 import { getDefaultCountry, mapIsoToRoute } from './countryMapper';
 import { BrowserProvider } from './providers/BrowserProvider';
-import { IpApiCoProvider } from './providers/IpApiCoProvider';
+import { VercelIpCountryProvider } from './providers/VercelIpCountryProvider';
 import { GeolocationProvider } from './types';
 
 /**
@@ -13,7 +13,7 @@ export class GeolocationService {
   constructor() {
     // Initialize providers in priority order
     this.providers = [
-      new IpApiCoProvider(), // Primary IP-based provider (30k free/month)
+      new VercelIpCountryProvider(), // Primary: country of the visitor's IP address
       new BrowserProvider(), // Fallback using browser language
     ];
 

@@ -1,4 +1,5 @@
 import { IconCheck } from '@tabler/icons-react';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Group, Stack, Text } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
 import { cn } from '@/lib/utils';
@@ -10,6 +11,7 @@ export interface SetupConditionCard {
   isSelected?: boolean;
   isDisabled?: boolean;
   isFulfilled?: boolean;
+  errorMessage?: string;
 }
 
 interface SetupConditionsVariantProps {
@@ -40,13 +42,17 @@ export default function SetupConditionsVariant({ cards }: SetupConditionsVariant
         >
           <Group gap="sm" className="tw:items-center">
             <div className="tw:w-5 tw:shrink-0" style={{ marginTop: '2px' }}>
-              {card.isFulfilled && (
-                <IconCheck
-                  size={20}
-                  style={{
-                    color: colors.primary[600],
-                  }}
-                />
+              {card.errorMessage ? (
+                <IngredientErrorIcon message={card.errorMessage} size={20} />
+              ) : (
+                card.isFulfilled && (
+                  <IconCheck
+                    size={20}
+                    style={{
+                      color: colors.primary[600],
+                    }}
+                  />
+                )
               )}
             </div>
             <Stack gap="xs" style={{ flex: 1 }}>

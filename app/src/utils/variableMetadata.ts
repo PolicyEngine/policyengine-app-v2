@@ -32,6 +32,7 @@ export function getNormalizedVariableMetadata(variable: Record<string, any> | nu
 
   return {
     defaultValue: rawVariable.defaultValue ?? rawVariable.default_value,
+    definitionPeriod: rawVariable.definitionPeriod ?? rawVariable.definition_period,
     documentation: rawVariable.documentation || rawVariable.description,
     entity: rawVariable.entity ?? '',
     hiddenInput: rawVariable.hiddenInput ?? rawVariable.hidden_input ?? false,
@@ -40,6 +41,7 @@ export function getNormalizedVariableMetadata(variable: Record<string, any> | nu
     moduleName: rawVariable.moduleName ?? rawVariable.module_name ?? '',
     name: rawVariable.name ?? '',
     possibleValues: rawVariable.possibleValues ?? rawVariable.possible_values,
+    quantityType: rawVariable.quantityType ?? rawVariable.quantity_type,
     unit: rawVariable.unit ?? rawVariable.variable_unit ?? null,
     valueType: normalizeVariableValueType(
       rawVariable.valueType ?? rawVariable.value_type ?? rawVariable.data_type

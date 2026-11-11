@@ -20,7 +20,8 @@ import { extractShareDataFromUrl } from '@/utils/shareUtils';
 import { ReportBuilderShell, SimulationBlockFull } from './components';
 import { useModifyReportSubmission } from './hooks/useModifyReportSubmission';
 import { useReportBuilderState } from './hooks/useReportBuilderState';
-import type { IngredientPickerState, ReportBuilderState, TopBarAction } from './types';
+import type { ReportBuilderState, TopBarAction } from './types';
+import { cloneReportBuilderState } from './utils/cloneReportBuilderState';
 
 export default function ModifyReportPage({ userReportId }: { userReportId?: string }) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
@@ -37,13 +38,14 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     shareData
   );
 
-  const [pickerState, setPickerState] = useState<IngredientPickerState>({
-    isOpen: false,
-    simulationIndex: 0,
-    ingredientType: 'policy',
-  });
-
-  const { handleSaveAsNew, handleReplace, isSavingNew, isReplacing } = useModifyReportSubmission({
+  const {
+    handleSaveAsNew,
+    handleReplace,
+    isSavingNew,
+    isReplacing,
+    isReportSubmissionBlocked,
+    submissionError,
+  } = useModifyReportSubmission({
     reportState: reportState ?? { label: null, year: '', simulations: [] },
     countryId,
     existingUserReportId: userReportId ?? '',
@@ -94,7 +96,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         icon: <IconX size={16} />,
         onClick: () => {
           if (originalState) {
-            setReportState(structuredClone(originalState) as ReportBuilderState);
+            setReportState(cloneReportBuilderState(originalState));
           }
           setIsEditing(false);
         },
@@ -109,7 +111,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         variant: 'secondary' as const,
         loading: isReplacing,
         loadingLabel: 'Updating report...',
-        disabled: isSavingNew,
+        disabled: isSavingNew || isReportSubmissionBlocked,
       },
       {
         key: 'save-new',
@@ -119,7 +121,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         variant: 'primary' as const,
         loading: isSavingNew,
         loadingLabel: 'Creating report...',
-        disabled: isReplacing,
+        disabled: isReplacing || isReportSubmissionBlocked,
       },
     ];
   }, [
@@ -130,17 +132,8 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     isSavingNew,
     isReplacing,
     isEitherSubmitting,
+    isReportSubmissionBlocked,
   ]);
-
-  if (isLoading || !reportState) {
-    return (
-      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
-        <Stack gap="xl">
-          <Text>Loading report...</Text>
-        </Stack>
-      </Container>
-    );
-  }
 
   if (error) {
     return (
@@ -152,9 +145,20 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     );
   }
 
+  if (isLoading || !reportState) {
+    return (
+      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
+        <Stack gap="xl">
+          <Text>Loading report...</Text>
+        </Stack>
+      </Container>
+    );
+  }
+
   return (
     <>
       <ReportBuilderShell
+        submissionError={submissionError}
         title={isReadOnly ? 'View report setup' : 'Edit report'}
         backPath={
           userReportId ? `/${countryId}/report-output/${userReportId}${shareSearch}` : undefined
@@ -163,8 +167,6 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         actions={topBarActions}
         reportState={reportState}
         setReportState={setReportState as React.Dispatch<React.SetStateAction<ReportBuilderState>>}
-        pickerState={pickerState}
-        setPickerState={setPickerState}
         BlockComponent={SimulationBlockFull}
         isReadOnly={isReadOnly}
       />
@@ -187,6 +189,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
                 Cancel
               </Button>
               <Button
+                disabled={isReportSubmissionBlocked}
                 onClick={() => {
                   setShowSameNameWarning(false);
                   handleSaveAsNew(reportState?.label || 'Untitled report');

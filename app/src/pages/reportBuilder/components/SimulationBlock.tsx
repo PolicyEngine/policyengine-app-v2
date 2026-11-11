@@ -34,13 +34,15 @@ export function SimulationBlock({
   inheritedPopulation,
   savedPolicies,
   recentPopulations,
+  policyErrorMessage,
+  populationErrorMessage,
 }: SimulationBlockProps) {
-  const isPolicyConfigured = !!simulation.policy.id;
+  const isPolicyConfigured = !!simulation.policy.id && !policyErrorMessage;
   const effectivePopulation =
     populationInherited && inheritedPopulation ? inheritedPopulation : simulation.population;
-  const isPopulationConfigured = !!(
-    effectivePopulation?.household?.id || effectivePopulation?.geography?.id
-  );
+  const isPopulationConfigured =
+    !!(effectivePopulation?.household?.id || effectivePopulation?.geography?.id) &&
+    !populationErrorMessage;
   const isFullyConfigured = isPolicyConfigured && isPopulationConfigured;
 
   const defaultLabel = index === 0 ? 'Baseline simulation' : 'Reform simulation';
@@ -143,6 +145,7 @@ export function SimulationBlock({
         onCreateCustom={() => {}}
         onBrowseMore={onBrowseMorePolicies}
         savedPolicies={savedPolicies}
+        selectedErrorMessage={policyErrorMessage}
       />
 
       <IngredientSection
@@ -159,6 +162,7 @@ export function SimulationBlock({
         inheritedPopulationType={inheritedPopulationType}
         inheritedPopulationLabel={inheritedPopulationLabel}
         recentPopulations={recentPopulations}
+        selectedErrorMessage={populationErrorMessage}
       />
     </div>
   );

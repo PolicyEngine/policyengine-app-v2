@@ -1,4 +1,5 @@
 import type { CountryId } from '@/libs/countries';
+import type { SPMSelection } from '@/types/spm';
 
 export type HouseholdScalar = string | number | boolean | null;
 export type HouseholdYearValueMap = Record<string, HouseholdScalar>;
@@ -8,6 +9,7 @@ export interface AppHouseholdInputEnvelope {
   id?: string;
   countryId: CountryId;
   householdData: AppHouseholdInputData;
+  spm?: SPMSelection;
   label?: string | null;
   year?: number | null;
 }
@@ -39,4 +41,5 @@ export interface HouseholdModelData {
   label: string | null;
   year: number | null;
   householdData: AppHouseholdInputData;
+  spm?: SPMSelection;
 }

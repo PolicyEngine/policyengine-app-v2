@@ -95,5 +95,7 @@ export type ColumnValue = TextValue | LinkValue | BulletsValue | CustomValue | n
 // Record interface
 export interface IngredientRecord {
   id: string;
-  [key: string]: ColumnValue | string;
+  isDisabled?: boolean;
+  errorMessage?: string;
+  [key: string]: ColumnValue | string | boolean | undefined;
 }

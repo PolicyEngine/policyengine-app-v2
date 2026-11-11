@@ -11,7 +11,6 @@ export {
 } from './congressional-district';
 
 export type {
-  StateDistrictData,
   CongressionalDistrictDataContextValue,
   CongressionalDistrictDataProviderProps,
 } from './congressional-district';

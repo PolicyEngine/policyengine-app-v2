@@ -12,7 +12,7 @@ import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';
 import { getVariableDisplayText } from '@/utils/householdDisplayText';
 import {
   formatVariableValue,
-  getParameterAtInstant,
+  getParameterNamedParts,
   shouldShowVariable,
 } from '@/utils/householdValues';
 
@@ -24,6 +24,8 @@ interface VariableArithmeticProps {
   defaultExpanded?: boolean;
   childrenOnly?: boolean;
   childVisibility?: 'nonzero' | 'all';
+  /** An unchanged line shows its value ("stayed the same at $30,000"), not its change of 0. */
+  unchangedShowsValue?: boolean;
 }
 
 /**
@@ -40,11 +42,15 @@ export default function VariableArithmetic({
   defaultExpanded = false,
   childrenOnly = false,
   childVisibility = 'nonzero',
+  unchangedShowsValue = false,
 }: VariableArithmeticProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const reportYear = useReportYear();
   const variables = useSelector((state: RootState) => state.metadata.variables);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const partParameterValues = useSelector(
+    (state: RootState) => state.metadata.v2PartParameterValues
+  );
   const entities = useSelector((state: RootState) => state.metadata.entities);
   const metadata = useMemo(
     () => ({ variables, parameters, entities }) as MetadataState,
@@ -64,13 +70,12 @@ export default function VariableArithmetic({
   let addsArray: string[] = [];
   let subtractsArray: string[] = [];
 
+  // A parameter name stands for the list it holds in the report's year: from
+  // the whole parameter list on v1, from the variables' part values on v2.
+  const instant = `${reportYear}-01-01`;
   if (variable.adds) {
     if (typeof variable.adds === 'string') {
-      // It's a parameter name - resolve it
-      const parameter = parameters[variable.adds];
-      if (parameter) {
-        addsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
-      }
+      addsArray = getParameterNamedParts(variable.adds, instant, parameters, partParameterValues);
     } else if (Array.isArray(variable.adds)) {
       addsArray = variable.adds;
     }
@@ -78,11 +83,12 @@ export default function VariableArithmetic({
 
   if (variable.subtracts) {
     if (typeof variable.subtracts === 'string') {
-      // It's a parameter name - resolve it
-      const parameter = parameters[variable.subtracts];
-      if (parameter) {
-        subtractsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
-      }
+      subtractsArray = getParameterNamedParts(
+        variable.subtracts,
+        instant,
+        parameters,
+        partParameterValues
+      );
     } else if (Array.isArray(variable.subtracts)) {
       subtractsArray = variable.subtracts;
     }
@@ -109,6 +115,7 @@ export default function VariableArithmetic({
       isAdd={isAdd} // Children of additions keep the same sign
       defaultExpanded={false}
       childVisibility="nonzero"
+      unchangedShowsValue={unchangedShowsValue}
     />
   ));
 
@@ -121,6 +128,7 @@ export default function VariableArithmetic({
       isAdd={!isAdd} // Children of subtractions flip the sign
       defaultExpanded={false}
       childVisibility="nonzero"
+      unchangedShowsValue={unchangedShowsValue}
     />
   ));
 
@@ -187,7 +195,13 @@ export default function VariableArithmetic({
               fw={typography.fontWeight.semibold}
               style={{ color: styleConfig.valueColor }}
             >
-              {formatVariableValue(variable, comparison.displayValue, 0)}
+              {formatVariableValue(
+                variable,
+                unchangedShowsValue && comparison.direction === 'no-change'
+                  ? comparison.baselineValue
+                  : comparison.displayValue,
+                0
+              )}
             </Text>
           </div>
           {expandable && (

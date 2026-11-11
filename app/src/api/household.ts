@@ -1,6 +1,7 @@
 import { BASE_URL } from '@/constants';
 import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import { HouseholdCreationPayload } from '@/types/payloads';
+import { householdAPIError } from './householdError';
 
 export async function fetchHouseholdById(
   country: string,
@@ -49,7 +50,7 @@ export async function createHousehold(
   });
 
   if (!res.ok) {
-    throw new Error('Failed to create household');
+    throw await householdAPIError(res, 'Failed to create household');
   }
 
   return res.json();

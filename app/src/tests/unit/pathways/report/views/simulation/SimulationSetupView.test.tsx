@@ -124,6 +124,32 @@ describe('SimulationSetupView', () => {
       // Then
       expect(screen.getByRole('button', { name: /next/i })).not.toBeDisabled();
     });
+
+    test('given a selected policy later errors then shows the error and requires reconfiguration', async () => {
+      const user = userEvent.setup();
+      render(
+        <SimulationSetupView
+          simulation={mockSimulationStateConfigured}
+          simulationIndex={0}
+          isReportMode={false}
+          onNavigateToPolicy={mockOnNavigateToPolicy}
+          onNavigateToPopulation={mockOnNavigateToPopulation}
+          onNext={mockOnNext}
+          isPolicyUnavailable
+          policyErrorMessage="Error loading this policy"
+        />
+      );
+
+      expect(screen.getByLabelText('Error loading this policy')).toBeInTheDocument();
+      expect(screen.getByText('Failed to load')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /configure household/i })).toBeDisabled();
+
+      await user.click(screen.getByRole('button', { name: /current law failed to load/i }));
+      await user.click(screen.getByRole('button', { name: /configure policy/i }));
+
+      expect(mockOnNavigateToPolicy).toHaveBeenCalledOnce();
+      expect(mockOnNext).not.toHaveBeenCalled();
+    });
   });
 
   describe('Partial configuration', () => {

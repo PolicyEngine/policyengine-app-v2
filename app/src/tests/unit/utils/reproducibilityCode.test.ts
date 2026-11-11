@@ -8,8 +8,10 @@ import {
   EXPECTED_COLAB_LINKS,
   EXPECTED_IMPORTS,
   HOUSEHOLD_WITH_NULLS,
+  MULTI_YEAR_HOUSEHOLD,
   POLICY_WITH_INFINITY,
   POLICY_WITH_NEGATIVE_INFINITY,
+  POLICY_WITH_STRING_INFINITY,
   REFORM_ONLY_POLICY,
   SIMPLE_HOUSEHOLD,
   TEST_DATASETS,
@@ -29,6 +31,11 @@ import {
 
 describe('reproducibilityCode', () => {
   describe('sanitizeStringToPython', () => {
+    test('given JavaScript literals inside quoted names and values then preserves their spelling', () => {
+      expect(
+        sanitizeStringToPython('{"true-null-key": "false and \\"true\\"", "enabled": true}')
+      ).toBe('{"true-null-key": "false and \\"true\\"", "enabled": True}');
+    });
     test('given string with true then converts to Python True', () => {
       // Given
       const input = '{"enabled": true}';
@@ -178,6 +185,28 @@ describe('reproducibilityCode', () => {
 
   describe('getReproducibilityCodeBlock', () => {
     describe('household simulations', () => {
+      test('given SPM settings then reproduction preserves geography and emits Python None without rewriting strings', () => {
+        const household = SIMPLE_HOUSEHOLD.withSPM({
+          geography_kind: 'national',
+          as_of: null,
+          scenario: 'test_null_scenario',
+        });
+        const code = getReproducibilityCodeBlock(
+          'household',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          household,
+          false
+        ).join('\n');
+        expect(code).toContain(
+          'spm={"geography_kind": "national", "as_of": None, "scenario": "test_null_scenario"}'
+        );
+        expect(code).not.toContain('"as_of": null');
+      });
+
       test('given US household with empty policy then generates basic simulation code', () => {
         // When
         const lines = getReproducibilityCodeBlock(
@@ -320,6 +349,25 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('employment_income');
         expect(code).toContain('count');
         expect(code).toContain('401');
+      });
+
+      test('given null requested outputs and other-year inputs then preserves inputs and the original household', () => {
+        const original = MULTI_YEAR_HOUSEHOLD.toJSON();
+        const code = getReproducibilityCodeBlock(
+          'household',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          MULTI_YEAR_HOUSEHOLD
+        ).join('\n');
+        expect(code).toContain('"true-null-person"');
+        expect(code).toContain('"false-household"');
+        expect(code).toContain('"2023": 34');
+        expect(code).toContain('"2023": "06037"');
+        expect(code).not.toContain('"2024": None');
+        expect(MULTI_YEAR_HOUSEHOLD.toJSON()).toEqual(original);
       });
 
       test('given household input with null values then cleans them up', () => {
@@ -800,6 +848,17 @@ describe('reproducibilityCode', () => {
     });
 
     describe('infinity handling', () => {
+      test('given a saved string Infinity baseline policy then emits an imported unbounded value', () => {
+        const code = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          POLICY_WITH_STRING_INFINITY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT
+        ).join('\n');
+        expect(code).toContain('import numpy as np');
+        expect(code).toContain('"2024-01-01.2100-12-31": np.inf');
+      });
       test('given policy with Infinity then adds numpy import', () => {
         // When
         const lines = getReproducibilityCodeBlock(
@@ -812,10 +871,9 @@ describe('reproducibilityCode', () => {
         );
         const code = lines.join('\n');
 
-        // Then - numpy import is added because the code detects Infinity values
-        // Note: JSON.stringify converts JS Infinity to null, so the output shows None
-        // The numpy import is still added based on the raw value check
+        // Then - the unbounded policy value survives JSON serialization.
         expect(code).toContain(EXPECTED_IMPORTS.NUMPY_IMPORT);
+        expect(code).toContain('"2024-01-01.2100-12-31": np.inf');
       });
 
       test('given policy with negative Infinity then adds numpy import', () => {
@@ -832,6 +890,7 @@ describe('reproducibilityCode', () => {
 
         // Then - numpy import is added because the code detects -Infinity values
         expect(code).toContain(EXPECTED_IMPORTS.NUMPY_IMPORT);
+        expect(code).toContain('"2024-01-01.2100-12-31": -np.inf');
       });
     });
   });

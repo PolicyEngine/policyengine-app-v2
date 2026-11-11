@@ -7,10 +7,10 @@ import { PolicyColumn } from '@/utils/policyTableHelpers';
  */
 export function getPolicyLabel(policy: Policy | undefined, userPolicies?: UserPolicy[]): string {
   if (!policy) {
-    return 'Unnamed Policy';
+    return 'Unnamed policy';
   }
   const userPolicy = userPolicies?.find((up) => up.policyId === policy.id);
-  return userPolicy?.label || policy.label || 'Unnamed Policy';
+  return userPolicy?.label || policy.label || 'Unnamed policy';
 }
 
 /**

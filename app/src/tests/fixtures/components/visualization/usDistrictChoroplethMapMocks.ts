@@ -50,6 +50,9 @@ export const MOCK_MIXED_VALUES: ChoroplethDataPoint[] = [
   { geoId: 'TX-23', label: "Texas's 23rd congressional district", value: 150 },
 ];
 
+/** Where the geographic district map loads its boundaries from. */
+export const CONGRESSIONAL_DISTRICTS_GEOJSON_PATH = '/data/geojson/congressional_districts.geojson';
+
 /**
  * Mock GeoJSON feature collection for testing
  */

@@ -14,6 +14,7 @@ import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreation
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
+import { getUserPolicyAvailability } from '@/utils/ingredientAvailability';
 
 export default function PoliciesPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -120,6 +121,7 @@ export default function PoliciesPage() {
 
       return {
         id: item.association.id?.toString() || item.association.policyId.toString(), // Use user association ID, not base policy ID
+        ...getUserPolicyAvailability(item),
         policyName: {
           text: item.association.label || `Policy #${item.association.policyId}`,
         } as TextValue,

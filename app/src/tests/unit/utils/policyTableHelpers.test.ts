@@ -35,6 +35,14 @@ describe('policyTableHelpers', () => {
         // Then
         expect(result).toBe('5,000.0');
       });
+
+      test('given integer with null unit then formats with one decimal place', () => {
+        // Given / When
+        const result = formatParameterValue(5000, null);
+
+        // Then
+        expect(result).toBe('5,000.0');
+      });
     });
 
     describe('Decimal formatting', () => {

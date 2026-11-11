@@ -1,3 +1,4 @@
+import type { SPMSelection } from '@/types/spm';
 import type {
   AppHouseholdInputData,
   AppHouseholdInputEnvelope,
@@ -160,6 +161,7 @@ export function buildV1CreateEnvelopeFromAppInput(args: {
   countryId: AppHouseholdInputEnvelope['countryId'];
   householdData: AppHouseholdInputData;
   label?: string | null;
+  spm?: SPMSelection;
   year?: number | null;
 }): V1HouseholdCreateEnvelope {
   const clonedData = cloneAppHouseholdInputData(args.householdData);
@@ -198,6 +200,7 @@ export function buildV1CreateEnvelopeFromAppInput(args: {
 
   return {
     country_id: countryId,
+    ...(args.spm ? { spm: cloneValue(args.spm) } : {}),
     label: args.label ?? undefined,
     data,
   };

@@ -23,7 +23,9 @@ describe("Header", () => {
   test("does not force desktop navigation to display via inline styles", () => {
     render(<Header />);
 
-    expect(screen.getByTestId("desktop-nav")).not.toHaveStyle({ display: "flex" });
+    expect(screen.getByTestId("desktop-nav")).not.toHaveStyle({
+      display: "flex",
+    });
     expect(screen.getByTestId("mobile-controls")).toBeInTheDocument();
   });
 

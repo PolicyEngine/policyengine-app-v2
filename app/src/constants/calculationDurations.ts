@@ -12,11 +12,22 @@
  * - Server load
  * - Calculation complexity
  * - Dataset size (Enhanced CPS vs standard)
+ * - Region (a state run is much shorter than a nationwide run)
+ *
+ * The country estimates (getDurationForCountry) are the defaults. The region
+ * estimates (getDurationForRegion) are opt-in, and come from successful
+ * production runs between 6 and 13 October 2026, measured from submission
+ * to completion. Most use the 90th percentile, so the bar rarely reaches its
+ * cap before the result.
  */
+
+import { normalizeRegionCode } from '@/models/region';
 
 /**
  * Duration estimate for US society-wide calculations
  * Used for Enhanced CPS dataset calculations
+ * Also the region estimate for US nationwide runs: observed mean 338 s,
+ * 90th percentile 392 s; 6 minutes sits between them.
  */
 export const US_SOCIETY_WIDE_DURATION_MS = 6 * 60 * 1000; // 6 minutes
 
@@ -24,6 +35,56 @@ export const US_SOCIETY_WIDE_DURATION_MS = 6 * 60 * 1000; // 6 minutes
  * Duration estimate for UK society-wide calculations
  */
 export const UK_SOCIETY_WIDE_DURATION_MS = 3 * 60 * 1000; // 3 minutes
+
+/**
+ * Region estimate for US state society-wide calculations
+ * Observed 90th percentile 187 s. Also used for US place (city) runs,
+ * which have no observed samples yet.
+ */
+export const US_STATE_SOCIETY_WIDE_DURATION_MS = 190 * 1000;
+
+/**
+ * How long one state's run for a nationwide report's congressional
+ * districts may compute, from its first request, before the app stops
+ * polling it and offers Retry: above the slowest on-demand state load
+ * measured (1,635 s, a year without a pre-built state file). For years with
+ * pre-built state files (2025–2027) that leaves room for a queue when two
+ * reports compute at once; for other years it leaves under 3 minutes, so a
+ * queued state may pass the limit, and Retry then checks the same run.
+ */
+export const US_STATE_DISTRICT_RUN_TIME_LIMIT_MS = 30 * 60 * 1000;
+
+/**
+ * Region estimate for US congressional district society-wide calculations
+ * Only one observed sample (200 s), so treat it as a rough value.
+ */
+export const US_DISTRICT_SOCIETY_WIDE_DURATION_MS = 200 * 1000;
+
+/**
+ * Region estimate for UK society-wide calculations
+ * Observed nationwide 90th percentile 108 s. Also used for UK subnational
+ * runs, which have no observed samples yet. Only getDurationForRegion uses
+ * it; the country estimate stays UK_SOCIETY_WIDE_DURATION_MS.
+ */
+export const UK_REGION_SOCIETY_WIDE_DURATION_MS = 110 * 1000;
+
+/**
+ * Estimate for a UK local-area breakdown run (`breakdown=local_areas`).
+ * Measured on the Public API on 26 October 2026 (.py 6.10.0), from
+ * submission to completion: UK-wide 267 s on a cold worker (about 90 s of it
+ * loading the local-area dataset) and 154 s on a warm one; Wales 46 s. A
+ * repeated request is served from the cache in about 1.5 s. The estimate
+ * covers the cold UK-wide run; the API's stages keep a faster run's bar
+ * honest.
+ */
+export const UK_LOCAL_AREA_BREAKDOWN_DURATION_MS = 270 * 1000;
+
+/**
+ * How long a UK local-area breakdown may compute before the app stops
+ * polling it and offers Retry, in case its job is stuck: several times the
+ * slowest measured run, to leave room for a queue.
+ */
+export const UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS = 30 * 60 * 1000;
 
 /**
  * Duration estimate for household calculations
@@ -51,6 +112,31 @@ export function getDurationForCountry(countryId: string): number {
     default:
       return DEFAULT_SOCIETY_WIDE_DURATION_MS;
   }
+}
+
+/**
+ * Get the region estimate for a society-wide calculation
+ * @param countryId - Country identifier ('us', 'uk', etc.)
+ * @param region - Region as sent to the API, e.g. 'us', 'state/ca' or
+ *   'congressional_district/CA-46' (legacy codes such as 'ca', 'us-ca' and
+ *   'CA-46' also work); omitted or the country code for nationwide
+ * @returns Duration in milliseconds
+ */
+export function getDurationForRegion(countryId: string, region?: string): number {
+  const country = countryId.toLowerCase();
+  if (country === 'uk') {
+    return UK_REGION_SOCIETY_WIDE_DURATION_MS;
+  }
+  if (country === 'us' && region) {
+    const regionType = normalizeRegionCode('us', region).split('/')[0].toLowerCase();
+    if (regionType === 'state' || regionType === 'place') {
+      return US_STATE_SOCIETY_WIDE_DURATION_MS;
+    }
+    if (regionType === 'congressional_district') {
+      return US_DISTRICT_SOCIETY_WIDE_DURATION_MS;
+    }
+  }
+  return getDurationForCountry(countryId);
 }
 
 /**

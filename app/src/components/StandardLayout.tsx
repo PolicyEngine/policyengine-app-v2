@@ -11,8 +11,11 @@
 import { useEffect } from 'react';
 import { LayoutProvider, useIsInsideLayout } from '@/contexts/LayoutContext';
 import { useAppLocation } from '@/contexts/LocationContext';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { cn } from '@/lib/utils';
+import { isFlagshipShellEnabled } from '@/libs/featureFlags';
+import FlagshipShell from './flagship/FlagshipShell';
 import GiveCalcBanner from './shared/GiveCalcBanner';
 import HeaderNavigation from './shared/HomeHeader';
 import Sidebar from './Sidebar';
@@ -24,6 +27,7 @@ interface StandardLayoutProps {
 export default function StandardLayout({ children }: StandardLayoutProps) {
   const isInsideLayout = useIsInsideLayout();
   const location = useAppLocation();
+  const countryId = useCurrentCountry();
   const [navbarOpened, { toggle: toggleNavbar, close: closeNavbar }] = useDisclosure();
 
   // Close navbar on route change (mobile UX)
@@ -35,6 +39,16 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
   // This prevents double-wrapping when pathways are inside router-provided layouts
   if (isInsideLayout) {
     return <>{children}</>;
+  }
+
+  // Flagship shell: a slim top bar over the content area. The legacy
+  // layout is unchanged with the flag off.
+  if (isFlagshipShellEnabled(countryId)) {
+    return (
+      <LayoutProvider>
+        <FlagshipShell>{children}</FlagshipShell>
+      </LayoutProvider>
+    );
   }
 
   return (

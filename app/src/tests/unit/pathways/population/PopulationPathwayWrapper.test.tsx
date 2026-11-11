@@ -78,13 +78,13 @@ describe('PopulationPathwayWrapper', () => {
     vi.mocked(useParams).mockReturnValue({});
     vi.mocked(useCurrentCountry).mockImplementation(() => {
       throw new Error(
-        'useCurrentCountry must be used within country routes (protected by CountryGuard). Got countryId: undefined'
+        'useCurrentCountry must be used within a CountryProvider. Got countryId: undefined'
       );
     });
 
-    // When/Then - Should throw error since CountryGuard would prevent this in real app
+    // When/Then - Should throw error since the country layout would prevent this in the real app
     expect(() => render(<PopulationPathwayWrapper />)).toThrow(
-      'useCurrentCountry must be used within country routes'
+      'useCurrentCountry must be used within a CountryProvider'
     );
   });
 });

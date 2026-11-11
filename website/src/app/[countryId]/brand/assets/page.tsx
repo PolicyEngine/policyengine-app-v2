@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { Button, Text, Title } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export const metadata: Metadata = {
   title: "Assets",
@@ -81,13 +77,7 @@ function LogoCard({
   );
 }
 
-function UsageCard({
-  type,
-  items,
-}: {
-  type: "do" | "dont";
-  items: string[];
-}) {
+function UsageCard({ type, items }: { type: "do" | "dont"; items: string[] }) {
   const isDo = type === "do";
   return (
     <div

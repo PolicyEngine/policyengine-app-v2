@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ChartWatermark } from '@/components/charts';
+import { Button } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { HexMapConfig } from '@/types/visualization/HexMapConfig';
-import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
+import type { HexMapDataPoint, HexMapMissingArea } from '@/types/visualization/HexMapDataPoint';
 import { getColorScale, interpolateColor } from '@/utils/visualization/colorScales';
 import {
   applyHexagonalPositioning,
@@ -14,18 +15,334 @@ interface HexagonalMapProps {
   /** Array of data points to visualize */
   data: HexMapDataPoint[];
 
+  /**
+   * Opt-in: areas the map places but has no value for, e.g. ones disclosure
+   * control withheld. Each is drawn on the same grid as the valued areas,
+   * hatched with a grey edge, outside the colour scale, with a tooltip of
+   * its name and `missingAreaText`. They take no part in the colour range,
+   * and cannot be selected.
+   */
+  missingAreas?: HexMapMissingArea[];
+
+  /** What a missing area's tooltip reads after its name. Defaults to "No data". */
+  missingAreaText?: string;
+
+  /**
+   * Opt-in: areas the map places but has no value for and no reason to
+   * give, e.g. a UK breakdown's areas that it neither published nor lists
+   * as withheld. Each is drawn on the same grid as the valued areas, in a
+   * plain neutral fill (the map's background, which the colour scale never
+   * produces) inside the missing areas' grey edge, so it reads as neither
+   * hatched nor valued, with a tooltip of its name and "No data". They take
+   * no part in the colour range, and cannot be selected.
+   */
+  noDataAreas?: HexMapMissingArea[];
+
   /** Configuration for the map */
   config?: Partial<HexMapConfig>;
 
   /** Optional ref to the map container for image export */
   exportRef?: React.Ref<HTMLDivElement>;
+
+  /** Opt-in: the id of the hexagon to outline as selected. */
+  selectedId?: string | null;
+
+  /** Opt-in: called with a hexagon's id when it is clicked. */
+  onSelect?: (id: string) => void;
+
+  /**
+   * Opt-in: keep the logo watermark clear of the map's frame. Without it the
+   * logo sits flush in the bottom-right corner, where the rounded frame clips it.
+   */
+  insetWatermark?: boolean;
+
+  /**
+   * Opt-in: zoom (buttons, wheel, pinch) and drag to pan, as the US
+   * district map does. Without it the map is fixed.
+   */
+  zoomable?: boolean;
+
+  /**
+   * Opt-in: centre the hexagons in the map's area, left of the color bar.
+   * Without it they sit against the top-left corner, so a narrow map such as
+   * the UK's leaves the rest of the frame empty and reads as cut off.
+   */
+  centered?: boolean;
+
+  /**
+   * Opt-in: draw the map at the frame's full width, not in a fixed 600-unit
+   * box. A dragged map then reaches the frame's edges, and the color bar sits
+   * at the right edge, in line with the logo.
+   */
+  fillWidth?: boolean;
 }
 
-/** Generate SVG polygon points for a flat-topped hexagon centered at (cx, cy) */
+/** Zoom limits and button step, the same as the US district map's. */
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 20;
+const ZOOM_STEP = 1.5;
+/** Pointer travel, in screen pixels, past which a press is a drag, not a click. */
+const DRAG_THRESHOLD = 3;
+
+/** A zoom level and pan offset, in SVG units: translate(x, y) scale(k). */
+export interface HexMapView {
+  k: number;
+  x: number;
+  y: number;
+}
+
+const INITIAL_VIEW: HexMapView = { k: 1, x: 0, y: 0 };
+
+function clampZoom(k: number): number {
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, k));
+}
+
+/** `view` zoomed to `k`, keeping the SVG point (px, py) where it is on screen. */
+export function zoomAbout(view: HexMapView, k: number, px: number, py: number): HexMapView {
+  const next = clampZoom(k);
+  const ratio = next / view.k;
+  return { k: next, x: px - (px - view.x) * ratio, y: py - (py - view.y) * ratio };
+}
+
+/** A client point in the SVG's own units, or null where the browser cannot say (e.g. jsdom). */
+function toSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
+  const matrix = svg.getScreenCTM?.();
+  if (!matrix || typeof svg.createSVGPoint !== 'function') {
+    return null;
+  }
+  const point = svg.createSVGPoint();
+  point.x = clientX;
+  point.y = clientY;
+  const local = point.matrixTransform(matrix.inverse());
+  return { x: local.x, y: local.y };
+}
+
+/** SVG units per screen pixel. */
+function svgUnitsPerPixel(svg: SVGSVGElement): number {
+  const matrix = svg.getScreenCTM?.();
+  return matrix && matrix.a ? 1 / matrix.a : 1;
+}
+
+/**
+ * Zoom and pan for the hex map: wheel and pinch zoom about the pointer,
+ * drag to pan, and a press that moves no further than a few pixels stays
+ * a click, so a hexagon can still be selected while zoomed.
+ */
+function useHexMapZoom(enabled: boolean, centerX: number, centerY: number) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [view, setView] = useState<HexMapView>(INITIAL_VIEW);
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<{
+    startView: HexMapView;
+    start: { x: number; y: number };
+    startDistance?: number;
+    dragging: boolean;
+  } | null>(null);
+  const suppressClick = useRef(false);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!enabled || !svg) {
+      return;
+    }
+    // A native listener, so the page does not scroll while the map zooms.
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const unit = event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.002;
+      const factor = 2 ** (-event.deltaY * unit * (event.ctrlKey ? 10 : 1));
+      const at = toSvgPoint(svg, event.clientX, event.clientY) ?? { x: centerX, y: centerY };
+      setView((current) => zoomAbout(current, current.k * factor, at.x, at.y));
+    };
+    svg.addEventListener('wheel', onWheel, { passive: false });
+    return () => svg.removeEventListener('wheel', onWheel);
+  }, [enabled, centerX, centerY]);
+
+  if (!enabled) {
+    return { svgRef, view: INITIAL_VIEW, handlers: {}, controls: null };
+  }
+
+  const beginGesture = () => {
+    const points = [...pointers.current.values()];
+    if (points.length >= 2) {
+      const [a, b] = points;
+      gesture.current = {
+        startView: view,
+        start: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+        startDistance: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+        dragging: true,
+      };
+    } else if (points.length === 1) {
+      gesture.current = { startView: view, start: points[0], dragging: false };
+    } else {
+      gesture.current = null;
+    }
+  };
+
+  const handlers = {
+    onPointerDown: (event: React.PointerEvent<SVGSVGElement>) => {
+      if (event.button !== 0) {
+        return;
+      }
+      suppressClick.current = false;
+      pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      beginGesture();
+    },
+    onPointerMove: (event: React.PointerEvent<SVGSVGElement>) => {
+      const svg = svgRef.current;
+      const current = gesture.current;
+      if (!svg || !current || !pointers.current.has(event.pointerId)) {
+        return;
+      }
+      pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      const points = [...pointers.current.values()];
+      if (points.length >= 2 && current.startDistance) {
+        const [a, b] = points;
+        const distance = Math.hypot(a.x - b.x, a.y - b.y);
+        const at = toSvgPoint(svg, current.start.x, current.start.y) ?? {
+          x: centerX,
+          y: centerY,
+        };
+        setView(
+          zoomAbout(
+            current.startView,
+            (current.startView.k * distance) / current.startDistance,
+            at.x,
+            at.y
+          )
+        );
+        return;
+      }
+      const dx = event.clientX - current.start.x;
+      const dy = event.clientY - current.start.y;
+      if (!current.dragging && Math.hypot(dx, dy) <= DRAG_THRESHOLD) {
+        return;
+      }
+      if (!current.dragging) {
+        current.dragging = true;
+        // The pointer can already be gone (e.g. a synthetic or cancelled
+        // pointer); the drag then still works without capture.
+        try {
+          svg.setPointerCapture?.(event.pointerId);
+        } catch {
+          // No active pointer to capture.
+        }
+      }
+      const unit = svgUnitsPerPixel(svg);
+      setView({
+        ...current.startView,
+        x: current.startView.x + dx * unit,
+        y: current.startView.y + dy * unit,
+      });
+    },
+    onPointerUp: (event: React.PointerEvent<SVGSVGElement>) => {
+      if (gesture.current?.dragging) {
+        suppressClick.current = true;
+      }
+      pointers.current.delete(event.pointerId);
+      beginGesture();
+    },
+    onPointerCancel: (event: React.PointerEvent<SVGSVGElement>) => {
+      pointers.current.delete(event.pointerId);
+      beginGesture();
+    },
+    // A drag ends in a click; it must not select the hexagon under it.
+    onClickCapture: (event: React.MouseEvent<SVGSVGElement>) => {
+      if (suppressClick.current) {
+        suppressClick.current = false;
+        event.stopPropagation();
+      }
+    },
+  };
+
+  const controls = (
+    <div
+      data-export-exclude
+      style={{
+        position: 'absolute',
+        top: spacing.sm,
+        left: spacing.sm,
+        zIndex: 1,
+        display: 'flex',
+        gap: spacing.xs,
+        background: colors.background.primary,
+        borderRadius: spacing.radius.container,
+        padding: spacing.xs,
+      }}
+    >
+      <Button
+        variant="outline"
+        size="icon-xs"
+        aria-label="Zoom in"
+        disabled={view.k >= MAX_ZOOM}
+        onClick={() =>
+          setView((current) => zoomAbout(current, current.k * ZOOM_STEP, centerX, centerY))
+        }
+      >
+        +
+      </Button>
+      <Button
+        variant="outline"
+        size="icon-xs"
+        aria-label="Zoom out"
+        disabled={view.k <= MIN_ZOOM}
+        onClick={() =>
+          setView((current) => zoomAbout(current, current.k / ZOOM_STEP, centerX, centerY))
+        }
+      >
+        −
+      </Button>
+      <Button variant="outline" size="xs" onClick={() => setView(INITIAL_VIEW)}>
+        Reset view
+      </Button>
+    </div>
+  );
+
+  return { svgRef, view, handlers, controls };
+}
+
+/** The grid's row spacing, in columns: rows of touching pointy-top hexagons. */
+const ROW_SPACING = Math.sqrt(3) / 2;
+
+/** A hexagon's radius, in columns: just under 1/√3, so neighbours keep a hairline gap. */
+const HEX_RADIUS = 0.55;
+
+/** A map with no missing areas: one array, so memos keep their values. */
+const NO_MISSING_AREAS: HexMapMissingArea[] = [];
+
+/** What a missing area reads, unless the caller says why it has no value, and what a no-data area reads. */
+const NO_DATA_TEXT = 'No data';
+
+/**
+ * A missing area's look: grey stripes on the map's background, which no
+ * colour on the scale resembles, inside a grey edge where a valued
+ * hexagon's edge is the background colour. The stripes repeat at half a
+ * hexagon's radius, but never closer than 4 pixels on screen: closer, they
+ * blend into a flat grey that the scale's grey arm holds, as on the UK
+ * constituency map, or on a fixed-width map drawn narrower than its 600
+ * units, as on a phone.
+ */
+const MISSING_AREA_GROUND_COLOR = colors.background.primary;
+const MISSING_AREA_STRIPE_COLOR = colors.gray[300];
+const MISSING_AREA_EDGE_COLOR = colors.gray[400];
+const MISSING_AREA_EDGE_WIDTH = 0.75;
+const MISSING_AREA_STRIPES_PER_RADIUS = 2;
+const MIN_MISSING_AREA_STRIPE_PIXELS = 4;
+
+/**
+ * A no-data area's look: the map's background, plain, inside the missing
+ * areas' grey edge. The colour scale's lightest colour, at zero, is the
+ * tertiary background, so no value is drawn in this fill.
+ */
+const NO_DATA_AREA_COLOR = colors.background.primary;
+
+/** The margin between the map's hexagons and its frame, in SVG units. */
+const MAP_MARGIN = 16;
+
+/** SVG polygon points for a pointy-topped hexagon centred at (cx, cy). */
 function hexPoints(cx: number, cy: number, size: number): string {
   const points: string[] = [];
   for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i;
+    const angle = (Math.PI / 3) * i + Math.PI / 6;
     const px = cx + size * Math.cos(angle);
     const py = cy + size * Math.sin(angle);
     points.push(`${px},${py}`);
@@ -33,12 +350,70 @@ function hexPoints(cx: number, cy: number, size: number): string {
   return points.join(' ');
 }
 
+/**
+ * Outline of the selected hexagon: a dark ring with a white core, so it
+ * reads on the darkest fill and the lightest alike.
+ */
+const SELECTED_STROKE_COLOR = colors.gray[900];
+const SELECTED_STROKE_WIDTH = 1.5;
+const SELECTED_RING_WIDTH = 3;
+const SELECTED_CORE_COLOR = colors.white;
+const SELECTED_CORE_WIDTH = 1;
+
 /** Color bar width in SVG units */
 const COLOR_BAR_WIDTH = 12;
 /** Color bar right margin */
 const COLOR_BAR_MARGIN = 60;
+/** Color bar tick label font size, and its approximate width per character. */
+const TICK_FONT_SIZE = 9;
+const TICK_CHAR_WIDTH = 5.5;
+/** Space between the color bar's labels and the frame's right edge: the logo's inset. */
+const FRAME_INSET = 8;
+/** The SVG's width in viewBox units when it does not fill the frame. */
+const FIXED_SVG_WIDTH = 600;
 
-export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps) {
+/**
+ * Points on the map's grid: even rows shifted half a column, and the rows
+ * spaced as touching pointy-top hexagons need.
+ */
+function positionOnGrid<Point extends { x: number; y: number }>(points: Point[]): Point[] {
+  return applyHexagonalPositioning(points).map((point) => ({ ...point, y: point.y * ROW_SPACING }));
+}
+
+/** The rendered width of `element`, in CSS pixels, kept up to date; null until measured. */
+function useElementWidth(element: Element | null, enabled: boolean): number | null {
+  const [width, setWidth] = useState<number | null>(null);
+  useEffect(() => {
+    if (!enabled || !element || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const measure = () => setWidth(Math.round(element.getBoundingClientRect().width) || null);
+    // Measure now as well: the observer only reports on a painted frame.
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element, enabled]);
+  return enabled ? width : null;
+}
+
+export function HexagonalMap({
+  data,
+  missingAreas = NO_MISSING_AREAS,
+  missingAreaText = NO_DATA_TEXT,
+  noDataAreas = NO_MISSING_AREAS,
+  config = {},
+  exportRef,
+  selectedId,
+  onSelect,
+  insetWatermark = false,
+  zoomable = false,
+  centered = false,
+  fillWidth = false,
+}: HexagonalMapProps) {
+  const mapId = useId().replace(/:/g, '');
+  const clipId = `hex-map-clip-${mapId}`;
+  const hatchingId = `hex-map-missing-area-hatching-${mapId}`;
   const [tooltip, setTooltip] = useState<{
     text: string;
     x: number;
@@ -48,8 +423,6 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
   const fullConfig: HexMapConfig = useMemo(
     () => ({
       height: 380,
-      hexSize: 8,
-      coordinateScale: 1,
       showColorBar: true,
       colorScale: {
         colors: getColorScale('diverging-gray-teal'),
@@ -63,38 +436,51 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
     [config]
   );
 
-  // Transform data for hexagonal positioning and apply coordinate scaling
-  const positionedData = useMemo(() => {
-    const hexPositioned = applyHexagonalPositioning(data);
-    const scale = fullConfig.coordinateScale ?? 1;
+  // Shift the even rows half a column, and space the rows as touching
+  // pointy-top hexagons need: the odd-r grid of the UK layouts. Missing
+  // and no-data areas take the same grid as the areas with values.
+  const positionedData = useMemo(() => positionOnGrid(data), [data]);
+  const positionedMissingAreas = useMemo(() => positionOnGrid(missingAreas), [missingAreas]);
+  const positionedNoDataAreas = useMemo(() => positionOnGrid(noDataAreas), [noDataAreas]);
 
-    if (scale === 1) {
-      return hexPositioned;
+  // The selected hexagon draws last, so no neighbour covers its outline.
+  const drawOrder = useMemo(() => {
+    if (!selectedId) {
+      return positionedData;
     }
+    return [
+      ...positionedData.filter((point) => point.id !== selectedId),
+      ...positionedData.filter((point) => point.id === selectedId),
+    ];
+  }, [positionedData, selectedId]);
 
-    return hexPositioned.map((point) => ({
-      ...point,
-      x: point.x * scale,
-      y: point.y * scale,
-    }));
-  }, [data, fullConfig.coordinateScale]);
+  const selectedPoint = selectedId
+    ? (positionedData.find((point) => point.id === selectedId) ?? null)
+    : null;
 
-  // Calculate data bounds
+  // Calculate data bounds, over the areas with values and without. A
+  // hexagon's size is a share of the scale, so the bounds take in each
+  // hexagon's edges, not only its centre: the map of a few areas, whose
+  // hexagons are large, then still fits its frame.
   const dataBounds = useMemo(() => {
-    if (positionedData.length === 0) {
+    const placed = [...positionedData, ...positionedMissingAreas, ...positionedNoDataAreas];
+    if (placed.length === 0) {
       return { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
     }
-    const xs = positionedData.map((p) => p.x);
-    const ys = positionedData.map((p) => p.y);
+    const xs = placed.map((p) => p.x);
+    const ys = placed.map((p) => p.y);
+    // A pointy-top hexagon reaches its radius up and down, and √3/2 of it sideways.
+    const verticalReach = HEX_RADIUS;
+    const horizontalReach = (HEX_RADIUS * Math.sqrt(3)) / 2;
     return {
-      xMin: Math.min(...xs),
-      xMax: Math.max(...xs),
-      yMin: Math.min(...ys),
-      yMax: Math.max(...ys),
+      xMin: Math.min(...xs) - horizontalReach,
+      xMax: Math.max(...xs) + horizontalReach,
+      yMin: Math.min(...ys) - verticalReach,
+      yMax: Math.max(...ys) + verticalReach,
     };
-  }, [positionedData]);
+  }, [positionedData, positionedMissingAreas, positionedNoDataAreas]);
 
-  // Calculate color range
+  // Calculate color range: from the areas with values alone
   const colorValues = positionedData.map((p) => p.value);
   const colorRange = useMemo(() => {
     if (colorValues.length === 0) {
@@ -111,13 +497,20 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
 
   const scaleColors = fullConfig.colorScale!.colors;
   const height = fullConfig.height ?? 380;
-  const hexSize = fullConfig.hexSize ?? 8;
 
   // Compute SVG coordinate system
   // We map data coordinates to SVG pixels with padding
-  const padding = hexSize * 2;
+  const padding = MAP_MARGIN;
   const colorBarSpace = fullConfig.showColorBar ? COLOR_BAR_MARGIN + COLOR_BAR_WIDTH + 40 : 0;
-  const svgWidth = 600; // Fixed width, responsive via CSS
+  // With fillWidth, one viewBox unit is one CSS pixel, as the SVG's height is `height` pixels.
+  const [svgElement, setSvgElement] = useState<SVGSVGElement | null>(null);
+  // The rendered width sets a fillWidth map's width, and tells a map with
+  // missing areas how many screen pixels one SVG unit takes.
+  const renderedWidth = useElementWidth(svgElement, fillWidth || missingAreas.length > 0);
+  const svgWidth = (fillWidth ? renderedWidth : null) ?? FIXED_SVG_WIDTH; // Fixed width, responsive via CSS
+  // The SVG is `height` pixels tall, as its viewBox is, so the viewBox scales
+  // to fit the narrower of the two: never past one pixel per unit.
+  const screenPixelsPerUnit = renderedWidth ? Math.min(renderedWidth / svgWidth, 1) : 1;
 
   const dataWidth = dataBounds.xMax - dataBounds.xMin || 1;
   const dataHeight = dataBounds.yMax - dataBounds.yMin || 1;
@@ -126,11 +519,154 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
   const availW = svgWidth - padding * 2 - colorBarSpace;
   const availH = height - padding * 2;
   const scale = Math.min(availW / dataWidth, availH / dataHeight);
-  const hexPixelSize = Math.min(hexSize * (scale / 20), scale * 0.45);
+  const hexPixelSize = scale * HEX_RADIUS;
+  const stripeSpacing = Math.max(
+    MIN_MISSING_AREA_STRIPE_PIXELS / screenPixelsPerUnit,
+    hexPixelSize / MISSING_AREA_STRIPES_PER_RADIUS
+  );
 
-  const toSvgX = (x: number) => padding + (x - dataBounds.xMin) * scale;
+  const formatTick = fullConfig.formatColorBarTick ?? defaultFormatTick;
+  const ticks = colorBarTicks(colorRange.min, colorRange.max);
+  // At full width, the longest tick label ends at the logo's right edge.
+  const colorBarX = fillWidth
+    ? svgWidth -
+      FRAME_INSET -
+      COLOR_BAR_WIDTH -
+      4 -
+      Math.max(...ticks.map((tick) => formatTick(tick).length)) * TICK_CHAR_WIDTH
+    : svgWidth - COLOR_BAR_MARGIN;
+
+  // The map's own area, left of the color bar: the map centres in it, and
+  // zoom centres on it and clips to it.
+  const mapAreaWidth = fullConfig.showColorBar ? colorBarX - 8 : svgWidth;
+  const fitWidth = (dataBounds.xMax - dataBounds.xMin) * scale;
+  const fitHeight = (dataBounds.yMax - dataBounds.yMin) * scale;
+  const offsetX = centered ? mapAreaWidth / 2 - padding - fitWidth / 2 : 0;
+  const offsetY = centered ? padding + fitHeight / 2 - height / 2 : 0;
+
+  const toSvgX = (x: number) => padding + offsetX + (x - dataBounds.xMin) * scale;
   // Flip Y so higher grid-y values go upward
-  const toSvgY = (y: number) => height - padding - (y - dataBounds.yMin) * scale;
+  const toSvgY = (y: number) => height - padding + offsetY - (y - dataBounds.yMin) * scale;
+  const zoom = useHexMapZoom(zoomable, mapAreaWidth / 2, height / 2);
+  const zoomSvgRef = zoom.svgRef;
+  const svgRefCallback = useCallback(
+    (node: SVGSVGElement | null) => {
+      zoomSvgRef.current = node;
+      setSvgElement(node);
+    },
+    [zoomSvgRef]
+  );
+  // The selected outline keeps its width in screen pixels at any zoom.
+  const outlineEffect = zoomable ? 'non-scaling-stroke' : undefined;
+  // The hatching is drawn inside the zoomed layer, which scales it by the
+  // zoom; dividing by the zoom keeps the stripes as far apart on screen at
+  // every zoom level.
+  const patternSpacing = stripeSpacing / zoom.view.k;
+
+  const showTooltip = (event: React.MouseEvent<SVGPolygonElement>, text: string) => {
+    const rect = (event.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
+    setTooltip({ text, x: event.clientX - rect.left, y: event.clientY - rect.top - 10 });
+  };
+
+  const mapLayer = (
+    <>
+      {/* Areas without a value: hatched, outside the colour scale, and not selectable. */}
+      {positionedMissingAreas.length > 0 && (
+        <defs>
+          <pattern
+            id={hatchingId}
+            patternUnits="userSpaceOnUse"
+            width={patternSpacing}
+            height={patternSpacing}
+            patternTransform="rotate(45)"
+          >
+            <rect width={patternSpacing} height={patternSpacing} fill={MISSING_AREA_GROUND_COLOR} />
+            <path
+              d={`M${patternSpacing / 2} 0 V${patternSpacing}`}
+              stroke={MISSING_AREA_STRIPE_COLOR}
+              strokeWidth={patternSpacing / 2}
+            />
+          </pattern>
+        </defs>
+      )}
+      {positionedMissingAreas.map((area) => (
+        <polygon
+          key={`missing-${area.id}`}
+          points={hexPoints(toSvgX(area.x), toSvgY(area.y), hexPixelSize)}
+          fill={`url(#${hatchingId})`}
+          stroke={MISSING_AREA_EDGE_COLOR}
+          strokeWidth={MISSING_AREA_EDGE_WIDTH}
+          vectorEffect={outlineEffect}
+          data-missing-area-id={area.id}
+          onMouseEnter={(event) => showTooltip(event, `${area.label}: ${missingAreaText}`)}
+          onMouseLeave={() => setTooltip(null)}
+        />
+      ))}
+
+      {/* Areas without a value or a reason: plain, outside the colour scale, and not selectable. */}
+      {positionedNoDataAreas.map((area) => (
+        <polygon
+          key={`no-data-${area.id}`}
+          points={hexPoints(toSvgX(area.x), toSvgY(area.y), hexPixelSize)}
+          fill={NO_DATA_AREA_COLOR}
+          stroke={MISSING_AREA_EDGE_COLOR}
+          strokeWidth={MISSING_AREA_EDGE_WIDTH}
+          vectorEffect={outlineEffect}
+          data-no-data-area-id={area.id}
+          onMouseEnter={(event) => showTooltip(event, `${area.label}: ${NO_DATA_TEXT}`)}
+          onMouseLeave={() => setTooltip(null)}
+        />
+      ))}
+
+      {/* Hexagon data points */}
+      {drawOrder.map((point) => {
+        const cx = toSvgX(point.x);
+        const cy = toSvgY(point.y);
+        const fill = interpolateColor(point.value, colorRange.min, colorRange.max, scaleColors);
+        const hoverText = generateHoverText(point, fullConfig.formatValue!);
+        const isSelected = !!selectedId && point.id === selectedId;
+
+        return (
+          <polygon
+            key={point.id}
+            points={hexPoints(cx, cy, hexPixelSize)}
+            fill={fill}
+            stroke={isSelected ? SELECTED_STROKE_COLOR : colors.background.primary}
+            strokeWidth={isSelected ? SELECTED_STROKE_WIDTH : 0.5}
+            vectorEffect={isSelected ? outlineEffect : undefined}
+            style={{ cursor: 'pointer' }}
+            onClick={onSelect ? () => onSelect(point.id) : undefined}
+            data-area-id={onSelect ? point.id : undefined}
+            data-selected={isSelected || undefined}
+            onMouseEnter={(event) => showTooltip(event, hoverText)}
+            onMouseLeave={() => setTooltip(null)}
+          />
+        );
+      })}
+
+      {/* The selected hexagon's ring, over its neighbours; clicks pass through. */}
+      {selectedPoint && (
+        <g data-export-exclude pointerEvents="none" data-testid="hex-selection-ring">
+          <polygon
+            points={hexPoints(toSvgX(selectedPoint.x), toSvgY(selectedPoint.y), hexPixelSize)}
+            fill="none"
+            stroke={SELECTED_STROKE_COLOR}
+            strokeWidth={SELECTED_RING_WIDTH}
+            strokeLinejoin="round"
+            vectorEffect={outlineEffect}
+          />
+          <polygon
+            points={hexPoints(toSvgX(selectedPoint.x), toSvgY(selectedPoint.y), hexPixelSize)}
+            fill="none"
+            stroke={SELECTED_CORE_COLOR}
+            strokeWidth={SELECTED_CORE_WIDTH}
+            strokeLinejoin="round"
+            vectorEffect={outlineEffect}
+          />
+        </g>
+      )}
+    </>
+  );
 
   return (
     <div
@@ -143,52 +679,49 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
         position: 'relative',
       }}
     >
+      {zoom.controls}
       <svg
+        ref={svgRefCallback}
         width="100%"
         height={height}
         viewBox={`0 0 ${svgWidth} ${height}`}
-        style={{ display: 'block' }}
+        style={
+          zoomable
+            ? { display: 'block', touchAction: 'none', userSelect: 'none', cursor: 'grab' }
+            : { display: 'block' }
+        }
+        {...zoom.handlers}
       >
-        {/* Hexagon data points */}
-        {positionedData.map((point) => {
-          const cx = toSvgX(point.x);
-          const cy = toSvgY(point.y);
-          const fill = interpolateColor(point.value, colorRange.min, colorRange.max, scaleColors);
-          const hoverText = generateHoverText(point, fullConfig.formatValue!);
-
-          return (
-            <polygon
-              key={point.id}
-              points={hexPoints(cx, cy, hexPixelSize)}
-              fill={fill}
-              stroke={colors.background.primary}
-              strokeWidth={0.5}
-              style={{ cursor: 'pointer' }}
-              onMouseEnter={(e) => {
-                const rect = (
-                  e.currentTarget.ownerSVGElement as SVGSVGElement
-                ).getBoundingClientRect();
-                setTooltip({
-                  text: hoverText,
-                  x: e.clientX - rect.left,
-                  y: e.clientY - rect.top - 10,
-                });
-              }}
-              onMouseLeave={() => setTooltip(null)}
-            />
-          );
-        })}
+        {zoomable ? (
+          <>
+            <defs>
+              <clipPath id={clipId}>
+                <rect x={0} y={0} width={mapAreaWidth} height={height} />
+              </clipPath>
+            </defs>
+            <g clipPath={`url(#${clipId})`}>
+              <g
+                transform={`translate(${zoom.view.x} ${zoom.view.y}) scale(${zoom.view.k})`}
+                data-testid="hex-map-zoom-layer"
+              >
+                {mapLayer}
+              </g>
+            </g>
+          </>
+        ) : (
+          mapLayer
+        )}
 
         {/* Color bar */}
         {fullConfig.showColorBar && positionedData.length > 0 && (
           <ColorBar
-            x={svgWidth - COLOR_BAR_MARGIN}
+            x={colorBarX}
             y={padding}
             width={COLOR_BAR_WIDTH}
             height={height - padding * 2}
-            min={colorRange.min}
-            max={colorRange.max}
+            ticks={ticks}
             scaleColors={scaleColors}
+            formatTick={formatTick}
           />
         )}
       </svg>
@@ -216,7 +749,13 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
         </div>
       )}
       {/* PolicyEngine logo watermark */}
-      <div style={{ padding: `${spacing.xs}px ${spacing.sm}px` }}>
+      <div
+        style={{
+          padding: insetWatermark
+            ? `${spacing.xs} ${spacing.sm}`
+            : `${spacing.xs}px ${spacing.sm}px`,
+        }}
+      >
         <ChartWatermark />
       </div>
     </div>
@@ -229,24 +768,22 @@ function ColorBar({
   y,
   width,
   height,
-  min,
-  max,
+  ticks,
   scaleColors,
+  formatTick,
 }: {
   x: number;
   y: number;
   width: number;
   height: number;
-  min: number;
-  max: number;
+  /** Tick values, lowest first. */
+  ticks: number[];
   scaleColors: string[];
+  /** How each tick reads; plain numbers unless the caller opts in. */
+  formatTick: (value: number) => string;
 }) {
   const gradientId = 'hex-color-bar-gradient';
-  const tickCount = 5;
-  const ticks: number[] = [];
-  for (let i = 0; i < tickCount; i++) {
-    ticks.push(min + (max - min) * (i / (tickCount - 1)));
-  }
+  const tickCount = ticks.length;
 
   return (
     <g>
@@ -265,7 +802,7 @@ function ColorBar({
             key={i}
             x={x + width + 4}
             y={ty}
-            fontSize={9}
+            fontSize={TICK_FONT_SIZE}
             fill={colors.gray[600]}
             dominantBaseline="central"
           >
@@ -277,7 +814,17 @@ function ColorBar({
   );
 }
 
-function formatTick(value: number): string {
+/** Five evenly spaced color bar ticks from `min` to `max`. */
+function colorBarTicks(min: number, max: number): number[] {
+  const tickCount = 5;
+  const ticks: number[] = [];
+  for (let i = 0; i < tickCount; i++) {
+    ticks.push(min + (max - min) * (i / (tickCount - 1)));
+  }
+  return ticks;
+}
+
+function defaultFormatTick(value: number): string {
   if (Math.abs(value) >= 1000) {
     return `${(value / 1000).toFixed(1)}k`;
   }

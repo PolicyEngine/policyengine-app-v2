@@ -18,7 +18,10 @@ export async function GET(request: NextRequest) {
     .filter(Boolean);
 
   if (monitorIds.length === 0) {
-    return NextResponse.json({ error: "No monitor IDs provided" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No monitor IDs provided" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -38,8 +41,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error:
-          status === 500 ? message : "Failed to fetch status data",
+        error: status === 500 ? message : "Failed to fetch status data",
       },
       { status },
     );

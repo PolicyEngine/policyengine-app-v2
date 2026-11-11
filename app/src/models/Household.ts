@@ -1,4 +1,5 @@
 import type { CountryId } from '@/libs/countries';
+import type { SPMSelection } from '@/types/spm';
 import { BaseModel } from './BaseModel';
 import {
   buildAppHouseholdDataFromV1Data,
@@ -57,6 +58,18 @@ const BUILDER_DEFAULT_EMPLOYMENT_INCOME = 0;
 const BUILDER_PRIMARY_PERSON_NAME = 'you';
 const BUILDER_DEFAULT_PARTNER_NAME = 'your partner';
 const BUILDER_DEPENDENT_ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth'];
+
+/**
+ * policyengine-uk person input naming the benefit unit's claimant and partner. Without it the
+ * model infers the couple from ages, so an adult dependant can be read as the partner.
+ */
+export const UK_CLAIMANT_OR_PARTNER_VARIABLE = 'is_claimant_or_partner';
+
+/** The unit whose members the builder's partner and child controls manage, by country. */
+const BUILDER_FAMILY_GROUPS: Partial<Record<CountryId, HouseholdGroupAppKey>> = {
+  uk: 'benunits',
+  us: 'taxUnits',
+};
 
 export interface PersonWithName extends AppHouseholdInputPerson {
   name: string;
@@ -146,7 +159,8 @@ function ensureGroupCollection(
   return householdData[entityName] as Record<string, AppHouseholdInputGroup>;
 }
 
-function addPersonToFirstGroup(
+/** Adds the person to the group holding "you" (the builder's own unit), else the first group. */
+function addPersonToBuilderGroup(
   groupMap: Record<string, AppHouseholdInputGroup>,
   defaultGroupName: string,
   personKey: string
@@ -155,9 +169,11 @@ function addPersonToFirstGroup(
     groupMap[defaultGroupName] = { members: [] };
   }
 
-  const firstGroup = Object.values(groupMap)[0];
-  if (!firstGroup.members.includes(personKey)) {
-    firstGroup.members.push(personKey);
+  const groups = Object.values(groupMap);
+  const builderGroup =
+    groups.find((group) => group.members.includes(BUILDER_PRIMARY_PERSON_NAME)) ?? groups[0];
+  if (!builderGroup.members.includes(personKey)) {
+    builderGroup.members.push(personKey);
   }
 }
 
@@ -350,6 +366,34 @@ function getBuilderDependentName(index: number): string {
   return `your ${BUILDER_DEPENDENT_ORDINALS[index] || `${index + 1}th`} dependent`;
 }
 
+/** The index getBuilderDependentName gave this name, or -1 for any other name. */
+function getBuilderDependentIndex(personKey: string): number {
+  const ordinal = /^your (\S+) dependent$/.exec(personKey)?.[1];
+  if (!ordinal) {
+    return -1;
+  }
+
+  const namedIndex = BUILDER_DEPENDENT_ORDINALS.indexOf(ordinal);
+  if (namedIndex !== -1) {
+    return namedIndex;
+  }
+
+  const numbered = /^(\d+)th$/.exec(ordinal)?.[1];
+  return numbered ? Number(numbered) - 1 : -1;
+}
+
+/** Everyone who shares a group with the person, the person included. */
+function getGroupMatesOf(
+  groups: AppHouseholdInputGroupMap | undefined,
+  personKey: string
+): Set<string> {
+  return new Set(
+    Object.values(groups ?? {})
+      .filter((group) => group.members.includes(personKey))
+      .flatMap((group) => group.members)
+  );
+}
+
 function getUniqueBuilderPersonName(existingKeys: Set<string>, preferredName: string): string {
   if (!existingKeys.has(preferredName)) {
     return preferredName;
@@ -391,7 +435,7 @@ function applyDefaultHouseholdGroups(
   householdData: AppHouseholdInputData,
   personKey: string
 ): void {
-  addPersonToFirstGroup(
+  addPersonToBuilderGroup(
     ensureGroupCollection(householdData, 'households'),
     'your household',
     personKey
@@ -403,13 +447,17 @@ function applyUSDefaultGroups(
   personKey: string,
   personType: 'adult' | 'child'
 ): void {
-  addPersonToFirstGroup(
+  addPersonToBuilderGroup(
     ensureGroupCollection(householdData, 'taxUnits'),
     'your tax unit',
     personKey
   );
-  addPersonToFirstGroup(ensureGroupCollection(householdData, 'families'), 'your family', personKey);
-  addPersonToFirstGroup(
+  addPersonToBuilderGroup(
+    ensureGroupCollection(householdData, 'families'),
+    'your family',
+    personKey
+  );
+  addPersonToBuilderGroup(
     ensureGroupCollection(householdData, 'spmUnits'),
     'your household',
     personKey
@@ -424,7 +472,7 @@ function applyUSDefaultGroups(
 }
 
 function applyUKDefaultGroups(householdData: AppHouseholdInputData, personKey: string): void {
-  addPersonToFirstGroup(
+  addPersonToBuilderGroup(
     ensureGroupCollection(householdData, 'benunits'),
     'your benefit unit',
     personKey
@@ -452,9 +500,6 @@ const HOUSEHOLD_COUNTRY_STRATEGIES: Partial<Record<CountryId, HouseholdCountrySt
   uk: {
     applyPersonDefaults: applyUKDefaultGroups,
   },
-  ca: DEFAULT_COUNTRY_STRATEGY,
-  ng: DEFAULT_COUNTRY_STRATEGY,
-  il: DEFAULT_COUNTRY_STRATEGY,
 };
 
 function getHouseholdCountryStrategy(countryId: CountryId): HouseholdCountryStrategy {
@@ -470,6 +515,8 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   private readonly yearValue: number | null;
 
+  private readonly spmValue?: SPMSelection;
+
   private readonly appInputData: AppHouseholdInputData;
 
   private constructor(args: {
@@ -478,6 +525,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     label?: string | null;
     year?: number | null;
     appInputData: AppHouseholdInputData;
+    spm?: SPMSelection;
   }) {
     super();
 
@@ -485,11 +533,23 @@ export class Household extends BaseModel<HouseholdModelData> {
       throw new Error('Household requires an id');
     }
 
+    if (args.spm && args.countryId !== 'us') {
+      throw new Error('SPM settings are only available for US households');
+    }
+    this.spmValue = args.spm ? cloneValue(args.spm) : undefined;
     this.id = args.id;
     this.countryIdValue = normalizeCountryId(args.countryId);
     this.labelValue = args.label ?? null;
     this.yearValue = args.year ?? null;
     this.appInputData = cloneAppHouseholdInputData(args.appInputData);
+  }
+
+  get spm(): SPMSelection | undefined {
+    return this.spmValue ? cloneValue(this.spmValue) : undefined;
+  }
+
+  withSPM(spm: SPMSelection | undefined): Household {
+    return Household.fromAppInput({ ...this.toJSON(), spm });
   }
 
   get countryId(): CountryId {
@@ -868,8 +928,25 @@ export class Household extends BaseModel<HouseholdModelData> {
       return BUILDER_DEFAULT_PARTNER_NAME;
     }
 
-    const adults = this.getAdults(year).map((person) => person.name);
-    return adults.find((personKey) => personKey !== resolvedPrimaryPersonKey) ?? null;
+    // Only an explicit partner counts. Age never makes one: a dependant aged 25 stays a dependant.
+    // A claimant-or-partner flag names a partner only when the primary person is flagged as a
+    // claimant too, and only inside their own family unit: a flagged member of another unit is
+    // that unit's own claimant.
+    const familyMembers = this.getBuilderFamilyMembers(resolvedPrimaryPersonKey);
+    const isFlaggedClaimantOrPartner = (personKey: string) =>
+      this.getPersonVariableAtYear(personKey, UK_CLAIMANT_OR_PARTNER_VARIABLE, year) === true;
+    if (!familyMembers || !isFlaggedClaimantOrPartner(resolvedPrimaryPersonKey)) {
+      return null;
+    }
+
+    return (
+      this.getSortedPersonNames().find(
+        (personKey) =>
+          personKey !== resolvedPrimaryPersonKey &&
+          familyMembers.has(personKey) &&
+          isFlaggedClaimantOrPartner(personKey)
+      ) ?? null
+    );
   }
 
   getBuilderChildKeys(
@@ -880,6 +957,9 @@ export class Household extends BaseModel<HouseholdModelData> {
     const resolvedPrimaryPersonKey = primaryPersonKey ?? this.getBuilderPrimaryPersonKey(year);
     const resolvedPartnerKey =
       partnerKey ?? this.getBuilderPartnerKey(year, resolvedPrimaryPersonKey);
+    const familyMembers = resolvedPrimaryPersonKey
+      ? this.getBuilderFamilyMembers(resolvedPrimaryPersonKey)
+      : null;
 
     return Household.sortPersonNames(
       Object.entries(this.appInputData.people)
@@ -887,11 +967,28 @@ export class Household extends BaseModel<HouseholdModelData> {
           if (personKey === resolvedPrimaryPersonKey || personKey === resolvedPartnerKey) {
             return false;
           }
+          if (familyMembers && !familyMembers.has(personKey)) {
+            return false;
+          }
 
           return isManagedBuilderChild(person, year);
         })
         .map(([personKey]) => personKey)
     );
+  }
+
+  /**
+   * Members of the primary person's own family unit (UK benefit unit, US tax unit). The builder's
+   * partner and child controls manage only these; members of another unit belong to that unit's
+   * own claimant. Null when the country has no such unit or the primary person is in none, and
+   * then the whole household counts.
+   */
+  private getBuilderFamilyMembers(primaryPersonKey: string): Set<string> | null {
+    const groupKey = BUILDER_FAMILY_GROUPS[this.countryId];
+    const members = groupKey
+      ? getGroupMatesOf(getGroupCollectionFromData(this.appInputData, groupKey), primaryPersonKey)
+      : new Set<string>();
+    return members.size > 0 ? members : null;
   }
 
   deriveBuilderComposition(year: string): HouseholdBuilderComposition {
@@ -908,6 +1005,55 @@ export class Household extends BaseModel<HouseholdModelData> {
       maritalStatus: partnerKey ? 'married' : 'single',
       numChildren: childKeys.length,
     };
+  }
+
+  /**
+   * Benefit-unit roles of a UK builder household: "you" and the explicit partner are the
+   * claimant and partner, and every other member (a dependant of any age) is neither.
+   *
+   * Returns null unless the household has the builder's structure: a person named "you" and one
+   * benefit unit holding everyone. Roles are all or nothing: policyengine-core gives anyone
+   * without an input the variable's default (false), not its formula, so roles for one unit
+   * would make another unit's claimant a non-claimant. Without roles, policyengine-uk infers
+   * them as before.
+   */
+  getBuilderClaimantRoles(year: string): Record<string, boolean> | null {
+    const benefitUnits = Object.values(this.appInputData.benunits ?? {});
+    const hasBuilderStructure =
+      this.countryId === 'uk' &&
+      BUILDER_PRIMARY_PERSON_NAME in this.appInputData.people &&
+      benefitUnits.length === 1 &&
+      this.personNames.every((personKey) => benefitUnits[0].members.includes(personKey));
+    if (!hasBuilderStructure) {
+      return null;
+    }
+
+    const { primaryPersonKey, partnerKey } = this.deriveBuilderComposition(year);
+    return Object.fromEntries(
+      this.personNames.map((personKey) => [
+        personKey,
+        personKey === primaryPersonKey || personKey === partnerKey,
+      ])
+    );
+  }
+
+  /** Records getBuilderClaimantRoles for the year, keeping any value a person already has. */
+  withBuilderClaimantRoles(year: string): Household {
+    const roles = this.getBuilderClaimantRoles(year);
+    if (!roles) {
+      return this;
+    }
+
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const normalizedYear = normalizeYear(year);
+    for (const [personKey, isClaimantOrPartner] of Object.entries(roles)) {
+      const person = nextData.people[personKey];
+      if (getYearValue(person[UK_CLAIMANT_OR_PARTNER_VARIABLE], normalizedYear) === undefined) {
+        setYearValue(person, UK_CLAIMANT_OR_PARTNER_VARIABLE, normalizedYear, isClaimantOrPartner);
+      }
+    }
+
+    return this.withHouseholdData(nextData);
   }
 
   getHeadPersonName(year: string | null | undefined): string | null {
@@ -960,6 +1106,7 @@ export class Household extends BaseModel<HouseholdModelData> {
       id: input.id ?? 'draft-household',
       countryId: normalizeCountryId(input.countryId),
       label: input.label ?? null,
+      spm: input.spm,
       year,
       appInputData,
     });
@@ -971,9 +1118,11 @@ export class Household extends BaseModel<HouseholdModelData> {
     label?: string | null;
     year?: number | null;
     id?: string;
+    spm?: SPMSelection;
   }): Household {
     return Household.fromAppInput({
       id: args.id,
+      spm: args.spm,
       countryId: args.countryId,
       householdData: args.householdData,
       label: args.label,
@@ -1023,6 +1172,7 @@ export class Household extends BaseModel<HouseholdModelData> {
       id: String(metadata.id),
       countryId: metadata.country_id as CountryId,
       label: metadata.label ?? null,
+      spm: metadata.spm,
       year,
       householdData: appInputData,
     });
@@ -1042,6 +1192,7 @@ export class Household extends BaseModel<HouseholdModelData> {
       id: options.id ?? 'draft-household',
       countryId: payload.country_id as CountryId,
       label: options.label ?? payload.label ?? null,
+      spm: payload.spm,
       year,
       householdData: appInputData,
     });
@@ -1051,6 +1202,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return new Household({
       id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label: this.label,
       year: this.year,
       appInputData: this.appInputData,
@@ -1061,6 +1213,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return new Household({
       id: this.id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label,
       year: this.year,
       appInputData: this.appInputData,
@@ -1152,9 +1305,25 @@ export class Household extends BaseModel<HouseholdModelData> {
       const parentIds = [composition.primaryPersonKey, composition.partnerKey].filter(
         Boolean
       ) as string[];
+      // Number new children after every dependant in the family unit, adult dependants included,
+      // and after the highest dependant ordinal anyone uses, so names never collide or repeat.
+      const familyMembers = composition.primaryPersonKey
+        ? this.getBuilderFamilyMembers(composition.primaryPersonKey)
+        : null;
+      const dependantCount = composition.people.filter(
+        (personKey) =>
+          !parentIds.includes(personKey) && (!familyMembers || familyMembers.has(personKey))
+      ).length;
+      const firstNewIndex = Math.max(
+        dependantCount,
+        ...composition.people.map((personKey) => getBuilderDependentIndex(personKey) + 1)
+      );
 
-      for (let index = composition.childKeys.length; index < newCount; index += 1) {
-        const childKey = getUniqueBuilderPersonName(existingKeys, getBuilderDependentName(index));
+      for (let offset = 0; offset < newCount - composition.childKeys.length; offset += 1) {
+        const childKey = getUniqueBuilderPersonName(
+          existingKeys,
+          getBuilderDependentName(firstNewIndex + offset)
+        );
         existingKeys.add(childKey);
         nextHousehold = nextHousehold.addChild(childKey, BUILDER_DEFAULT_CHILD_AGE, parentIds, {
           employment_income: BUILDER_DEFAULT_EMPLOYMENT_INCOME,
@@ -1399,6 +1568,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return {
       id: this.id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label: this.label,
       year: this.year,
       householdData: this.householdData,
@@ -1408,6 +1578,7 @@ export class Household extends BaseModel<HouseholdModelData> {
   toV1CreationPayload(): V1HouseholdCreateEnvelope {
     return buildV1CreateEnvelopeFromAppInput({
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       householdData: this.appInputData,
       label: this.label,
       year: this.year ?? inferYearFromData(this.appInputData),
@@ -1426,6 +1597,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return {
       id: this.id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label: this.label,
       year: this.year,
       householdData: cloneValue(this.appInputData),
@@ -1440,6 +1612,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return new Household({
       id: this.id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label: this.label,
       year: this.year,
       appInputData,

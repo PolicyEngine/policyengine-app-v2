@@ -1,0 +1,669 @@
+import { describe, expect, it } from 'vitest';
+import {
+  buildConceptAliases,
+  buildConceptClusters,
+  buildParameterSearchEntries,
+  buildStateNames,
+  canonicalizeQuery,
+  countHiddenByFilters,
+  createParameterSearchIndex,
+  groupSearchResults,
+  initialismOf,
+  listStateCodes,
+  ParameterSearchEntry,
+  searchParameters,
+} from '@/libs/parameterSearch';
+import {
+  buildCrowdedStateParameterCollection,
+  buildFederalCtcParameterCollection,
+  buildJurisdictionParameterCollection,
+  buildLargeParameterCollection,
+  buildSearchQualityParameterCollection,
+  CODE_ONLY_STATE,
+  CONTRIB_LOCAL_PATH,
+  CROWDED_FEDERAL_PATH,
+  CTC_BASE_AMOUNT_PATH,
+  FEDERAL_CTC_PATH,
+  FEDERAL_TOP_RATE_PATH,
+  JURISDICTION_STATE_NAMES,
+  MD_LOCAL_RATE_PATH,
+  NY_STATE_RATE_PATH,
+  NYC_LOCAL_RATE_PATH,
+} from '@/tests/fixtures/libs/parameterSearchMocks';
+
+const SMALL_COLLECTION = {
+  'gov.irs': { type: 'parameterNode', parameter: 'gov.irs', label: 'IRS' },
+  'gov.irs.credits': { type: 'parameterNode', parameter: 'gov.irs.credits', label: 'credits' },
+  'gov.irs.credits.ctc': {
+    type: 'parameterNode',
+    parameter: 'gov.irs.credits.ctc',
+    label: 'child tax credit',
+  },
+  'gov.irs.credits.ctc.amount': {
+    type: 'parameter',
+    parameter: 'gov.irs.credits.ctc.amount',
+    label: 'amount',
+    unit: 'currency-USD',
+    description: 'Base CTC amount per child',
+    economy: true,
+    household: true,
+  },
+  'gov.taxsim.thing': {
+    type: 'parameter',
+    parameter: 'gov.taxsim.thing',
+    label: 'taxsim thing',
+    economy: true,
+    household: true,
+  },
+  'gov.abolitions.ctc': {
+    type: 'parameter',
+    parameter: 'gov.abolitions.ctc',
+    label: 'abolish ctc',
+    economy: true,
+    household: true,
+  },
+  'gov.hidden.param': {
+    type: 'parameter',
+    parameter: 'gov.hidden.param',
+    label: 'hidden',
+    economy: false,
+    household: false,
+  },
+} as any;
+
+describe('buildParameterSearchEntries', () => {
+  it('given a collection then entries carry full hierarchical breadcrumbs', () => {
+    const entries = buildParameterSearchEntries(SMALL_COLLECTION);
+
+    const ctc = entries.find((e) => e.path === 'gov.irs.credits.ctc.amount');
+    expect(ctc?.breadcrumb).toBe('IRS → Credits → Child tax credit → Amount');
+    expect(ctc?.unit).toBe('currency-USD');
+  });
+
+  it('given excluded and non-simulatable parameters then they are not indexed', () => {
+    const entries = buildParameterSearchEntries(SMALL_COLLECTION);
+    const paths = entries.map((e) => e.path);
+
+    expect(paths).not.toContain('gov.taxsim.thing');
+    expect(paths).not.toContain('gov.abolitions.ctc');
+    expect(paths).not.toContain('gov.hidden.param');
+    expect(paths).not.toContain('gov.irs.credits.ctc'); // nodes are not leaves
+  });
+});
+
+describe('searchParameters', () => {
+  const entries = buildParameterSearchEntries(SMALL_COLLECTION);
+  const index = createParameterSearchIndex(entries);
+
+  it('given a multi-word query spanning breadcrumb levels then the parameter is found', () => {
+    const results = searchParameters(index, 'child tax credit amount');
+    expect(results[0]?.path).toBe('gov.irs.credits.ctc.amount');
+  });
+
+  it('given a one-character query then no results are returned', () => {
+    expect(searchParameters(index, 'c')).toEqual([]);
+  });
+
+  it('given a blank query then no results are returned', () => {
+    expect(searchParameters(index, '   ')).toEqual([]);
+  });
+});
+
+describe('groupSearchResults', () => {
+  const entry = (path: string, breadcrumb: string): ParameterSearchEntry => ({
+    path,
+    label: breadcrumb.split(' → ').pop() ?? path,
+    breadcrumb,
+    unit: null,
+    description: null,
+    isContrib: false,
+    stateCode: null,
+  });
+
+  it('given results sharing a folder then they cluster under it', () => {
+    const groups = groupSearchResults([
+      entry('gov.b.ctc.amount', 'B → CTC → Amount'),
+      entry('gov.a.solo', 'A → Solo'),
+      entry('gov.b.ctc.phase_out', 'B → CTC → Phase-out'),
+      entry('gov.c.other', 'C → Other'),
+    ]);
+
+    expect(groups[0].folder).toBe('B → CTC');
+    expect(groups[0].entries.map((e) => e.path)).toEqual([
+      'gov.b.ctc.amount',
+      'gov.b.ctc.phase_out',
+    ]);
+    expect(groups[1].entries[0].path).toBe('gov.a.solo');
+    expect(groups[2].entries[0].path).toBe('gov.c.other');
+  });
+
+  it('given the best match is alone in its folder then its group still leads', () => {
+    // UK "basic rate": the income tax basic rate ranks first, then three
+    // capital gains rates that share a folder.
+    const groups = groupSearchResults([
+      entry('gov.hmrc.income_tax.rates.uk[0].rate', 'HMRC → Income Tax → Basic rate'),
+      entry('gov.hmrc.cgt.basic_rate', 'HMRC → CGT → Basic rate'),
+      entry('gov.hmrc.cgt.higher_rate', 'HMRC → CGT → Higher rate'),
+      entry('gov.hmrc.cgt.additional_rate', 'HMRC → CGT → Additional rate'),
+    ]);
+
+    expect(groups.map((group) => group.entries[0].path)).toEqual([
+      'gov.hmrc.income_tax.rates.uk[0].rate',
+      'gov.hmrc.cgt.basic_rate',
+    ]);
+    expect(groups[1].entries).toHaveLength(3);
+  });
+
+  it('given only singleton results then every group is standalone in rank order', () => {
+    const groups = groupSearchResults([entry('gov.a.x', 'A → X'), entry('gov.b.y', 'B → Y')]);
+
+    expect(groups.map((g) => g.entries.length)).toEqual([1, 1]);
+    expect(groups[0].entries[0].path).toBe('gov.a.x');
+  });
+
+  it('given members of two unlabeled schedules then each schedule is one group, bracket by bracket', () => {
+    // As search ranks them for "ctc": brackets interleaved across `base` and `arpa`,
+    // whose own nodes have no label, so every breadcrumb reads "… → Amount → Bracket N".
+    const crumb = (n: number, leaf: string) =>
+      `IRS → Credits → CTC → Amount → Bracket ${n} → ${leaf}`;
+    const groups = groupSearchResults([
+      entry('gov.irs.credits.ctc.amount.base[0].amount', crumb(1, 'Amount')),
+      entry('gov.irs.credits.ctc.amount.base[0].threshold', crumb(1, 'Threshold')),
+      entry('gov.irs.credits.ctc.amount.arpa[0].amount', crumb(1, 'Amount')),
+      entry('gov.irs.credits.ctc.amount.base[1].amount', crumb(2, 'Amount')),
+      entry('gov.irs.credits.ctc.amount.arpa[1].threshold', crumb(2, 'Threshold')),
+      entry('gov.irs.credits.ctc.amount.base[1].threshold', crumb(2, 'Threshold')),
+    ]);
+
+    expect(groups.map((group) => [group.folder, group.schedule])).toEqual([
+      ['IRS → Credits → CTC → Amount → Base', 'gov.irs.credits.ctc.amount.base'],
+      ['IRS → Credits → CTC → Amount → ARPA', 'gov.irs.credits.ctc.amount.arpa'],
+    ]);
+    expect(groups[0].entries.map((e) => e.path)).toEqual([
+      'gov.irs.credits.ctc.amount.base[0].amount',
+      'gov.irs.credits.ctc.amount.base[0].threshold',
+      'gov.irs.credits.ctc.amount.base[1].amount',
+      'gov.irs.credits.ctc.amount.base[1].threshold',
+    ]);
+  });
+
+  it('given a schedule with its own label then the header names it, once', () => {
+    const labeled = (path: string, n: number) => ({
+      ...entry(path, `IRS → EITC → Phase-in rate → Bracket ${n} → Rate`),
+      scheduleLabel: 'Phase-in rate',
+    });
+    const [group] = groupSearchResults([
+      labeled('gov.irs.eitc.phase_in[0].rate', 1),
+      labeled('gov.irs.eitc.phase_in[1].rate', 2),
+    ]);
+
+    expect(group.folder).toBe('IRS → EITC → Phase-in rate');
+    const [ctc] = groupSearchResults([
+      {
+        ...entry(
+          'gov.irs.credits.ctc.amount.arpa[0].amount',
+          'IRS → CTC → Amount → Bracket 1 → Amount'
+        ),
+        scheduleLabel: 'Child Tax Credit ARPA amount',
+      },
+      {
+        ...entry(
+          'gov.irs.credits.ctc.amount.arpa[1].amount',
+          'IRS → CTC → Amount → Bracket 2 → Amount'
+        ),
+        scheduleLabel: 'Child Tax Credit ARPA amount',
+      },
+    ]);
+    expect(ctc.folder).toBe('IRS → CTC → Amount → Child Tax Credit ARPA amount');
+  });
+
+  it('given no results then no groups return', () => {
+    expect(groupSearchResults([])).toEqual([]);
+  });
+});
+
+describe('search quality with model-shaped metadata', () => {
+  const parameters = buildSearchQualityParameterCollection();
+  const entries = buildParameterSearchEntries(parameters);
+  const index = createParameterSearchIndex(entries);
+  const largeEntries = buildParameterSearchEntries(buildLargeParameterCollection());
+  const largeIndex = createParameterSearchIndex(largeEntries);
+
+  it('given a generated large collection then more than ten thousand parameters are indexed', () => {
+    expect(largeEntries.length).toBeGreaterThan(10_000);
+  });
+
+  it.each([
+    ['child tax credit amount', 'ctc'],
+    ['earned income credit maximum', 'eitc'],
+    ['snap', 'snap'],
+    ['standard deduction', 'standard'],
+    ['ssi', 'ssi'],
+  ])('given the query "%s" then a matching path appears in the top results', (query, fragment) => {
+    const results = searchParameters(index, query, 10);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.some((r) => r.path.toLowerCase().includes(fragment))).toBe(true);
+  });
+
+  it('given a typo ("chid tax credit") then the CTC still surfaces', () => {
+    const results = searchParameters(index, 'chid tax credit', 10);
+    expect(results.some((r) => r.path.includes('ctc'))).toBe(true);
+  });
+
+  it('given the limit then no more than that many results return', () => {
+    expect(searchParameters(index, 'tax', 5)).toHaveLength(5);
+  });
+
+  it('given the entries then contrib and state parameters are tagged', () => {
+    const contribEntry = entries.find((e) => e.path.startsWith('gov.contrib.'));
+    const stateEntry = entries.find((e) => e.path.startsWith('gov.states.ca.'));
+
+    expect(contribEntry?.isContrib).toBe(true);
+    expect(stateEntry?.stateCode).toBe('ca');
+    expect(listStateCodes(entries).length).toBeGreaterThan(40);
+  });
+
+  it('given default filters then contributed parameters never surface', () => {
+    const results = searchParameters(index, 'ctc additional bracket', 10);
+    expect(results.every((r) => !r.isContrib)).toBe(true);
+  });
+
+  it('given contributed opted in then contributed parameters can surface', () => {
+    const results = searchParameters(index, 'ctc additional bracket', 10, {
+      includeContrib: true,
+      stateScope: 'all',
+    });
+    expect(results.some((r) => r.isContrib)).toBe(true);
+  });
+
+  it('given federal-only scope then a generic query returns no state parameters', () => {
+    const results = searchParameters(index, 'income tax rate', 10, {
+      includeContrib: false,
+      stateScope: 'federal',
+    });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.every((r) => r.stateCode === null)).toBe(true);
+  });
+
+  it('given a single-state scope then only that state remains', () => {
+    const results = searchParameters(index, 'income tax rate', 20, {
+      includeContrib: false,
+      stateScope: 'ut',
+    });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.every((r) => r.stateCode === 'ut')).toBe(true);
+  });
+
+  it('given filters hiding matches then countHiddenByFilters reports them', () => {
+    const hidden = countHiddenByFilters(index, 'ctc additional bracket threshold', 10, {
+      includeContrib: false,
+      stateScope: 'all',
+    });
+    expect(hidden).toBeGreaterThan(0);
+  });
+
+  it('given a common multi-word query then the fast path answers in as-you-type latency', () => {
+    searchParameters(largeIndex, 'child tax'); // warm up
+    const start = performance.now();
+    searchParameters(largeIndex, 'child tax credit amount');
+    const elapsed = performance.now() - start;
+
+    // The token prefilter must keep the common case within typeahead latency
+    // even when the generated input contains more than 10,000 parameters.
+    expect(elapsed).toBeLessThan(500);
+  });
+});
+
+describe('bracket schedule members', () => {
+  const parameters = buildFederalCtcParameterCollection();
+  const index = createParameterSearchIndex(
+    buildParameterSearchEntries(parameters),
+    buildConceptClusters(parameters),
+    buildConceptAliases(parameters)
+  );
+
+  it('given the program name then the per-child amount, labelled only "amount", is among the first results', () => {
+    const results = searchParameters(index, 'child tax credit', 10).map((entry) => entry.path);
+
+    expect(results).toContain(CTC_BASE_AMOUNT_PATH);
+  });
+
+  it('given a bracket member then its entry carries the schedule it belongs to', () => {
+    const entry = buildParameterSearchEntries(parameters).find(
+      (candidate) => candidate.path === CTC_BASE_AMOUNT_PATH
+    );
+
+    expect(entry?.scheduleLabel).toBe('Child Tax Credit amount');
+  });
+});
+
+describe('derived ranking priors', () => {
+  const PRIOR_COLLECTION = {
+    'gov.irs': { type: 'parameterNode', parameter: 'gov.irs', label: 'IRS' },
+    'gov.irs.credits': { type: 'parameterNode', parameter: 'gov.irs.credits', label: 'credits' },
+    'gov.irs.credits.ctc': {
+      type: 'parameterNode',
+      parameter: 'gov.irs.credits.ctc',
+      label: 'child tax credit',
+    },
+    'gov.irs.credits.ctc.amount': {
+      type: 'parameter',
+      parameter: 'gov.irs.credits.ctc.amount',
+      label: 'amount',
+      unit: 'currency-USD',
+      economy: true,
+      household: true,
+    },
+    'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount': {
+      type: 'parameter',
+      parameter: 'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+      label: 'amount',
+      unit: 'currency-USD',
+      economy: true,
+      household: true,
+    },
+  } as any;
+  const priorIndex = createParameterSearchIndex(buildParameterSearchEntries(PRIOR_COLLECTION));
+
+  it('given a conversational question then coverage matching still finds the parameter', () => {
+    const results = searchParameters(
+      priorIndex,
+      'why does the child tax credit amount phase out',
+      5
+    );
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].path).toContain('gov.irs.credits.ctc');
+  });
+
+  it('given an acronym only in the path then it still matches', () => {
+    const results = searchParameters(priorIndex, 'ctc amount', 5);
+    expect(results[0].path).toContain('gov.irs.credits.ctc');
+  });
+
+  it('given equal matches then the shallow canonical parameter outranks the bracketed internal', () => {
+    const results = searchParameters(priorIndex, 'child tax credit amount', 5);
+    expect(results[0].path).toBe('gov.irs.credits.ctc.amount');
+  });
+
+  it('given live usage then the used parameter floats above unused siblings', async () => {
+    const { registerUsagePaths, resetUsagePaths } = await import('@/libs/searchPriors');
+    resetUsagePaths();
+    registerUsagePaths([
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+    ]);
+
+    const results = searchParameters(priorIndex, 'child tax credit amount', 5);
+    expect(results[0].path).toBe(
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount'
+    );
+
+    resetUsagePaths();
+  });
+});
+
+describe('derived concept clusters', () => {
+  const parameters = buildSearchQualityParameterCollection();
+  const clusters = buildConceptClusters(parameters);
+  const conceptIndex = createParameterSearchIndex(
+    buildParameterSearchEntries(parameters),
+    clusters
+  );
+
+  test('given the metadata then eitc and its spelled-out name share a cluster', () => {
+    const eitcCluster = clusters.find((cluster) => cluster.includes('eitc'));
+    expect(eitcCluster).toBeDefined();
+    expect(eitcCluster).toContain('earned income tax credit');
+  });
+
+  test('given "eitc" then earned_income state parameters surface too', () => {
+    const results = searchParameters(conceptIndex, 'eitc', 20);
+    expect(results.some((r) => r.path.includes('.eitc'))).toBe(true);
+    expect(results.some((r) => r.path.includes('earned_income'))).toBe(true);
+  });
+
+  test('given the spelled-out name then eitc-segment parameters surface', () => {
+    const results = searchParameters(conceptIndex, 'earned income tax credit', 20);
+    expect(results.some((r) => r.path.includes('.eitc'))).toBe(true);
+  });
+
+  test('given "eitc" with a state scope then only that state\'s variants remain', () => {
+    const results = searchParameters(conceptIndex, 'eitc', 20, {
+      includeContrib: false,
+      stateScope: 'ca',
+    });
+    expect(results.some((r) => r.stateCode === 'ca')).toBe(true);
+    // A state scope means that state's parameters only — federal and
+    // other states' versions are excluded.
+    expect(results.every((r) => r.stateCode === 'ca')).toBe(true);
+  });
+
+  test('given contrib enabled then contrib eitc reforms join the results', () => {
+    const results = searchParameters(conceptIndex, 'eitc', 40, {
+      includeContrib: true,
+      stateScope: 'all',
+    });
+    expect(results.some((r) => r.isContrib)).toBe(true);
+  });
+});
+
+describe('concept aliases', () => {
+  const COLLECTION: any = {
+    'gov.irs.credits.ctc': {
+      type: 'parameterNode',
+      parameter: 'gov.irs.credits.ctc',
+      label: 'Child Tax Credit',
+    },
+    'gov.irs.credits.ctc.amount': {
+      type: 'parameter',
+      parameter: 'gov.irs.credits.ctc.amount',
+      label: 'Child Tax Credit amount',
+      economy: true,
+    },
+    'gov.dwp.universal_credit': {
+      type: 'parameterNode',
+      parameter: 'gov.dwp.universal_credit',
+      label: 'Universal Credit',
+    },
+  };
+
+  it('given a multi-word label then its initialism becomes an alias', () => {
+    const aliases = buildConceptAliases(COLLECTION);
+
+    expect(aliases.get('ctc')).toBe('child tax credit');
+    // No path segment spells this one out — the initialism rule is the
+    // only way "uc" reaches Universal Credit.
+    expect(aliases.get('uc')).toBe('universal credit');
+  });
+
+  it('given an initialism claimed by rival concepts then it is left alone', () => {
+    const contested: any = {
+      a: { parameter: 'gov.a', label: 'Union County' },
+      b: { parameter: 'gov.b', label: 'Unemployment Compensation' },
+      c: { parameter: 'gov.c', label: 'Unmarried Childless' },
+    };
+
+    expect(buildConceptAliases(contested).has('uc')).toBe(false);
+  });
+
+  it('given a single-word label then no initialism is derived', () => {
+    expect(initialismOf('medicaid')).toBeNull();
+    // Structural words carry no meaning in an acronym.
+    expect(initialismOf('temporary assistance for needy families')).toBe('tanf');
+  });
+
+  it('given an acronym query then it canonicalizes to the spelled-out phrase', () => {
+    const aliases = buildConceptAliases(COLLECTION);
+
+    expect(canonicalizeQuery('CTC amount', aliases)).toBe('child tax credit amount');
+    // Already spelled out: unchanged, so both forms rank identically.
+    expect(canonicalizeQuery('child tax credit amount', aliases)).toBe('child tax credit amount');
+  });
+});
+
+describe('jurisdiction scope and ranking', () => {
+  const parameters = buildJurisdictionParameterCollection();
+  const entries = buildParameterSearchEntries(parameters);
+  const index = createParameterSearchIndex(entries, [], new Map(), buildStateNames(parameters));
+  const ALL = { includeContrib: false, stateScope: 'all' };
+  const FEDERAL = { includeContrib: false, stateScope: 'federal' };
+
+  it('given a local parameter then it is attributed to its state', () => {
+    const local = entries.find((e) => e.path === NYC_LOCAL_RATE_PATH);
+
+    expect(local?.stateCode).toBe('ny');
+  });
+
+  it('given federal-only scope then local parameters are excluded', () => {
+    const results = searchParameters(index, 'income tax rate', 20, FEDERAL);
+
+    expect(results.map((r) => r.path)).toContain(FEDERAL_TOP_RATE_PATH);
+    expect(results.map((r) => r.path)).not.toContain(NYC_LOCAL_RATE_PATH);
+    expect(results.map((r) => r.path)).not.toContain(MD_LOCAL_RATE_PATH);
+  });
+
+  it('given federal-only scope with contributed opted in then stateless local reforms stay out', () => {
+    const results = searchParameters(index, 'nyc income tax credit income limit', 20, {
+      includeContrib: true,
+      stateScope: 'federal',
+    });
+
+    expect(results.map((r) => r.path)).not.toContain(CONTRIB_LOCAL_PATH);
+  });
+
+  it("given a state scope then that state's local parameters are included", () => {
+    const results = searchParameters(index, 'income tax rate', 20, {
+      includeContrib: false,
+      stateScope: 'ny',
+    });
+
+    expect(results.map((r) => r.path)).toEqual(
+      expect.arrayContaining([NY_STATE_RATE_PATH, NYC_LOCAL_RATE_PATH])
+    );
+  });
+
+  it('given all jurisdictions and a program name naming no state then the federal parameter ranks first', () => {
+    const results = searchParameters(index, 'child tax credit', 10, ALL);
+
+    expect(results[0]?.path).toBe(FEDERAL_CTC_PATH);
+  });
+
+  it("given a query naming a state then that state's parameter ranks first", () => {
+    const results = searchParameters(index, 'Oregon child tax credit', 10, ALL);
+
+    expect(results[0]?.stateCode).toBe('or');
+  });
+
+  it('given a capitalized postal code then it names the state', () => {
+    const results = searchParameters(index, 'OR child tax credit', 10, ALL);
+
+    expect(results[0]?.stateCode).toBe('or');
+  });
+
+  it('given "in" and "or" as ordinary words then no state is named', () => {
+    const results = searchParameters(index, 'child tax credit in or out of work', 10, ALL);
+
+    expect(results[0]?.path).toBe(FEDERAL_CTC_PATH);
+  });
+
+  it('given more state matches than the re-rank cap then the federal parameter is still ranked', () => {
+    const crowded = buildCrowdedStateParameterCollection();
+    const crowdedIndex = createParameterSearchIndex(buildParameterSearchEntries(crowded));
+
+    const results = searchParameters(crowdedIndex, 'standard deduction', 10, ALL);
+
+    expect(results.map((r) => r.path)).toContain(CROWDED_FEDERAL_PATH);
+  });
+});
+
+describe('buildStateNames', () => {
+  it('given state nodes then their names map to their codes', () => {
+    const names = buildStateNames(buildJurisdictionParameterCollection());
+
+    expect(names.get('new york')).toBe('ny');
+    expect(names.size).toBe(Object.keys(JURISDICTION_STATE_NAMES).length);
+  });
+
+  it('given a state node labelled only with its code then it adds no name', () => {
+    const names = buildStateNames(buildJurisdictionParameterCollection());
+
+    expect([...names.values()]).not.toContain(CODE_ONLY_STATE);
+  });
+});
+
+describe('a query that names a state', () => {
+  const stateEntry = (path: string, breadcrumb: string, stateCode: string | null) => ({
+    path,
+    label: breadcrumb.split(' → ').pop() ?? path,
+    breadcrumb,
+    unit: null,
+    description: null,
+    isContrib: false,
+    stateCode,
+  });
+  const entries = [
+    stateEntry(
+      'gov.states.vt.tax.income.credits.eitc.match',
+      'States → Vermont → EITC → Match',
+      'vt'
+    ),
+    stateEntry(
+      'gov.local.md.montgomery_county.tax.income.credits.eitc.refundable.match',
+      'Local → Maryland → Montgomery County → EITC → Match',
+      'md'
+    ),
+    stateEntry(
+      'gov.states.mt.tax.income.credits.eitc.match',
+      'States → Montana → EITC → Match',
+      'mt'
+    ),
+    stateEntry(
+      'gov.states.ar.tax.income.credits.cdcc.match',
+      'States → Arkansas → CDCC → Match',
+      'ar'
+    ),
+    stateEntry(
+      'gov.states.ks.tax.income.credits.cdcc_fraction',
+      'States → Kansas → Credits → CDCC fraction',
+      'ks'
+    ),
+    stateEntry('gov.irs.credits.eitc.max[0].amount', 'IRS → Credits → EITC → Maximum', null),
+  ];
+  const stateNames = new Map([
+    ['montana', 'mt'],
+    ['vermont', 'vt'],
+    ['maryland', 'md'],
+    ['arkansas', 'ar'],
+    ['kansas', 'ks'],
+  ]);
+  const index = createParameterSearchIndex(entries, [], new Map(), stateNames);
+
+  it('given "Montana EITC" then Montana leads and no other state shows', () => {
+    const found = searchParameters(index, 'Montana EITC', 10).map((entry) => entry.stateCode);
+
+    expect(found[0]).toBe('mt');
+    expect(found).not.toContain('vt');
+    expect(found).not.toContain('md');
+  });
+
+  it('given "Kansas CDCC" then Arkansas, which spells kansas inside it, does not show', () => {
+    const found = searchParameters(index, 'Kansas CDCC', 10).map((entry) => entry.stateCode);
+
+    expect(found).toEqual(['ks']);
+  });
+
+  it('given a state with no such program then other states still show, after it', () => {
+    // Montana has no CDCC parameter here: the search does not come back empty.
+    const found = searchParameters(index, 'Montana CDCC', 10).map((entry) => entry.stateCode);
+
+    expect(found).toEqual(expect.arrayContaining(['ar', 'ks']));
+  });
+
+  it('given no state then every state still matches', () => {
+    const found = searchParameters(index, 'eitc match', 10).map((entry) => entry.stateCode);
+
+    expect(found).toEqual(expect.arrayContaining(['vt', 'md', 'mt']));
+  });
+});

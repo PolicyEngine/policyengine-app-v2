@@ -74,6 +74,19 @@ export function formatLabelParts(parts: string[]): string {
 }
 
 /**
+ * Compacts a long breadcrumb for dense displays: keeps the last
+ * `maxParts` segments and elides the rest ("… → Child tax credit →
+ * Amount"). Pair with the full breadcrumb in a title attribute.
+ */
+export function formatCompactBreadcrumb(breadcrumb: string, maxParts = 3): string {
+  const parts = breadcrumb.split(' → ');
+  if (parts.length <= maxParts) {
+    return breadcrumb;
+  }
+  return `… → ${parts.slice(-maxParts).join(' → ')}`;
+}
+
+/**
  * Builds a flat map of parameter path -> label from the parameterTree.
  * This includes both intermediate nodes and leaf parameters.
  * Used when the parameters collection doesn't include intermediate paths.

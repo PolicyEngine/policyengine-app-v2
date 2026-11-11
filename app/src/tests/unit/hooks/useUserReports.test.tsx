@@ -1,7 +1,7 @@
 import React from 'react';
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -19,8 +19,9 @@ import {
 } from '@/hooks/useUserReportAssociations';
 import { useUserReportById, useUserReports } from '@/hooks/useUserReports';
 import { useSimulationAssociationsByUser } from '@/hooks/useUserSimulationAssociations';
-import metadataReducer from '@/reducers/metadataReducer';
+import metadataReducer, { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { mockReport, mockReportMetadata } from '@/tests/fixtures/adapters/reportMocks';
+import { mockMetadataResponse } from '@/tests/fixtures/api/metadataMocks';
 import {
   mockUserReportList,
   TEST_LABEL,
@@ -262,6 +263,37 @@ describe('useUserReports', () => {
       expect(firstReport.policies).toBeDefined();
     });
 
+    test('given parameter metadata is loading then waits to fetch policies until it is ready', async () => {
+      // Given
+      store.dispatch(fetchMetadataThunk.pending('metadata-request', 'us'));
+
+      // When
+      const { result } = renderHook(() => useUserReports(TEST_USER_ID), { wrapper });
+
+      // Then
+      await waitFor(() => {
+        expect(simulationApi.fetchSimulationById).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+      expect(policyApi.fetchPolicyById).not.toHaveBeenCalled();
+
+      act(() => {
+        store.dispatch(
+          fetchMetadataThunk.fulfilled(
+            { data: mockMetadataResponse, country: 'us' },
+            'metadata-request',
+            'us'
+          )
+        );
+      });
+
+      await waitFor(() => {
+        expect(policyApi.fetchPolicyById).toHaveBeenCalled();
+      });
+    });
+
     test('given reports with household populations then includes household data', async () => {
       // Given
       const userId = TEST_USER_ID;
@@ -400,14 +432,16 @@ describe('useUserReports', () => {
       expect(result.current.data.length).toBeGreaterThan(0);
       // Some simulations might still be cached, so we just verify the structure
       expect(result.current.data[0]).toHaveProperty('simulations');
+      expect(result.current.isError).toBe(false);
+      expect(result.current.error).toBeNull();
+      expect(result.current.data.some((report) => report.error)).toBe(true);
     });
 
-    test('given policy fetch fails then continues with partial data', async () => {
+    test('given policy fetch fails then marks affected reports without page-level error', async () => {
       // Given
       const userId = TEST_USER_ID;
-      vi.spyOn(policyApi, 'fetchPolicyById').mockRejectedValue(
-        new Error(ERROR_MESSAGES.POLICY_FETCH_FAILED)
-      );
+      const error = new Error('Policy fetch failed');
+      vi.spyOn(policyApi, 'fetchPolicyById').mockRejectedValue(error);
 
       // When
       const { result } = renderHook(() => useUserReports(userId), { wrapper });
@@ -417,12 +451,11 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Should still return reports but policies will be undefined or partial
-      // The hook doesn't guarantee empty arrays when fetches fail
       expect(result.current.data).toBeDefined();
       expect(result.current.data.length).toBeGreaterThan(0);
-      // Some policies might still be cached, so we just verify the structure
-      expect(result.current.data[0]).toHaveProperty('policies');
+      expect(result.current.isError).toBe(false);
+      expect(result.current.error).toBeNull();
+      expect(result.current.data.some((report) => report.error === error)).toBe(true);
     });
   });
 

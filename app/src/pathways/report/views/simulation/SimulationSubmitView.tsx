@@ -14,6 +14,10 @@ import { SimulationCreationPayload } from '@/types/payloads';
 interface SimulationSubmitViewProps {
   simulation: SimulationStateProps;
   onSubmitSuccess: (simulationId: string) => void;
+  isPolicyUnavailable?: boolean;
+  isPopulationUnavailable?: boolean;
+  policyErrorMessage?: string;
+  populationErrorMessage?: string;
   onBack?: () => void;
   onCancel?: () => void;
 }
@@ -21,12 +25,26 @@ interface SimulationSubmitViewProps {
 export default function SimulationSubmitView({
   simulation,
   onSubmitSuccess,
+  isPolicyUnavailable = false,
+  isPopulationUnavailable = false,
+  policyErrorMessage,
+  populationErrorMessage,
   onBack,
   onCancel,
 }: SimulationSubmitViewProps) {
   const { createSimulation, isPending } = useCreateSimulation(simulation?.label || undefined);
+  const hasPolicy = !!simulation.policy.id;
+  const hasPopulation = !!(
+    simulation.population.household?.id || simulation.population.geography?.id
+  );
+  const isSubmissionBlocked =
+    !hasPolicy || !hasPopulation || isPolicyUnavailable || isPopulationUnavailable;
 
   function handleSubmit() {
+    if (isSubmissionBlocked) {
+      return;
+    }
+
     // Determine population ID and type based on what's set
     let populationId: string | undefined;
     let populationType: 'household' | 'geography' | undefined;
@@ -61,18 +79,30 @@ export default function SimulationSubmitView({
     {
       title: 'Population added',
       description:
-        simulation.population.label ||
-        `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,
-      isFulfilled: !!(simulation.population.household?.id || simulation.population.geography?.id),
-      badge:
-        simulation.population.label ||
-        `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,
+        isPopulationUnavailable && populationErrorMessage
+          ? 'Failed to load'
+          : simulation.population.label ||
+            `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,
+      isFulfilled: hasPopulation && !isPopulationUnavailable,
+      isDisabled: isPopulationUnavailable,
+      errorMessage: populationErrorMessage,
+      badge: isPopulationUnavailable
+        ? undefined
+        : simulation.population.label ||
+          `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,
     },
     {
       title: 'Policy reform added',
-      description: simulation.policy.label || `Policy #${simulation.policy.id}`,
-      isFulfilled: !!simulation.policy.id,
-      badge: simulation.policy.label || `Policy #${simulation.policy.id}`,
+      description:
+        isPolicyUnavailable && policyErrorMessage
+          ? 'Failed to load'
+          : simulation.policy.label || `Policy #${simulation.policy.id}`,
+      isFulfilled: hasPolicy && !isPolicyUnavailable,
+      isDisabled: isPolicyUnavailable,
+      errorMessage: policyErrorMessage,
+      badge: isPolicyUnavailable
+        ? undefined
+        : simulation.policy.label || `Policy #${simulation.policy.id}`,
     },
   ];
 
@@ -84,6 +114,7 @@ export default function SimulationSubmitView({
       submitButtonText="Create simulation"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
+      submitButtonDisabled={isSubmissionBlocked}
       onBack={onBack}
       onCancel={onCancel}
     />

@@ -10,6 +10,7 @@ import {
 } from '@/tests/fixtures/utils/parameterLabelsMocks';
 import {
   buildCompactLabel,
+  formatCompactBreadcrumb,
   formatLabelParts,
   getHierarchicalLabels,
 } from '@/utils/parameterLabels';
@@ -350,5 +351,25 @@ describe('capitalize first formatting', () => {
     // Then
     // Empty label gets filtered out, so result array is empty
     expect(result).toEqual([]);
+  });
+});
+
+describe('formatCompactBreadcrumb', () => {
+  test('given a short breadcrumb then it is unchanged', () => {
+    expect(formatCompactBreadcrumb('IRS → Credits')).toBe('IRS → Credits');
+  });
+
+  test('given a long breadcrumb then only the last segments remain with an ellipsis', () => {
+    expect(
+      formatCompactBreadcrumb(
+        'Internal Revenue Service (IRS) → Credits → Child Tax Credit → Amount → Bracket 1 → Amount'
+      )
+    ).toBe('… → Amount → Bracket 1 → Amount');
+  });
+
+  test('given a plain path with no separators then it is unchanged', () => {
+    expect(formatCompactBreadcrumb('gov.irs.credits.ctc.amount')).toBe(
+      'gov.irs.credits.ctc.amount'
+    );
   });
 });

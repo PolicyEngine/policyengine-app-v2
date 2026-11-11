@@ -5,6 +5,7 @@ import PrivacyPage from "../../app/[countryId]/privacy/page";
 import TermsPage from "../../app/[countryId]/terms/page";
 import ResearchPage from "../../app/[countryId]/research/page";
 import ClaudePluginPage from "../../app/[countryId]/ai-agents/page";
+import AiPage from "../../app/[countryId]/ai/page";
 
 describe("static pages", () => {
   test("Donate page renders heading", async () => {
@@ -48,5 +49,16 @@ describe("static pages", () => {
     });
     expect(el).toBeTruthy();
     expect(el.type).toBeDefined();
+  });
+
+  test("AI hub page renders heading and thesis", async () => {
+    const el = await AiPage({ params: Promise.resolve({ countryId: "us" }) });
+    render(el);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      /AI at PolicyEngine/,
+    );
+    expect(
+      screen.getByText(/We model what AI does to the economy/),
+    ).toBeInTheDocument();
   });
 });

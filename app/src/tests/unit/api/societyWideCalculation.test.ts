@@ -1,18 +1,80 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
+import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
+import {
+  deleteFailedSocietyWideCalculation,
+  EconomyCalculationError,
+  failedCalculationOf,
+  fetchLocalAreaBreakdown,
+  fetchSocietyWideCalculation,
+  isLocalAreaBreakdown,
+} from '@/api/societyWideCalculation';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
+  EXPECTED_BY_CONSTITUENCY,
+  EXPECTED_BY_LOCAL_AUTHORITY,
+  LIST_SHAPE_UK_RESULT,
+} from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
+import {
+  BREAKDOWN_BODY_WITHOUT_BUNDLE_VERSIONS,
+  BREAKDOWN_ERROR_RESPONSE,
+  BREAKDOWN_OK_RESPONSE,
+  BREAKDOWN_PROVENANCE,
+  BREAKDOWN_REFUSED_BODY,
+  BREAKDOWN_REFUSED_MESSAGE,
+  BREAKDOWN_REGION_SCOTLAND,
+  BREAKDOWN_REGION_UK,
+  BREAKDOWN_RELEASE_BUNDLE,
+  BREAKDOWN_YEAR,
+  EMPTY_BREAKDOWN_RESULT,
+  EXPECTED_BREAKDOWN_WITH_BUNDLE,
+  LIST_SHAPE_BREAKDOWN_RESULT_WITH_WITHHELD_CODES,
+  LISTED_CONSTITUENCY_WITHHELD_CODES,
+  LISTED_LOCAL_AUTHORITY_WITHHELD_CODES,
+  mockErrorResponseWithBody,
+  NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
+  NATIONAL_UK_RESULT_WITH_NULL_AREAS,
+  NATIONAL_UK_RESULT_WITHOUT_AREA_KEYS,
+  OLDER_RELEASE_BUNDLE,
+  OLDER_UK_BODY_WITH_AREAS,
+  PLAIN_TEXT_ERROR_BODY,
+} from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import {
+  DELETABLE_FAILED_CALCULATION_BODY,
+  DELETE_FAILED_MESSAGE,
+  DELETE_NOT_A_FAILURE_BODY,
+  DELETE_NOTHING_STORED_BODY,
+  DELETE_REFUSED_SECONDS,
+  DELETE_TOO_SOON_BODY,
+  economyCalculationError,
   ERROR_MESSAGES,
+  FAILED_CALCULATION_BODY,
   HTTP_STATUS,
   mockCompletedResponse,
+  mockCompletedResponseWithBundleBesideResult,
+  mockCompletedResponseWithBundleInResult,
+  mockDeleteResponse,
   mockErrorCalculationResponse,
   mockErrorResponse,
+  mockFailedCalculationResponse,
   mockNetworkError,
   mockPendingResponse,
   mockSuccessResponse,
+  mockUSPolicyEngineBundle,
+  READ_DELETE_AFTER_SECONDS,
+  READ_RETRY_AFTER_SECONDS,
+  STATE_ECONOMY_PARAMS,
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
+  UNEXPECTED_DELETE_ANSWERS,
+  UNREAD_DELETE_AFTER_SECONDS_BODIES,
+  UNREAD_RETRY_AFTER_SECONDS_BODIES,
+  UNREADABLE_DELETE_REFUSAL_BODIES,
 } from '@/tests/fixtures/api/societyWideMocks';
+import {
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_REGION_CODE,
+} from '@/tests/fixtures/models/regionMocks';
+import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 
 global.fetch = vi.fn();
 
@@ -131,43 +193,63 @@ describe('societyWide API', () => {
       expect(result.result?.budget.budgetary_impact).toBe(75000);
     });
 
-    test('given completed status with policyengine bundle then merges bundle into result', async () => {
+    test.each([
+      ['inside the result, as the Public API returns it', mockCompletedResponseWithBundleInResult],
+      ['beside the result', mockCompletedResponseWithBundleBesideResult],
+    ])(
+      'given completed status with the policyengine bundle %s then merges the bundle into the result',
+      async (_label, body) => {
+        // Given
+        (global.fetch as any).mockResolvedValue(mockSuccessResponse(body));
+
+        // When
+        const response = await fetchSocietyWideCalculation(
+          TEST_COUNTRIES.US,
+          TEST_POLICY_IDS.REFORM,
+          TEST_POLICY_IDS.BASELINE,
+          { region: 'us', time_period: CURRENT_YEAR }
+        );
+
+        // Then
+        expect(response.result).toMatchObject(mockUSPolicyEngineBundle);
+      }
+    );
+
+    test('given the Public API body for a .py 6.10.0 national UK result then the result gets the bundle versions and dataset', async () => {
       // Given
-      const countryId = TEST_COUNTRIES.US;
-      const reformPolicyId = TEST_POLICY_IDS.REFORM;
-      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const mockResponse = mockSuccessResponse({
-        ...mockCompletedResponse,
-        result: {
-          ...mockCompletedResponse.result!,
-          model_version: 'old-model-version',
-          data_version: 'old-data-version',
-        },
-        policyengine_bundle: {
-          model_version: '1.634.4',
-          policyengine_version: '3.4.0',
-          data_version: '1.77.0',
-          dataset: 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
-        },
-      });
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse(NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE)
+      );
 
       // When
-      const params = { region: 'us', time_period: CURRENT_YEAR };
-      const result = await fetchSocietyWideCalculation(
-        countryId,
-        reformPolicyId,
-        baselinePolicyId,
-        params
+      const response = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
       );
 
       // Then
-      expect(result.result?.model_version).toBe('1.634.4');
-      expect(result.result?.policyengine_version).toBe('3.4.0');
-      expect(result.result?.data_version).toBe('1.77.0');
-      expect(result.result?.dataset).toBe(
-        'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0'
+      expect(response.result).toMatchObject(BREAKDOWN_RELEASE_BUNDLE);
+      expect(response.result?.policyengine_bundle).toEqual(BREAKDOWN_RELEASE_BUNDLE);
+      expect(hasUKLocalAreaImpacts(response.result)).toBe(false);
+    });
+
+    test('given the Public API body for a .py 6.7.5 UK result with area data then the result gets .py 6.7.5 and keeps its areas', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(OLDER_UK_BODY_WITH_AREAS));
+
+      // When
+      const response = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
       );
+
+      // Then
+      expect(response.result).toMatchObject(OLDER_RELEASE_BUNDLE);
+      expect(hasUKLocalAreaImpacts(response.result)).toBe(true);
     });
 
     test('given error status then returns error message with null result', async () => {
@@ -223,6 +305,55 @@ describe('societyWide API', () => {
       ).rejects.toThrow(
         ERROR_MESSAGES.CALCULATION_FAILED(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Error')
       );
+    });
+
+    test('given a failed calculation answered with 502 then the error carries the status and the parsed body, with the same message', async () => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(mockFailedCalculationResponse());
+
+      // When
+      const error = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.US,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: 'state/ca', time_period: CURRENT_YEAR }
+      ).catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({
+        status: HTTP_STATUS.BAD_GATEWAY,
+        body: FAILED_CALCULATION_BODY,
+        message: ERROR_MESSAGES.CALCULATION_FAILED(
+          HTTP_STATUS.BAD_GATEWAY,
+          JSON.stringify(FAILED_CALCULATION_BODY)
+        ),
+      });
+    });
+
+    test('given an error page in place of the answer then the error carries the status and no body', async () => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(
+        mockErrorResponseWithBody(
+          HTTP_STATUS.SERVICE_UNAVAILABLE,
+          'Service Unavailable',
+          PLAIN_TEXT_ERROR_BODY
+        )
+      );
+
+      // When
+      const error = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.US,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: 'state/ca', time_period: CURRENT_YEAR }
+      ).catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({ status: HTTP_STATUS.SERVICE_UNAVAILABLE, body: null });
     });
 
     test('given network error then propagates error', async () => {
@@ -330,7 +461,7 @@ describe('societyWide API', () => {
       expect((global.fetch as any).mock.calls[0][0]).not.toContain('include_district_breakdowns');
     });
 
-    test('given explicit dataset parameter then includes it in URL', async () => {
+    test('given stale dataset parameter then omits it from the URL', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
@@ -344,7 +475,7 @@ describe('societyWide API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=custom_dataset`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
@@ -352,5 +483,617 @@ describe('societyWide API', () => {
         })
       );
     });
+
+    test('given a UK result with list-shape area impacts then returns them keyed by name', async () => {
+      // Given
+      const params = { region: 'uk', time_period: CURRENT_YEAR };
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse({ status: 'ok', result: LIST_SHAPE_UK_RESULT })
+      );
+
+      // When
+      const response = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        params
+      );
+
+      // Then
+      const result = response.result as any;
+      expect(result.constituency_impact).toEqual({ by_constituency: EXPECTED_BY_CONSTITUENCY });
+      expect(result.local_authority_impact).toEqual({
+        by_local_authority: EXPECTED_BY_LOCAL_AUTHORITY,
+      });
+    });
+
+    test('given a breakdown passed to the national request anyway then it is not sent', async () => {
+      // Given
+      const params = {
+        region: BREAKDOWN_REGION_UK,
+        time_period: BREAKDOWN_YEAR,
+        breakdown: 'local_areas',
+      } as any;
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        params
+      );
+
+      // Then
+      expect((global.fetch as any).mock.calls[0][0]).toBe(
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${TEST_POLICY_IDS.REFORM}/over/${TEST_POLICY_IDS.BASELINE}?region=uk&time_period=${BREAKDOWN_YEAR}`
+      );
+    });
+
+    test('given no breakdown requested then the URL has no breakdown parameter', async () => {
+      // Given
+      const params = { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR };
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        params
+      );
+
+      // Then
+      expect((global.fetch as any).mock.calls[0][0]).not.toContain('breakdown');
+    });
+
+    test.each([
+      ['absent', NATIONAL_UK_RESULT_WITHOUT_AREA_KEYS],
+      ['null', NATIONAL_UK_RESULT_WITH_NULL_AREAS],
+    ])(
+      'given a national UK result whose area impacts are %s then it has no area data',
+      async (_label, nationalResult) => {
+        // Given
+        (global.fetch as any).mockResolvedValue(
+          mockSuccessResponse({ status: 'ok', result: nationalResult })
+        );
+
+        // When
+        const response = await fetchSocietyWideCalculation(
+          TEST_COUNTRIES.UK,
+          TEST_POLICY_IDS.REFORM,
+          TEST_POLICY_IDS.BASELINE,
+          { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+        );
+
+        // Then
+        expect(response.status).toBe('ok');
+        expect(response.result?.budget).toEqual(nationalResult.budget);
+        expect(hasUKLocalAreaImpacts(response.result)).toBe(false);
+      }
+    );
+
+    test('given a UK result with area impacts then it has area data', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse({ status: 'ok', result: LIST_SHAPE_UK_RESULT })
+      );
+
+      // When
+      const response = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(hasUKLocalAreaImpacts(response.result)).toBe(true);
+    });
+  });
+
+  describe('fetchLocalAreaBreakdown', () => {
+    test('given a UK-wide report then sends breakdown=local_areas after the region and year', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect((global.fetch as any).mock.calls[0][0]).toBe(
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${TEST_POLICY_IDS.REFORM}/over/${TEST_POLICY_IDS.BASELINE}?region=uk&time_period=${BREAKDOWN_YEAR}&breakdown=local_areas`
+      );
+    });
+
+    test('given a nation report then asks the economy endpoint for its local-area breakdown', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_SCOTLAND, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${TEST_POLICY_IDS.REFORM}/over/${TEST_POLICY_IDS.BASELINE}?region=country%2Fscotland&time_period=${BREAKDOWN_YEAR}&breakdown=local_areas`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+    });
+
+    test('given a breakdown request then never sends dataset or include_district_breakdowns', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        {
+          region: BREAKDOWN_REGION_UK,
+          time_period: BREAKDOWN_YEAR,
+          dataset: 'microcosm_uk_2024_25_dense',
+          include_district_breakdowns: true,
+        } as any
+      );
+
+      // Then
+      const url = (global.fetch as any).mock.calls[0][0] as string;
+      expect(url).not.toContain('dataset');
+      expect(url).not.toContain('include_district_breakdowns');
+    });
+
+    test('given a completed breakdown then returns its lists keyed by area name', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(BREAKDOWN_OK_RESPONSE));
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(response.status).toBe('ok');
+      expect(response.result).toEqual(EXPECTED_BREAKDOWN_WITH_BUNDLE);
+    });
+
+    test('given a completed breakdown that lists its withheld codes then returns the lists as they came', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse({
+          status: 'ok',
+          result: LIST_SHAPE_BREAKDOWN_RESULT_WITH_WITHHELD_CODES,
+        })
+      );
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      const breakdown = response.result as LocalAreaBreakdown;
+      expect(breakdown.constituency_withheld_codes).toEqual(LISTED_CONSTITUENCY_WITHHELD_CODES);
+      expect(breakdown.local_authority_withheld_codes).toEqual(
+        LISTED_LOCAL_AUTHORITY_WITHHELD_CODES
+      );
+      expect(Object.keys(breakdown.constituency_impact.by_constituency)).toHaveLength(1);
+    });
+
+    test('given a bundle without versions then the breakdown keeps its own versions', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse(BREAKDOWN_BODY_WITHOUT_BUNDLE_VERSIONS)
+      );
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(response.result).toMatchObject({
+        model_version: BREAKDOWN_PROVENANCE.model_version,
+        policyengine_version: BREAKDOWN_PROVENANCE.policyengine_version,
+      });
+    });
+
+    test('given every area withheld then returns empty maps for both levels', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse({ status: 'ok', result: EMPTY_BREAKDOWN_RESULT })
+      );
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      const result = response.result!;
+      expect(isLocalAreaBreakdown(result)).toBe(true);
+      const breakdown = result as LocalAreaBreakdown;
+      expect(breakdown.constituency_impact).toEqual({ by_constituency: {} });
+      expect(breakdown.local_authority_impact).toEqual({ by_local_authority: {} });
+    });
+
+    test('given a failed breakdown then returns the error envelope', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(BREAKDOWN_ERROR_RESPONSE));
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(response.status).toBe('error');
+      expect(response.error).toBe(BREAKDOWN_ERROR_RESPONSE.error);
+      expect(response.result).toBeNull();
+    });
+
+    test('given the API refuses the breakdown with a message then the error names the breakdown and gives the message', async () => {
+      // Given
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(
+        mockErrorResponseWithBody(HTTP_STATUS.BAD_REQUEST, 'Bad Request', BREAKDOWN_REFUSED_BODY)
+      );
+
+      // When
+      const request = fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      await expect(request).rejects.toThrow(
+        `Local-area breakdown failed (400): ${BREAKDOWN_REFUSED_MESSAGE}`
+      );
+      expect(consoleError.mock.calls[0][0]).toBe('[fetchLocalAreaBreakdown] 400 Bad Request');
+    });
+
+    test('given an error body that is not JSON then the breakdown error gives the body', async () => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(
+        mockErrorResponseWithBody(
+          HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          'Internal Server Error',
+          PLAIN_TEXT_ERROR_BODY
+        )
+      );
+
+      // When
+      const request = fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      await expect(request).rejects.toThrow(
+        `Local-area breakdown failed (500): ${PLAIN_TEXT_ERROR_BODY}`
+      );
+    });
+  });
+});
+
+describe('failedCalculationOf', () => {
+  test('given a 502 with the Public API error body then gives the seconds it keeps the failure', () => {
+    // When
+    const failure = failedCalculationOf(
+      economyCalculationError(HTTP_STATUS.BAD_GATEWAY, FAILED_CALCULATION_BODY)
+    );
+
+    // Then
+    expect(failure).toEqual({
+      retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds,
+      deleteAfterSeconds: null,
+    });
+  });
+
+  test.each(READ_RETRY_AFTER_SECONDS)(
+    'given retry_after_seconds %s then the failure has those seconds',
+    (_case, seconds) => {
+      // When
+      const failure = failedCalculationOf(
+        economyCalculationError(HTTP_STATUS.BAD_GATEWAY, {
+          ...FAILED_CALCULATION_BODY,
+          retry_after_seconds: seconds,
+        })
+      );
+
+      // Then
+      expect(failure).toEqual({ retryAfterSeconds: seconds, deleteAfterSeconds: null });
+    }
+  );
+
+  test.each(UNREAD_RETRY_AFTER_SECONDS_BODIES)(
+    'given retry_after_seconds %s then the failure has no seconds',
+    (_case, body) => {
+      // When
+      const failure = failedCalculationOf(economyCalculationError(HTTP_STATUS.BAD_GATEWAY, body));
+
+      // Then
+      expect(failure).toEqual({ retryAfterSeconds: null, deleteAfterSeconds: null });
+    }
+  );
+
+  test.each(READ_DELETE_AFTER_SECONDS)(
+    'given delete_after_seconds %s then the failure has those seconds until a DELETE is accepted',
+    (_case, seconds) => {
+      // When
+      const failure = failedCalculationOf(
+        economyCalculationError(HTTP_STATUS.BAD_GATEWAY, {
+          ...DELETABLE_FAILED_CALCULATION_BODY,
+          delete_after_seconds: seconds,
+        })
+      );
+
+      // Then
+      expect(failure).toEqual({
+        retryAfterSeconds: DELETABLE_FAILED_CALCULATION_BODY.retry_after_seconds,
+        deleteAfterSeconds: seconds,
+      });
+    }
+  );
+
+  test.each(UNREAD_DELETE_AFTER_SECONDS_BODIES)(
+    'given delete_after_seconds %s then the failure cannot be deleted',
+    (_case, body) => {
+      // When
+      const failure = failedCalculationOf(economyCalculationError(HTTP_STATUS.BAD_GATEWAY, body));
+
+      // Then
+      expect(failure?.deleteAfterSeconds).toBeNull();
+    }
+  );
+
+  test.each([
+    ['a 502 without an error body', economyCalculationError(HTTP_STATUS.BAD_GATEWAY, null)],
+    [
+      'a 502 whose body is a list',
+      economyCalculationError(HTTP_STATUS.BAD_GATEWAY, [FAILED_CALCULATION_BODY]),
+    ],
+    [
+      'another status with an error body',
+      economyCalculationError(HTTP_STATUS.SERVICE_UNAVAILABLE, FAILED_CALCULATION_BODY),
+    ],
+    [
+      'a plain Error whose message reads like one',
+      new Error(
+        `Society-wide calculation failed (502): ${JSON.stringify(FAILED_CALCULATION_BODY)}`
+      ),
+    ],
+  ])('given %s then it is not a failed calculation', (_case, error) => {
+    // When
+    const failure = failedCalculationOf(error);
+
+    // Then
+    expect(failure).toBeNull();
+  });
+});
+
+describe('deleteFailedSocietyWideCalculation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const deleteFailure = (params = STATE_ECONOMY_PARAMS, countryId: string = TEST_COUNTRIES.US) =>
+    deleteFailedSocietyWideCalculation(
+      countryId,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      params
+    );
+
+  test('given a state then it sends DELETE to the URL the economy request uses', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
+    mockFetch.mockResolvedValueOnce(mockSuccessResponse(mockPendingResponse) as any);
+    await fetchSocietyWideCalculation(
+      TEST_COUNTRIES.US,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      STATE_ECONOMY_PARAMS
+    );
+
+    // When
+    await deleteFailure();
+
+    // Then
+    const [[economyUrl], [deleteUrl, deleteInit]] = mockFetch.mock.calls;
+    expect(deleteUrl).toBe(economyUrl);
+    expect(deleteInit).toMatchObject({ method: 'DELETE' });
+  });
+
+  test('given a saved region code for Northern Ireland then the DELETE names the region the app uses', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
+
+    // When
+    await deleteFailure(
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR },
+      TEST_COUNTRIES.UK
+    );
+
+    // Then
+    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  test('given 204 then the stored failure was deleted', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'deleted' });
+  });
+
+  test('given 404 with the Public API error body then nothing was stored', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockDeleteResponse(HTTP_STATUS.NOT_FOUND, JSON.stringify(DELETE_NOTHING_STORED_BODY)) as any
+    );
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'nothing-stored' });
+  });
+
+  test('given 409 with delete_after_seconds then the DELETE was too soon, with the seconds left', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockDeleteResponse(HTTP_STATUS.CONFLICT, JSON.stringify(DELETE_TOO_SOON_BODY)) as any
+    );
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'too-soon', deleteAfterSeconds: DELETE_REFUSED_SECONDS });
+  });
+
+  test('given 409 with delete_after_seconds null then the stored result is not a failure', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockDeleteResponse(HTTP_STATUS.CONFLICT, JSON.stringify(DELETE_NOT_A_FAILURE_BODY)) as any
+    );
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'not-a-failure' });
+  });
+
+  test.each(UNREADABLE_DELETE_REFUSAL_BODIES)(
+    'given 409 %s then it throws an error with the status and the parsed body',
+    async (_case, body, parsed) => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockDeleteResponse(HTTP_STATUS.CONFLICT, body) as any
+      );
+
+      // When
+      const error = await deleteFailure().catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({ status: HTTP_STATUS.CONFLICT, body: parsed });
+    }
+  );
+
+  test.each(UNEXPECTED_DELETE_ANSWERS)(
+    'given %s then it throws an error that names the DELETE, with the status and the parsed body',
+    async (_case, status, body, parsed) => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue(mockDeleteResponse(status, body) as any);
+
+      // When
+      const error = await deleteFailure().catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({
+        status,
+        body: parsed,
+        message: DELETE_FAILED_MESSAGE(status, body || String(status)),
+      });
+    }
+  );
+
+  test('given a network error then it propagates', async () => {
+    // Given
+    vi.mocked(global.fetch).mockRejectedValue(mockNetworkError);
+
+    // When
+    const deletion = deleteFailure();
+
+    // Then
+    await expect(deletion).rejects.toThrow(ERROR_MESSAGES.NETWORK_ERROR);
+  });
+});
+
+describe('societyWide API Northern Ireland region', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('given a national request for country/ni then it asks for country/northern_ireland', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockSuccessResponse(mockPendingResponse) as any);
+
+    // When
+    await fetchSocietyWideCalculation(
+      TEST_COUNTRIES.UK,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR }
+    );
+
+    // Then
+    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  test('given a local-area breakdown for country/ni then it asks for country/northern_ireland', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockSuccessResponse(mockPendingResponse) as any);
+
+    // When
+    await fetchLocalAreaBreakdown(
+      TEST_COUNTRIES.UK,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR }
+    );
+
+    // Then
+    const requestUrl = new URL(String(mockFetch.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 });

@@ -53,7 +53,13 @@ export function ColumnRenderer({ config, record }: ColumnRendererProps) {
       return <TextColumn config={config as TextColumnConfig} value={value as TextValue} />;
 
     case 'link':
-      return <LinkColumn config={config as LinkColumnConfig} value={value as LinkValue} />;
+      return (
+        <LinkColumn
+          config={config as LinkColumnConfig}
+          value={value as LinkValue}
+          disabled={record.isDisabled}
+        />
+      );
 
     case 'bullets':
       return <BulletsColumn config={config as BulletsColumnConfig} value={value as BulletsValue} />;

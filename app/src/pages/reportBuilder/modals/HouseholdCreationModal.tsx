@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconChevronLeft, IconHome, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
+import HouseholdSaveError from '@/components/household/HouseholdSaveError';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Group } from '@/components/ui/Group';
@@ -17,7 +18,9 @@ import { Household as HouseholdModel } from '@/models/Household';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { RootState } from '@/store';
 import { PopulationStateProps } from '@/types/pathwayState';
+import { withSupportedBuilderClaimantRoles } from '@/utils/builderClaimantRoles';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
+import { getModelMetadataError } from '@/utils/spmSelection';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { HouseholdCreationContent } from './population';
 import { SaveAsNewNameDialog } from './SaveAsNewNameDialog';
@@ -73,6 +76,7 @@ export function HouseholdCreationModal({
     typeof HouseholdValidation.isReadyForSimulation
   > | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [saveError, setSaveError] = useState<Error | null>(null);
   const [pendingUnnamedAction, setPendingUnnamedAction] = useState<PendingUnnamedAction>(null);
   const [saveAsNewNamePromptOpen, setSaveAsNewNamePromptOpen] = useState(false);
   const [associationLookupError, setAssociationLookupError] = useState<string | null>(null);
@@ -90,6 +94,7 @@ export function HouseholdCreationModal({
     setPendingUnnamedAction(null);
     setSaveAsNewNamePromptOpen(false);
     setAssociationLookupError(null);
+    setSaveError(null);
     setValidation(null);
     setHousehold(normalizedInitialHousehold ?? HouseholdModel.starter(countryId, reportYear));
   }, [countryId, isOpen, normalizedInitialHousehold, reportYear, resolvedInitialEditorMode]);
@@ -122,11 +127,13 @@ export function HouseholdCreationModal({
 
     setValidation(null);
     const timeoutId = setTimeout(() => {
-      setValidation(HouseholdValidation.isReadyForSimulation(household, countryId, reportYear));
+      setValidation(
+        HouseholdValidation.isReadyForSimulation(household, countryId, reportYear, metadata)
+      );
     }, 400);
 
     return () => clearTimeout(timeoutId);
-  }, [countryId, household, isOpen, isReadOnly, reportYear]);
+  }, [countryId, household, isOpen, isReadOnly, reportYear, metadata]);
 
   const validationMessage = isReadOnly ? null : (validation?.errors[0]?.message ?? null);
 
@@ -142,7 +149,11 @@ export function HouseholdCreationModal({
   }, [household, normalizedInitialHousehold]);
 
   const isValidationBlocking =
-    !isReadOnly && (!household || validation === null || validation.isValid === false);
+    !isReadOnly &&
+    (!household ||
+      validation === null ||
+      validation.isValid === false ||
+      !!getModelMetadataError(countryId, metadata));
 
   const handleHouseholdChange = useCallback((nextHousehold: HouseholdModel) => {
     setValidation(null);
@@ -204,26 +215,33 @@ export function HouseholdCreationModal({
       const nextValidation = HouseholdValidation.isReadyForSimulation(
         householdToSave,
         countryId,
-        reportYear
+        reportYear,
+        metadata
       );
       setValidation(nextValidation);
       if (!nextValidation.isValid) {
         return;
       }
 
+      setSaveError(null);
       try {
-        const payload = householdToSave.toV1CreationPayload();
+        const householdWithRoles = withSupportedBuilderClaimantRoles(
+          householdToSave,
+          metadata,
+          reportYear
+        );
+        const payload = householdWithRoles.toV1CreationPayload();
         const result = await createHouseholdWithLabel(payload, householdToSave.label ?? undefined);
         const householdId = String(result.result.household_id);
-        const savedHousehold = householdToSave
+        const savedHousehold = householdWithRoles
           .withId(householdId)
           .withLabel(householdToSave.label ?? null);
         persistCreatedHousehold(savedHousehold);
       } catch (error) {
-        console.error('Failed to create household:', error);
+        setSaveError(error instanceof Error ? error : new Error('Unable to create household.'));
       }
     },
-    [countryId, createHouseholdWithLabel, household, persistCreatedHousehold, reportYear]
+    [countryId, createHouseholdWithLabel, household, persistCreatedHousehold, reportYear, metadata]
   );
 
   const resolveInitialHouseholdAssociation = useCallback(async () => {
@@ -247,13 +265,15 @@ export function HouseholdCreationModal({
     const nextValidation = HouseholdValidation.isReadyForSimulation(
       household,
       countryId,
-      reportYear
+      reportYear,
+      metadata
     );
     setValidation(nextValidation);
     if (!nextValidation.isValid) {
       return;
     }
 
+    setSaveError(null);
     setIsUpdating(true);
     setAssociationLookupError(null);
     try {
@@ -267,11 +287,12 @@ export function HouseholdCreationModal({
         return;
       }
 
+      const householdWithRoles = withSupportedBuilderClaimantRoles(household, metadata, reportYear);
       let updatedAssociation = await updateHouseholdAssociation.mutateAsync({
         userHouseholdId: association.id,
         updates: {},
         association,
-        nextHousehold: household,
+        nextHousehold: householdWithRoles,
       });
 
       const desiredLabel = household.label ?? undefined;
@@ -282,13 +303,13 @@ export function HouseholdCreationModal({
         });
       }
 
-      const savedHousehold = household
+      const savedHousehold = householdWithRoles
         .withId(updatedAssociation.householdId)
         .withLabel(updatedAssociation.label ?? desiredLabel ?? null);
 
       persistCreatedHousehold(savedHousehold);
     } catch (error) {
-      console.error('Failed to update household:', error);
+      setSaveError(error instanceof Error ? error : new Error('Unable to update household.'));
     } finally {
       setIsUpdating(false);
     }
@@ -298,6 +319,7 @@ export function HouseholdCreationModal({
     persistCreatedHousehold,
     countryId,
     reportYear,
+    metadata,
     updateHouseholdAssociation,
   ]);
 
@@ -438,6 +460,20 @@ export function HouseholdCreationModal({
               </Group>
             </Group>
           </div>
+
+          {saveError && (
+            <div className="tw:px-xl tw:pt-md">
+              <HouseholdSaveError
+                error={saveError}
+                onResetSPM={() => {
+                  if (household) {
+                    handleHouseholdChange(household.withSPM(undefined));
+                    setSaveError(null);
+                  }
+                }}
+              />
+            </div>
+          )}
 
           <div
             style={{

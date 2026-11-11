@@ -1,0 +1,90 @@
+/**
+ * Where a report's provisions come from when the local stash is missing.
+ *
+ * `runFlagshipReport` stashes the provisions under the report id (in
+ * localStorage signed out, in memory for a signed-in session), which
+ * serves the browser that ran the report and nobody else: a shared link,
+ * another device, or a cleared profile opens the report with no
+ * provenance, and validation has nothing to match. The
+ * reform policy on the PolicyEngine API carries the same parameter
+ * changes, so they are rebuilt from it here, read in the report's year
+ * as the run that stashed them described them.
+ */
+import { CURRENT_YEAR } from '@/constants';
+import { currentLawForYear, provisionValueInYear } from '@/libs/draftReform';
+import type { FlagshipReportMeta, RunReportProvision } from '@/libs/flagship/runReport';
+import type { Policy } from '@/types/ingredients/Policy';
+import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import { getCurrentValue } from '@/utils/parameterValues';
+
+/**
+ * Current law for a parameter in `year` — null where it leaves the amount
+ * to a formula that year — or today's value before its first date.
+ */
+function currentLawIn(
+  values: Record<string, any> | undefined,
+  year: string,
+  countryId: string
+): unknown {
+  if (!values) {
+    return undefined;
+  }
+  const law = currentLawForYear(values, Number(year), countryId);
+  return law === undefined ? getCurrentValue(values) : law;
+}
+
+/**
+ * Rebuilds report provisions from a policy's parameter changes. Each
+ * keeps every dated value the policy sets, so a recompute or an edit
+ * runs the same reform; its value and current law are those of the
+ * report's year.
+ */
+export function provisionsFromPolicy(
+  policy: Policy | null | undefined,
+  parameters: Record<string, any> | null | undefined,
+  year: string = CURRENT_YEAR,
+  countryId: string = 'us'
+): RunReportProvision[] {
+  return (policy?.parameters ?? []).map((parameter) => {
+    const metadata = parameters?.[parameter.name];
+    const baselineValue = currentLawIn(metadata?.values, year, countryId);
+    const intervals = parameter.values.length > 0 ? parameter.values : undefined;
+    const inYear = intervals
+      ? provisionValueInYear({ value: undefined, intervals }, Number(year), countryId)
+      : null;
+    return {
+      path: parameter.name,
+      breadcrumb: metadata
+        ? formatLabelParts(getHierarchicalLabels(parameter.name, parameters!))
+        : parameter.name,
+      unit: metadata?.unit ?? null,
+      baselineValue,
+      // A year the policy does not reach keeps current law.
+      value: inYear ?? baselineValue,
+      ...(intervals && { intervals }),
+    };
+  });
+}
+
+/**
+ * Provenance for a report opened without its local stash: the reform
+ * policy's changes as provisions in the report's year, the report's own
+ * label as title.
+ */
+export function provenanceFromPolicy(
+  policy: Policy | null | undefined,
+  parameters: Record<string, any> | null | undefined,
+  label: string | null | undefined,
+  year: string = CURRENT_YEAR,
+  countryId: string = 'us'
+): FlagshipReportMeta | null {
+  if (!policy) {
+    return null;
+  }
+  return {
+    title: label || policy.label || '',
+    sourceNote: '',
+    provisions: provisionsFromPolicy(policy, parameters, year, countryId),
+    createdAt: '',
+  };
+}

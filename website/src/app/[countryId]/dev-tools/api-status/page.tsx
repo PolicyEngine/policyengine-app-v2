@@ -5,7 +5,8 @@ import ApiStatusClient from "./ApiStatusClient";
 
 export const metadata: Metadata = {
   title: "API status",
-  description: "Monitor the current status and availability of PolicyEngine API services.",
+  description:
+    "Monitor the current status and availability of PolicyEngine API services.",
 };
 
 export default function ApiStatusPage() {

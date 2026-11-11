@@ -46,6 +46,10 @@ import {
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import {
+  isPolicyDuplicateOfCurrentLaw,
+  POLICY_MATCHES_CURRENT_LAW_MESSAGE,
+} from '@/utils/policyCurrentLaw';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { getReportYearDateBounds } from '../utils/reportYearDates';
@@ -92,11 +96,8 @@ export function PolicyCreationModal({
   const userId = MOCK_USER_ID.toString();
 
   // Get metadata from Redux state
-  const {
-    parameterTree,
-    parameters,
-    loading: metadataLoading,
-  } = useSelector((state: RootState) => state.metadata);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const { parameterTree, parameters: parameterMetadata, loading: metadataLoading } = metadata;
   const { minDate, maxDate } = useSelector(getDateRange);
 
   // Local policy state
@@ -183,12 +184,16 @@ export function PolicyCreationModal({
 
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
+  const isDupeOfCurrentLaw = useMemo(
+    () => isPolicyDuplicateOfCurrentLaw(policyParameters, metadata, countryId),
+    [policyParameters, metadata, countryId]
+  );
 
   // Get modified parameter data for the Changes section
   const modifiedParams: ModifiedParam[] = useMemo(() => {
     return policyParameters.map((p) => {
-      const metadata = parameters[p.name];
-      const hierarchicalLabels = getHierarchicalLabels(p.name, parameters);
+      const metadata = parameterMetadata[p.name];
+      const hierarchicalLabels = getHierarchicalLabels(p.name, parameterMetadata);
       const displayLabel =
         hierarchicalLabels.length > 0
           ? formatLabelParts(hierarchicalLabels)
@@ -206,7 +211,7 @@ export function PolicyCreationModal({
         changes,
       };
     });
-  }, [policyParameters, parameters]);
+  }, [policyParameters, parameterMetadata]);
 
   // Get searchable parameters from memoized selector
   const searchableParameters = useSelector(selectSearchableParameters);
@@ -214,7 +219,7 @@ export function PolicyCreationModal({
   // Handle search selection - expand tree path and select parameter
   const handleSearchSelect = useCallback(
     (paramName: string) => {
-      const param = parameters[paramName];
+      const param = parameterMetadata[paramName];
       if (!param || param.type !== 'parameter') {
         return;
       }
@@ -234,13 +239,13 @@ export function PolicyCreationModal({
       // Auto-switch to parameters tab when selecting from search
       setActiveTab('parameters');
     },
-    [parameters, expandedMenuItems]
+    [parameterMetadata, expandedMenuItems]
   );
 
   // Handle menu item click
   const handleMenuItemClick = useCallback(
     (paramName: string) => {
-      const param = parameters[paramName];
+      const param = parameterMetadata[paramName];
       if (param && param.type === 'parameter') {
         setSelectedParam(param);
         setIntervals([]);
@@ -258,7 +263,7 @@ export function PolicyCreationModal({
         return newSet;
       });
     },
-    [parameters]
+    [parameterMetadata]
   );
 
   // Handle value submission
@@ -312,13 +317,20 @@ export function PolicyCreationModal({
   // Handle policy creation
   const handleCreatePolicy = useCallback(
     async (labelOverride?: string | null) => {
+      if (isDupeOfCurrentLaw) {
+        return;
+      }
+
       const resolvedLabel =
         labelOverride === undefined ? normalizedPolicyLabel : (labelOverride?.trim() ?? '');
       const policyData: Partial<Policy> = {
         parameters: policyParameters,
       };
 
-      const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
+      const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
+        policyData as Policy,
+        parameterMetadata
+      );
 
       try {
         const result = await createPolicyWithLabel(payload, resolvedLabel || undefined);
@@ -333,7 +345,15 @@ export function PolicyCreationModal({
         console.error('Failed to create policy:', error);
       }
     },
-    [normalizedPolicyLabel, policyParameters, createPolicyWithLabel, onPolicyCreated, onClose]
+    [
+      normalizedPolicyLabel,
+      policyParameters,
+      isDupeOfCurrentLaw,
+      createPolicyWithLabel,
+      onPolicyCreated,
+      onClose,
+      parameterMetadata,
+    ]
   );
 
   // Unnamed-policy warning for creating/saving without a name
@@ -359,14 +379,17 @@ export function PolicyCreationModal({
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!initialPolicy?.id) {
+    if (!initialPolicy?.id || isDupeOfCurrentLaw) {
       return;
     }
     setIsUpdating(true);
     setAssociationLookupError(null);
 
     const policyData: Partial<Policy> = { parameters: policyParameters };
-    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
+    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
+      policyData as Policy,
+      parameterMetadata
+    );
 
     try {
       const association = await resolveInitialPolicyAssociation();
@@ -403,12 +426,14 @@ export function PolicyCreationModal({
   }, [
     normalizedPolicyLabel,
     policyParameters,
+    isDupeOfCurrentLaw,
     initialPolicy?.id,
     resolveInitialPolicyAssociation,
     countryId,
     updatePolicyAssociation,
     onPolicyCreated,
     onClose,
+    parameterMetadata,
   ]);
 
   const runPendingUnnamedAction = useCallback(() => {
@@ -458,7 +483,7 @@ export function PolicyCreationModal({
 
     const paramToChart = policyParameters.find((p) => p.name === selectedParam.parameter);
     if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
-      const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
+      const userIntervals = new ValueIntervalCollection(paramToChart.values);
       for (const interval of userIntervals.getIntervals()) {
         reformValues.addInterval(interval);
       }
@@ -704,17 +729,21 @@ export function PolicyCreationModal({
               </Button>
             </Group>
             <div>
-              {associationLookupError && (
+              {associationLookupError ? (
                 <Text size="sm" c="red">
                   {associationLookupError}
                 </Text>
-              )}
+              ) : modificationCount > 0 && isDupeOfCurrentLaw && !isReadOnly ? (
+                <Text size="sm" style={{ color: colors.text.warning }}>
+                  {POLICY_MATCHES_CURRENT_LAW_MESSAGE}
+                </Text>
+              ) : null}
             </div>
             <Group gap="sm" justify="end">
               {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button
                   onClick={() => requestSaveAction('create')}
-                  disabled={isCreating || modificationCount === 0}
+                  disabled={isCreating || isDupeOfCurrentLaw}
                 >
                   {isCreating && <Spinner size="sm" />}
                   Create policy
@@ -736,13 +765,13 @@ export function PolicyCreationModal({
                     label="Update existing policy"
                     onClick={() => requestSaveAction('update-existing')}
                     loading={isUpdating}
-                    disabled={isCreating || modificationCount === 0}
+                    disabled={isCreating || isDupeOfCurrentLaw}
                   />
                   <EditAndSaveNewButton
                     label="Save as new policy"
                     onClick={() => requestSaveAction('save-as-new')}
                     loading={isCreating}
-                    disabled={isUpdating || modificationCount === 0}
+                    disabled={isUpdating || isDupeOfCurrentLaw}
                   />
                 </>
               )}

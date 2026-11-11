@@ -1,5 +1,60 @@
 [
   {
+    "title": "Why the Prop 40 revenue estimates differ",
+    "date": "2026-10-30",
+    "type": "webinar",
+    "location": "Virtual",
+    "host": "PolicyEngine",
+    "description": "David Trimmer covers Prop 40, the 2026 Billionaire Tax Act, and the Berkeley and Hoover estimates. Fernando Hoces de la Guardia presents his Open Policy Analysis reconciliation of the two. Max Ghenis applies both sets of assumptions in PolicyEngine's open calculator, which splits the gap between them by assumption, and David walks through the 2026 ballot measures dashboard.",
+    "registrationUrl": "https://us06web.zoom.us/meeting/register/Y3jIHS9BQmmBVndpOGTt4g",
+    "recordingUrl": "https://www.youtube.com/watch?v=KLTDkpxKHLs",
+    "slidesUrl": "https://policyengine.org/slides/prop40-webinar-2026",
+    "image": "KLTDkpxKHLs.jpg",
+    "url": "https://www.policyengine.org/us/california-wealth-tax",
+    "tags": ["us"],
+    "featured": true
+  },
+  {
+    "title": "Autumn Budget 2026: PolicyEngine's same-day first look",
+    "date": "2026-10-28",
+    "type": "webinar",
+    "location": "Virtual",
+    "host": "PolicyEngine",
+    "description": "Max Ghenis, Vahid Ahmadi and María Juaristi present our first estimates of what the Autumn Budget means for public finances, household incomes and poverty, at 4:30pm GMT on Budget day. Our UK Budget analysis is funded by the Nuffield Foundation.",
+    "registrationUrl": "https://us06web.zoom.us/meeting/register/2DLUeZAbRwKkKEK-2JrFrQ",
+    "recordingUrl": "https://www.youtube.com/watch?v=ZutKULXLhU0",
+    "slidesUrl": "https://policyengine.org/slides/autumn-budget-2026",
+    "image": "ZutKULXLhU0.jpg",
+    "tags": ["uk"],
+    "featured": true
+  },
+  {
+    "title": "The new child poverty numbers, and how state reforms would affect them",
+    "date": "2026-09-15",
+    "type": "webinar",
+    "location": "Virtual",
+    "host": "PolicyEngine",
+    "description": "Same-day walkthrough of the Census Bureau's 2025 poverty numbers and the Supplemental Poverty Measure, with reactions from Cynthia Osborne (Prenatal-to-3 Policy Impact Center) and Joshua McCabe (Niskanen Center), and a demo of the Child Poverty Impact Dashboard.",
+    "recordingUrl": "https://www.youtube.com/watch?v=TKf1D13FZiQ",
+    "slidesUrl": "https://policyengine.org/slides/cpid-webinar-2026",
+    "image": "TKf1D13FZiQ.jpg",
+    "tags": ["us"]
+  },
+  {
+    "title": "New technologies for evidence-based policy making: a workshop alongside IARIW 2026",
+    "date": "2026-08-27",
+    "type": "workshop",
+    "location": "Brussels, Belgium",
+    "host": "CAPE (UCLouvain Saint-Louis) and PolicyEngine",
+    "description": "Free half-day workshop: talks and live demos of open microsimulation platforms (BEAMM, PolicyEngine), simulation-ready microdata and executable law, then a roundtable with senior Belgian public-finance officials. Held alongside the 39th IARIW General Conference.",
+    "registrationUrl": "https://docs.google.com/forms/d/e/1FAIpQLSfpfDAGrAeAD4yG1aupgZnJ6VecBGZIaCHqWuVCYRXxuEDWeA/viewform",
+    "url": "https://policyengine.org/us/events/iariw-2026",
+    "tags": ["global"],
+    "featured": true,
+    "recordingUrl": "https://www.youtube.com/watch?v=ONnT8UFBz-k",
+    "image": "iariw-2026/social-card.png"
+  },
+  {
     "title": "CliffWatch: where, when, and how benefit cliffs hit US households",
     "date": "2026-05-29",
     "type": "webinar",
@@ -9,7 +64,9 @@
     "registrationUrl": "https://us06web.zoom.us/meeting/register/nEmrV3a4SvS7kOqkwR_c4Q#/registration",
     "url": "https://policyengine.org/us/cliffwatch",
     "tags": ["us"],
-    "featured": true
+    "featured": true,
+    "recordingUrl": "https://www.youtube.com/watch?v=q_Y0fdCH_Io",
+    "image": "q_Y0fdCH_Io.jpg"
   },
   {
     "title": "PSL Demo Day — PolicyEngine's TAXSIM emulator",

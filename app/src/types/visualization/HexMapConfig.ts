@@ -13,13 +13,14 @@ export interface ColorScaleConfig {
 }
 
 /**
- * Configuration for rendering a hexagonal map
+ * Configuration for rendering a hexagonal map. The map draws its points as
+ * a tiled odd-r grid of touching pointy-top hexagons, as the UK layouts
+ * (data/ukHexLayouts) expect, sized to fit its frame.
  *
  * @example
  * ```typescript
  * const config: HexMapConfig = {
  *   height: 600,
- *   hexSize: 12,
  *   colorScale: {
  *     colors: ['#616161', '#BDBDBD', '#F2F2F2', '#D8E6F3', '#2C6496'],
  *     tickFormat: '£,.0f',
@@ -33,16 +34,6 @@ export interface HexMapConfig {
   /** Height of the plot in pixels */
   height?: number;
 
-  /** Size of each hexagon marker */
-  hexSize?: number;
-
-  /**
-   * Scale factor for coordinates to control spacing between hexagons.
-   * Values < 1 bring hexagons closer together, values > 1 spread them apart.
-   * Default is 1 (no scaling).
-   */
-  coordinateScale?: number;
-
   /** Color scale configuration */
   colorScale?: ColorScaleConfig;
 
@@ -51,4 +42,10 @@ export interface HexMapConfig {
 
   /** Function to format hover text values */
   formatValue?: (value: number) => string;
+
+  /**
+   * Opt-in: how the color bar's ticks read, e.g. as pounds or percentages.
+   * Plain numbers (1.2k, 178, 0.02) when unset.
+   */
+  formatColorBarTick?: (value: number) => string;
 }

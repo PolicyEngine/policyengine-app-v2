@@ -1,17 +1,19 @@
 import { FOREVER } from '../../constants';
+import type { PolicyParameterValue } from '../metadata/policyMetadata';
 
 // This is the standard way of serializing intervals, including
 // for parameter values within a given policy
 export interface ValueInterval {
+  parameter?: string;
   startDate: string; // ISO date string (YYYY-MM-DD)
   endDate: string; // ISO date string (YYYY-MM-DD)
-  value: any;
+  value: PolicyParameterValue;
 }
 
 // These are used when reading parameter metadata, as
 // the API returns values as map of start dates to values, no intervals
 export interface ValuesList {
-  [startDate: string]: any; // Maps ISO-formatted date string to value
+  [startDate: string]: PolicyParameterValue; // Maps ISO-formatted date string to value
 }
 
 export enum OverlapType {
@@ -107,7 +109,7 @@ export class ValueIntervalCollection {
     return this.intervals.map((interval) => interval.endDate);
   }
 
-  getAllValues(): any[] {
+  getAllValues(): PolicyParameterValue[] {
     return this.intervals.map((interval) => interval.value);
   }
 

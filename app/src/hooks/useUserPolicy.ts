@@ -3,6 +3,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { Policy } from '@/types/ingredients/Policy';
 import type { PolicyCreationPayload } from '@/types/payloads';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
@@ -187,12 +188,15 @@ export function isPolicyWithAssociation(obj: unknown): obj is UserPolicyWithAsso
 
 export const useUserPolicies = (userId: string) => {
   const country = useCurrentCountry();
+  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
+    useParameterMetadata(country);
 
   // First, get the associations (filtered by current country)
   const {
     data: associations,
     isLoading: associationsLoading,
     error: associationsError,
+    refetch: refetchAssociations,
   } = usePolicyAssociationsByUser(userId);
 
   // Extract policy IDs
@@ -206,7 +210,7 @@ export const useUserPolicies = (userId: string) => {
       queryFn: async () => {
         try {
           const metadata = await fetchPolicyById(country, policyId.toString());
-          return PolicyAdapter.fromMetadata(metadata);
+          return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
         } catch (error) {
           // Add context to help debug which policy failed
           const message =
@@ -217,7 +221,7 @@ export const useUserPolicies = (userId: string) => {
           throw new Error(message);
         }
       },
-      enabled: !!associations, // Only run when associations are loaded
+      enabled: !!associations && isParameterMetadataReady,
       staleTime: 5 * 60 * 1000,
       structuralSharing: false,
     })),
@@ -225,7 +229,7 @@ export const useUserPolicies = (userId: string) => {
 
   // Combine the results
   const isLoading = associationsLoading || policyQueries.some((q) => q.isLoading);
-  const error = associationsError || policyQueries.find((q) => q.error)?.error;
+  const error = associationsError;
   const isError = !!error;
 
   // Simple index-based mapping since queries are in same order as associations
@@ -235,7 +239,7 @@ export const useUserPolicies = (userId: string) => {
       policy: policyQueries[index]?.data,
       isLoading: policyQueries[index]?.isLoading ?? false,
       error: policyQueries[index]?.error ?? null,
-      isError: !!error,
+      isError: !!policyQueries[index]?.error,
     })
   );
 
@@ -244,6 +248,7 @@ export const useUserPolicies = (userId: string) => {
     isLoading,
     isError,
     error,
+    refetchAssociations,
     associations, // Still available if needed separately
   };
 };

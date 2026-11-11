@@ -86,21 +86,49 @@ export class CalcOrchestrator {
     this.queryClient.setQueryData(queryOptions.queryKey, initialStatus);
 
     // CRITICAL DECISION POINT: Household vs Economy
-    if (initialStatus.status === 'complete') {
+    if (
+      initialStatus.status === 'complete' ||
+      (metadata.calcType === 'household' && initialStatus.status === 'error')
+    ) {
       // HOUSEHOLD CASE: Calculation completed synchronously
-      trackSimulationCompleted({ calcType: metadata.calcType, countryId: config.countryId });
-      await this.resultPersister.persist(initialStatus, config.countryId, config.year);
-
-      // Notify manager to cleanup this orchestrator
-      if (this.manager) {
-        this.manager.cleanup(config.calcId);
+      try {
+        if (initialStatus.status === 'complete') {
+          trackSimulationCompleted({ calcType: metadata.calcType, countryId: config.countryId });
+        }
+        await this.resultPersister.persist(initialStatus, config.countryId, config.year);
+      } finally {
+        this.manager?.cleanup(config.calcId, config.targetType);
       }
 
       return;
     }
 
+    // Opt-in (v3): an economy run that failed at once is over. Its record
+    // says so, and nothing is left to poll.
+    if (
+      config.recordReportErrors &&
+      config.targetType === 'report' &&
+      initialStatus.status === 'error'
+    ) {
+      try {
+        await this.resultPersister.persistReportError(initialStatus, config.countryId, config.year);
+      } catch (error) {
+        console.error('[CalcOrchestrator] Failed to record the error:', error);
+      } finally {
+        this.manager?.cleanup(config.calcId, config.targetType);
+      }
+      return;
+    }
+
     // ECONOMY CASE: Start polling for progress
-    this.startPolling(queryOptions, metadata, config.countryId, config.calcId, config.year);
+    this.startPolling(
+      queryOptions,
+      metadata,
+      config.countryId,
+      config.calcId,
+      config.year,
+      config.recordReportErrors === true
+    );
   }
 
   /**
@@ -114,6 +142,8 @@ export class CalcOrchestrator {
    * @param countryId - Country ID for persistence
    * @param calcId - Calculation ID for cleanup
    * @param year - Report year for persistence
+   * @param recordReportErrors - Opt-in (v3): write a failed report run to its
+   *   record. Off by default: a failure is only logged.
    */
   private startPolling(
     queryOptions: ReturnType<
@@ -122,7 +152,8 @@ export class CalcOrchestrator {
     _metadata: CalcMetadata,
     countryId: string,
     calcId: string,
-    year: string
+    year: string,
+    recordReportErrors = false
   ): void {
     const { queryKey, queryFn, refetchInterval } = queryOptions;
 
@@ -133,7 +164,7 @@ export class CalcOrchestrator {
       );
 
       if (this.manager) {
-        this.manager.cleanup(calcId);
+        this.manager.cleanup(calcId, _metadata.targetType);
       }
       return;
     }
@@ -169,7 +200,7 @@ export class CalcOrchestrator {
 
             // Notify manager to remove this orchestrator
             if (this.manager) {
-              this.manager.cleanup(calcId);
+              this.manager.cleanup(calcId, _metadata.targetType);
             }
           });
 
@@ -184,9 +215,24 @@ export class CalcOrchestrator {
         this.currentUnsubscribe = null;
 
         // Notify manager to remove this orchestrator
-        if (this.manager) {
-          this.manager.cleanup(calcId);
+        const cleanup = () => {
+          if (this.manager) {
+            this.manager.cleanup(calcId, _metadata.targetType);
+          }
+        };
+
+        // Opt-in (v3): the report's record says the run failed.
+        if (recordReportErrors && _metadata.targetType === 'report') {
+          this.resultPersister
+            .persistReportError(status, countryId, year)
+            .catch((error) => {
+              console.error('[CalcOrchestrator] Failed to record the error:', error);
+            })
+            .finally(cleanup);
+          return;
         }
+
+        cleanup();
       }
     });
 
@@ -234,7 +280,9 @@ export class CalcOrchestrator {
     const populationType = sim1.populationType || 'geography';
 
     if (populationType === 'household') {
-      populationId = config.populations.household1?.id || sim1.populationId || '';
+      // The saved simulation identifies its immutable household. A stale builder
+      // object must never substitute the baseline household for the reform.
+      populationId = sim1.populationId || config.populations.household1?.id || '';
     } else {
       const geography = config.populations.geography1;
       // geographyId now contains the FULL prefixed value like "constituency/Sheffield Central"
@@ -257,6 +305,8 @@ export class CalcOrchestrator {
       region,
       year: config.year,
       calcId: config.calcId,
+      // Opt-in (v3): without it the params stay exactly as before.
+      ...(config.estimateByRegion && { estimateByRegion: true }),
     };
   }
 }

@@ -1,45 +1,11 @@
 import type { NextConfig } from "next";
 import { appZoneRewrites } from "./src/data/appZoneRoutes";
-
-const tealSquareLogoPath = "/assets/logos/policyengine/teal-square.png";
-
-const policyEngineIconRewrites = [
-  { source: "/favicon.ico", destination: tealSquareLogoPath },
-  { source: "/apple-touch-icon.png", destination: tealSquareLogoPath },
-  { source: "/logo192.png", destination: tealSquareLogoPath },
-  { source: "/logo512.png", destination: tealSquareLogoPath },
-  { source: "/policyengine-logo.png", destination: tealSquareLogoPath },
-  { source: "/icon.svg", destination: "/favicon.svg" },
-  { source: "/policyengine-favicon.svg", destination: "/favicon.svg" },
-  {
-    source: "/:countryId/:appSlug/favicon.ico",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/apple-touch-icon.png",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/logo192.png",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/logo512.png",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/policyengine-logo.png",
-    destination: tealSquareLogoPath,
-  },
-  { source: "/:countryId/:appSlug/favicon.svg", destination: "/favicon.svg" },
-  { source: "/:countryId/:appSlug/icon.svg", destination: "/favicon.svg" },
-  {
-    source: "/:countryId/:appSlug/policyengine-favicon.svg",
-    destination: "/favicon.svg",
-  },
-];
+import { policyEngineIconRewrites } from "./src/data/policyEngineIconRewrites";
 
 const nextConfig: NextConfig = {
+  // Workspace packages that ship TypeScript source rather than a build.
+  transpilePackages: ["@policyengine/public-api-forwarding"],
+
   // Vercel's image optimiser (/_vercel/image) only accepts widths from this
   // allowlist (imageSizes ∪ deviceSizes). For Next.js projects this config is
   // the source of truth — the `images` block in vercel.json is ignored — and
@@ -65,9 +31,29 @@ const nextConfig: NextConfig = {
       },
       // Claude-branded skills page → runtime-agnostic AI agents page
       {
+        source: "/iariw-2026",
+        destination: "/us/events/iariw-2026",
+        permanent: false,
+      },
+      {
         source: "/:countryId/claude-plugin",
         destination: "/:countryId/ai-agents",
         permanent: true,
+      },
+      // Childcare cliff edge dashboard: taken down temporarily while its
+      // costing is revised (uk-childcare-100k-threshold#8). Temporary so the
+      // URL can come back unchanged.
+      {
+        source: "/uk/childcare-100k-threshold/:path*",
+        destination: "/uk/research",
+        permanent: false,
+      },
+      // Retired Citizens' Economic Council simulator, still embedded by
+      // citizensecon.org.uk/policymodelling → main UK simulator
+      {
+        source: "/uk/cec",
+        destination: "/uk",
+        permanent: false,
       },
       // Legacy /blog → /research
       {
@@ -80,15 +66,51 @@ const nextConfig: NextConfig = {
         destination: "/:countryId/research",
         permanent: true,
       },
+      // Legacy /methodology → the model documentation
       {
-        source: "/us/obbba-household-by-household",
-        destination: "/us/obbba-household-explorer",
+        source: "/:countryId/methodology",
+        destination: "/:countryId/model",
+        permanent: true,
+      },
+      // OBBBA household explorer: every older slug, and the misspelled or
+      // mis-prefixed links still published elsewhere, lands on
+      // /us/obbba-households (suffix and query kept). These run before the
+      // beforeFiles zone rewrites, so the old slugs are never proxied.
+      ...[
+        "/us/obbba-household-explorer",
+        "/us/obbba-household-by-household",
+        "/us/obbba-scatter",
+        // POPVOX Foundation's OBBBA case notes link this typo.
+        "/us/obba-household-explorer",
+      ].flatMap((source) => [
+        { source, destination: "/us/obbba-households", permanent: true },
+        {
+          source: `${source}/:path*`,
+          destination: "/us/obbba-households/:path*",
+          permanent: true,
+        },
+      ]),
+      // Tool slugs published as if they were research articles.
+      {
+        source: "/us/research/obbba-household-explorer",
+        destination: "/us/obbba-households",
         permanent: true,
       },
       {
-        source: "/us/obbba-household-by-household/:path*",
-        destination: "/us/obbba-household-explorer/:path*",
+        source: "/us/research/obbba-household-by-household",
+        destination: "/us/obbba-households",
         permanent: true,
+      },
+      // Vanity alias for the OB3 shorthand (temporary).
+      {
+        source: "/us/ob3-households",
+        destination: "/us/obbba-households",
+        permanent: false,
+      },
+      {
+        source: "/us/ob3-households/:path*",
+        destination: "/us/obbba-households/:path*",
+        permanent: false,
       },
       {
         source: "/us/aca-reforms-calculator",
@@ -104,6 +126,19 @@ const nextConfig: NextConfig = {
         source: "/pe84",
         destination: "/us/pe84",
         permanent: true,
+      },
+      // The Autumn Budget 2026 dashboard's chosen address. The dashboard
+      // serves /uk/autumn-budget-2026 until its basePath moves (dashboard
+      // #212, after Budget day); then this pair is reversed.
+      {
+        source: "/uk/budgets/autumn-2026",
+        destination: "/uk/autumn-budget-2026",
+        permanent: false,
+      },
+      {
+        source: "/uk/budgets/autumn-2026/:path*",
+        destination: "/uk/autumn-budget-2026/:path*",
+        permanent: false,
       },
       // Vanity redirects to the standalone PolicyBench site (external).
       // policybench.org is country-agnostic, so both the bare and
@@ -124,11 +159,6 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
-        source: "/us/obbba-scatter",
-        destination: "/us/obbba-household-explorer",
-        permanent: true,
-      },
-      {
         source: "/us/california-wealth-tax/embed",
         destination: "/us/california-wealth-tax",
         permanent: true,
@@ -138,7 +168,27 @@ const nextConfig: NextConfig = {
         destination: "/us/california-wealth-tax/:path*",
         permanent: true,
       },
-      // CliffWatch renamed from cliff-watch → cliffwatch
+      // The CliffWatch zone is US-only, so UK slugs go to UK CliffWatch, ahead
+      // of the rename below (one hop), suffix kept for the UK zone's og:image.
+      // US share links minted when /uk/cliffwatch proxied the US tool carry
+      // ?s=<state code> (UK CliffWatch never uses s), so they go to /us/.
+      ...["/uk/cliffwatch", "/uk/cliff-watch"].flatMap((source) => [
+        {
+          source,
+          has: [{ type: "query" as const, key: "s", value: "[A-Za-z]{2}" }],
+          destination: "/us/cliffwatch",
+          permanent: true,
+        },
+        { source, destination: "/uk/uk-cliff-watch", permanent: true },
+        {
+          source: `${source}/:path*`,
+          destination: "/uk/uk-cliff-watch/:path*",
+          permanent: true,
+        },
+      ]),
+      // CliffWatch renamed from cliff-watch → cliffwatch. The US zone is
+      // built with basePath /us/cliff-watch, so its _next assets and /api
+      // calls also arrive through this redirect.
       {
         source: "/:countryId/cliff-watch",
         destination: "/:countryId/cliffwatch",
@@ -172,6 +222,15 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         ...policyEngineIconRewrites,
         ...appZoneRewrites,
+        // PolicyEngine Belgium prototype (Vercel) — static demo over Microcosm-BE
+        {
+          source: "/be",
+          destination: "https://policyengine-be-demo.vercel.app/",
+        },
+        {
+          source: "/be/:path*",
+          destination: "https://policyengine-be-demo.vercel.app/:path*",
+        },
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         {
           source: "/us/api",
@@ -301,6 +360,30 @@ const nextConfig: NextConfig = {
         },
       ],
     };
+  },
+
+  // Production builds skip webpack's persistent cache, which served stale CSS.
+  // Tailwind makes src/ a context dependency of globals.css, and the webpack
+  // bundled with Next 15.5 can't snapshot a directory that holds symlinks to
+  // files (src/data/*.json point into app/src/data). The CSS module is then
+  // cached with no record of its inputs, so a build that restores the cache,
+  // as Vercel's builds do, reuses the old CSS whatever changed, client
+  // components and globals.css included. scripts/check-built-css.mjs fails a
+  // build whose CSS lacks a class of a fresh compile, or has a Tailwind
+  // utility the fresh compile lacks. It compares class names, not values.
+  //
+  // A webpack hook also turns off Next's build workers unless they're asked
+  // for, hence experimental.webpackBuildWorker. `next dev` runs on Turbopack,
+  // which ignores the hook; its "Webpack is configured while Turbopack is not"
+  // warning is expected.
+  experimental: {
+    webpackBuildWorker: true,
+  },
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      config.cache = false;
+    }
+    return config;
   },
 
   async headers() {

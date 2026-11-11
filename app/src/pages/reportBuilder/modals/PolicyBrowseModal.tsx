@@ -16,6 +16,7 @@ import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPoli
 import { RootState } from '@/store';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
+import { getUserPolicyAvailability } from '@/utils/ingredientAvailability';
 import { formatLabelParts, getHierarchicalLabelsFromTree } from '@/utils/parameterLabels';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { createCurrentLawPolicy } from '../currentLaw';
@@ -72,6 +73,7 @@ export function PolicyBrowseModal({
           parameters: p.policy?.parameters || [],
           createdAt: p.association.createdAt,
           updatedAt: p.association.updatedAt,
+          ...getUserPolicyAvailability(p),
         };
       })
       .sort((a, b) => {
@@ -119,7 +121,11 @@ export function PolicyBrowseModal({
     label: string;
     paramCount: number;
     userPolicyAssociationId?: string;
+    isDisabled?: boolean;
   }) => {
+    if (policy.isDisabled) {
+      return;
+    }
     if (policy.userPolicyAssociationId) {
       updatePolicyAssociation.mutate({
         userPolicyId: policy.userPolicyAssociationId,
@@ -253,13 +259,15 @@ export function PolicyBrowseModal({
           parameterTree={parameterTree}
           onClose={() => setDrawerPolicyId(null)}
           onSelect={() => {
-            if (drawerPolicy) {
-              handleSelectPolicy(drawerPolicy);
-              setDrawerPolicyId(null);
+            if (!drawerPolicy || drawerPolicy.isDisabled) {
+              return;
             }
+
+            handleSelectPolicy(drawerPolicy);
+            setDrawerPolicyId(null);
           }}
           onEdit={() => {
-            if (!drawerPolicy) {
+            if (!drawerPolicy || drawerPolicy.isDisabled) {
               return;
             }
 

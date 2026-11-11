@@ -11,9 +11,25 @@ const fontSizeMap: Record<string, string> = {
 interface LinkColumnProps {
   config: LinkColumnConfig;
   value: LinkValue;
+  disabled?: boolean;
 }
 
-export function LinkColumn({ config, value }: LinkColumnProps) {
+export function LinkColumn({ config, value, disabled }: LinkColumnProps) {
+  if (disabled) {
+    return (
+      <span
+        className="tw:no-underline"
+        style={{
+          color: colors.text.secondary,
+          fontSize: fontSizeMap[config.size || 'sm'],
+          cursor: 'not-allowed',
+        }}
+      >
+        {value.text}
+      </span>
+    );
+  }
+
   return (
     <AppLink
       to={value.url || `${config.urlPrefix || '#'}${value.text}`}
