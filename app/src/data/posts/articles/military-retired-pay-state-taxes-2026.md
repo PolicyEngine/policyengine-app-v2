@@ -5,7 +5,7 @@ Twenty-eight states exempt all military retired pay from income tax in 2026, inc
 | Treatment | States |
 | --- | --- |
 | Exempt all of it (28) | Alabama, Arizona, Arkansas, Connecticut, Hawaii, Illinois, Indiana, Iowa, Kansas, Louisiana, Maine, Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Nebraska, New Jersey, New York, North Dakota, Ohio, Oklahoma, Pennsylvania, Rhode Island, South Carolina, Utah, West Virginia and Wisconsin |
-| Exempt all, part or none of it, depending on the retiree (13) | California, Colorado, Delaware, Georgia, Idaho, Kentucky, Maryland, Montana, New Mexico, North Carolina, Oregon, Vermont and Virginia |
+| Exemption depends on the retiree (13) | California, Colorado, Delaware, Georgia, Idaho, Kentucky, Maryland, Montana, New Mexico, North Carolina, Oregon, Vermont and Virginia |
 | Exempt none of it | District of Columbia |
 | Levy no broad income tax (9) | Alaska, Florida, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Washington and Wyoming |
 
@@ -79,7 +79,7 @@ Take a married couple in which one spouse is 45, draws $30,000 of military retir
 
 Oregon and DC tax all of this couple's pay, so the couple owes $2,310 more in Oregon and $1,900 more in DC. Delaware, Maryland, Montana, Colorado and California each exempt $12,500 to $20,000 of it, and the couple owes $1,087 more in Delaware, $831 in Maryland before county income tax, $705 in Montana, $660 in Colorado and $278 in California. The other seven of the 13 states exempt all $30,000 of this couple's pay.[^1] For example, Georgia exempts up to $35,000 for a retiree under 62 who earns more than $17,500 in Georgia.
 
-Utah, South Carolina and Maine exempt the pay but collect more from this couple, because each counts the pay as income when it sets a credit or deduction:
+Utah, South Carolina and Maine exempt the pay, but the couple still owes more there, because each counts the pay as income when it sets a credit or deduction:
 
 - Utah offsets its tax on the pay with a credit ([Utah Code § 59-10-1043](https://le.utah.gov/xcode/Title59/Chapter10/59-10-S1043.html)), but it shrinks its taxpayer tax credit by 1.3% of income above a base amount ([2025 TC-40 instructions, p. 8](https://files.tax.utah.gov/tax/forms/2025/tc-40inst.pdf#page=10)). The pay adds $30,000 to that income, so the couple loses $390 of that credit.
 - South Carolina shrinks its $30,000 Income Adjusted Deduction for married couples whose federal adjusted gross income (AGI) exceeds $80,000 ([Act 110 of 2026](https://www.scstatehouse.gov/sess126_2025-2026/bills/4216.htm), section 3). The pay lifts the couple's federal AGI to $90,000, and the couple owes $142 more.
@@ -94,33 +94,32 @@ A retired couple aged 67 and 65, living on $45,000 of military retired pay and $
 ```chart
 {
   "type": "bar",
-  "title": "Figure 2: Federal and state income tax on $45,000 of military retired pay",
-  "subtitle": "Extra federal and state income tax a married couple, ages 67 and 65, owes because of $45,000 of military retired pay, with $30,000 of Social Security, in the ten states where the pay raises state income tax, 2026",
+  "title": "Figure 2: Where $45,000 of military retired pay raises state income tax",
+  "subtitle": "Extra state income tax a married couple, ages 67 and 65, owes because of $45,000 of military retired pay, with $30,000 of Social Security, 2026",
   "orientation": "horizontal",
-  "stacked": true,
+  "legend": false,
   "xKey": "state",
   "series": [
-    {"key": "federal_tax", "name": "Federal income tax", "color": "quinary"},
-    {"key": "state_tax", "name": "State income tax", "color": "primary"}
+    {"key": "tax", "name": "Extra state income tax", "color": "primary"}
   ],
   "data": [
-    {"state": "Hawaii", "federal_tax": 1710, "state_tax": 440},
-    {"state": "Delaware", "federal_tax": 1710, "state_tax": 353},
-    {"state": "Montana", "federal_tax": 1710, "state_tax": 258},
-    {"state": "Vermont", "federal_tax": 1710, "state_tax": 250},
-    {"state": "Maine", "federal_tax": 1710, "state_tax": 220},
-    {"state": "New Mexico", "federal_tax": 1710, "state_tax": 152},
-    {"state": "Indiana", "federal_tax": 1710, "state_tax": 140},
-    {"state": "Oklahoma", "federal_tax": 1710, "state_tax": 80},
-    {"state": "Arizona", "federal_tax": 1710, "state_tax": 50},
-    {"state": "Idaho", "federal_tax": 1710, "state_tax": 10}
+    {"state": "Hawaii", "tax": 440},
+    {"state": "Delaware", "tax": 353},
+    {"state": "Montana", "tax": 258},
+    {"state": "Vermont", "tax": 250},
+    {"state": "Maine", "tax": 220},
+    {"state": "New Mexico", "tax": 152},
+    {"state": "Indiana", "tax": 140},
+    {"state": "Oklahoma", "tax": 80},
+    {"state": "Arizona", "tax": 50},
+    {"state": "Idaho", "tax": 10}
   ],
   "format": {"decimals": 0, "prefix": "$", "separator": true},
   "source": "Source: PolicyEngine-US household calculations for 2026; github.com/PolicyEngine/veterans-day-2026."
 }
 ```
 
-With the pay, the couple must count $19,600 of their Social Security as taxable income, their federal AGI rises from $0 to $64,600, and their federal income tax rises from $0 to $1,710.
+With the pay, the couple must count $19,600 of their Social Security as taxable income, their federal AGI rises from $0 to $64,600, and their federal income tax rises from $0 to $1,710. The federal increase is the same in each of the ten states in Figure 2.
 
 Montana exempts none of this couple's pay, because it exempts no more than the Montana earnings on a return and the couple has none. Montana also follows the federal rules for Social Security, so it taxes the $19,600 of it that the pay makes taxable, and the couple owes $258 more there. Delaware taxes all but $12,500 of the pay, and the couple owes $353 more. DC taxes all of the pay, but from 2026 it lets filers take the federal $6,000 deduction for each spouse 65 or older ([Fiscal Year 2027 Budget Support Act of 2026](https://lims.dccouncil.gov/downloads/LIMS/61627/Meeting3/Enrollment/B26-0661-Enrollment17.pdf?Id=243990#page=192), section 7112). With it, the couple's deductions in DC exceed the $45,000, and the couple owes no DC income tax. California, Colorado, Idaho, Maryland, New Mexico, Oregon and Virginia also tax part of this couple's pay, but the couple owes no income tax on it in those states after their deductions, exemptions and credits.
 
@@ -140,28 +139,23 @@ In seven states, the couple loses a credit:
 
 Idaho charges $10, its permanent building fund tax, on each return it requires ([Idaho Code § 63-3082](https://legislature.idaho.gov/statutesrules/idstat/title63/t63ch30/sect63-3082/)), and with the pay this couple has to file.
 
-## Other rules for veterans
+## Conclusion
 
-PolicyEngine also models rules in benefit programs and state income taxes that turn on military service or veteran status, such as these:
+In 2026, 28 states exempt all military retired pay from income tax, 13 exempt all, part or none of it, depending on the retiree, and DC taxes all of it. A couple in which a 45-year-old retiree draws $30,000 of the pay and earns $60,000 owes more state income tax because of it in nine states and DC, up to $2,310 in Oregon. A retired couple with $45,000 of the pay and $30,000 of Social Security owes more in ten states, up to $440 in Hawaii, and in seven of them only because the couple loses a credit.
 
-**Table 3: Other rules for veterans that PolicyEngine models**
-
-| Program | Rule | Law |
-| --- | --- | --- |
-| SNAP | Congress exempted veterans from SNAP's time limit for adults without dependents in 2023, then ended the exemption in July 2025. | [P.L. 118-5, sec. 311](https://www.govinfo.gov/content/pkg/PLAW-118publ5/html/PLAW-118publ5.htm); [P.L. 119-21, sec. 10102](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=11) |
-| Medicaid | States must apply work requirements to adults in the Medicaid expansion by January 1, 2027, or by the end of 2028 if the Secretary of Health and Human Services grants a state more time. They must exempt veterans with a disability the Department of Veterans Affairs (VA) rates as total. | [P.L. 119-21, sec. 71119](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=236); [42 CFR 435.554(c)(4)](https://www.law.cornell.edu/cfr/text/42/435.554) |
-| Kansas income tax | Kansas gives an extra $2,320 exemption to each veteran with an honorable discharge who receives VA disability compensation at the 100% rate for a permanent service-connected disability. | [K.S.A. 79-32,121b(b)(2)](https://www.kslegislature.gov/li/b2025_26/statute/079_000_0000_chapter/079_032_0000_article/079_032_0121b_section/079_032_0121b_k/) |
-| Michigan income tax | Michigan gives an extra $500 exemption to each veteran with an honorable or general discharge and a service-connected disability, at any rating. | [MCL 206.30(3)(b) and (7)](https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-206-30); [2025 MI-1040 instructions, p. 10](https://www.michigan.gov/taxes/-/media/Project/Websites/taxes/Forms/IIT/TY2025/MI-1040-Book.pdf#page=10) |
+We invite you to explore our [additional analyses](https://www.policyengine.org/us/research) and use [PolicyEngine](https://www.policyengine.org/us) to calculate your own taxes and benefits.
 
 ## How we calculated the couples' taxes
 
-We calculated each couple's 2026 state income tax in every state twice with [PolicyEngine-US](https://github.com/PolicyEngine/policyengine-us), once with the military retired pay and once without it. Both couples file jointly, claim no dependents and live in the state all year. Neither retiree has a service-connected disability. The second couple's retiree served entirely before 1998, and 177 of those 240 months fall before October 1991. In Montana, we assume the retiree meets the exemption's residency test and that 2026 falls within its five consecutive years. We count state credits, including refundable ones, in state income tax and leave out local income taxes, such as those Maryland's counties levy. Most states have yet to publish their 2026 forms, so we estimate some inflation-adjusted amounts, and the final amounts can differ by a few dollars. We ran PolicyEngine-US with updates we haven't yet released, such as DC's 2026 deductions, and until we release them, the PolicyEngine web calculator can show different amounts.
+We calculated each couple's 2026 federal and state income tax in every state twice with [PolicyEngine-US](https://github.com/PolicyEngine/policyengine-us), once with the military retired pay and once without it. Both couples file jointly, claim no dependents and live in the state all year. Neither retiree has a service-connected disability. PolicyEngine-US counts Alaska's Permanent Fund Dividend as income, so in Alaska the retired couple's federal income tax rises by $2,080 rather than $1,710. The second couple's retiree served entirely before 1998, and 177 of those 240 months fall before October 1991. In Montana, we assume the retiree meets the exemption's residency test and that 2026 falls within its five consecutive years. We count state credits, including refundable ones, in state income tax and leave out local income taxes, such as those Maryland's counties levy. Most states have yet to publish their 2026 forms, so we estimate some inflation-adjusted amounts, and the final amounts can differ by a few dollars. We ran PolicyEngine-US with updates we haven't yet released, such as DC's 2026 deductions, and until we release them, the PolicyEngine web calculator can show different amounts.
 
 PolicyEngine's microdata don't record veteran status or military retired pay, so we don't estimate how many retirees each state's rules reach. We publish the code and full results, including a wider grid of pay and wages for both ages, at [github.com/PolicyEngine/veterans-day-2026](https://github.com/PolicyEngine/veterans-day-2026).
 
-## Appendix: where states tax the pay
+PolicyEngine also models rules in benefit programs and state income taxes that turn on military service or veteran status. Table 4 in the appendix lists four of them.
 
-**Table 4: Military retired pay the 13 states and DC exempt in 2026**
+## Appendix
+
+**Table 3: Military retired pay the 13 states and DC exempt in 2026**
 
 | State | Military retired pay the state exempts in 2026 | Law |
 | --- | --- | --- |
@@ -179,5 +173,13 @@ PolicyEngine's microdata don't record veteran status or military retired pay, so
 | Vermont | All of it for filers with federal AGI up to $125,000, and a share that falls to zero at $175,000 | [32 V.S.A. § 5830e(d)](https://legislature.vermont.gov/statutes/section/32/151/05830e) |
 | Virginia | Up to $40,000 | [Va. Code § 58.1-322.02(18)](https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-322.02/) |
 | District of Columbia | None | [D.C. Code § 47-1803.02(a)(2)(N)](https://code.dccouncil.gov/us/dc/council/code/sections/47-1803.02) |
+**Table 4: Other rules for veterans that PolicyEngine models**
 
-[^1]: Table 4 in the appendix lists the rule in each of the 13 states and DC, with its source in law.
+| Program | Rule | Law |
+| --- | --- | --- |
+| SNAP | Congress exempted veterans from SNAP's time limit for adults without dependents in 2023, then ended the exemption in July 2025. | [P.L. 118-5, sec. 311](https://www.govinfo.gov/content/pkg/PLAW-118publ5/html/PLAW-118publ5.htm); [P.L. 119-21, sec. 10102](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=11) |
+| Medicaid | States must apply work requirements to adults in the Medicaid expansion by January 1, 2027, or by the end of 2028 if the Secretary of Health and Human Services grants a state more time. They must exempt veterans with a disability the Department of Veterans Affairs (VA) rates as total. | [P.L. 119-21, sec. 71119](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=236); [42 CFR 435.554(c)(4)](https://www.law.cornell.edu/cfr/text/42/435.554) |
+| Kansas income tax | Kansas gives an extra $2,320 exemption to each veteran with an honorable discharge who receives VA disability compensation at the 100% rate for a permanent service-connected disability. | [K.S.A. 79-32,121b(b)(2)](https://www.kslegislature.gov/li/b2025_26/statute/079_000_0000_chapter/079_032_0000_article/079_032_0121b_section/079_032_0121b_k/) |
+| Michigan income tax | Michigan gives an extra $500 exemption to each veteran with an honorable or general discharge and a service-connected disability, at any rating. | [MCL 206.30(3)(b) and (7)](https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-206-30); [2025 MI-1040 instructions, p. 10](https://www.michigan.gov/taxes/-/media/Project/Websites/taxes/Forms/IIT/TY2025/MI-1040-Book.pdf#page=10) |
+
+[^1]: Table 3 in the appendix lists the rule in each of the 13 states and DC, with its source in law.
