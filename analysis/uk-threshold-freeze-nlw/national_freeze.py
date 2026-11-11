@@ -82,8 +82,9 @@ COMPARISONS = (OBR_THRESHOLDS, HMRC_TEN_PERCENT)
 # advises 10 against secondary disclosure. disclosure.py holds every figure we
 # publish to PolicyEngine's rules, starting with 10 survey households behind it.
 SURVEY_HOUSEHOLD_FLOOR = disclosure.FLOOR
-# A household or person "has less" or "has more" when the change exceeds 1p.
-CHANGE_TOLERANCE = 0.01
+# A household or person "has less" or "has more" when the change exceeds £1 a
+# year. PolicyEngine's disclosure layer counts a change of £1 or less as none.
+CHANGE_TOLERANCE = disclosure.CHANGE_TOLERANCE
 # Record spaces for disclosure.py, and the scope of a figure the same in every
 # scenario.
 HOUSEHOLDS, PEOPLE = "households", "people"
@@ -819,8 +820,10 @@ def global_key(table: str, scope: str, local: tuple, shared: bool) -> tuple:
 def scenario_differences(cells: dict, spaces: dict, scenarios: list) -> set:
     """A reader can subtract one scenario's figure from another's. We add each
     difference that fails the rules as a figure we never publish, linked to the two
-    it comes from. A difference that passes can give nothing away, since no other
-    link names it."""
+    it comes from. A difference that passes stays out of the programme, which
+    credits the reader with its value only through the two figures it comes from.
+    When all of a passing difference's parts share one sign, a reader also knows
+    that sign, and the programme leaves that out."""
     places = defaultdict(dict)
     for key in list(cells):
         table, scope, *rest = key
@@ -841,12 +844,14 @@ def scenario_differences(cells: dict, spaces: dict, scenarios: list) -> set:
 
 
 def decimals(column: str, scope: str = FROZEN) -> int:
-    """The decimal places we publish a column to, never finer than PolicyEngine's
-    layer rounds: £10 million for totals in £ billion, 1,000 for counts in
-    millions, 0.1 percentage points for shares and rates, £1 for averages and
-    0.01 percentage points for percentage changes. A Gini index keeps five. A
-    comparison scenario's own figures take one place fewer; a figure the same in
-    every scenario has the scope "frozen" and keeps the paths' places."""
+    """The decimal places we publish a column to, no finer than the minimum
+    rounding bases of PolicyEngine's layer: £10 million for totals in £ billion,
+    1,000 for counts in millions, 0.1 percentage points for shares and rates, £1
+    for averages and 0.01 percentage points for percentage changes. We compute no
+    standard errors, so the layer could round a figure more coarsely than we do.
+    A Gini index keeps five places. A comparison scenario's own figures take one
+    place fewer; a figure the same in every scenario has the scope "frozen" and
+    keeps the paths' places."""
     places = column_decimals(column)
     return places - 1 if scope in COMPARISONS else places
 
@@ -1224,6 +1229,14 @@ def sha256_of(path: str) -> str:
     return digest.hexdigest()
 
 
+def without_float_noise(values):
+    """Thresholds as the meta records them: to six places, so £13,827 doesn't print
+    as 13827.000000000002 and weekly thresholds keep their pence and fractions."""
+    if isinstance(values, dict):
+        return {key: without_float_noise(value) for key, value in values.items()}
+    return round(values, 6) if isinstance(values, float) else values
+
+
 def run_tables(args) -> None:
     arrays_dir, out_dir, private_dir = Path(args.arrays), Path(args.out), Path(args.private)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1288,11 +1301,13 @@ def run_tables(args) -> None:
             ),
             "figures": summary,
         },
-        "scenarios": {
-            name: {path: {str(y): v for y, v in values.items()} for path, values in scenario_thresholds(name).items()}
-            for name in names
-        },
-        "parameters_held": parameters,
+        "scenarios": without_float_noise(
+            {
+                name: {path: {str(y): v for y, v in values.items()} for path, values in scenario_thresholds(name).items()}
+                for name in names
+            }
+        ),
+        "parameters_held": without_float_noise(parameters),
         "checks": holds,
     }
     (out_dir / f"national_meta_{label}.json").write_text(json.dumps(meta, indent=1, ensure_ascii=False) + "\n")

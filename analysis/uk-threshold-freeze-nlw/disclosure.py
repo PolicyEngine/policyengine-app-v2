@@ -16,9 +16,15 @@ which checks an average change on its change and treats its count of households
 as public, we publish each group's size. Copies of one survey household count
 once.
 
-We round every figure we publish, never more finely than PolicyEngine's layer
-rounds. The figures add up in ways a reader knows, so a reader can bound a
-figure we withhold. We record each identity as a link, and credit the reader
+We round every figure we publish no more finely than the minimum rounding bases
+of PolicyEngine's layer: £1,000 for totals, £1 for averages, 0.0001 for relative
+changes and 0.001 for shares. The layer also coarsens a figure's rounding to the
+order of magnitude of its bootstrap standard error. We compute no standard
+errors, so we can print a figure more finely than the layer would, and the
+reader below works from our rounding.
+
+The figures add up in ways a reader knows, so a reader can bound a figure we
+withhold. We record each identity as a link, and credit the reader
 with each published figure to within its rounding, the sign of any figure whose
 parts all share one, and the size of each share's group. A linear programme over
 every link then gives the reader's tightest bounds on each withheld figure that

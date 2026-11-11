@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
+from scipy.optimize import linprog
 
 import disclosure
 from disclosure import (
@@ -465,6 +466,31 @@ def check_withheld(cells, links, spaces, figures, withheld):
     assert withhold(again, links, spaces, figures)[0] == set()
 
 
+def test_two_withheld_parts_that_fail_together_become_a_target():
+    """T = A + B + C. A fails on its own and B passes, but one household holds most
+    of A + B. With A and B withheld and T and C shown, a reader gets A + B from
+    T - C, so the reader protects A + B as well, and the audit fails until we
+    withhold more."""
+    values = np.concatenate([[1_000.0, 5.0, 5.0], np.full(30, 10.0), np.full(100, 20.0)])
+    part = np.repeat(np.array(["a", "b", "c"]), [3, 30, 100])
+    cells = {("part", name): change_cell(SPACE, values, part == name) for name in "abc"}
+    cells[("part", "total")] = change_cell(SPACE, values)
+    links = [((("part", "total"), 1), (("part", "a"), -1), (("part", "b"), -1), (("part", "c"), -1))]
+    spaces = spaces_for(np.arange(len(values)))
+    cells, figures = publish(cells, spaces, decimals=6)
+    reader = Reader(cells, links, spaces, figures)
+    a, b = ("part", "a"), ("part", "b")
+    assert not reader.ok[a] and all(reader.ok[("part", name)] for name in ("b", "c", "total"))
+    assert not passes(supports_of(remainder([(a, 1), (b, 1)], cells), spaces))
+    together = [target for target in reader.targets({a, b}) if {key for key, _ in target.members} == {a, b}]
+    assert together
+    with pytest.raises(DisclosureError):
+        disclosure.audit(reader, {a, b})
+    withheld, _ = withhold(cells, links, spaces, figures)
+    assert a in withheld
+    check_withheld(cells, links, spaces, figures, withheld)
+
+
 def corner_table(decimals: int):
     """Three rows and three columns. Thirty survey households stand in each cell
     but the corner, which holds three."""
@@ -614,6 +640,77 @@ def test_a_readers_bounds_always_hold_the_true_value(seed, decimals):
     for key in reader.keys:
         below, above, _, _ = reader.reach(((key, 1),), {key})
         assert below >= 0 and above >= 0
+
+
+def bounds_in_levels(cells, links, spaces, figures, members, hidden):
+    """How far below and above its true value a reader can push a signed sum of
+    cells, from a linear programme in the cells' levels over every cell at once.
+    Reader.reach works in shifts from the true values, one linked component at a
+    time, and widens each interval to hold the truth. This programme does none of
+    those things, so the two agree only if both bound what the reader knows."""
+    keys = sorted({key for link in links for key, _ in link}, key=str)
+    column = {key: i for i, key in enumerate(keys)}
+    matrix = np.zeros((len(links), len(keys)))
+    for r, link in enumerate(links):
+        for key, sign in link:
+            matrix[r, column[key]] += sign
+    levels = np.array([disclosure.total(cells[key], spaces) for key in keys])
+    # The true levels meet every link and every bound below, so the programme
+    # always has a solution.
+    assert np.all(np.abs(matrix @ levels) <= 1e-9 * (1 + np.abs(matrix) @ np.abs(levels)))
+    bounds = []
+    for key in keys:
+        cell = cells[key]
+        # A reader knows a cell's sign when all its records' parts share one.
+        low = 0.0 if not len(cell.parts) or cell.parts.min() >= 0 else -math.inf
+        high = 0.0 if not len(cell.parts) or cell.parts.max() <= 0 else math.inf
+        if cell.published and key not in hidden:
+            figure = figures[key]
+            if figure is None:
+                shown_low = shown_high = 0.0
+            else:
+                den = disclosure.denominator(cell, spaces)
+                half = 0.5 * 10.0 ** (-cell.decimals)
+                shown_low, shown_high = sorted(((figure - half) * den, (figure + half) * den))
+            low, high = max(low, shown_low), min(high, shown_high)
+        value = levels[column[key]]
+        slack = 1e-9 * (1 + abs(value))
+        assert low - slack <= value <= high + slack, key
+        bounds.append((None if math.isinf(low) else low, None if math.isinf(high) else high))
+    objective = np.zeros(len(keys))
+    for key, sign in members:
+        objective[column[key]] += sign
+    truth = float(objective @ levels)
+    extremes = []
+    for direction in (1, -1):
+        result = linprog(direction * objective, A_eq=matrix, b_eq=np.zeros(len(links)), bounds=bounds, method="highs")
+        # With the true levels feasible, HiGHS can only fail on an unbounded
+        # programme, which it sometimes calls infeasible.
+        if result.status in (2, 3):
+            extremes.append(-direction * math.inf)
+            continue
+        assert result.status == 0, result.message
+        extremes.append(direction * float(result.fun))
+    lowest, highest = extremes
+    return max(0.0, truth - lowest), max(0.0, highest - truth), float(np.abs(levels).max())
+
+
+@settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@given(seed=st.integers(0, 2**16), decimals=st.sampled_from([-2, -1, 0, 3]), data=st.data())
+def test_a_readers_bounds_match_a_programme_in_levels(seed, decimals, data):
+    cells, links, spaces, figures = random_grid(seed, 3, 3, 90, 40, decimals)
+    reader = Reader(cells, links, spaces, figures)
+    keys = sorted(cells, key=str)
+    hidden = set(data.draw(st.lists(st.sampled_from(keys), max_size=5)))
+    chosen = data.draw(st.lists(st.sampled_from(keys), min_size=1, max_size=3, unique=True))
+    members = tuple((key, data.draw(st.sampled_from([1, -1]))) for key in chosen)
+    below, above, _, _ = reader.reach(members, hidden)
+    level_below, level_above, scale = bounds_in_levels(cells, links, spaces, figures, members, hidden)
+    for ours, theirs in ((below, level_below), (above, level_above)):
+        if math.isinf(theirs):
+            assert math.isinf(ours)
+        else:
+            assert ours == pytest.approx(theirs, rel=1e-6, abs=1e-6 * (1 + scale))
 
 
 def test_withholding_succeeds_on_most_tables():

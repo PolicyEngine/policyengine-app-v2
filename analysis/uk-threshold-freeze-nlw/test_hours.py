@@ -265,7 +265,7 @@ def test_net_income_chart_matches_the_results():
 
 def test_chart_says_which_way_the_comparison_runs():
     subtitle = chart_titled("Workers on UC lose less net income")["subtitle"]
-    assert subtitle.startswith("Net income with thresholds frozen, less net income if the government had raised")
+    assert subtitle.startswith("Net income with thresholds frozen, minus net income if the government had raised")
     for household in ("single", "lone_parent", "single_social_rent", "single_kingston_upon_thames"):
         assert net(household, 35.0) < 0
 
@@ -274,10 +274,11 @@ def test_uc_and_council_tax_reduction_prose_matches_the_results():
     renter = META["benefit_runs_out_at_hours"]["single_social_rent"]
     kingston = META["benefit_runs_out_at_hours"]["single_kingston_upon_thames"]
     expected = [
-        f"which comes to {gbp(net('single_social_rent', 24.33))} from about 24.3 hours",
-        f"Their UC runs out at {about(renter['uc_frozen'])} with thresholds frozen",
-        f"would have run out at {about(renter['uc_raised'])} if the government",
-        f"From {about(renter['uc_frozen'])}, they have the full {gbp(net('single_social_rent', 34.0))} less",
+        "Compared with raising the allowance and NI threshold together, they have "
+        f"{gbp(net('single_social_rent', 24.33))} less net income from about 24.3 hours.",
+        f"On that path, their UC would have run out at {about(renter['uc_raised'])}, against "
+        f"{about(renter['uc_frozen'])} with thresholds frozen, and from {about(renter['uc_frozen'])} they have the full "
+        f"{gbp(net('single_social_rent', 34.0))} less.",
         f"Band C bill of {gbp(META['council_bills']['KINGSTON_UPON_THAMES'])}",
         f"has {gbp(net('single_kingston_upon_thames', 25.0))} less net income from about 24.3 hours to {about(kingston['ctr_raised'])}",
         f"from {about(kingston['uc_frozen'])} they have the full {gbp(net('single_kingston_upon_thames', 34.0))} less",

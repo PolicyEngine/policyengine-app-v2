@@ -30,18 +30,18 @@
    "2026-27": {
     "figures": 1049,
     "withheld": 95,
-    "withheld_failing_the_rules": 22,
+    "withheld_failing_the_rules": 23,
     "withheld_by_policyengines_share_rule": 0,
-    "withheld_to_keep_a_failing_figure_out_of_reach": 73,
+    "withheld_to_keep_a_failing_figure_out_of_reach": 72,
     "shown_on_fewer_than_30_effective_survey_households": 88
    },
    "2027-28": {
     "figures": 1049,
-    "withheld": 95,
-    "withheld_failing_the_rules": 23,
+    "withheld": 97,
+    "withheld_failing_the_rules": 28,
     "withheld_by_policyengines_share_rule": 0,
-    "withheld_to_keep_a_failing_figure_out_of_reach": 72,
-    "shown_on_fewer_than_30_effective_survey_households": 82
+    "withheld_to_keep_a_failing_figure_out_of_reach": 69,
+    "shown_on_fewer_than_30_effective_survey_households": 80
    }
   }
  },
@@ -52,8 +52,8 @@
     "2027": 16650
    },
    "gov.hmrc.national_insurance.class_1.employee_scale[1].threshold": {
-    "2026": 309.2307692307692,
-    "2027": 320.1923076923077
+    "2026": 309.230769,
+    "2027": 320.192308
    }
   },
   "ni_sep_cpi_from_jul22": {
@@ -114,8 +114,8 @@
     "2027": 243.0
    },
    "gov.hmrc.national_insurance.class_1.employee_scale[2].threshold": {
-    "2026": 1239.8076923076924,
-    "2027": 1278.2692307692307
+    "2026": 1239.807692,
+    "2027": 1278.269231
    },
    "gov.hmrc.national_insurance.class_4.thresholds.lower_profits_limit": {
     "2026": 12272,
@@ -128,8 +128,8 @@
   },
   "hmrc_ten_percent": {
    "gov.hmrc.income_tax.allowances.personal_allowance.amount": {
-    "2026": 13827.000000000002,
-    "2027": 13827.000000000002
+    "2026": 13827.0,
+    "2027": 13827.0
    },
    "gov.hmrc.income_tax.rates.uk[1].threshold": {
     "2026": 41470.0,
@@ -167,7 +167,7 @@
     "personal_allowance": 16080.0,
     "basic_rate_band": 37700.0,
     "additional_rate_threshold": 125140.0,
-    "primary_threshold_week": 309.2307692307692,
+    "primary_threshold_week": 309.230769,
     "upper_earnings_limit_week": 966.73,
     "lower_profits_limit": 12570.0,
     "upper_profits_limit": 50270.0
@@ -176,7 +176,7 @@
     "personal_allowance": 16650.0,
     "basic_rate_band": 37700.0,
     "additional_rate_threshold": 125140.0,
-    "primary_threshold_week": 320.1923076923077,
+    "primary_threshold_week": 320.192308,
     "upper_earnings_limit_week": 966.73,
     "lower_profits_limit": 12570.0,
     "upper_profits_limit": 50270.0
@@ -268,7 +268,7 @@
     "basic_rate_band": 48400.0,
     "additional_rate_threshold": 150000.0,
     "primary_threshold_week": 236.0,
-    "upper_earnings_limit_week": 1239.8076923076924,
+    "upper_earnings_limit_week": 1239.807692,
     "lower_profits_limit": 12272.0,
     "upper_profits_limit": 64470.0
    },
@@ -277,14 +277,14 @@
     "basic_rate_band": 49900.0,
     "additional_rate_threshold": 150000.0,
     "primary_threshold_week": 243.0,
-    "upper_earnings_limit_week": 1278.2692307692307,
+    "upper_earnings_limit_week": 1278.269231,
     "lower_profits_limit": 12636.0,
     "upper_profits_limit": 66470.0
    }
   },
   "hmrc_ten_percent": {
    "2026": {
-    "personal_allowance": 13827.000000000002,
+    "personal_allowance": 13827.0,
     "basic_rate_band": 41470.0,
     "additional_rate_threshold": 125140.0,
     "primary_threshold_week": 241.73,
@@ -293,7 +293,7 @@
     "upper_profits_limit": 50270.0
    },
    "2027": {
-    "personal_allowance": 13827.000000000002,
+    "personal_allowance": 13827.0,
     "basic_rate_band": 41470.0,
     "additional_rate_threshold": 125140.0,
     "primary_threshold_week": 241.73,

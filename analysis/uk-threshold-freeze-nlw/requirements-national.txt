@@ -7,3 +7,5 @@ pandas==3.0.5
 scipy==1.18.1
 tables==3.11.1
 h5py==3.16.0
+hypothesis==6.170.15
+pytest
