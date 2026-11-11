@@ -269,7 +269,7 @@ function BarBody({ spec }: { spec: BlogBarChartSpec }) {
   const longest = Math.max(
     ...spec.data.map((row) => String(row[spec.xKey] ?? "").length),
   );
-  const categoryWidth = Math.min(160, 12 + 7 * longest);
+  const categoryWidth = Math.min(180, 16 + 8 * longest);
   const height =
     spec.height ??
     (horizontal ? Math.max(200, 48 + 36 * spec.data.length) : 360);
