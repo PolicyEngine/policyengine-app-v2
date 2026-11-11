@@ -26,6 +26,23 @@ vi.mock('@/types/v2User', async (importOriginal) => {
 
 const fetchMock = vi.fn();
 
+interface SentRequest {
+  method?: string;
+  headers: Record<string, string>;
+}
+
+/**
+ * The one request the page sent to `url` with `method`, so a test checks
+ * that request whatever else the page read, such as `GET /v2/me` again.
+ */
+function sentRequest(method: string, url: string): SentRequest {
+  const matching = fetchMock.mock.calls.filter(
+    ([sentUrl, init]) => sentUrl === url && (init?.method ?? 'GET').toUpperCase() === method
+  );
+  expect(matching).toHaveLength(1);
+  return matching[0][1];
+}
+
 function renderPage(auth: AuthContextValue, countryId = 'us') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -126,9 +143,11 @@ describe('AccountPage', () => {
 
     // Then
     await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
-    const [url, init] = fetchMock.mock.calls[1];
-    expect(url).toBe('https://api.policyengine.org/v2/me/export?country_id=us');
-    expect(init.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
+    const exportRequest = sentRequest(
+      'GET',
+      'https://api.policyengine.org/v2/me/export?country_id=us'
+    );
+    expect(exportRequest.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:export');
   });
 
@@ -150,9 +169,8 @@ describe('AccountPage', () => {
 
     // Then
     await waitFor(() => expect(auth.signOut).toHaveBeenCalled());
-    const [url, init] = fetchMock.mock.calls[1];
-    expect(url).toBe('https://api.policyengine.org/v2/me?country_id=us');
-    expect(init.method).toBe('DELETE');
+    const deletion = sentRequest('DELETE', 'https://api.policyengine.org/v2/me?country_id=us');
+    expect(deletion.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
   });
 
   test('given an admin then the page links to the users page', async () => {
