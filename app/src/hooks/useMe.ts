@@ -5,6 +5,7 @@ import { useCurrentPathname } from '@/contexts/LocationContext';
 import { isCallbackPath } from '@/libs/auth/authConfig';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
+import { queryConfig } from '@/libs/queryConfig';
 import { isAssociationCountry, type AssociationCountryId } from '@/types/v2User';
 
 /**
@@ -46,6 +47,11 @@ export function useMeRequestCountry(): AssociationCountryId | null {
  * `useUserType` both read it, so they share one request per session and
  * country. It requests nothing unless signed in to the US or UK (see
  * `useMeRequestCountry`); until then the query stays pending.
+ *
+ * Its answer stays fresh for the Public API's usual five minutes, whatever
+ * the query client's defaults, so a component that starts reading it later,
+ * such as a `MinimumUserType` the account page shows once the user is known,
+ * reads the same answer instead of requesting it again.
  */
 export function useMe() {
   const auth = useAuthStatus();
@@ -55,5 +61,6 @@ export function useMe() {
   return useQuery({
     queryKey: meQueryKey(auth.subject, countryId),
     queryFn: requestCountryId ? () => fetchMe(client, requestCountryId) : skipToken,
+    staleTime: queryConfig.api.staleTime,
   });
 }
