@@ -25,6 +25,7 @@
  *   "valueLabels": false,
  *   "orientation": "horizontal",
  *   "legend": false,
+ *   "stacked": true,
  *   "source": "..."
  * }
  *
@@ -39,6 +40,11 @@
  *
  * "legend" (default true) shows the series names. Set it to false for a
  * single series that the title or subtitle already names.
+ *
+ * "stacked" (default false) stacks the series in each row, in series order
+ * from zero, and labels each stack's end with the row's total. List first
+ * the series readers should compare across rows, since only it shares a
+ * baseline.
  */
 
 import { type ReactNode, useId } from "react";
@@ -106,6 +112,7 @@ export interface BlogBarChartSpec {
   valueLabels?: boolean;
   orientation?: "vertical" | "horizontal";
   legend?: boolean;
+  stacked?: boolean;
   source?: string;
   height?: number;
 }
@@ -129,6 +136,7 @@ function parseBarSpec(s: Record<string, unknown>): BlogBarChartSpec | null {
     return null;
   }
   if (s.legend !== undefined && typeof s.legend !== "boolean") return null;
+  if (s.stacked !== undefined && typeof s.stacked !== "boolean") return null;
   if (!Array.isArray(s.series) || s.series.length === 0) return null;
   if (!Array.isArray(s.data) || s.data.length === 0) return null;
   if (
@@ -242,10 +250,15 @@ function BarBody({ spec }: { spec: BlogBarChartSpec }) {
       (s) => typeof row[s.key] === "number" && (row[s.key] as number) < 0,
     ),
   );
-  const values = spec.data.flatMap((row) =>
+  const rowValues = (row: BlogChartRow) =>
     spec.series
       .map((s) => row[s.key])
-      .filter((v): v is number => typeof v === "number"),
+      .filter((v): v is number => typeof v === "number");
+  const rowTotal = (row: BlogChartRow) =>
+    rowValues(row).reduce((sum, v) => sum + v, 0);
+  // A stack reaches its row's total, so the axis must cover the totals too.
+  const values = spec.data.flatMap((row) =>
+    spec.stacked ? [...rowValues(row), rowTotal(row)] : rowValues(row),
   );
   const axis = niceTicks(values);
   const tickFormat = (v: number) =>
@@ -342,29 +355,49 @@ function BarBody({ spec }: { spec: BlogBarChartSpec }) {
         {spec.legend !== false && (
           <Legend {...LEGEND_STYLE} iconType="square" />
         )}
-        {spec.series.map((s, i) => (
-          <Bar
-            key={s.key}
-            dataKey={s.key}
-            name={s.name}
-            fill={chartColor(s.color, i)}
-            radius={horizontal ? [0, 2, 2, 0] : [2, 2, 0, 0]}
-            isAnimationActive={false}
-          >
-            {spec.valueLabels !== false && (
-              <LabelList
-                dataKey={s.key}
-                content={(props) => (
-                  <ValueLabel
-                    {...props}
-                    format={format}
-                    horizontal={horizontal}
-                  />
-                )}
-              />
-            )}
-          </Bar>
-        ))}
+        {spec.series.map((s, i) => {
+          const last = i === spec.series.length - 1;
+          // In a stack only the outer segment gets rounded corners and the
+          // label, which gives the row's total.
+          const rounded = !spec.stacked || last;
+          const labelled =
+            spec.valueLabels !== false && (!spec.stacked || last);
+          return (
+            <Bar
+              key={s.key}
+              dataKey={s.key}
+              name={s.name}
+              fill={chartColor(s.color, i)}
+              stackId={spec.stacked ? "stack" : undefined}
+              radius={
+                rounded
+                  ? horizontal
+                    ? [0, 2, 2, 0]
+                    : [2, 2, 0, 0]
+                  : [0, 0, 0, 0]
+              }
+              isAnimationActive={false}
+            >
+              {labelled && (
+                <LabelList
+                  dataKey={s.key}
+                  content={(props) => (
+                    <ValueLabel
+                      {...props}
+                      value={
+                        spec.stacked && typeof props.index === "number"
+                          ? rowTotal(spec.data[props.index])
+                          : props.value
+                      }
+                      format={format}
+                      horizontal={horizontal}
+                    />
+                  )}
+                />
+              )}
+            </Bar>
+          );
+        })}
       </BarChart>
     </ResponsiveContainer>
   );

@@ -257,6 +257,41 @@ describe("BlogChart", () => {
     );
   });
 
+  test("stacked bars label each row's total once and rescale the axis to the totals", () => {
+    expect(
+      parseBlogChartSpec(JSON.stringify({ ...SPEC, stacked: "yes" })),
+    ).toBeNull();
+    const { container } = render(
+      <BlogChart
+        data={JSON.stringify({
+          ...SPEC,
+          orientation: "horizontal",
+          stacked: true,
+          data: [
+            { group: "All people", census: 0.3, registered: 0.5 },
+            { group: "Under 18", census: 0.1, registered: 0.2 },
+          ],
+        })}
+      />,
+    );
+    const texts = [...container.querySelectorAll("svg text")].map(
+      (el) => el.textContent,
+    );
+    // Totals 0.80 and 0.30 label the stacks; the segments carry no labels.
+    expect(texts).toContain("+0.80");
+    expect(texts).toContain("+0.30");
+    for (const t of ["+0.50", "+0.20", "+0.10"]) {
+      expect(texts).not.toContain(t);
+    }
+    const ticks = [
+      ...container.querySelectorAll(".recharts-xAxis-tick-labels text"),
+    ].map((el) => Number((el.textContent ?? "").replace(/[^0-9.]/g, "")));
+    expect(Math.max(...ticks)).toBeGreaterThanOrEqual(0.8);
+    expect(container.querySelectorAll(".recharts-bar-rectangle")).toHaveLength(
+      4,
+    );
+  });
+
   test("legend false leaves the legend out and keeps the bars", () => {
     const { container } = render(
       <BlogChart data={JSON.stringify({ ...SPEC, legend: false })} />,
