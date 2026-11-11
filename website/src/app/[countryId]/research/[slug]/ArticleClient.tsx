@@ -470,7 +470,7 @@ function AuthorSection({
           >
             {author.headshot && (
               <OptimisedImage
-                alt={author.name}
+                alt={getAuthorName(authorId)}
                 src={`/assets/authors/${author.headshot}`}
                 width={70}
                 height={70}

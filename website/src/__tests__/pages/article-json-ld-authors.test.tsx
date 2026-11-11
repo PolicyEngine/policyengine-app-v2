@@ -53,6 +53,12 @@ describe("article JSON-LD authors", () => {
     expect(missing).toEqual([]);
   });
 
+  test("given posts.json then it has the posts these tests name", () => {
+    const slugs = posts.map((post) => post.slug);
+    expect(slugs).toContain(DAVID_TRIMMER_POST);
+    expect(slugs).toContain(MULTI_AUTHOR_POST);
+  });
+
   test("given David Trimmer's 2027 inflation post then the author is David Trimmer", async () => {
     const jsonLd = await articleJsonLd(DAVID_TRIMMER_POST);
 
@@ -62,13 +68,14 @@ describe("article JSON-LD authors", () => {
   });
 
   test("given a post with several authors then lists each by name, in byline order", async () => {
-    const post = posts.find((p) => p.slug === MULTI_AUTHOR_POST)!;
+    const post = posts.find((p) => p.slug === MULTI_AUTHOR_POST);
+    expect(post, MULTI_AUTHOR_POST).toBeDefined();
     const jsonLd = await articleJsonLd(MULTI_AUTHOR_POST);
 
     expect(jsonLd.author).toEqual(
-      post.authors.map((slug) => ({
+      post!.authors.map((slug) => ({
         "@type": "Person",
-        name: authors[slug].name,
+        name: authors[slug].name.trim(),
       })),
     );
     expect(jsonLd.author.length).toBeGreaterThan(1);

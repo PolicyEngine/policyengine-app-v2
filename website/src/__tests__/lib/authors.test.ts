@@ -10,7 +10,7 @@ import {
 
 // Invariants, for any author lookup and any list of slugs:
 //   1. a slug whose own record has a non-blank name gets that name, trimmed;
-//   2. any other slug gets its title-cased form, never the bare slug;
+//   2. any other slug gets its title-cased form;
 //   3. the JSON-LD author array has one schema.org Person per slug, in the
 //      order the slugs come, each named by getAuthorName.
 
@@ -66,7 +66,7 @@ describe("getAuthorName", () => {
     expect(getAuthorName("david-trimmer")).toBe("David Trimmer");
   });
 
-  test("property: a slug with a named record always gets that name, trimmed", () => {
+  test("given any slug with a named record then returns that name, trimmed", () => {
     fc.assert(
       fc.property(slugArb, nameArb, (slug, name) => {
         expect(getAuthorName(slug, { [slug]: { name } })).toBe(name.trim());
@@ -74,7 +74,7 @@ describe("getAuthorName", () => {
     );
   });
 
-  test("property: a slug with no record always gets its title-cased form", () => {
+  test("given any slug with no record then returns its title-cased form", () => {
     fc.assert(
       fc.property(slugArb, (slug) => {
         const name = getAuthorName(slug, {});
@@ -90,7 +90,7 @@ describe("formatAuthorSlug", () => {
     expect(formatAuthorSlug("max-ghenis")).toBe("Max Ghenis");
   });
 
-  test("property: keeps one word per slug segment", () => {
+  test("given any slug then keeps one word per slug segment", () => {
     fc.assert(
       fc.property(slugArb, (slug) => {
         expect(formatAuthorSlug(slug).split(" ")).toHaveLength(
@@ -124,7 +124,7 @@ describe("articleJsonLdAuthors", () => {
     expect(articleJsonLdAuthors([], AUTHORS)).toEqual([]);
   });
 
-  test("property: one Person per slug, in order, named by getAuthorName", () => {
+  test("given any lookup and slugs then lists one Person per slug, in order, named by its record or slug", () => {
     const lookupArb = fc.dictionary(slugArb, fc.record({ name: nameArb }));
     fc.assert(
       fc.property(lookupArb, fc.array(slugArb), (lookup, extraSlugs) => {
@@ -132,10 +132,14 @@ describe("articleJsonLdAuthors", () => {
         const people = articleJsonLdAuthors(slugs, lookup);
         expect(people).toHaveLength(slugs.length);
         people.forEach((person, i) => {
-          expect(person).toEqual({
-            "@type": "Person",
-            name: getAuthorName(slugs[i], lookup),
-          });
+          const slug = slugs[i];
+          const expectedName = Object.prototype.hasOwnProperty.call(
+            lookup,
+            slug,
+          )
+            ? lookup[slug].name.trim()
+            : formatAuthorSlug(slug);
+          expect(person).toEqual({ "@type": "Person", name: expectedName });
         });
       }),
     );
