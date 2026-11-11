@@ -4611,6 +4611,64 @@
         }
       }
     },
+    "/v2/countries": {
+      "get": {
+        "summary": "List the served countries and the calculations each supports",
+        "operationId": "list_countries_v2_countries_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryListResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The countries list supports GET only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request has query parameters; the list takes none.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The countries query failed internally.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The v2 database is not configured or cannot be reached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v2/tax-benefit-models": {
       "get": {
         "summary": "List models for one PolicyEngine.py catalog",
@@ -6129,7 +6187,7 @@
             }
           },
           "404": {
-            "description": "The requested catalog resource is absent.",
+            "description": "The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6169,7 +6227,7 @@
             }
           },
           "503": {
-            "description": "The initialized v2 catalog is unavailable, or the catalog version has no parameter tree (publication writes trees only for the versions it publishes and for the installed version with catalog format 2); the message then names the version.",
+            "description": "The initialized v2 catalog is unavailable, or the catalog version has no parameter tree (publication writes trees only for the versions it publishes and for the installed version with catalog format 2); the message then names the version. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6281,7 +6339,7 @@
             }
           },
           "404": {
-            "description": "The requested catalog resource is absent.",
+            "description": "The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6321,7 +6379,7 @@
             }
           },
           "503": {
-            "description": "The initialized v2 catalog is unavailable, or the catalog version has no parameter search file: only catalog format 2 versions that publication has published, or run with installed, since search files were added have one. The message then names the version.",
+            "description": "The initialized v2 catalog is unavailable, or the catalog version has no parameter search file: only catalog format 2 versions that publication has published, or run with installed, since search files were added have one. The message then names the version. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6665,7 +6723,7 @@
             }
           },
           "404": {
-            "description": "The requested catalog resource is absent.",
+            "description": "The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6705,7 +6763,7 @@
             }
           },
           "503": {
-            "description": "The initialized v2 catalog is unavailable.",
+            "description": "The initialized v2 catalog is unavailable. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6821,7 +6879,7 @@
             }
           },
           "404": {
-            "description": "The requested catalog resource is absent.",
+            "description": "The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6861,7 +6919,7 @@
             }
           },
           "503": {
-            "description": "The initialized v2 catalog is unavailable.",
+            "description": "The initialized v2 catalog is unavailable. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8092,7 +8150,7 @@
             }
           },
           "404": {
-            "description": "The requested catalog resource is absent.",
+            "description": "The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8132,7 +8190,7 @@
             }
           },
           "503": {
-            "description": "The initialized v2 catalog is unavailable.",
+            "description": "The initialized v2 catalog is unavailable. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8258,7 +8316,7 @@
             }
           },
           "404": {
-            "description": "The requested catalog resource is absent.",
+            "description": "The requested catalog resource is absent. A catalog version other than the running one that catalog publication pruned (it removed the version's current-law parameter values, parameter tree and parameter search file, which return when that PolicyEngine.py version is installed again) also returns 404, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8298,7 +8356,7 @@
             }
           },
           "503": {
-            "description": "The initialized v2 catalog is unavailable.",
+            "description": "The initialized v2 catalog is unavailable. If catalog pruning removed the data of the running PolicyEngine.py version, which a request without policyengine_version selects, it also returns 503, with Cache-Control: no-store and a message naming the country and version.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8361,6 +8419,111 @@
         "title": "AccountPatchRequest",
         "description": "Explicitly supplied account presentation fields."
       },
+      "CountryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "household_enabled": {
+            "type": "boolean",
+            "title": "Household Enabled"
+          },
+          "society_wide_enabled": {
+            "type": "boolean",
+            "title": "Society Wide Enabled"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "household_enabled",
+          "society_wide_enabled"
+        ],
+        "title": "CountryItem",
+        "description": "One served country and the calculations it supports.\n\n``id`` is the value other v2 resources take as ``country_id``.\n``household_enabled`` means household calculations and saved households\nare available; ``society_wide_enabled`` means society-wide reports are,\nand is only set for a country that is also household enabled."
+      },
+      "CountryListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/CountryListResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "CountryListResponse",
+        "description": "Success envelope: ``status`` \"ok\", a null ``message`` and the countries."
+      },
+      "CountryListResult": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CountryItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CountryListResult",
+        "description": "Every served country, ordered by ``id``."
+      },
+      "DeploymentResponse": {
+        "properties": {
+          "policyengine_version": {
+            "type": "string",
+            "title": "Policyengine Version"
+          },
+          "policyengine_version_live_since": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policyengine Version Live Since"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policyengine_version",
+          "policyengine_version_live_since",
+          "revision"
+        ],
+        "title": "DeploymentResponse",
+        "description": "The policyengine.py version this revision serves, and since when.\n\n``policyengine_version_live_since`` is when this .py version first went\nlive: redeploys that keep the version keep the date. It is null on a\nrevision deployed before the deploy recorded it, outside Cloud Run, or\nwhen the version the deploy dated is not the installed one."
+      },
       "FiniteJsonValue": {
         "anyOf": [
           {
@@ -8392,6 +8555,21 @@
           }
         ]
       },
+      "HealthNotReadyResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "not_ready",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthNotReadyResponse",
+        "description": "Health-check result while warmup runs or the configuration is invalid."
+      },
       "HealthResponse": {
         "properties": {
           "status": {
@@ -8405,7 +8583,7 @@
           "status"
         ],
         "title": "HealthResponse",
-        "description": "Health-check result showing that the API is up and serving requests."
+        "description": "Health-check result showing that the API has warmed up and can serve requests."
       },
       "HouseholdCreateRequest": {
         "properties": {
@@ -8822,7 +9000,9 @@
             "type": "string",
             "enum": [
               "unauthenticated",
-              "standard"
+              "standard",
+              "author",
+              "admin"
             ],
             "title": "User Type"
           },
@@ -8893,7 +9073,7 @@
           "created_at"
         ],
         "title": "MeItem",
-        "description": "The current user: a signed-in account or a browser's unauthenticated user.\n\n``user_type`` says which. An unauthenticated user has no primary country, and\nonly a signed-in user can set its names or primary country."
+        "description": "The current user: a signed-in account or a browser's unauthenticated user.\n\n``user_type`` says which: ``unauthenticated``, or the signed-in user's\nstored type, ``standard``, ``author`` or ``admin``, where each type has\nevery permission of the types before it. An unauthenticated user has no\nprimary country, and only a signed-in user can set its names or primary\ncountry."
       },
       "MeUpgradeResponse": {
         "properties": {
@@ -11330,6 +11510,21 @@
             },
             "type": "array",
             "title": "Parameter Values"
+          },
+          "missing_parameters": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing Parameters",
+            "description": "The parameter paths this policy sets that the current tax-benefit model (the catalog of the running PolicyEngine.py version) no longer has, sorted; empty when it has them all. Null when that catalog is not published, so nothing could be checked. A policy with missing parameters cannot be run on the current model."
           }
         },
         "additionalProperties": false,
@@ -11340,7 +11535,8 @@
           "tax_benefit_model_id",
           "created_at",
           "updated_at",
-          "parameter_values"
+          "parameter_values",
+          "missing_parameters"
         ],
         "title": "PolicyItem",
         "description": "A stored policy: parameter values for one tax-benefit model.\n\nPolicies are immutable and deduplicated: creating one with identical\ncontent returns the existing policy and its ``id``."
