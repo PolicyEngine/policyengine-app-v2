@@ -141,7 +141,9 @@ This is done once, in this order, by a repository admin and an owner of the `@po
    - workflow filename: `publish-api-client.yaml`;
    - environment: `npm-publish`;
    - allowed actions: allow direct `npm publish` as well as `npm stage publish`, which npm always allows. npm refuses the workflow's `npm publish` without this.
-4. **Run the workflow on `main` within 2 days.** Then check that npm shows the new version with a provenance record.
+
+   A package can have several trusted publishers, and npm accepts a token that matches any one of them. If others are listed, remove each one that doesn't name the environment `npm-publish`.
+4. **Run the workflow on `main` within 2 days.** Then check that npm shows the new version with a provenance record. If the 2 days pass first, npm marks the trusted publisher expired and it can't be edited: delete it, add it again as in step 3, and run the workflow.
 5. **Optionally, disallow tokens.** Under the package's Publishing access, choose "Require two-factor authentication and disallow tokens". This stops publishing with npm access tokens. The package's maintainers on npm can still publish by hand with two-factor authentication.
 
 npm accepts the workflow's OIDC token only when its repository, workflow file and environment match the trusted publisher, and the repository also matches `repository.url` in `package.json`. The workflow's own `main`-only conditions are in the workflow file, which a copy on another branch could leave out. The environment's branch rule is what stops such a copy from getting a token that names `npm-publish`. GitHub's documentation doesn't say whether its "Allow administrators to bypass configured protection rules" setting lets admins skip that branch rule.
