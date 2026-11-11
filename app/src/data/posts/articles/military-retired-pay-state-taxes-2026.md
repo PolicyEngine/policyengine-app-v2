@@ -100,20 +100,20 @@ A retired couple aged 67 and 65, living on $45,000 of military retired pay and $
   "stacked": true,
   "xKey": "state",
   "series": [
-    {"key": "state_tax", "name": "State income tax", "color": "primary"},
-    {"key": "federal_tax", "name": "Federal income tax", "color": "quinary"}
+    {"key": "federal_tax", "name": "Federal income tax", "color": "quinary"},
+    {"key": "state_tax", "name": "State income tax", "color": "primary"}
   ],
   "data": [
-    {"state": "Hawaii", "state_tax": 440, "federal_tax": 1710},
-    {"state": "Delaware", "state_tax": 353, "federal_tax": 1710},
-    {"state": "Montana", "state_tax": 258, "federal_tax": 1710},
-    {"state": "Vermont", "state_tax": 250, "federal_tax": 1710},
-    {"state": "Maine", "state_tax": 220, "federal_tax": 1710},
-    {"state": "New Mexico", "state_tax": 152, "federal_tax": 1710},
-    {"state": "Indiana", "state_tax": 140, "federal_tax": 1710},
-    {"state": "Oklahoma", "state_tax": 80, "federal_tax": 1710},
-    {"state": "Arizona", "state_tax": 50, "federal_tax": 1710},
-    {"state": "Idaho", "state_tax": 10, "federal_tax": 1710}
+    {"state": "Hawaii", "federal_tax": 1710, "state_tax": 440},
+    {"state": "Delaware", "federal_tax": 1710, "state_tax": 353},
+    {"state": "Montana", "federal_tax": 1710, "state_tax": 258},
+    {"state": "Vermont", "federal_tax": 1710, "state_tax": 250},
+    {"state": "Maine", "federal_tax": 1710, "state_tax": 220},
+    {"state": "New Mexico", "federal_tax": 1710, "state_tax": 152},
+    {"state": "Indiana", "federal_tax": 1710, "state_tax": 140},
+    {"state": "Oklahoma", "federal_tax": 1710, "state_tax": 80},
+    {"state": "Arizona", "federal_tax": 1710, "state_tax": 50},
+    {"state": "Idaho", "federal_tax": 1710, "state_tax": 10}
   ],
   "format": {"decimals": 0, "prefix": "$", "separator": true},
   "source": "Source: PolicyEngine-US household calculations for 2026; github.com/PolicyEngine/veterans-day-2026."
