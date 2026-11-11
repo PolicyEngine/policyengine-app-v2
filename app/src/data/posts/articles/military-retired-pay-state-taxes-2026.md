@@ -5,7 +5,7 @@ Twenty-eight states exempt all military retired pay from income tax in 2026, inc
 | Treatment | States |
 | --- | --- |
 | Exempt all of it (28) | Alabama, Arizona, Arkansas, Connecticut, Hawaii, Illinois, Indiana, Iowa, Kansas, Louisiana, Maine, Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Nebraska, New Jersey, New York, North Dakota, Ohio, Oklahoma, Pennsylvania, Rhode Island, South Carolina, Utah, West Virginia and Wisconsin |
-| Exemption depends on the retiree (13) | California, Colorado, Delaware, Georgia, Idaho, Kentucky, Maryland, Montana, New Mexico, North Carolina, Oregon, Vermont and Virginia |
+| Exempt all, part or none of it, depending on the retiree (13) | California, Colorado, Delaware, Georgia, Idaho, Kentucky, Maryland, Montana, New Mexico, North Carolina, Oregon, Vermont and Virginia |
 | Exempt none of it | District of Columbia |
 | Levy no broad income tax (9) | Alaska, Florida, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Washington and Wyoming |
 
@@ -95,7 +95,7 @@ A retired couple aged 67 and 65, living on $45,000 of military retired pay and $
 {
   "type": "bar",
   "title": "Figure 2: Where $45,000 of military retired pay raises state income tax",
-  "subtitle": "Extra state income tax a married couple, ages 67 and 65, owes because of $45,000 of military retired pay, with $30,000 of Social Security, 2026",
+  "subtitle": "Extra state income tax a married couple owes when one spouse, age 67, receives $45,000 of military retired pay on top of $30,000 of Social Security, 2026",
   "orientation": "horizontal",
   "legend": false,
   "xKey": "state",
@@ -119,7 +119,7 @@ A retired couple aged 67 and 65, living on $45,000 of military retired pay and $
 }
 ```
 
-With the pay, the couple must count $19,600 of their Social Security as taxable income, their federal AGI rises from $0 to $64,600, and their federal income tax rises from $0 to $1,710. The federal increase is the same in each of the ten states in Figure 2.
+With the pay, the couple must count $19,600 of their Social Security as taxable income, their federal AGI rises from $0 to $64,600, and their federal income tax rises from $0 to $1,710.
 
 Montana exempts none of this couple's pay, because it exempts no more than the Montana earnings on a return and the couple has none. Montana also follows the federal rules for Social Security, so it taxes the $19,600 of it that the pay makes taxable, and the couple owes $258 more there. Delaware taxes all but $12,500 of the pay, and the couple owes $353 more. DC taxes all of the pay, but from 2026 it lets filers take the federal $6,000 deduction for each spouse 65 or older ([Fiscal Year 2027 Budget Support Act of 2026](https://lims.dccouncil.gov/downloads/LIMS/61627/Meeting3/Enrollment/B26-0661-Enrollment17.pdf?Id=243990#page=192), section 7112). With it, the couple's deductions in DC exceed the $45,000, and the couple owes no DC income tax. California, Colorado, Idaho, Maryland, New Mexico, Oregon and Virginia also tax part of this couple's pay, but after their deductions, exemptions and credits, the couple owes those states no income tax on it.
 
@@ -141,17 +141,17 @@ Idaho charges $10, its permanent building fund tax, on each return it requires (
 
 ## Conclusion
 
-In 2026, 28 states exempt all military retired pay from income tax, 13 exempt all, part or none of it, depending on the retiree, and DC taxes all of it. A couple in which a 45-year-old retiree draws $30,000 of the pay and earns $60,000 owes more state income tax because of it in nine states and DC, up to $2,310 in Oregon. A retired couple with $45,000 of the pay and $30,000 of Social Security owes more in ten states, up to $440 in Hawaii, and in seven of them only because the couple loses a credit.
+A married couple owes more state income tax in nine states and DC, up to $2,310 in Oregon, when one spouse, age 45, draws $30,000 of military retired pay and earns $60,000. After federal and state income tax, that couple keeps $24,090 to $26,580 of the pay. A retired couple with $45,000 of the pay and $30,000 of Social Security owes more in ten states, up to $440 in Hawaii, and keeps $42,850 to $43,290 of the pay after federal and state income tax. In seven of those states, the couple loses a credit, and Idaho charges $10 on each return it requires, so only Delaware and Montana collect tax on the pay itself.
 
-We invite you to explore our [additional analyses](https://www.policyengine.org/us/research) and use [PolicyEngine](https://www.policyengine.org/us) to calculate your own taxes and benefits.
+Use [PolicyEngine](https://www.policyengine.org/us) to calculate your own taxes and benefits.
 
 ## How we calculated the couples' taxes
 
-We calculated each couple's 2026 federal and state income tax in every state twice with [PolicyEngine-US](https://github.com/PolicyEngine/policyengine-us), once with the military retired pay and once without it. Both couples file jointly, claim no dependents and live in the state all year. Neither retiree has a service-connected disability. PolicyEngine-US counts Alaska's Permanent Fund Dividend as income, so in Alaska the retired couple's federal income tax rises by $2,080 rather than $1,710. In the retired couple, the retiree served entirely before 1998, and 177 of those 240 months fall before October 1991. In Montana, we assume the retiree meets the exemption's residency test and that 2026 falls within its five consecutive years. We count state credits, including refundable ones, in state income tax and leave out local income taxes, such as those Maryland's counties levy. Most states have yet to publish their 2026 forms, so we estimate some inflation-adjusted amounts, and the final amounts can differ by a few dollars. We ran PolicyEngine-US with updates we haven't yet released, such as DC's 2026 deductions, and until we release them, the PolicyEngine web calculator can show different amounts.
+We calculated each couple's 2026 federal and state income tax in every state twice with [PolicyEngine-US](https://github.com/PolicyEngine/policyengine-us), once with the military retired pay and once without it. Both couples file jointly, claim no dependents and live in the state all year. Neither retiree has a service-connected disability. PolicyEngine-US counts Alaska's Permanent Fund Dividend as income, so in Alaska the pay makes $21,300 of the retired couple's Social Security taxable and raises their federal income tax by $2,080 rather than $1,710. In the retired couple, the retiree served entirely before 1998, and 177 of those 240 months fall before October 1991. In Montana, we assume the retiree meets the exemption's residency test and that 2026 falls within its five consecutive years. We count state credits, including refundable ones, in state income tax and leave out local income taxes, such as those Maryland's counties levy. Most states have yet to publish their 2026 forms, so we estimate some inflation-adjusted amounts, and the final amounts can differ by a few dollars. We ran PolicyEngine-US with updates we haven't yet released, such as DC's 2026 deductions, and until we release them, the PolicyEngine web calculator can show different amounts.
 
 PolicyEngine's microdata don't record veteran status or military retired pay, so we don't estimate how many retirees each state's rules reach. We publish the code and full results, including a wider grid of pay and wages for both ages, at [github.com/PolicyEngine/veterans-day-2026](https://github.com/PolicyEngine/veterans-day-2026).
 
-PolicyEngine also models rules in benefit programs and state income taxes that depend on military service or veteran status. Table 4 in the appendix lists four of them.
+PolicyEngine also models rules in benefit programs and state income taxes that depend on military service or veteran status, including the four in Table 4 of the appendix.
 
 ## Appendix
 
