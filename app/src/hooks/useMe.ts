@@ -5,8 +5,13 @@ import { useCurrentPathname } from '@/contexts/LocationContext';
 import { isCallbackPath } from '@/libs/auth/authConfig';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
-import { queryConfig } from '@/libs/queryConfig';
 import { isAssociationCountry, type AssociationCountryId } from '@/types/v2User';
+
+/**
+ * How long a `GET /v2/me` answer stays fresh: five minutes, the calculator's
+ * query client default (calculator-app's providers.tsx).
+ */
+export const ME_STALE_TIME_MS = 5 * 60 * 1000;
 
 /**
  * The cache key of `GET /v2/me`: one entry per Auth0 subject and country.
@@ -48,10 +53,12 @@ export function useMeRequestCountry(): AssociationCountryId | null {
  * country. It requests nothing unless signed in to the US or UK (see
  * `useMeRequestCountry`); until then the query stays pending.
  *
- * Its answer stays fresh for the Public API's usual five minutes, whatever
- * the query client's defaults, so a component that starts reading it later,
- * such as a `MinimumUserType` the account page shows once the user is known,
- * reads the same answer instead of requesting it again.
+ * It sets only its freshness, `ME_STALE_TIME_MS`, so that a component that
+ * starts reading it later, such as a `MinimumUserType` the account page
+ * shows once the user is known, reads the same answer instead of requesting
+ * it again, even under a query client whose data goes stale at once.
+ * Refetching on window focus or reconnect, and retries, still follow the
+ * query client.
  */
 export function useMe() {
   const auth = useAuthStatus();
@@ -61,6 +68,6 @@ export function useMe() {
   return useQuery({
     queryKey: meQueryKey(auth.subject, countryId),
     queryFn: requestCountryId ? () => fetchMe(client, requestCountryId) : skipToken,
-    staleTime: queryConfig.api.staleTime,
+    staleTime: ME_STALE_TIME_MS,
   });
 }
