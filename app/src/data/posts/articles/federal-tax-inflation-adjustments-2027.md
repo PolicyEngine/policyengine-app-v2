@@ -2,7 +2,7 @@ On November 5, 2026, the Internal Revenue Service (IRS) [released](https://www.i
 
 ## Overview
 
-In the [Tax Cuts and Jobs Act of 2017](https://www.congress.gov/115/plaws/publ97/PLAW-115publ97.pdf#page=7) ([26 U.S.C. § 1(f)(3)](https://www.law.cornell.edu/uscode/text/26/1#f_3)), Congress began indexing federal income tax provisions to the Chained Consumer Price Index for All Urban Consumers (C-CPI-U). The Bureau of Labor Statistics (BLS) published no C-CPI-U value for October 2025. In the values BLS had published by September 2026, the C-CPI-U averaged 182.86 over the other 11 months of the year ending August 31, 2026, up 3.2% from 177.21 over the 12 months ending August 31, 2025.
+In the [Tax Cuts and Jobs Act of 2017](https://www.congress.gov/115/plaws/publ97/PLAW-115publ97.pdf#page=7) ([26 U.S.C. § 1(f)(3)](https://www.law.cornell.edu/uscode/text/26/1#f_3)), Congress began indexing federal income tax provisions to the Chained Consumer Price Index for All Urban Consumers (C-CPI-U). The Bureau of Labor Statistics (BLS) published no C-CPI-U value for October 2025. As of BLS's September 2026 release of August 2026 data, the C-CPI-U averaged 182.86 over the other 11 months of the year ending August 31, 2026, up 3.2% from 177.21 over the 12 months ending August 31, 2025.
 
 For years the IRS has not yet published, PolicyEngine projects these amounts. For most, we grow the latest IRS amount by the C-CPI-U, using observed values and then the Congressional Budget Office's [inflation projections](https://www.cbo.gov/data/budget-economic-data#4). For a few, including the EITC phase-out thresholds and the AMT 28% bracket threshold, we use CBO's projections of the amounts themselves. Users can then calculate household net income and analyze policy proposals for years before the IRS publishes official values.
 
@@ -23,10 +23,12 @@ As it did for [tax year 2025](/us/research/federal-tax-inflation-adjustments-202
 
 The IRS raised both indexed amounts of the Child Tax Credit (CTC) for 2027, each to the amount we had projected: the maximum refundable portion from $1,700 to $1,800, and the maximum credit from $2,200 to $2,300. Congress set the refundable portion at $1,400 per child in the [Tax Cuts and Jobs Act of 2017](https://www.congress.gov/115/plaws/publ97/PLAW-115publ97.pdf#page=21) (Public Law 115-97, section 11022) and indexed it for inflation. Congress raised the maximum credit to $2,200 in [H.R. 1, the One Big Beautiful Bill Act](https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf#page=90) (Public Law 119-21, section 70104) and indexed it for inflation after 2025. For both, the IRS rounds each increase down to a multiple of $100 ([26 U.S.C. § 24(i)(3)](https://www.law.cornell.edu/uscode/text/26/24#i_3)).
 
+The IRS also set the [minimum standard deduction for dependents](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/deductions/standard/dependent/amount.yaml) at $1,400 for 2027, the amount we had projected.
+
 In addition to the standard deduction, we updated the following provisions to their 2027 values:
 
 - [Additional standard deduction for the aged or blind](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/deductions/standard/aged_or_blind/amount.yaml) ($1,700, or $2,100 for unmarried filers other than surviving spouses)
-- [Dependent standard deduction](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/deductions/standard/dependent/amount.yaml) ($1,400) and its [earned income addition](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/deductions/standard/dependent/additional_earned_income.yaml) ($500)
+- [Earned income addition](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/deductions/standard/dependent/additional_earned_income.yaml) to the standard deduction for dependents ($500)
 - [Income tax bracket thresholds](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/income/bracket.yaml)
 - [Capital gains bracket thresholds](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/capital_gains/thresholds.yaml)
 - [EITC maximum amounts](https://github.com/PolicyEngine/policyengine-us/blob/main/policyengine_us/parameters/gov/irs/credits/eitc/max.yaml)
@@ -50,4 +52,4 @@ Arizona's Department of Revenue adjusts the state's standard deduction for infla
 
 Versions 2.116.3 and later of our [policyengine-us](https://pypi.org/project/policyengine-us/) Python package include the 2027 values. As of November 11, 2026, our [parameter explorer](/us/model/rules/parameters) and [web app](https://app.policyengine.org/us) run an earlier version of the model, which holds our projections for 2027.
 
-_Correction, November 11, 2026: An earlier version of this post gave the C-CPI-U's average for the 12 months ending August 31, 2025 as 177.11, the value BLS first published. BLS has since revised that average to 177.21._
+_Correction, November 11, 2026: An earlier version of this post gave the C-CPI-U's average for the 12 months ending August 31, 2025 as 177.11, from the values BLS first published. BLS has since revised those values, which now average 177.21. The earlier version also listed the CTC and the minimum standard deduction for dependents among the amounts we updated, though our projections already matched the IRS's 2027 values for both, and it left out the material participation condition for the QBI minimum deduction._
