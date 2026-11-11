@@ -122,9 +122,9 @@ A retired couple aged 67 and 65, living on $45,000 of military retired pay and $
 
 With the pay, the couple must count $19,600 of their Social Security as taxable income, their federal AGI rises from $0 to $64,600, and their federal income tax rises from $0 to $1,710.
 
-Montana exempts none of this couple's pay, because it exempts no more than the Montana earnings on a return and the couple has none. Montana also follows the federal rules for Social Security, so it taxes the $19,600 of it that the pay makes taxable, and the couple owes $258 more there. Delaware taxes all but $12,500 of the pay, and the couple owes $353 more. DC taxes all of the pay, but from 2026 it lets filers take the federal $6,000 deduction for each spouse 65 or older ([Fiscal Year 2027 Budget Support Act of 2026](https://lims.dccouncil.gov/downloads/LIMS/61627/Meeting3/Enrollment/B26-0661-Enrollment17.pdf?Id=243990#page=192), section 7112). With it, the couple's deductions in DC exceed the $45,000, and the couple owes no DC income tax. California, Colorado, Maryland, Oregon and Virginia also tax part of this couple's pay, but the couple owes no income tax in those states after their deductions, exemptions and credits.
+Montana exempts none of this couple's pay, because it exempts no more than the Montana earnings on a return and the couple has none. Montana also follows the federal rules for Social Security, so it taxes the $19,600 of it that the pay makes taxable, and the couple owes $258 more there. Delaware taxes all but $12,500 of the pay, and the couple owes $353 more. DC taxes all of the pay, but from 2026 it lets filers take the federal $6,000 deduction for each spouse 65 or older ([Fiscal Year 2027 Budget Support Act of 2026](https://lims.dccouncil.gov/downloads/LIMS/61627/Meeting3/Enrollment/B26-0661-Enrollment17.pdf?Id=243990#page=192), section 7112). With it, the couple's deductions in DC exceed the $45,000, and the couple owes no DC income tax. California, Colorado, Idaho, Maryland, New Mexico, Oregon and Virginia also tax part of this couple's pay, but the couple owes no income tax on it in those states after their deductions, exemptions and credits.
 
-In seven other states, the couple loses a credit:
+In seven states, the couple loses a credit:
 
 **Table 2: Credits the retired couple loses because of the pay**
 
