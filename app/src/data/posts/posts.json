@@ -4,7 +4,7 @@
     "description": "Of the 41 states with a broad income tax, 28 exempt all military retired pay in 2026 and 13 tax some or all of it. We calculate how the pay changes the state income tax that two couples, each with a military retiree, owe in every state.",
     "date": "2026-11-11 08:00:00",
     "tags": ["us", "policy", "tax"],
-    "authors": ["max-ghenis"],
+    "authors": ["max-ghenis", "david-trimmer"],
     "filename": "military-retired-pay-state-taxes-2026.md",
     "image": "military-retired-pay-state-taxes-2026/cover.webp"
   },
