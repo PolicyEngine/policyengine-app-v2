@@ -13,14 +13,11 @@
 import {
   checkOrigin,
   corsResponseHeaders,
-  createPublicApiForwarder,
   errorResponse,
   isJsonMediaType,
   ROUTE_ERROR_HEADER,
   isLocalDevelopmentOrigin,
   preflightResponse,
-  vercelClientAddress,
-  vercelRuntimeTokenStore,
   type CorsPolicy,
 } from "@policyengine/public-api-forwarding";
 
@@ -31,6 +28,8 @@ import {
   PUBLIC_API_ROUTE_PREFIX,
   matchAllowedOperation,
 } from "@/libs/publicApiRoute/allowList";
+
+import { calculatorPublicApi } from "../../calculatorPublicApi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,13 +45,6 @@ export const dynamic = "force-dynamic";
 // is usually milliseconds and at most the token request. Browsers calling
 // the Public API directly had no such window.
 export const maxDuration = 800;
-
-const calculatorPublicApi = createPublicApiForwarder({
-  environment: process.env,
-  callerName: "policyengine-calculator",
-  sharedTokenStore: vercelRuntimeTokenStore(),
-  clientAddress: vercelClientAddress,
-});
 
 // The calculator's own pages are same-origin. Only local work on another
 // port, such as the Vite dev server or Storybook, needs CORS.
