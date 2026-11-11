@@ -71,7 +71,7 @@ Each method that resolves with a result takes the result's type, for example `ca
 
 `createPolicyEngineApiClient({ baseUrl, fetch, unauthenticatedUserId })`:
 
-- `baseUrl`: where the dashboard API is served. The default is https://www.policyengine.org, which works from a dashboard served on www.policyengine.org, from its preview and from local development. Pass `""` to call the page's own origin.
+- `baseUrl`: where the dashboard API is served. The default is https://www.policyengine.org, which works from a dashboard served on www.policyengine.org, from its own allowed host (see [Which pages may call it](#which-pages-may-call-it)), from its preview and from local development. Pass `""` to call the page's own origin.
 - `fetch`: a `fetch` to use instead of the global one.
 - `unauthenticatedUserId`: sent as `PolicyEngine-Unauthenticated-User`, for pages that keep one.
 
@@ -119,7 +119,7 @@ That answer has no CORS headers. A page on www.policyengine.org reads it as abov
 
 ## Which pages may call it
 
-The dashboard API answers browser requests from www.policyengine.org itself, from `http://localhost` and `http://127.0.0.1` on any port, from the PolicyEngine team's Vercel previews (`*-policy-engine.vercel.app`), from the dashboards' own `*.vercel.app` hosts that www.policyengine.org serves, and from the exact hosts of a few other PolicyEngine dashboards, listed in the website's `src/lib/dashboardApi/cors.ts`. It refuses other sites' pages with 403.
+The dashboard API answers browser requests from www.policyengine.org itself, from `http://localhost` and `http://127.0.0.1` on any port, from the PolicyEngine team's Vercel previews (`*-policy-engine.vercel.app`), from the dashboards' own `*.vercel.app` hosts that www.policyengine.org serves, and from the exact hosts of a few other PolicyEngine dashboards, listed in `website/src/lib/dashboardApi/cors.ts` in [PolicyEngine/policyengine-app-v2](https://github.com/PolicyEngine/policyengine-app-v2). It refuses other sites' pages with 403.
 
 ## Releases
 

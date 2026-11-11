@@ -24,9 +24,10 @@ export const DASHBOARD_VERCEL_HOSTS: ReadonlySet<string> = new Set(
 );
 
 /**
- * Production hosts of PolicyEngine dashboards that call the dashboard API
- * and that DASHBOARD_VERCEL_HOSTS doesn't cover. Each is an exact host name,
- * never a pattern.
+ * Production hosts of PolicyEngine dashboards whose pages call the dashboard
+ * API (once their phase 4.1 changes, which move them off the Public API,
+ * ship) and that DASHBOARD_VERCEL_HOSTS doesn't cover. Each is an exact host
+ * name, never a pattern.
  */
 export const OTHER_DASHBOARD_HOSTS: ReadonlySet<string> = new Set([
   // nc-stein-2027-tax-proposals: both production domains of its Vercel

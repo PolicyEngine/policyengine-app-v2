@@ -8,6 +8,7 @@ import * as policiesRoute from "@/app/api/policies/route";
 import {
   DASHBOARD_VERCEL_HOSTS,
   isAllowedDashboardOrigin,
+  OTHER_DASHBOARD_HOSTS,
 } from "@/lib/dashboardApi/cors";
 
 import { getLegacyAppRedirectUrl } from "@/lib/legacyRedirect";
@@ -503,7 +504,7 @@ describe("the dashboard API's server credential", () => {
 });
 
 describe("dashboard API origins", () => {
-  test("given the zone routes then every dashboard *.vercel.app host is allowed and no other host is", () => {
+  test("given the zone routes then every dashboard *.vercel.app host is allowed and an unlisted host is not", () => {
     // Then
     expect(DASHBOARD_VERCEL_HOSTS.size).toBeGreaterThan(50);
     for (const host of DASHBOARD_VERCEL_HOSTS) {
@@ -521,8 +522,8 @@ describe("dashboard API origins", () => {
   });
 
   // The production hosts of phase 4.1 dashboards whose pages call the
-  // dashboard API and that the zone routes' *.vercel.app hosts don't cover,
-  // with the repository each one serves.
+  // dashboard API once their phase 4.1 changes ship, and that the zone
+  // routes' *.vercel.app hosts don't cover, with the repository each serves.
   test.each([
     ["nc-stein-2027-tax-proposals", "nc-governor-tax-proposals.vercel.app"],
     [
@@ -559,8 +560,10 @@ describe("dashboard API origins", () => {
   );
 
   // Dashboards with their own Vercel host whose pages don't call the
-  // dashboard API: aspen-eitc-ctc's production build calls its Modal backend,
-  // and autumn-budget-2025-in-review calls the Public API from its server.
+  // dashboard API, so they get no entry of their own: aspen-eitc-ctc's
+  // production build calls its Modal backend while its Vercel project sets
+  // NEXT_PUBLIC_HOUSEHOLD_API_URL, and autumn-budget-2025-in-review calls the
+  // Public API from its server. A later zone route may still allow either.
   test.each([
     ["aspen-eitc-ctc", "https://aspen-eitc-ctc.vercel.app"],
     [
@@ -568,10 +571,10 @@ describe("dashboard API origins", () => {
       "https://autumn-budget-2025-in-review.vercel.app",
     ],
   ])(
-    "given %s, whose pages don't call the dashboard API, then its host is refused",
+    "given %s, whose pages don't call the dashboard API, then its host is not listed",
     (_repository, origin) => {
       // Then
-      expect(isAllowedDashboardOrigin(new URL(origin))).toBe(false);
+      expect(OTHER_DASHBOARD_HOSTS.has(new URL(origin).hostname)).toBe(false);
     },
   );
 
