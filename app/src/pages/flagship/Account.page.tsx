@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { IconDownload, IconTrash } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
-import { deleteMe, exportMe, fetchMe } from '@/api/v2Me';
+import { deleteMe, exportMe } from '@/api/v2Me';
 import { AppLink } from '@/components/AppLink';
 import { accountDisplayName } from '@/components/auth/AuthMenu';
 import {
@@ -24,6 +23,7 @@ import {
 } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useMe } from '@/hooks/useMe';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { isAssociationCountry, type AssociationCountryId } from '@/types/v2User';
@@ -143,10 +143,7 @@ export default function AccountPage() {
 function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
   const auth = useAuthStatus();
   const client = useV2UserClient();
-  const me = useQuery({
-    queryKey: ['account', auth.subject, countryId],
-    queryFn: () => fetchMe(client, countryId),
-  });
+  const me = useMe();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);

@@ -1,8 +1,8 @@
 {
   "name": "@policyengine/api-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Browser client for www.policyengine.org's dashboard API: household calculations, policies, economy comparisons and country metadata.",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "repository": {
@@ -38,6 +38,7 @@
   "devDependencies": {
     "prettier": "^3.5.3",
     "typescript": "^5.8.0",
-    "vitest": "^3.2.3"
+    "vitest": "^3.2.3",
+    "yaml": "^2.8.1"
   }
 }
