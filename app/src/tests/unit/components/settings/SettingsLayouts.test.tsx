@@ -149,7 +149,7 @@ describe('AdminSettingsLayout', () => {
 
 describe('AccountSettingsLayout', () => {
   test.each<CountryId>(['us', 'uk'])(
-    'given the account page in %s then the My account sidebar has only General, marked as the current page',
+    'given the General page in %s then the My account sidebar lists General then My data, with General current',
     async (countryId) => {
       // Given
       answerMe(fetchMock);
@@ -159,13 +159,33 @@ describe('AccountSettingsLayout', () => {
 
       // Then
       const sidebar = screen.getByRole('navigation', { name: 'My account' });
-      const generalLink = within(sidebar).getByRole('link', { name: 'General' });
-      expect(generalLink).toHaveAttribute('href', `/${countryId}/account`);
-      expect(generalLink).toHaveAttribute('aria-current', 'page');
-      expect(within(sidebar).getAllByRole('link')).toHaveLength(1);
+      const links = within(sidebar).getAllByRole('link');
+      expect(links.map((link) => link.textContent)).toEqual(['General', 'My data']);
+      expect(links[0]).toHaveAttribute('href', `/${countryId}/account`);
+      expect(links[0]).toHaveAttribute('aria-current', 'page');
+      expect(links[1]).toHaveAttribute('href', `/${countryId}/account/data`);
+      expect(links[1]).not.toHaveAttribute('aria-current');
       expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument();
     }
   );
+
+  test('given the My data page then My data is the current page and General is not', () => {
+    // Given
+    answerMe(fetchMock);
+
+    // When
+    renderLayout({ Layout: AccountSettingsLayout, pathname: '/us/account/data' });
+
+    // Then
+    const sidebar = screen.getByRole('navigation', { name: 'My account' });
+    expect(within(sidebar).getByRole('link', { name: 'My data' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(within(sidebar).getByRole('link', { name: 'General' })).not.toHaveAttribute(
+      'aria-current'
+    );
+  });
 
   test('given a signed-out visitor then the account page still has its sidebar', () => {
     // When
