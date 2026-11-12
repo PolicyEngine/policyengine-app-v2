@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { IconBuilding, IconLogout, IconUserCircle } from '@tabler/icons-react';
 import { organizationUsersPath } from '@/components/admin/organizationSettingsPages';
 import {
@@ -86,8 +87,10 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
 /**
  * The signed-in user's menu. It reads the user's type (`GET /v2/me`) while
  * the header shows, not only once the menu opens, so that for an admin
- * "My organization" is normally there before the menu opens, rather than
- * added above "Sign out" while the user is choosing an item.
+ * "My organization" is normally there when the menu opens. Whether the
+ * item shows is decided as the menu opens and kept until it closes: an
+ * answer that arrives while it is open changes the next opening only, so
+ * no item is added above "Sign out" while the user is choosing one.
  */
 function SignedInAccountMenu({
   auth,
@@ -101,11 +104,20 @@ function SignedInAccountMenu({
   const nav = useAppNavigate();
   const userType = useUserType();
   const isAdmin = userType !== null && userTypeMeetsMinimum(userType, 'admin');
+  const [open, setOpen] = useState(false);
+  const [showOrganization, setShowOrganization] = useState(false);
   const name = accountDisplayName(auth);
   const email = auth.profile?.email;
 
+  const changeOpen = (nextOpen: boolean) => {
+    if (nextOpen) {
+      setShowOrganization(isAdmin);
+    }
+    setOpen(nextOpen);
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={changeOpen}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -150,7 +162,7 @@ function SignedInAccountMenu({
           <IconUserCircle size={16} />
           My account
         </DropdownMenuItem>
-        {isAdmin && (
+        {showOrganization && (
           <DropdownMenuItem onSelect={() => nav.push(organizationUsersPath(countryId))}>
             <IconBuilding size={16} />
             My organization

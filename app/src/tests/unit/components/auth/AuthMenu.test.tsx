@@ -13,11 +13,7 @@ import {
   itemResponse,
   meItemOfType,
 } from '@/tests/fixtures/api/v2UserMocks';
-import {
-  createTestQueryClient,
-  letPendingWorkRun,
-  MeStatusProbe,
-} from '@/tests/fixtures/hooks/useMeMocks';
+import { createTestQueryClient, MeStatusProbe } from '@/tests/fixtures/hooks/useMeMocks';
 import {
   AuthTestProvider,
   makeAuthValue,
@@ -170,9 +166,8 @@ describe('AuthMenu', () => {
       // Given: the header reads the user's type before the menu is opened.
       const user = userEvent.setup();
       answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
-      renderMenu(signedInAuthValue(), countryId);
-      await waitFor(() => expect(meReads()).toHaveLength(1));
-      await letPendingWorkRun();
+      renderMenu(signedInAuthValue(), countryId, { showMeStatus: true });
+      await screen.findByText('/v2/me status: success');
 
       // When
       await openMenu(user);
@@ -198,6 +193,33 @@ describe('AuthMenu', () => {
     // Then
     expect(screen.getByRole('menuitem', { name: /my account/i })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'My organization' })).not.toBeInTheDocument();
+  });
+
+  test('given /v2/me answers "admin" while the menu is open then the open menu keeps its items, and the next opening has "My organization"', async () => {
+    // Given
+    const user = userEvent.setup();
+    const pendingMe = deferredResponse();
+    answerMe(fetchMock, { meResponse: () => pendingMe.response });
+    renderMenu(signedInAuthValue(), 'us', { showMeStatus: true });
+    await waitFor(() => expect(meReads()).toHaveLength(1));
+    await openMenu(user);
+
+    // When
+    pendingMe.answer(itemResponse(meItemOfType('admin')));
+    await screen.findByText('/v2/me status: success');
+
+    // Then: no item is added under the pointer while the menu is open.
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'My account',
+      'Sign out',
+    ]);
+    await user.keyboard('{Escape}');
+    await openMenu(user);
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'My account',
+      'My organization',
+      'Sign out',
+    ]);
   });
 
   test.each(['standard', 'author'] as const)(
