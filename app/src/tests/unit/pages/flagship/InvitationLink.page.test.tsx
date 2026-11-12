@@ -28,7 +28,7 @@ describe('InvitationLinkPage', () => {
     expect(screen.getByText('Opening your invitation…')).toBeInTheDocument();
   });
 
-  test('given storage is blocked then the token goes on to the accept page in its fragment', () => {
+  test('given storage is blocked then the page says so, keeps the token out of the address bar and stays', () => {
     // Given
     vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
       throw new Error('Storage is blocked');
@@ -40,6 +40,10 @@ describe('InvitationLinkPage', () => {
     render(<InvitationLinkPage onContinue={continueTo} />);
 
     // Then
-    expect(continueTo).toHaveBeenCalledWith(`/us/invitations/accept#token=${INVITATION_TOKEN}`);
+    expect(
+      screen.getByRole('heading', { name: 'This browser is not keeping site data' })
+    ).toBeInTheDocument();
+    expect(window.location.hash).toBe('');
+    expect(continueTo).not.toHaveBeenCalled();
   });
 });

@@ -95,6 +95,31 @@ describe('AdminInvitations', () => {
     expect(invitationRequests()).toEqual([]);
   });
 
+  test('given a user search then going to the invitations and back keeps the search and its users', async () => {
+    // Given
+    const user = userEvent.setup();
+    answerInvitationApi(fetchMock);
+    renderAdminPage();
+    await user.type(await screen.findByRole('searchbox', { name: 'Email' }), 'grace');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+    await waitFor(() =>
+      expect(within(screen.getByRole('table', { name: 'Users' })).getAllByRole('row')).toHaveLength(
+        2
+      )
+    );
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Invitations' }));
+    await invitationsTable();
+    await user.click(screen.getByRole('tab', { name: 'Find users' }));
+
+    // Then
+    expect(screen.getByRole('searchbox', { name: 'Email' })).toHaveValue('grace');
+    expect(within(screen.getByRole('table', { name: 'Users' })).getAllByRole('row')).toHaveLength(
+      2
+    );
+  });
+
   test('given open invitations then the tab lists each with its type, last send and expiry', async () => {
     // When
     await openInvitations();

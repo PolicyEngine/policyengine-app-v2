@@ -93,22 +93,21 @@ export function clearPendingInvitationToken(token: string): void {
 /**
  * Saves the token in this page's URL fragment (`#token=…`), if there is
  * one, and removes the fragment from the address bar and this history
- * entry. With storage blocked the fragment stays, so the page can still
- * accept the token while it is open. Returns the token, or null when the
- * fragment has none.
+ * entry, so no script that records the page's address reads it. Returns
+ * the token, or null when the fragment has none; with storage blocked it
+ * is returned unsaved, for the page to use while it is open.
  */
 export function takeInvitationTokenFromUrl(): string | null {
   const token = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('token');
   if (!token) {
     return null;
   }
-  if (savePendingInvitationToken(token)) {
-    window.history.replaceState(
-      window.history.state,
-      '',
-      `${window.location.pathname}${window.location.search}`
-    );
-  }
+  savePendingInvitationToken(token);
+  window.history.replaceState(
+    window.history.state,
+    '',
+    `${window.location.pathname}${window.location.search}`
+  );
   return token;
 }
 

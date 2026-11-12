@@ -67,6 +67,7 @@ function UserTypeNotKnown() {
 
 function AdminUsers() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [openTab, setOpenTab] = useState('users');
   return (
     <PageShell>
       <Stack gap="xs">
@@ -74,21 +75,23 @@ function AdminUsers() {
           Users
         </Title>
         <Text style={{ margin: 0, color: colors.text.secondary }}>
-          Find signed-in users by email, change their user types, and see who changed them.
+          Find signed-in users by email, change their user types, and see who changed them, or
+          invite people by email to become authors or admins.
         </Text>
       </Stack>
-      {/* Only the open tab is rendered, so the invitations are read when their tab opens. */}
-      <Tabs defaultValue="users">
+      <Tabs value={openTab} onValueChange={setOpenTab}>
         <TabsList>
           <TabsTrigger value="users">Find users</TabsTrigger>
           <TabsTrigger value="invitations">Invitations</TabsTrigger>
         </TabsList>
-        <TabsContent value="users">
+        {/* Kept rendered while hidden, so a search survives a visit to the invitations. */}
+        <TabsContent value="users" forceMount hidden={openTab !== 'users'}>
           <Stack gap="xl">
             <AdminUserSearch selectedUserId={selectedUserId} onSelectUser={setSelectedUserId} />
             {selectedUserId && <AdminUserDetails key={selectedUserId} userId={selectedUserId} />}
           </Stack>
         </TabsContent>
+        {/* Rendered only while open, so the invitations are read when their tab opens. */}
         <TabsContent value="invitations">
           <AdminInvitations />
         </TabsContent>

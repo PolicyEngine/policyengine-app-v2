@@ -92,7 +92,7 @@ describe('pendingInvitation', () => {
     );
   });
 
-  test('given storage is blocked then the token stays in the address bar', () => {
+  test('given storage is blocked then the token is still returned and leaves the address bar', () => {
     // Given
     vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
       throw new Error('Storage is blocked');
@@ -104,7 +104,7 @@ describe('pendingInvitation', () => {
 
     // Then
     expect(token).toBe(INVITATION_TOKEN);
-    expect(window.location.hash).toBe(`#token=${INVITATION_TOKEN}`);
+    expect(window.location.hash).toBe('');
   });
 
   test('given no token in the fragment then a token saved earlier stays', () => {

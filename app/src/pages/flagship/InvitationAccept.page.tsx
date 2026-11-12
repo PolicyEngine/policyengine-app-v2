@@ -268,9 +268,9 @@ export default function InvitationAcceptPage() {
   const [token, setToken] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
-    const linkToken = takeInvitationTokenFromUrl();
-    // The link's own token, when storage is blocked and could not keep it.
-    setToken(readPendingInvitationToken() ?? linkToken);
+    // The link just opened wins over a token saved earlier, which a resend
+    // may have replaced; it is also the only copy when storage is blocked.
+    setToken(takeInvitationTokenFromUrl() ?? readPendingInvitationToken());
   }, []);
 
   if (token === undefined) {

@@ -15,11 +15,11 @@ import {
   emailNotVerifiedResponse,
   INVITATION_API_MESSAGES,
   INVITATION_TOKEN,
+  OTHER_INVITATION_TOKEN,
 } from '@/tests/fixtures/api/v2InvitationMocks';
-import { errorResponse, meItemOfType } from '@/tests/fixtures/api/v2UserMocks';
+import { deferredResponse, errorResponse, meItemOfType } from '@/tests/fixtures/api/v2UserMocks';
 import {
   forgetWindowFocus,
-  letPendingWorkRun,
   MeStatusProbe,
   returnToWindow,
   UserSessionProviders,
@@ -391,20 +391,52 @@ describe('InvitationAcceptPage', () => {
     ).toBeInTheDocument();
   });
 
-  test('given the window regains focus while the acceptance is under way then it is posted once', async () => {
+  test('given the email is not verified and the invitee comes back by focus and by showing the tab at once then it is posted once more', async () => {
     // Given
     savePendingInvitationToken(INVITATION_TOKEN);
-    answerAcceptanceApi(fetchMock, { signedInUser: STANDARD_USER });
+    const heldAnswer = deferredResponse();
+    let attempts = 0;
+    answerAcceptanceApi(fetchMock, {
+      signedInUser: STANDARD_USER,
+      acceptResponse: () => {
+        attempts += 1;
+        return attempts === 1 ? emailNotVerifiedResponse() : heldAnswer.response;
+      },
+    });
+    renderAcceptPage();
+    await screen.findByRole('heading', { name: 'Verify your email address' });
+
+    // When
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    await returnToWindow();
+    heldAnswer.answer(acceptanceResponse());
+
+    // Then
+    expect(
+      await screen.findByRole('heading', { name: 'You are now an author' })
+    ).toBeInTheDocument();
+    expect(acceptRequests()).toHaveLength(2);
+  });
+
+  test('given a newer link is opened while storage keeps an older token but cannot be written then the newer token is posted', async () => {
+    // Given
+    savePendingInvitationToken(OTHER_INVITATION_TOKEN);
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('Storage is full');
+    });
+    openAcceptPage(`#token=${INVITATION_TOKEN}`);
+    const { acceptBodies } = answerAcceptanceApi(fetchMock, { signedInUser: STANDARD_USER });
 
     // When
     renderAcceptPage();
-    await returnToWindow();
-    await screen.findByRole('heading', { name: 'You are now an author' });
-    await returnToWindow();
-    await letPendingWorkRun();
 
     // Then
-    expect(acceptRequests()).toHaveLength(1);
+    expect(
+      await screen.findByRole('heading', { name: 'You are now an author' })
+    ).toBeInTheDocument();
+    expect(acceptBodies).toEqual([{ token: INVITATION_TOKEN }]);
   });
 
   test("given storage is blocked then the link's own token is still accepted", async () => {
