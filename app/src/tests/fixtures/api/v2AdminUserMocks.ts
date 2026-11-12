@@ -67,7 +67,8 @@ export const ADMIN_API_MESSAGES = {
   LAST_ADMIN_DELETION:
     "The last admin's account can't be deleted; make another user an admin first",
   ACCOUNT_DELETION_UNAVAILABLE: 'Account deletion is temporarily unavailable; nothing was deleted',
-  OPERATION_FAILED: 'The operation could not be completed.',
+  /** The Public API's message for a 500. */
+  OPERATION_FAILED: 'V2 user operation failed',
 } as const;
 
 /**
