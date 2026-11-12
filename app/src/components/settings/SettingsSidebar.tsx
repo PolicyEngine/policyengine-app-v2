@@ -1,7 +1,7 @@
 import { AppLink } from '@/components/AppLink';
 import { useAppPathname } from '@/contexts/LocationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { isSettingsPageCurrent, type SettingsPage } from './settingsPages';
+import { currentSettingsPagePath, type SettingsPage } from './settingsPages';
 
 interface SettingsSidebarProps {
   /** The sidebar's accessible name, such as "My account" or "Admin". */
@@ -17,12 +17,16 @@ interface SettingsSidebarProps {
 export default function SettingsSidebar({ label, pages }: SettingsSidebarProps) {
   const countryId = useCurrentCountry();
   const pathname = useAppPathname();
+  const currentPath = currentSettingsPagePath(
+    pathname,
+    pages.map(({ path }) => path(countryId))
+  );
   return (
     <nav aria-label={label} className="tw:shrink-0 tw:md:w-48">
       <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-0.5 tw:p-0">
         {pages.map(({ label: pageLabel, icon: PageIcon, path }) => {
           const pagePath = path(countryId);
-          const current = isSettingsPageCurrent(pathname, pagePath);
+          const current = pagePath === currentPath;
           return (
             <li key={pageLabel}>
               <AppLink

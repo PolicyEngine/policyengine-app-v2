@@ -9,10 +9,6 @@ import {
   itemResponse,
   meItemOfType,
   mockMeItem,
-  okResponse,
-  PE_USER_ID,
-  policyItem,
-  reportItem,
   TEST_ACCESS_TOKEN,
 } from '@/tests/fixtures/api/v2UserMocks';
 import {
@@ -44,16 +40,6 @@ function sentRequest(method: string, url: string): SentRequest {
   );
   expect(matching).toHaveLength(1);
   return matching[0][1];
-}
-
-/** The text of a downloaded file, read the way a browser would. */
-function readBlob(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsText(blob);
-  });
 }
 
 function renderPage(auth: AuthContextValue, countryId = 'us') {
@@ -131,78 +117,17 @@ describe('AccountPage', () => {
     expect(await screen.findByText('Member since')).toBeInTheDocument();
   });
 
-  test('given "Download my data" then the export is fetched with the session token', async () => {
+  test('given a signed-in user then the General page has no "Download my data": it is on My data', async () => {
     // Given
-    const user = userEvent.setup();
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:export');
-    // jsdom has no revokeObjectURL
-    const revokeObjectURL = vi.fn();
-    Object.defineProperty(URL, 'revokeObjectURL', {
-      configurable: true,
-      writable: true,
-      value: revokeObjectURL,
-    });
-    answerMe(fetchMock, {
-      otherResponse: () =>
-        okResponse({
-          user: mockMeItem,
-          policies: [],
-          households: [],
-          simulations: [],
-          reports: [],
-        }),
-    });
-    renderPage(signedInAuthValue());
+    answerMe(fetchMock);
 
     // When
-    await user.click(await screen.findByRole('button', { name: /download my data/i }));
-
-    // Then
-    await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
-    const exportRequest = sentRequest('GET', '/api/policyengine/v2/me/export?country_id=us');
-    expect(exportRequest.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:export');
-  });
-
-  test('given "Download my data" then the file leaves out the account record and every user ID', async () => {
-    // Given
-    const user = userEvent.setup();
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:export');
-    Object.defineProperty(URL, 'revokeObjectURL', {
-      configurable: true,
-      writable: true,
-      value: vi.fn(),
-    });
-    const savedPolicy = policyItem();
-    const savedReport = reportItem();
-    answerMe(fetchMock, {
-      otherResponse: () =>
-        okResponse({
-          user: mockMeItem,
-          policies: [savedPolicy],
-          households: [],
-          simulations: [],
-          reports: [savedReport],
-        }),
-    });
     renderPage(signedInAuthValue());
-
-    // When
-    await user.click(await screen.findByRole('button', { name: /download my data/i }));
+    await screen.findByText('Member since');
 
     // Then
-    await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
-    const fileText = await readBlob(createObjectURL.mock.calls[0][0] as Blob);
-    const { user_id: _policyUserId, ...policyWithoutUser } = savedPolicy;
-    const { user_id: _reportUserId, ...reportWithoutUser } = savedReport;
-    expect(JSON.parse(fileText)).toEqual({
-      policies: [policyWithoutUser],
-      households: [],
-      simulations: [],
-      reports: [reportWithoutUser],
-    });
-    expect(fileText).not.toContain(PE_USER_ID);
-    expect(fileText).not.toContain(mockMeItem.email);
+    expect(screen.queryByRole('button', { name: /download my data/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /delete my account/i })).toBeInTheDocument();
   });
 
   test('given a confirmed deletion then the account is deleted and the user signed out', async () => {

@@ -5,9 +5,9 @@ import SettingsSidebar from './SettingsSidebar';
 
 /**
  * The account settings ("My account" in the account menu): the shared
- * settings template with a sidebar of the account pages (for now only
- * General). Everyone who can open the account page sees the sidebar,
- * signed out included.
+ * settings template with a sidebar of the account pages (General and My
+ * data). Everyone who can open the account pages sees the sidebar, signed
+ * out included.
  */
 export default function AccountSettingsLayout({ children }: { children: ReactNode }) {
   return (
