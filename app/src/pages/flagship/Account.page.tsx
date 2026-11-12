@@ -3,7 +3,6 @@ import { IconDownload, IconTrash } from '@tabler/icons-react';
 import { deleteMe, exportMe } from '@/api/v2Me';
 import { AppLink } from '@/components/AppLink';
 import { accountDisplayName } from '@/components/auth/AuthMenu';
-import MinimumUserType from '@/components/auth/MinimumUserType';
 import {
   Button,
   Card,
@@ -223,20 +222,6 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
           </Stack>
         </CardContent>
       </Card>
-
-      <MinimumUserType minimum="admin">
-        <Card>
-          <CardHeader>
-            <CardTitle>Users</CardTitle>
-            <CardDescription>
-              Find signed-in users by email, change their user types and delete their accounts.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AppLink to={`/${countryId}/admin/users`}>Manage users</AppLink>
-          </CardContent>
-        </Card>
-      </MinimumUserType>
 
       <Card>
         <CardHeader>

@@ -170,23 +170,9 @@ describe('AccountPage', () => {
     expect(deletion.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
   });
 
-  test('given an admin then the page links to the users page', async () => {
+  test('given an admin then the page has no users section: the account menu leads there', async () => {
     // Given
     answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
-
-    // When
-    renderPage(signedInAuthValue());
-
-    // Then
-    expect(await screen.findByRole('link', { name: 'Manage users' })).toHaveAttribute(
-      'href',
-      '/us/admin/users'
-    );
-  });
-
-  test('given a standard user then the page has no link to the users page', async () => {
-    // Given
-    answerMe(fetchMock);
 
     // When
     renderPage(signedInAuthValue());
@@ -194,6 +180,7 @@ describe('AccountPage', () => {
 
     // Then
     expect(screen.queryByRole('link', { name: 'Manage users' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/find signed-in users/i)).not.toBeInTheDocument();
   });
 
   test('given a country without account storage then the page points to the US and UK', () => {
