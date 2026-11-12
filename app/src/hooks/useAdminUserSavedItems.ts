@@ -12,10 +12,12 @@ import { retryTemporaryFailures, useReadMeAgainOnRefusal } from './useAdminUsers
  *
  * The Public API records every read with the admin's and the user's IDs,
  * so this reads only when it mounts (render it once the admin asks), and
- * not again when the window regains focus or the browser reconnects. Each
- * mount reads again, whatever is cached. A 403 reads `/v2/me` again, as
- * the other admin reads do; a 404 means the user is gone, so the user is
- * read again too, and the details then say so.
+ * not again when the window regains focus or the browser reconnects. The
+ * answer is dropped from the cache once nothing shows it, so each showing
+ * waits for its own read, and so shows only what a recorded read
+ * returned. A 403 reads `/v2/me` again, as the other admin reads do; a
+ * 404 means the user is gone, so the user is read again too, and the
+ * details then say so.
  */
 export function useAdminUserSavedItems(userId: string) {
   const { subject } = useAuthStatus();
@@ -31,6 +33,7 @@ export function useAdminUserSavedItems(userId: string) {
         }
         throw error;
       }),
+    gcTime: 0,
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,

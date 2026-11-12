@@ -1,7 +1,7 @@
 import type { Mock } from 'vitest';
 import type { components } from '@/api/publicApi/schema';
 import type { AdminUserItem } from '@/api/v2AdminUsers';
-import type { AdminUserSavedItems } from '@/api/v2AdminUserSavedItems';
+import type { UserSavedItems } from '@/api/v2AdminUserSavedItems';
 import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   ADMIN_API_MESSAGES,
@@ -108,7 +108,7 @@ export function savedReport(overrides: Partial<SavedReport> = {}): SavedReport {
  * The export's `user`: the admin user item's fields that `/v2/me` also has.
  * The admin item types its country as any string; `/v2/me` names `us` or `uk`.
  */
-export function exportedUser(user: AdminUserItem): AdminUserSavedItems['user'] {
+export function exportedUser(user: AdminUserItem): UserSavedItems['user'] {
   return {
     id: user.id,
     user_type: user.user_type,
@@ -121,7 +121,7 @@ export function exportedUser(user: AdminUserItem): AdminUserSavedItems['user'] {
 }
 
 /** What a user who saved nothing gets back. */
-export function nothingSaved(user: AdminUserItem): AdminUserSavedItems {
+export function nothingSaved(user: AdminUserItem): UserSavedItems {
   return { user: exportedUser(user), policies: [], households: [], simulations: [], reports: [] };
 }
 
@@ -129,7 +129,7 @@ export function nothingSaved(user: AdminUserItem): AdminUserSavedItems {
  * Grace's saved items: a v2 policy in the US and an unnamed v1 policy in
  * the UK, a v1 household, a v2 simulation and a v1 report that has run.
  */
-export const GRACE_SAVED_ITEMS: AdminUserSavedItems = {
+export const GRACE_SAVED_ITEMS: UserSavedItems = {
   user: exportedUser(GRACE),
   policies: [
     savedPolicy({ name: SAVED_ITEM_NAMES.US_POLICY, policy_id: SAVED_TARGET_IDS.V2_POLICY }),
@@ -169,7 +169,7 @@ export const GRACE_SAVED_ITEMS: AdminUserSavedItems = {
 export function answerSavedItems(
   fetchMock: Mock,
   apiState: ReturnType<typeof answerAdminApi>,
-  savedItemsByUserId: Readonly<Record<string, AdminUserSavedItems>> = {
+  savedItemsByUserId: Readonly<Record<string, UserSavedItems>> = {
     [GRACE.id]: GRACE_SAVED_ITEMS,
   }
 ) {

@@ -7,7 +7,7 @@ import type { V2UserClient } from '@/api/v2UserClient';
  * own `GET /v2/me/export` returns, the user and every policy, household,
  * simulation and report it saved, in every country.
  */
-export type AdminUserSavedItems = components['schemas']['AdminUserSavedItemsResponse']['result'];
+export type UserSavedItems = components['schemas']['AdminUserSavedItemsResponse']['result'];
 
 /**
  * Reads a signed-in user's saved items (`GET /v2/admin/users/{user_id}/saved-items`).
@@ -18,6 +18,6 @@ export type AdminUserSavedItems = components['schemas']['AdminUserSavedItemsResp
 export function fetchAdminUserSavedItems(
   client: V2UserClient,
   userId: string
-): Promise<AdminUserSavedItems> {
-  return client.request<AdminUserSavedItems>('GET', `${adminUserPath(userId)}/saved-items`);
+): Promise<UserSavedItems> {
+  return client.request<UserSavedItems>('GET', `${adminUserPath(userId)}/saved-items`);
 }

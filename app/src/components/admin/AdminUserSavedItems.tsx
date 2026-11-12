@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import type { AdminUserSavedItems as SavedItems } from '@/api/v2AdminUserSavedItems';
+import type { UserSavedItems } from '@/api/v2AdminUserSavedItems';
 import {
   Button,
   ShadcnTable,
@@ -14,7 +14,6 @@ import {
   Title,
 } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
-import { isRefusedOrMissing } from '@/hooks/useAdminUsers';
 import { useAdminUserSavedItems } from '@/hooks/useAdminUserSavedItems';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CountryId } from '@/libs/countries';
@@ -47,7 +46,7 @@ interface SavedItemKind {
   showsLastRun: boolean;
 }
 
-function savedItemKinds(savedItems: SavedItems): SavedItemKind[] {
+function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
   return [
     {
       heading: 'Policies',
@@ -170,12 +169,9 @@ function SavedItemsContent({ userId }: { userId: string }) {
   const countryId = useCurrentCountry();
   const savedItems = useAdminUserSavedItems(userId);
 
-  // Saved items already read stay on the screen when a later read fails
-  // for a while (a network error, a 5xx), but not after a 403 or 404.
-  if (
-    savedItems.isError &&
-    (savedItems.data === undefined || isRefusedOrMissing(savedItems.error))
-  ) {
+  // Each showing reads once and keeps nothing from an earlier one (see
+  // `useAdminUserSavedItems`), so an error here never has items to keep.
+  if (savedItems.isError) {
     return (
       <Stack gap="sm" align="start">
         <Text role="alert" size="sm" style={{ margin: 0, color: colors.error }}>

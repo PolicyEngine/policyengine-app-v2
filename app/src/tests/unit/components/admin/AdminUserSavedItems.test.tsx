@@ -24,6 +24,7 @@ import {
   createTestQueryClient,
   forgetWindowFocus,
   letPendingWorkRun,
+  reconnect,
   returnToWindow,
   UserSessionProviders,
 } from '@/tests/fixtures/hooks/useMeMocks';
@@ -367,6 +368,20 @@ describe('AdminUserSavedItems', () => {
     expect(savedItemsReads(GRACE.id)).toHaveLength(1);
   });
 
+  test('given the production cache defaults then reconnecting does not read the saved items again', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // When
+    await reconnect();
+    await letPendingWorkRun();
+
+    // Then
+    expect(savedItemsReads(GRACE.id)).toHaveLength(1);
+  });
+
   test("given the admin opens another user then that user's saved items wait to be asked for", async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!);
@@ -398,5 +413,51 @@ describe('AdminUserSavedItems', () => {
 
     // Then
     await waitFor(() => expect(savedItemsReads(GRACE.id)).toHaveLength(2));
+  });
+
+  test('given the saved items were shown before then showing them again waits for the new read', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+    await user.click(screen.getByRole('button', { name: ALAN.email! }));
+    await screen.findByText(ALAN.id);
+    await user.click(screen.getByRole('button', { name: GRACE.email! }));
+    await screen.findByText(GRACE.id);
+    const { answerHeldRequests } = holdRequests(
+      fetchMock,
+      (method, path) => method === 'GET' && path === savedItemsPath(GRACE.id)
+    );
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await letPendingWorkRun();
+
+    // Then
+    expect(screen.queryByRole('table', { name: 'Saved policies' })).not.toBeInTheDocument();
+    expect(screen.getByText('Loading the saved items…')).toBeInTheDocument();
+    answerHeldRequests();
+  });
+
+  test('given the saved items were shown before then a failed new read shows its error, not the earlier items', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+    await user.click(screen.getByRole('button', { name: ALAN.email! }));
+    await screen.findByText(ALAN.id);
+    await user.click(screen.getByRole('button', { name: GRACE.email! }));
+    await screen.findByText(GRACE.id);
+    failSavedItemsReads(GRACE.id, 503, SERVER_ERROR_MESSAGE);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await letRetriesRun();
+
+    // Then
+    expect(
+      await screen.findByText(`We could not load the saved items: ${SERVER_ERROR_MESSAGE}`)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Saved policies' })).not.toBeInTheDocument();
   });
 });

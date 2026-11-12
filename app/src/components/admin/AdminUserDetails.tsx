@@ -135,7 +135,7 @@ function DetailsMessage({ heading, children }: { heading: string; children: Reac
   );
 }
 
-/** One user's details, a control to change their type, and their type changes. */
+/** One user's details, a control to change their type, their type changes and their saved items. */
 export default function AdminUserDetails({ userId }: { userId: string }) {
   const countryId = useCurrentCountry();
   const adminUser = useAdminUser(userId);
