@@ -300,6 +300,22 @@ describe('AdminUserSavedItems', () => {
     expect(await screen.findByRole('table', { name: 'Saved policies' })).toBeInTheDocument();
   });
 
+  test('given trying again shows the saved items then focus moves to the saved items heading, since the button is gone', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const { answerAsTheApi } = failSavedItemsReads(GRACE.id, 503, SERVER_ERROR_MESSAGE);
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByText(`We could not load the saved items: ${SERVER_ERROR_MESSAGE}`);
+    fetchMock.mockImplementation(answerAsTheApi);
+
+    // When
+    await user.click(within(savedItemsSection()).getByRole('button', { name: 'Try again' }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // Then
+    expect(screen.getByRole('heading', { name: 'Saved items' })).toHaveFocus();
+  });
+
   test('given the saved items fail once with a server error then they are read again and show', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
@@ -439,7 +455,7 @@ describe('AdminUserSavedItems', () => {
     answerHeldRequests();
   });
 
-  test('given the saved items were shown before then a failed new read shows its error, not the earlier items', async () => {
+  test('given the saved items were shown before then the earlier items stay hidden while a new read fails, and its error shows', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
     await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
@@ -449,12 +465,22 @@ describe('AdminUserSavedItems', () => {
     await user.click(screen.getByRole('button', { name: GRACE.email! }));
     await screen.findByText(GRACE.id);
     failSavedItemsReads(GRACE.id, 503, SERVER_ERROR_MESSAGE);
+    const { answerHeldRequests } = holdRequests(
+      fetchMock,
+      (method, path) => method === 'GET' && path === savedItemsPath(GRACE.id)
+    );
 
     // When
     await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
-    await letRetriesRun();
+    await letPendingWorkRun();
+    const tableWhileReading = screen.queryByRole('table', { name: 'Saved policies' });
+    for (let round = 0; round < 10; round += 1) {
+      answerHeldRequests();
+      await letPendingWorkRun();
+    }
 
     // Then
+    expect(tableWhileReading).toBeNull();
     expect(
       await screen.findByText(`We could not load the saved items: ${SERVER_ERROR_MESSAGE}`)
     ).toBeInTheDocument();

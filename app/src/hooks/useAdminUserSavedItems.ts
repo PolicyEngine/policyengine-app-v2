@@ -13,9 +13,10 @@ import { retryTemporaryFailures, useReadMeAgainOnRefusal } from './useAdminUsers
  * The Public API records every read with the admin's and the user's IDs,
  * so this reads only when it mounts (render it once the admin asks), and
  * not again when the window regains focus or the browser reconnects. The
- * answer is dropped from the cache once nothing shows it, so each showing
- * waits for its own read, and so shows only what a recorded read
- * returned. A 403 reads `/v2/me` again, as the other admin reads do; a
+ * answer is dropped from the cache once nothing shows it, so a later
+ * showing never shows an earlier answer: it waits for a new read, or joins
+ * one still under way from a showing just closed. A 403 reads `/v2/me`
+ * again, as the other admin reads do; a
  * 404 means the user is gone, so the user is read again too, and the
  * details then say so.
  */

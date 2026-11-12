@@ -164,8 +164,11 @@ function SavedItemKindTable({ kind, countryId }: { kind: SavedItemKind; countryI
   );
 }
 
-/** Reads the saved items when it mounts, and shows them, or why they could not be read. */
-function SavedItemsContent({ userId }: { userId: string }) {
+/**
+ * Reads the saved items when it mounts, and shows them, or why they could
+ * not be read. `focusHeading` gives the section's heading focus.
+ */
+function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHeading: () => void }) {
   const countryId = useCurrentCountry();
   const savedItems = useAdminUserSavedItems(userId);
 
@@ -177,7 +180,15 @@ function SavedItemsContent({ userId }: { userId: string }) {
         <Text role="alert" size="sm" style={{ margin: 0, color: colors.error }}>
           We could not load the saved items: {savedItems.error.message}
         </Text>
-        <Button variant="outline" size="sm" onClick={() => savedItems.refetch()}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            // The button is gone once the read answers; focus would go nowhere.
+            focusHeading();
+            void savedItems.refetch();
+          }}
+        >
           Try again
         </Button>
       </Stack>
@@ -233,7 +244,7 @@ export default function AdminUserSavedItems({ userId }: { userId: string }) {
           Saved items
         </Title>
         {shown ? (
-          <SavedItemsContent userId={userId} />
+          <SavedItemsContent userId={userId} focusHeading={() => headingRef.current?.focus()} />
         ) : (
           <Stack gap="sm" align="start">
             <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
