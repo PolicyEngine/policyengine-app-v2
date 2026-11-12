@@ -1,9 +1,13 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent } from '@test-utils';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import AuthMenu from '@/components/auth/AuthMenu';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import HeaderActionButtons from '@/components/homeHeader/HeaderActionButtons';
+import { NavigationProvider } from '@/contexts/NavigationContext';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
+import { answerMe, itemResponse, meItemOfType } from '@/tests/fixtures/api/v2UserMocks';
+import { createTestQueryClient, MeStatusProbe } from '@/tests/fixtures/hooks/useMeMocks';
 import {
   AuthTestProvider,
   makeAuthValue,
@@ -17,17 +21,47 @@ vi.mock('@/types/v2User', async (importOriginal) => {
   return withSwitchableAccountStorage(await importOriginal());
 });
 
+const fetchMock = vi.fn();
+
+/** Where the menu's items navigate to. */
+const navigation = { push: vi.fn(), replace: vi.fn(), back: vi.fn() };
+
+beforeEach(() => {
+  fetchMock.mockReset();
+  answerMe(fetchMock);
+  vi.stubGlobal('fetch', fetchMock);
+  navigation.push.mockReset();
+});
+
 afterEach(() => {
   accountStorage.withoutAccountStorage = false;
 });
 
-function renderMenu(auth: AuthContextValue, countryId = 'us') {
+/**
+ * Renders the menu for `auth`. `GET /v2/me` answers with a standard user
+ * unless a test answers it otherwise; `showMeStatus` also shows that
+ * request's status, so a test can wait until it has answered.
+ */
+function renderMenu(
+  auth: AuthContextValue,
+  countryId = 'us',
+  { showMeStatus = false }: { showMeStatus?: boolean } = {}
+) {
   return render(
-    <AuthTestProvider value={auth}>
-      <AuthMenu />
-    </AuthTestProvider>,
+    <QueryClientProvider client={createTestQueryClient()}>
+      <NavigationProvider value={navigation}>
+        <AuthTestProvider value={auth}>
+          <AuthMenu />
+          {showMeStatus && <MeStatusProbe />}
+        </AuthTestProvider>
+      </NavigationProvider>
+    </QueryClientProvider>,
     countryId
   );
+}
+
+async function openMenu(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /account menu for ada lovelace/i }));
 }
 
 describe('legacy calculator pages', () => {
@@ -112,4 +146,36 @@ describe('AuthMenu', () => {
     await user.click(screen.getByRole('menuitem', { name: /sign out/i }));
     expect(auth.signOut).toHaveBeenCalled();
   });
+
+  test('given an admin then "My organization" opens the organization\'s users page', async () => {
+    // Given
+    const user = userEvent.setup();
+    answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
+    renderMenu(signedInAuthValue());
+
+    // When
+    await openMenu(user);
+    await user.click(await screen.findByRole('menuitem', { name: 'My organization' }));
+
+    // Then
+    expect(navigation.push).toHaveBeenCalledWith('/us/admin/users');
+  });
+
+  test.each(['standard', 'author'] as const)(
+    'given a user of type %s then the menu has no "My organization"',
+    async (userType) => {
+      // Given
+      const user = userEvent.setup();
+      answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType(userType)) });
+      renderMenu(signedInAuthValue(), 'us', { showMeStatus: true });
+      await screen.findByText('/v2/me status: success');
+
+      // When
+      await openMenu(user);
+
+      // Then
+      expect(screen.getByRole('menuitem', { name: /my account/i })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'My organization' })).not.toBeInTheDocument();
+    }
+  );
 });

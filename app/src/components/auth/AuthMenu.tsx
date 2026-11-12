@@ -1,4 +1,6 @@
-import { IconLogout, IconUserCircle } from '@tabler/icons-react';
+import { IconBuilding, IconLogout, IconUserCircle } from '@tabler/icons-react';
+import { organizationUsersPath } from '@/components/admin/OrganizationSettingsLayout';
+import MinimumUserType from '@/components/auth/MinimumUserType';
 import {
   Button,
   DropdownMenu,
@@ -31,8 +33,8 @@ function initialOf(name: string): string {
 /**
  * The v3 header's sign-in control: "Sign in" when signed out (with a note
  * when the last session ended on its own), the user menu (My account,
- * Sign out) when signed in, and nothing when sign-in is disabled or
- * outside the US and UK.
+ * My organization for admins, Sign out) when signed in, and nothing when
+ * sign-in is disabled or outside the US and UK.
  */
 export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
   const auth = useAuthStatus();
@@ -128,6 +130,13 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
           <IconUserCircle size={16} />
           My account
         </DropdownMenuItem>
+        {/* Admins only; it appears once /v2/me has said the user is one. */}
+        <MinimumUserType minimum="admin">
+          <DropdownMenuItem onSelect={() => nav.push(organizationUsersPath(countryId))}>
+            <IconBuilding size={16} />
+            My organization
+          </DropdownMenuItem>
+        </MinimumUserType>
         <DropdownMenuItem onSelect={() => auth.signOut()}>
           <IconLogout size={16} />
           Sign out
