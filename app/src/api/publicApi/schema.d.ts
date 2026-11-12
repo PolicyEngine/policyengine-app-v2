@@ -72,6 +72,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v2/me/invitations/accept': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Accept an invitation
+     * @description Signed-in users only. Gives the signed-in user the invited type when the token names a pending invitation and Auth0 reports the signed-in identity's email verified and equal to the invited address, ignoring case. An invitation never lowers a type: a user who already has that type or a higher one keeps it (outcome unchanged), and the invitation is still accepted.
+     */
+    post: operations['accept_invitation_v2_me_invitations_accept_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/me/type-changes/{type_change_id}/dismiss': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Dismiss the notice of a type change
+     * @description Signed-in users only. /v2/me's latest_type_change no longer names this change.
+     */
+    post: operations['dismiss_type_change_v2_me_type_changes__type_change_id__dismiss_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v2/admin/users': {
     parameters: {
       query?: never;
@@ -130,6 +170,70 @@ export interface paths {
     get: operations['list_user_type_changes_v2_admin_users__user_id__user_type_changes_get'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/admin/invitations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List pending invitations, newest first
+     * @description Admins only. Lists the invitations that are not accepted, revoked or expired, each saying whether its last email failed to send.
+     */
+    get: operations['list_invitations_v2_admin_invitations_get'];
+    put?: never;
+    /**
+     * Invite an email address to become an author or admin
+     * @description Admins only. Creates the invitation and emails its link to the address. Inviting an address with a pending invitation replaces that invitation's token. When the email fails to send, the invitation is still created, with last_send_failed set.
+     */
+    post: operations['create_invitation_v2_admin_invitations_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/admin/invitations/{invitation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke a pending invitation
+     * @description Admins only. Its link no longer works.
+     */
+    delete: operations['revoke_invitation_v2_admin_invitations__invitation_id__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/admin/invitations/{invitation_id}/resend': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Send a pending invitation again
+     * @description Admins only. Gives the invitation a new token and expiry, and emails the new link; the old link no longer works.
+     */
+    post: operations['resend_invitation_v2_admin_invitations__invitation_id__resend_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1137,6 +1241,32 @@ export interface components {
     };
     JsonValue: unknown;
     /**
+     * LatestUserTypeChange
+     * @description The signed-in user's latest type change, until the user dismisses it.
+     */
+    LatestUserTypeChange: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Previous User Type
+       * @enum {string}
+       */
+      previous_user_type: 'standard' | 'author' | 'admin';
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'standard' | 'author' | 'admin';
+      /**
+       * Changed At
+       * Format: date-time
+       */
+      changed_at: string;
+    };
+    /**
      * MeDetailResponse
      * @description Success response holding the current user.
      */
@@ -1224,6 +1354,7 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      latest_type_change: components['schemas']['LatestUserTypeChange'] | null;
     };
     /**
      * MeUpgradeResponse
@@ -2959,6 +3090,141 @@ export interface components {
       description?: string | null;
     };
     /**
+     * UserInvitationAcceptRequest
+     * @description The token from an invitation's link.
+     */
+    UserInvitationAcceptRequest: {
+      /** Token */
+      token: string;
+    };
+    /**
+     * UserInvitationAcceptResponse
+     * @description The response to an accepted invitation.
+     */
+    UserInvitationAcceptResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['UserInvitationAcceptResult'];
+    };
+    /**
+     * UserInvitationAcceptResult
+     * @description The signed-in user after accepting an invitation.
+     *
+     *     ``outcome`` is ``changed`` when the user was given the invited type, and
+     *     ``unchanged`` when the user already had it or a higher one.
+     */
+    UserInvitationAcceptResult: {
+      item: components['schemas']['MeItem'];
+      /**
+       * Outcome
+       * @enum {string}
+       */
+      outcome: 'changed' | 'unchanged';
+    };
+    /**
+     * UserInvitationCreateRequest
+     * @description The email address to invite and the type the invitation gives.
+     */
+    UserInvitationCreateRequest: {
+      /** Email */
+      email: string;
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'author' | 'admin';
+    };
+    /**
+     * UserInvitationItem
+     * @description A pending invitation to become an author or admin.
+     *
+     *     ``last_send_failed`` is true when its last email could not be sent after
+     *     retries; resending it tries again.
+     */
+    UserInvitationItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Email */
+      email: string;
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'author' | 'admin';
+      /** Invited By User Id */
+      invited_by_user_id: string | null;
+      /** Invited By Email */
+      invited_by_email: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Expires At
+       * Format: date-time
+       */
+      expires_at: string;
+      /** Last Sent At */
+      last_sent_at: string | null;
+      /** Last Send Failed */
+      last_send_failed: boolean;
+    };
+    /**
+     * UserInvitationListResponse
+     * @description The response for the pending invitations.
+     */
+    UserInvitationListResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['UserInvitationListResult'];
+    };
+    /**
+     * UserInvitationListResult
+     * @description The pending invitations, newest first.
+     */
+    UserInvitationListResult: {
+      /** Items */
+      items: components['schemas']['UserInvitationItem'][];
+    };
+    /**
+     * UserInvitationResponse
+     * @description The response for one invitation.
+     */
+    UserInvitationResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['UserInvitationResult'];
+    };
+    /**
+     * UserInvitationResult
+     * @description One invitation.
+     */
+    UserInvitationResult: {
+      item: components['schemas']['UserInvitationItem'];
+    };
+    /**
      * UserPolicyCreateRequest
      * @description Association fields; the owner is taken from the request credential.
      */
@@ -3437,7 +3703,7 @@ export interface components {
        * Source
        * @enum {string}
        */
-      source: 'admin_route' | 'script';
+      source: 'admin_route' | 'invitation' | 'script';
       /**
        * Created At
        * Format: date-time
@@ -3489,6 +3755,24 @@ export interface components {
        * @enum {string}
        */
       expected_user_type: 'standard' | 'author' | 'admin';
+    };
+    /**
+     * V2EmailNotVerifiedErrorResponse
+     * @description A refused acceptance. ``code`` is ``email_not_verified`` while the
+     *     signed-in identity's email is not verified, and null when the inviting
+     *     admin is no longer an admin.
+     */
+    V2EmailNotVerifiedErrorResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /** Code */
+      code?: 'email_not_verified' | null;
     };
     /**
      * V2ErrorResponse
@@ -4047,6 +4331,176 @@ export interface operations {
       };
     };
   };
+  accept_invitation_v2_me_invitations_accept_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UserInvitationAcceptRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserInvitationAcceptResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The signed-in identity's verified email is not the invited address. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The signed-in identity's email is not verified yet (code email_not_verified), or the admin who sent the invitation is no longer an admin. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2EmailNotVerifiedErrorResponse'];
+        };
+      };
+      /** @description The token names no pending invitation: it is unknown, used, revoked or expired. */
+      410: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Auth0, user authentication or persistence is unavailable; trying again is safe. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  dismiss_type_change_v2_me_type_changes__type_change_id__dismiss_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        type_change_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The signed-in user has no type change with this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
   list_users_v2_admin_users_get: {
     parameters: {
       query?: {
@@ -4386,6 +4840,326 @@ export interface operations {
       };
       /** @description The user's type is no longer the expected one, or the change would leave no admin. */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  list_invitations_v2_admin_invitations_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserInvitationListResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  create_invitation_v2_admin_invitations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UserInvitationCreateRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserInvitationResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  revoke_invitation_v2_admin_invitations__invitation_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        invitation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No pending invitation has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  resend_invitation_v2_admin_invitations__invitation_id__resend_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        invitation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserInvitationResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No pending invitation has this ID. */
+      404: {
         headers: {
           [name: string]: unknown;
         };

@@ -696,6 +696,215 @@
         }
       }
     },
+    "/v2/me/invitations/accept": {
+      "post": {
+        "summary": "Accept an invitation",
+        "description": "Signed-in users only. Gives the signed-in user the invited type when the token names a pending invitation and Auth0 reports the signed-in identity's email verified and equal to the invited address, ignoring case. An invitation never lowers a type: a user who already has that type or a higher one keeps it (outcome unchanged), and the invitation is still accepted.",
+        "operationId": "accept_invitation_v2_me_invitations_accept_post",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInvitationAcceptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInvitationAcceptResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The signed-in identity's verified email is not the invited address.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The signed-in identity's email is not verified yet (code email_not_verified), or the admin who sent the invitation is no longer an admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2EmailNotVerifiedErrorResponse"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "The token names no pending invitation: it is unknown, used, revoked or expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Auth0, user authentication or persistence is unavailable; trying again is safe.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/me/type-changes/{type_change_id}/dismiss": {
+      "post": {
+        "summary": "Dismiss the notice of a type change",
+        "description": "Signed-in users only. /v2/me's latest_type_change no longer names this change.",
+        "operationId": "dismiss_type_change_v2_me_type_changes__type_change_id__dismiss_post",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type_change_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Type Change Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The signed-in user has no type change with this ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v2/admin/users": {
       "get": {
         "summary": "List signed-in users, newest first",
@@ -1165,6 +1374,399 @@
           },
           "409": {
             "description": "The user's type is no longer the expected one, or the change would leave no admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/admin/invitations": {
+      "get": {
+        "summary": "List pending invitations, newest first",
+        "description": "Admins only. Lists the invitations that are not accepted, revoked or expired, each saying whether its last email failed to send.",
+        "operationId": "list_invitations_v2_admin_invitations_get",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInvitationListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Invite an email address to become an author or admin",
+        "description": "Admins only. Creates the invitation and emails its link to the address. Inviting an address with a pending invitation replaces that invitation's token. When the email fails to send, the invitation is still created, with last_send_failed set.",
+        "operationId": "create_invitation_v2_admin_invitations_post",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInvitationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInvitationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/admin/invitations/{invitation_id}": {
+      "delete": {
+        "summary": "Revoke a pending invitation",
+        "description": "Admins only. Its link no longer works.",
+        "operationId": "revoke_invitation_v2_admin_invitations__invitation_id__delete",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invitation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invitation Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No pending invitation has this ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/admin/invitations/{invitation_id}/resend": {
+      "post": {
+        "summary": "Send a pending invitation again",
+        "description": "Admins only. Gives the invitation a new token and expiry, and emails the new link; the old link no longer works.",
+        "operationId": "resend_invitation_v2_admin_invitations__invitation_id__resend_post",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invitation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invitation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInvitationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No pending invitation has this ID.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9582,6 +10184,48 @@
         "description": "One person in a household.\n\n``memberships`` maps each of the country's entity collections to the ``id``\nof the group the person belongs to, and must name every collection."
       },
       "JsonValue": {},
+      "LatestUserTypeChange": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "previous_user_type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
+            "title": "Previous User Type"
+          },
+          "user_type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
+            "title": "User Type"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Changed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "previous_user_type",
+          "user_type",
+          "changed_at"
+        ],
+        "title": "LatestUserTypeChange",
+        "description": "The signed-in user's latest type change, until the user dismisses it."
+      },
       "MeDetailResponse": {
         "properties": {
           "status": {
@@ -9767,6 +10411,16 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "latest_type_change": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LatestUserTypeChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -9778,7 +10432,8 @@
           "first_name",
           "last_name",
           "email",
-          "created_at"
+          "created_at",
+          "latest_type_change"
         ],
         "title": "MeItem",
         "description": "The current user: a signed-in account or a browser's unauthenticated user.\n\n``user_type`` says which: ``unauthenticated``, or the signed-in user's\nstored type, ``standard``, ``author`` or ``admin``, where each type has\nevery permission of the types before it. An unauthenticated user has no\nprimary country, and only a signed-in user can set its names or primary\ncountry."
@@ -13862,6 +14517,261 @@
         "title": "UserHouseholdPatchRequest",
         "description": "Explicitly supplied mutable link or presentation fields."
       },
+      "UserInvitationAcceptRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "UserInvitationAcceptRequest",
+        "description": "The token from an invitation's link."
+      },
+      "UserInvitationAcceptResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/UserInvitationAcceptResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "UserInvitationAcceptResponse",
+        "description": "The response to an accepted invitation."
+      },
+      "UserInvitationAcceptResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/MeItem"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "changed",
+              "unchanged"
+            ],
+            "title": "Outcome"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item",
+          "outcome"
+        ],
+        "title": "UserInvitationAcceptResult",
+        "description": "The signed-in user after accepting an invitation.\n\n``outcome`` is ``changed`` when the user was given the invited type, and\n``unchanged`` when the user already had it or a higher one."
+      },
+      "UserInvitationCreateRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "minLength": 3,
+            "title": "Email"
+          },
+          "user_type": {
+            "type": "string",
+            "enum": [
+              "author",
+              "admin"
+            ],
+            "title": "User Type"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email",
+          "user_type"
+        ],
+        "title": "UserInvitationCreateRequest",
+        "description": "The email address to invite and the type the invitation gives."
+      },
+      "UserInvitationItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "user_type": {
+            "type": "string",
+            "enum": [
+              "author",
+              "admin"
+            ],
+            "title": "User Type"
+          },
+          "invited_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited By User Id"
+          },
+          "invited_by_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited By Email"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "last_sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sent At"
+          },
+          "last_send_failed": {
+            "type": "boolean",
+            "title": "Last Send Failed"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "user_type",
+          "invited_by_user_id",
+          "invited_by_email",
+          "created_at",
+          "expires_at",
+          "last_sent_at",
+          "last_send_failed"
+        ],
+        "title": "UserInvitationItem",
+        "description": "A pending invitation to become an author or admin.\n\n``last_send_failed`` is true when its last email could not be sent after\nretries; resending it tries again."
+      },
+      "UserInvitationListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/UserInvitationListResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "UserInvitationListResponse",
+        "description": "The response for the pending invitations."
+      },
+      "UserInvitationListResult": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserInvitationItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "UserInvitationListResult",
+        "description": "The pending invitations, newest first."
+      },
+      "UserInvitationResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/UserInvitationResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "UserInvitationResponse",
+        "description": "The response for one invitation."
+      },
+      "UserInvitationResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/UserInvitationItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item"
+        ],
+        "title": "UserInvitationResult",
+        "description": "One invitation."
+      },
       "UserPolicyCreateRequest": {
         "properties": {
           "country_id": {
@@ -15149,6 +16059,7 @@
             "type": "string",
             "enum": [
               "admin_route",
+              "invitation",
               "script"
             ],
             "title": "Source"
@@ -15245,6 +16156,40 @@
         ],
         "title": "UserTypePatchRequest",
         "description": "The signed-in type an admin gives a user, and the type the admin last read.\n\nexpected_user_type is the user's type as the admin last read it. When the\nrequest would change the type and the stored type differs from\nexpected_user_type, the change is refused (409) and nothing is written.\nWhen the user already has user_type, nothing changes (200), whatever\nexpected_user_type is. Only the type is compared: a type changed and\nchanged back since the read is not detected."
+      },
+      "V2EmailNotVerifiedErrorResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error",
+            "title": "Status",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Message"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "email_not_verified"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "V2EmailNotVerifiedErrorResponse",
+        "description": "A refused acceptance. ``code`` is ``email_not_verified`` while the\nsigned-in identity's email is not verified, and null when the inviting\nadmin is no longer an admin."
       },
       "V2ErrorResponse": {
         "properties": {
