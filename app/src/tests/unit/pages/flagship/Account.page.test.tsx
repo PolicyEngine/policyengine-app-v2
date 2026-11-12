@@ -10,6 +10,9 @@ import {
   meItemOfType,
   mockMeItem,
   okResponse,
+  PE_USER_ID,
+  policyItem,
+  reportItem,
   TEST_ACCESS_TOKEN,
 } from '@/tests/fixtures/api/v2UserMocks';
 import {
@@ -41,6 +44,16 @@ function sentRequest(method: string, url: string): SentRequest {
   );
   expect(matching).toHaveLength(1);
   return matching[0][1];
+}
+
+/** The text of a downloaded file, read the way a browser would. */
+function readBlob(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(blob);
+  });
 }
 
 function renderPage(auth: AuthContextValue, countryId = 'us') {
@@ -83,7 +96,7 @@ describe('AccountPage', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('given a signed-in user then the page loads their PolicyEngine user from /v2/me', async () => {
+  test('given a signed-in user then the General page loads their PolicyEngine user from /v2/me, without showing its ID', async () => {
     // Given
     answerMe(fetchMock);
 
@@ -91,8 +104,11 @@ describe('AccountPage', () => {
     renderPage(signedInAuthValue());
 
     // Then
-    expect(await screen.findByText(mockMeItem.id)).toBeInTheDocument();
+    expect(await screen.findByText('Member since')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'General' })).toBeInTheDocument();
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+    expect(screen.queryByText(mockMeItem.id)).not.toBeInTheDocument();
+    expect(screen.queryByText('PolicyEngine user ID')).not.toBeInTheDocument();
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('/api/policyengine/v2/me?country_id=us');
     expect(init.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
@@ -112,7 +128,7 @@ describe('AccountPage', () => {
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
     // Then
-    expect(await screen.findByText(mockMeItem.id)).toBeInTheDocument();
+    expect(await screen.findByText('Member since')).toBeInTheDocument();
   });
 
   test('given "Download my data" then the export is fetched with the session token', async () => {
@@ -148,6 +164,47 @@ describe('AccountPage', () => {
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:export');
   });
 
+  test('given "Download my data" then the file leaves out the account record and every user ID', async () => {
+    // Given
+    const user = userEvent.setup();
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:export');
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
+    const savedPolicy = policyItem();
+    const savedReport = reportItem();
+    answerMe(fetchMock, {
+      otherResponse: () =>
+        okResponse({
+          user: mockMeItem,
+          policies: [savedPolicy],
+          households: [],
+          simulations: [],
+          reports: [savedReport],
+        }),
+    });
+    renderPage(signedInAuthValue());
+
+    // When
+    await user.click(await screen.findByRole('button', { name: /download my data/i }));
+
+    // Then
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
+    const fileText = await readBlob(createObjectURL.mock.calls[0][0] as Blob);
+    const { user_id: _policyUserId, ...policyWithoutUser } = savedPolicy;
+    const { user_id: _reportUserId, ...reportWithoutUser } = savedReport;
+    expect(JSON.parse(fileText)).toEqual({
+      policies: [policyWithoutUser],
+      households: [],
+      simulations: [],
+      reports: [reportWithoutUser],
+    });
+    expect(fileText).not.toContain(PE_USER_ID);
+    expect(fileText).not.toContain(mockMeItem.email);
+  });
+
   test('given a confirmed deletion then the account is deleted and the user signed out', async () => {
     // Given
     const user = userEvent.setup();
@@ -176,7 +233,7 @@ describe('AccountPage', () => {
 
     // When
     renderPage(signedInAuthValue());
-    await screen.findByText(mockMeItem.id);
+    await screen.findByText('Member since');
 
     // Then
     expect(screen.queryByRole('link', { name: 'Manage users' })).not.toBeInTheDocument();

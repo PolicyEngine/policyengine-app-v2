@@ -26,10 +26,37 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMe } from '@/hooks/useMe';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
-import { isAssociationCountry, type AssociationCountryId } from '@/types/v2User';
+import {
+  isAssociationCountry,
+  type AssociationCountryId,
+  type MeExportResult,
+} from '@/types/v2User';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
 const EXPORT_FILE_NAME = 'policyengine-account-data.json';
+
+/**
+ * The export as the downloaded file holds it: every saved record, without
+ * the account record (`user`) or the user ID (`user_id`) each record
+ * repeats. The Public API still sends them to the browser.
+ */
+function exportFileContent(exported: MeExportResult): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(exported)
+      .filter(([section]) => section !== 'user')
+      .map(([section, records]) => [
+        section,
+        Array.isArray(records) ? records.map(withoutUserId) : records,
+      ])
+  );
+}
+
+function withoutUserId(record: unknown): unknown {
+  if (record === null || typeof record !== 'object' || Array.isArray(record)) {
+    return record;
+  }
+  return Object.fromEntries(Object.entries(record).filter(([field]) => field !== 'user_id'));
+}
 
 function downloadJson(data: unknown, fileName: string): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -57,7 +84,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <Stack gap="xl">
       <Title order={1} style={{ margin: 0 }}>
-        Your account
+        General
       </Title>
       {children}
     </Stack>
@@ -81,9 +108,10 @@ function DetailRow({ label, value }: { label: string; value: string | null }) {
 }
 
 /**
- * The v3 account page: who the signed-in user is, downloading everything
- * saved to the account, and deleting the account. Reads the PolicyEngine
- * user from `GET /v2/me` (the user menu uses the Auth0 ID token instead).
+ * The v3 account page, the account settings' General page: who the
+ * signed-in user is, downloading everything saved to the account, and
+ * deleting the account. Reads the PolicyEngine user from `GET /v2/me` (the
+ * user menu uses the Auth0 ID token instead), and does not show its ID.
  */
 export default function AccountPage() {
   const auth = useAuthStatus();
@@ -183,7 +211,7 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
     setExporting(true);
     setExportError(null);
     try {
-      downloadJson(await exportMe(client, countryId), EXPORT_FILE_NAME);
+      downloadJson(exportFileContent(await exportMe(client, countryId)), EXPORT_FILE_NAME);
     } catch (error) {
       setExportError(error instanceof Error ? error.message : 'The download did not complete.');
     } finally {
@@ -218,7 +246,6 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
               value={user.primary_country ? getCountryLabel(user.primary_country) : null}
             />
             <DetailRow label="Member since" value={formatDate(user.created_at)} />
-            <DetailRow label="PolicyEngine user ID" value={user.id} />
           </Stack>
         </CardContent>
       </Card>
@@ -227,7 +254,7 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
         <CardHeader>
           <CardTitle>Download my data</CardTitle>
           <CardDescription>
-            A JSON file with your account and everything saved to it, in every country.
+            A JSON file with everything saved to your account, in every country.
           </CardDescription>
         </CardHeader>
         <CardContent>

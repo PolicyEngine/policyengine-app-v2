@@ -1,7 +1,9 @@
 import { useState, type ReactNode } from 'react';
 import { render, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import OrganizationSettingsLayout from '@/components/admin/OrganizationSettingsLayout';
+import AccountSettingsLayout from '@/components/settings/AccountSettingsLayout';
+import AdminSettingsLayout from '@/components/settings/AdminSettingsLayout';
+import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import type { CountryId } from '@/libs/countries';
 import {
   answerMe,
@@ -14,23 +16,33 @@ import {
   MeStatusProbe,
   UserSessionProviders,
 } from '@/tests/fixtures/hooks/useMeMocks';
-import { signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
+import { makeAuthValue, signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
 
 const fetchMock = vi.fn();
 
 const PAGE_CONTENT = 'The page inside the layout';
 
+type SettingsLayout = typeof AccountSettingsLayout;
+
 function renderLayout({
+  Layout = AdminSettingsLayout,
+  auth = signedInAuthValue(),
   countryId = 'us',
   pathname = `/${countryId}/admin/users`,
   page = <p>{PAGE_CONTENT}</p>,
-}: { countryId?: CountryId; pathname?: string; page?: ReactNode } = {}) {
+}: {
+  Layout?: SettingsLayout;
+  auth?: AuthContextValue;
+  countryId?: CountryId;
+  pathname?: string;
+  page?: ReactNode;
+} = {}) {
   return render(
     <UserSessionProviders
       queryClient={createTestQueryClient()}
-      session={{ auth: signedInAuthValue(), countryId, pathname }}
+      session={{ auth, countryId, pathname }}
     >
-      <OrganizationSettingsLayout>{page}</OrganizationSettingsLayout>
+      <Layout>{page}</Layout>
       <MeStatusProbe />
     </UserSessionProviders>,
     countryId
@@ -47,8 +59,8 @@ function PageWithState() {
   );
 }
 
-function organizationSidebar() {
-  return screen.queryByRole('navigation', { name: 'My organization' });
+function sidebarNamed(name: string) {
+  return screen.queryByRole('navigation', { name });
 }
 
 beforeEach(() => {
@@ -56,9 +68,9 @@ beforeEach(() => {
   vi.stubGlobal('fetch', fetchMock);
 });
 
-describe('OrganizationSettingsLayout', () => {
+describe('AdminSettingsLayout', () => {
   test.each<CountryId>(['us', 'uk'])(
-    'given an admin in %s then the sidebar links to the users page, marked as the current page',
+    'given an admin in %s then the Admin sidebar links to the users page, marked as the current page',
     async (countryId) => {
       // Given
       answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
@@ -67,15 +79,16 @@ describe('OrganizationSettingsLayout', () => {
       renderLayout({ countryId });
 
       // Then
-      const sidebar = await screen.findByRole('navigation', { name: 'My organization' });
+      const sidebar = await screen.findByRole('navigation', { name: 'Admin' });
       const usersLink = within(sidebar).getByRole('link', { name: 'Users' });
       expect(usersLink).toHaveAttribute('href', `/${countryId}/admin/users`);
       expect(usersLink).toHaveAttribute('aria-current', 'page');
+      expect(within(sidebar).getAllByRole('link')).toHaveLength(1);
       expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument();
     }
   );
 
-  test('given an admin on another organization page then Users is not marked as the current page', async () => {
+  test('given an admin on another admin page then Users is not marked as the current page', async () => {
     // Given
     answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
 
@@ -83,7 +96,7 @@ describe('OrganizationSettingsLayout', () => {
     renderLayout({ pathname: '/us/admin/users-archive' });
 
     // Then
-    const sidebar = await screen.findByRole('navigation', { name: 'My organization' });
+    const sidebar = await screen.findByRole('navigation', { name: 'Admin' });
     expect(within(sidebar).getByRole('link', { name: 'Users' })).not.toHaveAttribute(
       'aria-current'
     );
@@ -98,7 +111,7 @@ describe('OrganizationSettingsLayout', () => {
     await screen.findByText('/v2/me status: success');
 
     // Then
-    expect(organizationSidebar()).not.toBeInTheDocument();
+    expect(sidebarNamed('Admin')).not.toBeInTheDocument();
     expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument();
   });
 
@@ -113,7 +126,7 @@ describe('OrganizationSettingsLayout', () => {
 
     // Then
     expect(screen.getByText('/v2/me status: pending')).toBeInTheDocument();
-    expect(organizationSidebar()).not.toBeInTheDocument();
+    expect(sidebarNamed('Admin')).not.toBeInTheDocument();
     expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument();
   });
 
@@ -129,7 +142,42 @@ describe('OrganizationSettingsLayout', () => {
     pendingMe.answer(itemResponse(meItemOfType('admin')));
 
     // Then
-    expect(await screen.findByRole('navigation', { name: 'My organization' })).toBeInTheDocument();
+    expect(await screen.findByRole('navigation', { name: 'Admin' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Clicked 1 times' })).toBeInTheDocument();
+  });
+});
+
+describe('AccountSettingsLayout', () => {
+  test.each<CountryId>(['us', 'uk'])(
+    'given the account page in %s then the My account sidebar has only General, marked as the current page',
+    async (countryId) => {
+      // Given
+      answerMe(fetchMock);
+
+      // When
+      renderLayout({ Layout: AccountSettingsLayout, countryId, pathname: `/${countryId}/account` });
+
+      // Then
+      const sidebar = screen.getByRole('navigation', { name: 'My account' });
+      const generalLink = within(sidebar).getByRole('link', { name: 'General' });
+      expect(generalLink).toHaveAttribute('href', `/${countryId}/account`);
+      expect(generalLink).toHaveAttribute('aria-current', 'page');
+      expect(within(sidebar).getAllByRole('link')).toHaveLength(1);
+      expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument();
+    }
+  );
+
+  test('given a signed-out visitor then the account page still has its sidebar', () => {
+    // When
+    renderLayout({
+      Layout: AccountSettingsLayout,
+      auth: makeAuthValue(),
+      pathname: '/us/account',
+    });
+
+    // Then
+    expect(sidebarNamed('My account')).toBeInTheDocument();
+    expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -1,27 +1,30 @@
 import { AppLink } from '@/components/AppLink';
 import { useAppPathname } from '@/contexts/LocationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import {
-  isOrganizationSettingsPageCurrent,
-  ORGANIZATION_SETTINGS_PAGES,
-} from './organizationSettingsPages';
+import { isSettingsPageCurrent, type SettingsPage } from './settingsPages';
+
+interface SettingsSidebarProps {
+  /** The sidebar's accessible name, such as "My account" or "Admin". */
+  label: string;
+  pages: readonly SettingsPage[];
+}
 
 /**
- * The organization settings pages' links, styled like the account menu's
- * items: a 16px icon, then the label. The current page's link is marked
- * with `aria-current="page"`.
+ * A settings sidebar's links, styled like the account menu's items: a 16px
+ * icon, then the label. The current page's link is marked with
+ * `aria-current="page"`.
  */
-export default function OrganizationSettingsSidebar() {
+export default function SettingsSidebar({ label, pages }: SettingsSidebarProps) {
   const countryId = useCurrentCountry();
   const pathname = useAppPathname();
   return (
-    <nav aria-label="My organization" className="tw:shrink-0 tw:md:w-48">
+    <nav aria-label={label} className="tw:shrink-0 tw:md:w-48">
       <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-0.5 tw:p-0">
-        {ORGANIZATION_SETTINGS_PAGES.map(({ label, icon: PageIcon, path }) => {
+        {pages.map(({ label: pageLabel, icon: PageIcon, path }) => {
           const pagePath = path(countryId);
-          const current = isOrganizationSettingsPageCurrent(pathname, pagePath);
+          const current = isSettingsPageCurrent(pathname, pagePath);
           return (
-            <li key={label}>
+            <li key={pageLabel}>
               <AppLink
                 to={pagePath}
                 aria-current={current ? 'page' : undefined}
@@ -30,7 +33,7 @@ export default function OrganizationSettingsSidebar() {
                 }`}
               >
                 <PageIcon size={16} className="tw:shrink-0 tw:text-muted-foreground" aria-hidden />
-                {label}
+                {pageLabel}
               </AppLink>
             </li>
           );
