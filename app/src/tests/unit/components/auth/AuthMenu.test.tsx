@@ -161,7 +161,7 @@ describe('AuthMenu', () => {
   });
 
   test.each(['us', 'uk'])(
-    'given an admin in %s then "My organization" is in the menu as it opens, and opens the users page',
+    'given an admin in %s then "Admin" is in the menu as it opens, and opens the users page',
     async (countryId) => {
       // Given: the header reads the user's type before the menu is opened.
       const user = userEvent.setup();
@@ -171,7 +171,7 @@ describe('AuthMenu', () => {
 
       // When
       await openMenu(user);
-      await user.click(screen.getByRole('menuitem', { name: 'My organization' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Admin' }));
 
       // Then
       expect(navigation.push).toHaveBeenCalledWith(`/${countryId}/admin/users`);
@@ -179,7 +179,7 @@ describe('AuthMenu', () => {
     }
   );
 
-  test('given /v2/me has not answered then the menu has no "My organization"', async () => {
+  test('given /v2/me has not answered then the menu has no "Admin"', async () => {
     // Given
     const user = userEvent.setup();
     const pendingMe = deferredResponse();
@@ -192,10 +192,10 @@ describe('AuthMenu', () => {
 
     // Then
     expect(screen.getByRole('menuitem', { name: /my account/i })).toBeInTheDocument();
-    expect(screen.queryByRole('menuitem', { name: 'My organization' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Admin' })).not.toBeInTheDocument();
   });
 
-  test('given /v2/me answers "admin" while the menu is open then the open menu keeps its items, and the next opening has "My organization"', async () => {
+  test('given /v2/me answers "admin" while the menu is open then the open menu keeps its items, and the next opening has "Admin"', async () => {
     // Given
     const user = userEvent.setup();
     const pendingMe = deferredResponse();
@@ -217,12 +217,12 @@ describe('AuthMenu', () => {
     await openMenu(user);
     expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
       'My account',
-      'My organization',
+      'Admin',
       'Sign out',
     ]);
   });
 
-  test('given /v2/me answers "admin" while the menu is open then closing it by choosing an item and opening it by keyboard shows "My organization"', async () => {
+  test('given /v2/me answers "admin" while the menu is open then closing it by choosing an item and opening it by keyboard shows "Admin"', async () => {
     // Given
     const user = userEvent.setup();
     const pendingMe = deferredResponse();
@@ -240,11 +240,11 @@ describe('AuthMenu', () => {
 
     // Then
     expect(navigation.push).toHaveBeenCalledWith('/us/account');
-    expect(await screen.findByRole('menuitem', { name: 'My organization' })).toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: 'Admin' })).toBeInTheDocument();
   });
 
   test.each(['standard', 'author'] as const)(
-    'given a user of type %s then the menu has no "My organization"',
+    'given a user of type %s then the menu has no "Admin"',
     async (userType) => {
       // Given
       const user = userEvent.setup();
@@ -257,7 +257,7 @@ describe('AuthMenu', () => {
 
       // Then
       expect(screen.getByRole('menuitem', { name: /my account/i })).toBeInTheDocument();
-      expect(screen.queryByRole('menuitem', { name: 'My organization' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Admin' })).not.toBeInTheDocument();
     }
   );
 });
