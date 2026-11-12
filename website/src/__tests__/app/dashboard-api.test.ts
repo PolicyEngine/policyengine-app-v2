@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { TOKEN_REQUEST_TIMEOUT_MILLISECONDS } from "@policyengine/public-api-forwarding";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import * as economyCompareRoute from "@/app/api/economy/compare/route";
@@ -8,7 +9,9 @@ import * as policiesRoute from "@/app/api/policies/route";
 import {
   DASHBOARD_VERCEL_HOSTS,
   isAllowedDashboardOrigin,
+  OTHER_DASHBOARD_HOSTS,
 } from "@/lib/dashboardApi/cors";
+import { HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS } from "@/lib/dashboardApi/operations";
 
 import { getLegacyAppRedirectUrl } from "@/lib/legacyRedirect";
 
@@ -35,8 +38,43 @@ const REFORM_PARAMETERS = {
 const CALCULATION_ANSWER = { status: "ok", message: null, result: HOUSEHOLD };
 const COMPUTING_ANSWER = { status: "computing", message: null, result: null };
 const STORED_POLICY_ID = 98765;
+// The slowest household calculation answer the Public API's load balancer
+// recorded (2026-11-08): over Cloud Run's 300 s, which counts from when an
+// instance takes the request.
+const SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS = 396_000;
+// Reading the request and streaming a large answer back.
+const BODY_TRANSFER_MILLISECONDS = 30_000;
+// Vercel's longest function duration on the Pro plan with Fluid compute.
+const VERCEL_PRO_MAXIMUM_DURATION_SECONDS = 800;
 
 const fetchMock = vi.fn<typeof fetch>();
+
+/**
+ * A Public API that answers the calculation after the given time, or never
+ * when it is null. Aborting the request rejects it, as fetch does.
+ */
+function publicApiAnsweringAfter(
+  answerAfterMilliseconds: number | null,
+): typeof fetch {
+  return (_input, init) =>
+    new Promise<Response>((resolve, reject) => {
+      const answerTimer =
+        answerAfterMilliseconds === null
+          ? undefined
+          : setTimeout(
+              () => resolve(jsonAnswer(CALCULATION_ANSWER)),
+              answerAfterMilliseconds,
+            );
+      init?.signal?.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(answerTimer);
+          reject(new DOMException("The request was aborted.", "AbortError"));
+        },
+        { once: true },
+      );
+    });
+}
 
 function jsonAnswer(body: unknown, statusCode = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -106,6 +144,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
@@ -280,6 +319,77 @@ describe("POST /api/household/calculate", () => {
 
     // Then
     expect(response.status).toBe(403);
+  });
+
+  test("given the Public API takes as long as its slowest recorded household answer then the household calculation still passes its answer through", async () => {
+    // Given
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(
+      publicApiAnsweringAfter(SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS),
+    );
+
+    // When
+    const responsePromise = householdCalculateRoute.POST(
+      dashboardRequest("/api/household/calculate", {
+        method: "POST",
+        body: { country: "us", household: HOUSEHOLD },
+      }),
+    );
+    await vi.advanceTimersByTimeAsync(
+      SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS,
+    );
+    const response = await responsePromise;
+
+    // Then
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(CALCULATION_ANSWER);
+  });
+
+  test("given the Public API has not answered within the household wait then the household calculation answers 504", async () => {
+    // Given
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(publicApiAnsweringAfter(null));
+    let hasAnswered = false;
+
+    // When
+    const responsePromise = householdCalculateRoute
+      .POST(
+        dashboardRequest("/api/household/calculate", {
+          method: "POST",
+          body: { country: "us", household: HOUSEHOLD },
+        }),
+      )
+      .then((response) => {
+        hasAnswered = true;
+        return response;
+      });
+    await vi.advanceTimersByTimeAsync(
+      HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS - 1,
+    );
+    const answeredBeforeTheWaitEnded = hasAnswered;
+    await vi.advanceTimersByTimeAsync(1);
+    const response = await responsePromise;
+
+    // Then
+    expect(answeredBeforeTheWaitEnded).toBe(false);
+    expect(response.status).toBe(504);
+    expect(await response.json()).toEqual({
+      status: "error",
+      message: "The Public API did not answer in time.",
+      result: null,
+    });
+  });
+
+  test("given the household wait then the function may run long enough to get a token, wait and stream the answer, within the Pro plan's maximum", () => {
+    // Then
+    expect(householdCalculateRoute.maxDuration * 1000).toBeGreaterThanOrEqual(
+      TOKEN_REQUEST_TIMEOUT_MILLISECONDS +
+        HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS +
+        BODY_TRANSFER_MILLISECONDS,
+    );
+    expect(householdCalculateRoute.maxDuration).toBeLessThanOrEqual(
+      VERCEL_PRO_MAXIMUM_DURATION_SECONDS,
+    );
   });
 });
 
@@ -503,10 +613,11 @@ describe("the dashboard API's server credential", () => {
 });
 
 describe("dashboard API origins", () => {
-  test("given the zone routes then every dashboard *.vercel.app host is allowed and no other host is", () => {
+  test("given the zone routes then every dashboard *.vercel.app host is allowed and an unlisted host is not", () => {
     // Then
     expect(DASHBOARD_VERCEL_HOSTS.size).toBeGreaterThan(50);
     for (const host of DASHBOARD_VERCEL_HOSTS) {
+      expect(host).toMatch(/\.vercel\.app$/);
       expect(isAllowedDashboardOrigin(new URL(`https://${host}`))).toBe(true);
     }
     expect(
@@ -514,10 +625,102 @@ describe("dashboard API origins", () => {
     ).toBe(false);
     expect(
       isAllowedDashboardOrigin(
-        new URL("https://policyengine--state-legislative-tracker.modal.run"),
+        new URL("https://policyengine--another-app.modal.run"),
       ),
     ).toBe(false);
   });
+
+  // The production hosts of phase 4.1 dashboards whose pages call the
+  // dashboard API once their phase 4.1 changes ship, and that the zone
+  // routes' *.vercel.app hosts don't cover, with the repository each serves.
+  test.each([
+    ["autumn-budget-2025-in-review", "autumn-budget-2025-in-review.vercel.app"],
+    ["nc-stein-2027-tax-proposals", "nc-governor-tax-proposals.vercel.app"],
+    [
+      "nc-stein-2027-tax-proposals",
+      "policyengine-nc-stein-2027-tax-prop.vercel.app",
+    ],
+    ["policyengine-model", "policyengine-model-phi.vercel.app"],
+    [
+      "state-legislative-tracker",
+      "policyengine--state-legislative-tracker.modal.run",
+    ],
+  ])(
+    "given %s's production host %s then its pages may call the dashboard API",
+    async (_repository, host) => {
+      // Given
+      const dashboardOrigin = `https://${host}`;
+
+      // When
+      const response = await householdCalculateRoute.POST(
+        dashboardRequest("/api/household/calculate", {
+          method: "POST",
+          origin: dashboardOrigin,
+          body: { country: "us", household: HOUSEHOLD },
+        }),
+      );
+
+      // Then
+      expect(isAllowedDashboardOrigin(new URL(dashboardOrigin))).toBe(true);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("access-control-allow-origin")).toBe(
+        dashboardOrigin,
+      );
+    },
+  );
+
+  // Dashboards with their own Vercel host whose pages don't call the
+  // dashboard API, so they get no entry of their own: aspen-eitc-ctc's
+  // production build calls its Modal backend while its Vercel project sets
+  // NEXT_PUBLIC_HOUSEHOLD_API_URL. A later zone route may still allow it.
+  test.each([["aspen-eitc-ctc", "https://aspen-eitc-ctc.vercel.app"]])(
+    "given %s, whose pages don't call the dashboard API, then its host is not listed",
+    (_repository, origin) => {
+      // Then
+      expect(OTHER_DASHBOARD_HOSTS.has(new URL(origin).hostname)).toBe(false);
+    },
+  );
+
+  test.each([
+    ["plain http", "http://policyengine-model-phi.vercel.app"],
+    ["another port", "https://policyengine-model-phi.vercel.app:8443"],
+    ["a subdomain", "https://preview.policyengine-model-phi.vercel.app"],
+    ["a longer name", "https://policyengine-model-phi-copy.vercel.app"],
+    [
+      "another domain",
+      "https://policyengine-model-phi.vercel.app.example.test",
+    ],
+    [
+      "another Modal workspace",
+      "https://someone-else--state-legislative-tracker.modal.run",
+    ],
+    [
+      "the Modal app's development address",
+      "https://policyengine--state-legislative-tracker-dev.modal.run",
+    ],
+    [
+      "a Vercel name PolicyEngine doesn't hold",
+      "https://policyengine-model.vercel.app",
+    ],
+    ["every PolicyEngine GitHub Pages site", "https://policyengine.github.io"],
+  ])(
+    "given %s instead of a dashboard's exact host then it answers 403",
+    async (_label, origin) => {
+      // When
+      const response = await householdCalculateRoute.POST(
+        dashboardRequest("/api/household/calculate", {
+          method: "POST",
+          origin,
+          body: { country: "us", household: HOUSEHOLD },
+        }),
+      );
+
+      // Then
+      expect(isAllowedDashboardOrigin(new URL(origin))).toBe(false);
+      expect(response.status).toBe(403);
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   test.each([
     "/api/household/calculate",
