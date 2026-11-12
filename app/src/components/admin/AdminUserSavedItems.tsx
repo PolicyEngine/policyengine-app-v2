@@ -1,0 +1,255 @@
+import { useEffect, useId, useRef, useState } from 'react';
+import type { AdminUserSavedItems as SavedItems } from '@/api/v2AdminUserSavedItems';
+import {
+  Button,
+  ShadcnTable,
+  Spinner,
+  Stack,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Text,
+  Title,
+} from '@/components/ui';
+import { colors, typography } from '@/designTokens';
+import { isRefusedOrMissing } from '@/hooks/useAdminUsers';
+import { useAdminUserSavedItems } from '@/hooks/useAdminUserSavedItems';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import type { CountryId } from '@/libs/countries';
+import { getCountryLabel } from '@/utils/geographyUtils';
+import { formatAdminDate } from './adminUserFormat';
+
+/** One saved record, whatever its kind, as its table shows it. */
+interface SavedItemRow {
+  /** The saved record's own ID. */
+  id: string;
+  name: string | null;
+  countryId: string;
+  /** The ID of the policy, household, simulation or report it points to. */
+  targetId: string | null;
+  /** The same for one saved before the detailed-save API: a v1 ID. */
+  legacyTargetId: number | null;
+  createdAt: string;
+  /** Reports only: when it last ran, or null if it never has. */
+  lastRunAt?: string | null;
+}
+
+/** One kind of saved record: policies, households, simulations or reports. */
+interface SavedItemKind {
+  /** Plural, such as "Policies". */
+  heading: string;
+  tableLabel: string;
+  emptyMessage: string;
+  targetIdHeader: string;
+  rows: SavedItemRow[];
+  showsLastRun: boolean;
+}
+
+function savedItemKinds(savedItems: SavedItems): SavedItemKind[] {
+  return [
+    {
+      heading: 'Policies',
+      tableLabel: 'Saved policies',
+      emptyMessage: 'No saved policies.',
+      targetIdHeader: 'Policy ID',
+      showsLastRun: false,
+      rows: savedItems.policies.map((policy) => ({
+        id: policy.id,
+        name: policy.name,
+        countryId: policy.country_id,
+        targetId: policy.policy_id,
+        legacyTargetId: policy.legacy_policy_id,
+        createdAt: policy.created_at,
+      })),
+    },
+    {
+      heading: 'Households',
+      tableLabel: 'Saved households',
+      emptyMessage: 'No saved households.',
+      targetIdHeader: 'Household ID',
+      showsLastRun: false,
+      rows: savedItems.households.map((household) => ({
+        id: household.id,
+        name: household.name,
+        countryId: household.country_id,
+        targetId: household.household_id,
+        legacyTargetId: household.legacy_household_id,
+        createdAt: household.created_at,
+      })),
+    },
+    {
+      heading: 'Simulations',
+      tableLabel: 'Saved simulations',
+      emptyMessage: 'No saved simulations.',
+      targetIdHeader: 'Simulation ID',
+      showsLastRun: false,
+      rows: savedItems.simulations.map((simulation) => ({
+        id: simulation.id,
+        name: simulation.name,
+        countryId: simulation.country_id,
+        targetId: simulation.simulation_id,
+        legacyTargetId: simulation.legacy_simulation_id,
+        createdAt: simulation.created_at,
+      })),
+    },
+    {
+      heading: 'Reports',
+      tableLabel: 'Saved reports',
+      emptyMessage: 'No saved reports.',
+      targetIdHeader: 'Report ID',
+      showsLastRun: true,
+      rows: savedItems.reports.map((report) => ({
+        id: report.id,
+        name: report.name,
+        countryId: report.country_id,
+        targetId: report.report_id,
+        legacyTargetId: report.legacy_report_id,
+        createdAt: report.created_at,
+        lastRunAt: report.last_run_at,
+      })),
+    },
+  ];
+}
+
+/** The IDs a record points to: its v2 ID, its v1 ID marked "(v1)", or both. */
+function targetIdLabel({ targetId, legacyTargetId }: SavedItemRow): string {
+  const labels = [targetId, legacyTargetId === null ? null : `${legacyTargetId} (v1)`].filter(
+    (label): label is string => label !== null
+  );
+  return labels.length > 0 ? labels.join(', ') : 'None';
+}
+
+function SavedItemKindTable({ kind, countryId }: { kind: SavedItemKind; countryId: CountryId }) {
+  return (
+    <Stack gap="xs">
+      <Title order={4} style={{ margin: 0, fontSize: typography.fontSize.sm }}>
+        {`${kind.heading} (${kind.rows.length})`}
+      </Title>
+      {kind.rows.length === 0 ? (
+        <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
+          {kind.emptyMessage}
+        </Text>
+      ) : (
+        <ShadcnTable aria-label={kind.tableLabel}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Country</TableHead>
+              <TableHead>{kind.targetIdHeader}</TableHead>
+              <TableHead>Saved</TableHead>
+              {kind.showsLastRun && <TableHead>Last run</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {kind.rows.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell style={{ whiteSpace: 'normal' }}>{row.name ?? 'No name'}</TableCell>
+                <TableCell>{getCountryLabel(row.countryId)}</TableCell>
+                <TableCell style={{ whiteSpace: 'normal', wordBreak: 'break-all' }}>
+                  {targetIdLabel(row)}
+                </TableCell>
+                <TableCell>{formatAdminDate(row.createdAt, countryId)}</TableCell>
+                {kind.showsLastRun && (
+                  <TableCell>
+                    {row.lastRunAt ? formatAdminDate(row.lastRunAt, countryId) : 'Never'}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </ShadcnTable>
+      )}
+    </Stack>
+  );
+}
+
+/** Reads the saved items when it mounts, and shows them, or why they could not be read. */
+function SavedItemsContent({ userId }: { userId: string }) {
+  const countryId = useCurrentCountry();
+  const savedItems = useAdminUserSavedItems(userId);
+
+  // Saved items already read stay on the screen when a later read fails
+  // for a while (a network error, a 5xx), but not after a 403 or 404.
+  if (
+    savedItems.isError &&
+    (savedItems.data === undefined || isRefusedOrMissing(savedItems.error))
+  ) {
+    return (
+      <Stack gap="sm" align="start">
+        <Text role="alert" size="sm" style={{ margin: 0, color: colors.error }}>
+          We could not load the saved items: {savedItems.error.message}
+        </Text>
+        <Button variant="outline" size="sm" onClick={() => savedItems.refetch()}>
+          Try again
+        </Button>
+      </Stack>
+    );
+  }
+  if (savedItems.data === undefined) {
+    return (
+      <Stack role="status" aria-live="polite" gap="sm" align="start">
+        <Spinner size="sm" />
+        <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
+          Loading the saved items…
+        </Text>
+      </Stack>
+    );
+  }
+  return (
+    <Stack gap="lg">
+      {savedItemKinds(savedItems.data).map((kind) => (
+        <SavedItemKindTable key={kind.heading} kind={kind} countryId={countryId} />
+      ))}
+    </Stack>
+  );
+}
+
+/**
+ * A signed-in user's saved policies, households, simulations and reports,
+ * in every country, read-only. They are read only when the admin asks,
+ * since the Public API records each read with the admin's and the user's
+ * IDs: opening a user to change their type reads none of them.
+ */
+export default function AdminUserSavedItems({ userId }: { userId: string }) {
+  const [shown, setShown] = useState(false);
+  const headingId = useId();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    // "Show saved items" had focus and is gone; the heading takes it.
+    if (shown) {
+      headingRef.current?.focus();
+    }
+  }, [shown]);
+
+  return (
+    <section aria-labelledby={headingId}>
+      <Stack gap="sm">
+        <Title
+          order={3}
+          id={headingId}
+          ref={headingRef}
+          tabIndex={-1}
+          style={{ margin: 0, fontSize: typography.fontSize.base }}
+        >
+          Saved items
+        </Title>
+        {shown ? (
+          <SavedItemsContent userId={userId} />
+        ) : (
+          <Stack gap="sm" align="start">
+            <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
+              The policies, households, simulations and reports this user saved, in every country.
+              Each read is recorded with your ID and the user&apos;s.
+            </Text>
+            <Button variant="outline" size="sm" onClick={() => setShown(true)}>
+              Show saved items
+            </Button>
+          </Stack>
+        )}
+      </Stack>
+    </section>
+  );
+}

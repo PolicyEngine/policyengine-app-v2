@@ -161,4 +161,7 @@ export const adminUserKeys = {
     [...adminUserKeys.all(subject), 'user', userId] as const,
   typeChanges: (subject: string | null, userId: string) =>
     [...adminUserKeys.all(subject), 'user-type-changes', userId] as const,
+  /** Not under `user`, so a change of the user's type never cancels or overwrites it. */
+  savedItems: (subject: string | null, userId: string) =>
+    [...adminUserKeys.all(subject), 'saved-items', userId] as const,
 };

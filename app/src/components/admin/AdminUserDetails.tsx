@@ -33,6 +33,7 @@ import {
   SIGNED_IN_USER_TYPES,
   USER_TYPE_LABELS,
 } from './adminUserFormat';
+import AdminUserSavedItems from './AdminUserSavedItems';
 import ChangeUserTypeDialog, {
   type ChangeOutcomeMessage,
   type UserTypeConfirmation,
@@ -335,6 +336,8 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           </Stack>
 
           <UserTypeChangeHistory userId={userId} />
+
+          <AdminUserSavedItems userId={userId} />
         </Stack>
       </CardContent>
 

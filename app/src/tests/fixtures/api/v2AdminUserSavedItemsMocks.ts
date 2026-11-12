@@ -10,6 +10,7 @@ import {
   type answerAdminApi,
 } from '@/tests/fixtures/api/v2AdminUserMocks';
 import { errorResponse, okResponse, TIMESTAMPS } from '@/tests/fixtures/api/v2UserMocks';
+import { isAssociationCountry } from '@/types/v2User';
 
 type SavedPolicy = components['schemas']['UserPolicyItem'];
 type SavedHousehold = components['schemas']['UserHouseholdItem'];
@@ -103,12 +104,15 @@ export function savedReport(overrides: Partial<SavedReport> = {}): SavedReport {
   };
 }
 
-/** The export's `user`: the admin user item's fields that `/v2/me` also has. */
+/**
+ * The export's `user`: the admin user item's fields that `/v2/me` also has.
+ * The admin item types its country as any string; `/v2/me` names `us` or `uk`.
+ */
 export function exportedUser(user: AdminUserItem): AdminUserSavedItems['user'] {
   return {
     id: user.id,
     user_type: user.user_type,
-    primary_country: user.primary_country,
+    primary_country: isAssociationCountry(user.primary_country) ? user.primary_country : null,
     first_name: user.first_name,
     last_name: user.last_name,
     email: user.email,

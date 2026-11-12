@@ -1,0 +1,402 @@
+import type { QueryClient } from '@tanstack/react-query';
+import { cleanup, render, screen, userEvent, waitFor, within } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { formatAdminDate } from '@/components/admin/adminUserFormat';
+import AdminUsersPage from '@/pages/flagship/AdminUsers.page';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
+import {
+  ALAN,
+  answerAdminApi,
+  answerAsDemotedAdmin,
+  GRACE,
+  holdRequests,
+  sentRequests,
+} from '@/tests/fixtures/api/v2AdminUserMocks';
+import {
+  answerSavedItems,
+  REPORT_LAST_RUN_AT,
+  SAVED_ITEM_NAMES,
+  SAVED_TARGET_IDS,
+} from '@/tests/fixtures/api/v2AdminUserSavedItemsMocks';
+import { errorResponse, TIMESTAMPS } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  createProductionLikeQueryClient,
+  createTestQueryClient,
+  forgetWindowFocus,
+  letPendingWorkRun,
+  returnToWindow,
+  UserSessionProviders,
+} from '@/tests/fixtures/hooks/useMeMocks';
+import { signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
+
+const fetchMock = vi.fn();
+
+const SHOW_SAVED_ITEMS = 'Show saved items';
+const SERVER_ERROR_MESSAGE = 'Saved work is temporarily unavailable.';
+
+/** The saved-items route's path for `userId`. */
+function savedItemsPath(userId: string): string {
+  return `/v2/admin/users/${userId}/saved-items`;
+}
+
+function savedItemsReads(userId: string): string[] {
+  return sentRequests(fetchMock).filter((request) => request === `GET ${savedItemsPath(userId)}`);
+}
+
+/**
+ * Renders the admin page over the fake Public API, Grace's saved items
+ * included, and opens `email`'s details from the list of users.
+ */
+async function openUserDetails(email: string, queryClient: QueryClient = createTestQueryClient()) {
+  const user = userEvent.setup();
+  const apiState = answerAdminApi(fetchMock);
+  answerSavedItems(fetchMock, apiState);
+  render(
+    <UserSessionProviders
+      queryClient={queryClient}
+      session={{ auth: signedInAuthValue(), countryId: 'us' }}
+    >
+      <AdminUsersPage />
+    </UserSessionProviders>
+  );
+  await user.click(await screen.findByRole('button', { name: email }));
+  await screen.findByRole('radiogroup', { name: 'User type' });
+  return { user, apiState };
+}
+
+function savedItemsSection(): HTMLElement {
+  return screen.getByRole('region', { name: 'Saved items' });
+}
+
+/** Each body row of the table named `tableName`, as the text of its cells. */
+function rowsOf(tableName: string): string[][] {
+  const table = screen.getByRole('table', { name: tableName });
+  return within(table)
+    .getAllByRole('row')
+    .slice(1)
+    .map((row) =>
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent ?? '')
+    );
+}
+
+/** Answers every later read of `userId`'s saved items with `status`, until the test answers otherwise. */
+function failSavedItemsReads(userId: string, status: number, message: string) {
+  const answerAsTheApi = fetchMock.getMockImplementation()!;
+  fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
+    publicApiPathOf(url) === savedItemsPath(userId)
+      ? errorResponse(status, message)
+      : answerAsTheApi(url, init)
+  );
+  return { answerAsTheApi };
+}
+
+/** Lets queued work run several times over, long enough for immediate retries to finish. */
+async function letRetriesRun() {
+  for (let round = 0; round < 10; round += 1) {
+    await letPendingWorkRun();
+  }
+}
+
+const SAVED_DATE = formatAdminDate(TIMESTAMPS.CREATED, 'us');
+
+beforeEach(() => {
+  fetchMock.mockReset();
+  vi.stubGlobal('fetch', fetchMock);
+});
+
+afterEach(() => {
+  cleanup();
+  forgetWindowFocus();
+  vi.unstubAllGlobals();
+});
+
+describe('AdminUserSavedItems', () => {
+  test('given an admin opens a user then their saved items are not read until the admin asks', async () => {
+    // When
+    await openUserDetails(GRACE.email!);
+
+    // Then
+    expect(
+      within(savedItemsSection()).getByRole('button', { name: SHOW_SAVED_ITEMS })
+    ).toBeInTheDocument();
+    expect(savedItemsReads(GRACE.id)).toEqual([]);
+  });
+
+  test("given the admin asks then the user's saved items are read once", async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // Then
+    expect(savedItemsReads(GRACE.id)).toHaveLength(1);
+  });
+
+  test('given the admin asks then focus moves to the saved items heading, since the button is gone', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+
+    // Then
+    expect(screen.getByRole('heading', { name: 'Saved items' })).toHaveFocus();
+  });
+
+  test('given saved policies then each shows its name, country, policy ID and date saved', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // Then
+    expect(rowsOf('Saved policies')).toEqual([
+      [SAVED_ITEM_NAMES.US_POLICY, 'United States', SAVED_TARGET_IDS.V2_POLICY, SAVED_DATE],
+      ['No name', 'United Kingdom', `${SAVED_TARGET_IDS.V1_POLICY} (v1)`, SAVED_DATE],
+    ]);
+  });
+
+  test('given saved households, simulations and reports then each kind lists its own', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // Then
+    expect({
+      households: rowsOf('Saved households'),
+      simulations: rowsOf('Saved simulations'),
+      reports: rowsOf('Saved reports'),
+    }).toEqual({
+      households: [
+        [
+          SAVED_ITEM_NAMES.HOUSEHOLD,
+          'United States',
+          `${SAVED_TARGET_IDS.V1_HOUSEHOLD} (v1)`,
+          SAVED_DATE,
+        ],
+      ],
+      simulations: [
+        [SAVED_ITEM_NAMES.SIMULATION, 'United States', SAVED_TARGET_IDS.V2_SIMULATION, SAVED_DATE],
+      ],
+      reports: [
+        [
+          SAVED_ITEM_NAMES.REPORT,
+          'United States',
+          `${SAVED_TARGET_IDS.V1_REPORT} (v1)`,
+          SAVED_DATE,
+          formatAdminDate(REPORT_LAST_RUN_AT, 'us'),
+        ],
+      ],
+    });
+  });
+
+  test('given saved items then each kind is headed with how many there are', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // Then
+    const headings = within(savedItemsSection())
+      .getAllByRole('heading', { level: 4 })
+      .map((heading) => heading.textContent);
+    expect(headings).toEqual(['Policies (2)', 'Households (1)', 'Simulations (1)', 'Reports (1)']);
+  });
+
+  test('given a user who saved nothing then each kind says none are saved', async () => {
+    // Given
+    const { user } = await openUserDetails(ALAN.email!);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+
+    // Then
+    await screen.findByText('No saved policies.');
+    expect(
+      within(savedItemsSection())
+        .getAllByText(/^No saved /)
+        .map((message) => message.textContent)
+    ).toEqual([
+      'No saved policies.',
+      'No saved households.',
+      'No saved simulations.',
+      'No saved reports.',
+    ]);
+  });
+
+  test('given the saved items are shown then the view offers nothing that changes them', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // Then
+    const section = savedItemsSection();
+    const controls = ['button', 'link', 'textbox', 'checkbox', 'combobox', 'menuitem'].flatMap(
+      (role) => within(section).queryAllByRole(role)
+    );
+    expect(controls).toEqual([]);
+  });
+
+  test('given the saved items are shown then only reads were sent', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // Then
+    const methods = new Set(sentRequests(fetchMock).map((request) => request.split(' ')[0]));
+    expect([...methods]).toEqual(['GET']);
+  });
+
+  test('given the saved items have not answered then the section says they are loading', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const { answerHeldRequests } = holdRequests(
+      fetchMock,
+      (method, path) => method === 'GET' && path === savedItemsPath(GRACE.id)
+    );
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+
+    // Then
+    expect(
+      await within(savedItemsSection()).findByText('Loading the saved items…')
+    ).toBeInTheDocument();
+    answerHeldRequests();
+  });
+
+  test('given the saved items cannot be read then trying again shows them', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const { answerAsTheApi } = failSavedItemsReads(GRACE.id, 503, SERVER_ERROR_MESSAGE);
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    expect(
+      await screen.findByText(`We could not load the saved items: ${SERVER_ERROR_MESSAGE}`)
+    ).toHaveAttribute('role', 'alert');
+    fetchMock.mockImplementation(answerAsTheApi);
+
+    // When
+    await user.click(within(savedItemsSection()).getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(await screen.findByRole('table', { name: 'Saved policies' })).toBeInTheDocument();
+  });
+
+  test('given the saved items fail once with a server error then they are read again and show', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
+    const answerAsTheApi = fetchMock.getMockImplementation()!;
+    let failuresLeft = 1;
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      if (publicApiPathOf(url) === savedItemsPath(GRACE.id) && failuresLeft > 0) {
+        failuresLeft -= 1;
+        return errorResponse(503, SERVER_ERROR_MESSAGE);
+      }
+      return answerAsTheApi(url, init);
+    });
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+
+    // Then
+    expect(await screen.findByRole('table', { name: 'Saved policies' })).toBeInTheDocument();
+  });
+
+  test('given the signed-in admin was demoted then the read is not retried and the page becomes not found', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
+    answerAsDemotedAdmin(fetchMock);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await letRetriesRun();
+
+    // Then
+    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
+    expect(savedItemsReads(GRACE.id)).toHaveLength(1);
+  });
+
+  test('given the user was deleted then the saved items are not retried and the details say the user no longer exists', async () => {
+    // Given
+    const { user, apiState } = await openUserDetails(
+      GRACE.email!,
+      createProductionLikeQueryClient()
+    );
+    apiState.users.splice(
+      apiState.users.findIndex((candidate) => candidate.id === GRACE.id),
+      1
+    );
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await letRetriesRun();
+
+    // Then
+    expect(await screen.findByText('This user no longer exists.')).toBeInTheDocument();
+    expect(savedItemsReads(GRACE.id)).toHaveLength(1);
+  });
+
+  test('given the production cache defaults then returning to the window does not read the saved items again', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // When
+    await returnToWindow();
+    await letPendingWorkRun();
+
+    // Then
+    expect(savedItemsReads(GRACE.id)).toHaveLength(1);
+  });
+
+  test("given the admin opens another user then that user's saved items wait to be asked for", async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // When
+    await user.click(screen.getByRole('button', { name: ALAN.email! }));
+    await screen.findByText(ALAN.id);
+
+    // Then
+    expect(screen.queryByRole('table', { name: 'Saved policies' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: SHOW_SAVED_ITEMS })).toBeInTheDocument();
+    expect(savedItemsReads(ALAN.id)).toEqual([]);
+  });
+
+  test('given the admin opens the same user again and asks then the saved items are read again', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+    await user.click(screen.getByRole('button', { name: ALAN.email! }));
+    await screen.findByText(ALAN.id);
+    await user.click(screen.getByRole('button', { name: GRACE.email! }));
+    await screen.findByText(GRACE.id);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+
+    // Then
+    await waitFor(() => expect(savedItemsReads(GRACE.id)).toHaveLength(2));
+  });
+});
