@@ -132,6 +132,13 @@ export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
   operation('account export', ['GET'], '/v2/me/export'),
   operation('account upgrade', ['POST'], '/v2/me/upgrade'),
 
+  // Admins' reads and type changes of signed-in users (api/v2AdminUsers.ts).
+  // Each carries the signed-in admin's own token, which the route forwards;
+  // the Public API refuses callers below admin.
+  operation('admin users', ['GET'], '/v2/admin/users'),
+  operation('admin user', ['GET', 'PATCH'], `/v2/admin/users/${UUID}`),
+  operation('admin user type changes', ['GET'], `/v2/admin/users/${UUID}/user-type-changes`),
+
   // Shared reports, read by anyone with the link (api/sharedReport.ts).
   operation('shared report', ['GET'], `/v2/shared-reports/${UUID}`),
 

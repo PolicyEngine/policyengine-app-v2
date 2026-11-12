@@ -72,6 +72,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v2/admin/users': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List signed-in users, newest first
+     * @description Admins only. With email, lists only users with an email address containing it, ignoring case; % and _ match themselves. Unauthenticated users are never listed.
+     */
+    get: operations['list_users_v2_admin_users_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/admin/users/{user_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read one signed-in user
+     * @description Admins only. An unauthenticated user's ID is not found (404).
+     */
+    get: operations['get_user_v2_admin_users__user_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Change a signed-in user's type
+     * @description Admins only. Records the change in the user's type history. Setting the type the user already has changes and records nothing, whatever expected_user_type is. Otherwise expected_user_type, the user's type as the admin last read it, must still be the stored type: when it differs, the change is refused (409) and nothing is written. Only the type is compared, so a type changed and changed back since the read is not detected. Demoting the last admin is refused (409) too.
+     */
+    patch: operations['change_user_type_v2_admin_users__user_id__patch'];
+    trace?: never;
+  };
+  '/v2/admin/users/{user_id}/user-type-changes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read a signed-in user's recorded type changes, newest first
+     * @description Admins only.
+     */
+    get: operations['list_user_type_changes_v2_admin_users__user_id__user_type_changes_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v2/user-reports': {
     parameters: {
       query?: never;
@@ -746,6 +810,92 @@ export interface components {
       last_name?: string | null;
       /** Primary Country */
       primary_country?: ('us' | 'uk') | null;
+    };
+    /**
+     * AdminUserItem
+     * @description A signed-in user as admins see it.
+     *
+     *     ``email`` is the email of the most recently seen of the user's sign-in
+     *     identities that has one, else the user's own. ``last_seen_at`` is when the
+     *     user's most recently seen identity was last seen.
+     */
+    AdminUserItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'standard' | 'author' | 'admin';
+      /** Email */
+      email: string | null;
+      /** First Name */
+      first_name: string | null;
+      /** Last Name */
+      last_name: string | null;
+      /** Primary Country */
+      primary_country: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Last Seen At */
+      last_seen_at: string | null;
+    };
+    /**
+     * AdminUserPageResponse
+     * @description The response for a page of signed-in users.
+     */
+    AdminUserPageResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['AdminUserPageResult'];
+    };
+    /**
+     * AdminUserPageResult
+     * @description One page of signed-in users, newest first.
+     */
+    AdminUserPageResult: {
+      /** Items */
+      items: components['schemas']['AdminUserItem'][];
+      /** Offset */
+      offset: number;
+      /** Limit */
+      limit: number;
+      /** Has More */
+      has_more: boolean;
+    };
+    /**
+     * AdminUserResponse
+     * @description The response for one signed-in user.
+     */
+    AdminUserResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['AdminUserResult'];
+    };
+    /**
+     * AdminUserResult
+     * @description One signed-in user.
+     */
+    AdminUserResult: {
+      item: components['schemas']['AdminUserItem'];
     };
     /**
      * CountryItem
@@ -3250,6 +3400,97 @@ export interface components {
       description?: string | null;
     };
     /**
+     * UserTypeChangeItem
+     * @description One recorded change of a signed-in user's type.
+     *
+     *     ``source`` is ``admin_route`` for a change an admin made through these
+     *     routes, named by ``changed_by_user_id`` and ``changed_by_email``, and
+     *     ``script`` for one the type script made, which names no admin.
+     *     ``changed_by_user_id`` is also null once that admin's account is deleted.
+     */
+    UserTypeChangeItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * User Id
+       * Format: uuid
+       */
+      user_id: string;
+      /**
+       * Previous User Type
+       * @enum {string}
+       */
+      previous_user_type: 'standard' | 'author' | 'admin';
+      /**
+       * New User Type
+       * @enum {string}
+       */
+      new_user_type: 'standard' | 'author' | 'admin';
+      /** Changed By User Id */
+      changed_by_user_id: string | null;
+      /** Changed By Email */
+      changed_by_email: string | null;
+      /**
+       * Source
+       * @enum {string}
+       */
+      source: 'admin_route' | 'script';
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * UserTypeChangeListResponse
+     * @description The response for a signed-in user's recorded type changes.
+     */
+    UserTypeChangeListResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['UserTypeChangeListResult'];
+    };
+    /**
+     * UserTypeChangeListResult
+     * @description A signed-in user's recorded type changes, newest first.
+     */
+    UserTypeChangeListResult: {
+      /** Items */
+      items: components['schemas']['UserTypeChangeItem'][];
+    };
+    /**
+     * UserTypePatchRequest
+     * @description The signed-in type an admin gives a user, and the type the admin last read.
+     *
+     *     expected_user_type is the user's type as the admin last read it. When the
+     *     request would change the type and the stored type differs from
+     *     expected_user_type, the change is refused (409) and nothing is written.
+     *     When the user already has user_type, nothing changes (200), whatever
+     *     expected_user_type is. Only the type is compared: a type changed and
+     *     changed back since the read is not detected.
+     */
+    UserTypePatchRequest: {
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'standard' | 'author' | 'admin';
+      /**
+       * Expected User Type
+       * @enum {string}
+       */
+      expected_user_type: 'standard' | 'author' | 'admin';
+    };
+    /**
      * V2ErrorResponse
      * @description Strict error response shared by every API v2 resource.
      */
@@ -3431,7 +3672,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The change conflicts with stored state, such as a record maintained by the v1 saved-policy mirror. */
+      /** @description The caller is the last admin; make another user an admin first. Nothing was deleted. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -3778,6 +4019,390 @@ export interface operations {
         };
       };
       /** @description The request does not match the schema, or a referenced v1 artifact or linked record does not exist. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  list_users_v2_admin_users_get: {
+    parameters: {
+      query?: {
+        /** @description Zero-based result offset */
+        offset?: number;
+        /** @description Maximum number of returned resources */
+        limit?: number;
+        email?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminUserPageResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No signed-in user has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  get_user_v2_admin_users__user_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminUserResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No signed-in user has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  change_user_type_v2_admin_users__user_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UserTypePatchRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminUserResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No signed-in user has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  list_user_type_changes_v2_admin_users__user_id__user_type_changes_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserTypeChangeListResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No signed-in user has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
       422: {
         headers: {
           [name: string]: unknown;

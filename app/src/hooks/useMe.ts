@@ -8,6 +8,12 @@ import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { isAssociationCountry, type AssociationCountryId } from '@/types/v2User';
 
 /**
+ * How long a `GET /v2/me` answer stays fresh: five minutes, the calculator's
+ * query client default (calculator-app's providers.tsx).
+ */
+export const ME_STALE_TIME_MS = 5 * 60 * 1000;
+
+/**
  * The cache key of `GET /v2/me`: one entry per Auth0 subject and country.
  * A signed-out visitor's entry (subject null) stays idle, since nothing is
  * requested for it.
@@ -46,6 +52,13 @@ export function useMeRequestCountry(): AssociationCountryId | null {
  * `useUserType` both read it, so they share one request per session and
  * country. It requests nothing unless signed in to the US or UK (see
  * `useMeRequestCountry`); until then the query stays pending.
+ *
+ * It sets only its freshness, `ME_STALE_TIME_MS`, so that a component that
+ * starts reading it later, such as the account or users page after the
+ * header's account menu, reads the same answer instead of requesting it
+ * again, even under a query client whose data goes stale at once.
+ * Refetching on window focus or reconnect, and retries, still follow the
+ * query client.
  */
 export function useMe() {
   const auth = useAuthStatus();
@@ -55,5 +68,6 @@ export function useMe() {
   return useQuery({
     queryKey: meQueryKey(auth.subject, countryId),
     queryFn: requestCountryId ? () => fetchMe(client, requestCountryId) : skipToken,
+    staleTime: ME_STALE_TIME_MS,
   });
 }

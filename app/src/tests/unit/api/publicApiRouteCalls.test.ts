@@ -23,6 +23,12 @@ import {
   deleteFailedSocietyWideCalculation,
   fetchSocietyWideCalculation,
 } from '@/api/societyWideCalculation';
+import {
+  changeAdminUserType,
+  fetchAdminUser,
+  fetchUserTypeChanges,
+  searchAdminUsers,
+} from '@/api/v2AdminUsers';
 import { AccountAssociationRoutes } from '@/api/v2Associations';
 import { deleteMe, exportMe, fetchMe, upgradeAccount } from '@/api/v2Me';
 import { createV2UserClient } from '@/api/v2UserClient';
@@ -195,6 +201,34 @@ const PUBLIC_API_CALLS: ReadonlyArray<[string, () => Promise<unknown>, string, s
     `/v2/policies/${SAVED_RECORD_ID}`,
   ],
   ['the account', () => fetchMe(browserUserClient(), 'us'), 'GET', '/v2/me'],
+  [
+    'the admin user search',
+    () => searchAdminUsers(browserUserClient(), { email: 'ada', offset: 0, limit: 25 }),
+    'GET',
+    '/v2/admin/users',
+  ],
+  [
+    'an admin user',
+    () => fetchAdminUser(browserUserClient(), SAVED_RECORD_ID),
+    'GET',
+    `/v2/admin/users/${SAVED_RECORD_ID}`,
+  ],
+  [
+    "an admin's change of a user's type",
+    () =>
+      changeAdminUserType(browserUserClient(), SAVED_RECORD_ID, {
+        userType: 'author',
+        expectedUserType: 'standard',
+      }),
+    'PATCH',
+    `/v2/admin/users/${SAVED_RECORD_ID}`,
+  ],
+  [
+    "a user's type changes",
+    () => fetchUserTypeChanges(browserUserClient(), SAVED_RECORD_ID),
+    'GET',
+    `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`,
+  ],
   ['the account export', () => exportMe(browserUserClient(), 'us'), 'GET', '/v2/me/export'],
   ['the account deletion', () => deleteMe(browserUserClient(), 'us'), 'DELETE', '/v2/me'],
   [

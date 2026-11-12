@@ -146,3 +146,19 @@ export const householdVariationKeys = {
       personName,
     ] as const,
 };
+
+/**
+ * The Public API's admin user routes, per signed-in session (`subject`), so
+ * another account signing in on the same browser never reads them.
+ */
+export const adminUserKeys = {
+  all: (subject: string | null) => ['admin-users', subject] as const,
+  /** Every search's key starts with this. */
+  searches: (subject: string | null) => [...adminUserKeys.all(subject), 'search'] as const,
+  search: (subject: string | null, email: string) =>
+    [...adminUserKeys.searches(subject), email] as const,
+  user: (subject: string | null, userId: string) =>
+    [...adminUserKeys.all(subject), 'user', userId] as const,
+  typeChanges: (subject: string | null, userId: string) =>
+    [...adminUserKeys.all(subject), 'user-type-changes', userId] as const,
+};
