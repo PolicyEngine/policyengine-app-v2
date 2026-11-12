@@ -184,7 +184,8 @@ function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHead
           variant="outline"
           size="sm"
           onClick={() => {
-            // The button is gone once the read answers; focus would go nowhere.
+            // The loading status replaces the button as soon as the read starts,
+            // which would leave focus nowhere.
             focusHeading();
             void savedItems.refetch();
           }}

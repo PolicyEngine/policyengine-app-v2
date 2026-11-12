@@ -16,9 +16,8 @@ import { retryTemporaryFailures, useReadMeAgainOnRefusal } from './useAdminUsers
  * answer is dropped from the cache once nothing shows it, so a later
  * showing never shows an earlier answer: it waits for a new read, or joins
  * one still under way from a showing just closed. A 403 reads `/v2/me`
- * again, as the other admin reads do; a
- * 404 means the user is gone, so the user is read again too, and the
- * details then say so.
+ * again, as the other admin reads do. A 404 means the user is gone, so the
+ * user is read again too, and the details then say so.
  */
 export function useAdminUserSavedItems(userId: string) {
   const { subject } = useAuthStatus();

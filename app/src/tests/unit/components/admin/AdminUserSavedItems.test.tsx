@@ -470,20 +470,44 @@ describe('AdminUserSavedItems', () => {
       (method, path) => method === 'GET' && path === savedItemsPath(GRACE.id)
     );
 
+    let earlierItemsShown = false;
+
     // When
     await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
     await letPendingWorkRun();
-    const tableWhileReading = screen.queryByRole('table', { name: 'Saved policies' });
-    for (let round = 0; round < 10; round += 1) {
+    // Answers the held read and each retry until the error shows, noting
+    // whether the earlier items ever showed in between.
+    await waitFor(() => {
+      earlierItemsShown ||= screen.queryByRole('table', { name: 'Saved policies' }) !== null;
       answerHeldRequests();
-      await letPendingWorkRun();
-    }
+      expect(
+        screen.getByText(`We could not load the saved items: ${SERVER_ERROR_MESSAGE}`)
+      ).toBeInTheDocument();
+    });
 
     // Then
-    expect(tableWhileReading).toBeNull();
-    expect(
-      await screen.findByText(`We could not load the saved items: ${SERVER_ERROR_MESSAGE}`)
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('table', { name: 'Saved policies' })).not.toBeInTheDocument();
+    expect(earlierItemsShown).toBe(false);
+  });
+
+  test('given the admin leaves a user while its saved items are read then showing them again joins that read', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!, createProductionLikeQueryClient());
+    const { answerHeldRequests } = holdRequests(
+      fetchMock,
+      (method, path) => method === 'GET' && path === savedItemsPath(GRACE.id)
+    );
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await user.click(screen.getByRole('button', { name: ALAN.email! }));
+    await screen.findByText(ALAN.id);
+    await user.click(screen.getByRole('button', { name: GRACE.email! }));
+    await screen.findByText(GRACE.id);
+
+    // When
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    answerHeldRequests();
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // Then
+    expect(savedItemsReads(GRACE.id)).toHaveLength(1);
   });
 });
