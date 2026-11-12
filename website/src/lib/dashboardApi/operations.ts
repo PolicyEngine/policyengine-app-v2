@@ -50,11 +50,12 @@ function countryMessage(): string {
 /**
  * How long POST /api/household/calculate waits for the Public API's response
  * headers: as long as the route's function may run (`maxDuration`, 800 s,
- * Vercel Pro's limit on Fluid compute), less 50 s for a token request and the
- * body, the same wait as the calculator's Public API route. The Public API's
- * Cloud Run services end a request 300 s after an instance takes it, but a
- * request can first wait for an instance to start: its load balancer recorded
- * household calculations answering after up to 396 s (2026-11-08).
+ * Vercel Pro's limit on Fluid compute), less 50 s for reading the request,
+ * getting a token and streaming the answer, the same wait as the calculator's
+ * Public API route. The Public API's Cloud Run services end a request 300 s
+ * after an instance takes it, but a request can first wait for an instance to
+ * start: its load balancer recorded household calculations answering after
+ * up to 396 s (2026-11-08).
  */
 export const HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS = 750_000;
 
