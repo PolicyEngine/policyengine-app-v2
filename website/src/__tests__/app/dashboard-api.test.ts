@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { TOKEN_REQUEST_TIMEOUT_MILLISECONDS } from "@policyengine/public-api-forwarding";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import * as economyCompareRoute from "@/app/api/economy/compare/route";
@@ -10,6 +11,7 @@ import {
   isAllowedDashboardOrigin,
   OTHER_DASHBOARD_HOSTS,
 } from "@/lib/dashboardApi/cors";
+import { HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS } from "@/lib/dashboardApi/operations";
 
 import { getLegacyAppRedirectUrl } from "@/lib/legacyRedirect";
 
@@ -36,8 +38,43 @@ const REFORM_PARAMETERS = {
 const CALCULATION_ANSWER = { status: "ok", message: null, result: HOUSEHOLD };
 const COMPUTING_ANSWER = { status: "computing", message: null, result: null };
 const STORED_POLICY_ID = 98765;
+// The slowest household calculation answer the Public API's load balancer
+// recorded (2026-11-08): over Cloud Run's 300 s, which counts from when an
+// instance takes the request.
+const SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS = 396_000;
+// Reading the request and streaming a large answer back.
+const BODY_TRANSFER_MILLISECONDS = 30_000;
+// Vercel's longest function duration on the Pro plan with Fluid compute.
+const VERCEL_PRO_MAXIMUM_DURATION_SECONDS = 800;
 
 const fetchMock = vi.fn<typeof fetch>();
+
+/**
+ * A Public API that answers the calculation after the given time, or never
+ * when it is null. Aborting the request rejects it, as fetch does.
+ */
+function publicApiAnsweringAfter(
+  answerAfterMilliseconds: number | null,
+): typeof fetch {
+  return (_input, init) =>
+    new Promise<Response>((resolve, reject) => {
+      const answerTimer =
+        answerAfterMilliseconds === null
+          ? undefined
+          : setTimeout(
+              () => resolve(jsonAnswer(CALCULATION_ANSWER)),
+              answerAfterMilliseconds,
+            );
+      init?.signal?.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(answerTimer);
+          reject(new DOMException("The request was aborted.", "AbortError"));
+        },
+        { once: true },
+      );
+    });
+}
 
 function jsonAnswer(body: unknown, statusCode = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -107,6 +144,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
@@ -281,6 +319,77 @@ describe("POST /api/household/calculate", () => {
 
     // Then
     expect(response.status).toBe(403);
+  });
+
+  test("given the Public API takes as long as its slowest recorded household answer then the household calculation still passes its answer through", async () => {
+    // Given
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(
+      publicApiAnsweringAfter(SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS),
+    );
+
+    // When
+    const responsePromise = householdCalculateRoute.POST(
+      dashboardRequest("/api/household/calculate", {
+        method: "POST",
+        body: { country: "us", household: HOUSEHOLD },
+      }),
+    );
+    await vi.advanceTimersByTimeAsync(
+      SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS,
+    );
+    const response = await responsePromise;
+
+    // Then
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(CALCULATION_ANSWER);
+  });
+
+  test("given the Public API has not answered within the household wait then the household calculation answers 504", async () => {
+    // Given
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(publicApiAnsweringAfter(null));
+    let hasAnswered = false;
+
+    // When
+    const responsePromise = householdCalculateRoute
+      .POST(
+        dashboardRequest("/api/household/calculate", {
+          method: "POST",
+          body: { country: "us", household: HOUSEHOLD },
+        }),
+      )
+      .then((response) => {
+        hasAnswered = true;
+        return response;
+      });
+    await vi.advanceTimersByTimeAsync(
+      HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS - 1,
+    );
+    const answeredBeforeTheWaitEnded = hasAnswered;
+    await vi.advanceTimersByTimeAsync(1);
+    const response = await responsePromise;
+
+    // Then
+    expect(answeredBeforeTheWaitEnded).toBe(false);
+    expect(response.status).toBe(504);
+    expect(await response.json()).toEqual({
+      status: "error",
+      message: "The Public API did not answer in time.",
+      result: null,
+    });
+  });
+
+  test("given the household wait then the function may run long enough to get a token, wait and stream the answer, within the Pro plan's maximum", () => {
+    // Then
+    expect(householdCalculateRoute.maxDuration * 1000).toBeGreaterThanOrEqual(
+      TOKEN_REQUEST_TIMEOUT_MILLISECONDS +
+        HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS +
+        BODY_TRANSFER_MILLISECONDS,
+    );
+    expect(householdCalculateRoute.maxDuration).toBeLessThanOrEqual(
+      VERCEL_PRO_MAXIMUM_DURATION_SECONDS,
+    );
   });
 });
 
