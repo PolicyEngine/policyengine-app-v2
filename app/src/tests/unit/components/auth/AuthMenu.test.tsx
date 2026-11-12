@@ -243,6 +243,25 @@ describe('AuthMenu', () => {
     expect(await screen.findByRole('menuitem', { name: 'Admin' })).toBeInTheDocument();
   });
 
+  test('given an admin then every item in the account menu shows a pointer', async () => {
+    // Given
+    const user = userEvent.setup();
+    answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
+    renderMenu(signedInAuthValue(), 'us', { showMeStatus: true });
+    await screen.findByText('/v2/me status: success');
+
+    // When
+    await openMenu(user);
+
+    // Then
+    const items = screen.getAllByRole('menuitem');
+    expect(items).toHaveLength(3);
+    for (const item of items) {
+      expect(item).toHaveClass('tw:cursor-pointer');
+      expect(item).not.toHaveClass('tw:cursor-default');
+    }
+  });
+
   test.each(['standard', 'author'] as const)(
     'given a user of type %s then the menu has no "Admin"',
     async (userType) => {

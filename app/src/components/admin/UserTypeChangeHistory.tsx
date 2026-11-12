@@ -36,7 +36,7 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
     content = (
       <Stack gap="sm" align="start">
         <Text role="alert" size="sm" style={{ margin: 0, color: colors.error }}>
-          We could not load the type changes: {changes.error.message}
+          We could not load the permissions changes: {changes.error.message}
         </Text>
         <Button variant="outline" size="sm" onClick={() => changes.refetch()}>
           Try again
@@ -52,7 +52,7 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
   } else if (changes.data.length === 0) {
     content = (
       <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
-        No type changes recorded.
+        No permissions changes recorded.
       </Text>
     );
   } else {
@@ -81,7 +81,7 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
   return (
     <Stack gap="sm">
       <Title order={3} id={headingId} style={{ margin: 0, fontSize: typography.fontSize.base }}>
-        Type changes
+        Permissions changes
       </Title>
       {content}
     </Stack>
