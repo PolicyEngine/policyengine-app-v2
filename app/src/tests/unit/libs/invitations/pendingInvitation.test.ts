@@ -24,6 +24,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
 
@@ -89,6 +90,21 @@ describe('pendingInvitation', () => {
     expect(`${window.location.pathname}${window.location.search}${window.location.hash}`).toBe(
       '/invitations/accept?utm_source=email'
     );
+  });
+
+  test('given storage is blocked then the token stays in the address bar', () => {
+    // Given
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('Storage is blocked');
+    });
+    openAddress(`/invitations/accept#token=${INVITATION_TOKEN}`);
+
+    // When
+    const token = takeInvitationTokenFromUrl();
+
+    // Then
+    expect(token).toBe(INVITATION_TOKEN);
+    expect(window.location.hash).toBe(`#token=${INVITATION_TOKEN}`);
   });
 
   test('given no token in the fragment then a token saved earlier stays', () => {

@@ -6,7 +6,7 @@ import { dismissAccountUpgradeNotice, runAccountUpgrade } from '@/libs/auth/acco
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import { sentRequests } from '@/tests/fixtures/api/v2AdminUserMocks';
-import { latestTypeChange } from '@/tests/fixtures/api/v2InvitationMocks';
+import { latestTypeChange, meResponse } from '@/tests/fixtures/api/v2InvitationMocks';
 import {
   errorResponse,
   itemResponse,
@@ -22,11 +22,13 @@ import {
   UserSessionProviders,
 } from '@/tests/fixtures/hooks/useMeMocks';
 import { makeAuthValue, signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
-import type { MeItem } from '@/types/v2User';
+import type { LatestUserTypeChange, MeItem } from '@/types/v2User';
 
 const fetchMock = vi.fn();
 const PROMOTION = latestTypeChange();
-const PROMOTED_USER: MeItem = { ...mockMeItem, user_type: 'author', latest_type_change: PROMOTION };
+/** Marks a `/v2/me` answer without `latest_type_change`, as from an API that does not send it. */
+const NOT_SENT = 'not sent' as const;
+const PROMOTED_USER: MeItem = { ...mockMeItem, user_type: 'author' };
 
 function renderBanner(auth: AuthContextValue = signedInAuthValue()) {
   return render(
@@ -40,23 +42,28 @@ function renderBanner(auth: AuthContextValue = signedInAuthValue()) {
 }
 
 /**
- * Answers `GET /v2/me` with `signedInUser`, which a dismissal changes as the
- * API does, and the dismissal with `dismissResponse` (by default 204).
+ * Answers `GET /v2/me` with `signedInUser` and, beside it, `latestChange`,
+ * which a dismissal clears as the API does; the dismissal answers with
+ * `dismissResponse` (by default 204). `NOT_SENT` answers as an API that
+ * does not send a latest type change.
  */
 function answerMeAndDismissal(
   signedInUser: MeItem,
+  latestChange: LatestUserTypeChange | null | typeof NOT_SENT = PROMOTION,
   dismissResponse: () => Response = () => noContentResponse()
 ) {
-  const state = { me: { ...signedInUser } };
+  const state = { latestChange };
   fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
     const path = publicApiPathOf(url);
     if (path === '/v2/me' && init.method === 'GET') {
-      return itemResponse(state.me);
+      return state.latestChange === NOT_SENT
+        ? itemResponse(signedInUser)
+        : meResponse(signedInUser, state.latestChange);
     }
     if (path === `/v2/me/type-changes/${PROMOTION.id}/dismiss` && init.method === 'POST') {
       const response = dismissResponse();
       if (response.ok) {
-        state.me = { ...state.me, latest_type_change: null };
+        state.latestChange = null;
       }
       return response;
     }
@@ -90,11 +97,11 @@ describe('UserTypeChangeBanner', () => {
   });
 
   test.each([
-    ['null', { ...mockMeItem, latest_type_change: null }],
-    ['absent', mockMeItem],
-  ])('given the latest type change is %s then no banner shows', async (_label, signedInUser) => {
+    ['null', null],
+    ['absent', NOT_SENT],
+  ])('given the latest type change is %s then no banner shows', async (_label, latestChange) => {
     // Given
-    answerMeAndDismissal(signedInUser);
+    answerMeAndDismissal(mockMeItem, latestChange);
 
     // When
     renderBanner();
@@ -134,12 +141,14 @@ describe('UserTypeChangeBanner', () => {
         screen.queryByRole('region', { name: 'Your account type changed' })
       ).not.toBeInTheDocument()
     );
-    expect(sentRequests(fetchMock)).toContain(`POST /v2/me/type-changes/${PROMOTION.id}/dismiss`);
+    expect(sentRequests(fetchMock)).toContain(
+      `POST /v2/me/type-changes/${PROMOTION.id}/dismiss?country_id=us`
+    );
   });
 
   test('given the dismissal fails then the banner stays and says why', async () => {
     // Given
-    answerMeAndDismissal(PROMOTED_USER, () =>
+    answerMeAndDismissal(PROMOTED_USER, PROMOTION, () =>
       errorResponse(500, 'The operation could not be completed.')
     );
     renderBanner();
@@ -157,12 +166,12 @@ describe('UserTypeChangeBanner', () => {
 
   test('given the change was already dismissed elsewhere then /v2/me is read again and the banner goes', async () => {
     // Given
-    const apiState = answerMeAndDismissal(PROMOTED_USER, () =>
-      errorResponse(404, 'The signed-in user has no type change with this ID.')
+    const apiState = answerMeAndDismissal(PROMOTED_USER, PROMOTION, () =>
+      errorResponse(404, 'The caller has no type change with this ID.')
     );
     renderBanner();
     await screen.findByRole('region', { name: 'Your account type changed' });
-    apiState.me = { ...apiState.me, latest_type_change: null };
+    apiState.latestChange = null;
 
     // When
     await userEvent.setup().click(screen.getByRole('button', { name: 'Dismiss' }));

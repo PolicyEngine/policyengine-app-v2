@@ -1,11 +1,15 @@
 import { render, screen } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { readPendingInvitationToken } from '@/libs/invitations/pendingInvitation';
 import InvitationLinkPage from '@/pages/flagship/InvitationLink.page';
 import { INVITATION_TOKEN } from '@/tests/fixtures/api/v2InvitationMocks';
 
 beforeEach(() => {
   localStorage.clear();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('InvitationLinkPage', () => {
@@ -22,5 +26,20 @@ describe('InvitationLinkPage', () => {
     expect(window.location.hash).toBe('');
     expect(continueTo).toHaveBeenCalledWith('/us/invitations/accept');
     expect(screen.getByText('Opening your invitation…')).toBeInTheDocument();
+  });
+
+  test('given storage is blocked then the token goes on to the accept page in its fragment', () => {
+    // Given
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('Storage is blocked');
+    });
+    window.history.replaceState(null, '', `/invitations/accept#token=${INVITATION_TOKEN}`);
+    const continueTo = vi.fn();
+
+    // When
+    render(<InvitationLinkPage onContinue={continueTo} />);
+
+    // Then
+    expect(continueTo).toHaveBeenCalledWith(`/us/invitations/accept#token=${INVITATION_TOKEN}`);
   });
 });

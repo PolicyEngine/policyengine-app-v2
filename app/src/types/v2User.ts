@@ -1,4 +1,4 @@
-import type { components } from '@/api/publicApi/schema';
+import type { paths } from '@/api/publicApi/schema';
 
 /**
  * Wire types for the PolicyEngine API's saved-work routes (`/v2/me*` and
@@ -78,13 +78,16 @@ export interface MeItem {
   created_at: string;
   /**
    * The signed-in user's latest type change until they dismiss it, else
-   * null. Absent from an API that does not send it yet.
+   * null. `GET /v2/me` sends it beside the user, and `fetchMe` copies it
+   * here; absent from other answers, and from an API that does not send it.
    */
   latest_type_change?: LatestUserTypeChange | null;
 }
 
-/** A signed-in user's type change, as `/v2/me` names it until the user dismisses it. */
-export type LatestUserTypeChange = components['schemas']['LatestUserTypeChange'];
+/** A signed-in user's type change, as `GET /v2/me` names it until the user dismisses it. */
+export type LatestUserTypeChange = NonNullable<
+  paths['/v2/me']['get']['responses'][200]['content']['application/json']['result']['latest_type_change']
+>;
 
 export interface ProvenanceWire {
   source: 'manual' | 'chat' | 'bill' | 'tool';

@@ -4,29 +4,23 @@ import { USER_TYPE_LABELS } from '@/components/admin/adminUserFormat';
 import { FLAGSHIP_TOP_BAR_HEIGHT } from '@/components/flagship/FlagshipTopBar';
 import { Button } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDismissTypeChange, useLatestTypeChange } from '@/hooks/useLatestTypeChange';
+import { useMeRequestCountry } from '@/hooks/useMe';
 import { useAccountUpgradeNotice } from '@/libs/auth/accountUpgrade';
+import type { AssociationCountryId, LatestUserTypeChange } from '@/types/v2User';
 import { formatDate } from '@/utils/dateUtils';
 
 const BANNER_TITLE = 'Your account type changed';
 
-/**
- * Tells the signed-in user their type changed (`/v2/me`'s
- * `latest_type_change`) until they dismiss it. Mounted once in the v3
- * workspace, it floats below the top bar in the place and style of the
- * sign-in upgrade's notice, and waits while that notice shows, so the two
- * never cover each other.
- */
-export default function UserTypeChangeBanner() {
-  const countryId = useCurrentCountry();
-  const typeChange = useLatestTypeChange();
-  const upgradeNotice = useAccountUpgradeNotice();
-  const dismissal = useDismissTypeChange();
+function TypeChangeNotice({
+  typeChange,
+  countryId,
+}: {
+  typeChange: LatestUserTypeChange;
+  countryId: AssociationCountryId;
+}) {
+  const dismissal = useDismissTypeChange(countryId);
   const titleId = useId();
-  if (!typeChange || upgradeNotice) {
-    return null;
-  }
   return (
     <section
       aria-labelledby={titleId}
@@ -44,7 +38,7 @@ export default function UserTypeChangeBanner() {
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.feature,
         background: colors.background.primary,
-        boxShadow: '0 8px 24px rgba(20, 32, 31, 0.12)',
+        boxShadow: `0 ${spacing.sm} ${spacing.xl} ${colors.shadow.medium}`,
         fontFamily: typography.fontFamily.primary,
       }}
     >
@@ -54,7 +48,7 @@ export default function UserTypeChangeBanner() {
           display: 'inline-flex',
           flexShrink: 0,
           padding: spacing.sm,
-          borderRadius: 999,
+          borderRadius: '50%',
           background: colors.primary[50],
           color: colors.primary[600],
         }}
@@ -100,10 +94,32 @@ export default function UserTypeChangeBanner() {
         onClick={() => dismissal.mutate(typeChange.id)}
         disabled={dismissal.isPending}
         aria-label="Dismiss"
-        style={{ flexShrink: 0, marginTop: -4, marginRight: -4, color: colors.text.tertiary }}
+        style={{
+          flexShrink: 0,
+          marginTop: `calc(-1 * ${spacing.xs})`,
+          marginRight: `calc(-1 * ${spacing.xs})`,
+          color: colors.text.tertiary,
+        }}
       >
         <IconX size={16} />
       </Button>
     </section>
   );
+}
+
+/**
+ * Tells the signed-in user their type changed (`/v2/me`'s
+ * `latest_type_change`) until they dismiss it. Mounted once in the v3
+ * workspace, it floats below the top bar in the place and style of the
+ * sign-in upgrade's notice, and waits while that notice shows, so the two
+ * never cover each other.
+ */
+export default function UserTypeChangeBanner() {
+  const countryId = useMeRequestCountry();
+  const typeChange = useLatestTypeChange();
+  const upgradeNotice = useAccountUpgradeNotice();
+  if (!typeChange || !countryId || upgradeNotice) {
+    return null;
+  }
+  return <TypeChangeNotice key={typeChange.id} typeChange={typeChange} countryId={countryId} />;
 }

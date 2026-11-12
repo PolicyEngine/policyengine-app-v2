@@ -54,14 +54,16 @@ function removeSavedInvitation() {
   }
 }
 
-export function savePendingInvitationToken(token: string, now: number = Date.now()): void {
+/** Saves `token`; false when storage is blocked. */
+export function savePendingInvitationToken(token: string, now: number = Date.now()): boolean {
   try {
     localStorage.setItem(
       PENDING_INVITATION_STORAGE_KEY,
       JSON.stringify({ token, savedAt: now } satisfies SavedInvitation)
     );
+    return true;
   } catch {
-    // Storage blocked: the invitation can still be accepted in this page.
+    return false;
   }
 }
 
@@ -91,19 +93,22 @@ export function clearPendingInvitationToken(token: string): void {
 /**
  * Saves the token in this page's URL fragment (`#token=…`), if there is
  * one, and removes the fragment from the address bar and this history
- * entry. Returns the token, or null when the fragment has none.
+ * entry. With storage blocked the fragment stays, so the page can still
+ * accept the token while it is open. Returns the token, or null when the
+ * fragment has none.
  */
 export function takeInvitationTokenFromUrl(): string | null {
   const token = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('token');
   if (!token) {
     return null;
   }
-  savePendingInvitationToken(token);
-  window.history.replaceState(
-    window.history.state,
-    '',
-    `${window.location.pathname}${window.location.search}`
-  );
+  if (savePendingInvitationToken(token)) {
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}${window.location.search}`
+    );
+  }
   return token;
 }
 

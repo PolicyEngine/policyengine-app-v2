@@ -1,7 +1,12 @@
 import type { Mock } from 'vitest';
-import type { InvitableUserType, UserInvitationItem } from '@/api/v2Invitations';
-import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
-import { answerAdminApi, SIGNED_IN_ADMIN } from '@/tests/fixtures/api/v2AdminUserMocks';
+import type {
+  InvitableUserType,
+  InvitationAcceptance,
+  InvitationRefusalCode,
+  UserInvitationItem,
+} from '@/api/v2Invitations';
+import { publicApiPathOf, requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
+import { answerAdminApi } from '@/tests/fixtures/api/v2AdminUserMocks';
 import {
   errorResponse,
   itemResponse,
@@ -27,50 +32,71 @@ export const INVITATION_TIMESTAMPS = {
   EXPIRES: '2026-11-19T10:00:00+00:00',
 } as const;
 
-/** The Public API's messages for the invitation routes' refusals. */
+/** The Public API's messages for the invitation routes' refusals (the app shows its own words). */
 export const INVITATION_API_MESSAGES = {
-  NO_PENDING_INVITATION: 'No pending invitation has this ID.',
+  NO_OPEN_INVITATION: 'No open invitation has this ID.',
   EMAIL_NOT_VERIFIED: "The signed-in account's email address is not verified yet.",
   EMAIL_MISMATCH: 'This invitation was sent to another email address.',
-  INVITATION_GONE: 'This invitation is no longer valid.',
+  INVITATION_GONE: 'This invitation can no longer be accepted.',
   INVITER_NOT_ADMIN: 'The admin who sent this invitation is no longer an admin.',
   AUTH0_UNAVAILABLE: 'Auth0 could not be reached; try again.',
 } as const;
 
-/** A pending invitation, by default the signed-in admin's of grace@example.org to become an author. */
+/** An open invitation, by default the signed-in admin's of grace@example.org to become an author. */
 export function invitationItem(overrides: Partial<UserInvitationItem> = {}): UserInvitationItem {
   return {
     id: INVITATION_IDS.GRACE,
     email: 'grace@example.org',
     user_type: 'author',
     invited_by_user_id: PE_USER_ID,
-    invited_by_email: SIGNED_IN_ADMIN.email,
     created_at: INVITATION_TIMESTAMPS.SENT,
     expires_at: INVITATION_TIMESTAMPS.EXPIRES,
+    expired: false,
     last_sent_at: INVITATION_TIMESTAMPS.SENT,
-    last_send_failed: false,
+    last_send_error: null,
     ...overrides,
   };
 }
 
 export const GRACE_INVITATION = invitationItem();
+/** An invitation whose last email Postmark refused (406: an address it suppresses). */
 export const ALAN_INVITATION = invitationItem({
   id: INVITATION_IDS.ALAN,
   email: 'alan@example.org',
   user_type: 'admin',
-  last_send_failed: true,
+  last_sent_at: null,
+  last_send_error: 'postmark_406',
 });
+
+/** A refused acceptance, with the code the Public API gives it. */
+export function acceptRefusalResponse(
+  status: number,
+  code: InvitationRefusalCode,
+  message: string = INVITATION_API_MESSAGES.INVITATION_GONE
+): Response {
+  return new Response(JSON.stringify({ status: 'error', message, code }), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
 
 /** The 409 the acceptance answers while the signed-in identity's email is not verified. */
 export function emailNotVerifiedResponse(): Response {
-  return new Response(
-    JSON.stringify({
-      status: 'error',
-      message: INVITATION_API_MESSAGES.EMAIL_NOT_VERIFIED,
-      code: 'email_not_verified',
-    }),
-    { status: 409, headers: { 'Content-Type': 'application/json' } }
+  return acceptRefusalResponse(
+    409,
+    'email_not_verified',
+    INVITATION_API_MESSAGES.EMAIL_NOT_VERIFIED
   );
+}
+
+/** An accepted invitation, by default one that made a standard user an author. */
+export function acceptanceResponse(overrides: Partial<InvitationAcceptance> = {}): Response {
+  return itemResponse({
+    user_type: 'author',
+    previous_user_type: 'standard',
+    type_changed: true,
+    ...overrides,
+  } satisfies InvitationAcceptance);
 }
 
 /** A type change as `/v2/me` names it until the user dismisses it. */
@@ -84,6 +110,17 @@ export function latestTypeChange(
     changed_at: TIMESTAMPS.UPDATED,
     ...overrides,
   };
+}
+
+/**
+ * `GET /v2/me`'s answer: the user in `item`, and its latest type change
+ * beside it, as the Public API sends them.
+ */
+export function meResponse(
+  user: MeItem,
+  latestChange: LatestUserTypeChange | null = null
+): Response {
+  return okResponse({ item: user, latest_type_change: latestChange });
 }
 
 /** Whether a POST body is exactly `{email, user_type}`, with an invitable type. */
@@ -101,33 +138,45 @@ function isInvitationBody(body: unknown): body is { email: string; user_type: In
 
 export interface FakeInvitationApiOptions {
   invitations?: UserInvitationItem[];
-  /** Whether the email of a new or resent invitation fails to send. */
-  sendFails?: boolean;
+  /** The `last_send_error` of every new or resent invitation; null when its email is sent. */
+  sendError?: string | null;
 }
 
 /**
  * Makes `fetchMock` behave like the Public API's admin invitation routes
  * over `invitations`, and like `answerAdminApi` for `/v2/me` and the admin
- * user routes. Returns the invitations' state, so a test can read what a
- * request stored. A new invitation to an address with a pending one
- * replaces it, as the API does.
+ * user routes. Returns the invitations' state, so a test can read or
+ * change what the API holds. A new invitation to an address with an open
+ * one revokes it, as the API does; the list is paged by offset and limit.
  */
 export function answerInvitationApi(
   fetchMock: Mock,
   {
     invitations = [GRACE_INVITATION, ALAN_INVITATION],
-    sendFails = false,
+    sendError = null,
   }: FakeInvitationApiOptions = {}
 ) {
   answerAdminApi(fetchMock);
   const answerAsAdminApi = fetchMock.getMockImplementation()!;
   const state = { invitations: invitations.map((invitation) => ({ ...invitation })) };
+  const sendOutcome = {
+    last_sent_at: sendError ? null : INVITATION_TIMESTAMPS.SENT,
+    last_send_error: sendError,
+  };
 
   fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
     const path = publicApiPathOf(url);
     const method = init.method ?? 'GET';
     if (path === '/v2/admin/invitations' && method === 'GET') {
-      return okResponse({ items: state.invitations });
+      const query = requestUrlOf(url).searchParams;
+      const offset = Number(query.get('offset') ?? 0);
+      const limit = Number(query.get('limit') ?? 100);
+      return okResponse({
+        items: state.invitations.slice(offset, offset + limit),
+        offset,
+        limit,
+        has_more: offset + limit < state.invitations.length,
+      });
     }
     if (path === '/v2/admin/invitations' && method === 'POST') {
       const body: unknown = JSON.parse(String(init.body));
@@ -138,7 +187,7 @@ export function answerInvitationApi(
         id: INVITATION_IDS.NEW,
         email: body.email,
         user_type: body.user_type,
-        last_send_failed: sendFails,
+        ...sendOutcome,
       });
       state.invitations = [
         created,
@@ -152,10 +201,10 @@ export function answerInvitationApi(
     if (invitationRoute) {
       const invitation = state.invitations.find((candidate) => candidate.id === invitationRoute[1]);
       if (!invitation) {
-        return errorResponse(404, INVITATION_API_MESSAGES.NO_PENDING_INVITATION);
+        return errorResponse(404, INVITATION_API_MESSAGES.NO_OPEN_INVITATION);
       }
       if (invitationRoute[2] && method === 'POST') {
-        invitation.last_send_failed = sendFails;
+        Object.assign(invitation, sendOutcome, { expired: false });
         return itemResponse(invitation);
       }
       if (!invitationRoute[2] && method === 'DELETE') {
@@ -170,10 +219,10 @@ export function answerInvitationApi(
 }
 
 /**
- * Makes `fetchMock` answer `GET /v2/me` with `signedInUser`, the acceptance
- * with `acceptResponse` (by default an accepted invitation that made the
- * user an author), and the dismissal with 204. Returns the request bodies
- * the acceptance received.
+ * Makes `fetchMock` answer `GET /v2/me` with the state's user and latest
+ * type change, the acceptance with `acceptResponse` (by default one that
+ * made the user an author, which the state then holds), and the dismissal
+ * with 204. Returns the state and the acceptance requests' bodies.
  */
 export function answerAcceptanceApi(
   fetchMock: Mock,
@@ -186,32 +235,34 @@ export function answerAcceptanceApi(
   }
 ) {
   const acceptBodies: unknown[] = [];
-  const answerAcceptance =
-    acceptResponse ??
-    (() =>
-      okResponse({
-        item: { ...signedInUser, user_type: 'author', latest_type_change: latestTypeChange() },
-        outcome: 'changed',
-      }));
+  const state = { me: { ...signedInUser }, latestChange: null as LatestUserTypeChange | null };
+  const answerAcceptance = acceptResponse ?? (() => acceptanceResponse());
   fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
     const path = publicApiPathOf(url);
     const method = init.method ?? 'GET';
     if (path === '/v2/me' && method === 'GET') {
-      return itemResponse(signedInUser);
+      return meResponse(state.me, state.latestChange);
     }
     if (path === '/v2/me/invitations/accept' && method === 'POST') {
       acceptBodies.push(JSON.parse(String(init.body)));
-      return answerAcceptance();
+      const response = await answerAcceptance();
+      if (response.ok) {
+        const { item } = (await response.clone().json()).result as { item: InvitationAcceptance };
+        if (item.type_changed) {
+          state.me = { ...state.me, user_type: item.user_type };
+          state.latestChange = latestTypeChange({
+            previous_user_type: item.previous_user_type,
+            user_type: item.user_type,
+          });
+        }
+      }
+      return response;
     }
     if (/^\/v2\/me\/type-changes\/[^/]+\/dismiss$/.test(path) && method === 'POST') {
+      state.latestChange = null;
       return noContentResponse();
     }
     return errorResponse(404, 'Not found');
   });
-  return { acceptBodies };
-}
-
-/** The signed-in user, an author since an accepted invitation. */
-export function meAfterAcceptance(signedInUser: MeItem): MeItem {
-  return { ...signedInUser, user_type: 'author', latest_type_change: latestTypeChange() };
+  return { acceptBodies, state };
 }

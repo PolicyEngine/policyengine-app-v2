@@ -20,8 +20,9 @@ export default function InvitationLinkPage({
   onContinue: (path: string) => void;
 }) {
   useEffect(() => {
+    // With storage blocked the fragment stays, and goes on with the invitee.
     takeInvitationTokenFromUrl();
-    onContinue(invitationAcceptPath(invitationCountry()));
+    onContinue(`${invitationAcceptPath(invitationCountry())}${window.location.hash}`);
   }, [onContinue]);
 
   return (

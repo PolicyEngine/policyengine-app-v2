@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react';
+import { useCallback, useId, useRef, useState, type FormEvent } from 'react';
 import type { InvitableUserType, UserInvitationItem } from '@/api/v2Invitations';
 import { isV2ApiError } from '@/api/v2UserClient';
 import {
@@ -35,35 +35,50 @@ const INVITABLE_USER_TYPES: readonly InvitableUserType[] = ['author', 'admin'];
 /** The longest address the API's invitation route accepts. */
 const INVITATION_EMAIL_MAX_LENGTH = 320;
 
-/** The outcome of the last send, resend or revocation: `alert` when it failed. */
+/** How many outcomes of recent sends, resends and revocations stay on the screen. */
+const OUTCOMES_SHOWN = 3;
+
+/** The outcome of a send, resend or revocation: `alert` when it failed. */
 interface InvitationOutcome {
   text: string;
   role: 'alert' | 'status';
 }
 
-function OutcomeText({ outcome }: { outcome: InvitationOutcome | null }) {
-  if (!outcome) {
-    return null;
+type ReportOutcome = (outcome: InvitationOutcome) => void;
+
+/**
+ * Why the Public API could not send an invitation's email, from its
+ * `last_send_error` identifier, in words.
+ */
+function sendErrorReason(sendError: string): string {
+  switch (sendError) {
+    case 'not_configured':
+      return 'sending email is not set up yet';
+    case 'timeout':
+      return 'Postmark did not answer in time';
+    case 'connection_error':
+      return 'Postmark could not be reached';
+    case 'secret_unavailable':
+      return 'the Public API could not read its Postmark token';
+    case 'postmark_406':
+      return 'Postmark does not send to this address, because earlier email to it bounced or was marked as spam';
   }
-  return (
-    <Text
-      role={outcome.role}
-      size="sm"
-      style={{
-        margin: 0,
-        color: outcome.role === 'alert' ? colors.error : colors.text.secondary,
-      }}
-    >
-      {outcome.text}
-    </Text>
-  );
+  const httpStatus = /^http_(\d+)$/.exec(sendError);
+  if (httpStatus) {
+    return `Postmark answered with HTTP status ${httpStatus[1]}`;
+  }
+  const postmarkError = /^postmark_(\d+)$/.exec(sendError);
+  if (postmarkError) {
+    return `Postmark refused it with error code ${postmarkError[1]}`;
+  }
+  return sendError;
 }
 
 function sentOutcome(invitation: UserInvitationItem, sentAgain: boolean): InvitationOutcome {
-  if (invitation.last_send_failed) {
+  if (invitation.last_send_error) {
     return {
       role: 'alert',
-      text: `The invitation to ${invitation.email} was saved, but its email could not be sent. Resend it from the list.`,
+      text: `The invitation to ${invitation.email} was saved, but its email could not be sent: ${sendErrorReason(invitation.last_send_error)}. Resend it from the list.`,
     };
   }
   return {
@@ -76,23 +91,24 @@ function sentOutcome(invitation: UserInvitationItem, sentAgain: boolean): Invita
 
 /** Why a resend or revocation failed: gone (404), or the API's message. */
 function rowFailure(
-  action: string,
+  action: 'resend' | 'revoke',
   invitation: UserInvitationItem,
-  error: Error
+  error: unknown
 ): InvitationOutcome {
   if (isV2ApiError(error, 404)) {
     return {
       role: 'alert',
-      text: `The invitation to ${invitation.email} is no longer pending: it may have been accepted, revoked or expired.`,
+      text: `The invitation to ${invitation.email} is no longer open: it may have been accepted or revoked.`,
     };
   }
+  const message = error instanceof Error ? error.message : String(error);
   return {
     role: 'alert',
-    text: `We could not ${action} the invitation to ${invitation.email}: ${error.message}`,
+    text: `We could not ${action} the invitation to ${invitation.email}: ${message}`,
   };
 }
 
-function InviteByEmailForm({ onOutcome }: { onOutcome: (outcome: InvitationOutcome) => void }) {
+function InviteByEmailForm({ onOutcome }: { onOutcome: ReportOutcome }) {
   const idPrefix = useId();
   const emailInputId = `${idPrefix}-email`;
   const typeGroupLabelId = `${idPrefix}-type-label`;
@@ -104,6 +120,7 @@ function InviteByEmailForm({ onOutcome }: { onOutcome: (outcome: InvitationOutco
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const address = email.trim();
+    // One invitation at a time: the button is disabled until this one answers.
     if (!address || sendInvitation.isPending) {
       return;
     }
@@ -131,7 +148,7 @@ function InviteByEmailForm({ onOutcome }: { onOutcome: (outcome: InvitationOutco
         alignItems: 'flex-start',
       }}
     >
-      <Stack gap="xs" style={{ width: '100%', maxWidth: 420 }}>
+      <Stack gap="xs" style={{ width: '100%' }}>
         <Label htmlFor={emailInputId}>Email address</Label>
         <Input
           id={emailInputId}
@@ -173,27 +190,46 @@ function InviteByEmailForm({ onOutcome }: { onOutcome: (outcome: InvitationOutco
   );
 }
 
-function PendingInvitations({ onOutcome }: { onOutcome: (outcome: InvitationOutcome) => void }) {
+/**
+ * The open invitations, each with resend and revoke. Each row's request
+ * runs on its own, so several rows can be resent or revoked at once; a
+ * row's buttons are disabled while its own request runs.
+ */
+function PendingInvitations({ onOutcome }: { onOutcome: ReportOutcome }) {
   const countryId = useCurrentCountry();
   const pending = usePendingInvitations();
   const resendInvitation = useResendInvitation();
   const revokeInvitation = useRevokeInvitation();
-  const busyInvitationId =
-    (resendInvitation.isPending && resendInvitation.variables?.id) ||
-    (revokeInvitation.isPending && revokeInvitation.variables?.id) ||
-    null;
+  const [busyInvitationIds, setBusyInvitationIds] = useState<ReadonlySet<string>>(new Set());
 
-  const resend = (invitation: UserInvitationItem) =>
-    resendInvitation.mutate(invitation, {
-      onSuccess: (resent) => onOutcome(sentOutcome(resent, true)),
-      onError: (error) => onOutcome(rowFailure('resend', invitation, error)),
+  const setBusy = (invitationId: string, busy: boolean) =>
+    setBusyInvitationIds((previous) => {
+      const next = new Set(previous);
+      if (busy) {
+        next.add(invitationId);
+      } else {
+        next.delete(invitationId);
+      }
+      return next;
     });
-  const revoke = (invitation: UserInvitationItem) =>
-    revokeInvitation.mutate(invitation, {
-      onSuccess: () =>
-        onOutcome({ role: 'status', text: `The invitation to ${invitation.email} was revoked.` }),
-      onError: (error) => onOutcome(rowFailure('revoke', invitation, error)),
-    });
+
+  // Each call's own promise gives its outcome: callbacks passed to
+  // mutate() would be replaced by the next row's call.
+  const runRowAction = async (action: 'resend' | 'revoke', invitation: UserInvitationItem) => {
+    setBusy(invitation.id, true);
+    try {
+      if (action === 'resend') {
+        onOutcome(sentOutcome(await resendInvitation.mutateAsync(invitation), true));
+      } else {
+        await revokeInvitation.mutateAsync(invitation);
+        onOutcome({ role: 'status', text: `The invitation to ${invitation.email} was revoked.` });
+      }
+    } catch (error) {
+      onOutcome(rowFailure(action, invitation, error));
+    } finally {
+      setBusy(invitation.id, false);
+    }
+  };
 
   // Invitations already read stay on the screen when a later read fails
   // for a while (a network error, a 5xx), but not after a 403 or 404.
@@ -226,7 +262,6 @@ function PendingInvitations({ onOutcome }: { onOutcome: (outcome: InvitationOutc
         <TableRow>
           <TableHead>Email</TableHead>
           <TableHead>Type</TableHead>
-          <TableHead>Invited by</TableHead>
           <TableHead>Last sent</TableHead>
           <TableHead>Expires</TableHead>
           <TableHead>
@@ -236,21 +271,26 @@ function PendingInvitations({ onOutcome }: { onOutcome: (outcome: InvitationOutc
       </TableHeader>
       <TableBody>
         {pending.data.map((invitation) => {
-          const busy = busyInvitationId === invitation.id;
+          const busy = busyInvitationIds.has(invitation.id);
           return (
             <TableRow key={invitation.id}>
               <TableCell>
                 <Stack gap="xs">
                   <span>{invitation.email}</span>
-                  {invitation.last_send_failed && (
+                  {invitation.last_send_error && (
                     <Text size="sm" style={{ margin: 0, color: colors.error }}>
-                      The last email could not be sent.
+                      The last email could not be sent:{' '}
+                      {sendErrorReason(invitation.last_send_error)}.
+                    </Text>
+                  )}
+                  {invitation.expired && (
+                    <Text size="sm" style={{ margin: 0, color: colors.text.warning }}>
+                      Expired: resend it to send a new link.
                     </Text>
                   )}
                 </Stack>
               </TableCell>
               <TableCell>{USER_TYPE_LABELS[invitation.user_type]}</TableCell>
-              <TableCell>{invitation.invited_by_email ?? '—'}</TableCell>
               <TableCell>
                 {invitation.last_sent_at
                   ? formatAdminDate(invitation.last_sent_at, countryId)
@@ -263,7 +303,7 @@ function PendingInvitations({ onOutcome }: { onOutcome: (outcome: InvitationOutc
                     variant="outline"
                     size="sm"
                     disabled={busy}
-                    onClick={() => resend(invitation)}
+                    onClick={() => void runRowAction('resend', invitation)}
                   >
                     Resend
                   </Button>
@@ -271,7 +311,7 @@ function PendingInvitations({ onOutcome }: { onOutcome: (outcome: InvitationOutc
                     variant="outline"
                     size="sm"
                     disabled={busy}
-                    onClick={() => revoke(invitation)}
+                    onClick={() => void runRowAction('revoke', invitation)}
                   >
                     Revoke
                   </Button>
@@ -287,11 +327,18 @@ function PendingInvitations({ onOutcome }: { onOutcome: (outcome: InvitationOutc
 
 /**
  * The admin page's invitations: an admin invites an email address to
- * become an author or admin, and resends or revokes pending invitations.
+ * become an author or admin, and resends or revokes open invitations.
  * The invitee accepts on the accept page, through the email's link.
  */
 export default function AdminInvitations() {
-  const [outcome, setOutcome] = useState<InvitationOutcome | null>(null);
+  const [outcomes, setOutcomes] = useState<ReadonlyArray<InvitationOutcome & { key: number }>>([]);
+  const nextOutcomeKey = useRef(0);
+  const reportOutcome = useCallback((outcome: InvitationOutcome) => {
+    nextOutcomeKey.current += 1;
+    const key = nextOutcomeKey.current;
+    setOutcomes((previous) => [{ ...outcome, key }, ...previous].slice(0, OUTCOMES_SHOWN));
+  }, []);
+
   return (
     <Stack gap="xl">
       <Stack gap="md">
@@ -304,14 +351,30 @@ export default function AdminInvitations() {
             address, they get the type you choose. An invitation never lowers anyone&apos;s type.
           </Text>
         </Stack>
-        <InviteByEmailForm onOutcome={setOutcome} />
+        <InviteByEmailForm onOutcome={reportOutcome} />
       </Stack>
-      <OutcomeText outcome={outcome} />
+      {outcomes.length > 0 && (
+        <Stack gap="xs">
+          {outcomes.map((outcome) => (
+            <Text
+              key={outcome.key}
+              role={outcome.role}
+              size="sm"
+              style={{
+                margin: 0,
+                color: outcome.role === 'alert' ? colors.error : colors.text.secondary,
+              }}
+            >
+              {outcome.text}
+            </Text>
+          ))}
+        </Stack>
+      )}
       <Stack gap="md">
         <Title order={2} style={{ margin: 0 }}>
           Pending invitations
         </Title>
-        <PendingInvitations onOutcome={setOutcome} />
+        <PendingInvitations onOutcome={reportOutcome} />
       </Stack>
     </Stack>
   );

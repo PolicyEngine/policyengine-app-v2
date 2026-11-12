@@ -1,8 +1,12 @@
-import { cleanup, render, screen, userEvent, waitFor, within } from '@test-utils';
+import { act, cleanup, render, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import AdminUsersPage from '@/pages/flagship/AdminUsers.page';
 import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
-import { ADMIN_API_MESSAGES, sentRequests } from '@/tests/fixtures/api/v2AdminUserMocks';
+import {
+  ADMIN_API_MESSAGES,
+  holdRequests,
+  sentRequests,
+} from '@/tests/fixtures/api/v2AdminUserMocks';
 import {
   ALAN_INVITATION,
   answerInvitationApi,
@@ -91,17 +95,18 @@ describe('AdminInvitations', () => {
     expect(invitationRequests()).toEqual([]);
   });
 
-  test('given pending invitations then the tab lists each with its type, inviter and expiry', async () => {
+  test('given open invitations then the tab lists each with its type, last send and expiry', async () => {
     // When
     await openInvitations();
 
     // Then
     const graceRow = await invitationRow(GRACE_INVITATION.email);
     expect(within(graceRow).getByText('Author')).toBeInTheDocument();
-    expect(within(graceRow).getByText(GRACE_INVITATION.invited_by_email!)).toBeInTheDocument();
+    expect(within(graceRow).getByText('Nov 12, 2026')).toBeInTheDocument();
     expect(within(graceRow).getByText('Nov 19, 2026')).toBeInTheDocument();
     const alanRow = await invitationRow(ALAN_INVITATION.email);
     expect(within(alanRow).getByText('Admin')).toBeInTheDocument();
+    expect(within(alanRow).getByText('Not sent')).toBeInTheDocument();
   });
 
   test('given the last email of an invitation failed to send then its row says so', async () => {
@@ -110,9 +115,22 @@ describe('AdminInvitations', () => {
 
     // Then
     const alanRow = await invitationRow(ALAN_INVITATION.email);
-    expect(within(alanRow).getByText('The last email could not be sent.')).toBeInTheDocument();
+    expect(within(alanRow).getByText(/The last email could not be sent/)).toHaveTextContent(
+      'The last email could not be sent: Postmark does not send to this address, because earlier email to it bounced or was marked as spam.'
+    );
     const graceRow = await invitationRow(GRACE_INVITATION.email);
     expect(within(graceRow).queryByText(/could not be sent/)).not.toBeInTheDocument();
+  });
+
+  test('given an expired invitation then its row says to resend it', async () => {
+    // When
+    await openInvitations({ invitations: [{ ...GRACE_INVITATION, expired: true }] });
+
+    // Then
+    const graceRow = await invitationRow(GRACE_INVITATION.email);
+    expect(
+      within(graceRow).getByText('Expired: resend it to send a new link.')
+    ).toBeInTheDocument();
   });
 
   test('given no pending invitations then the tab says so', async () => {
@@ -149,7 +167,7 @@ describe('AdminInvitations', () => {
 
   test('given the email of a new invitation fails to send then the admin is told to resend it', async () => {
     // Given
-    const { user } = await openInvitations({ sendFails: true });
+    const { user } = await openInvitations({ sendError: 'not_configured' });
     await invitationsTable();
 
     // When
@@ -157,7 +175,7 @@ describe('AdminInvitations', () => {
 
     // Then
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      `The invitation to ${NEW_INVITEE_EMAIL} was saved, but its email could not be sent. Resend it from the list.`
+      `The invitation to ${NEW_INVITEE_EMAIL} was saved, but its email could not be sent: sending email is not set up yet. Resend it from the list.`
     );
   });
 
@@ -222,7 +240,7 @@ describe('AdminInvitations', () => {
     ).not.toBeInTheDocument();
   });
 
-  test('given an invitation is no longer pending then resending it says so and the list is read again', async () => {
+  test('given an invitation is no longer open then resending it says so and the list is read again', async () => {
     // Given
     const { user, apiState } = await openInvitations();
     const graceRow = await invitationRow(GRACE_INVITATION.email);
@@ -235,12 +253,41 @@ describe('AdminInvitations', () => {
 
     // Then
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      `The invitation to ${GRACE_INVITATION.email} is no longer pending: it may have been accepted, revoked or expired.`
+      `The invitation to ${GRACE_INVITATION.email} is no longer open: it may have been accepted or revoked.`
     );
     await waitFor(async () =>
       expect(
         within(await invitationsTable()).queryByText(GRACE_INVITATION.email)
       ).not.toBeInTheDocument()
+    );
+  });
+
+  test('given two rows are resent at once then each row waits for its own request and each outcome shows', async () => {
+    // Given
+    const { user } = await openInvitations();
+    const { answerHeldRequests } = holdRequests(
+      fetchMock,
+      (method, path) => method === 'POST' && path.endsWith('/resend')
+    );
+    const alanRow = await invitationRow(ALAN_INVITATION.email);
+    const graceRow = await invitationRow(GRACE_INVITATION.email);
+
+    // When
+    await user.click(within(alanRow).getByRole('button', { name: 'Resend' }));
+    await user.click(within(graceRow).getByRole('button', { name: 'Resend' }));
+
+    // Then
+    expect(within(alanRow).getByRole('button', { name: 'Resend' })).toBeDisabled();
+    expect(within(graceRow).getByRole('button', { name: 'Revoke' })).toBeDisabled();
+    await act(async () => answerHeldRequests());
+    expect(
+      await screen.findByText(`Invitation sent again to ${ALAN_INVITATION.email}.`)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(`Invitation sent again to ${GRACE_INVITATION.email}.`)
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(within(alanRow).getByRole('button', { name: 'Resend' })).toBeEnabled()
     );
   });
 

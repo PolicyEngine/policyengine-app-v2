@@ -2,50 +2,53 @@ import { describe, expect, test } from 'vitest';
 import {
   acceptInvitation,
   createInvitation,
+  invitationRefusalCode,
   isEmailNotVerified,
   listInvitations,
   resendInvitation,
   revokeInvitation,
 } from '@/api/v2Invitations';
-import { V2ApiError } from '@/api/v2UserClient';
+import { V2_MAX_PAGE_SIZE } from '@/api/v2UserClient';
 import {
+  acceptanceResponse,
+  acceptRefusalResponse,
   ALAN_INVITATION,
   emailNotVerifiedResponse,
   GRACE_INVITATION,
-  INVITATION_API_MESSAGES,
   INVITATION_IDS,
   INVITATION_TOKEN,
-  meAfterAcceptance,
 } from '@/tests/fixtures/api/v2InvitationMocks';
 import {
   createTestApiContext,
   errorResponse,
   fetchCall,
   itemResponse,
-  mockMeItem,
   noContentResponse,
-  okResponse,
+  pageResponse,
   TEST_ACCESS_TOKEN,
 } from '@/tests/fixtures/api/v2UserMocks';
 
 describe('v2Invitations', () => {
-  test('given pending invitations then the list is read with the session token and returned', async () => {
+  test('given open invitations then every page is read with the session token and the invitations returned', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
-    fetchMock.mockResolvedValue(okResponse({ items: [GRACE_INVITATION, ALAN_INVITATION] }));
+    fetchMock
+      .mockResolvedValueOnce(pageResponse([GRACE_INVITATION], { hasMore: true }))
+      .mockResolvedValueOnce(pageResponse([ALAN_INVITATION], { offset: 1 }));
 
     // When
     const invitations = await listInvitations(context.client);
 
     // Then
     expect(invitations).toEqual([GRACE_INVITATION, ALAN_INVITATION]);
-    const request = fetchCall(fetchMock);
-    expect([request.method, request.path, request.query]).toEqual([
+    const firstRequest = fetchCall(fetchMock, 0);
+    expect([firstRequest.method, firstRequest.path, firstRequest.query]).toEqual([
       'GET',
       '/v2/admin/invitations',
-      {},
+      { offset: '0', limit: String(V2_MAX_PAGE_SIZE) },
     ]);
-    expect(request.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
+    expect(firstRequest.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
+    expect(fetchCall(fetchMock, 1).query).toEqual({ offset: '1', limit: String(V2_MAX_PAGE_SIZE) });
   });
 
   test('given an address and a type then the invitation is created with exactly those', async () => {
@@ -69,7 +72,7 @@ describe('v2Invitations', () => {
     ]);
   });
 
-  test('given a pending invitation then resending posts to its resend route and returns it', async () => {
+  test('given an open invitation then resending posts to its resend route and returns it', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockResolvedValue(itemResponse(ALAN_INVITATION));
@@ -87,7 +90,7 @@ describe('v2Invitations', () => {
     ]);
   });
 
-  test('given a pending invitation then revoking deletes it', async () => {
+  test('given an open invitation then revoking deletes it', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockResolvedValue(noContentResponse());
@@ -103,22 +106,25 @@ describe('v2Invitations', () => {
     ]);
   });
 
-  test('given a token then acceptance posts only the token and returns the user and outcome', async () => {
+  test('given a token and a country then acceptance posts only the token, with the country, and returns the new type', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
-    const accepted = { item: meAfterAcceptance(mockMeItem), outcome: 'changed' };
-    fetchMock.mockResolvedValue(okResponse(accepted));
+    fetchMock.mockResolvedValue(acceptanceResponse());
 
     // When
-    const result = await acceptInvitation(context.client, INVITATION_TOKEN);
+    const acceptance = await acceptInvitation(context.client, 'uk', INVITATION_TOKEN);
 
     // Then
-    expect(result).toEqual(accepted);
+    expect(acceptance).toEqual({
+      user_type: 'author',
+      previous_user_type: 'standard',
+      type_changed: true,
+    });
     const request = fetchCall(fetchMock);
     expect([request.method, request.path, request.query, request.body]).toEqual([
       'POST',
       '/v2/me/invitations/accept',
-      {},
+      { country_id: 'uk' },
       { token: INVITATION_TOKEN },
     ]);
   });
@@ -129,7 +135,7 @@ describe('v2Invitations', () => {
     fetchMock.mockResolvedValue(emailNotVerifiedResponse());
 
     // When
-    const failure = await acceptInvitation(context.client, INVITATION_TOKEN).catch(
+    const failure = await acceptInvitation(context.client, 'us', INVITATION_TOKEN).catch(
       (caught: unknown) => caught
     );
 
@@ -137,18 +143,24 @@ describe('v2Invitations', () => {
     expect(isEmailNotVerified(failure)).toBe(true);
   });
 
-  test('given another 409 then the acceptance error is not email_not_verified', async () => {
+  test('given a refusal with a code then its code is read, and other errors have none', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
-    fetchMock.mockResolvedValue(errorResponse(409, INVITATION_API_MESSAGES.INVITER_NOT_ADMIN));
+    fetchMock
+      .mockResolvedValueOnce(acceptRefusalResponse(409, 'inviter_not_admin'))
+      .mockResolvedValueOnce(errorResponse(500, 'The operation could not be completed.'));
 
     // When
-    const failure = await acceptInvitation(context.client, INVITATION_TOKEN).catch(
+    const refusal = await acceptInvitation(context.client, 'us', INVITATION_TOKEN).catch(
+      (caught: unknown) => caught
+    );
+    const failure = await acceptInvitation(context.client, 'us', INVITATION_TOKEN).catch(
       (caught: unknown) => caught
     );
 
     // Then
-    expect(failure).toBeInstanceOf(V2ApiError);
-    expect(isEmailNotVerified(failure)).toBe(false);
+    expect(invitationRefusalCode(refusal)).toBe('inviter_not_admin');
+    expect(isEmailNotVerified(refusal)).toBe(false);
+    expect(invitationRefusalCode(failure)).toBeNull();
   });
 });

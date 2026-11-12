@@ -262,13 +262,13 @@ const PUBLIC_API_CALLS: ReadonlyArray<[string, () => Promise<unknown>, string, s
   ],
   [
     "an invitation's acceptance",
-    () => acceptInvitation(browserUserClient(), 'invitation-token'),
+    () => acceptInvitation(browserUserClient(), 'us', 'invitation-token'),
     'POST',
     '/v2/me/invitations/accept',
   ],
   [
     "a type change's dismissal",
-    () => dismissTypeChange(browserUserClient(), SAVED_RECORD_ID),
+    () => dismissTypeChange(browserUserClient(), 'us', SAVED_RECORD_ID),
     'POST',
     `/v2/me/type-changes/${SAVED_RECORD_ID}/dismiss`,
   ],

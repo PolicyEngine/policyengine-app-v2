@@ -1,24 +1,43 @@
-import type { components } from '@/api/publicApi/schema';
+import type { paths } from '@/api/publicApi/schema';
 import { isV2ApiError, type V2UserClient } from '@/api/v2UserClient';
-import type { V2ItemResult } from '@/types/v2User';
+import type { AssociationCountryId, V2ItemResult } from '@/types/v2User';
 
 /**
  * The Public API's invitations to become an author or admin. Admins send,
  * list, resend and revoke them (`/v2/admin/invitations*`, 403 for anyone
  * else); the invitee, signed in, accepts one with the token from the
  * email's link (`/v2/me/invitations/accept`). Each takes the session's
- * bearer token and no country.
+ * bearer token.
+ *
+ * The types come from the operations' paths rather than from schema names,
+ * so they follow the Public API's document whatever it calls its schemas.
  */
 
-/** A pending invitation as admins see it. */
-export type UserInvitationItem = components['schemas']['UserInvitationItem'];
+type AdminInvitationsPath = paths['/v2/admin/invitations'];
+type AcceptPath = paths['/v2/me/invitations/accept']['post'];
+
+/** An open invitation (not accepted or revoked) as admins see it. */
+export type UserInvitationItem =
+  AdminInvitationsPath['get']['responses'][200]['content']['application/json']['result']['items'][number];
 /** The types an invitation can give. */
 export type InvitableUserType = UserInvitationItem['user_type'];
-/** The signed-in user after an accepted invitation, and whether the type changed. */
-export type InvitationAcceptResult = components['schemas']['UserInvitationAcceptResult'];
+/** The signed-in user's type after accepting, and whether the acceptance changed it. */
+export type InvitationAcceptance =
+  AcceptPath['responses'][200]['content']['application/json']['result']['item'];
+/** Why an acceptance was refused, as the Public API names it. */
+export type InvitationRefusalCode =
+  AcceptPath['responses'][410]['content']['application/json']['code'];
 
-/** The `code` of the acceptance's 409 while the signed-in identity's email is not verified. */
-export const EMAIL_NOT_VERIFIED_CODE = 'email_not_verified';
+const INVITATION_REFUSAL_CODES: readonly string[] = [
+  'auth0_unavailable',
+  'invitation_not_found',
+  'invitation_revoked',
+  'invitation_expired',
+  'invitation_accepted',
+  'inviter_not_admin',
+  'email_not_verified',
+  'email_mismatch',
+] satisfies readonly InvitationRefusalCode[];
 
 export interface NewInvitation {
   email: string;
@@ -29,19 +48,15 @@ function invitationPath(invitationId: string): string {
   return `admin/invitations/${encodeURIComponent(invitationId)}`;
 }
 
-/** The pending invitations, newest first. */
-export async function listInvitations(client: V2UserClient): Promise<UserInvitationItem[]> {
-  const result = await client.request<components['schemas']['UserInvitationListResult']>(
-    'GET',
-    'admin/invitations'
-  );
-  return result.items;
+/** Every open invitation, newest first, expired ones included, read a page at a time. */
+export function listInvitations(client: V2UserClient): Promise<UserInvitationItem[]> {
+  return client.listAll<UserInvitationItem>('admin/invitations');
 }
 
 /**
- * Invites `email` to become `userType` and emails the link. An address
- * with a pending invitation gets a new token in its place. The invitation
- * is created even when its email fails to send (`last_send_failed`).
+ * Invites `email` to become `userType` and emails the link. Any open
+ * invitation to the same address is revoked first. The invitation is
+ * created even when its email fails to send (`last_send_error`).
  */
 export async function createInvitation(
   client: V2UserClient,
@@ -54,13 +69,16 @@ export async function createInvitation(
       body: {
         email,
         user_type: userType,
-      } satisfies components['schemas']['UserInvitationCreateRequest'],
+      } satisfies AdminInvitationsPath['post']['requestBody']['content']['application/json'],
     }
   );
   return result.item;
 }
 
-/** Gives the invitation a new token and expiry and emails the new link; the old link stops working. */
+/**
+ * Gives the invitation a new link and a new expiry, and emails it again;
+ * the old link stops working. Expired invitations can be resent.
+ */
 export async function resendInvitation(
   client: V2UserClient,
   invitationId: string
@@ -78,19 +96,34 @@ export async function revokeInvitation(client: V2UserClient, invitationId: strin
 }
 
 /**
- * Accepts the invitation `token` names for the signed-in user. The token
- * is a credential: it goes to this route and nowhere else.
+ * Accepts the invitation `token` names for the signed-in user. A user who
+ * has no account yet gets one, with `countryId` as its primary country.
+ * The token is a credential: it goes to this route and nowhere else.
  */
-export function acceptInvitation(
+export async function acceptInvitation(
   client: V2UserClient,
+  countryId: AssociationCountryId,
   token: string
-): Promise<InvitationAcceptResult> {
-  return client.request<InvitationAcceptResult>('POST', 'me/invitations/accept', {
-    body: { token } satisfies components['schemas']['UserInvitationAcceptRequest'],
-  });
+): Promise<InvitationAcceptance> {
+  const result = await client.request<V2ItemResult<InvitationAcceptance>>(
+    'POST',
+    'me/invitations/accept',
+    {
+      query: { country_id: countryId },
+      body: { token } satisfies AcceptPath['requestBody']['content']['application/json'],
+    }
+  );
+  return result.item;
+}
+
+/** The code of a refused acceptance, or null for any other error. */
+export function invitationRefusalCode(error: unknown): InvitationRefusalCode | null {
+  return isV2ApiError(error) && error.code !== null && INVITATION_REFUSAL_CODES.includes(error.code)
+    ? (error.code as InvitationRefusalCode)
+    : null;
 }
 
 /** Whether an acceptance was refused because the signed-in identity's email is not verified yet. */
 export function isEmailNotVerified(error: unknown): boolean {
-  return isV2ApiError(error, 409) && error.code === EMAIL_NOT_VERIFIED_CODE;
+  return invitationRefusalCode(error) === 'email_not_verified';
 }

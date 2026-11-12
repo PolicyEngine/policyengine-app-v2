@@ -1,33 +1,32 @@
 import { QueryClient } from '@tanstack/react-query';
-import { cleanup, render, screen, userEvent, waitFor } from '@test-utils';
+import { act, cleanup, render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { meQueryKey } from '@/hooks/useMe';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import {
   readPendingInvitationToken,
   savePendingInvitationToken,
 } from '@/libs/invitations/pendingInvitation';
 import InvitationAcceptPage from '@/pages/flagship/InvitationAccept.page';
-import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import { sentRequests } from '@/tests/fixtures/api/v2AdminUserMocks';
 import {
+  acceptanceResponse,
+  acceptRefusalResponse,
   answerAcceptanceApi,
   emailNotVerifiedResponse,
   INVITATION_API_MESSAGES,
   INVITATION_TOKEN,
-  latestTypeChange,
 } from '@/tests/fixtures/api/v2InvitationMocks';
-import { errorResponse, meItemOfType, okResponse } from '@/tests/fixtures/api/v2UserMocks';
+import { errorResponse, meItemOfType } from '@/tests/fixtures/api/v2UserMocks';
 import {
   forgetWindowFocus,
   letPendingWorkRun,
+  MeStatusProbe,
   returnToWindow,
   UserSessionProviders,
 } from '@/tests/fixtures/hooks/useMeMocks';
 import {
   makeAuthValue,
   signedInAuthValue,
-  TEST_AUTH0_SUBJECT,
   TEST_PROFILE,
 } from '@/tests/fixtures/libs/auth/authMocks';
 
@@ -44,17 +43,21 @@ function createAcceptQueryClient(): QueryClient {
 
 function renderAcceptPage({
   auth = signedInAuthValue(),
-  queryClient = createAcceptQueryClient(),
-}: { auth?: AuthContextValue; queryClient?: QueryClient } = {}) {
+  withMeReader = false,
+}: {
+  auth?: AuthContextValue;
+  /** Also renders a `/v2/me` reader, as the workspace's banner is. */
+  withMeReader?: boolean;
+} = {}) {
   render(
     <UserSessionProviders
-      queryClient={queryClient}
+      queryClient={createAcceptQueryClient()}
       session={{ auth, countryId: 'us', pathname: ACCEPT_PAGE_PATH }}
     >
       <InvitationAcceptPage />
+      {withMeReader && <MeStatusProbe />}
     </UserSessionProviders>
   );
-  return { queryClient };
 }
 
 /** Puts the browser on the accept page, as the email's link (or a return to it) opens it. */
@@ -64,6 +67,10 @@ function openAcceptPage(fragment = '') {
 
 function acceptRequests(): string[] {
   return sentRequests(fetchMock).filter((request) => request.includes('/invitations/accept'));
+}
+
+function meReads(): string[] {
+  return sentRequests(fetchMock).filter((request) => request.startsWith('GET /v2/me'));
 }
 
 beforeEach(() => {
@@ -76,6 +83,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   forgetWindowFocus();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
@@ -131,7 +139,7 @@ describe('InvitationAcceptPage', () => {
     expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument();
   });
 
-  test('given a signed-in invitee then /v2/me is read first and then only the token is posted', async () => {
+  test('given a signed-in invitee then only the token is posted, with the country, without reading /v2/me first', async () => {
     // Given
     savePendingInvitationToken(INVITATION_TOKEN);
     const { acceptBodies } = answerAcceptanceApi(fetchMock, { signedInUser: STANDARD_USER });
@@ -143,36 +151,39 @@ describe('InvitationAcceptPage', () => {
     expect(
       await screen.findByRole('heading', { name: 'You are now an author' })
     ).toBeInTheDocument();
-    const requests = sentRequests(fetchMock);
-    expect(requests[0]).toBe('GET /v2/me?country_id=us');
-    expect(acceptRequests()).toEqual(['POST /v2/me/invitations/accept']);
+    expect(
+      screen.getByText("Your PolicyEngine account's type changed from Standard to Author.")
+    ).toBeInTheDocument();
+    expect(sentRequests(fetchMock)).toEqual(['POST /v2/me/invitations/accept?country_id=us']);
     expect(acceptBodies).toEqual([{ token: INVITATION_TOKEN }]);
   });
 
-  test('given the invitation is accepted then the token is dropped and /v2/me holds the new type', async () => {
+  test('given the invitation is accepted then the token is dropped and /v2/me is read again', async () => {
     // Given
     savePendingInvitationToken(INVITATION_TOKEN);
     answerAcceptanceApi(fetchMock, { signedInUser: STANDARD_USER });
 
     // When
-    const { queryClient } = renderAcceptPage();
+    renderAcceptPage({ withMeReader: true });
     await screen.findByRole('heading', { name: 'You are now an author' });
 
     // Then
     expect(readPendingInvitationToken()).toBeNull();
-    expect(queryClient.getQueryData(meQueryKey(TEST_AUTH0_SUBJECT, 'us'))).toMatchObject({
-      user_type: 'author',
-      latest_type_change: latestTypeChange(),
-    });
+    await waitFor(() => expect(meReads()).toHaveLength(2));
+    expect(sentRequests(fetchMock).at(-1)).toBe('GET /v2/me?country_id=us');
   });
 
   test('given the user already had the type or a higher one then the page says nothing changed', async () => {
     // Given
     savePendingInvitationToken(INVITATION_TOKEN);
-    const admin = meItemOfType('admin');
     answerAcceptanceApi(fetchMock, {
-      signedInUser: admin,
-      acceptResponse: () => okResponse({ item: admin, outcome: 'unchanged' }),
+      signedInUser: meItemOfType('admin'),
+      acceptResponse: () =>
+        acceptanceResponse({
+          user_type: 'admin',
+          previous_user_type: 'admin',
+          type_changed: false,
+        }),
     });
 
     // When
@@ -206,37 +217,39 @@ describe('InvitationAcceptPage', () => {
     expect(readPendingInvitationToken()).toBe(INVITATION_TOKEN);
   });
 
-  test('given the email is not verified then returning to the page accepts the invitation', async () => {
-    // Given
-    savePendingInvitationToken(INVITATION_TOKEN);
-    let verified = false;
-    answerAcceptanceApi(fetchMock, {
-      signedInUser: STANDARD_USER,
-      acceptResponse: () =>
-        verified
-          ? okResponse({
-              item: {
-                ...STANDARD_USER,
-                user_type: 'author',
-                latest_type_change: latestTypeChange(),
-              },
-              outcome: 'changed',
-            })
-          : emailNotVerifiedResponse(),
-    });
-    renderAcceptPage();
-    await screen.findByRole('heading', { name: 'Verify your email address' });
+  test.each([
+    ['the tab is shown again', () => returnToWindow()],
+    [
+      'the window regains focus',
+      () =>
+        act(async () => {
+          window.dispatchEvent(new Event('focus'));
+        }),
+    ],
+  ])(
+    'given the email is not verified then accepting is tried again when %s',
+    async (_label, comeBack) => {
+      // Given
+      savePendingInvitationToken(INVITATION_TOKEN);
+      let verified = false;
+      answerAcceptanceApi(fetchMock, {
+        signedInUser: STANDARD_USER,
+        acceptResponse: () => (verified ? acceptanceResponse() : emailNotVerifiedResponse()),
+      });
+      renderAcceptPage();
+      await screen.findByRole('heading', { name: 'Verify your email address' });
 
-    // When
-    verified = true;
-    await returnToWindow();
+      // When
+      verified = true;
+      await comeBack();
 
-    // Then
-    expect(
-      await screen.findByRole('heading', { name: 'You are now an author' })
-    ).toBeInTheDocument();
-    expect(acceptRequests()).toHaveLength(2);
-  });
+      // Then
+      expect(
+        await screen.findByRole('heading', { name: 'You are now an author' })
+      ).toBeInTheDocument();
+      expect(acceptRequests()).toHaveLength(2);
+    }
+  );
 
   test('given the signed-in address is not the invited one then the page says so and keeps the token', async () => {
     // Given
@@ -244,7 +257,8 @@ describe('InvitationAcceptPage', () => {
     const auth = signedInAuthValue();
     answerAcceptanceApi(fetchMock, {
       signedInUser: STANDARD_USER,
-      acceptResponse: () => errorResponse(403, INVITATION_API_MESSAGES.EMAIL_MISMATCH),
+      acceptResponse: () =>
+        acceptRefusalResponse(403, 'email_mismatch', INVITATION_API_MESSAGES.EMAIL_MISMATCH),
     });
     renderAcceptPage({ auth });
 
@@ -258,17 +272,19 @@ describe('InvitationAcceptPage', () => {
   });
 
   test.each([
-    [410, INVITATION_API_MESSAGES.INVITATION_GONE, 'This invitation link no longer works'],
-    [422, 'The request does not match the schema.', 'This invitation link no longer works'],
-    [409, INVITATION_API_MESSAGES.INVITER_NOT_ADMIN, 'This invitation is no longer valid'],
-  ])(
-    'given the acceptance is refused with %s then the page says so and drops the token',
-    async (status, message, heading) => {
+    [410, 'invitation_not_found', 'This invitation link no longer works'],
+    [410, 'invitation_revoked', 'This invitation link no longer works'],
+    [410, 'invitation_expired', 'This invitation has expired'],
+    [410, 'invitation_accepted', 'This invitation was already accepted'],
+    [409, 'inviter_not_admin', 'This invitation is no longer valid'],
+  ] as const)(
+    'given the acceptance is refused with %s %s then the page says so and drops the token',
+    async (status, code, heading) => {
       // Given
       savePendingInvitationToken(INVITATION_TOKEN);
       answerAcceptanceApi(fetchMock, {
         signedInUser: STANDARD_USER,
-        acceptResponse: () => errorResponse(status, message),
+        acceptResponse: () => acceptRefusalResponse(status, code),
       });
 
       // When
@@ -280,6 +296,41 @@ describe('InvitationAcceptPage', () => {
     }
   );
 
+  test('given a token that is not one (422) then the link is said to no longer work and the token is dropped', async () => {
+    // Given
+    savePendingInvitationToken(INVITATION_TOKEN);
+    answerAcceptanceApi(fetchMock, {
+      signedInUser: STANDARD_USER,
+      acceptResponse: () => errorResponse(422, 'The request does not match the schema.'),
+    });
+
+    // When
+    renderAcceptPage();
+
+    // Then
+    expect(
+      await screen.findByRole('heading', { name: 'This invitation link no longer works' })
+    ).toBeInTheDocument();
+    expect(readPendingInvitationToken()).toBeNull();
+  });
+
+  test('given the invitation was already accepted then /v2/me is read again', async () => {
+    // Given
+    savePendingInvitationToken(INVITATION_TOKEN);
+    answerAcceptanceApi(fetchMock, {
+      signedInUser: STANDARD_USER,
+      acceptResponse: () => acceptRefusalResponse(410, 'invitation_accepted'),
+    });
+
+    // When
+    renderAcceptPage({ withMeReader: true });
+    await screen.findByRole('heading', { name: 'This invitation was already accepted' });
+
+    // Then
+    await waitFor(() => expect(meReads()).toHaveLength(2));
+    expect(sentRequests(fetchMock).at(-1)).toBe('GET /v2/me?country_id=us');
+  });
+
   test('given Auth0 cannot be reached once then the acceptance is tried again by itself', async () => {
     // Given
     savePendingInvitationToken(INVITATION_TOKEN);
@@ -289,12 +340,13 @@ describe('InvitationAcceptPage', () => {
       acceptResponse: () => {
         if (failures > 0) {
           failures -= 1;
-          return errorResponse(503, INVITATION_API_MESSAGES.AUTH0_UNAVAILABLE);
+          return acceptRefusalResponse(
+            503,
+            'auth0_unavailable',
+            INVITATION_API_MESSAGES.AUTH0_UNAVAILABLE
+          );
         }
-        return okResponse({
-          item: { ...STANDARD_USER, user_type: 'author', latest_type_change: latestTypeChange() },
-          outcome: 'changed',
-        });
+        return acceptanceResponse();
       },
     });
 
@@ -316,15 +368,12 @@ describe('InvitationAcceptPage', () => {
       signedInUser: STANDARD_USER,
       acceptResponse: () =>
         available
-          ? okResponse({
-              item: {
-                ...STANDARD_USER,
-                user_type: 'author',
-                latest_type_change: latestTypeChange(),
-              },
-              outcome: 'changed',
-            })
-          : errorResponse(503, INVITATION_API_MESSAGES.AUTH0_UNAVAILABLE),
+          ? acceptanceResponse()
+          : acceptRefusalResponse(
+              503,
+              'auth0_unavailable',
+              INVITATION_API_MESSAGES.AUTH0_UNAVAILABLE
+            ),
     });
     renderAcceptPage();
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -342,35 +391,7 @@ describe('InvitationAcceptPage', () => {
     ).toBeInTheDocument();
   });
 
-  test('given /v2/me cannot be read then nothing is posted and trying again continues', async () => {
-    // Given
-    savePendingInvitationToken(INVITATION_TOKEN);
-    let meAvailable = false;
-    answerAcceptanceApi(fetchMock, { signedInUser: STANDARD_USER });
-    const answerAsBefore = fetchMock.getMockImplementation()!;
-    fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
-      !meAvailable && publicApiPathOf(url) === '/v2/me'
-        ? errorResponse(500, 'The operation could not be completed.')
-        : answerAsBefore(url, init)
-    );
-    renderAcceptPage();
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'We could not load your PolicyEngine account: The operation could not be completed.'
-    );
-    await letPendingWorkRun();
-    expect(acceptRequests()).toEqual([]);
-
-    // When
-    meAvailable = true;
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Try again' }));
-
-    // Then
-    expect(
-      await screen.findByRole('heading', { name: 'You are now an author' })
-    ).toBeInTheDocument();
-  });
-
-  test('given the page renders again while the acceptance is under way then it is posted once', async () => {
+  test('given the window regains focus while the acceptance is under way then it is posted once', async () => {
     // Given
     savePendingInvitationToken(INVITATION_TOKEN);
     answerAcceptanceApi(fetchMock, { signedInUser: STANDARD_USER });
@@ -383,6 +404,24 @@ describe('InvitationAcceptPage', () => {
     await letPendingWorkRun();
 
     // Then
-    await waitFor(() => expect(acceptRequests()).toHaveLength(1));
+    expect(acceptRequests()).toHaveLength(1);
+  });
+
+  test("given storage is blocked then the link's own token is still accepted", async () => {
+    // Given
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('Storage is blocked');
+    });
+    openAcceptPage(`#token=${INVITATION_TOKEN}`);
+    const { acceptBodies } = answerAcceptanceApi(fetchMock, { signedInUser: STANDARD_USER });
+
+    // When
+    renderAcceptPage();
+
+    // Then
+    expect(
+      await screen.findByRole('heading', { name: 'You are now an author' })
+    ).toBeInTheDocument();
+    expect(acceptBodies).toEqual([{ token: INVITATION_TOKEN }]);
   });
 });

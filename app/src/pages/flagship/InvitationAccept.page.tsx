@@ -1,29 +1,35 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { focusManager } from '@tanstack/react-query';
-import { isEmailNotVerified, type InvitationAcceptResult } from '@/api/v2Invitations';
-import { isV2ApiError } from '@/api/v2UserClient';
+import {
+  invitationRefusalCode,
+  isEmailNotVerified,
+  type InvitationAcceptance,
+} from '@/api/v2Invitations';
 import { USER_TYPE_LABELS } from '@/components/admin/adminUserFormat';
 import { AppLink } from '@/components/AppLink';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
-import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { isFinalRefusal, useAcceptInvitation } from '@/hooks/useInvitationAcceptance';
-import { useMe } from '@/hooks/useMe';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import {
   invitationAcceptPath,
   readPendingInvitationToken,
   takeInvitationTokenFromUrl,
 } from '@/libs/invitations/pendingInvitation';
-import { isAssociationCountry, type UserType } from '@/types/v2User';
+import type { AssociationCountryId, UserType } from '@/types/v2User';
 
 function PageShell({ children }: { children: ReactNode }) {
   return (
     <Stack
       gap="md"
       align="start"
-      style={{ maxWidth: 560, margin: '0 auto', padding: spacing['3xl'], width: '100%' }}
+      style={{
+        maxWidth: spacing.layout.container,
+        margin: '0 auto',
+        padding: spacing['3xl'],
+        width: '100%',
+      }}
     >
       {children}
     </Stack>
@@ -65,26 +71,58 @@ function userTypeWithArticle(userType: UserType): string {
   return `an ${userTypeLabel(userType).toLowerCase()}`;
 }
 
-function Accepted({ result }: { result: InvitationAcceptResult }) {
+function AccountLink() {
   const countryId = useCurrentCountry();
-  const userType = result.item.user_type;
+  return <AppLink to={`/${countryId}/account`}>Go to your account</AppLink>;
+}
+
+function Accepted({ acceptance }: { acceptance: InvitationAcceptance }) {
   return (
     <PageShell>
       <Stack role="status" gap="md">
         <Heading>
-          {result.outcome === 'changed'
-            ? `You are now ${userTypeWithArticle(userType)}`
+          {acceptance.type_changed
+            ? `You are now ${userTypeWithArticle(acceptance.user_type)}`
             : 'Invitation accepted'}
         </Heading>
         <Explanation>
-          {result.outcome === 'changed'
-            ? `Your PolicyEngine account's type is now ${userTypeLabel(userType)}.`
-            : `You are already ${userTypeWithArticle(userType)}, which includes everything this invitation gives, so nothing changed.`}
+          {acceptance.type_changed
+            ? `Your PolicyEngine account's type changed from ${userTypeLabel(acceptance.previous_user_type)} to ${userTypeLabel(acceptance.user_type)}.`
+            : `You are already ${userTypeWithArticle(acceptance.user_type)}, which includes everything this invitation gives, so nothing changed.`}
         </Explanation>
       </Stack>
-      <AppLink to={`/${countryId}/account`}>Go to your account</AppLink>
+      <AccountLink />
     </PageShell>
   );
+}
+
+const ASK_AGAIN = 'Ask the admin who invited you to send it again.';
+
+/** What the page says about a refusal that no new attempt can change. */
+function finalRefusalWording(error: Error): { heading: string; explanation: string } {
+  switch (invitationRefusalCode(error)) {
+    case 'invitation_accepted':
+      return {
+        heading: 'This invitation was already accepted',
+        explanation:
+          'An invitation can be accepted once. Your account page shows the type your account has.',
+      };
+    case 'invitation_expired':
+      return { heading: 'This invitation has expired', explanation: ASK_AGAIN };
+    case 'inviter_not_admin':
+      return {
+        heading: 'This invitation is no longer valid',
+        explanation:
+          'The admin who sent it is no longer an admin. Ask another admin to invite you again.',
+      };
+    default:
+      // invitation_not_found, invitation_revoked, or a token that is not one (422).
+      return {
+        heading: 'This invitation link no longer works',
+        explanation:
+          'It was withdrawn, or replaced by a newer invitation email. Open the link in the latest invitation email, or ask the admin who invited you to send it again.',
+      };
+  }
 }
 
 /** Why the acceptance failed, and what the invitee can do. */
@@ -115,7 +153,7 @@ function Refused({
       </PageShell>
     );
   }
-  if (isV2ApiError(error, 403)) {
+  if (invitationRefusalCode(error) === 'email_mismatch') {
     return (
       <PageShell>
         <Heading>This invitation is for another email address</Heading>
@@ -128,19 +166,12 @@ function Refused({
     );
   }
   if (isFinalRefusal(error)) {
-    const inviterNoLongerAdmin = isV2ApiError(error, 409);
+    const { heading, explanation } = finalRefusalWording(error);
     return (
       <PageShell>
-        <Heading>
-          {inviterNoLongerAdmin
-            ? 'This invitation is no longer valid'
-            : 'This invitation link no longer works'}
-        </Heading>
-        <Explanation>
-          {inviterNoLongerAdmin
-            ? 'The admin who sent it is no longer an admin. Ask another admin to invite you again.'
-            : 'It may have expired, been used already or been withdrawn. Ask the admin who invited you to send it again.'}
-        </Explanation>
+        <Heading>{heading}</Heading>
+        <Explanation>{explanation}</Explanation>
+        {invitationRefusalCode(error) === 'invitation_accepted' && <AccountLink />}
       </PageShell>
     );
   }
@@ -156,56 +187,66 @@ function Refused({
 }
 
 /**
- * Signed in: reads `/v2/me` first, which creates a new user's account,
- * then posts the token once. While the email is not verified it tries
- * again each time the invitee comes back to the page.
+ * Signed in: posts the token once, which also creates the account of a
+ * user who has none. While the email is not verified it tries again each
+ * time the invitee comes back: the window regains focus, or the tab is
+ * shown again.
  */
-function Acceptance({ token }: { token: string }) {
+function Acceptance({ token, countryId }: { token: string; countryId: AssociationCountryId }) {
   const auth = useAuthStatus();
-  const me = useMe();
-  const acceptance = useAcceptInvitation();
+  const acceptance = useAcceptInvitation(countryId);
   const { mutate: accept } = acceptance;
-  const started = useRef(false);
+  // Set while a post is under way, so a focus and a visibility change
+  // arriving together post once.
+  const posting = useRef(false);
 
-  useEffect(() => {
-    if (me.isSuccess && !started.current) {
-      started.current = true;
-      accept(token);
+  const tryAccepting = useCallback(() => {
+    if (posting.current) {
+      return;
     }
-  }, [me.isSuccess, accept, token]);
+    posting.current = true;
+    accept(token, {
+      onSettled: () => {
+        posting.current = false;
+      },
+    });
+  }, [accept, token]);
+
+  const started = useRef(false);
+  useEffect(() => {
+    if (!started.current) {
+      started.current = true;
+      tryAccepting();
+    }
+  }, [tryAccepting]);
 
   const waitingForVerification = acceptance.isError && isEmailNotVerified(acceptance.error);
   useEffect(() => {
     if (!waitingForVerification) {
       return undefined;
     }
-    // Back from the verification email, in this tab.
-    return focusManager.subscribe((focused) => {
+    // Back from the verification email: react-query's focusManager reports
+    // the tab being shown again; a window that stayed visible regains focus.
+    const stopWatchingVisibility = focusManager.subscribe((focused) => {
       if (focused) {
-        accept(token);
+        tryAccepting();
       }
     });
-  }, [waitingForVerification, accept, token]);
+    window.addEventListener('focus', tryAccepting);
+    return () => {
+      stopWatchingVisibility();
+      window.removeEventListener('focus', tryAccepting);
+    };
+  }, [waitingForVerification, tryAccepting]);
 
-  if (me.isError) {
-    return (
-      <PageShell>
-        <Heading>Accept your invitation</Heading>
-        <Text role="alert" style={{ margin: 0, color: colors.error }}>
-          We could not load your PolicyEngine account: {me.error.message}
-        </Text>
-        <Button onClick={() => me.refetch()}>Try again</Button>
-      </PageShell>
-    );
-  }
   if (acceptance.isSuccess) {
-    return <Accepted result={acceptance.data} />;
+    return <Accepted acceptance={acceptance.data} />;
   }
   if (acceptance.isError) {
     return (
       <Refused
         error={acceptance.error}
-        onTryAgain={() => accept(token)}
+        onTryAgain={tryAccepting}
         onSignOut={() => void auth.signOut()}
       />
     );
@@ -220,22 +261,17 @@ function Acceptance({ token }: { token: string }) {
  * and then accepts the invitation with no further step.
  */
 export default function InvitationAcceptPage() {
+  // The US or the UK, the countries with accounts.
   const countryId = useCurrentCountry();
-  const nav = useAppNavigate();
   const auth = useAuthStatus();
   // Undefined until the page has read the link and storage, after mount.
   const [token, setToken] = useState<string | null | undefined>(undefined);
-  const acceptPath = invitationAcceptPath(countryId);
 
   useEffect(() => {
-    takeInvitationTokenFromUrl();
-    if (!isAssociationCountry(countryId)) {
-      // Accounts exist in the US and UK workspaces only.
-      nav.replace(invitationAcceptPath('us'));
-      return;
-    }
-    setToken(readPendingInvitationToken());
-  }, [countryId, nav]);
+    const linkToken = takeInvitationTokenFromUrl();
+    // The link's own token, when storage is blocked and could not keep it.
+    setToken(readPendingInvitationToken() ?? linkToken);
+  }, []);
 
   if (token === undefined) {
     return <Working label="Loading…" />;
@@ -260,6 +296,7 @@ export default function InvitationAcceptPage() {
     );
   }
   if (auth.status === 'signed_out') {
+    const acceptPath = invitationAcceptPath(countryId);
     return (
       <PageShell>
         <Heading>Accept your invitation</Heading>
@@ -276,5 +313,5 @@ export default function InvitationAcceptPage() {
       </PageShell>
     );
   }
-  return <Acceptance token={token} />;
+  return <Acceptance token={token} countryId={countryId} />;
 }
