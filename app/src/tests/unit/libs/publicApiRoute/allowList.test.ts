@@ -54,6 +54,12 @@ const CALCULATOR_OPERATIONS: ReadonlyArray<[string, string, string]> = [
   ['GET', `/v2/admin/users/${SAVED_RECORD_ID}`, 'admin user'],
   ['PATCH', `/v2/admin/users/${SAVED_RECORD_ID}`, 'admin user'],
   ['GET', `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`, 'admin user type changes'],
+  ['GET', '/v2/admin/invitations', 'admin invitations'],
+  ['POST', '/v2/admin/invitations', 'admin invitations'],
+  ['DELETE', `/v2/admin/invitations/${SAVED_RECORD_ID}`, 'admin invitation'],
+  ['POST', `/v2/admin/invitations/${SAVED_RECORD_ID}/resend`, 'admin invitation resend'],
+  ['POST', '/v2/me/invitations/accept', 'invitation acceptance'],
+  ['POST', `/v2/me/type-changes/${SAVED_RECORD_ID}/dismiss`, 'type change dismissal'],
 ];
 
 // Requests the calculator never sends, many of them neighbours of ones it
@@ -93,6 +99,17 @@ const REFUSED_REQUESTS: ReadonlyArray<[string, string]> = [
   ['GET', `/v2/admin/users/${SAVED_RECORD_ID}/saved-items`],
   ['GET', '/v2/admin/users/not-a-uuid'],
   ['PATCH', `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`],
+  ['DELETE', '/v2/admin/invitations'],
+  ['GET', `/v2/admin/invitations/${SAVED_RECORD_ID}`],
+  ['PATCH', `/v2/admin/invitations/${SAVED_RECORD_ID}`],
+  ['POST', '/v2/admin/invitations/not-a-uuid/resend'],
+  ['GET', `/v2/admin/invitations/${SAVED_RECORD_ID}/resend`],
+  ['GET', '/v2/me/invitations/accept'],
+  ['POST', '/v2/me/invitations'],
+  ['POST', `/v2/me/invitations/${SAVED_RECORD_ID}/accept`],
+  ['GET', `/v2/me/type-changes/${SAVED_RECORD_ID}/dismiss`],
+  ['POST', '/v2/me/type-changes/not-a-uuid/dismiss'],
+  ['DELETE', `/v2/me/type-changes/${SAVED_RECORD_ID}`],
 ];
 
 describe('matchAllowedOperation', () => {

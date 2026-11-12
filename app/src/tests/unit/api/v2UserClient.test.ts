@@ -74,6 +74,37 @@ describe('v2UserClient', () => {
     expect(isV2ApiError(error, 422)).toBe(true);
   });
 
+  test('given an error envelope with a code then the error carries the code', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({ status: 'error', message: 'Not verified yet', code: 'email_not_verified' }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } }
+      )
+    );
+
+    // When
+    const failure = context.client
+      .request('POST', 'me/invitations/accept')
+      .catch((caught: unknown) => caught);
+
+    // Then
+    expect(await failure).toMatchObject({ status: 409, code: 'email_not_verified' });
+  });
+
+  test('given an error envelope without a code then the error has no code', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(errorResponse(409, 'Already saved'));
+
+    // When
+    const failure = context.client.request('GET', 'me').catch((caught: unknown) => caught);
+
+    // Then
+    expect(await failure).toMatchObject({ status: 409, code: null });
+  });
+
   test.each([
     [422, /not valid, or something it refers to may no longer exist/],
     [409, /conflicts with what is already saved/],

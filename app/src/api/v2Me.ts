@@ -54,3 +54,11 @@ export async function upgradeAccount(
     headers: { [UNAUTHENTICATED_USER_HEADER]: browserUserId },
   });
 }
+
+/**
+ * Dismisses the notice of a type change: `/v2/me`'s `latest_type_change`
+ * no longer names it.
+ */
+export async function dismissTypeChange(client: V2UserClient, typeChangeId: string): Promise<void> {
+  await client.request<void>('POST', `me/type-changes/${encodeURIComponent(typeChangeId)}/dismiss`);
+}

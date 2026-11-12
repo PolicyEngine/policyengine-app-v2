@@ -1,3 +1,5 @@
+import type { components } from '@/api/publicApi/schema';
+
 /**
  * Wire types for the PolicyEngine API's saved-work routes (`/v2/me*` and
  * `/v2/user-*`). Field names are snake_case, as on the wire. The server
@@ -17,11 +19,15 @@ export function isAssociationCountry(countryId: unknown): countryId is Associati
   );
 }
 
-/** `{"status": "ok", "message": null, "result": <R>}` or `{"status": "error", "message": "…"}`. */
+/**
+ * `{"status": "ok", "message": null, "result": <R>}` or
+ * `{"status": "error", "message": "…"}`, where some errors add a `code`.
+ */
 export interface V2Envelope<R> {
   status: 'ok' | 'error';
   message: string | null;
   result?: R;
+  code?: unknown;
 }
 
 export interface V2ItemResult<T> {
@@ -70,7 +76,15 @@ export interface MeItem {
   last_name: string | null;
   email: string | null;
   created_at: string;
+  /**
+   * The signed-in user's latest type change until they dismiss it, else
+   * null. Absent from an API that does not send it yet.
+   */
+  latest_type_change?: LatestUserTypeChange | null;
 }
+
+/** A signed-in user's type change, as `/v2/me` names it until the user dismisses it. */
+export type LatestUserTypeChange = components['schemas']['LatestUserTypeChange'];
 
 export interface ProvenanceWire {
   source: 'manual' | 'chat' | 'bill' | 'tool';
