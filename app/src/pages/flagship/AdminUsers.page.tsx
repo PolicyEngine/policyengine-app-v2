@@ -58,9 +58,7 @@ function AdminUsers() {
         <Title order={1} style={{ margin: 0 }}>
           Users
         </Title>
-        <Text style={{ margin: 0, color: colors.text.secondary }}>
-          Find signed-in users by email, change their user types, and see who changed them.
-        </Text>
+        <Text style={{ margin: 0, color: colors.text.secondary }}>View all user accounts</Text>
       </Stack>
       <AdminUserSearch selectedUserId={selectedUserId} onSelectUser={setSelectedUserId} />
       {selectedUserId && <AdminUserDetails key={selectedUserId} userId={selectedUserId} />}
