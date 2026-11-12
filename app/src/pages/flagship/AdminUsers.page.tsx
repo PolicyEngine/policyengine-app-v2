@@ -1,8 +1,19 @@
 import { useState } from 'react';
+import AdminInvitations from '@/components/admin/AdminInvitations';
 import AdminUserDetails from '@/components/admin/AdminUserDetails';
 import AdminUserSearch from '@/components/admin/AdminUserSearch';
 import MinimumUserType from '@/components/auth/MinimumUserType';
-import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
+import {
+  Button,
+  Spinner,
+  Stack,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Text,
+  Title,
+} from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { useMe } from '@/hooks/useMe';
 import { useUserType } from '@/hooks/useUserType';
@@ -66,8 +77,22 @@ function AdminUsers() {
           Find signed-in users by email, change their user types, and see who changed them.
         </Text>
       </Stack>
-      <AdminUserSearch selectedUserId={selectedUserId} onSelectUser={setSelectedUserId} />
-      {selectedUserId && <AdminUserDetails key={selectedUserId} userId={selectedUserId} />}
+      {/* Only the open tab is rendered, so the invitations are read when their tab opens. */}
+      <Tabs defaultValue="users">
+        <TabsList>
+          <TabsTrigger value="users">Find users</TabsTrigger>
+          <TabsTrigger value="invitations">Invitations</TabsTrigger>
+        </TabsList>
+        <TabsContent value="users">
+          <Stack gap="xl">
+            <AdminUserSearch selectedUserId={selectedUserId} onSelectUser={setSelectedUserId} />
+            {selectedUserId && <AdminUserDetails key={selectedUserId} userId={selectedUserId} />}
+          </Stack>
+        </TabsContent>
+        <TabsContent value="invitations">
+          <AdminInvitations />
+        </TabsContent>
+      </Tabs>
     </PageShell>
   );
 }

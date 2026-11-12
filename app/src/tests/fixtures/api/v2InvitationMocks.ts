@@ -1,7 +1,7 @@
 import type { Mock } from 'vitest';
 import type { InvitableUserType, UserInvitationItem } from '@/api/v2Invitations';
-import { answerAdminApi, SIGNED_IN_ADMIN } from '@/tests/fixtures/api/v2AdminUserMocks';
 import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
+import { answerAdminApi, SIGNED_IN_ADMIN } from '@/tests/fixtures/api/v2AdminUserMocks';
 import {
   errorResponse,
   itemResponse,
@@ -114,7 +114,10 @@ export interface FakeInvitationApiOptions {
  */
 export function answerInvitationApi(
   fetchMock: Mock,
-  { invitations = [GRACE_INVITATION, ALAN_INVITATION], sendFails = false }: FakeInvitationApiOptions = {}
+  {
+    invitations = [GRACE_INVITATION, ALAN_INVITATION],
+    sendFails = false,
+  }: FakeInvitationApiOptions = {}
 ) {
   answerAdminApi(fetchMock);
   const answerAsAdminApi = fetchMock.getMockImplementation()!;
@@ -147,9 +150,7 @@ export function answerInvitationApi(
     }
     const invitationRoute = /^\/v2\/admin\/invitations\/([^/]+)(\/resend)?$/.exec(path);
     if (invitationRoute) {
-      const invitation = state.invitations.find(
-        (candidate) => candidate.id === invitationRoute[1]
-      );
+      const invitation = state.invitations.find((candidate) => candidate.id === invitationRoute[1]);
       if (!invitation) {
         return errorResponse(404, INVITATION_API_MESSAGES.NO_PENDING_INVITATION);
       }
