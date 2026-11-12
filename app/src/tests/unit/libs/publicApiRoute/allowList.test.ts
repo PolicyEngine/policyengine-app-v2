@@ -53,6 +53,7 @@ const CALCULATOR_OPERATIONS: ReadonlyArray<[string, string, string]> = [
   ['GET', '/v2/admin/users', 'admin users'],
   ['GET', `/v2/admin/users/${SAVED_RECORD_ID}`, 'admin user'],
   ['PATCH', `/v2/admin/users/${SAVED_RECORD_ID}`, 'admin user'],
+  ['DELETE', `/v2/admin/users/${SAVED_RECORD_ID}`, 'admin user'],
   ['GET', `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`, 'admin user type changes'],
 ];
 
@@ -89,7 +90,9 @@ const REFUSED_REQUESTS: ReadonlyArray<[string, string]> = [
   ['GET', '/us%2Fmetadata'],
   ['GET', '/v2/model-catalog?country_id=us'],
   ['POST', '/v2/admin/users'],
-  ['DELETE', `/v2/admin/users/${SAVED_RECORD_ID}`],
+  ['DELETE', '/v2/admin/users'],
+  ['DELETE', '/v2/admin/users/not-a-uuid'],
+  ['DELETE', `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`],
   ['GET', `/v2/admin/users/${SAVED_RECORD_ID}/saved-items`],
   ['GET', '/v2/admin/users/not-a-uuid'],
   ['PATCH', `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`],
