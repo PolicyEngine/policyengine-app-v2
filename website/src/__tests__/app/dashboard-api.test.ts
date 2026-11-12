@@ -8,6 +8,7 @@ import * as policiesRoute from "@/app/api/policies/route";
 import {
   DASHBOARD_VERCEL_HOSTS,
   isAllowedDashboardOrigin,
+  OTHER_DASHBOARD_HOSTS,
 } from "@/lib/dashboardApi/cors";
 
 import { getLegacyAppRedirectUrl } from "@/lib/legacyRedirect";
@@ -503,10 +504,11 @@ describe("the dashboard API's server credential", () => {
 });
 
 describe("dashboard API origins", () => {
-  test("given the zone routes then every dashboard *.vercel.app host is allowed and no other host is", () => {
+  test("given the zone routes then every dashboard *.vercel.app host is allowed and an unlisted host is not", () => {
     // Then
     expect(DASHBOARD_VERCEL_HOSTS.size).toBeGreaterThan(50);
     for (const host of DASHBOARD_VERCEL_HOSTS) {
+      expect(host).toMatch(/\.vercel\.app$/);
       expect(isAllowedDashboardOrigin(new URL(`https://${host}`))).toBe(true);
     }
     expect(
@@ -514,10 +516,102 @@ describe("dashboard API origins", () => {
     ).toBe(false);
     expect(
       isAllowedDashboardOrigin(
-        new URL("https://policyengine--state-legislative-tracker.modal.run"),
+        new URL("https://policyengine--another-app.modal.run"),
       ),
     ).toBe(false);
   });
+
+  // The production hosts of phase 4.1 dashboards whose pages call the
+  // dashboard API once their phase 4.1 changes ship, and that the zone
+  // routes' *.vercel.app hosts don't cover, with the repository each serves.
+  test.each([
+    ["autumn-budget-2025-in-review", "autumn-budget-2025-in-review.vercel.app"],
+    ["nc-stein-2027-tax-proposals", "nc-governor-tax-proposals.vercel.app"],
+    [
+      "nc-stein-2027-tax-proposals",
+      "policyengine-nc-stein-2027-tax-prop.vercel.app",
+    ],
+    ["policyengine-model", "policyengine-model-phi.vercel.app"],
+    [
+      "state-legislative-tracker",
+      "policyengine--state-legislative-tracker.modal.run",
+    ],
+  ])(
+    "given %s's production host %s then its pages may call the dashboard API",
+    async (_repository, host) => {
+      // Given
+      const dashboardOrigin = `https://${host}`;
+
+      // When
+      const response = await householdCalculateRoute.POST(
+        dashboardRequest("/api/household/calculate", {
+          method: "POST",
+          origin: dashboardOrigin,
+          body: { country: "us", household: HOUSEHOLD },
+        }),
+      );
+
+      // Then
+      expect(isAllowedDashboardOrigin(new URL(dashboardOrigin))).toBe(true);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("access-control-allow-origin")).toBe(
+        dashboardOrigin,
+      );
+    },
+  );
+
+  // Dashboards with their own Vercel host whose pages don't call the
+  // dashboard API, so they get no entry of their own: aspen-eitc-ctc's
+  // production build calls its Modal backend while its Vercel project sets
+  // NEXT_PUBLIC_HOUSEHOLD_API_URL. A later zone route may still allow it.
+  test.each([["aspen-eitc-ctc", "https://aspen-eitc-ctc.vercel.app"]])(
+    "given %s, whose pages don't call the dashboard API, then its host is not listed",
+    (_repository, origin) => {
+      // Then
+      expect(OTHER_DASHBOARD_HOSTS.has(new URL(origin).hostname)).toBe(false);
+    },
+  );
+
+  test.each([
+    ["plain http", "http://policyengine-model-phi.vercel.app"],
+    ["another port", "https://policyengine-model-phi.vercel.app:8443"],
+    ["a subdomain", "https://preview.policyengine-model-phi.vercel.app"],
+    ["a longer name", "https://policyengine-model-phi-copy.vercel.app"],
+    [
+      "another domain",
+      "https://policyengine-model-phi.vercel.app.example.test",
+    ],
+    [
+      "another Modal workspace",
+      "https://someone-else--state-legislative-tracker.modal.run",
+    ],
+    [
+      "the Modal app's development address",
+      "https://policyengine--state-legislative-tracker-dev.modal.run",
+    ],
+    [
+      "a Vercel name PolicyEngine doesn't hold",
+      "https://policyengine-model.vercel.app",
+    ],
+    ["every PolicyEngine GitHub Pages site", "https://policyengine.github.io"],
+  ])(
+    "given %s instead of a dashboard's exact host then it answers 403",
+    async (_label, origin) => {
+      // When
+      const response = await householdCalculateRoute.POST(
+        dashboardRequest("/api/household/calculate", {
+          method: "POST",
+          origin,
+          body: { country: "us", household: HOUSEHOLD },
+        }),
+      );
+
+      // Then
+      expect(isAllowedDashboardOrigin(new URL(origin))).toBe(false);
+      expect(response.status).toBe(403);
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   test.each([
     "/api/household/calculate",
