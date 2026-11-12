@@ -210,7 +210,10 @@ export type UserReportPatchBody = Partial<Omit<UserReportCreateBody, 'country_id
 
 /* /v2/me/export */
 
-/** Everything saved to the account, in every country; downloaded as is. */
+/**
+ * Everything saved to the account, in every country. The downloaded file
+ * leaves out `user` and each record's `user_id` (see DownloadMyData).
+ */
 export interface MeExportResult {
   /** Null for a signed-out browser that has saved nothing yet. */
   user: MeItem | null;
