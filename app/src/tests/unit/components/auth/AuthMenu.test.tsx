@@ -222,6 +222,27 @@ describe('AuthMenu', () => {
     ]);
   });
 
+  test('given /v2/me answers "admin" while the menu is open then closing it by choosing an item and opening it by keyboard shows "My organization"', async () => {
+    // Given
+    const user = userEvent.setup();
+    const pendingMe = deferredResponse();
+    answerMe(fetchMock, { meResponse: () => pendingMe.response });
+    renderMenu(signedInAuthValue(), 'us', { showMeStatus: true });
+    await waitFor(() => expect(meReads()).toHaveLength(1));
+    await openMenu(user);
+    pendingMe.answer(itemResponse(meItemOfType('admin')));
+    await screen.findByText('/v2/me status: success');
+
+    // When
+    await user.click(screen.getByRole('menuitem', { name: /my account/i }));
+    screen.getByRole('button', { name: /account menu for ada lovelace/i }).focus();
+    await user.keyboard('{Enter}');
+
+    // Then
+    expect(navigation.push).toHaveBeenCalledWith('/us/account');
+    expect(await screen.findByRole('menuitem', { name: 'My organization' })).toBeInTheDocument();
+  });
+
   test.each(['standard', 'author'] as const)(
     'given a user of type %s then the menu has no "My organization"',
     async (userType) => {

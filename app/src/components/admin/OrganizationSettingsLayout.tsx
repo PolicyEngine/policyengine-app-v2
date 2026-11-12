@@ -7,9 +7,10 @@ import OrganizationSettingsSidebar from './OrganizationSettingsSidebar';
  * The organization settings pages' layout: for admins, the sidebar of the
  * pages (for now only Users) left of the page, or above it on narrow
  * screens. Everyone else, and anyone whose type is not known yet, sees
- * the page alone, which says it is loading or not found. The page keeps
- * its place in the tree when the sidebar appears, so it is not mounted
- * again once `/v2/me` answers.
+ * the page alone. The layout hides only the sidebar: each page restricts
+ * its own content to admins, with its own loading and not-found states,
+ * as `AdminUsersPage` does. The page keeps its place in the tree when the
+ * sidebar appears, so it is not mounted again once `/v2/me` answers.
  */
 export default function OrganizationSettingsLayout({ children }: { children: ReactNode }) {
   return (
