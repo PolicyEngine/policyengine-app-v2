@@ -54,9 +54,9 @@ export function useMeRequestCountry(): AssociationCountryId | null {
  * `useMeRequestCountry`); until then the query stays pending.
  *
  * It sets only its freshness, `ME_STALE_TIME_MS`, so that a component that
- * starts reading it later, such as a `MinimumUserType` the account page
- * shows once the user is known, reads the same answer instead of requesting
- * it again, even under a query client whose data goes stale at once.
+ * starts reading it later, such as the account or users page after the
+ * header's account menu, reads the same answer instead of requesting it
+ * again, even under a query client whose data goes stale at once.
  * Refetching on window focus or reconnect, and retries, still follow the
  * query client.
  */
