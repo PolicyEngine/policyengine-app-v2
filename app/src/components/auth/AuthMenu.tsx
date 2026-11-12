@@ -22,6 +22,9 @@ interface AuthMenuProps {
   variant?: 'default' | 'inverse';
 }
 
+/** The account menu's items show a pointer, as links do, instead of the menu's default arrow. */
+const MENU_ITEM_CLASS = 'tw:cursor-pointer';
+
 /** The name or email to show for the signed-in user (from the Auth0 ID token). */
 export function accountDisplayName(auth: Pick<AuthContextValue, 'profile'>): string {
   return auth.profile?.name || auth.profile?.email || 'Account';
@@ -158,17 +161,23 @@ function SignedInAccountMenu({
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => nav.push(`/${countryId}/account`)}>
+        <DropdownMenuItem
+          className={MENU_ITEM_CLASS}
+          onSelect={() => nav.push(`/${countryId}/account`)}
+        >
           <IconUserCircle size={16} />
           My account
         </DropdownMenuItem>
         {showAdmin && (
-          <DropdownMenuItem onSelect={() => nav.push(adminUsersPath(countryId))}>
+          <DropdownMenuItem
+            className={MENU_ITEM_CLASS}
+            onSelect={() => nav.push(adminUsersPath(countryId))}
+          >
             <IconBuilding size={16} />
             Admin
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onSelect={() => auth.signOut()}>
+        <DropdownMenuItem className={MENU_ITEM_CLASS} onSelect={() => auth.signOut()}>
           <IconLogout size={16} />
           Sign out
         </DropdownMenuItem>

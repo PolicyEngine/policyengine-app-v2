@@ -409,7 +409,7 @@ describe('AdminUsersPage', () => {
     expect(await screen.findByText(GRACE.id)).toBeInTheDocument();
   });
 
-  test('given the type changes cannot be read then trying again shows them', async () => {
+  test('given the permissions changes cannot be read then trying again shows them', async () => {
     // Given
     const user = userEvent.setup();
     answerAdminApi(fetchMock, { changes: [SCRIPT_CHANGE] });
@@ -421,14 +421,16 @@ describe('AdminUsersPage', () => {
     );
     renderAdminPage();
     await user.click(await screen.findByRole('button', { name: GRACE.email! }));
-    expect(await screen.findByText(/We could not load the type changes/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/We could not load the permissions changes/)
+    ).toBeInTheDocument();
     fetchMock.mockImplementation(answerAsTheApi);
 
     // When
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
     // Then
-    expect(await screen.findByRole('list', { name: 'Type changes' })).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: 'Permissions changes' })).toBeInTheDocument();
   });
 
   test("given a new type then the confirmation names the user's email and the old and new types", async () => {
@@ -532,7 +534,7 @@ describe('AdminUsersPage', () => {
     await user.click(within(confirmation).getByRole('button', { name: 'Confirm change' }));
 
     // Then
-    const history = await screen.findByRole('list', { name: 'Type changes' });
+    const history = await screen.findByRole('list', { name: 'Permissions changes' });
     expect(await within(history).findByText('Standard to Author')).toBeInTheDocument();
     expect(within(history).getByText(`Changed by ${SIGNED_IN_ADMIN.email}`)).toBeInTheDocument();
     const patchCall = fetchMock.mock.calls.find(([, init]) => init.method === 'PATCH')!;
@@ -915,7 +917,7 @@ describe('AdminUsersPage', () => {
     await openUserDetails(GRACE.email!, { changes: [SCRIPT_CHANGE] });
 
     // Then
-    const history = await screen.findByRole('list', { name: 'Type changes' });
+    const history = await screen.findByRole('list', { name: 'Permissions changes' });
     expect(await within(history).findByText('Standard to Admin')).toBeInTheDocument();
     expect(within(history).getByText('Set by the type script')).toBeInTheDocument();
     expect(within(history).queryByText(/Changed by/)).not.toBeInTheDocument();

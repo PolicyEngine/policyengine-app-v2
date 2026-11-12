@@ -78,9 +78,7 @@ export default function DownloadMyData({ countryId }: { countryId: AssociationCo
     <Card>
       <CardHeader>
         <CardTitle>Download my data</CardTitle>
-        <CardDescription>
-          A JSON file with everything saved to your account, in every country.
-        </CardDescription>
+        <CardDescription>A JSON file with everything saved to your account.</CardDescription>
       </CardHeader>
       <CardContent>
         <Stack gap="sm">
