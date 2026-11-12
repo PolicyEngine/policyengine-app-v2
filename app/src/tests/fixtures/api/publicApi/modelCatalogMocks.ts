@@ -50,6 +50,8 @@ export const US_MODEL_CATALOG_RESULT: Schemas['MetadataModelCatalogResult'] = {
     { key: 'household', plural: 'households', is_person: false },
   ],
   basic_inputs: ['age', 'employment_income'],
+  // A version without certified SPM settings: both are null.
+  spm: { available: false, settings_schema: null, defaults: null },
   regions: [
     region('us', 'United States', 'national'),
     region('state/ca', 'California', 'state', CALIFORNIA),
