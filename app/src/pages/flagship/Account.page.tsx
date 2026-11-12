@@ -119,7 +119,6 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
       <Card>
         <CardHeader>
           <CardTitle>{accountDisplayName(auth)}</CardTitle>
-          <CardDescription>Signed in with your social account.</CardDescription>
         </CardHeader>
         <CardContent>
           <Stack gap="sm">
@@ -137,8 +136,7 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
         <CardHeader>
           <CardTitle>Delete my account</CardTitle>
           <CardDescription>
-            Permanently deletes your account and everything saved to it. Work saved on this browser
-            while signed out stays on this browser.
+            Permanently deletes your account and everything saved to it.
           </CardDescription>
         </CardHeader>
         <CardContent>

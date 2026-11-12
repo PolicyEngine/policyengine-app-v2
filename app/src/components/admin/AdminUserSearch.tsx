@@ -173,7 +173,7 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
             value={emailDraft}
             maxLength={EMAIL_SEARCH_MAX_LENGTH}
             onChange={(event) => setEmailDraft(event.target.value)}
-            placeholder="Part of an email address"
+            placeholder="Email address"
           />
         </Stack>
         <Button type="submit">Search</Button>

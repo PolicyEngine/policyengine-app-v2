@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getArticleContent, getAllSlugs, getPostBySlug } from "@/lib/articles";
+import { articleJsonLdAuthors } from "@/lib/authors";
 import { encodeJsonForScript } from "@/lib/encodeJsonForScript";
 import { isNotebookFile } from "@/lib/notebookUtils";
 import { toPostIsoDate } from "@/lib/postDate";
@@ -82,7 +83,7 @@ export default async function ArticlePage({
     headline: post.title,
     description: post.description,
     datePublished: toPostIsoDate(post.date),
-    author: post.authors.map((name) => ({ "@type": "Person", name })),
+    author: articleJsonLdAuthors(post.authors),
     publisher: {
       "@type": "Organization",
       name: "PolicyEngine",
