@@ -83,7 +83,7 @@ export interface paths {
     put?: never;
     /**
      * Accept an invitation
-     * @description Signed-in users only. Gives the signed-in user the invited type when the token names a pending invitation and Auth0 reports the signed-in identity's email verified and equal to the invited address, ignoring case. An invitation never lowers a type: a user who already has that type or a higher one keeps it (outcome unchanged), and the invitation is still accepted.
+     * @description Signed-in users only. Gives the caller the invited type when the token names an open, unexpired invitation from a current admin and Auth0 reports the caller's verified email equal to the invited address, ignoring case. An invitation never lowers a type. A caller with no user yet gets one, with country_id as its primary country.
      */
     post: operations['accept_invitation_v2_me_invitations_accept_post'];
     delete?: never;
@@ -103,7 +103,7 @@ export interface paths {
     put?: never;
     /**
      * Dismiss the notice of a type change
-     * @description Signed-in users only. /v2/me's latest_type_change no longer names this change.
+     * @description Signed-in users only. GET /v2/me's latest_type_change no longer names this change. Dismissing a dismissed change is fine.
      */
     post: operations['dismiss_type_change_v2_me_type_changes__type_change_id__dismiss_post'];
     delete?: never;
@@ -184,14 +184,14 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * List pending invitations, newest first
-     * @description Admins only. Lists the invitations that are not accepted, revoked or expired, each saying whether its last email failed to send.
+     * List open invitations, newest first
+     * @description Admins only. Lists the invitations that are not accepted or revoked, expired ones included.
      */
     get: operations['list_invitations_v2_admin_invitations_get'];
     put?: never;
     /**
      * Invite an email address to become an author or admin
-     * @description Admins only. Creates the invitation and emails its link to the address. Inviting an address with a pending invitation replaces that invitation's token. When the email fails to send, the invitation is still created, with last_send_failed set.
+     * @description Admins only. Revokes any open invitation to the same address, ignoring case, creates the invitation, then emails its link. A failed send still answers 201, with last_send_error set.
      */
     post: operations['create_invitation_v2_admin_invitations_post'];
     delete?: never;
@@ -211,8 +211,8 @@ export interface paths {
     put?: never;
     post?: never;
     /**
-     * Revoke a pending invitation
-     * @description Admins only. Its link no longer works.
+     * Revoke an open invitation
+     * @description Admins only. Its link stops working.
      */
     delete: operations['revoke_invitation_v2_admin_invitations__invitation_id__delete'];
     options?: never;
@@ -230,8 +230,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Send a pending invitation again
-     * @description Admins only. Gives the invitation a new token and expiry, and emails the new link; the old link no longer works.
+     * Send an open invitation again
+     * @description Admins only. Gives the invitation a new link and a new 7-day expiry, makes the caller its inviting admin, and emails it again; the old link stops working. Expired invitations can be resent.
      */
     post: operations['resend_invitation_v2_admin_invitations__invitation_id__resend_post'];
     delete?: never;
@@ -1242,7 +1242,7 @@ export interface components {
     JsonValue: unknown;
     /**
      * LatestUserTypeChange
-     * @description The signed-in user's latest type change, until the user dismisses it.
+     * @description The signed-in user's most recent type change, until the user dismisses it.
      */
     LatestUserTypeChange: {
       /**
@@ -1354,6 +1354,30 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+    };
+    /**
+     * MeReadResponse
+     * @description Success response holding the current user.
+     */
+    MeReadResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['MeReadResult'];
+    };
+    /**
+     * MeReadResult
+     * @description Result holding the current user in ``item``, and its most recent type
+     *     change in ``latest_type_change`` until the user dismisses it (always null
+     *     for an unauthenticated user).
+     */
+    MeReadResult: {
+      item: components['schemas']['MeItem'];
       latest_type_change: components['schemas']['LatestUserTypeChange'] | null;
     };
     /**
@@ -3090,8 +3114,29 @@ export interface components {
       description?: string | null;
     };
     /**
+     * UserInvitationAcceptItem
+     * @description The caller's type after accepting an invitation.
+     *
+     *     ``user_type`` is the caller's type now. ``type_changed`` is false when the
+     *     caller already had the invited type or a higher one.
+     */
+    UserInvitationAcceptItem: {
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'standard' | 'author' | 'admin';
+      /**
+       * Previous User Type
+       * @enum {string}
+       */
+      previous_user_type: 'standard' | 'author' | 'admin';
+      /** Type Changed */
+      type_changed: boolean;
+    };
+    /**
      * UserInvitationAcceptRequest
-     * @description The token from an invitation's link.
+     * @description The token from an invitation link's #token= fragment.
      */
     UserInvitationAcceptRequest: {
       /** Token */
@@ -3114,22 +3159,14 @@ export interface components {
     };
     /**
      * UserInvitationAcceptResult
-     * @description The signed-in user after accepting an invitation.
-     *
-     *     ``outcome`` is ``changed`` when the user was given the invited type, and
-     *     ``unchanged`` when the user already had it or a higher one.
+     * @description The caller's type after accepting an invitation.
      */
     UserInvitationAcceptResult: {
-      item: components['schemas']['MeItem'];
-      /**
-       * Outcome
-       * @enum {string}
-       */
-      outcome: 'changed' | 'unchanged';
+      item: components['schemas']['UserInvitationAcceptItem'];
     };
     /**
      * UserInvitationCreateRequest
-     * @description The email address to invite and the type the invitation gives.
+     * @description The address to invite, one address with no whitespace, < or >, and the type the invitation grants.
      */
     UserInvitationCreateRequest: {
       /** Email */
@@ -3142,10 +3179,13 @@ export interface components {
     };
     /**
      * UserInvitationItem
-     * @description A pending invitation to become an author or admin.
+     * @description An open invitation to become an author or admin.
      *
-     *     ``last_send_failed`` is true when its last email could not be sent after
-     *     retries; resending it tries again.
+     *     ``expired`` is true once ``expires_at`` has passed: it cannot be accepted,
+     *     but it can be resent. ``last_sent_at`` is null when the last send failed
+     *     or was not tried, and ``last_send_error`` then says why, as a short
+     *     identifier such as ``not_configured``, ``timeout``, ``connection_error``,
+     *     ``http_500``, ``postmark_406`` or ``secret_unavailable``.
      */
     UserInvitationItem: {
       /**
@@ -3162,8 +3202,6 @@ export interface components {
       user_type: 'author' | 'admin';
       /** Invited By User Id */
       invited_by_user_id: string | null;
-      /** Invited By Email */
-      invited_by_email: string | null;
       /**
        * Created At
        * Format: date-time
@@ -3174,16 +3212,18 @@ export interface components {
        * Format: date-time
        */
       expires_at: string;
+      /** Expired */
+      expired: boolean;
       /** Last Sent At */
       last_sent_at: string | null;
-      /** Last Send Failed */
-      last_send_failed: boolean;
+      /** Last Send Error */
+      last_send_error: string | null;
     };
     /**
-     * UserInvitationListResponse
-     * @description The response for the pending invitations.
+     * UserInvitationPageResponse
+     * @description The response for a page of open invitations.
      */
-    UserInvitationListResponse: {
+    UserInvitationPageResponse: {
       /**
        * Status
        * @default ok
@@ -3192,15 +3232,21 @@ export interface components {
       status: 'ok';
       /** Message */
       message?: null;
-      result: components['schemas']['UserInvitationListResult'];
+      result: components['schemas']['UserInvitationPageResult'];
     };
     /**
-     * UserInvitationListResult
-     * @description The pending invitations, newest first.
+     * UserInvitationPageResult
+     * @description A page of open invitations, newest first.
      */
-    UserInvitationListResult: {
+    UserInvitationPageResult: {
       /** Items */
       items: components['schemas']['UserInvitationItem'][];
+      /** Offset */
+      offset: number;
+      /** Limit */
+      limit: number;
+      /** Has More */
+      has_more: boolean;
     };
     /**
      * UserInvitationResponse
@@ -3757,24 +3803,6 @@ export interface components {
       expected_user_type: 'standard' | 'author' | 'admin';
     };
     /**
-     * V2EmailNotVerifiedErrorResponse
-     * @description A refused acceptance. ``code`` is ``email_not_verified`` while the
-     *     signed-in identity's email is not verified, and null when the inviting
-     *     admin is no longer an admin.
-     */
-    V2EmailNotVerifiedErrorResponse: {
-      /**
-       * Status
-       * @default error
-       * @constant
-       */
-      status: 'error';
-      /** Message */
-      message: string;
-      /** Code */
-      code?: 'email_not_verified' | null;
-    };
-    /**
      * V2ErrorResponse
      * @description Strict error response shared by every API v2 resource.
      */
@@ -3787,6 +3815,33 @@ export interface components {
       status: 'error';
       /** Message */
       message: string;
+    };
+    /**
+     * V2InvitationAcceptErrorResponse
+     * @description A refused invitation acceptance, with a code saying why.
+     */
+    V2InvitationAcceptErrorResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /**
+       * Code
+       * @enum {string}
+       */
+      code:
+        | 'auth0_unavailable'
+        | 'invitation_not_found'
+        | 'invitation_revoked'
+        | 'invitation_expired'
+        | 'invitation_accepted'
+        | 'inviter_not_admin'
+        | 'email_not_verified'
+        | 'email_mismatch';
     };
   };
   responses: never;
@@ -3815,7 +3870,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['MeDetailResponse'];
+          'application/json': components['schemas']['MeReadResponse'];
         };
       };
       /** @description The supplied references or countries contradict each other. */
@@ -4333,7 +4388,10 @@ export interface operations {
   };
   accept_invitation_v2_me_invitations_accept_post: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -4362,31 +4420,31 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The signed-in identity's verified email is not the invited address. */
+      /** @description The caller's verified email is not the invited address (code email_mismatch). */
       403: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
+          'application/json': components['schemas']['V2InvitationAcceptErrorResponse'];
         };
       };
-      /** @description The signed-in identity's email is not verified yet (code email_not_verified), or the admin who sent the invitation is no longer an admin. */
+      /** @description The admin who sent the invitation is no longer an admin (code inviter_not_admin), or Auth0 has no verified email for the caller (code email_not_verified). */
       409: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['V2EmailNotVerifiedErrorResponse'];
+          'application/json': components['schemas']['V2InvitationAcceptErrorResponse'];
         };
       };
-      /** @description The token names no pending invitation: it is unknown, used, revoked or expired. */
+      /** @description The invitation cannot be accepted: no invitation has this token (invitation_not_found), or it was revoked (invitation_revoked), expired (invitation_expired) or already accepted (invitation_accepted). */
       410: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
+          'application/json': components['schemas']['V2InvitationAcceptErrorResponse'];
         };
       };
       /** @description The request body exceeds 256 KiB. */
@@ -4416,20 +4474,23 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description Auth0, user authentication or persistence is unavailable; trying again is safe. */
+      /** @description Auth0 cannot be reached (code auth0_unavailable), or persistence is unavailable. */
       503: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['V2ErrorResponse'];
+          'application/json': components['schemas']['V2InvitationAcceptErrorResponse'];
         };
       };
     };
   };
   dismiss_type_change_v2_me_type_changes__type_change_id__dismiss_post: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
       header?: never;
       path: {
         type_change_id: string;
@@ -4454,7 +4515,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The signed-in user has no type change with this ID. */
+      /** @description The caller has no type change with this ID. */
       404: {
         headers: {
           [name: string]: unknown;
@@ -4887,7 +4948,12 @@ export interface operations {
   };
   list_invitations_v2_admin_invitations_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Zero-based result offset */
+        offset?: number;
+        /** @description Maximum number of returned resources */
+        limit?: number;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -4900,7 +4966,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['UserInvitationListResponse'];
+          'application/json': components['schemas']['UserInvitationPageResponse'];
         };
       };
       /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
@@ -5073,7 +5139,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description No pending invitation has this ID. */
+      /** @description No open invitation has this ID: it is unknown, accepted or revoked. */
       404: {
         headers: {
           [name: string]: unknown;
@@ -5158,7 +5224,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description No pending invitation has this ID. */
+      /** @description No open invitation has this ID: it is unknown, accepted or revoked. */
       404: {
         headers: {
           [name: string]: unknown;
