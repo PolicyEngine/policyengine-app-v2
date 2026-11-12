@@ -24,7 +24,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -153,7 +156,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -292,7 +298,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -426,7 +435,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -557,7 +569,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -700,7 +715,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -841,7 +859,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -1877,7 +1898,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -2042,7 +2066,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -2201,7 +2228,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -2339,7 +2369,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -2487,7 +2520,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -2613,7 +2649,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -2694,7 +2733,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -2859,7 +2901,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -3018,7 +3063,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -3156,7 +3204,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -3304,7 +3355,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -3428,7 +3482,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -3593,7 +3650,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -3770,7 +3830,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -3909,7 +3972,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -4057,7 +4123,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -4181,7 +4250,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -4346,7 +4418,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -4523,7 +4598,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -4662,7 +4740,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -4810,7 +4891,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -4925,7 +5009,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -5072,7 +5159,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -5203,7 +5293,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -5305,7 +5398,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -5470,7 +5566,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -5600,7 +5699,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -5787,7 +5889,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -6090,7 +6195,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -6260,7 +6368,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -6413,7 +6524,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -6583,7 +6697,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -6754,7 +6871,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -6924,7 +7044,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -7138,7 +7261,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -7306,7 +7432,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -7465,7 +7594,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -7635,7 +7767,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -7843,7 +7978,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -8013,7 +8151,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -8166,7 +8307,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -8336,7 +8480,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -8506,7 +8653,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -8659,7 +8809,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -8802,7 +8955,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -8946,7 +9102,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -9090,7 +9249,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -9234,7 +9396,10 @@
             "in": "query",
             "required": true,
             "schema": {
-              "enum": ["us", "uk"],
+              "enum": [
+                "us",
+                "uk"
+              ],
               "type": "string",
               "description": "Supported PolicyEngine country ID",
               "title": "Country Id"
@@ -9419,7 +9584,10 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["us", "uk"],
+                "enum": [
+                  "us",
+                  "uk"
+                ],
                 "description": "Supported PolicyEngine country ID"
               },
               {
@@ -9443,7 +9611,11 @@
           },
           "user_type": {
             "type": "string",
-            "enum": ["standard", "author", "admin"],
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "User Type"
           },
           "email": {
@@ -9541,7 +9713,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "AdminUserPageResponse",
         "description": "The response for a page of signed-in users."
       },
@@ -9569,7 +9743,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items", "offset", "limit", "has_more"],
+        "required": [
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "AdminUserPageResult",
         "description": "One page of signed-in users, newest first."
       },
@@ -9591,7 +9770,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "AdminUserResponse",
         "description": "The response for one signed-in user."
       },
@@ -9603,7 +9784,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "AdminUserResult",
         "description": "One signed-in user."
       },
@@ -9624,7 +9807,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "household_enabled", "society_wide_enabled"],
+        "required": [
+          "id",
+          "household_enabled",
+          "society_wide_enabled"
+        ],
         "title": "CountryItem",
         "description": "One served country and the calculations it supports.\n\n``id`` is the value other v2 resources take as ``country_id``.\n``household_enabled`` means household calculations and saved households\nare available; ``society_wide_enabled`` means society-wide reports are,\nand is only set for a country that is also household enabled."
       },
@@ -9646,7 +9833,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "CountryListResponse",
         "description": "Success envelope: ``status`` \"ok\", a null ``message`` and the countries."
       },
@@ -9662,7 +9851,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "title": "CountryListResult",
         "description": "Every served country, ordered by ``id``."
       },
@@ -9696,7 +9887,11 @@
           }
         },
         "type": "object",
-        "required": ["policyengine_version", "policyengine_version_live_since", "revision"],
+        "required": [
+          "policyengine_version",
+          "policyengine_version_live_since",
+          "revision"
+        ],
         "title": "DeploymentResponse",
         "description": "The policyengine.py version this revision serves, and since when.\n\n``policyengine_version_live_since`` is when this .py version first went\nlive: redeploys that keep the version keep the date. It is null on a\nrevision deployed before the deploy recorded it, outside Cloud Run, or\nwhen the version the deploy dated is not the installed one."
       },
@@ -9740,7 +9935,9 @@
           }
         },
         "type": "object",
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "title": "HealthNotReadyResponse",
         "description": "Health-check result while warmup runs or the configuration is invalid."
       },
@@ -9753,7 +9950,9 @@
           }
         },
         "type": "object",
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "title": "HealthResponse",
         "description": "Health-check result showing that the API has warmed up and can serve requests."
       },
@@ -9761,7 +9960,10 @@
         "properties": {
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -9786,7 +9988,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["country_id", "default_year", "household_data"],
+        "required": [
+          "country_id",
+          "default_year",
+          "household_data"
+        ],
         "title": "HouseholdCreateRequest",
         "description": "Native immutable household content with no presentation or model fields."
       },
@@ -9808,7 +10014,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "HouseholdDetailResponse",
         "description": "Success response holding one household."
       },
@@ -9820,7 +10028,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "HouseholdDetailResult",
         "description": "Result holding one household in ``item``."
       },
@@ -9856,7 +10066,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "values"],
+        "required": [
+          "id",
+          "values"
+        ],
         "title": "HouseholdEntityRecord",
         "description": "One group entity in a household, such as a tax unit or a benefit unit.\n\n``id`` is unique within its collection and is what people's ``memberships``\nrefer to. ``values`` maps variable names to values, and ``source_name``\noptionally keeps the entity's original name, such as its key in a v1 household."
       },
@@ -9869,7 +10082,10 @@
           },
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -9940,7 +10156,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "HouseholdPageResponse",
         "description": "Success response holding one page of households."
       },
@@ -9968,7 +10186,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items", "offset", "limit", "has_more"],
+        "required": [
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "HouseholdPageResult",
         "description": "One page of households, oldest first.\n\n``offset`` and ``limit`` echo the request; when ``has_more`` is true, ask\nfor the next page with ``offset + limit``."
       },
@@ -10013,7 +10236,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "values", "memberships"],
+        "required": [
+          "id",
+          "values",
+          "memberships"
+        ],
         "title": "HouseholdPersonRecord",
         "description": "One person in a household.\n\n``memberships`` maps each of the country's entity collections to the ``id``\nof the group the person belongs to, and must name every collection."
       },
@@ -10027,12 +10254,20 @@
           },
           "previous_user_type": {
             "type": "string",
-            "enum": ["standard", "author", "admin"],
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "Previous User Type"
           },
           "user_type": {
             "type": "string",
-            "enum": ["standard", "author", "admin"],
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "User Type"
           },
           "changed_at": {
@@ -10043,7 +10278,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "previous_user_type", "user_type", "changed_at"],
+        "required": [
+          "id",
+          "previous_user_type",
+          "user_type",
+          "changed_at"
+        ],
         "title": "LatestUserTypeChange",
         "description": "The signed-in user's most recent type change, until the user dismisses it."
       },
@@ -10065,7 +10305,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MeDetailResponse",
         "description": "Success response holding the current user."
       },
@@ -10077,7 +10319,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "MeDetailResult",
         "description": "Result holding the current user in ``item``."
       },
@@ -10099,7 +10343,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MeExportResponse",
         "description": "Success response holding the current user's export."
       },
@@ -10146,7 +10392,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["user", "policies", "households", "simulations", "reports"],
+        "required": [
+          "user",
+          "policies",
+          "households",
+          "simulations",
+          "reports"
+        ],
         "title": "MeExportResult",
         "description": "The current user and every policy, household, simulation and report it saved.\n\nThe export covers every country, not only the requested one."
       },
@@ -10159,14 +10411,22 @@
           },
           "user_type": {
             "type": "string",
-            "enum": ["unauthenticated", "standard", "author", "admin"],
+            "enum": [
+              "unauthenticated",
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "User Type"
           },
           "primary_country": {
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["us", "uk"],
+                "enum": [
+                  "us",
+                  "uk"
+                ],
                 "description": "Supported PolicyEngine country ID"
               },
               {
@@ -10246,7 +10506,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MeReadResponse",
         "description": "Success response holding the current user."
       },
@@ -10268,7 +10530,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item", "latest_type_change"],
+        "required": [
+          "item",
+          "latest_type_change"
+        ],
         "title": "MeReadResult",
         "description": "Result holding the current user in ``item``, and its most recent type\nchange in ``latest_type_change`` until the user dismisses it (always null\nfor an unauthenticated user)."
       },
@@ -10290,7 +10555,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MeUpgradeResponse",
         "description": "Success response holding the signed-in account after an upgrade."
       },
@@ -10301,13 +10568,20 @@
           },
           "outcome": {
             "type": "string",
-            "enum": ["converted", "merged", "none"],
+            "enum": [
+              "converted",
+              "merged",
+              "none"
+            ],
             "title": "Outcome"
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item", "outcome"],
+        "required": [
+          "item",
+          "outcome"
+        ],
         "title": "MeUpgradeResult",
         "description": "The signed-in account after a browser's unauthenticated user moved into it.\n\n``outcome`` is ``converted`` when the unauthenticated user became the account\nin place, ``merged`` when its records moved to an existing account, and\n``none`` when there was no unauthenticated user to move."
       },
@@ -10346,7 +10620,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "parameter_id", "value", "start_date", "end_date"],
+        "required": [
+          "id",
+          "parameter_id",
+          "value",
+          "start_date",
+          "end_date"
+        ],
         "title": "MetadataCanonicalParameterValue",
         "description": "One current-law value of a parameter.\n\nThe value applies from start_date until end_date, or indefinitely when\nend_date is null."
       },
@@ -10469,7 +10749,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataCatalogParametersResponse",
         "description": "Success response holding parameters fetched by name, with their values."
       },
@@ -10549,7 +10831,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataCatalogVariablesResponse",
         "description": "Success response holding every variable of one catalog version."
       },
@@ -10638,7 +10922,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "name", "description", "year"],
+        "required": [
+          "id",
+          "name",
+          "description",
+          "year"
+        ],
         "title": "MetadataDataset",
         "description": "A named input dataset available to the selected model version.\n\nThese datasets are logical inputs, so storage_path is always null and\nis_output_dataset is always false."
       },
@@ -10660,7 +10949,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataDatasetDetailResponse",
         "description": "Success response holding one dataset."
       },
@@ -10683,7 +10974,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["name", "label"],
+        "required": [
+          "name",
+          "label"
+        ],
         "title": "MetadataDatasetOption",
         "description": "The national dataset, offered as the default for an economy calculation."
       },
@@ -10705,7 +10999,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataDatasetPageResponse",
         "description": "Success response holding one page of datasets."
       },
@@ -10734,7 +11030,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["start_date", "end_date", "value"],
+        "required": [
+          "start_date",
+          "end_date",
+          "value"
+        ],
         "title": "MetadataDatedValue",
         "description": "A current-law parameter value from start_date until end_date.\n\nA null end_date means the value applies until a later value starts, or\nindefinitely."
       },
@@ -10750,7 +11050,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "item"],
+        "required": [
+          "policyengine_version",
+          "item"
+        ],
         "title": "MetadataDetailResult[MetadataCanonicalParameterValue]"
       },
       "MetadataDetailResult_MetadataDataset_": {
@@ -10765,7 +11068,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "item"],
+        "required": [
+          "policyengine_version",
+          "item"
+        ],
         "title": "MetadataDetailResult[MetadataDataset]"
       },
       "MetadataDetailResult_MetadataModelVersionDetail_": {
@@ -10780,7 +11086,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "item"],
+        "required": [
+          "policyengine_version",
+          "item"
+        ],
         "title": "MetadataDetailResult[MetadataModelVersionDetail]"
       },
       "MetadataDetailResult_MetadataModel_": {
@@ -10795,7 +11104,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "item"],
+        "required": [
+          "policyengine_version",
+          "item"
+        ],
         "title": "MetadataDetailResult[MetadataModel]"
       },
       "MetadataDetailResult_MetadataParameterSummary_": {
@@ -10810,7 +11122,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "item"],
+        "required": [
+          "policyengine_version",
+          "item"
+        ],
         "title": "MetadataDetailResult[MetadataParameterSummary]"
       },
       "MetadataDetailResult_MetadataRegion_": {
@@ -10825,7 +11140,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "item"],
+        "required": [
+          "policyengine_version",
+          "item"
+        ],
         "title": "MetadataDetailResult[MetadataRegion]"
       },
       "MetadataDetailResult_MetadataVariable_": {
@@ -10840,7 +11158,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "item"],
+        "required": [
+          "policyengine_version",
+          "item"
+        ],
         "title": "MetadataDetailResult[MetadataVariable]"
       },
       "MetadataEconomyOptions": {
@@ -10869,7 +11190,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["region", "time_period", "datasets"],
+        "required": [
+          "region",
+          "time_period",
+          "datasets"
+        ],
         "title": "MetadataEconomyOptions",
         "description": "The region, year and dataset choices for an economy calculation.\n\nEvery list is empty for a catalog without regions, such as a\nhousehold-only country's, which offers no economy calculation."
       },
@@ -10891,7 +11216,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataEconomyOptionsResponse",
         "description": "Success response holding the options for configuring an economy comparison."
       },
@@ -10929,7 +11256,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "current_law_id", "region", "time_period", "datasets"],
+        "required": [
+          "policyengine_version",
+          "current_law_id",
+          "region",
+          "time_period",
+          "datasets"
+        ],
         "title": "MetadataEconomyOptionsResult",
         "description": "The choices for configuring an economy calculation.\n\nIt lists the selectable regions, years and datasets, and the id of the\ncurrent-law policy to use as a baseline."
       },
@@ -10950,7 +11283,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["key", "plural", "is_person"],
+        "required": [
+          "key",
+          "plural",
+          "is_person"
+        ],
         "title": "MetadataEntity",
         "description": "A kind of member a household holds, such as a person or a tax unit.\n\nplural is the key the household's members of this kind are listed under,\nand is_person marks the entity every household input about a person uses."
       },
@@ -10983,7 +11320,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["value", "label"],
+        "required": [
+          "value",
+          "label"
+        ],
         "title": "MetadataEnumValue",
         "description": "One value of an enum variable: its stored name and its display label.\n\nThe label keeps the type the country package declares it with."
       },
@@ -11012,7 +11352,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "name", "description"],
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
         "title": "MetadataModel",
         "description": "A country's tax-benefit model in the selected PolicyEngine.py catalog."
       },
@@ -11034,7 +11378,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataModelCatalogResponse",
         "description": "Success response holding the small parts of one catalog version."
       },
@@ -11127,7 +11473,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataModelDetailResponse",
         "description": "Success response holding one tax-benefit model."
       },
@@ -11149,7 +11497,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataModelPageResponse",
         "description": "Success response holding a page of the selected catalog's tax-benefit models.\n\nA catalog has one model per country, so only the first page has an item."
       },
@@ -11171,7 +11521,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataModelSelectionResponse",
         "description": "Success response holding a country's model and its selected model version."
       },
@@ -11190,7 +11542,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "model", "model_version"],
+        "required": [
+          "policyengine_version",
+          "model",
+          "model_version"
+        ],
         "title": "MetadataModelSelectionResult",
         "description": "A country's model together with the model version selected for the request."
       },
@@ -11264,7 +11620,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataModelVersionDetailResponse",
         "description": "Success response holding one model version."
       },
@@ -11286,7 +11644,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataModelVersionPageResponse",
         "description": "Success response holding a page of the selected catalog's model versions.\n\nA catalog has one model version, so only the first page has an item."
       },
@@ -11318,7 +11678,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "items", "offset", "limit", "has_more"],
+        "required": [
+          "policyengine_version",
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "MetadataPageResult[MetadataCanonicalParameterValue]"
       },
       "MetadataPageResult_MetadataDataset_": {
@@ -11349,7 +11715,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "items", "offset", "limit", "has_more"],
+        "required": [
+          "policyengine_version",
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "MetadataPageResult[MetadataDataset]"
       },
       "MetadataPageResult_MetadataModelVersionDetail_": {
@@ -11380,7 +11752,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "items", "offset", "limit", "has_more"],
+        "required": [
+          "policyengine_version",
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "MetadataPageResult[MetadataModelVersionDetail]"
       },
       "MetadataPageResult_MetadataModel_": {
@@ -11411,7 +11789,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "items", "offset", "limit", "has_more"],
+        "required": [
+          "policyengine_version",
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "MetadataPageResult[MetadataModel]"
       },
       "MetadataPageResult_MetadataParameterChild_": {
@@ -11442,7 +11826,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "items", "offset", "limit", "has_more"],
+        "required": [
+          "policyengine_version",
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "MetadataPageResult[MetadataParameterChild]"
       },
       "MetadataPageResult_MetadataParameterSummary_": {
@@ -11473,7 +11863,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "items", "offset", "limit", "has_more"],
+        "required": [
+          "policyengine_version",
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "MetadataPageResult[MetadataParameterSummary]"
       },
       "MetadataPageResult_MetadataRegion_": {
@@ -11504,7 +11900,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "items", "offset", "limit", "has_more"],
+        "required": [
+          "policyengine_version",
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "MetadataPageResult[MetadataRegion]"
       },
       "MetadataPageResult_MetadataVariable_": {
@@ -11535,7 +11937,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["policyengine_version", "items", "offset", "limit", "has_more"],
+        "required": [
+          "policyengine_version",
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "MetadataPageResult[MetadataVariable]"
       },
       "MetadataParameterChild": {
@@ -11550,7 +11958,10 @@
           },
           "type": {
             "type": "string",
-            "enum": ["node", "parameter"],
+            "enum": [
+              "node",
+              "parameter"
+            ],
             "title": "Type"
           },
           "child_count": {
@@ -11577,7 +11988,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["path", "label", "type"],
+        "required": [
+          "path",
+          "label",
+          "type"
+        ],
         "title": "MetadataParameterChild",
         "description": "A direct child in the parameter tree.\n\nA node has a child_count; a parameter leaf carries the parameter's summary."
       },
@@ -11599,7 +12014,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataParameterChildPageResponse",
         "description": "Success response holding one page of a parameter path's direct children."
       },
@@ -11621,7 +12038,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataParameterDetailResponse",
         "description": "Success response holding one parameter."
       },
@@ -11643,7 +12062,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataParameterPageResponse",
         "description": "Success response holding one page of parameters."
       },
@@ -11710,7 +12131,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["start_date", "editable"],
+        "required": [
+          "start_date",
+          "editable"
+        ],
         "title": "MetadataParameterSearchFileEditabilityChange",
         "description": "From ``start_date`` (an ISO date), whether a draft can edit the value."
       },
@@ -11734,7 +12158,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["path", "label"],
+        "required": [
+          "path",
+          "label"
+        ],
         "title": "MetadataParameterSearchFileLabel",
         "description": "Another parameter under ``gov``: its path and stored label, or null."
       },
@@ -11751,7 +12178,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["path", "label"],
+        "required": [
+          "path",
+          "label"
+        ],
         "title": "MetadataParameterSearchFileNode",
         "description": "``gov`` or a node under it that has a stored label."
       },
@@ -11808,7 +12238,13 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["path", "label", "unit", "description", "editable"],
+        "required": [
+          "path",
+          "label",
+          "unit",
+          "description",
+          "editable"
+        ],
         "title": "MetadataParameterSearchFileParameter",
         "description": "A parameter a reform can change, with what v3's search indexes.\n\n``label`` is the stored label, or null when none is stored. ``editable``\nsays whether a draft can edit the earliest current-law value (a number, a\nyes/no value or an infinite threshold); ``editable_changes``, present only\nwhen that changes over time and never null, lists the dates from which it\nchanges."
       },
@@ -11923,7 +12359,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataParameterValueDetailResponse",
         "description": "Success response holding one parameter value."
       },
@@ -11945,7 +12383,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataParameterValuePageResponse",
         "description": "Success response holding one page of parameter values."
       },
@@ -12080,7 +12520,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataRegionDetailResponse",
         "description": "Success response holding one region."
       },
@@ -12100,7 +12542,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["name", "label", "type"],
+        "required": [
+          "name",
+          "label",
+          "type"
+        ],
         "title": "MetadataRegionOption",
         "description": "A region that can be chosen for an economy calculation; name is its code."
       },
@@ -12122,7 +12568,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataRegionPageResponse",
         "description": "Success response holding one page of regions."
       },
@@ -12154,7 +12602,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["name", "label"],
+        "required": [
+          "name",
+          "label"
+        ],
         "title": "MetadataTimePeriodOption",
         "description": "A year that can be chosen for an economy calculation."
       },
@@ -12386,7 +12837,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataVariableDetailResponse",
         "description": "Success response holding one variable."
       },
@@ -12408,7 +12861,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "MetadataVariablePageResponse",
         "description": "Success response holding one page of variables."
       },
@@ -12416,7 +12871,10 @@
         "properties": {
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -12436,7 +12894,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["country_id", "tax_benefit_model_id", "parameter_values"],
+        "required": [
+          "country_id",
+          "tax_benefit_model_id",
+          "parameter_values"
+        ],
         "title": "PolicyCreateRequest",
         "description": "Native body containing immutable policy content only."
       },
@@ -12458,7 +12920,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "PolicyDetailResponse",
         "description": "Success response holding one policy."
       },
@@ -12470,7 +12934,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "PolicyDetailResult",
         "description": "Result holding one policy in ``item``."
       },
@@ -12555,7 +13021,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "PolicyPageResponse",
         "description": "Success response holding one page of policies."
       },
@@ -12583,7 +13051,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items", "offset", "limit", "has_more"],
+        "required": [
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "PolicyPageResult",
         "description": "One page of policies, oldest first.\n\n``offset`` and ``limit`` echo the request; when ``has_more`` is true, ask\nfor the next page with ``offset + limit``."
       },
@@ -12617,7 +13090,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["parameter_id", "value", "start_date"],
+        "required": [
+          "parameter_id",
+          "value",
+          "start_date"
+        ],
         "title": "PolicyParameterValueInput",
         "description": "One normalized effective value for a catalog parameter UUID."
       },
@@ -12660,7 +13137,14 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "parameter_id", "parameter_name", "value", "start_date", "end_date"],
+        "required": [
+          "id",
+          "parameter_id",
+          "parameter_name",
+          "value",
+          "start_date",
+          "end_date"
+        ],
         "title": "PolicyParameterValueItem",
         "description": "One value a policy sets for a parameter from ``start_date``.\n\n``parameter_name`` is the parameter's path in the model, and a null\n``end_date`` means the value has no end."
       },
@@ -12668,7 +13152,12 @@
         "properties": {
           "source": {
             "type": "string",
-            "enum": ["manual", "chat", "bill", "tool"],
+            "enum": [
+              "manual",
+              "chat",
+              "bill",
+              "tool"
+            ],
             "title": "Source"
           },
           "ref": {
@@ -12687,7 +13176,11 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["exact", "approximated", "partial"]
+                "enum": [
+                  "exact",
+                  "approximated",
+                  "partial"
+                ]
               },
               {
                 "type": "null"
@@ -12698,7 +13191,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["source"],
+        "required": [
+          "source"
+        ],
         "title": "PolicyProvenance",
         "description": "Where a v3 reform came from."
       },
@@ -12732,7 +13227,9 @@
           }
         },
         "type": "object",
-        "required": ["source"],
+        "required": [
+          "source"
+        ],
         "title": "PolicyProvenanceItem",
         "description": "Stored v3 reform provenance as responses publish it.\n\nIt mirrors the contract without the input bounds and ignores unknown keys,\nso any stored row serializes."
       },
@@ -12770,7 +13267,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["geography", "reached_count", "matches"],
+        "required": [
+          "geography",
+          "reached_count",
+          "matches"
+        ],
         "title": "ReportCalibration",
         "description": "Calibration results for one geography, with at most 500 variable matches."
       },
@@ -12804,7 +13305,11 @@
           }
         },
         "type": "object",
-        "required": ["geography", "reached_count", "matches"],
+        "required": [
+          "geography",
+          "reached_count",
+          "matches"
+        ],
         "title": "ReportCalibrationItem",
         "description": "Calibration results saved with a report, for one geography and data release."
       },
@@ -12821,7 +13326,11 @@
           },
           "ring": {
             "type": "string",
-            "enum": ["primary", "mechanism", "downstream"],
+            "enum": [
+              "primary",
+              "mechanism",
+              "downstream"
+            ],
             "title": "Ring"
           },
           "target_count": {
@@ -12918,7 +13427,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["name", "source", "geography"],
+        "required": [
+          "name",
+          "source",
+          "geography"
+        ],
         "title": "ReportCalibrationWorst",
         "description": "The calibration target a match fits worst, with its source and geography."
       },
@@ -12949,7 +13462,11 @@
           }
         },
         "type": "object",
-        "required": ["name", "source", "geography"],
+        "required": [
+          "name",
+          "source",
+          "geography"
+        ],
         "title": "ReportCalibrationWorstItem",
         "description": "The calibration target that one match fits worst, with its relative error."
       },
@@ -13043,7 +13560,11 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["nearest", "down", "up"]
+                "enum": [
+                  "nearest",
+                  "down",
+                  "up"
+                ]
               },
               {
                 "type": "null"
@@ -13054,7 +13575,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["path", "breadcrumb", "baseline_value", "value"],
+        "required": [
+          "path",
+          "breadcrumb",
+          "baseline_value",
+          "value"
+        ],
         "title": "ReportProvision",
         "description": "One provision of the report's reform: a parameter's baseline and reform values.\n\n``path`` is the parameter path and ``breadcrumb`` its readable label, and\n``intervals`` optionally gives a dated schedule. ``growth`` says how a value\nset from one year on moves in later years (``fixed``, ``current_law`` or an\nindex's parameter path); the other ``growth_*`` fields say when it moves and\nhow grown values round. They are absent for a hand-set schedule."
       },
@@ -13087,7 +13613,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["start_date", "end_date", "value"],
+        "required": [
+          "start_date",
+          "end_date",
+          "value"
+        ],
         "title": "ReportProvisionInterval",
         "description": "One dated value in a provision's schedule, from ``start_date`` to ``end_date``.\n\nDates are ``YYYY-MM-DD`` strings and ``value`` is any finite JSON value.\n``parameter`` is optional, and is left out of the stored report when unset."
       },
@@ -13117,7 +13647,11 @@
           }
         },
         "type": "object",
-        "required": ["start_date", "end_date", "value"],
+        "required": [
+          "start_date",
+          "end_date",
+          "value"
+        ],
         "title": "ReportProvisionIntervalItem",
         "description": "A provision's value for the dates from ``start_date`` to ``end_date``."
       },
@@ -13219,7 +13753,12 @@
           }
         },
         "type": "object",
-        "required": ["path", "breadcrumb", "baseline_value", "value"],
+        "required": [
+          "path",
+          "breadcrumb",
+          "baseline_value",
+          "value"
+        ],
         "title": "ReportProvisionItem",
         "description": "One parameter the report's reform changes, with its baseline and reform values.\n\n``intervals`` gives the reform's dated values when they vary over time. The\n``growth`` keys, present only when set, say how a value set from one year on\nmoves in later years and how grown values round."
       },
@@ -13237,7 +13776,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["programs"],
+        "required": [
+          "programs"
+        ],
         "title": "ReportScorecard",
         "description": "The programs on the report's validation scorecard, at most 200 names."
       },
@@ -13252,7 +13793,9 @@
           }
         },
         "type": "object",
-        "required": ["programs"],
+        "required": [
+          "programs"
+        ],
         "title": "ReportScorecardItem",
         "description": "The programs on the scorecard saved with a report's validation."
       },
@@ -13291,7 +13834,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["matched_at", "map_model_version"],
+        "required": [
+          "matched_at",
+          "map_model_version"
+        ],
         "title": "ReportValidation",
         "description": "The validation snapshot saved with a report.\n\n``calibration`` and ``scorecard`` are optional, and the stored snapshot keeps\nonly the keys supplied."
       },
@@ -13327,7 +13873,10 @@
           }
         },
         "type": "object",
-        "required": ["matched_at", "map_model_version"],
+        "required": [
+          "matched_at",
+          "map_model_version"
+        ],
         "title": "ReportValidationItem",
         "description": "The validation snapshot saved with a report.\n\nIt records when the report was matched and with which map model version,\nand optionally the calibration results and scorecard."
       },
@@ -13340,18 +13889,25 @@
                   "type": "string"
                 }
               },
-              "required": ["geography_id"]
+              "required": [
+                "geography_id"
+              ]
             },
             "properties": {
               "geography_kind": {
-                "enum": ["county", "national"]
+                "enum": [
+                  "county",
+                  "national"
+                ]
               }
             }
           },
           {
             "properties": {
               "geography_kind": {
-                "enum": ["metro"]
+                "enum": [
+                  "metro"
+                ]
               },
               "geography_id": {
                 "type": "string",
@@ -13359,7 +13915,10 @@
                 "pattern": "\\S"
               }
             },
-            "required": ["geography_kind", "geography_id"]
+            "required": [
+              "geography_kind",
+              "geography_id"
+            ]
           }
         ],
         "properties": {
@@ -13390,7 +13949,11 @@
           },
           "geography_kind": {
             "type": "string",
-            "enum": ["county", "national", "metro"],
+            "enum": [
+              "county",
+              "national",
+              "metro"
+            ],
             "title": "Geography Kind"
           },
           "geography_id": {
@@ -13446,7 +14009,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "SharedBaselineReformItem",
         "description": "The saved reform a shared report was compared with, named but not linked."
       },
@@ -13468,7 +14033,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "SharedUserReportDetailResponse",
         "description": "Success response holding one shared report."
       },
@@ -13480,7 +14047,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "SharedUserReportDetailResult",
         "description": "Result holding one shared report in ``item``."
       },
@@ -13493,7 +14062,10 @@
           },
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -13646,7 +14218,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["people", "household", "benunit"],
+        "required": [
+          "people",
+          "household",
+          "benunit"
+        ],
         "title": "UKHouseholdDocument",
         "description": "UK household content: people, households and benefit units."
       },
@@ -13707,7 +14283,14 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["people", "household", "family", "tax_unit", "spm_unit", "marital_unit"],
+        "required": [
+          "people",
+          "household",
+          "family",
+          "tax_unit",
+          "spm_unit",
+          "marital_unit"
+        ],
         "title": "USHouseholdDocument",
         "description": "US household content: people and the US group entities they belong to.\n\n``spm`` optionally selects an SPM forecast scenario and geography; omit it\nrather than sending null."
       },
@@ -13719,7 +14302,10 @@
         "properties": {
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -13777,7 +14363,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["country_id"],
+        "required": [
+          "country_id"
+        ],
         "title": "UserHouseholdCreateRequest",
         "description": "Association fields; the owner is taken from the request credential."
       },
@@ -13799,7 +14387,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserHouseholdDetailResponse",
         "description": "Success response holding one user-household association."
       },
@@ -13811,7 +14401,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "UserHouseholdDetailResult",
         "description": "Result holding one user-household association in ``item``."
       },
@@ -13824,7 +14416,10 @@
           },
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -13923,7 +14518,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserHouseholdPageResponse",
         "description": "Success response holding one page of user-household associations."
       },
@@ -13951,7 +14548,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items", "offset", "limit", "has_more"],
+        "required": [
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "UserHouseholdPageResult",
         "description": "One page of user-household associations, oldest first.\n\n``offset`` and ``limit`` echo the request; when ``has_more`` is true, ask\nfor the next page with ``offset + limit``."
       },
@@ -14018,12 +14620,20 @@
         "properties": {
           "user_type": {
             "type": "string",
-            "enum": ["standard", "author", "admin"],
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "User Type"
           },
           "previous_user_type": {
             "type": "string",
-            "enum": ["standard", "author", "admin"],
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "Previous User Type"
           },
           "type_changed": {
@@ -14033,7 +14643,11 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["user_type", "previous_user_type", "type_changed"],
+        "required": [
+          "user_type",
+          "previous_user_type",
+          "type_changed"
+        ],
         "title": "UserInvitationAcceptItem",
         "description": "The caller's type after accepting an invitation.\n\n``user_type`` is the caller's type now. ``type_changed`` is false when the\ncaller already had the invited type or a higher one."
       },
@@ -14048,7 +14662,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["token"],
+        "required": [
+          "token"
+        ],
         "title": "UserInvitationAcceptRequest",
         "description": "The token from an invitation link's #token= fragment."
       },
@@ -14070,7 +14686,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserInvitationAcceptResponse",
         "description": "The response to an accepted invitation."
       },
@@ -14082,7 +14700,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "UserInvitationAcceptResult",
         "description": "The caller's type after accepting an invitation."
       },
@@ -14096,13 +14716,19 @@
           },
           "user_type": {
             "type": "string",
-            "enum": ["author", "admin"],
+            "enum": [
+              "author",
+              "admin"
+            ],
             "title": "User Type"
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["email", "user_type"],
+        "required": [
+          "email",
+          "user_type"
+        ],
         "title": "UserInvitationCreateRequest",
         "description": "The address to invite, one address with no whitespace, < or >, and the type the invitation grants."
       },
@@ -14119,7 +14745,10 @@
           },
           "user_type": {
             "type": "string",
-            "enum": ["author", "admin"],
+            "enum": [
+              "author",
+              "admin"
+            ],
             "title": "User Type"
           },
           "invited_by_user_id": {
@@ -14206,7 +14835,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserInvitationPageResponse",
         "description": "The response for a page of open invitations."
       },
@@ -14234,7 +14865,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items", "offset", "limit", "has_more"],
+        "required": [
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "UserInvitationPageResult",
         "description": "A page of open invitations, newest first."
       },
@@ -14256,7 +14892,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserInvitationResponse",
         "description": "The response for one invitation."
       },
@@ -14268,7 +14906,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "UserInvitationResult",
         "description": "One invitation."
       },
@@ -14276,7 +14916,10 @@
         "properties": {
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -14335,7 +14978,10 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["current-law", "current-policy"]
+                "enum": [
+                  "current-law",
+                  "current-policy"
+                ]
               },
               {
                 "type": "null"
@@ -14356,7 +15002,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["country_id"],
+        "required": [
+          "country_id"
+        ],
         "title": "UserPolicyCreateRequest",
         "description": "Association fields; the owner is taken from the request credential."
       },
@@ -14378,7 +15026,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserPolicyDetailResponse",
         "description": "Success response holding one user-policy association."
       },
@@ -14390,7 +15040,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "UserPolicyDetailResult",
         "description": "Result holding one user-policy association in ``item``."
       },
@@ -14403,7 +15055,10 @@
           },
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -14461,7 +15116,10 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["current-law", "current-policy"]
+                "enum": [
+                  "current-law",
+                  "current-policy"
+                ]
               },
               {
                 "type": "null"
@@ -14526,7 +15184,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserPolicyPageResponse",
         "description": "Success response holding one page of user-policy associations."
       },
@@ -14554,7 +15214,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items", "offset", "limit", "has_more"],
+        "required": [
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "UserPolicyPageResult",
         "description": "One page of user-policy associations, oldest first.\n\n``offset`` and ``limit`` echo the request; when ``has_more`` is true, ask\nfor the next page with ``offset + limit``."
       },
@@ -14615,7 +15280,10 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["current-law", "current-policy"]
+                "enum": [
+                  "current-law",
+                  "current-policy"
+                ]
               },
               {
                 "type": "null"
@@ -14728,7 +15396,10 @@
           },
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -14768,7 +15439,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["country_id", "legacy_report_id"],
+        "required": [
+          "country_id",
+          "legacy_report_id"
+        ],
         "title": "UserReportCreateRequest",
         "description": "Association fields; the owner is taken from the request credential."
       },
@@ -14790,7 +15464,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserReportDetailResponse",
         "description": "Success response holding one user-report association."
       },
@@ -14802,7 +15478,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "UserReportDetailResult",
         "description": "Result holding one user-report association in ``item``."
       },
@@ -14815,7 +15493,10 @@
           },
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -15003,7 +15684,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserReportPageResponse",
         "description": "Success response holding one page of user-report associations."
       },
@@ -15031,7 +15714,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items", "offset", "limit", "has_more"],
+        "required": [
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "UserReportPageResult",
         "description": "One page of user-report associations, oldest first.\n\n``offset`` and ``limit`` echo the request; when ``has_more`` is true, ask\nfor the next page with ``offset + limit``."
       },
@@ -15172,7 +15860,10 @@
         "properties": {
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -15210,7 +15901,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["country_id", "legacy_simulation_id"],
+        "required": [
+          "country_id",
+          "legacy_simulation_id"
+        ],
         "title": "UserSimulationCreateRequest",
         "description": "Association fields; the owner is taken from the request credential."
       },
@@ -15232,7 +15926,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserSimulationDetailResponse",
         "description": "Success response holding one user-simulation association."
       },
@@ -15244,7 +15940,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["item"],
+        "required": [
+          "item"
+        ],
         "title": "UserSimulationDetailResult",
         "description": "Result holding one user-simulation association in ``item``."
       },
@@ -15257,7 +15955,10 @@
           },
           "country_id": {
             "type": "string",
-            "enum": ["us", "uk"],
+            "enum": [
+              "us",
+              "uk"
+            ],
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
@@ -15356,7 +16057,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserSimulationPageResponse",
         "description": "Success response holding one page of user-simulation associations."
       },
@@ -15384,7 +16087,12 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items", "offset", "limit", "has_more"],
+        "required": [
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
         "title": "UserSimulationPageResult",
         "description": "One page of user-simulation associations, oldest first.\n\n``offset`` and ``limit`` echo the request; when ``has_more`` is true, ask\nfor the next page with ``offset + limit``."
       },
@@ -15448,12 +16156,20 @@
           },
           "previous_user_type": {
             "type": "string",
-            "enum": ["standard", "author", "admin"],
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "Previous User Type"
           },
           "new_user_type": {
             "type": "string",
-            "enum": ["standard", "author", "admin"],
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "New User Type"
           },
           "changed_by_user_id": {
@@ -15481,7 +16197,11 @@
           },
           "source": {
             "type": "string",
-            "enum": ["admin_route", "invitation", "script"],
+            "enum": [
+              "admin_route",
+              "invitation",
+              "script"
+            ],
             "title": "Source"
           },
           "created_at": {
@@ -15523,7 +16243,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["result"],
+        "required": [
+          "result"
+        ],
         "title": "UserTypeChangeListResponse",
         "description": "The response for a signed-in user's recorded type changes."
       },
@@ -15539,7 +16261,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "title": "UserTypeChangeListResult",
         "description": "A signed-in user's recorded type changes, newest first."
       },
@@ -15547,18 +16271,29 @@
         "properties": {
           "user_type": {
             "type": "string",
-            "enum": ["standard", "author", "admin"],
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "User Type"
           },
           "expected_user_type": {
             "type": "string",
-            "enum": ["standard", "author", "admin"],
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
             "title": "Expected User Type"
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["user_type", "expected_user_type"],
+        "required": [
+          "user_type",
+          "expected_user_type"
+        ],
         "title": "UserTypePatchRequest",
         "description": "The signed-in type an admin gives a user, and the type the admin last read.\n\nexpected_user_type is the user's type as the admin last read it. When the\nrequest would change the type and the stored type differs from\nexpected_user_type, the change is refused (409) and nothing is written.\nWhen the user already has user_type, nothing changes (200), whatever\nexpected_user_type is. Only the type is compared: a type changed and\nchanged back since the read is not detected."
       },
@@ -15578,7 +16313,9 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "title": "V2ErrorResponse",
         "description": "Strict error response shared by every API v2 resource."
       },
@@ -15612,7 +16349,10 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["message", "code"],
+        "required": [
+          "message",
+          "code"
+        ],
         "title": "V2InvitationAcceptErrorResponse",
         "description": "A refused invitation acceptance, with a code saying why."
       }
