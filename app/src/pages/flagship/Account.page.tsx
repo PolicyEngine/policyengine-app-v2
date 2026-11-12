@@ -55,7 +55,7 @@ function formatDate(iso: string | undefined | null): string | null {
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <Stack gap="xl" style={{ maxWidth: 720, margin: '0 auto', width: '100%' }}>
+    <Stack gap="xl">
       <Title order={1} style={{ margin: 0 }}>
         Your account
       </Title>
