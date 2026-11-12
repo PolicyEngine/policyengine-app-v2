@@ -9,15 +9,23 @@ import {
   handleDashboardApiRequest,
   readJsonBody,
 } from "@/lib/dashboardApi/handler";
-import { householdCalculation } from "@/lib/dashboardApi/operations";
+import {
+  HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS,
+  householdCalculation,
+} from "@/lib/dashboardApi/operations";
 import { websitePublicApi } from "@/lib/publicApi/forwarder";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// A household with many people or a variation chart can take over a minute.
-// The Public API gets 100 s to answer, after up to 10 s for a token, so the
-// route's own JSON 504 arrives before Vercel ends the function.
-export const maxDuration = 120;
+// A household with many people, several years or a variation chart can take
+// minutes, and a request may first wait for a Public API instance to start.
+// The route may run for 800 s, Vercel Pro's limit on Fluid compute: a token
+// request of up to 10 s, a wait of up to 750 s
+// (HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS) and then the streamed answer.
+// website/vercel.json turns on Vercel's request cancellation for this route,
+// so a browser that goes away stops the function and its request to the
+// Public API, rather than holding them for that long.
+export const maxDuration = 800;
 
 export function OPTIONS(request: Request): Response {
   return dashboardApiPreflight(request);
@@ -36,7 +44,8 @@ export async function POST(request: Request): Promise<Response> {
     return websitePublicApi.forward(operation.request, {
       incomingRequest: request,
       responseHeaders: corsHeaders,
-      responseHeadersTimeoutMilliseconds: 100_000,
+      responseHeadersTimeoutMilliseconds:
+        HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS,
     });
   });
 }
