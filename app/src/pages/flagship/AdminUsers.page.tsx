@@ -14,16 +14,12 @@ import {
   Text,
   Title,
 } from '@/components/ui';
-import { colors, spacing } from '@/designTokens';
+import { colors } from '@/designTokens';
 import { useMe } from '@/hooks/useMe';
 import { useUserType } from '@/hooks/useUserType';
 
 function PageShell({ children }: { children: React.ReactNode }) {
-  return (
-    <Stack gap="xl" style={{ maxWidth: spacing.layout.container, margin: '0 auto', width: '100%' }}>
-      {children}
-    </Stack>
-  );
+  return <Stack gap="xl">{children}</Stack>;
 }
 
 /** What everyone but an admin sees: the page does not exist for them. */
