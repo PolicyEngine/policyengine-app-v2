@@ -24,6 +24,7 @@ import {
   useReadAdminUserNow,
 } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useAdminUserDeletionUnderWay } from '@/hooks/useDeleteAdminUser';
 import { useMe } from '@/hooks/useMe';
 import { getCountryLabel } from '@/utils/geographyUtils';
 import {
@@ -135,7 +136,10 @@ function DetailsMessage({ heading, children }: { heading: string; children: Reac
   );
 }
 
-/** One user's details, a control to change their type, and their type changes. */
+/**
+ * One user's details, a control to change their type, their type changes,
+ * and a control to delete their account.
+ */
 export default function AdminUserDetails({ userId }: { userId: string }) {
   const countryId = useCurrentCountry();
   const adminUser = useAdminUser(userId);
@@ -164,6 +168,9 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
   const heading = adminUser.data ? adminUserLabel(adminUser.data) : 'User';
   // Set once the admin deletes the user's account; shown in place of the user.
   const [deletedAccount, setDeletedAccount] = useState<DeletedAccount | null>(null);
+  // While it runs, a read may find the user gone before the deletion
+  // answers; the details stay until it does, so its answer is shown.
+  const deletionUnderWay = useAdminUserDeletionUnderWay(userId);
 
   if (deletedAccount) {
     return (
@@ -183,7 +190,7 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
     );
   }
 
-  if (adminUser.isError && isV2ApiError(adminUser.error, 404)) {
+  if (!deletionUnderWay && adminUser.isError && isV2ApiError(adminUser.error, 404)) {
     return (
       <DetailsMessage heading={heading}>
         <Text role="status" style={{ margin: 0, color: colors.text.secondary }}>
@@ -195,7 +202,10 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
 
   // A user already read stays on the screen when a later read fails for a
   // while (a network error, a 5xx), but not after a 403.
-  if (adminUser.data === undefined || (adminUser.isError && isRefusedOrMissing(adminUser.error))) {
+  if (
+    adminUser.data === undefined ||
+    (!deletionUnderWay && adminUser.isError && isRefusedOrMissing(adminUser.error))
+  ) {
     if (adminUser.isError) {
       return (
         <DetailsMessage heading={heading}>

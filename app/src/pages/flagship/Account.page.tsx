@@ -229,7 +229,7 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
           <CardHeader>
             <CardTitle>Users</CardTitle>
             <CardDescription>
-              Find signed-in users by email and change their user types.
+              Find signed-in users by email, change their user types and delete their accounts.
             </CardDescription>
           </CardHeader>
           <CardContent>

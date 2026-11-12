@@ -46,7 +46,7 @@ export default function DeleteUserAccount({
   onDeleted,
 }: DeleteUserAccountProps) {
   const countryId = useCurrentCountry();
-  const deleteUser = useDeleteAdminUser();
+  const deleteUser = useDeleteAdminUser(user.id);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -80,17 +80,14 @@ export default function DeleteUserAccount({
 
   const confirmDeletion = () => {
     const deletedAccount = { userLabel: adminUserLabel(user), email: user.email };
-    deleteUser.mutate(
-      { userId: user.id },
-      {
-        onSuccess: () => onDeleted({ ...deletedAccount, auth0UsersLeftMessage: null }),
-        onError: (error) => {
-          if (isDeletedWithAuth0UsersLeft(error)) {
-            onDeleted({ ...deletedAccount, auth0UsersLeftMessage: error.message });
-          }
-        },
-      }
-    );
+    deleteUser.mutate(undefined, {
+      onSuccess: () => onDeleted({ ...deletedAccount, auth0UsersLeftMessage: null }),
+      onError: (error) => {
+        if (isDeletedWithAuth0UsersLeft(error)) {
+          onDeleted({ ...deletedAccount, auth0UsersLeftMessage: error.message });
+        }
+      },
+    });
   };
 
   return (

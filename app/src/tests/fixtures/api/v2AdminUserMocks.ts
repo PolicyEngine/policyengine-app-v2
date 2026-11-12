@@ -8,6 +8,7 @@ import {
   noContentResponse,
   okResponse,
   PE_USER_ID,
+  routeErrorResponse,
   TIMESTAMPS,
 } from '@/tests/fixtures/api/v2UserMocks';
 import type { MeItem } from '@/types/v2User';
@@ -106,6 +107,8 @@ export const SIGNED_IN_ADMIN_USER = adminUserItem({
   first_name: SIGNED_IN_ADMIN.first_name,
   last_name: SIGNED_IN_ADMIN.last_name,
 });
+/** A user with neither an email nor a name, whom the page can name only by ID. */
+export const UNNAMED_USER = adminUserItem({ email: null, first_name: null, last_name: null });
 export const ALAN = adminUserItem({
   id: ADMIN_USER_IDS.ALAN,
   email: 'alan@example.org',
@@ -165,8 +168,11 @@ export interface FakeAdminApiOptions {
    * error and changes nothing.
    */
   patchRefusal?: { status: number; message: string };
-  /** A refusal of every account deletion (such as 503): nothing is deleted. */
-  deleteRefusal?: { status: number; message: string };
+  /**
+   * A refusal of every account deletion (such as 503): nothing is deleted.
+   * With `writtenByRoute`, the calculator's route wrote it, not the API.
+   */
+  deleteRefusal?: { status: number; message: string; writtenByRoute?: boolean };
   /** A 502 with this message after a deletion, which deletes the user first, as the API does. */
   auth0DeletionFailure?: string;
 }
@@ -270,7 +276,8 @@ export function answerAdminApi(
         return userResponse(userRoute[1]);
       }
       if (deleteRefusal) {
-        return errorResponse(deleteRefusal.status, deleteRefusal.message);
+        const refusalResponse = deleteRefusal.writtenByRoute ? routeErrorResponse : errorResponse;
+        return refusalResponse(deleteRefusal.status, deleteRefusal.message);
       }
       state.users.splice(userIndex, 1);
       state.changes = state.changes.filter((change) => change.user_id !== userRoute[1]);

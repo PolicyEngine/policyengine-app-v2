@@ -2,6 +2,7 @@ import { cleanup, render, screen, userEvent, waitFor, within } from '@test-utils
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ADMIN_USER_PAGE_SIZE } from '@/hooks/useAdminUsers';
 import AdminUsersPage from '@/pages/flagship/AdminUsers.page';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   ADMIN_API_MESSAGES,
   ALAN,
@@ -13,11 +14,15 @@ import {
   numberedAdminUsers,
   sentRequests,
   SIGNED_IN_ADMIN_USER,
+  UNNAMED_USER,
   type FakeAdminApiOptions,
 } from '@/tests/fixtures/api/v2AdminUserMocks';
+import { errorResponse, ROUTE_MESSAGES } from '@/tests/fixtures/api/v2UserMocks';
 import {
   createTestQueryClient,
   forgetWindowFocus,
+  letPendingWorkRun,
+  returnToWindow,
   UserSessionProviders,
 } from '@/tests/fixtures/hooks/useMeMocks';
 import { signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
@@ -26,9 +31,6 @@ const fetchMock = vi.fn();
 
 /** What the details say once the open user's account is deleted. */
 const ACCOUNT_DELETED_TEXT = "This user's account was deleted.";
-
-/** A user with neither an email nor a name, whom the page can name only by ID. */
-const UNNAMED_USER = { ...GRACE, email: null, first_name: null, last_name: null };
 
 function renderAdminPage() {
   return render(
@@ -71,6 +73,52 @@ function deleteRequests(): string[] {
 
 function listReads(): string[] {
   return sentRequests(fetchMock).filter((request) => request.startsWith('GET /v2/admin/users?'));
+}
+
+function readsOfUser(userId: string): string[] {
+  return sentRequests(fetchMock).filter((request) => request === `GET /v2/admin/users/${userId}`);
+}
+
+function isListRead(method: string, path: string): boolean {
+  return method === 'GET' && path === '/v2/admin/users';
+}
+
+/** Lets queued work run several times over, long enough for answers to be shown. */
+async function letQueuedWorkRun() {
+  for (let round = 0; round < 10; round += 1) {
+    await letPendingWorkRun();
+  }
+}
+
+/**
+ * Answers every later DELETE at once, as the API then would, but holds the
+ * answer back until the test calls `deliverHeldAnswers`: a deletion whose
+ * data is gone while its answer is still on its way.
+ */
+function holdAnswersOfDeletions() {
+  const answerAsBefore = fetchMock.getMockImplementation()!;
+  const heldDeliveries: Array<() => void> = [];
+  fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+    if ((init.method ?? 'GET') !== 'DELETE') {
+      return answerAsBefore(url, init);
+    }
+    const answer = await answerAsBefore(url, init);
+    return new Promise<Response>((resolve) => {
+      heldDeliveries.push(() => resolve(answer));
+    });
+  });
+  return { deliverHeldAnswers: () => heldDeliveries.splice(0).forEach((deliver) => deliver()) };
+}
+
+/** Makes every later read of the list fail with a server error, and other requests answer as before. */
+function failListReads() {
+  const answerAsBefore = fetchMock.getMockImplementation()!;
+  fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
+    isListRead(init.method ?? 'GET', publicApiPathOf(url))
+      ? errorResponse(500, ADMIN_API_MESSAGES.OPERATION_FAILED)
+      : answerAsBefore(url, init)
+  );
+  return { answerListReadsAgain: () => fetchMock.mockImplementation(answerAsBefore) };
 }
 
 /** The list of users, also while a dialog hides the rest of the page from assistive technology. */
@@ -174,10 +222,7 @@ describe('AdminUsersPage account deletion', () => {
   test('given the deletion is confirmed then the user leaves the list before the list is read again', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!);
-    const { heldRequestCount } = holdRequests(
-      fetchMock,
-      (method, path) => method === 'GET' && path === '/v2/admin/users'
-    );
+    const { heldRequestCount } = holdRequests(fetchMock, isListRead);
     const confirmation = await askToDeleteAccount(user);
 
     // When
@@ -231,17 +276,26 @@ describe('AdminUsersPage account deletion', () => {
   });
 
   test.each([
-    ['Auth0 deletion is unavailable', 503, ADMIN_API_MESSAGES.ACCOUNT_DELETION_UNAVAILABLE],
-    ['the user is the only admin', 409, ADMIN_API_MESSAGES.LAST_ADMIN_DELETION],
-    ['the deletion fails', 500, ADMIN_API_MESSAGES.OPERATION_FAILED],
+    ['Auth0 deletion is unavailable', 503, ADMIN_API_MESSAGES.ACCOUNT_DELETION_UNAVAILABLE, false],
+    ['the API refuses with a conflict', 409, ADMIN_API_MESSAGES.LAST_ADMIN_DELETION, false],
+    ['the deletion fails', 500, ADMIN_API_MESSAGES.OPERATION_FAILED, false],
+    [
+      "the calculator's route cannot reach the Public API",
+      502,
+      ROUTE_MESSAGES.PUBLIC_API_UNREACHABLE,
+      true,
+    ],
   ])(
-    "given %s then the confirmation shows the API's message and the user stays",
-    async (_reason, status, message) => {
+    "given %s then the confirmation shows the answer's message and the user stays",
+    async (_reason, status, message, writtenByRoute) => {
       // When
-      const { confirmation } = await deleteGracesAccount({ deleteRefusal: { status, message } });
+      const { confirmation } = await deleteGracesAccount({
+        deleteRefusal: { status, message, writtenByRoute },
+      });
 
       // Then
       expect(await within(confirmation).findByRole('alert')).toHaveTextContent(message);
+      expect(screen.queryByText(ACCOUNT_DELETED_TEXT)).not.toBeInTheDocument();
       expect(within(confirmation).getByRole('button', { name: 'Delete account' })).toBeEnabled();
       expect(
         within(usersTable()).getByRole('button', { name: GRACE.email!, hidden: true })
@@ -278,6 +332,51 @@ describe('AdminUsersPage account deletion', () => {
     expect(alert).toHaveTextContent(message);
     expect(alert).toHaveTextContent(`This user's email was ${GRACE.email}.`);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(
+      within(usersTable()).queryByRole('button', { name: GRACE.email! })
+    ).not.toBeInTheDocument();
+  });
+
+  test('given the user is read while the deletion is under way then the deletion still says what happened', async () => {
+    // Given
+    const message = auth0UsersLeftMessage(1, 1);
+    const { user } = await openUserDetails(GRACE.email!, { auth0DeletionFailure: message });
+    const { deliverHeldAnswers } = holdAnswersOfDeletions();
+    const confirmation = await askToDeleteAccount(user);
+    await user.click(within(confirmation).getByRole('button', { name: 'Delete account' }));
+    await waitFor(() => expect(deleteRequests()).toHaveLength(1));
+    const userReadsBefore = readsOfUser(GRACE.id).length;
+
+    // When
+    // The data is gone, so this read finds no user, while the Auth0 deletions are still running.
+    await returnToWindow();
+    await waitFor(() => expect(readsOfUser(GRACE.id).length).toBe(userReadsBefore + 1));
+    await letQueuedWorkRun();
+    deliverHeldAnswers();
+
+    // Then
+    expect(await screen.findByText(ACCOUNT_DELETED_TEXT)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(message);
+  });
+
+  test('given the last read of the list failed for a while then the deletion still takes the user out of it', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    const { answerListReadsAgain } = failListReads();
+    const listReadsBefore = listReads().length;
+    await returnToWindow();
+    await waitFor(() => expect(listReads().length).toBe(listReadsBefore + 1));
+    await letQueuedWorkRun();
+    expect(within(usersTable()).getByRole('button', { name: GRACE.email! })).toBeInTheDocument();
+    answerListReadsAgain();
+    holdRequests(fetchMock, isListRead);
+    const confirmation = await askToDeleteAccount(user);
+
+    // When
+    await user.click(within(confirmation).getByRole('button', { name: 'Delete account' }));
+    await screen.findByText(ACCOUNT_DELETED_TEXT);
+
+    // Then
     expect(
       within(usersTable()).queryByRole('button', { name: GRACE.email! })
     ).not.toBeInTheDocument();

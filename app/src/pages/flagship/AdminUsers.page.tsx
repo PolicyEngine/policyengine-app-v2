@@ -63,7 +63,8 @@ function AdminUsers() {
           Users
         </Title>
         <Text style={{ margin: 0, color: colors.text.secondary }}>
-          Find signed-in users by email, change their user types, and see who changed them.
+          Find signed-in users by email, change their user types, see who changed them, and delete
+          their accounts.
         </Text>
       </Stack>
       <AdminUserSearch selectedUserId={selectedUserId} onSelectUser={setSelectedUserId} />
@@ -74,10 +75,10 @@ function AdminUsers() {
 
 /**
  * The admin users page (`/{countryId}/admin/users`): admins find signed-in
- * users, change their types and read each user's type changes. Everyone
- * else, signed out included, gets a not-found page once their type is
- * known, and no admin route is called for them. Until it is known the page
- * says it is loading, or shows why /v2/me failed.
+ * users, change their types, read each user's type changes and delete
+ * their accounts. Everyone else, signed out included, gets a not-found page
+ * once their type is known, and no admin route is called for them. Until it
+ * is known the page says it is loading, or shows why /v2/me failed.
  */
 export default function AdminUsersPage() {
   const userType = useUserType();
