@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { IconDownload, IconTrash } from '@tabler/icons-react';
-import { deleteMe, exportMe } from '@/api/v2Me';
-import { AppLink } from '@/components/AppLink';
+import { IconTrash } from '@tabler/icons-react';
+import { deleteMe } from '@/api/v2Me';
+import AccountSection from '@/components/account/AccountSection';
 import { accountDisplayName } from '@/components/auth/AuthMenu';
 import {
   Button,
@@ -19,56 +19,13 @@ import {
   Spinner,
   Stack,
   Text,
-  Title,
 } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMe } from '@/hooks/useMe';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
-import {
-  isAssociationCountry,
-  type AssociationCountryId,
-  type MeExportResult,
-} from '@/types/v2User';
+import type { AssociationCountryId } from '@/types/v2User';
 import { getCountryLabel } from '@/utils/geographyUtils';
-
-const EXPORT_FILE_NAME = 'policyengine-account-data.json';
-
-/**
- * The export as the downloaded file holds it: every saved record, without
- * the account record (`user`) or the user ID (`user_id`) each record
- * repeats. The Public API still sends them to the browser.
- */
-function exportFileContent(exported: MeExportResult): Record<string, unknown> {
-  return Object.fromEntries(
-    Object.entries(exported)
-      .filter(([section]) => section !== 'user')
-      .map(([section, records]) => [
-        section,
-        Array.isArray(records) ? records.map(withoutUserId) : records,
-      ])
-  );
-}
-
-function withoutUserId(record: unknown): unknown {
-  if (record === null || typeof record !== 'object' || Array.isArray(record)) {
-    return record;
-  }
-  return Object.fromEntries(Object.entries(record).filter(([field]) => field !== 'user_id'));
-}
-
-function downloadJson(data: unknown, fileName: string): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
 
 function formatDate(iso: string | undefined | null): string | null {
   if (!iso) {
@@ -78,17 +35,6 @@ function formatDate(iso: string | undefined | null): string | null {
   return Number.isNaN(date.getTime())
     ? null
     : date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-function PageShell({ children }: { children: React.ReactNode }) {
-  return (
-    <Stack gap="xl">
-      <Title order={1} style={{ margin: 0 }}>
-        General
-      </Title>
-      {children}
-    </Stack>
-  );
 }
 
 function DetailRow({ label, value }: { label: string; value: string | null }) {
@@ -109,89 +55,38 @@ function DetailRow({ label, value }: { label: string; value: string | null }) {
 
 /**
  * The v3 account page, the account settings' General page: who the
- * signed-in user is, downloading everything saved to the account, and
- * deleting the account. Reads the PolicyEngine user from `GET /v2/me` (the
+ * signed-in user is, and deleting the account ("Download my data" is on
+ * the My data page). Reads the PolicyEngine user from `GET /v2/me` (the
  * user menu uses the Auth0 ID token instead), and does not show its ID.
  */
 export default function AccountPage() {
-  const auth = useAuthStatus();
-  const countryId = useCurrentCountry();
-
-  if (auth.status === 'disabled') {
-    return (
-      <PageShell>
-        <Text style={{ margin: 0 }}>Signing in is not available here yet.</Text>
-      </PageShell>
-    );
-  }
-
-  // Accounts are for the US and UK: elsewhere there is nothing to sign in to.
-  if (!isAssociationCountry(countryId)) {
-    return (
-      <PageShell>
-        <Text style={{ margin: 0 }}>
-          Accounts store work for the US and UK calculators. Work in the{' '}
-          {getCountryLabel(countryId)} calculator stays on this device. Manage your account from{' '}
-          <AppLink to="/us/account">the US calculator</AppLink> or{' '}
-          <AppLink to="/uk/account">the UK calculator</AppLink>.
-        </Text>
-        {auth.status === 'signed_in' && (
-          <div>
-            <Button variant="outline" onClick={() => auth.signOut()}>
-              Sign out
-            </Button>
-          </div>
-        )}
-      </PageShell>
-    );
-  }
-
-  if (auth.status === 'signed_out') {
-    return (
-      <PageShell>
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign in to keep your work</CardTitle>
-            <CardDescription>
-              The reforms and reports you save now are kept for this browser. Sign in to keep them
-              in your account and use them on any device.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => auth.signIn()}>Sign in</Button>
-          </CardContent>
-        </Card>
-      </PageShell>
-    );
-  }
-
-  return <SignedInAccount countryId={countryId} />;
+  return (
+    <AccountSection title="General">
+      {(countryId) => <SignedInAccount countryId={countryId} />}
+    </AccountSection>
+  );
 }
 
 function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
   const auth = useAuthStatus();
   const client = useV2UserClient();
   const me = useMe();
-  const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   if (me.isPending) {
     return (
-      <PageShell>
-        <Stack role="status" aria-live="polite" align="center" gap="md">
-          <Spinner size="sm" />
-          <Text style={{ margin: 0, color: colors.text.secondary }}>Loading your account…</Text>
-        </Stack>
-      </PageShell>
+      <Stack role="status" aria-live="polite" align="center" gap="md">
+        <Spinner size="sm" />
+        <Text style={{ margin: 0, color: colors.text.secondary }}>Loading your account…</Text>
+      </Stack>
     );
   }
 
   if (me.isError) {
     return (
-      <PageShell>
+      <>
         <Text role="alert" style={{ margin: 0, color: colors.error }}>
           We could not load your PolicyEngine account: {me.error.message}
         </Text>
@@ -201,23 +96,11 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
             Sign out
           </Button>
         </div>
-      </PageShell>
+      </>
     );
   }
 
   const user = me.data;
-
-  const handleExport = async () => {
-    setExporting(true);
-    setExportError(null);
-    try {
-      downloadJson(exportFileContent(await exportMe(client, countryId)), EXPORT_FILE_NAME);
-    } catch (error) {
-      setExportError(error instanceof Error ? error.message : 'The download did not complete.');
-    } finally {
-      setExporting(false);
-    }
-  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -232,7 +115,7 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
   };
 
   return (
-    <PageShell>
+    <>
       <Card>
         <CardHeader>
           <CardTitle>{accountDisplayName(auth)}</CardTitle>
@@ -246,30 +129,6 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
               value={user.primary_country ? getCountryLabel(user.primary_country) : null}
             />
             <DetailRow label="Member since" value={formatDate(user.created_at)} />
-          </Stack>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Download my data</CardTitle>
-          <CardDescription>
-            A JSON file with everything saved to your account, in every country.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Stack gap="sm">
-            <div>
-              <Button variant="outline" onClick={handleExport} disabled={exporting}>
-                {exporting ? <Spinner size="sm" /> : <IconDownload size={16} />}
-                Download my data
-              </Button>
-            </div>
-            {exportError && (
-              <Text size="sm" style={{ margin: 0, color: colors.error }}>
-                {exportError}
-              </Text>
-            )}
           </Stack>
         </CardContent>
       </Card>
@@ -322,6 +181,6 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </PageShell>
+    </>
   );
 }
