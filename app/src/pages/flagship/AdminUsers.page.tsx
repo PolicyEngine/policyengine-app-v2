@@ -70,10 +70,7 @@ function AdminUsers() {
         <Title order={1} style={{ margin: 0 }}>
           Users
         </Title>
-        <Text style={{ margin: 0, color: colors.text.secondary }}>
-          Find signed-in users by email, change their user types, and see who changed them, or
-          invite people by email to become authors or admins.
-        </Text>
+        <Text style={{ margin: 0, color: colors.text.secondary }}>View all user accounts</Text>
       </Stack>
       <Tabs value={openTab} onValueChange={setOpenTab}>
         <TabsList>
