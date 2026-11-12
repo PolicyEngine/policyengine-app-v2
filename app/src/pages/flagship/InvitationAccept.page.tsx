@@ -19,18 +19,10 @@ import {
 } from '@/libs/invitations/pendingInvitation';
 import type { AssociationCountryId, UserType } from '@/types/v2User';
 
+/** The page fills the workspace's content area, which sets its own padding. */
 function PageShell({ children }: { children: ReactNode }) {
   return (
-    <Stack
-      gap="md"
-      align="start"
-      style={{
-        maxWidth: spacing.layout.container,
-        margin: '0 auto',
-        padding: spacing['3xl'],
-        width: '100%',
-      }}
-    >
+    <Stack gap="md" align="start">
       {children}
     </Stack>
   );
