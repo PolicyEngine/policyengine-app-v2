@@ -79,7 +79,11 @@ describe('v2UserClient', () => {
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockResolvedValue(
       new Response(
-        JSON.stringify({ status: 'error', message: 'Not verified yet', code: 'email_not_verified' }),
+        JSON.stringify({
+          status: 'error',
+          message: 'Not verified yet',
+          code: 'email_not_verified',
+        }),
         { status: 409, headers: { 'Content-Type': 'application/json' } }
       )
     );

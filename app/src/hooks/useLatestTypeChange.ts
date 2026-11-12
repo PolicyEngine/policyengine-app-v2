@@ -32,9 +32,7 @@ export function useDismissTypeChange() {
       // A read that started before the dismissal would bring the change back.
       await queryClient.cancelQueries({ queryKey, exact: true });
       queryClient.setQueryData<MeItem>(queryKey, (me) =>
-        me && me.latest_type_change?.id === typeChangeId
-          ? { ...me, latest_type_change: null }
-          : me
+        me && me.latest_type_change?.id === typeChangeId ? { ...me, latest_type_change: null } : me
       );
     },
     onError: (error) => {

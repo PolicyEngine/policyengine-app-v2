@@ -236,7 +236,12 @@ const PUBLIC_API_CALLS: ReadonlyArray<[string, () => Promise<unknown>, string, s
     'GET',
     `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`,
   ],
-  ['the pending invitations', () => listInvitations(browserUserClient()), 'GET', '/v2/admin/invitations'],
+  [
+    'the pending invitations',
+    () => listInvitations(browserUserClient()),
+    'GET',
+    '/v2/admin/invitations',
+  ],
   [
     'an invitation',
     () => createInvitation(browserUserClient(), { email: 'grace@example.org', userType: 'author' }),
