@@ -1,9 +1,19 @@
-import { render, screen, userEvent } from '@test-utils';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, userEvent, waitFor } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import AuthMenu from '@/components/auth/AuthMenu';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import HeaderActionButtons from '@/components/homeHeader/HeaderActionButtons';
+import { NavigationProvider } from '@/contexts/NavigationContext';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
+import {
+  answerMe,
+  deferredResponse,
+  itemResponse,
+  meItemOfType,
+} from '@/tests/fixtures/api/v2UserMocks';
+import { createTestQueryClient, MeStatusProbe } from '@/tests/fixtures/hooks/useMeMocks';
 import {
   AuthTestProvider,
   makeAuthValue,
@@ -17,16 +27,53 @@ vi.mock('@/types/v2User', async (importOriginal) => {
   return withSwitchableAccountStorage(await importOriginal());
 });
 
+const fetchMock = vi.fn();
+
+/** Where the menu's items navigate to. */
+const navigation = { push: vi.fn(), replace: vi.fn(), back: vi.fn() };
+
+beforeEach(() => {
+  fetchMock.mockReset();
+  answerMe(fetchMock);
+  vi.stubGlobal('fetch', fetchMock);
+  navigation.push.mockReset();
+});
+
 afterEach(() => {
   accountStorage.withoutAccountStorage = false;
 });
 
-function renderMenu(auth: AuthContextValue, countryId = 'us') {
+/**
+ * Renders the menu for `auth`. `GET /v2/me` answers with a standard user
+ * unless a test answers it otherwise; `showMeStatus` also shows that
+ * request's status, so a test can wait until it has answered.
+ */
+function renderMenu(
+  auth: AuthContextValue,
+  countryId = 'us',
+  { showMeStatus = false }: { showMeStatus?: boolean } = {}
+) {
   return render(
-    <AuthTestProvider value={auth}>
-      <AuthMenu />
-    </AuthTestProvider>,
+    <QueryClientProvider client={createTestQueryClient()}>
+      <NavigationProvider value={navigation}>
+        <AuthTestProvider value={auth}>
+          <AuthMenu />
+          {showMeStatus && <MeStatusProbe />}
+        </AuthTestProvider>
+      </NavigationProvider>
+    </QueryClientProvider>,
     countryId
+  );
+}
+
+async function openMenu(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /account menu for ada lovelace/i }));
+}
+
+/** The `GET /v2/me` requests sent so far. */
+function meReads() {
+  return fetchMock.mock.calls.filter(
+    ([url, init]) => publicApiPathOf(url) === '/v2/me' && (init?.method ?? 'GET') === 'GET'
   );
 }
 
@@ -112,4 +159,105 @@ describe('AuthMenu', () => {
     await user.click(screen.getByRole('menuitem', { name: /sign out/i }));
     expect(auth.signOut).toHaveBeenCalled();
   });
+
+  test.each(['us', 'uk'])(
+    'given an admin in %s then "My organization" is in the menu as it opens, and opens the users page',
+    async (countryId) => {
+      // Given: the header reads the user's type before the menu is opened.
+      const user = userEvent.setup();
+      answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
+      renderMenu(signedInAuthValue(), countryId, { showMeStatus: true });
+      await screen.findByText('/v2/me status: success');
+
+      // When
+      await openMenu(user);
+      await user.click(screen.getByRole('menuitem', { name: 'My organization' }));
+
+      // Then
+      expect(navigation.push).toHaveBeenCalledWith(`/${countryId}/admin/users`);
+      expect(meReads()).toHaveLength(1);
+    }
+  );
+
+  test('given /v2/me has not answered then the menu has no "My organization"', async () => {
+    // Given
+    const user = userEvent.setup();
+    const pendingMe = deferredResponse();
+    answerMe(fetchMock, { meResponse: () => pendingMe.response });
+    renderMenu(signedInAuthValue());
+    await waitFor(() => expect(meReads()).toHaveLength(1));
+
+    // When
+    await openMenu(user);
+
+    // Then
+    expect(screen.getByRole('menuitem', { name: /my account/i })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'My organization' })).not.toBeInTheDocument();
+  });
+
+  test('given /v2/me answers "admin" while the menu is open then the open menu keeps its items, and the next opening has "My organization"', async () => {
+    // Given
+    const user = userEvent.setup();
+    const pendingMe = deferredResponse();
+    answerMe(fetchMock, { meResponse: () => pendingMe.response });
+    renderMenu(signedInAuthValue(), 'us', { showMeStatus: true });
+    await waitFor(() => expect(meReads()).toHaveLength(1));
+    await openMenu(user);
+
+    // When
+    pendingMe.answer(itemResponse(meItemOfType('admin')));
+    await screen.findByText('/v2/me status: success');
+
+    // Then: no item is added under the pointer while the menu is open.
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'My account',
+      'Sign out',
+    ]);
+    await user.keyboard('{Escape}');
+    await openMenu(user);
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'My account',
+      'My organization',
+      'Sign out',
+    ]);
+  });
+
+  test('given /v2/me answers "admin" while the menu is open then closing it by choosing an item and opening it by keyboard shows "My organization"', async () => {
+    // Given
+    const user = userEvent.setup();
+    const pendingMe = deferredResponse();
+    answerMe(fetchMock, { meResponse: () => pendingMe.response });
+    renderMenu(signedInAuthValue(), 'us', { showMeStatus: true });
+    await waitFor(() => expect(meReads()).toHaveLength(1));
+    await openMenu(user);
+    pendingMe.answer(itemResponse(meItemOfType('admin')));
+    await screen.findByText('/v2/me status: success');
+
+    // When
+    await user.click(screen.getByRole('menuitem', { name: /my account/i }));
+    screen.getByRole('button', { name: /account menu for ada lovelace/i }).focus();
+    await user.keyboard('{Enter}');
+
+    // Then
+    expect(navigation.push).toHaveBeenCalledWith('/us/account');
+    expect(await screen.findByRole('menuitem', { name: 'My organization' })).toBeInTheDocument();
+  });
+
+  test.each(['standard', 'author'] as const)(
+    'given a user of type %s then the menu has no "My organization"',
+    async (userType) => {
+      // Given
+      const user = userEvent.setup();
+      answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType(userType)) });
+      renderMenu(signedInAuthValue(), 'us', { showMeStatus: true });
+      await screen.findByText('/v2/me status: success');
+
+      // When
+      await openMenu(user);
+
+      // Then
+      expect(screen.getByRole('menuitem', { name: /my account/i })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'My organization' })).not.toBeInTheDocument();
+    }
+  );
 });
