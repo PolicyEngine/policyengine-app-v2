@@ -1,13 +1,23 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent } from '@test-utils';
+import { render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import AuthMenu from '@/components/auth/AuthMenu';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import HeaderActionButtons from '@/components/homeHeader/HeaderActionButtons';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
-import { answerMe, itemResponse, meItemOfType } from '@/tests/fixtures/api/v2UserMocks';
-import { createTestQueryClient, MeStatusProbe } from '@/tests/fixtures/hooks/useMeMocks';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
+import {
+  answerMe,
+  deferredResponse,
+  itemResponse,
+  meItemOfType,
+} from '@/tests/fixtures/api/v2UserMocks';
+import {
+  createTestQueryClient,
+  letPendingWorkRun,
+  MeStatusProbe,
+} from '@/tests/fixtures/hooks/useMeMocks';
 import {
   AuthTestProvider,
   makeAuthValue,
@@ -62,6 +72,13 @@ function renderMenu(
 
 async function openMenu(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /account menu for ada lovelace/i }));
+}
+
+/** The `GET /v2/me` requests sent so far. */
+function meReads() {
+  return fetchMock.mock.calls.filter(
+    ([url, init]) => publicApiPathOf(url) === '/v2/me' && (init?.method ?? 'GET') === 'GET'
+  );
 }
 
 describe('legacy calculator pages', () => {
@@ -147,18 +164,40 @@ describe('AuthMenu', () => {
     expect(auth.signOut).toHaveBeenCalled();
   });
 
-  test('given an admin then "My organization" opens the organization\'s users page', async () => {
+  test.each(['us', 'uk'])(
+    'given an admin in %s then "My organization" is in the menu as it opens, and opens the users page',
+    async (countryId) => {
+      // Given: the header reads the user's type before the menu is opened.
+      const user = userEvent.setup();
+      answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
+      renderMenu(signedInAuthValue(), countryId);
+      await waitFor(() => expect(meReads()).toHaveLength(1));
+      await letPendingWorkRun();
+
+      // When
+      await openMenu(user);
+      await user.click(screen.getByRole('menuitem', { name: 'My organization' }));
+
+      // Then
+      expect(navigation.push).toHaveBeenCalledWith(`/${countryId}/admin/users`);
+      expect(meReads()).toHaveLength(1);
+    }
+  );
+
+  test('given /v2/me has not answered then the menu has no "My organization"', async () => {
     // Given
     const user = userEvent.setup();
-    answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
+    const pendingMe = deferredResponse();
+    answerMe(fetchMock, { meResponse: () => pendingMe.response });
     renderMenu(signedInAuthValue());
+    await waitFor(() => expect(meReads()).toHaveLength(1));
 
     // When
     await openMenu(user);
-    await user.click(await screen.findByRole('menuitem', { name: 'My organization' }));
 
     // Then
-    expect(navigation.push).toHaveBeenCalledWith('/us/admin/users');
+    expect(screen.getByRole('menuitem', { name: /my account/i })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'My organization' })).not.toBeInTheDocument();
   });
 
   test.each(['standard', 'author'] as const)(

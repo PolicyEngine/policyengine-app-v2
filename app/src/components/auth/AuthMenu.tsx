@@ -1,6 +1,5 @@
 import { IconBuilding, IconLogout, IconUserCircle } from '@tabler/icons-react';
-import { organizationUsersPath } from '@/components/admin/OrganizationSettingsLayout';
-import MinimumUserType from '@/components/auth/MinimumUserType';
+import { organizationUsersPath } from '@/components/admin/organizationSettingsPages';
 import {
   Button,
   DropdownMenu,
@@ -13,8 +12,9 @@ import {
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserType } from '@/hooks/useUserType';
 import { useAuthStatus, type AuthContextValue } from '@/libs/auth/AuthContext';
-import { isAssociationCountry } from '@/types/v2User';
+import { isAssociationCountry, userTypeMeetsMinimum } from '@/types/v2User';
 
 interface AuthMenuProps {
   /** 'inverse' for the teal calculator header; 'default' for light bars. */
@@ -39,7 +39,6 @@ function initialOf(name: string): string {
 export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
   const auth = useAuthStatus();
   const countryId = useCurrentCountry();
-  const nav = useAppNavigate();
   const inverse = variant === 'inverse';
 
   // Accounts hold US and UK work only; elsewhere v3 stays in this browser.
@@ -81,6 +80,27 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
     );
   }
 
+  return <SignedInAccountMenu auth={auth} countryId={countryId} inverse={inverse} />;
+}
+
+/**
+ * The signed-in user's menu. It reads the user's type (`GET /v2/me`) while
+ * the header shows, not only once the menu opens, so that for an admin
+ * "My organization" is normally there before the menu opens, rather than
+ * added above "Sign out" while the user is choosing an item.
+ */
+function SignedInAccountMenu({
+  auth,
+  countryId,
+  inverse,
+}: {
+  auth: AuthContextValue;
+  countryId: string;
+  inverse: boolean;
+}) {
+  const nav = useAppNavigate();
+  const userType = useUserType();
+  const isAdmin = userType !== null && userTypeMeetsMinimum(userType, 'admin');
   const name = accountDisplayName(auth);
   const email = auth.profile?.email;
 
@@ -130,13 +150,12 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
           <IconUserCircle size={16} />
           My account
         </DropdownMenuItem>
-        {/* Admins only; it appears once /v2/me has said the user is one. */}
-        <MinimumUserType minimum="admin">
+        {isAdmin && (
           <DropdownMenuItem onSelect={() => nav.push(organizationUsersPath(countryId))}>
             <IconBuilding size={16} />
             My organization
           </DropdownMenuItem>
-        </MinimumUserType>
+        )}
         <DropdownMenuItem onSelect={() => auth.signOut()}>
           <IconLogout size={16} />
           Sign out

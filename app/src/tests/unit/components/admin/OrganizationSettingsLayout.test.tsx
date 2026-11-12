@@ -1,4 +1,5 @@
-import { render, screen, waitFor, within } from '@test-utils';
+import { useState, type ReactNode } from 'react';
+import { render, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import OrganizationSettingsLayout from '@/components/admin/OrganizationSettingsLayout';
 import type { CountryId } from '@/libs/countries';
@@ -22,18 +23,27 @@ const PAGE_CONTENT = 'The page inside the layout';
 function renderLayout({
   countryId = 'us',
   pathname = `/${countryId}/admin/users`,
-}: { countryId?: CountryId; pathname?: string } = {}) {
+  page = <p>{PAGE_CONTENT}</p>,
+}: { countryId?: CountryId; pathname?: string; page?: ReactNode } = {}) {
   return render(
     <UserSessionProviders
       queryClient={createTestQueryClient()}
       session={{ auth: signedInAuthValue(), countryId, pathname }}
     >
-      <OrganizationSettingsLayout>
-        <p>{PAGE_CONTENT}</p>
-      </OrganizationSettingsLayout>
+      <OrganizationSettingsLayout>{page}</OrganizationSettingsLayout>
       <MeStatusProbe />
     </UserSessionProviders>,
     countryId
+  );
+}
+
+/** A page with its own state, which it loses if it is mounted again. */
+function PageWithState() {
+  const [clicks, setClicks] = useState(0);
+  return (
+    <button type="button" onClick={() => setClicks(clicks + 1)}>
+      Clicked {clicks} times
+    </button>
   );
 }
 
@@ -105,5 +115,21 @@ describe('OrganizationSettingsLayout', () => {
     expect(screen.getByText('/v2/me status: pending')).toBeInTheDocument();
     expect(organizationSidebar()).not.toBeInTheDocument();
     expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument();
+  });
+
+  test('given the sidebar appears once /v2/me answers then the page keeps its state', async () => {
+    // Given
+    const user = userEvent.setup();
+    const pendingMe = deferredResponse();
+    answerMe(fetchMock, { meResponse: () => pendingMe.response });
+    renderLayout({ page: <PageWithState /> });
+    await user.click(screen.getByRole('button', { name: 'Clicked 0 times' }));
+
+    // When
+    pendingMe.answer(itemResponse(meItemOfType('admin')));
+
+    // Then
+    expect(await screen.findByRole('navigation', { name: 'My organization' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clicked 1 times' })).toBeInTheDocument();
   });
 });
