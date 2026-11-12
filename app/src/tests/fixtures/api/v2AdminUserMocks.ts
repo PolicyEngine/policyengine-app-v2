@@ -5,6 +5,7 @@ import {
   errorResponse,
   itemResponse,
   meItemOfType,
+  noContentResponse,
   okResponse,
   PE_USER_ID,
   TIMESTAMPS,
@@ -62,7 +63,24 @@ export const ADMIN_API_MESSAGES = {
   LAST_ADMIN_DEMOTION: "The last admin can't be demoted; make another user an admin first",
   NO_SIGNED_IN_USER: 'No signed-in user has this ID.',
   ADMINS_ONLY: 'Only admins may use these routes.',
+  LAST_ADMIN_DELETION:
+    "The last admin's account can't be deleted; make another user an admin first",
+  ACCOUNT_DELETION_UNAVAILABLE: 'Account deletion is temporarily unavailable; nothing was deleted',
+  OPERATION_FAILED: 'The operation could not be completed.',
 } as const;
+
+/**
+ * The Public API's 502 for an admin's deletion whose data was deleted but
+ * `undeletedCount` of the user's `totalCount` Auth0 users were not.
+ */
+export function auth0UsersLeftMessage(undeletedCount: number, totalCount: number): string {
+  return (
+    `The account's data was deleted, but ${undeletedCount} of the ${totalCount} Auth0 users ` +
+    "of its sign-in identities from this Public API's Auth0 tenant could not be deleted; " +
+    'find them in Auth0 by the email the admin user routes showed for this user before the ' +
+    'deletion, and delete them there'
+  );
+}
 
 /** A signed-in user as `/v2/admin/users` lists it. */
 export function adminUserItem(overrides: Partial<AdminUserItem> = {}): AdminUserItem {
@@ -147,6 +165,10 @@ export interface FakeAdminApiOptions {
    * error and changes nothing.
    */
   patchRefusal?: { status: number; message: string };
+  /** A refusal of every account deletion (such as 503): nothing is deleted. */
+  deleteRefusal?: { status: number; message: string };
+  /** A 502 with this message after a deletion, which deletes the user first, as the API does. */
+  auth0DeletionFailure?: string;
 }
 
 /**
@@ -157,7 +179,9 @@ export interface FakeAdminApiOptions {
  * records nothing, whatever was expected. Otherwise a stored type other
  * than `expected_user_type` is a 409, and `patchRefusal` (a last-admin
  * refusal) applies; a change is recorded newest first, as the signed-in
- * admin's.
+ * admin's. A DELETE of a user who exists answers `deleteRefusal` if set;
+ * otherwise it deletes the user and their changes, and answers 204, or
+ * `auth0DeletionFailure`'s 502.
  */
 export function answerAdminApi(
   fetchMock: Mock,
@@ -166,6 +190,8 @@ export function answerAdminApi(
     users = [GRACE, ALAN],
     changes = [],
     patchRefusal,
+    deleteRefusal,
+    auth0DeletionFailure,
   }: FakeAdminApiOptions = {}
 ) {
   const state = {
@@ -237,6 +263,18 @@ export function answerAdminApi(
       );
       user.user_type = newUserType;
       return itemResponse(user);
+    }
+    if (userRoute && !userRoute[2] && method === 'DELETE') {
+      const userIndex = state.users.findIndex((candidate) => candidate.id === userRoute[1]);
+      if (userIndex === -1) {
+        return userResponse(userRoute[1]);
+      }
+      if (deleteRefusal) {
+        return errorResponse(deleteRefusal.status, deleteRefusal.message);
+      }
+      state.users.splice(userIndex, 1);
+      state.changes = state.changes.filter((change) => change.user_id !== userRoute[1]);
+      return auth0DeletionFailure ? errorResponse(502, auth0DeletionFailure) : noContentResponse();
     }
     return errorResponse(404, 'Not found');
   });
