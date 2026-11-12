@@ -1216,6 +1216,125 @@
         }
       }
     },
+    "/v2/admin/users/{user_id}/saved-items": {
+      "get": {
+        "summary": "Read a signed-in user's saved policies, households, simulations and reports",
+        "description": "Admins only; read-only. Returns what the user's own GET /v2/me/export returns, in every country: the user, with the email admins see for it, and every saved policy, household, simulation and report. An unauthenticated user's ID is not found (404). Each read is recorded with the admin's and the user's IDs.",
+        "operationId": "get_user_saved_items_v2_admin_users__user_id__saved_items_get",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserSavedItemsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No signed-in user has this ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The user's type is no longer the expected one, or the change would leave no admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v2/user-reports": {
       "post": {
         "summary": "Save a v1 report for the current user",
@@ -9127,6 +9246,30 @@
         "title": "AdminUserResult",
         "description": "One signed-in user."
       },
+      "AdminUserSavedItemsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/MeExportResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "AdminUserSavedItemsResponse",
+        "description": "The response for a signed-in user's saved items, in every country.\n\n``result`` is what the user's own ``GET /v2/me/export`` returns: the user,\nwith the email admins see for it, and every policy, household, simulation\nand report it saved."
+      },
       "CountryItem": {
         "properties": {
           "id": {
@@ -9695,7 +9838,7 @@
           "reports"
         ],
         "title": "MeExportResult",
-        "description": "The current user and every policy, household, simulation and report it saved.\n\nThe export covers every country, not only the requested one."
+        "description": "A user and every policy, household, simulation and report it saved.\n\nThe export covers every country, not only the requested one.\n``GET /v2/me/export`` returns the current user's, and\n``GET /v2/admin/users/{user_id}/saved-items`` a signed-in user's, to admins."
       },
       "MeItem": {
         "properties": {

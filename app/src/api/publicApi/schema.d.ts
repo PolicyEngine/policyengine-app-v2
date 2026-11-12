@@ -136,6 +136,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v2/admin/users/{user_id}/saved-items': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read a signed-in user's saved policies, households, simulations and reports
+     * @description Admins only; read-only. Returns what the user's own GET /v2/me/export returns, in every country: the user, with the email admins see for it, and every saved policy, household, simulation and report. An unauthenticated user's ID is not found (404). Each read is recorded with the admin's and the user's IDs.
+     */
+    get: operations['get_user_saved_items_v2_admin_users__user_id__saved_items_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v2/user-reports': {
     parameters: {
       query?: never;
@@ -898,6 +918,25 @@ export interface components {
       item: components['schemas']['AdminUserItem'];
     };
     /**
+     * AdminUserSavedItemsResponse
+     * @description The response for a signed-in user's saved items, in every country.
+     *
+     *     ``result`` is what the user's own ``GET /v2/me/export`` returns: the user,
+     *     with the email admins see for it, and every policy, household, simulation
+     *     and report it saved.
+     */
+    AdminUserSavedItemsResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['MeExportResult'];
+    };
+    /**
      * CountryItem
      * @description One served country and the calculations it supports.
      *
@@ -1175,9 +1214,11 @@ export interface components {
     };
     /**
      * MeExportResult
-     * @description The current user and every policy, household, simulation and report it saved.
+     * @description A user and every policy, household, simulation and report it saved.
      *
      *     The export covers every country, not only the requested one.
+     *     ``GET /v2/me/export`` returns the current user's, and
+     *     ``GET /v2/admin/users/{user_id}/saved-items`` a signed-in user's, to admins.
      */
     MeExportResult: {
       user: components['schemas']['MeItem'] | null;
@@ -4355,6 +4396,100 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['UserTypeChangeListResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No signed-in user has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  get_user_saved_items_v2_admin_users__user_id__saved_items_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminUserSavedItemsResponse'];
         };
       };
       /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
