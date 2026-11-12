@@ -163,4 +163,23 @@ describe('v2Invitations', () => {
     expect(isEmailNotVerified(refusal)).toBe(false);
     expect(invitationRefusalCode(failure)).toBeNull();
   });
+
+  test('given a refusal with a code the contract does not list then it has no refusal code', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({ status: 'error', message: 'Refused.', code: 'a_newer_reason' }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } }
+      )
+    );
+
+    // When
+    const refusal = await acceptInvitation(context.client, 'us', INVITATION_TOKEN).catch(
+      (caught: unknown) => caught
+    );
+
+    // Then
+    expect(invitationRefusalCode(refusal)).toBeNull();
+  });
 });

@@ -24,11 +24,14 @@ export type InvitableUserType = UserInvitationItem['user_type'];
 /** The signed-in user's type after accepting, and whether the acceptance changed it. */
 export type InvitationAcceptance =
   AcceptPath['responses'][200]['content']['application/json']['result']['item'];
-/** Why an acceptance was refused, as the Public API names it. */
-export type InvitationRefusalCode =
-  AcceptPath['responses'][410]['content']['application/json']['code'];
+/** The `code` of a refused acceptance, as the Public API's document types it: any short string. */
+type DocumentedRefusalCode = AcceptPath['responses'][410]['content']['application/json']['code'];
 
-const INVITATION_REFUSAL_CODES: readonly string[] = [
+/**
+ * The codes the Public API's route contract gives a refused acceptance.
+ * Its document types `code` as any string, so the app names them here.
+ */
+const INVITATION_REFUSAL_CODES = [
   'auth0_unavailable',
   'invitation_not_found',
   'invitation_revoked',
@@ -37,7 +40,14 @@ const INVITATION_REFUSAL_CODES: readonly string[] = [
   'inviter_not_admin',
   'email_not_verified',
   'email_mismatch',
-] satisfies readonly InvitationRefusalCode[];
+] as const satisfies readonly DocumentedRefusalCode[];
+
+/** Why an acceptance was refused. */
+export type InvitationRefusalCode = (typeof INVITATION_REFUSAL_CODES)[number];
+
+function isInvitationRefusalCode(code: string): code is InvitationRefusalCode {
+  return (INVITATION_REFUSAL_CODES as readonly string[]).includes(code);
+}
 
 export interface NewInvitation {
   email: string;
@@ -118,8 +128,8 @@ export async function acceptInvitation(
 
 /** The code of a refused acceptance, or null for any other error. */
 export function invitationRefusalCode(error: unknown): InvitationRefusalCode | null {
-  return isV2ApiError(error) && error.code !== null && INVITATION_REFUSAL_CODES.includes(error.code)
-    ? (error.code as InvitationRefusalCode)
+  return isV2ApiError(error) && error.code !== null && isInvitationRefusalCode(error.code)
+    ? error.code
     : null;
 }
 
