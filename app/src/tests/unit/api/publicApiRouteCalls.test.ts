@@ -29,6 +29,7 @@ import {
   fetchUserTypeChanges,
   searchAdminUsers,
 } from '@/api/v2AdminUsers';
+import { fetchAdminUserSavedItems } from '@/api/v2AdminUserSavedItems';
 import { AccountAssociationRoutes } from '@/api/v2Associations';
 import { deleteMe, exportMe, fetchMe, upgradeAccount } from '@/api/v2Me';
 import { createV2UserClient } from '@/api/v2UserClient';
@@ -228,6 +229,12 @@ const PUBLIC_API_CALLS: ReadonlyArray<[string, () => Promise<unknown>, string, s
     () => fetchUserTypeChanges(browserUserClient(), SAVED_RECORD_ID),
     'GET',
     `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`,
+  ],
+  [
+    "a user's saved items, read by an admin",
+    () => fetchAdminUserSavedItems(browserUserClient(), SAVED_RECORD_ID),
+    'GET',
+    `/v2/admin/users/${SAVED_RECORD_ID}/saved-items`,
   ],
   ['the account export', () => exportMe(browserUserClient(), 'us'), 'GET', '/v2/me/export'],
   ['the account deletion', () => deleteMe(browserUserClient(), 'us'), 'DELETE', '/v2/me'],

@@ -54,6 +54,7 @@ const CALCULATOR_OPERATIONS: ReadonlyArray<[string, string, string]> = [
   ['GET', `/v2/admin/users/${SAVED_RECORD_ID}`, 'admin user'],
   ['PATCH', `/v2/admin/users/${SAVED_RECORD_ID}`, 'admin user'],
   ['GET', `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`, 'admin user type changes'],
+  ['GET', `/v2/admin/users/${SAVED_RECORD_ID}/saved-items`, 'admin user saved items'],
 ];
 
 // Requests the calculator never sends, many of them neighbours of ones it
@@ -90,9 +91,12 @@ const REFUSED_REQUESTS: ReadonlyArray<[string, string]> = [
   ['GET', '/v2/model-catalog?country_id=us'],
   ['POST', '/v2/admin/users'],
   ['DELETE', `/v2/admin/users/${SAVED_RECORD_ID}`],
-  ['GET', `/v2/admin/users/${SAVED_RECORD_ID}/saved-items`],
   ['GET', '/v2/admin/users/not-a-uuid'],
   ['PATCH', `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`],
+  ['POST', `/v2/admin/users/${SAVED_RECORD_ID}/saved-items`],
+  ['PATCH', `/v2/admin/users/${SAVED_RECORD_ID}/saved-items`],
+  ['DELETE', `/v2/admin/users/${SAVED_RECORD_ID}/saved-items`],
+  ['GET', '/v2/admin/users/not-a-uuid/saved-items'],
 ];
 
 describe('matchAllowedOperation', () => {

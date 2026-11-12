@@ -23,7 +23,8 @@ export interface AdminUserSearch {
   limit: number;
 }
 
-function adminUserPath(userId: string): string {
+/** The admin routes' path for one user, `admin/users/{user_id}`, the ID encoded. */
+export function adminUserPath(userId: string): string {
   return `admin/users/${encodeURIComponent(userId)}`;
 }
 
