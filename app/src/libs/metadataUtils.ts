@@ -47,10 +47,13 @@ export const getLastSupportedYear = createSelector(
 export const getDateRange = createSelector(
   (state: RootState) => state.metadata.economyOptions.time_period,
   (timePeriods) => {
+    // Applies only until the country's metadata loads, and is shared by the US
+    // and the UK, whose years both start in 2024. Once loaded, the metadata's
+    // own years replace it.
     if (!timePeriods || timePeriods.length === 0) {
       return {
-        minDate: '2022-01-01',
-        maxDate: '2035-12-31',
+        minDate: '2024-01-01',
+        maxDate: '2036-12-31',
       };
     }
 
