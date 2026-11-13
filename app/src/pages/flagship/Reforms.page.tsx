@@ -21,6 +21,9 @@ import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
 import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import MissingParametersTransferDialog from '@/components/flagship/MissingParametersTransferDialog';
 import ProvisionList from '@/components/flagship/ProvisionList';
+import ReformParameterTable, {
+  parameterBreadcrumb,
+} from '@/components/flagship/ReformParameterTable';
 import ReformReports, { LatestReportBadge } from '@/components/flagship/ReformReports';
 import SavedReportTransferDialog from '@/components/flagship/SavedReportTransferDialog';
 import {
@@ -49,7 +52,6 @@ import {
   loadProvisionsIntoDraft,
   provisionsToRun,
   reformToProvisions,
-  yearReadDate,
   type ProvisionDetails,
 } from '@/libs/draftReform';
 import { BillFilters, billPlace, filterBills, NO_BILL_FILTERS } from '@/libs/flagship/billFilters';
@@ -58,7 +60,7 @@ import {
   billReportProvisions,
   billScoresOtherThanWriteUp,
 } from '@/libs/flagship/billProvisions';
-import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
+import { dayLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import {
   catalogMissingNamesForRoutes,
@@ -74,11 +76,9 @@ import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { reformParameterNames } from '@/libs/flagship/v3ParameterNames';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
-import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { currencySymbol } from '@/utils/formatters';
-import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
-import { formatValue, getCurrentValue } from '@/utils/parameterValues';
+import { getCurrentValue } from '@/utils/parameterValues';
 
 /** How a reform came about: the report's record keeps it; the page doesn't show it. */
 const SOURCE_LABELS: Record<ReformSource, string> = {
@@ -114,41 +114,6 @@ const filterControl: React.CSSProperties = {
 /** The year a saved reform's report runs: its first change, or this year once that is past. */
 const reformRunYear = (reform: Reform) =>
   billRunYear(reform.parameters.map((parameter) => ({ intervals: parameter.values })));
-
-/** A saved reform's parameter rows: name, current law, the reform's value, when it starts. */
-const PARAMETER_ROW: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr) minmax(88px, 140px) minmax(120px, 180px) minmax(64px, 96px)',
-  alignItems: 'center',
-  columnGap: spacing.md,
-  padding: `${spacing.sm} 0`,
-  borderBottom: `1px solid ${colors.border.light}`,
-};
-
-const PARAMETER_HEADING: React.CSSProperties = {
-  fontSize: typography.fontSize.xs,
-  fontWeight: typography.fontWeight.medium,
-  color: colors.text.secondary,
-};
-
-const PARAMETER_VALUE: React.CSSProperties = {
-  fontSize: typography.fontSize.sm,
-  fontWeight: typography.fontWeight.medium,
-  color: colors.text.primary,
-  fontVariantNumeric: 'tabular-nums',
-};
-
-const PARAMETER_MUTED: React.CSSProperties = {
-  fontSize: typography.fontSize.sm,
-  color: colors.text.secondary,
-  fontVariantNumeric: 'tabular-nums',
-  whiteSpace: 'nowrap',
-};
-
-/** A value as the row reads it: True/False, as Build's switch says. */
-function displayValue(value: unknown, unit: string | null): string {
-  return typeof value === 'boolean' ? (value ? 'True' : 'False') : formatValue(value, unit);
-}
 
 /** Small-caps muted eyebrow — the one structural label cards carry. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -391,9 +356,7 @@ export default function ReformsPage() {
   });
 
   const resolveBreadcrumb = (path: string, fallback?: string) =>
-    parameters?.[path]
-      ? formatLabelParts(getHierarchicalLabels(path, parameters))
-      : (fallback ?? path);
+    parameterBreadcrumb(path, parameters, fallback);
 
   // Each with its dated values, read against the law in the bill's run year
   // — or, for a bill that is law already, the law the tracker compared it with.
@@ -461,15 +424,6 @@ export default function ReformsPage() {
   const billScoresOtherChange = (bill: TrackedBill) =>
     !billAlreadyCurrentLaw(bill.provisions, parameters, billRunYear(bill.provisions)) &&
     billScoresOtherThanWriteUp(bill.provisions, bill.changes);
-
-  /** Current law for a parameter in `year`. */
-  const currentLawAt = (path: string, year: number) => {
-    const values = parameters?.[path]?.values;
-    return values
-      ? (new ValueIntervalCollection(values).getValueAtDate(yearReadDate(year, countryId)) ??
-          getCurrentValue(values))
-      : undefined;
-  };
 
   const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matches = (haystack: string) =>
@@ -864,139 +818,13 @@ export default function ReformsPage() {
             </Stack>
           )}
 
-          {parametersFailed ? (
-            <ErrorState
-              compact
-              title="Could not load the parameters"
-              onRetry={viewedParameters.retry}
-            />
-          ) : (
-            <div role="table" aria-label="Parameters">
-              <div role="row" style={{ ...PARAMETER_ROW, paddingTop: 0 }}>
-                {['Parameter', 'Current law', 'Your reform', 'From'].map((heading) => (
-                  <span key={heading} role="columnheader" style={PARAMETER_HEADING}>
-                    {heading}
-                  </span>
-                ))}
-              </div>
-              {!metadataReady ? (
-                // Names and current law come with the model's metadata: until
-                // then each row holds its place, rather than empty boxes.
-                <SkeletonRegion label="Loading parameters">
-                  {selectedReform.parameters.map((parameter) => (
-                    <div key={parameter.name} style={PARAMETER_ROW}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <SkeletonLine width="60%" />
-                        <SkeletonLine width="40%" height={10} />
-                      </div>
-                      <SkeletonLine width={56} />
-                      <SkeletonLine width={64} />
-                      <SkeletonLine width={64} />
-                    </div>
-                  ))}
-                </SkeletonRegion>
-              ) : (
-                selectedReform.parameters.map((parameter) => {
-                  const unit = parameters[parameter.name]?.unit ?? null;
-                  const first = parameter.values[0];
-                  // Current law where the change starts, not today.
-                  const baseline = first
-                    ? currentLawAt(parameter.name, Number(first.startDate.slice(0, 4)))
-                    : getCurrentValue(parameters[parameter.name]?.values);
-                  // One row per period the reform sets, each read against
-                  // current law in its own first year.
-                  const periods = parameter.values.length > 0 ? parameter.values : [];
-                  const parts = resolveBreadcrumb(parameter.name).split(' → ');
-                  const name = parts[parts.length - 1] ?? parameter.name;
-                  const context = parts.slice(0, -1).join(' → ');
-                  const nameCell = (
-                    <div
-                      role="cell"
-                      style={{ minWidth: 0 }}
-                      title={resolveBreadcrumb(parameter.name)}
-                    >
-                      <Text
-                        style={{
-                          margin: 0,
-                          fontSize: typography.fontSize.sm,
-                          lineHeight: '20px',
-                          fontWeight: typography.fontWeight.medium,
-                          color: colors.text.primary,
-                        }}
-                      >
-                        {name.charAt(0).toUpperCase() + name.slice(1)}
-                      </Text>
-                      {context && (
-                        <Text
-                          className="tw:truncate"
-                          style={{
-                            margin: 0,
-                            fontSize: typography.fontSize.xs,
-                            color: colors.text.secondary,
-                          }}
-                        >
-                          {context}
-                        </Text>
-                      )}
-                    </div>
-                  );
-                  if (periods.length === 0) {
-                    return (
-                      <div key={parameter.name} role="row" style={PARAMETER_ROW}>
-                        {nameCell}
-                        <span role="cell" style={PARAMETER_MUTED}>
-                          {displayValue(baseline, unit)}
-                        </span>
-                        <span role="cell" style={PARAMETER_VALUE} />
-                        <span role="cell" style={PARAMETER_MUTED} />
-                      </div>
-                    );
-                  }
-                  // Each column lists the periods, one line each, so a period
-                  // reads straight across; the name sits at the top.
-                  const column = (
-                    render: (period: (typeof periods)[number]) => React.ReactNode,
-                    style: React.CSSProperties
-                  ) => (
-                    <span
-                      role="cell"
-                      style={{
-                        ...style,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: spacing.xs,
-                      }}
-                    >
-                      {periods.map((period) => (
-                        <span key={period.startDate} style={{ lineHeight: '20px' }}>
-                          {render(period)}
-                        </span>
-                      ))}
-                    </span>
-                  );
-                  return (
-                    <div
-                      key={parameter.name}
-                      role="row"
-                      style={{ ...PARAMETER_ROW, alignItems: 'start' }}
-                    >
-                      {nameCell}
-                      {column(
-                        (period) =>
-                          displayValue(
-                            currentLawAt(parameter.name, Number(period.startDate.slice(0, 4))),
-                            unit
-                          ),
-                        PARAMETER_MUTED
-                      )}
-                      {column((period) => displayValue(period.value, unit), PARAMETER_VALUE)}
-                      {column((period) => periodLabel(period, countryId), PARAMETER_MUTED)}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
+          <ReformParameterTable
+            reformParameters={selectedReform.parameters}
+            reformHeading="Your reform"
+            metadataReady={metadataReady}
+            metadataFailed={parametersFailed}
+            onRetryMetadata={viewedParameters.retry}
+          />
 
           <div
             style={{
