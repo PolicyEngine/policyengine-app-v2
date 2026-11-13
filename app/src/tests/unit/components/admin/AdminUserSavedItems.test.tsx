@@ -20,6 +20,7 @@ import {
   answerPolicyReads,
   answerReportReads,
   answerSavedItems,
+  answerSimulationReads,
   GRACE_SAVED_ITEMS,
   GRACE_V2_POLICY,
   HOUSEHOLD_VARIABLES,
@@ -536,8 +537,11 @@ describe('AdminUserSavedItems', () => {
 });
 
 describe('AdminUserSavedItems policies and reports', () => {
-  /** A report Grace ran from her US policy, saved with the default saved report's name. */
-  function reportFromUsPolicy(overrides: Parameters<typeof savedReport>[0] = {}) {
+  /**
+   * A saved report Grace ran from one of her policies: by default her US
+   * policy, with the default saved report's name and v1 report.
+   */
+  function reportFromPolicy(overrides: Parameters<typeof savedReport>[0] = {}) {
     return savedReport({
       name: SAVED_ITEM_NAMES.REPORT,
       legacy_report_id: SAVED_TARGET_IDS.V1_REPORT,
@@ -547,7 +551,7 @@ describe('AdminUserSavedItems policies and reports', () => {
     });
   }
 
-  /** The dialog's list of reports run from the policy, once its report rows have their status. */
+  /** The dialog's list of the reports run from the policy. */
   function reportsIn(dialog: HTMLElement): HTMLElement {
     return within(dialog).getByRole('region', { name: 'Reports' });
   }
@@ -584,12 +588,14 @@ describe('AdminUserSavedItems policies and reports', () => {
       policies,
       households,
       reports,
+      simulations,
     }: {
       savedItems?: UserSavedItems;
       queryClient?: QueryClient;
       policies?: Parameters<typeof answerPolicyReads>[1];
       households?: Parameters<typeof answerHouseholdReads>[1];
       reports?: Parameters<typeof answerReportReads>[1];
+      simulations?: Parameters<typeof answerSimulationReads>[1];
     } = {}
   ) {
     const { user } = await openUserDetails(
@@ -600,9 +606,10 @@ describe('AdminUserSavedItems policies and reports', () => {
     const policyReads = answerPolicyReads(fetchMock, policies);
     const householdReads = answerHouseholdReads(fetchMock, households);
     const reportReads = answerReportReads(fetchMock, reports);
+    const simulationReads = answerSimulationReads(fetchMock, simulations);
     await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
     await screen.findByRole('table', { name: 'Saved policies' });
-    return { user, policyReads, householdReads, reportReads };
+    return { user, policyReads, householdReads, reportReads, simulationReads };
   }
 
   async function openHousehold(user: ReturnType<typeof userEvent.setup>, name: string) {
@@ -973,12 +980,12 @@ describe('AdminUserSavedItems policies and reports', () => {
       savedItems: {
         ...GRACE_SAVED_ITEMS,
         reports: [
-          reportFromUsPolicy({
+          reportFromPolicy({
             id: OLDER_REPORT_ID,
             legacy_report_id: OLDER_V1_REPORT_ID,
             last_run_at: null,
           }),
-          reportFromUsPolicy(),
+          reportFromPolicy(),
         ],
       },
       reports: {
@@ -1025,7 +1032,7 @@ describe('AdminUserSavedItems policies and reports', () => {
           ...GRACE_SAVED_ITEMS.policies,
           savedPolicy({ id: COMPARISON_POLICY_ID, name: COMPARISON_POLICY_NAME }),
         ],
-        reports: [reportFromUsPolicy({ baseline_user_policy_id: COMPARISON_POLICY_ID })],
+        reports: [reportFromPolicy({ baseline_user_policy_id: COMPARISON_POLICY_ID })],
       },
     });
 
@@ -1057,7 +1064,7 @@ describe('AdminUserSavedItems policies and reports', () => {
       savedItems: {
         ...GRACE_SAVED_ITEMS,
         reports: [
-          reportFromUsPolicy({
+          reportFromPolicy({
             country_id: 'uk',
             legacy_report_id: UK_V1_REPORT_ID,
             user_policy_id: SAVED_ITEM_IDS.UK_POLICY,
@@ -1085,6 +1092,107 @@ describe('AdminUserSavedItems policies and reports', () => {
       links: [],
       note: "These reports can't be opened while the United Kingdom uses the older interface.",
     });
+  });
+
+  test('given a report run against current law from a policy saved in another country then its row says nothing about what it was compared with', async () => {
+    // Given
+    // The UK's current law is policy 1; the page's US metadata knows only
+    // the US's, policy 2.
+    const UK_V1_REPORT_ID = 617;
+    const UK_BASELINE_SIMULATION_ID = '7101';
+    const { user } = await showSavedItems(GRACE.email!, {
+      savedItems: {
+        ...GRACE_SAVED_ITEMS,
+        reports: [
+          reportFromPolicy({
+            country_id: 'uk',
+            legacy_report_id: UK_V1_REPORT_ID,
+            user_policy_id: SAVED_ITEM_IDS.UK_POLICY,
+          }),
+        ],
+      },
+      policies: {
+        v2: {},
+        v1: { [`uk/${SAVED_TARGET_IDS.V1_POLICY}`]: UK_V1_POLICY_JSON },
+      },
+      reports: {
+        [`uk/${UK_V1_REPORT_ID}`]: v1Report({
+          id: UK_V1_REPORT_ID,
+          country_id: 'uk',
+          simulation_1_id: UK_BASELINE_SIMULATION_ID,
+        }),
+      },
+      simulations: { [`uk/${UK_BASELINE_SIMULATION_ID}`]: 1 },
+    });
+
+    // When
+    const dialog = await openPolicy(user, 'No name');
+    await within(reportsIn(dialog)).findByText('Done');
+    await letRetriesRun();
+
+    // Then
+    expect(within(reportsIn(dialog)).queryByText(/^Compared with/)).toBeNull();
+  });
+
+  test("given a report compared with one of the user's unnamed saved policies then its row calls that policy No name, as the saved policies table does", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!, {
+      savedItems: {
+        ...GRACE_SAVED_ITEMS,
+        reports: [reportFromPolicy({ baseline_user_policy_id: SAVED_ITEM_IDS.UK_POLICY })],
+      },
+    });
+
+    // When
+    const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(reportsIn(dialog)).findByText('Done');
+
+    // Then
+    expect(within(reportsIn(dialog)).getByText(/^Compared with/).textContent).toBe(
+      'Compared with No name'
+    );
+  });
+
+  test('given a policy with reports is open then only reads were sent', async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!, {
+      savedItems: { ...GRACE_SAVED_ITEMS, reports: [reportFromPolicy()] },
+    });
+
+    // When
+    const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(reportsIn(dialog)).findByText('Done');
+    await letRetriesRun();
+
+    // Then
+    const methods = new Set(sentRequests(fetchMock).map((request) => request.split(' ')[0]));
+    expect([...methods]).toEqual(['GET']);
+  });
+
+  test("given the policy's dialog is open then its content can take keyboard focus, so it scrolls without a mouse", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+
+    // Then
+    expect(
+      within(dialog).getByRole('region', { name: 'Saved policy' }).getAttribute('tabindex')
+    ).toBe('0');
+  });
+
+  test("given the household's dialog is open then its content can take keyboard focus, so it scrolls without a mouse", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const dialog = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+
+    // Then
+    expect(
+      within(dialog).getByRole('region', { name: 'Saved household' }).getAttribute('tabindex')
+    ).toBe('0');
   });
 
   test("given the admin opens a household then it opens in a modal dialog, headed with the household's name", async () => {

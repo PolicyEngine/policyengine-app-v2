@@ -424,6 +424,41 @@ export function answerReportReads(
 }
 
 /**
+ * Makes `fetchMock` also answer the v1 simulation reads a report row sends
+ * for its baseline, `GET /{country}/simulation/{id}`, with the policy each
+ * simulation ran, from `policyIds`, by `{country}/{id}`. An unknown
+ * simulation is a 404. Returns the paths read, in order.
+ */
+export function answerSimulationReads(
+  fetchMock: Mock,
+  policyIds: Readonly<Record<string, number>> = {}
+) {
+  const simulationReads: string[] = [];
+  const answerAsBefore = fetchMock.getMockImplementation()!;
+  fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const path = publicApiPathOf(input);
+    const simulationRoute = /^\/(\w+)\/simulation\/(\d+)$/.exec(path);
+    if (requestMethodOf(input, init) !== 'GET' || !simulationRoute) {
+      return answerAsBefore(input, init);
+    }
+    simulationReads.push(path);
+    const [, countryId, simulationId] = simulationRoute;
+    const policyId = policyIds[`${countryId}/${simulationId}`];
+    return policyId === undefined
+      ? errorResponse(404, 'Simulation not found.')
+      : okResponse({
+          id: Number(simulationId),
+          country_id: countryId,
+          api_version: '1.0.0',
+          population_id: countryId,
+          population_type: 'geography',
+          policy_id: String(policyId),
+        });
+  });
+  return simulationReads;
+}
+
+/**
  * Makes `fetchMock`, already set up by `answerAdminApi`, also answer
  * `GET /v2/admin/users/{user_id}/saved-items` as the Public API does: a
  * user in `apiState` gets its entry of `savedItemsByUserId`, or nothing
