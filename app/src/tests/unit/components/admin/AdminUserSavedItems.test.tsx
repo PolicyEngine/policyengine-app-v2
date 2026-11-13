@@ -1002,6 +1002,7 @@ describe('AdminUserSavedItems policies and reports', () => {
     // When
     const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
     await within(reportsIn(dialog)).findByText('Done');
+    await within(reportsIn(dialog)).findByText('2027 report');
 
     // Then
     expect({
@@ -1103,9 +1104,11 @@ describe('AdminUserSavedItems policies and reports', () => {
     // Then
     expect({
       links: within(reportsIn(dialog)).queryAllByRole('link'),
+      buttons: within(reportsIn(dialog)).queryAllByRole('button'),
       note: within(reportsIn(dialog)).getByText(/^These reports can't be opened/).textContent,
     }).toEqual({
       links: [],
+      buttons: [],
       note: "These reports can't be opened while the United Kingdom uses the older interface.",
     });
   });
@@ -1116,7 +1119,7 @@ describe('AdminUserSavedItems policies and reports', () => {
     // the US's, policy 2.
     const UK_V1_REPORT_ID = 617;
     const UK_BASELINE_SIMULATION_ID = '7101';
-    const { user } = await showSavedItems(GRACE.email!, {
+    const { user, simulationReads } = await showSavedItems(GRACE.email!, {
       savedItems: {
         ...GRACE_SAVED_ITEMS,
         reports: [
@@ -1147,7 +1150,10 @@ describe('AdminUserSavedItems policies and reports', () => {
     await letRetriesRun();
 
     // Then
-    expect(within(reportsIn(dialog)).queryByText(/^Compared with/)).toBeNull();
+    expect({
+      comparison: within(reportsIn(dialog)).queryByText(/^Compared with/),
+      simulationReads,
+    }).toEqual({ comparison: null, simulationReads: [] });
   });
 
   test("given a report compared with one of the user's unnamed saved policies then its row calls that policy No name, as the saved policies table does", async () => {

@@ -124,10 +124,10 @@ const CONTENT_PADDING = `${spacing.xl} ${spacing['3xl']} ${spacing.xl} ${spacing
 
 /**
  * The width the reforms page shows a saved reform at (`WorkspaceLayout`'s
- * reading width, 760px), with the content's padding, and never wider than
- * the window less a margin.
+ * reading width, 760px), with the content's padding and the dialog's 1px
+ * border on each side, and never wider than the window less a margin.
  */
-const DIALOG_MAX_WIDTH = `min(calc(760px + ${spacing.xl} + ${spacing['3xl']}), calc(100% - 2rem))`;
+const DIALOG_MAX_WIDTH = `min(calc(760px + ${spacing.xl} + ${spacing['3xl']} + 2px), calc(100% - 2rem))`;
 
 /**
  * A modal dialog over the admin page showing one of a user's saved items,
