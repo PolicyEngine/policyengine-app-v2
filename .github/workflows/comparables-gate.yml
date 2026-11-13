@@ -1,0 +1,122 @@
+name: Comparables gate
+
+# Every research entry not on the list of entries live before the gate
+# (website/src/data/comparablesGrandfathered.json) must name a complete record
+# of its comparables search in PolicyEngine/policyengine-scorecard. The Tests
+# job checks each block's shape without the network; this job downloads the
+# scorecard's published index from its main branch and checks that every
+# block resolves to a search the index lists, and that the grandfather list
+# has not grown after the cutover. The scorecard is public, so the download
+# needs no token. A failed download fails the job: the gate fails closed.
+#
+# It runs on every pull request (no path filter, so it can be a required
+# check), on every push to main, and weekly, so a record removed from the
+# scorecard shows up without waiting for the next change. A failed weekly
+# run opens an issue.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned here, not read from the change under test, so a change cannot
+  # point the gate at another index. A test checks comparables.ts agrees.
+  SCORECARD_INDEX_URL: https://raw.githubusercontent.com/PolicyEngine/policyengine-scorecard/main/data/comparables/index.json
+
+jobs:
+  resolve:
+    name: Comparables resolve against the scorecard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      # Same Node as the Tests job (pr.yaml): vitest runs on Node.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download the scorecard's comparables index
+        run: |
+          curl --fail --silent --show-error --location --retry 5 --retry-all-errors \
+            --output "$RUNNER_TEMP/comparables-index.json" "$SCORECARD_INDEX_URL"
+          node -e "const i=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));console.log(Object.keys(i.analyses).length+' records in the scorecard index ('+i.schema+')')" "$RUNNER_TEMP/comparables-index.json"
+          echo "COMPARABLES_INDEX_PATH=$RUNNER_TEMP/comparables-index.json" >> "$GITHUB_ENV"
+
+      # The registries, grandfather list and featured banner on the branch this
+      # change merges into: the base of a pull request, or main before a push.
+      # None on a scheduled or manual run. A base the checkout cannot read
+      # fails the job, rather than passing as if there were none.
+      - name: The registries before this change
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          dir="$RUNNER_TEMP/comparables-base"
+          mkdir -p "$dir"
+          if [ -n "$BASE_SHA" ] && [ "$BASE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            if ! git cat-file -e "$BASE_SHA^{commit}"; then
+              echo "::error::cannot read the base commit $BASE_SHA"
+              exit 1
+            fi
+            for path in \
+              app/src/data/apps/apps.json \
+              app/src/data/posts/posts.json \
+              website/src/data/comparablesGrandfathered.json \
+              website/src/components/home/FeaturedResearchBanner.tsx; do
+              # a file the base does not have yet is absent, not an error
+              if git cat-file -e "$BASE_SHA:$path" 2>/dev/null; then
+                git show "$BASE_SHA:$path" > "$dir/$(basename "$path")"
+              fi
+            done
+          fi
+          ls -la "$dir"
+          echo "COMPARABLES_BASE_DIR=$dir" >> "$GITHUB_ENV"
+
+      - name: Every research entry passes the gate
+        working-directory: ./website
+        env:
+          COMPARABLES_GATE: "1"
+        run: bun run test src/__tests__/content/comparables.live.test.ts
+
+  report:
+    name: Report a failed weekly run
+    needs: resolve
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the gate's issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Comparables gate failing on main"
+          number=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+          body="The weekly comparables gate failed: $RUN_URL. A research entry's comparables block no longer resolves against the scorecard index, or the index changed shape. See website/src/data/comparables.ts."
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
