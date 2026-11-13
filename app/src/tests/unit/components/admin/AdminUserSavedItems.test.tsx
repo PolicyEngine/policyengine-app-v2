@@ -16,15 +16,18 @@ import {
   sentRequests,
 } from '@/tests/fixtures/api/v2AdminUserMocks';
 import {
+  answerHouseholdReads,
   answerPolicyReads,
   answerSavedItems,
   GRACE_SAVED_ITEMS,
   GRACE_V2_POLICY,
+  HOUSEHOLD_VARIABLES,
   REPORT_LAST_RUN_AT,
   SAVED_ITEM_IDS,
   SAVED_ITEM_NAMES,
   SAVED_POLICY_PARAMETER,
   SAVED_TARGET_IDS,
+  savedHousehold,
   savedPolicy,
   savedReport,
 } from '@/tests/fixtures/api/v2AdminUserSavedItemsMocks';
@@ -188,7 +191,7 @@ describe('AdminUserSavedItems', () => {
     ]);
   });
 
-  test('given saved households, simulations and reports then each kind lists its own', async () => {
+  test('given saved households and reports then each shows its name, country and date saved, without IDs', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!);
 
@@ -199,20 +202,9 @@ describe('AdminUserSavedItems', () => {
     // Then
     expect({
       households: rowsOf('Saved households'),
-      simulations: rowsOf('Saved simulations'),
       reports: rowsOf('Saved reports'),
     }).toEqual({
-      households: [
-        [
-          SAVED_ITEM_NAMES.HOUSEHOLD,
-          'United States',
-          `${SAVED_TARGET_IDS.V1_HOUSEHOLD} (v1)`,
-          SAVED_DATE,
-        ],
-      ],
-      simulations: [
-        [SAVED_ITEM_NAMES.SIMULATION, 'United States', SAVED_TARGET_IDS.V2_SIMULATION, SAVED_DATE],
-      ],
+      households: [[SAVED_ITEM_NAMES.HOUSEHOLD, 'United States', SAVED_DATE]],
       reports: [
         [
           `${SAVED_ITEM_NAMES.REPORT}${NEW_TAB_NOTE}`,
@@ -224,7 +216,7 @@ describe('AdminUserSavedItems', () => {
     });
   });
 
-  test('given saved items then each kind is headed with how many there are', async () => {
+  test('given saved items then policies, households and reports are each headed with how many there are, and simulations are not shown', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!);
 
@@ -236,10 +228,10 @@ describe('AdminUserSavedItems', () => {
     const headings = within(savedItemsSection())
       .getAllByRole('heading', { level: 4 })
       .map((heading) => heading.textContent);
-    expect(headings).toEqual(['Policies (2)', 'Households (1)', 'Simulations (1)', 'Reports (1)']);
+    expect(headings).toEqual(['Policies (2)', 'Households (1)', 'Reports (1)']);
   });
 
-  test('given a user who saved nothing then each kind says none are saved', async () => {
+  test('given a user who saved nothing then policies, households and reports each say none are saved', async () => {
     // Given
     const { user } = await openUserDetails(ALAN.email!);
 
@@ -252,15 +244,10 @@ describe('AdminUserSavedItems', () => {
       within(savedItemsSection())
         .getAllByText(/^No saved /)
         .map((message) => message.textContent)
-    ).toEqual([
-      'No saved policies.',
-      'No saved households.',
-      'No saved simulations.',
-      'No saved reports.',
-    ]);
+    ).toEqual(['No saved policies.', 'No saved households.', 'No saved reports.']);
   });
 
-  test('given the saved items are shown then its only controls open the policies and the report, and none changes them', async () => {
+  test('given the saved items are shown then its only controls open the policies, the household and the report, and none changes them', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!);
 
@@ -279,6 +266,7 @@ describe('AdminUserSavedItems', () => {
     expect(controls).toEqual([
       `button: ${SAVED_ITEM_NAMES.US_POLICY}`,
       'button: No name',
+      `button: ${SAVED_ITEM_NAMES.HOUSEHOLD}`,
       `link: ${SAVED_ITEM_NAMES.REPORT}${NEW_TAB_NOTE}`,
     ]);
   });
@@ -574,9 +562,40 @@ describe('AdminUserSavedItems policies and reports', () => {
       savedItems ? { [GRACE.id]: savedItems } : undefined
     );
     const policyReads = answerPolicyReads(fetchMock);
+    const householdReads = answerHouseholdReads(fetchMock);
     await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
     await screen.findByRole('table', { name: 'Saved policies' });
-    return { user, policyReads };
+    return { user, policyReads, householdReads };
+  }
+
+  async function openHousehold(user: ReturnType<typeof userEvent.setup>, name: string) {
+    const savedHouseholds = screen.getByRole('table', { name: 'Saved households' });
+    await user.click(within(savedHouseholds).getByRole('button', { name }));
+    return screen.findByRole('dialog', { name });
+  }
+
+  /** Each table in the household's panel, by name, as the text of its rows' cells. */
+  function householdTablesIn(panel: HTMLElement): Record<string, string[][]> {
+    return Object.fromEntries(
+      within(panel)
+        .getAllByRole('table')
+        .map((table) => [
+          table.getAttribute('aria-label'),
+          within(table)
+            .getAllByRole('row')
+            .slice(1)
+            .map((row) =>
+              within(row)
+                .getAllByRole('cell')
+                .map((cell) => cell.textContent ?? '')
+            ),
+        ])
+    );
+  }
+
+  /** Grace's saved items, with `household` as her only saved household. */
+  function savedItemsWithHousehold(household: ReturnType<typeof savedHousehold>): UserSavedItems {
+    return { ...GRACE_SAVED_ITEMS, households: [household] };
   }
 
   async function openPolicy(user: ReturnType<typeof userEvent.setup>, name: string) {
@@ -590,6 +609,9 @@ describe('AdminUserSavedItems policies and reports', () => {
   });
 
   afterEach(() => {
+    // Unmounted first: clearing the metadata under a mounted panel would
+    // render it again after the test.
+    cleanup();
     store.dispatch(clearMetadata());
   });
 
@@ -846,6 +868,121 @@ describe('AdminUserSavedItems policies and reports', () => {
     expect(
       within(screen.getByRole('table', { name: 'Saved policies' })).getByRole('button', {
         name: SAVED_ITEM_NAMES.US_POLICY,
+      })
+    ).toHaveFocus();
+  });
+  test('given the admin opens a household then a panel shows the values set for each person and for the household', async () => {
+    // Given
+    store.dispatch(clearMetadata());
+    seedDeductionMetadata({ variables: HOUSEHOLD_VARIABLES });
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+    await within(panel).findByRole('table', { name: 'You' });
+
+    // Then
+    expect(householdTablesIn(panel)).toEqual({
+      You: [
+        ['Age', '40'],
+        ['Employment income', '$50,000'],
+      ],
+      'Your first dependent': [['Age', '10']],
+      'Your household': [['State', 'CA']],
+    });
+  });
+
+  test('given the admin opens a household then the panel says how many people it has, its year and when it was saved', async () => {
+    // Given
+    const { user, householdReads } = await showSavedItems(GRACE.email!);
+
+    // When
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+
+    // Then
+    expect(
+      await within(panel).findByText('2 people · 2026 · saved Oct 12, 2026')
+    ).toBeInTheDocument();
+    expect(householdReads).toEqual([`/us/household/${SAVED_TARGET_IDS.V1_HOUSEHOLD}`]);
+  });
+
+  test("given a household saved in another country then its panel links to that country's admin page and reads no household", async () => {
+    // Given
+    const ukHousehold = savedHousehold({
+      name: SAVED_ITEM_NAMES.HOUSEHOLD,
+      country_id: 'uk',
+      legacy_household_id: SAVED_TARGET_IDS.V1_HOUSEHOLD,
+    });
+    const { user, householdReads } = await showSavedItems(GRACE.email!, {
+      savedItems: savedItemsWithHousehold(ukHousehold),
+    });
+
+    // When
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+
+    // Then
+    const link = within(panel).getByRole('link', {
+      name: `Open the United Kingdom admin page${NEW_TAB_NOTE}`,
+    });
+    expect({ href: link.getAttribute('href'), reads: householdReads }).toEqual({
+      href: '/uk/admin/users',
+      reads: [],
+    });
+  });
+
+  test('given the household cannot be read then the panel says so, and trying again shows it', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    answerHouseholdReads(fetchMock, {});
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved households' });
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+    expect(await within(panel).findByRole('alert')).toHaveTextContent(
+      'We could not load this household'
+    );
+    answerHouseholdReads(fetchMock);
+
+    // When
+    await user.click(within(panel).getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(await within(panel).findByRole('table', { name: 'You' })).toBeInTheDocument();
+  });
+
+  test('given a household saved only as a v2 household then the panel says it cannot show it and reads nothing', async () => {
+    // Given
+    const v2Household = savedHousehold({
+      name: SAVED_ITEM_NAMES.HOUSEHOLD,
+      household_id: 'b2000000-0000-4000-8000-000000000001',
+    });
+    const { user, householdReads } = await showSavedItems(GRACE.email!, {
+      savedItems: savedItemsWithHousehold(v2Household),
+    });
+
+    // When
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+
+    // Then
+    expect(await within(panel).findByRole('alert')).toHaveTextContent(
+      'This household is a v2 household, which this page cannot show yet.'
+    );
+    expect(householdReads).toEqual([]);
+  });
+
+  test("given the household's panel is open then closing it returns focus to the household's name", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+    await within(panel).findByRole('table', { name: 'You' });
+
+    // When
+    await user.click(within(panel).getByRole('button', { name: 'Close' }));
+
+    // Then
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(
+      within(screen.getByRole('table', { name: 'Saved households' })).getByRole('button', {
+        name: SAVED_ITEM_NAMES.HOUSEHOLD,
       })
     ).toHaveFocus();
   });

@@ -43,9 +43,12 @@ export function useAdminSavedPolicyContent(policy: AdminSavedPolicy, enabled: bo
   const v2PolicyId = policy.policy_id;
   const v1PolicyId = isLegacyId(policy.legacy_policy_id) ? String(policy.legacy_policy_id) : null;
   return useQuery<V2Policy | PolicyMetadata, Error, AdminSavedPolicyContent>({
+    // A record that points to no policy has its own key: its failure is its own.
     queryKey: v2PolicyId
       ? v2PolicyKey(countryId, v2PolicyId)
-      : v1PolicyKey(countryId, v1PolicyId ?? ''),
+      : v1PolicyId
+        ? v1PolicyKey(countryId, v1PolicyId)
+        : ['saved-policy-without-policy', policy.id],
     queryFn: () => {
       if (v2PolicyId) {
         return fetchV2PolicyItem(countryId, v2PolicyId);

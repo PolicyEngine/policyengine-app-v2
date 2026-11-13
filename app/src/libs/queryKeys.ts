@@ -89,6 +89,16 @@ export const v2PolicyKey = (countryId: string, policyId: string) =>
 /** How long a fetched v2 policy stays cached without a reader. */
 export const V2_POLICY_GC_TIME = 30 * 60 * 1000;
 
+/**
+ * A v1 household as `GET /{country}/household/{id}` returns it, per country.
+ * The admin page's saved household panel reads households through it.
+ */
+export const v1HouseholdKey = (countryId: string, householdId: string) =>
+  ['v1-household', countryId, householdId] as const;
+
+/** How long a fetched v1 household stays cached without a reader. */
+export const V1_HOUSEHOLD_GC_TIME = 30 * 60 * 1000;
+
 export const householdKeys = {
   all: ['households'] as const,
   byId: (householdId: string) => [...householdKeys.all, 'household_id', householdId] as const,

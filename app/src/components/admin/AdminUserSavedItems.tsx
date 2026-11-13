@@ -14,14 +14,22 @@ import {
   Title,
 } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
+import type { AdminSavedHousehold } from '@/hooks/useAdminSavedHousehold';
 import type { AdminSavedPolicy } from '@/hooks/useAdminSavedPolicy';
 import { useAdminUserSavedItems } from '@/hooks/useAdminUserSavedItems';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CountryId } from '@/libs/countries';
 import { getCountryLabel } from '@/utils/geographyUtils';
-import AdminSavedPolicyPanel from './AdminSavedPolicyPanel';
+import AdminSavedItemPanel from './AdminSavedItemPanel';
 import { formatAdminDate } from './adminUserFormat';
 import NewTabLink from './NewTabLink';
+import SavedHouseholdDetails from './SavedHouseholdDetails';
+import SavedPolicyDetails from './SavedPolicyDetails';
+
+/** A saved policy or household, which the panel shows. */
+type PanelItem =
+  | { kind: 'policy'; policy: AdminSavedPolicy }
+  | { kind: 'household'; household: AdminSavedHousehold };
 
 /** One saved record, whatever its kind, as its table shows it. */
 interface SavedItemRow {
@@ -29,93 +37,67 @@ interface SavedItemRow {
   id: string;
   name: string | null;
   countryId: string;
-  /** The ID of the policy, household, simulation or report it points to. */
-  targetId: string | null;
-  /** The same for one saved before the detailed-save API: a v1 ID. */
-  legacyTargetId: number | null;
   createdAt: string;
   /** Reports only: when it last ran, or null if it never has. */
   lastRunAt?: string | null;
-  /** Policies only: the saved policy, which its name opens in a panel. */
-  policy?: AdminSavedPolicy;
+  /** Policies and households: the record, which its name opens in the panel. */
+  panelItem?: PanelItem;
   /** Reports only: the report's page, which its name opens in a new tab. */
   reportPath?: string;
 }
 
-/** One kind of saved record: policies, households, simulations or reports. */
+/** One kind of saved record: policies, households or reports. */
 interface SavedItemKind {
   /** Plural, such as "Policies". */
   heading: string;
   tableLabel: string;
   emptyMessage: string;
-  /** The heading of the column of IDs the records point to; null for none. */
-  targetIdHeader: string | null;
   rows: SavedItemRow[];
   showsLastRun: boolean;
 }
 
+/**
+ * The saved policies, households and reports. Each name opens the record
+ * itself, which says more than the IDs it points to. The read also
+ * returns the user's saved simulations, which the view leaves out.
+ */
 function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
   return [
     {
       heading: 'Policies',
       tableLabel: 'Saved policies',
       emptyMessage: 'No saved policies.',
-      // Each name opens the policy itself, which says more than its ID.
-      targetIdHeader: null,
       showsLastRun: false,
       rows: savedItems.policies.map((policy) => ({
         id: policy.id,
         name: policy.name,
         countryId: policy.country_id,
-        targetId: policy.policy_id,
-        legacyTargetId: policy.legacy_policy_id,
         createdAt: policy.created_at,
-        policy,
+        panelItem: { kind: 'policy', policy },
       })),
     },
     {
       heading: 'Households',
       tableLabel: 'Saved households',
       emptyMessage: 'No saved households.',
-      targetIdHeader: 'Household ID',
       showsLastRun: false,
       rows: savedItems.households.map((household) => ({
         id: household.id,
         name: household.name,
         countryId: household.country_id,
-        targetId: household.household_id,
-        legacyTargetId: household.legacy_household_id,
         createdAt: household.created_at,
-      })),
-    },
-    {
-      heading: 'Simulations',
-      tableLabel: 'Saved simulations',
-      emptyMessage: 'No saved simulations.',
-      targetIdHeader: 'Simulation ID',
-      showsLastRun: false,
-      rows: savedItems.simulations.map((simulation) => ({
-        id: simulation.id,
-        name: simulation.name,
-        countryId: simulation.country_id,
-        targetId: simulation.simulation_id,
-        legacyTargetId: simulation.legacy_simulation_id,
-        createdAt: simulation.created_at,
+        panelItem: { kind: 'household', household },
       })),
     },
     {
       heading: 'Reports',
       tableLabel: 'Saved reports',
       emptyMessage: 'No saved reports.',
-      // Each name opens the report itself, which says more than its ID.
-      targetIdHeader: null,
       showsLastRun: true,
       rows: savedItems.reports.map((report) => ({
         id: report.id,
         name: report.name,
         countryId: report.country_id,
-        targetId: report.report_id,
-        legacyTargetId: report.legacy_report_id,
         createdAt: report.created_at,
         lastRunAt: report.last_run_at,
         // A saved report's own ID is its link, which anyone can open, in
@@ -126,27 +108,19 @@ function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
   ];
 }
 
-/** The IDs a record points to: its v2 ID, its v1 ID marked "(v1)", or both. */
-function targetIdLabel({ targetId, legacyTargetId }: SavedItemRow): string {
-  const labels = [targetId, legacyTargetId === null ? null : `${legacyTargetId} (v1)`].filter(
-    (label): label is string => label !== null
-  );
-  return labels.length > 0 ? labels.join(', ') : 'None';
-}
+/** Opens a saved policy or household in the panel; `opener` takes focus back when it closes. */
+type OpenInPanel = (item: PanelItem, opener: HTMLElement) => void;
 
-/** Opens a saved policy's panel; `opener` takes focus back when it closes. */
-type OpenPolicy = (policy: AdminSavedPolicy, opener: HTMLElement) => void;
-
-/** A record's name: for a policy, a control that opens it; for a report, a link to it. */
-function SavedItemName({ row, onOpenPolicy }: { row: SavedItemRow; onOpenPolicy: OpenPolicy }) {
+/** A record's name: for a policy or household, a control that opens it; for a report, a link to it. */
+function SavedItemName({ row, onOpen }: { row: SavedItemRow; onOpen: OpenInPanel }) {
   const name = row.name ?? 'No name';
-  const { policy, reportPath } = row;
-  if (policy) {
+  const { panelItem, reportPath } = row;
+  if (panelItem) {
     return (
       <Button
         variant="link"
         className="tw:h-auto tw:p-0 tw:whitespace-normal tw:text-left"
-        onClick={(event) => onOpenPolicy(policy, event.currentTarget)}
+        onClick={(event) => onOpen(panelItem, event.currentTarget)}
       >
         {name}
       </Button>
@@ -161,11 +135,11 @@ function SavedItemName({ row, onOpenPolicy }: { row: SavedItemRow; onOpenPolicy:
 function SavedItemKindTable({
   kind,
   countryId,
-  onOpenPolicy,
+  onOpen,
 }: {
   kind: SavedItemKind;
   countryId: CountryId;
-  onOpenPolicy: OpenPolicy;
+  onOpen: OpenInPanel;
 }) {
   return (
     <Stack gap="xs">
@@ -182,7 +156,6 @@ function SavedItemKindTable({
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Country</TableHead>
-              {kind.targetIdHeader !== null && <TableHead>{kind.targetIdHeader}</TableHead>}
               <TableHead>Saved</TableHead>
               {kind.showsLastRun && <TableHead>Last run</TableHead>}
             </TableRow>
@@ -191,14 +164,9 @@ function SavedItemKindTable({
             {kind.rows.map((row) => (
               <TableRow key={row.id}>
                 <TableCell style={{ whiteSpace: 'normal' }}>
-                  <SavedItemName row={row} onOpenPolicy={onOpenPolicy} />
+                  <SavedItemName row={row} onOpen={onOpen} />
                 </TableCell>
                 <TableCell>{getCountryLabel(row.countryId)}</TableCell>
-                {kind.targetIdHeader !== null && (
-                  <TableCell style={{ whiteSpace: 'normal', wordBreak: 'break-all' }}>
-                    {targetIdLabel(row)}
-                  </TableCell>
-                )}
                 <TableCell>{formatAdminDate(row.createdAt, countryId)}</TableCell>
                 {kind.showsLastRun && (
                   <TableCell>
@@ -221,11 +189,11 @@ function SavedItemKindTable({
 function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHeading: () => void }) {
   const countryId = useCurrentCountry();
   const savedItems = useAdminUserSavedItems(userId);
-  const [openPolicy, setOpenPolicy] = useState<AdminSavedPolicy | null>(null);
-  const policyOpenerRef = useRef<HTMLElement | null>(null);
-  const openPolicyFrom: OpenPolicy = (policy, opener) => {
-    policyOpenerRef.current = opener;
-    setOpenPolicy(policy);
+  const [panelItem, setPanelItem] = useState<PanelItem | null>(null);
+  const panelOpenerRef = useRef<HTMLElement | null>(null);
+  const openInPanel: OpenInPanel = (item, opener) => {
+    panelOpenerRef.current = opener;
+    setPanelItem(item);
   };
 
   // Each showing reads once and keeps nothing from an earlier one (see
@@ -268,21 +236,28 @@ function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHead
           key={kind.heading}
           kind={kind}
           countryId={countryId}
-          onOpenPolicy={openPolicyFrom}
+          onOpen={openInPanel}
         />
       ))}
-      <AdminSavedPolicyPanel
-        policy={openPolicy}
-        onClose={() => setOpenPolicy(null)}
-        returnFocusTo={policyOpenerRef}
-      />
+      <AdminSavedItemPanel
+        open={panelItem !== null}
+        onClose={() => setPanelItem(null)}
+        returnFocusTo={panelOpenerRef}
+      >
+        {panelItem?.kind === 'policy' && (
+          <SavedPolicyDetails key={panelItem.policy.id} policy={panelItem.policy} />
+        )}
+        {panelItem?.kind === 'household' && (
+          <SavedHouseholdDetails key={panelItem.household.id} household={panelItem.household} />
+        )}
+      </AdminSavedItemPanel>
     </Stack>
   );
 }
 
 /**
- * A signed-in user's saved policies, households, simulations and reports,
- * in every country, read-only. They are read only when the admin asks,
+ * A signed-in user's saved policies, households and reports, in every
+ * country, read-only. They are read only when the admin asks,
  * since the Public API records each read with the admin's and the user's
  * IDs: opening a user to change their type reads none of them.
  */
@@ -315,8 +290,8 @@ export default function AdminUserSavedItems({ userId }: { userId: string }) {
         ) : (
           <Stack gap="sm" align="start">
             <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
-              The policies, households, simulations and reports this user saved, in every country.
-              Each read is recorded with your ID and the user&apos;s.
+              The policies, households and reports this user saved, in every country. Each read is
+              recorded with your ID and the user&apos;s.
             </Text>
             <Button variant="outline" size="sm" onClick={() => setShown(true)}>
               Show saved items

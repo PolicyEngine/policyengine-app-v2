@@ -245,6 +245,79 @@ export function answerPolicyReads(
 }
 
 /**
+ * The model variables Grace's household sets, as v1 metadata lists them, so
+ * the household's panel names them and formats their values.
+ */
+export const HOUSEHOLD_VARIABLES = {
+  age: { name: 'age', label: 'Age', unit: 'year', entity: 'person' },
+  employment_income: {
+    name: 'employment_income',
+    label: 'Employment income',
+    unit: 'currency-USD',
+    entity: 'person',
+  },
+  state_name: { name: 'state_name', label: 'State', unit: null, entity: 'household' },
+};
+
+/**
+ * The v1 household Grace's saved household points to, in 2026: an adult
+ * earning $50,000 and a child of 10, in California.
+ */
+export const V1_HOUSEHOLD_JSON = {
+  people: {
+    you: { age: { 2026: 40 }, employment_income: { 2026: 50000 } },
+    'your first dependent': { age: { 2026: 10 } },
+  },
+  families: { 'your family': { members: ['you', 'your first dependent'] } },
+  tax_units: { 'your tax unit': { members: ['you', 'your first dependent'] } },
+  spm_units: { 'your household': { members: ['you', 'your first dependent'] } },
+  marital_units: {
+    'your marital unit': { members: ['you'] },
+    "your first dependent's marital unit": { members: ['your first dependent'] },
+  },
+  households: {
+    'your household': { members: ['you', 'your first dependent'], state_name: { 2026: 'CA' } },
+  },
+};
+
+/**
+ * Makes `fetchMock` also answer the household reads a saved household's
+ * panel sends, `GET /{country}/household/{id}`, from `households`'
+ * `household_json`s, by `{country}/{id}`. An unknown household is a 404.
+ * Returns the paths read, in order.
+ */
+export function answerHouseholdReads(
+  fetchMock: Mock,
+  households: Readonly<Record<string, unknown>> = {
+    [`us/${SAVED_TARGET_IDS.V1_HOUSEHOLD}`]: V1_HOUSEHOLD_JSON,
+  }
+) {
+  const householdReads: string[] = [];
+  const answerAsBefore = fetchMock.getMockImplementation()!;
+  fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const path = publicApiPathOf(input);
+    const householdRoute = /^\/(\w+)\/household\/(\d+)$/.exec(path);
+    if (requestMethodOf(input, init) !== 'GET' || !householdRoute) {
+      return answerAsBefore(input, init);
+    }
+    householdReads.push(path);
+    const [, countryId, householdId] = householdRoute;
+    const householdJson = households[`${countryId}/${householdId}`];
+    return householdJson
+      ? okResponse({
+          id: Number(householdId),
+          country_id: countryId,
+          label: null,
+          api_version: '1.0.0',
+          household_json: householdJson,
+          household_hash: 'hash',
+        })
+      : errorResponse(404, 'Household not found.');
+  });
+  return householdReads;
+}
+
+/**
  * Makes `fetchMock`, already set up by `answerAdminApi`, also answer
  * `GET /v2/admin/users/{user_id}/saved-items` as the Public API does: a
  * user in `apiState` gets its entry of `savedItemsByUserId`, or nothing
