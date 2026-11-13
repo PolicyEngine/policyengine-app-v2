@@ -38,7 +38,8 @@ export function SavedItemHeader({
   description: string;
 }) {
   return (
-    <Stack style={{ gap: spacing.xs }}>
+    // Clear of the panel's close button, in its top right corner.
+    <Stack style={{ gap: spacing.xs, paddingRight: spacing['2xl'] }}>
       <SheetTitle asChild>
         <Title order={2} style={{ margin: 0 }}>
           {name ?? 'No name'}
@@ -131,7 +132,9 @@ export default function AdminSavedItemPanel({
       {open && (
         <SheetContent
           side="right"
-          className="tw:w-full tw:sm:max-w-2xl tw:overflow-y-auto"
+          // An explicit width: this theme's spacing scale names 2xl 24px, which
+          // Tailwind's named max-width classes (max-w-2xl) would use.
+          className="tw:w-full tw:sm:max-w-[42rem] tw:overflow-y-auto"
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             returnFocusTo.current?.focus();
