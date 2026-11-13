@@ -33,6 +33,7 @@ import {
   SIGNED_IN_USER_TYPES,
   USER_TYPE_LABELS,
 } from './adminUserFormat';
+import AdminUserSavedItems from './AdminUserSavedItems';
 import ChangeUserTypeDialog, {
   type ChangeOutcomeMessage,
   type UserTypeConfirmation,
@@ -134,7 +135,7 @@ function DetailsMessage({ heading, children }: { heading: string; children: Reac
   );
 }
 
-/** One user's details, a control to change their type, and their type changes. */
+/** One user's details, a control to change their type, their type changes and their saved items. */
 export default function AdminUserDetails({ userId }: { userId: string }) {
   const countryId = useCurrentCountry();
   const adminUser = useAdminUser(userId);
@@ -335,6 +336,8 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           </Stack>
 
           <UserTypeChangeHistory userId={userId} />
+
+          <AdminUserSavedItems userId={userId} />
         </Stack>
       </CardContent>
 

@@ -147,12 +147,15 @@ type MetadataRegion = { name: string; label: string; type: string };
 function seedMetadata({
   countryId,
   parameters,
+  variables = {},
   regions,
   firstYear,
   lastYear,
 }: {
   countryId: string;
   parameters: Record<string, unknown>;
+  /** The model's variables, by name; none unless given. */
+  variables?: Record<string, unknown>;
   regions: MetadataRegion[];
   firstYear: number;
   lastYear: number;
@@ -167,7 +170,7 @@ function seedMetadata({
       data: {
         result: {
           parameters,
-          variables: {},
+          variables,
           entities: {},
           variableModules: {},
           economy_options: {
@@ -191,14 +194,18 @@ function seedMetadata({
 export function seedDeductionMetadata({
   regions = [],
   lastYear = 2027,
+  variables,
 }: {
   regions?: MetadataRegion[];
   /** The model's last year (economy_options.time_period runs 2025 to it). */
   lastYear?: number;
+  /** The model's variables, by name; none unless given. */
+  variables?: Record<string, unknown>;
 } = {}) {
   seedMetadata({
     countryId: 'us',
     parameters: DEDUCTION_PARAMETERS,
+    variables,
     regions,
     firstYear: 2025,
     lastYear,
