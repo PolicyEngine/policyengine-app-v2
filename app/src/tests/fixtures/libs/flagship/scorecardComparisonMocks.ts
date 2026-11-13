@@ -76,3 +76,31 @@ export const ukMeasureClaim = (overrides: Partial<ScorecardClaim> = {}): Scoreca
     },
     ...overrides,
   });
+
+/** HM Treasury's two-child-limit costing: a static and a post-behavioural leg for each year. */
+export const TWO_CHILD_LIMIT_HINT =
+  'Universal Credit Child Element: Remove the two child limit from April 2026, taking 450,000 children out of poverty';
+export const twoChildLimitClaim = (
+  period: number,
+  scoringMethod: 'static' | 'post_behavioural',
+  externalValue: number,
+  peValue: number
+): ScorecardClaim => ({
+  ...scorecardClaim({
+    claim_id: `two-child-${period}-${scoringMethod}`,
+    country: 'UK',
+    source: 'hm_treasury',
+    unit_concept: 'gbp',
+    name: 'Budget 2025: Policy costings (PU 3595)',
+    period,
+    external_value: externalValue,
+    claim_baseline: 'current_law',
+    conditions: { scoring_method: scoringMethod, reform_hint: TWO_CHILD_LIMIT_HINT },
+    measure: { key: 'ab2025__uc_child_element_remove_two_child_limit' },
+    latest: {
+      value: peValue,
+      status: scoringMethod === 'static' ? 'comparable' : 'concept_mismatch',
+      baseline: 'pre_ab2025',
+    },
+  }),
+});

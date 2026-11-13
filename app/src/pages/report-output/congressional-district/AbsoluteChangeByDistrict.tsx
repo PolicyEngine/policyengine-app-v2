@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
-import { normalizeDistrictId } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
+import { districtErrorSummary } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import StateDistrictComputePanel from '@/components/flagship/report/StateDistrictComputePanel';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
 import { Group, Stack, Text, Title } from '@/components/ui';
 import {
@@ -9,7 +10,7 @@ import {
   type MapVisualizationType,
 } from '@/components/visualization/choropleth';
 import { useCongressionalDistrictData } from '@/contexts/CongressionalDistrictDataContext';
-import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
+import { useCongressionalDistrictImpacts } from '@/hooks/useCongressionalDistrictImpacts';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
@@ -23,7 +24,10 @@ interface AbsoluteChangeByDistrictProps {
  * Displays a geographic choropleth map showing the absolute household income change
  * for each US congressional district in currency terms.
  *
- * Uses district data included in the report output.
+ * A state report maps its own result's districts. A nationwide report maps
+ * each state's own run (useCongressionalDistrictImpacts), with the state
+ * district panel in place of the map until a state is in, and above it
+ * until every state is.
  */
 export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictProps) {
   // Map visualization type state (default to geographic)
@@ -31,38 +35,46 @@ export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictPro
   const mapRef = useRef<HTMLDivElement>(null);
 
   const { labelLookup, stateCode } = useCongressionalDistrictData();
+  // A state report's own districts; a nationwide report's from each state's run.
+  const { districts, runs, pendingStates, failedStates } = useCongressionalDistrictImpacts(output);
 
-  // Check if output has district data from the report calculation.
-  const existingMapData = useMemo(() => {
-    if (!('congressional_district_impact' in output)) {
-      return [];
-    }
-    const districtData = (output as ReportOutputSocietyWideUS).congressional_district_impact;
-    if (!districtData?.districts) {
-      return [];
-    }
-    return districtData.districts.map((item) => {
-      const id = normalizeDistrictId(item.district);
-      return {
-        geoId: id,
-        label: labelLookup.get(id) ?? `District ${id}`,
+  const mapData = useMemo(
+    () =>
+      (districts ?? []).map((item) => ({
+        geoId: item.district,
+        label: labelLookup.get(item.district) ?? `District ${item.district}`,
         value: item.average_household_income_change,
-      };
-    });
-  }, [output, labelLookup]);
-
-  const mapData = existingMapData;
+      })),
+    [districts, labelLookup]
+  );
+  // States still to come are not marked; failed states are.
+  const errorStates = useMemo(
+    () =>
+      runs
+        ? districtErrorSummary(districts, Array.from(labelLookup.keys()), {
+            pendingStates,
+            failedStates,
+          }).errorStateAbbrs
+        : undefined,
+    [districts, failedStates, labelLookup, pendingStates, runs]
+  );
+  const unfinishedRuns = runs && runs.status !== 'complete' ? runs : null;
 
   if (!mapData.length) {
     return (
       <Stack align="center" justify="center" style={{ height: 400 }}>
-        <Text c="dimmed">No congressional district data available</Text>
+        {runs ? (
+          <StateDistrictComputePanel runs={runs} />
+        ) : (
+          <Text c="dimmed">No congressional district data available</Text>
+        )}
       </Stack>
     );
   }
 
   return (
     <Stack gap="md">
+      {unfinishedRuns && <StateDistrictComputePanel runs={unfinishedRuns} />}
       <Group justify="space-between" align="center" wrap="nowrap">
         <Title order={3} style={{ flex: 1 }}>
           Absolute household income change by congressional district
@@ -91,6 +103,7 @@ export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictPro
               }),
           }}
           focusState={stateCode ?? undefined}
+          errorStates={errorStates}
           visualizationType={mapType}
           exportRef={mapRef}
         />

@@ -1,6 +1,18 @@
 import '@testing-library/jest-dom/vitest';
 
-import { vi } from 'vitest';
+import { afterAll, afterEach, vi } from 'vitest';
+import {
+  failOnUnmockedRequests,
+  installUnmockedRequestGuard,
+} from './test-utils/unmockedRequestGuard';
+
+// No test reaches the network: a request that no test mocked is refused at
+// once, and fails the test that sent it even when the code under test
+// catches the error. A test's own fetch mock replaces the guard, as before.
+installUnmockedRequestGuard();
+afterEach(failOnUnmockedRequests);
+// A request sent after a file's last test has finished fails the file.
+afterAll(failOnUnmockedRequests);
 
 // Browser API mocks below only apply to jsdom suites; node-environment
 // suites (e.g. @vitest-environment node integration tests) skip them.

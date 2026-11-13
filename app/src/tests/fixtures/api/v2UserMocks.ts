@@ -1,10 +1,21 @@
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 import type { ApiStoreContext } from '@/api/v2Associations';
 import { createV2UserClient } from '@/api/v2UserClient';
-import type { MeItem, SharedReportItem, UserPolicyItem, UserReportItem } from '@/types/v2User';
+import { publicApiPathOf, requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
+import { UNKNOWN_USER_TYPE } from '@/tests/fixtures/types/v2UserMocks';
+import type {
+  MeItem,
+  SharedReportItem,
+  UserHouseholdItem,
+  UserPolicyItem,
+  UserReportItem,
+  UserType,
+} from '@/types/v2User';
 
 export const TEST_API_BASE = 'https://api.test.policyengine.org';
 export const TEST_ACCESS_TOKEN = 'test-access-token';
+/** The access token of a second account signed in on the same browser. */
+export const OTHER_ACCESS_TOKEN = 'other-test-access-token';
 /** This browser's unauthenticated user in tests. */
 export const BROWSER_USER_ID = '6f1c2a9e-3b4d-4e5f-8a7b-9c0d1e2f3a4b';
 export const PE_USER_ID = '7c1e5a8e-2b1f-4c55-9a3e-1f2d3c4b5a69';
@@ -13,12 +24,19 @@ export const ASSOCIATION_IDS = {
   POLICY: '11111111-1111-4111-8111-111111111111',
   REPORT: '44444444-4444-4444-8444-444444444444',
   REFORM: '55555555-5555-4555-8555-555555555555',
+  HOUSEHOLD: '66666666-6666-4666-8666-666666666666',
 } as const;
 
 export const LEGACY_IDS = {
   POLICY: 95762,
   REPORT: 615,
+  HOUSEHOLD: 54321,
+  /** Another household the same page calculates. */
+  OTHER_HOUSEHOLD: 54322,
 } as const;
+
+/** A calculated household's summary, as the Household tab writes it, which names its saved row. */
+export const HOUSEHOLD_SUMMARY = 'Married · 2 children · California';
 
 export const TIMESTAMPS = {
   CREATED: '2026-10-12T10:00:00+00:00',
@@ -34,6 +52,14 @@ export const mockMeItem: MeItem = {
   email: 'ada@example.org',
   created_at: TIMESTAMPS.CREATED,
 };
+
+/** The signed-in user as `/v2/me` returns them, with the given stored type. */
+export function meItemOfType(userType: UserType): MeItem {
+  return { ...mockMeItem, user_type: userType };
+}
+
+/** A `/v2/me` user whose type this app does not know, as a newer API could send. */
+export const meItemWithUnknownType: MeItem = { ...mockMeItem, user_type: UNKNOWN_USER_TYPE };
 
 const base = {
   country_id: 'us' as const,
@@ -69,6 +95,16 @@ export function reportItem(overrides: Partial<UserReportItem> = {}): UserReportI
     validation: null,
     budget_window_years: null,
     last_run_at: null,
+    ...overrides,
+  };
+}
+
+export function householdItem(overrides: Partial<UserHouseholdItem> = {}): UserHouseholdItem {
+  return {
+    ...base,
+    id: ASSOCIATION_IDS.HOUSEHOLD,
+    household_id: null,
+    legacy_household_id: LEGACY_IDS.HOUSEHOLD,
     ...overrides,
   };
 }
@@ -139,6 +175,43 @@ export function noContentResponse(): Response {
   return new Response(null, { status: 204 });
 }
 
+/**
+ * Makes `fetchMock` answer GET /v2/me with `meResponse` (by default
+ * `mockMeItem`) and every other request with `otherResponse` (by default
+ * 204 No Content).
+ */
+export function answerMe(
+  fetchMock: Mock,
+  {
+    meResponse = () => itemResponse(mockMeItem),
+    otherResponse = () => noContentResponse(),
+  }: {
+    meResponse?: () => Response | Promise<Response>;
+    otherResponse?: () => Response;
+  } = {}
+): void {
+  fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
+    publicApiPathOf(url) === '/v2/me' && init.method === 'GET' ? meResponse() : otherResponse()
+  );
+}
+
+/** Makes `fetchMock` answer GET /v2/me with `meItem`. */
+export function answerMeWithUser(fetchMock: Mock, meItem: MeItem): void {
+  answerMe(fetchMock, { meResponse: () => itemResponse(meItem) });
+}
+
+/** A response that stays pending until the test calls `answer`. */
+export function deferredResponse(): {
+  response: Promise<Response>;
+  answer: (response: Response) => void;
+} {
+  let resolveResponse: (response: Response) => void = () => {};
+  const response = new Promise<Response>((resolve) => {
+    resolveResponse = resolve;
+  });
+  return { response, answer: (answeredResponse) => resolveResponse(answeredResponse) };
+}
+
 /** A fetch mock plus an API store context that uses it. */
 export function createTestApiContext(countryId: 'us' | 'uk' = 'us'): {
   fetchMock: ReturnType<typeof vi.fn>;
@@ -156,10 +229,10 @@ export function createTestApiContext(countryId: 'us' | 'uk' = 'us'): {
 /** The (url, init) of the nth fetch call, with the parsed URL and JSON body. */
 export function fetchCall(fetchMock: ReturnType<typeof vi.fn>, index = 0) {
   const [url, init] = fetchMock.mock.calls[index] as [string, RequestInit];
-  const parsed = new URL(url);
+  const parsed = requestUrlOf(url);
   return {
     url: parsed,
-    path: parsed.pathname,
+    path: publicApiPathOf(url),
     query: Object.fromEntries(parsed.searchParams.entries()),
     method: init.method,
     headers: init.headers as Record<string, string>,

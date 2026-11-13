@@ -125,7 +125,7 @@ describe('HouseholdImpactSection analytics', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add a household' }));
     await user.click(screen.getByRole('button', { name: 'Add another household' }));
-    await user.click(screen.getByRole('button', { name: 'Remove household 1' }));
+    await user.click(screen.getByRole('button', { name: 'Remove Household 2' }));
 
     expect(sent('household_added')).toEqual([
       { country_id: 'us', household_count: 1 },

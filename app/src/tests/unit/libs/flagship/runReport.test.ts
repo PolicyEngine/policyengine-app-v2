@@ -1,12 +1,28 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { FlagshipReportRecord, FlagshipReportStore } from '@/api/flagshipReportStore';
 import {
+  LocalStorageFlagshipReportStore,
+  type FlagshipReportRecord,
+  type FlagshipReportStore,
+} from '@/api/flagshipReportStore';
+import {
+  createReportRecords,
   forgetAccountReportMeta,
   readReportMeta,
   REPORT_META_KEY,
   reportMetaFromRecord,
   runFlagshipReport,
+  type ReportRecordsRunner,
 } from '@/libs/flagship/runReport';
+import {
+  CALIFORNIA_BASELINE_SIMULATION_ID,
+  CALIFORNIA_RECORDS_REQUEST,
+  CALIFORNIA_REFORM_SIMULATION_ID,
+  CALIFORNIA_REGION,
+  STATE_RECORDS_BASELINE_POLICY_ID,
+  STATE_RECORDS_REFORM_POLICY_ID,
+  STATE_RECORDS_YEAR,
+  STORED_CALIFORNIA_REPORT,
+} from '@/tests/fixtures/libs/flagship/runReportMocks';
 
 const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
@@ -568,6 +584,179 @@ describe('runFlagshipReport', () => {
         accountReportStore: accountStore,
       })
     ).rejects.toThrow('Saved work is temporarily unavailable.');
+  });
+
+  describe('given a saved report to move onto the new run', () => {
+    test('then the account row is repointed, not created, and keeps its link', async () => {
+      // Given
+      const accountStore = {
+        create: vi.fn(),
+        update: vi.fn().mockResolvedValue({ id: REPORT_ROW_ID }),
+      } as unknown as FlagshipReportStore;
+
+      // When
+      const link = await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: 'Hand-built',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        reformId: REFORM_ROW_ID,
+        year: 2027,
+        accountReportStore: accountStore,
+        savedReportId: REPORT_ROW_ID,
+      });
+
+      // Then
+      expect(link).toBe(REPORT_ROW_ID);
+      expect(accountStore.create).not.toHaveBeenCalled();
+      expect(accountStore.update).toHaveBeenCalledWith(REPORT_ROW_ID, {
+        apiReportId: '55',
+        provisions: [PROVISION],
+        year: '2027',
+      });
+      expect(readReportMeta(REPORT_ROW_ID)?.provisions).toEqual([PROVISION]);
+    });
+
+    test('then a failed account update fails the run', async () => {
+      // Given
+      const accountStore = {
+        create: vi.fn(),
+        update: vi.fn().mockRejectedValue(new Error('Saved work is temporarily unavailable.')),
+      } as unknown as FlagshipReportStore;
+
+      // When / Then
+      await expect(
+        runFlagshipReport({
+          countryId: 'us',
+          title: 'CTC expansion',
+          sourceNote: '',
+          provisions: [PROVISION],
+          currentLawId: 2,
+          accountReportStore: accountStore,
+          savedReportId: REPORT_ROW_ID,
+        })
+      ).rejects.toThrow('Saved work is temporarily unavailable.');
+      expect(accountStore.create).not.toHaveBeenCalled();
+    });
+
+    test('then the browser record is repointed, and the link is the new v1 report', async () => {
+      // Given
+      const saved = await new LocalStorageFlagshipReportStore().create({
+        countryId: 'us',
+        apiReportId: '40',
+        title: 'CTC expansion',
+        sourceNote: 'Hand-built',
+        provisions: [PROVISION],
+        year: '2026',
+        reformId: 'rf-local1',
+      });
+
+      // When
+      const link = await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: 'Hand-built',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        reformId: 'rf-local1',
+        year: 2026,
+        savedReportId: saved.id,
+      });
+
+      // Then
+      expect(link).toBe('55');
+      const records = await new LocalStorageFlagshipReportStore().findMine();
+      // The same record, dated by the new run and with no pin from the old one.
+      expect(records).toEqual([
+        { ...saved, apiReportId: '55', createdAt: expect.any(String), validation: null },
+      ]);
+      expect(records[0].createdAt >= saved.createdAt).toBe(true);
+    });
+
+    test('then a browser record that is gone fails the run', async () => {
+      await expect(
+        runFlagshipReport({
+          countryId: 'us',
+          title: 'CTC expansion',
+          sourceNote: '',
+          provisions: [PROVISION],
+          currentLawId: 2,
+          savedReportId: 'lfr-missing',
+        })
+      ).rejects.toThrow('Report not found');
+    });
+  });
+});
+
+describe('createReportRecords', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Responses queued by earlier runs are not this one's.
+    mockCreateSimulation.mockReset();
+    mockCreateSimulation
+      .mockResolvedValueOnce({ result: { simulation_id: CALIFORNIA_BASELINE_SIMULATION_ID } })
+      .mockResolvedValueOnce({ result: { simulation_id: CALIFORNIA_REFORM_SIMULATION_ID } });
+    mockCreateReport.mockResolvedValue(STORED_CALIFORNIA_REPORT);
+  });
+
+  test('given a state then both simulations run on it with each policy and the base report pairs them for the year', async () => {
+    // When
+    await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST);
+
+    // Then
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(1, 'us', {
+      population_id: CALIFORNIA_REGION,
+      population_type: 'geography',
+      policy_id: STATE_RECORDS_BASELINE_POLICY_ID,
+    });
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(2, 'us', {
+      population_id: CALIFORNIA_REGION,
+      population_type: 'geography',
+      policy_id: STATE_RECORDS_REFORM_POLICY_ID,
+    });
+    expect(mockCreateReport).toHaveBeenCalledWith('us', {
+      simulation_1_id: Number(CALIFORNIA_BASELINE_SIMULATION_ID),
+      simulation_2_id: Number(CALIFORNIA_REFORM_SIMULATION_ID),
+      year: String(STATE_RECORDS_YEAR),
+    });
+  });
+
+  test('given a stored report then it comes back with its status and output', async () => {
+    // When
+    const report = await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST);
+
+    // Then
+    expect(report).toEqual(STORED_CALIFORNIA_REPORT);
+  });
+
+  test('given a runner then each request goes through it', async () => {
+    // Given
+    let requestsThroughRunner = 0;
+    const runner: ReportRecordsRunner = (request) => {
+      requestsThroughRunner += 1;
+      return request();
+    };
+
+    // When
+    await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST, runner);
+
+    // Then
+    expect(requestsThroughRunner).toBe(3);
+    expect(mockCreateSimulation).toHaveBeenCalledTimes(2);
+    expect(mockCreateReport).toHaveBeenCalledTimes(1);
+  });
+
+  test('given no region then the records are for the whole country', async () => {
+    // When
+    await createReportRecords('us', { ...CALIFORNIA_RECORDS_REQUEST, region: undefined });
+
+    // Then
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(1, 'us', {
+      population_id: 'us',
+      population_type: 'geography',
+      policy_id: STATE_RECORDS_BASELINE_POLICY_ID,
+    });
   });
 });
 

@@ -319,3 +319,64 @@ export function withUKBreakdowns(output: SocietyWideReportOutput): SocietyWideRe
     detailed_budget: UK_DETAILED_BUDGET,
   } as unknown as SocietyWideReportOutput;
 }
+
+/**
+ * Report 4738's budget (the UK's 2027 Universal Credit freeze): the total,
+ * £958.5m, includes £25.0m of Scottish Child Payment that the detailed
+ * budget has no row for, so its rows add up to only £933.5m.
+ */
+export const UC_FREEZE_TOTAL = 958.5e6;
+export const UC_FREEZE_DETAILED_BUDGET = {
+  universal_credit: { baseline: 82244.8e6, reform: 81311.3e6, difference: -933.5e6 },
+  child_benefit: { baseline: 14306.5e6, reform: 14306.5e6, difference: 0 },
+};
+
+/** A report's output with report 4738's UK budget and detailed budget. */
+export function withUCFreezeBudget(output: SocietyWideReportOutput): SocietyWideReportOutput {
+  return {
+    ...withBudget(output, { federal: 0, state: 0, benefits: -UC_FREEZE_TOTAL }),
+    detailed_budget: UC_FREEZE_DETAILED_BUDGET,
+  } as unknown as SocietyWideReportOutput;
+}
+
+/**
+ * Report 4738's detailed budget once the simulation API sends a row for
+ * every programme the reform changes, each with its `is_tax` flag:
+ * Scottish Child Payment, which no fixed list names, is a benefit.
+ */
+export const UC_FREEZE_FLAGGED_DETAILED_BUDGET = {
+  universal_credit: { baseline: 82244.8e6, reform: 81311.3e6, difference: -933.5e6, is_tax: false },
+  scottish_child_payment: { baseline: 600e6, reform: 575e6, difference: -25e6, is_tax: false },
+  income_tax: { baseline: 300e9, reform: 300e9, difference: 0, is_tax: true },
+};
+
+/** A report's output with report 4738's budget and its flagged detailed budget. */
+export function withFlaggedUCFreezeBudget(
+  output: SocietyWideReportOutput
+): SocietyWideReportOutput {
+  return {
+    ...withBudget(output, { federal: 0, state: 0, benefits: -UC_FREEZE_TOTAL }),
+    detailed_budget: UC_FREEZE_FLAGGED_DETAILED_BUDGET,
+  } as unknown as SocietyWideReportOutput;
+}
+
+/**
+ * An employer NI threshold rise from £5,000 to £9,100 (2027-28): employers
+ * pay £15.5bn less employer NI, which the total leaves out, and pass it on
+ * as pay, so income tax, NI and Universal Credit add up to the £5.3bn total.
+ */
+export const EMPLOYER_NI_TOTAL = 5.3e9;
+export const EMPLOYER_NI_DETAILED_BUDGET = {
+  income_tax: { baseline: 300e9, reform: 304e9, difference: 4e9 },
+  national_insurance: { baseline: 150e9, reform: 150.9e9, difference: 0.9e9 },
+  universal_credit: { baseline: 82e9, reform: 81.6e9, difference: -0.4e9 },
+  ni_employer: { baseline: 120e9, reform: 104.5e9, difference: -15.5e9 },
+};
+
+/** A report's output with the employer NI threshold rise's budget. */
+export function withEmployerNIBudget(output: SocietyWideReportOutput): SocietyWideReportOutput {
+  return {
+    ...withBudget(output, { federal: 4.9e9, state: 0, benefits: -0.4e9 }),
+    detailed_budget: EMPLOYER_NI_DETAILED_BUDGET,
+  } as unknown as SocietyWideReportOutput;
+}

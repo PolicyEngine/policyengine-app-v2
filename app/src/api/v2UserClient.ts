@@ -114,8 +114,15 @@ async function readEnvelope(response: Response): Promise<V2Envelope<unknown> | n
   }
 }
 
+/** The message for a failed response: the API's own, else one for its status. */
+export function failureMessage(status: number, apiMessage?: string | null): string {
+  return apiMessage || STATUS_MESSAGES[status] || `Request failed (${status})`;
+}
+
 /** The header naming who a request is made as. */
-async function credentialHeaders(credentials: V2Credentials): Promise<Record<string, string>> {
+export async function credentialHeaders(
+  credentials: V2Credentials
+): Promise<Record<string, string>> {
   if (credentials.kind === 'none') {
     return {};
   }
@@ -175,12 +182,7 @@ export function createV2UserClient({
 
     const envelope = await readEnvelope(response);
     if (!response.ok) {
-      throw new V2ApiError(
-        response.status,
-        envelope?.message ||
-          STATUS_MESSAGES[response.status] ||
-          `Request failed (${response.status})`
-      );
+      throw new V2ApiError(response.status, failureMessage(response.status, envelope?.message));
     }
     if (!envelope || envelope.status !== 'ok') {
       throw new V2ApiError(

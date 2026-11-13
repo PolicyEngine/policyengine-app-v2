@@ -3,8 +3,8 @@ import {
   hasLocalAuthorityImpacts,
 } from '@/adapters/societyWideOutputNormalizer';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { withheldUKAreaCodes } from '@/components/visualization/choropleth/ukHexLayout';
 import type { UKReportLocalAreaRequest } from '@/hooks/useUKLocalAreaBreakdown';
-import type { Region } from '@/models/region';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -122,77 +122,107 @@ export const UK_AREA_NOUNS: Record<UKAreaLevel, { one: string; many: string }> =
 };
 
 /**
- * How many of a level's areas a disclosure-controlled breakdown left out,
- * out of how many there are; null when the app cannot count them.
+ * What an area disclosure control withheld reads on the maps, in its
+ * tooltip: the geographic map's boundary and the hex map's hexagon alike.
+ * When the breakdown lists its withheld codes, only the listed areas read
+ * it, and the level's other areas without a result read "No data".
  */
-export type UKWithheldAreas = { withheld: number; total: number } | null;
+export const UK_WITHHELD_AREA_TEXT = 'Not reported';
+
+/**
+ * How many of a level's areas a disclosure-controlled breakdown withheld,
+ * out of how many there are, and the breakdown's own list of withheld
+ * codes when it gives one, which the maps draw from; null when the app
+ * cannot count them.
+ *
+ * The note under the maps reads `withheld`, and the maps read
+ * `listedCodes`. They agree because countWithheldUKAreas and the hex map's
+ * placeUKHexMap both pass the level's published codes, the report's region
+ * and the same list to withheldUKAreaCodes, so they count and hatch the
+ * same areas, and the geographic map reads "Not reported" on those areas'
+ * boundaries alone. The count is null exactly when withheldUKAreaCodes
+ * cannot match the result to the layout, and the hex map then draws no
+ * withheld or no-data areas either, so a null count needs no list; the
+ * geographic map then reads "Not reported" on every boundary without a
+ * result, as for a breakdown without a list.
+ */
+export type UKWithheldAreas = {
+  withheld: number;
+  total: number;
+  /** The breakdown's withheld ONS codes at this level; absent when it does not list them. */
+  listedCodes?: string[];
+} | null;
 
 /** Each level's withheld areas; a level absent here gets no withheld note. */
 export type UKBreakdownWithheldAreas = Partial<Record<UKAreaLevel, UKWithheldAreas>>;
 
 /**
- * The areas of a level a breakdown did not publish, counted against the
- * level's areas in the region list from the country metadata. Both levels
- * follow one rule. A count needs the two lists to name the same areas, so
- * it is given only:
- * - for a UK-wide report. The metadata gives each area's name, label and
- *   type, but not its code or nation, so a nation's areas cannot be picked
- *   out of the list;
- * - when every published name is in the list. Otherwise the lists
- *   disagree, and no count is given.
- *
- * The Public API lists the same 650 constituencies as .py, and from
- * PolicyEngine/policyengine-api#4024 on the same 361 local authorities as
- * .py 6.10.0. An earlier deployment lists 360, without Ards and North Down;
- * a breakdown that publishes that area then gets no local authority count.
+ * The areas of a level a breakdown withheld, out of the level's areas in
+ * the report's region; null when the app cannot count them. The count
+ * follows the hex map's rule (withheldUKAreaCodes): each published area's
+ * ONS code against the layout, all of it for a UK-wide report and the
+ * nation's for a nation's report, so the note under the map and the
+ * areas it draws as withheld always agree. With the breakdown's list of
+ * withheld codes, only the listed areas the result leaves out count;
+ * without one, every area it leaves out does. A published area with no
+ * code, or a code outside the region's layout, gives no count.
  */
 export function countWithheldUKAreas({
   level,
   region,
-  publishedNames,
-  regions,
+  publishedCodes,
+  listedWithheldCodes,
 }: {
   level: UKAreaLevel;
   region?: string | null;
-  publishedNames: string[];
-  regions: Region[];
+  /** The published areas' ONS codes, one per area. */
+  publishedCodes: (string | undefined)[];
+  /** The breakdown's withheld codes at this level; null or absent when it does not list them. */
+  listedWithheldCodes?: string[] | null;
 }): UKWithheldAreas {
-  if (region && region.toLowerCase() !== 'uk') {
+  const withheld = withheldUKAreaCodes(level, publishedCodes, region, listedWithheldCodes);
+  if (!withheld) {
     return null;
   }
-  const prefix = `${level}/`;
-  const listedNames = new Set(
-    regions
-      .filter((entry) => entry.code.startsWith(prefix))
-      .map((entry) => entry.code.slice(prefix.length))
-  );
-  if (listedNames.size === 0 || publishedNames.some((name) => !listedNames.has(name))) {
-    return null;
-  }
-  return { withheld: listedNames.size - new Set(publishedNames).size, total: listedNames.size };
+  return {
+    withheld: withheld.codes.length,
+    total: withheld.total,
+    ...(listedWithheldCodes && { listedCodes: listedWithheldCodes }),
+  };
 }
 
 /**
- * Both levels' withheld areas for a breakdown of a report's region. A level
- * the API returned as null publishes no areas.
+ * A breakdown level's list of withheld codes, as the result gives it: its
+ * codes when it is a list, and null otherwise (null, absent, or anything
+ * else), which the count and the hex map read as giving no list.
+ */
+function listedWithheldCodesOf(codes: unknown): string[] | null {
+  return Array.isArray(codes) ? codes.filter((code) => typeof code === 'string') : null;
+}
+
+/**
+ * Both levels' withheld areas for a breakdown of a report's region, each
+ * from the level's list of withheld codes when the breakdown gives one. A
+ * level the API returned as null publishes no areas.
  */
 export function withheldUKAreasOf(
   breakdown: LocalAreaBreakdown,
-  region: string | null | undefined,
-  regions: Region[]
+  region: string | null | undefined
 ): UKBreakdownWithheldAreas {
+  const constituencies = breakdown.constituency_impact?.by_constituency ?? {};
+  const localAuthorities = breakdown.local_authority_impact?.by_local_authority ?? {};
   return {
     constituency: countWithheldUKAreas({
       level: 'constituency',
       region,
-      publishedNames: Object.keys(breakdown.constituency_impact?.by_constituency ?? {}),
-      regions,
+      publishedCodes: Object.values(constituencies).map((area) => area.code),
+      listedWithheldCodes: listedWithheldCodesOf(breakdown.constituency_withheld_codes),
     }),
     local_authority: countWithheldUKAreas({
       level: 'local_authority',
       region,
-      publishedNames: Object.keys(breakdown.local_authority_impact?.by_local_authority ?? {}),
-      regions,
+      publishedCodes: Object.values(localAuthorities).map((area) => area.code),
+      listedWithheldCodes: listedWithheldCodesOf(breakdown.local_authority_withheld_codes),
     }),
   };
 }

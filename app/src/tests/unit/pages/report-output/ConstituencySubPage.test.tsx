@@ -11,12 +11,24 @@ import {
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  boundariesReading,
   HEX_MAP_TAB,
   MAP_LEGEND_NAME,
   mockUKBoundaryFetch,
+  NOT_REPORTED_TEXT,
 } from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
-import { COMPLETE_RESPONSE } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
+import { NO_DATA_TEXT } from '@/tests/fixtures/components/visualization/hexMapMocks';
+import { EXPECTED_CONSTITUENCY_COUNT } from '@/tests/fixtures/data/uk_geography/ukGeographyReference';
+import {
+  COMPLETE_RESPONSE,
+  COMPLETE_RESPONSE_WITH_WITHHELD_LISTS,
+  UK_LISTED_WITHHELD_CONSTITUENCY_CODES,
+} from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
+import {
+  hatchedAreaCodes,
+  noDataHexagons,
+} from '@/tests/fixtures/pages/report-output/ukHexMapPlacementMocks';
 import {
   V2_UK_LOCAL_AREA_REQUEST_PROPS,
   withNullAreaImpacts,
@@ -26,12 +38,6 @@ vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchLocalAreaBreakdown: vi.fn(),
 }));
-
-vi.mock('@/hooks/useRegions', async () => {
-  const { UK_METADATA_REGIONS } =
-    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
-  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
-});
 
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
 const NOT_AVAILABLE = 'Constituency analysis not available for this region';
@@ -96,10 +102,14 @@ describe('ConstituencySubPage', () => {
     expect(
       await screen.findByText('Absolute household income change by constituency')
     ).toBeInTheDocument();
-    // The map's one hexagon is the computed area: hovering it names it.
+    // The map's one hexagon with a value is the computed area: hovering it
+    // names it. The UK's other 649 constituencies are drawn as withheld.
     await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
-    const hexagons = container.querySelectorAll('svg polygon');
+    const hexagons = container.querySelectorAll('svg polygon:not([data-missing-area-id])');
     expect(hexagons).toHaveLength(1);
+    expect(container.querySelectorAll('[data-missing-area-id]').length).toBe(
+      EXPECTED_CONSTITUENCY_COUNT - 1
+    );
     await user.hover(hexagons[0]);
     expect(screen.getByText(new RegExp(`^${BREAKDOWN_CONSTITUENCY_NAME}:`))).toBeInTheDocument();
   });
@@ -112,7 +122,7 @@ describe('ConstituencySubPage', () => {
     expect(screen.getByText(NOT_AVAILABLE)).toBeInTheDocument();
   });
 
-  test('given the areas computed for a UK-wide report then the charts say how many constituencies were not published', async () => {
+  test('given the areas computed for a UK-wide report then the charts say how many constituencies were not reported', async () => {
     // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
@@ -128,9 +138,57 @@ describe('ConstituencySubPage', () => {
 
     // Then
     expect(
-      await screen.findByText(/^2 of 3 constituencies are not published\./)
+      await screen.findByText(/^649 of 650 constituencies are not reported\./)
     ).toBeInTheDocument();
     expect(screen.getByText(/^1 constituency is approximate:/)).toBeInTheDocument();
+  });
+
+  test('given the areas computed with a list of withheld constituencies then the note counts the list and the hex map hatches only those', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_WITHHELD_LISTS);
+    const { container } = renderWithQueryClient(
+      <ConstituencySubPage
+        output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+        {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+      />
+    );
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // When
+    expect(
+      await screen.findByText(/^2 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
+
+    // Then: Cardiff East and Cardiff West hatched, and the UK's other 647 absent constituencies without data
+    expect(hatchedAreaCodes(container)).toEqual(UK_LISTED_WITHHELD_CONSTITUENCY_CODES);
+    expect(noDataHexagons(container)).toHaveLength(
+      EXPECTED_CONSTITUENCY_COUNT - 1 - UK_LISTED_WITHHELD_CONSTITUENCY_CODES.length
+    );
+  });
+
+  test('given the areas computed with a list of withheld constituencies then the geographic map reads not reported for as many boundaries as the note counts', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_WITHHELD_LISTS);
+    renderWithQueryClient(
+      <ConstituencySubPage
+        output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+        {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+      />
+    );
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then: the boundary fixture holds both listed constituencies and five unlisted ones
+    expect(
+      await screen.findByText(/^2 of 650 constituencies are not reported\./)
+    ).toBeInTheDocument();
+    await screen.findByRole('img', { name: MAP_LEGEND_NAME });
+    expect(boundariesReading(NOT_REPORTED_TEXT)).toEqual(UK_LISTED_WITHHELD_CONSTITUENCY_CODES);
+    expect(boundariesReading(NO_DATA_TEXT)).toHaveLength(5);
   });
 
   test('given a breakdown release result with constituencies only then the tab shows them, as the section does', async () => {

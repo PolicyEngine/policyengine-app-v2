@@ -1,6 +1,7 @@
 import { renderWithCountry, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
+import { colors, spacing } from '@/designTokens';
 import { countryIds } from '@/libs/countries';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
 import {
@@ -12,6 +13,7 @@ import {
   OTHER_LINK_ROWS,
   WEBSITE_URL,
 } from '@/tests/fixtures/components/flagship/topBarFixtures';
+import { MOCK_COUNTRIES } from '@/tests/fixtures/components/homeHeader/CountrySelectorMocks';
 import { getToolsMenuEntries, type ToolsMenuEntry } from '@/utils/toolsMenu';
 
 const mockNavigate = vi.fn();
@@ -31,9 +33,6 @@ vi.mock('react-router-dom', async () => {
 const COUNTRIES_WITH_TOOLS = countryIds
   .map((countryId): [string, ToolsMenuEntry[]] => [countryId, getToolsMenuEntries(countryId)])
   .filter(([, tools]) => tools.length > 0);
-const COUNTRIES_WITHOUT_TOOLS = countryIds.filter(
-  (countryId) => getToolsMenuEntries(countryId).length === 0
-);
 
 /** Every click a link should let through, on every tool row in both menus: one case each. */
 const CLICKS: [string, MouseEventInit][] = [
@@ -172,6 +171,93 @@ describe('FlagshipTopBar', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/us/reforms');
   });
 
+  test("given the bar renders then the country selector follows the sections and comes just before a phone's menu", () => {
+    // Given
+    renderTopBar();
+
+    // When
+    const selector = screen.getByRole('button', { name: /country selector/i });
+
+    // Then — as in the legacy header: after its sections on a wide screen,
+    // and just before the menu button on a phone
+    const buttonsInOrder = screen.getAllByRole('button');
+    const selectorPosition = buttonsInOrder.indexOf(selector);
+    const moreLinksButton = screen.getByRole('button', { name: /more policyengine links/i });
+    expect(screen.getByRole('navigation', { name: 'Primary' })).not.toContainElement(selector);
+    expect(buttonsInOrder.indexOf(moreLinksButton)).toBeLessThan(selectorPosition);
+    expect(buttonsInOrder[selectorPosition + 1]).toBe(screen.getByRole('button', { name: 'Menu' }));
+  });
+
+  test('given the country selector is opened then it offers exactly the US and the UK', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderTopBar();
+    const buttonsBeforeOpening = screen.getAllByRole('button');
+
+    // When
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
+
+    // Then
+    const countryOptions = screen
+      .getAllByRole('button')
+      .filter((button) => !buttonsBeforeOpening.includes(button));
+    expect(countryOptions).toHaveLength(MOCK_COUNTRIES.length);
+    MOCK_COUNTRIES.forEach((country, index) => {
+      expect(countryOptions[index]).toHaveTextContent(country.label);
+    });
+  });
+
+  test('given the UK is chosen from the country selector then it navigates to the same path under the UK', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderTopBar();
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
+
+    // When
+    await user.click(screen.getByRole('button', { name: /united kingdom/i }));
+
+    // Then — the mocked location is /us/build
+    expect(mockNavigate).toHaveBeenCalledWith('/uk/build');
+  });
+
+  test("given the bar's white background then the country selector's globe icon is dark", () => {
+    // When
+    renderTopBar();
+
+    // Then
+    const globeIcon = screen
+      .getByRole('button', { name: /country selector/i })
+      .querySelector('svg');
+    expect(globeIcon).toHaveAttribute('stroke', colors.gray[700]);
+  });
+
+  test("given the bar renders then the country selector's button carries the bar's button sizes", () => {
+    // When
+    renderTopBar();
+
+    // Then — the sections and the more menu are 34px tall; a phone's
+    // menu button, the bar's other button there, is 40px square
+    expect(screen.getByRole('button', { name: /more policyengine links/i }).style.height).toBe(
+      '34px'
+    );
+    expect(screen.getByRole('button', { name: /country selector/i })).toHaveClass(
+      'tw:size-[34px]',
+      'tw:max-sm:size-10'
+    );
+  });
+
+  test("given the bar renders then the country selector's hover square has the bar's button corners", () => {
+    // When
+    renderTopBar();
+
+    // Then
+    const moreButton = screen.getByRole('button', { name: /more policyengine links/i });
+    expect(moreButton.style.borderRadius).toBe(spacing.radius.container);
+    expect(screen.getByRole('button', { name: /country selector/i }).style.borderRadius).toBe(
+      moreButton.style.borderRadius
+    );
+  });
+
   describe('tools menu', () => {
     test('given the US then CliffWatch links its page on the website', async () => {
       // Given
@@ -223,32 +309,6 @@ describe('FlagshipTopBar', () => {
           })),
           '—',
           ...OTHER_LINK_ROWS.map((label) => expect.objectContaining({ label })),
-        ]);
-      }
-    );
-
-    test.each(COUNTRIES_WITHOUT_TOOLS)(
-      'given %s, which has no tools, then the menus are one plain list with no tool rows',
-      async (countryId) => {
-        // Given
-        const { unmount } = renderTopBar(countryId);
-
-        // When
-        const moreMenu = await openMoreMenu();
-
-        // Then
-        expect(menuRows(moreMenu)).toEqual(['Research', ...OTHER_LINK_ROWS]);
-
-        // And a phone's menu likewise
-        unmount();
-        renderTopBar(countryId);
-        const phoneMenu = await openPhoneMenu();
-        expect(menuRows(phoneMenu)).toEqual([
-          'Build',
-          'Reforms',
-          '—',
-          'Research',
-          ...OTHER_LINK_ROWS,
         ]);
       }
     );

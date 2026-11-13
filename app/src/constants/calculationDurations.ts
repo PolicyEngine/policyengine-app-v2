@@ -44,6 +44,17 @@ export const UK_SOCIETY_WIDE_DURATION_MS = 3 * 60 * 1000; // 3 minutes
 export const US_STATE_SOCIETY_WIDE_DURATION_MS = 190 * 1000;
 
 /**
+ * How long one state's run for a nationwide report's congressional
+ * districts may compute, from its first request, before the app stops
+ * polling it and offers Retry: above the slowest on-demand state load
+ * measured (1,635 s, a year without a pre-built state file). For years with
+ * pre-built state files (2025–2027) that leaves room for a queue when two
+ * reports compute at once; for other years it leaves under 3 minutes, so a
+ * queued state may pass the limit, and Retry then checks the same run.
+ */
+export const US_STATE_DISTRICT_RUN_TIME_LIMIT_MS = 30 * 60 * 1000;
+
+/**
  * Region estimate for US congressional district society-wide calculations
  * Only one observed sample (200 s), so treat it as a rough value.
  */
@@ -59,11 +70,21 @@ export const UK_REGION_SOCIETY_WIDE_DURATION_MS = 110 * 1000;
 
 /**
  * Estimate for a UK local-area breakdown run (`breakdown=local_areas`).
- * No production runs exist yet to measure. Building the area results inside
- * a national run took about 70–90 s; a separate run also loads the
- * local-area dataset, which a cold worker downloads first.
+ * Measured on the Public API on 26 October 2026 (.py 6.10.0), from
+ * submission to completion: UK-wide 267 s on a cold worker (about 90 s of it
+ * loading the local-area dataset) and 154 s on a warm one; Wales 46 s. A
+ * repeated request is served from the cache in about 1.5 s. The estimate
+ * covers the cold UK-wide run; the API's stages keep a faster run's bar
+ * honest.
  */
-export const UK_LOCAL_AREA_BREAKDOWN_DURATION_MS = 3 * 60 * 1000;
+export const UK_LOCAL_AREA_BREAKDOWN_DURATION_MS = 270 * 1000;
+
+/**
+ * How long a UK local-area breakdown may compute before the app stops
+ * polling it and offers Retry, in case its job is stuck: several times the
+ * slowest measured run, to leave room for a queue.
+ */
+export const UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS = 30 * 60 * 1000;
 
 /**
  * Duration estimate for household calculations

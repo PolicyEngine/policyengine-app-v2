@@ -11,6 +11,8 @@ import {
   NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
   nationalResultFromBody,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
+import { COMPUTE_DISTRICTS_LABEL } from '@/tests/fixtures/components/flagship/report/stateDistrictComputePanelMocks';
 import {
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY,
@@ -21,10 +23,37 @@ import {
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
+import {
+  economyWhere,
+  fakeStateDistrictApi,
+  NATIONWIDE_OUTPUT_WITH_DISTRICTS,
+  OTHER_STATE_RUNS_YEAR,
+  STATE_COMPUTING,
+  STATE_COUNT,
+  STATE_RUNS_BASELINE_POLICY_ID,
+  STATE_RUNS_REFORM_POLICY_ID,
+  STATE_RUNS_YEAR,
+  stateOk,
+  UTAH,
+  UTAH_REPORT_OUTPUT,
+  type FakeStateApi,
+} from '@/tests/fixtures/hooks/useStateDistrictRunsMocks';
 import { OTHER_BREAKDOWN_YEAR } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
+
+// US reports read the 50 states and DC; other countries read their own regions as before.
+vi.mock('@/hooks/useRegions', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useRegions')>();
+  const { US_STATE_REGIONS } = await import('@/tests/fixtures/hooks/useStateDistrictRunsMocks');
+  return {
+    useRegions: (...args: Parameters<typeof actual.useRegions>) =>
+      args[0] === 'us'
+        ? { ...actual.useRegions(...args), data: US_STATE_REGIONS }
+        : actual.useRegions(...args),
+  };
+});
 
 vi.mock('@/utils/isSocietyWideReportNoOp', () => ({
   isSocietyWideReportNoOp: () => true,
@@ -391,11 +420,15 @@ describe('ReportView UK local areas', () => {
     vi.unstubAllGlobals();
   });
 
-  const renderUKReport = (output: Parameters<typeof ReportView>[0]['output']) => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => Response.json({ status: 'computing', queue_position: 1, result: null }))
-    );
+  const renderUKReport = (
+    output: Parameters<typeof ReportView>[0]['output'],
+    {
+      fetchImpl = async () =>
+        Response.json({ status: 'computing', queue_position: 1, result: null }),
+      runsBlocked = false,
+    }: { fetchImpl?: () => Promise<Response>; runsBlocked?: boolean } = {}
+  ) => {
+    vi.stubGlobal('fetch', vi.fn(fetchImpl));
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     return render(
       <QueryClientProvider client={queryClient}>
@@ -408,6 +441,7 @@ describe('ReportView UK local areas', () => {
           reformPolicyId={UK_SECTION_PROPS.reformPolicyId}
           baselinePolicyId={UK_SECTION_PROPS.baselinePolicyId}
           output={output}
+          runsBlocked={runsBlocked}
           calibration={null}
           trackRecord={null}
         />
@@ -422,30 +456,61 @@ describe('ReportView UK local areas', () => {
       .mock.calls.map(([url]) => String(url))
       .filter((url) => url.includes('/economy/'));
 
-  test('given results without area impacts then the card says they are calculated on request', () => {
+  test('given results without area impacts then the card says they calculate in the background', () => {
     // When
     renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
 
     // Then
     expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
-      'Calculate income changes across constituencies and local authorities, and compare them on a map.'
+      'Compare income changes across constituencies and local authorities on a map. They calculate in the background, in a few minutes.'
     );
   });
 
-  test('given results without area impacts then the local areas tab offers to compute them and sends nothing', async () => {
+  test('given results without area impacts then one breakdown request goes for the report region and year before the tab opens', async () => {
+    // When
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
+
+    // Then
+    await waitFor(() => expect(economyRequests()).toHaveLength(1));
+    expect(economyRequests()[0]).toContain(
+      `/uk/economy/${UK_SECTION_PROPS.reformPolicyId}/over/${UK_SECTION_PROPS.baselinePolicyId}?region=uk&time_period=${UK_SECTION_PROPS.year}&breakdown=local_areas`
+    );
+  });
+
+  test('given the background run computing then the local areas tab shows its progress with no compute button', async () => {
     // Given
     const user = userEvent.setup();
     renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
+    await waitFor(() => expect(economyRequests()).toHaveLength(1));
 
     // When
     await user.click(screen.getByRole('tab', { name: 'Local areas' }));
 
     // Then
-    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
-    expect(economyRequests()).toEqual([]);
+    expect(await screen.findByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(economyRequests()).toHaveLength(1);
   });
 
-  test('given the Public API body for a .py 6.10.0 national result then the local areas tab offers to compute', async () => {
+  test('given the background run failed then the tab offers Retry and no second request goes by itself', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS, {
+      fetchImpl: async () => {
+        throw new Error('Network down');
+      },
+    });
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // When
+    const retry = await screen.findByRole('button', { name: 'Retry' });
+
+    // Then
+    expect(retry).toBeInTheDocument();
+    expect(economyRequests()).toHaveLength(1);
+  });
+
+  test('given the Public API body for a .py 6.10.0 national result then the local areas tab shows the background run', async () => {
     // Given
     const user = userEvent.setup();
     const output = await nationalResultFromBody(NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE);
@@ -455,11 +520,11 @@ describe('ReportView UK local areas', () => {
     await user.click(screen.getByRole('tab', { name: 'Local areas' }));
 
     // Then
-    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    expect(await screen.findByRole('progressbar')).toBeInTheDocument();
     expect(screen.queryByText('No constituency data available')).not.toBeInTheDocument();
   });
 
-  test('given a saved .py 6.10.0 result with the version only in its bundle then the local areas tab offers to compute', async () => {
+  test('given a saved .py 6.10.0 result with the version only in its bundle then the local areas tab shows the background run', async () => {
     // Given
     const user = userEvent.setup();
     renderUKReport(SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY);
@@ -468,29 +533,35 @@ describe('ReportView UK local areas', () => {
     await user.click(screen.getByRole('tab', { name: 'Local areas' }));
 
     // Then
-    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
-  });
-
-  test('given compute clicked then one breakdown request goes for the report region and year', async () => {
-    // Given
-    const user = userEvent.setup();
-    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
-    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
-
-    // When
-    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
-
-    // Then
-    await waitFor(() => expect(economyRequests()).toHaveLength(1));
-    expect(economyRequests()[0]).toContain(
-      `/uk/economy/${UK_SECTION_PROPS.reformPolicyId}/over/${UK_SECTION_PROPS.baselinePolicyId}?region=uk&time_period=${UK_SECTION_PROPS.year}&breakdown=local_areas`
-    );
     expect(await screen.findByRole('progressbar')).toBeInTheDocument();
   });
 
-  test('given compute clicked then switching to another year sends no request until compute is clicked for it', async () => {
+  test('given runs are blocked then the local areas tab says why, offers no compute and sends nothing', async () => {
     // Given
     const user = userEvent.setup();
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS, { runsBlocked: true });
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(
+      screen.getByText(/local-area results cannot be calculated for this report/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(economyRequests()).toEqual([]);
+  });
+
+  test('given runs are blocked then the overview card does not say local areas calculate in the background', () => {
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS, { runsBlocked: true });
+
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).not.toHaveTextContent(
+      /calculate in the background/i
+    );
+  });
+
+  test('given the report switched to another year then the breakdown request for that year goes too', async () => {
+    // Given
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => Response.json({ status: 'computing', queue_position: 1, result: null }))
@@ -513,16 +584,16 @@ describe('ReportView UK local areas', () => {
       </QueryClientProvider>
     );
     const { rerender } = render(reportForYear(UK_SECTION_PROPS.year), 'uk');
-    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
-    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
     await waitFor(() => expect(economyRequests()).toHaveLength(1));
 
     // When
     rerender(reportForYear(OTHER_BREAKDOWN_YEAR));
 
     // Then
-    expect(await screen.findByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
-    expect(economyRequests()).toHaveLength(1);
+    await waitFor(() => expect(economyRequests()).toHaveLength(2));
+    expect(economyRequests()[1]).toContain(
+      `time_period=${OTHER_BREAKDOWN_YEAR}&breakdown=local_areas`
+    );
   });
 
   test('given stored results with no version and no area data then the card and the tab read as before, with no compute', async () => {
@@ -559,6 +630,159 @@ describe('ReportView UK local areas', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
     expect(economyRequests()).toEqual([]);
+  });
+});
+
+describe('ReportView US districts from state runs', () => {
+  let api: FakeStateApi;
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const reportFor = (
+    queryClient: QueryClient,
+    {
+      region = 'us',
+      year = STATE_RUNS_YEAR,
+      output = NATIONWIDE_OUTPUT_WITH_DISTRICTS,
+    }: {
+      region?: string;
+      year?: string;
+      output?: Parameters<typeof ReportView>[0]['output'];
+    } = {}
+  ) => (
+    <QueryClientProvider client={queryClient}>
+      <ReportView
+        title="Higher CTC"
+        sourceNote="Hand-built"
+        provisions={[]}
+        year={year}
+        region={region}
+        reformPolicyId={STATE_RUNS_REFORM_POLICY_ID}
+        baselinePolicyId={STATE_RUNS_BASELINE_POLICY_ID}
+        output={output}
+        calibration={null}
+        trackRecord={null}
+      />
+    </QueryClientProvider>
+  );
+
+  const openDistricts = async (
+    options: Parameters<typeof reportFor>[1] = {},
+    economy = economyWhere({ [UTAH]: () => stateOk(UTAH) }, () => STATE_COMPUTING)
+  ) => {
+    api = fakeStateDistrictApi({ economy });
+    vi.stubGlobal('fetch', api.fetch);
+    const user = userEvent.setup();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(reportFor(queryClient, options));
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
+    return { ...view, user, queryClient };
+  };
+
+  const economyRequestsFor = (year: string) =>
+    api
+      .economyRequests()
+      .filter((url) => requestUrlOf(url).searchParams.get('time_period') === year);
+
+  test('given a nationwide report then its districts tab offers Compute and maps none of the result’s districts', async () => {
+    // When
+    await openDistricts();
+
+    // Then
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByRole('button', { name: COMPUTE_DISTRICTS_LABEL })
+    ).toBeInTheDocument();
+    expect(within(panel).queryByText('$999')).not.toBeInTheDocument();
+    expect(within(panel).queryByText('AL-01')).not.toBeInTheDocument();
+  });
+
+  test('given the districts tab opened then every state is looked up and nothing is computed', async () => {
+    // When
+    await openDistricts();
+    await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL });
+
+    // Then
+    expect(api.reportRequests()).toHaveLength(STATE_COUNT);
+    expect(api.economyRequests()).toHaveLength(0);
+  });
+
+  test('given Compute then the states fill in the map, with how many are in', async () => {
+    // Given
+    const { user } = await openDistricts();
+
+    // When
+    await user.click(await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL }));
+
+    // Then
+    expect(await screen.findByText('1 of 51 states')).toBeInTheDocument();
+    expect(within(screen.getByRole('tabpanel')).getAllByText('UT-01').length).toBeGreaterThan(0);
+    await waitFor(() => expect(api.economyRequests()).toHaveLength(STATE_COUNT));
+  });
+
+  test('given a state report then its districts tab maps its own districts and computes nothing', async () => {
+    // When
+    await openDistricts({ region: UTAH, output: UTAH_REPORT_OUTPUT });
+
+    // Then
+    const panel = screen.getByRole('tabpanel');
+    expect((await within(panel).findAllByText('UT-01')).length).toBeGreaterThan(0);
+    expect(
+      within(panel).queryByRole('button', { name: COMPUTE_DISTRICTS_LABEL })
+    ).not.toBeInTheDocument();
+    expect(api.requests().filter((request) => !request.url.endsWith('.json'))).toEqual(
+      api.requests().filter((request) => !request.url.includes('/us/'))
+    );
+  });
+
+  test('given a nationwide report then the overview card says each state runs on its own data', () => {
+    // When
+    api = fakeStateDistrictApi();
+    vi.stubGlobal('fetch', api.fetch);
+    render(reportFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })));
+
+    // Then
+    expect(screen.getByRole('button', { name: 'Explore districts' })).toHaveTextContent(
+      'Compare income changes across districts on a map. Each state’s districts come from a run on its own data, which takes a few minutes.'
+    );
+  });
+
+  test('given a state report then the overview card reads as before', () => {
+    // When
+    api = fakeStateDistrictApi();
+    vi.stubGlobal('fetch', api.fetch);
+    render(
+      reportFor(new QueryClient({ defaultOptions: { queries: { retry: false } } }), {
+        region: UTAH,
+        output: UTAH_REPORT_OUTPUT,
+      })
+    );
+
+    // Then
+    expect(
+      within(screen.getByRole('button', { name: 'Explore districts' })).getByText(
+        'Compare income changes across districts on a map.'
+      )
+    ).toBeInTheDocument();
+  });
+
+  test('given the report switched to another year then nothing is computed for it until its own Compute', async () => {
+    // Given
+    const { user, queryClient, rerender } = await openDistricts();
+    await user.click(await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL }));
+    await waitFor(() => expect(economyRequestsFor(STATE_RUNS_YEAR)).toHaveLength(STATE_COUNT));
+
+    // When
+    rerender(reportFor(queryClient, { year: OTHER_STATE_RUNS_YEAR }));
+
+    // Then
+    expect(
+      await screen.findByRole('button', { name: COMPUTE_DISTRICTS_LABEL })
+    ).toBeInTheDocument();
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    expect(economyRequestsFor(OTHER_STATE_RUNS_YEAR)).toHaveLength(0);
   });
 });
 

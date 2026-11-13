@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { STATE_NAMES } from '@/api/billFeed';
+import { VariableNamesFailed } from '@/components/flagship/V3VariablesGate';
 import { Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
+import { useV3Variables } from '@/hooks/useV3Variables';
 import {
   CalibrationCountry,
   calibrationFitForGeography,
   CalibrationMatches,
   calibrationMatchesForPaths,
+  calibrationPreviewTargets,
   CalibrationRing,
   calibrationTargetLabel,
   CalibrationTargetRow,
@@ -325,8 +328,26 @@ export function GeographyFitSection({
 }) {
   const fit = useGeographyCalibrationFit(geography, countryId);
   const variables = useSelector((state: RootState) => state.metadata.variables);
+  // On v2 the variables (target names) load in the background; wait for them.
+  const variablesStatus = useV3Variables();
   const name = geographyName(geography);
   const heading = <ValidationSubheading>{name} data fit</ValidationSubheading>;
+  if (variablesStatus.status === 'loading') {
+    return (
+      <>
+        {heading}
+        <ValidationLoading label="Loading variable names" />
+      </>
+    );
+  }
+  if (variablesStatus.status === 'error') {
+    return (
+      <>
+        {heading}
+        <VariableNamesFailed onRetry={variablesStatus.retry} />
+      </>
+    );
+  }
   if (fit === undefined) {
     return (
       <>
@@ -395,6 +416,52 @@ export function GeographyFitSection({
   );
 }
 
+/**
+ * One calibration group's target rows: its headline totals and largest
+ * gaps first (calibrationPreviewTargets), the rest after "Show all".
+ */
+function CalibrationGroupTargets({
+  targets,
+  group,
+  countryId,
+}: {
+  targets: CalibrationTargetRow[];
+  group: string;
+  countryId: CalibrationCountry;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const { ordered, previewCount } = calibrationPreviewTargets(targets);
+  const visible = showAll ? ordered : ordered.slice(0, previewCount);
+  return (
+    <>
+      {visible.map((target) => (
+        <tr key={target.name}>
+          <th scope="row" style={labelCellStyle}>
+            <TargetDetails target={target} group={group} countryId={countryId} />
+          </th>
+          <TargetCells target={target} />
+        </tr>
+      ))}
+      {ordered.length > previewCount && (
+        <tr>
+          <td colSpan={CALIBRATION_COLUMNS.length} style={{ padding: `${spacing.xs} 0` }}>
+            <button
+              type="button"
+              style={rowButtonStyle}
+              aria-expanded={showAll}
+              onClick={() => setShowAll((value) => !value)}
+            >
+              {showAll
+                ? `Show the first ${previewCount} ${group} targets`
+                : `Show all ${ordered.length} ${group} targets`}
+            </button>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
 export function CalibrationMatchSection({
   matches,
   pin,
@@ -403,6 +470,8 @@ export function CalibrationMatchSection({
   pin?: CalibrationPin;
 }) {
   const variables = useSelector((state: RootState) => state.metadata.variables);
+  // On v2 the variables (target names) load in the background; wait for them.
+  const variablesStatus = useV3Variables();
   const countryId: CalibrationCountry = matches?.countryId ?? 'us';
   const uk = countryId === 'uk';
   // UK nations and the UK itself are the dashboard's "country" level.
@@ -432,6 +501,12 @@ export function CalibrationMatchSection({
   }
   if (matches === undefined) {
     return card(<ValidationLoading label="Checking calibration targets" />);
+  }
+  if (variablesStatus.status === 'loading') {
+    return card(<ValidationLoading label="Loading variable names" />);
+  }
+  if (variablesStatus.status === 'error') {
+    return card(<VariableNamesFailed onRetry={variablesStatus.retry} />);
   }
   const placeName = geographyName(matches.geography);
   const related = matches.matches.length === 0 ? (matches.related ?? []) : [];
@@ -502,14 +577,7 @@ export function CalibrationMatchSection({
                 </CellNote>
               </th>
             </tr>
-            {match.targets.map((target) => (
-              <tr key={target.name}>
-                <th scope="row" style={labelCellStyle}>
-                  <TargetDetails target={target} group={group} countryId={countryId} />
-                </th>
-                <TargetCells target={target} />
-              </tr>
-            ))}
+            <CalibrationGroupTargets targets={match.targets} group={group} countryId={countryId} />
           </tbody>
         );
       })}

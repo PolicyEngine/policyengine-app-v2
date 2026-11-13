@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { isAccountId } from '@/api/v2Associations';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
+import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import {
   nationalPopulationLabel,
   populationLabel,
@@ -19,17 +20,19 @@ import ReportYearSwitcher, {
   type YearStatus,
 } from '@/components/flagship/report/ReportYearSwitcher';
 import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgress';
+import UKLocalAreaAutoStart from '@/components/flagship/report/UKLocalAreaAutoStart';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
+import SavedReportTransferDialog from '@/components/flagship/SavedReportTransferDialog';
 import { ErrorState } from '@/components/flagship/states';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Title } from '@/components/ui';
 import { getDurationForRegion } from '@/constants/calculationDurations';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
-import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import {
   useFlagshipReportStore,
+  useReformStore,
   useReportRecord,
   useSharedReport,
 } from '@/hooks/useFlagshipStores';
@@ -38,7 +41,10 @@ import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot
 import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
+import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
+import { useV3VariablesInBackground } from '@/hooks/useV3Variables';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
+import { describeCalculationError } from '@/libs/flagship/calculationError';
 import {
   isUntitledReform,
   reportYearLabel,
@@ -52,8 +58,10 @@ import {
 } from '@/libs/flagship/reportBaseline';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta, reportMetaFromRecord } from '@/libs/flagship/runReport';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
+import { isUKLocalLevelRegion } from '@/utils/geographyUtils';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
 
 /** A failed load at the top of the overview, in a dashed box. */
@@ -104,6 +112,8 @@ function runStartedAt(...stamps: Array<string | null | undefined>): number | und
 export default function FlagshipReportPage({ userReportId: propId }: FlagshipReportPageProps) {
   const params = useParams<{ userReportId: string }>();
   const userReportId = propId ?? params.userReportId ?? '';
+  // On v2, the variables (household builder, breakdown, programme names) start loading at once.
+  useV3VariablesInBackground();
   // A report's link is its saved report's ID, which anyone can open with its
   // owner's details. Without accounts (sign-in off, or outside the US and
   // UK) nothing is shared, so the link is the v1 report's number; where
@@ -123,6 +133,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     error: reportLoadError,
     notFound: reportNotFound,
     failedPolicyIds,
+    policiesChecked,
+    missingParameters,
     retry: retryReport,
   } = useFlagshipReport(
     (sharedLink ? shared?.record.apiReportId : browserLink ? userReportId : undefined) ?? ''
@@ -146,6 +158,22 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const reformPolicyId = simulations?.[1]?.policyId;
   const reformPolicy = policies.find((policy) => policy.id === reformPolicyId);
   const baselinePolicyId = simulations?.[0]?.policyId;
+  const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
+  // Names and current law for what the report changes (and what it is
+  // compared with): with the whole metadata on the v1 routes; on the v2
+  // routes they load in one request once the report's policies are in.
+  const storedMeta = readReportMeta(userReportId);
+  const reportParameterNames = useMemo(
+    () => [
+      ...new Set([
+        ...(storedMeta?.provisions.map((provision) => provision.path) ?? []),
+        ...(reformPolicy?.parameters?.map((parameter) => parameter.name) ?? []),
+        ...(baselinePolicy?.parameters?.map((parameter) => parameter.name) ?? []),
+      ]),
+    ],
+    [storedMeta, reformPolicy, baselinePolicy]
+  );
+  const reportParameters = useEnsureV3Parameters(reportParameterNames);
   // The saved report names the reform it was compared with; only its owner
   // links to that reform.
   const sharedBaseline =
@@ -157,30 +185,44 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         }
       : undefined;
   const meta =
-    readReportMeta(userReportId) ??
+    storedMeta ??
     reportMetaFromRecord(shared?.record, report?.year, sharedBaseline) ??
     provenanceFromPolicy(
-      reformPolicy,
+      // Rebuilt from the policy once its parameters' names and current law are in.
+      reportParameters.status === 'ready' ? reformPolicy : undefined,
       parameters,
       report?.label,
       report?.year || undefined,
       report?.countryId
     );
 
+  // The report's policies set parameters the model no longer has: its
+  // stored results may show, but nothing on the page may calculate.
+  const runsBlocked = missingParameters.length > 0;
+  // Anything on the page may calculate only once the policies are checked
+  // and none sets a parameter the model no longer has.
+  const runsAllowed = policiesChecked && !runsBlocked;
+  // The user's own saved report offers, as the page opens, to run again
+  // without those parameters, until "Not now" puts it off; a report
+  // someone else saved only says why it cannot run.
+  const reformStore = useReformStore();
+  const [transferPutOffFor, setTransferPutOffFor] = useState<string | null>(null);
+
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.
   const unreadableMeta = useUnreadableReportMeta(userReportId);
   // The reform's provisions are rebuilt from metadata; without it they cannot show.
-  const metadata = useFlagshipMetadataStatus();
+  const metadata = reportParameters;
   // Rebuilt, the provisions are on their way until the reform policy loads
   // (it waits for the parameter metadata, so names and current law come
   // with it): the report waits for them rather than show an empty reform
   // to adjust. A policy or metadata that failed lets it show without them.
+  const reformPolicyFailed = !!reformPolicyId && failedPolicyIds.includes(reformPolicyId);
   const awaitingProvisions =
     !meta &&
     !unresolvable &&
     !!reformPolicyId &&
-    !failedPolicyIds.includes(reformPolicyId) &&
+    !reformPolicyFailed &&
     metadata.status !== 'error';
 
   // A household report is the classic calculator's: this page shows
@@ -239,14 +281,14 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   });
 
   useStartCalculationOnLoad({
-    enabled: !!report && !!calcConfigs,
+    // Not before the policies are checked, and never with missing parameters.
+    enabled: !!report && !!calcConfigs && runsAllowed,
     configs: calcConfigs || [],
     isComplete: calcStatus.isComplete,
   });
 
   const output = calcStatus.isComplete ? (calcStatus.result as SocietyWideOutput) : null;
 
-  const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
   // A baseline policy that failed to load is unknown, not current law.
   const baselineUnknown = reportBaselineUnknown(meta, baselinePolicyId, {
     currentLawId,
@@ -265,10 +307,17 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     region && report && region !== report.countryId
       ? populationLabel(region, economyRegions)
       : undefined;
+  // Where the reform ran, as a failed calculation's message says it.
+  const calculationScope = regionLabel
+    ? `for ${regionLabel}`
+    : report?.countryId === 'uk'
+      ? 'UK-wide'
+      : 'nationwide';
   // A budget window's years. The run scored the first in full; another
   // year runs once it is opened, or with the rest from the All years view.
+  // Blocked, the report shows its own year only: another would need a run.
   const windowYears =
-    meta?.budgetWindow && meta.budgetWindow.windowSize > 1 && report?.year
+    runsAllowed && meta?.budgetWindow && meta.budgetWindow.windowSize > 1 && report?.year
       ? Array.from({ length: meta.budgetWindow.windowSize }, (_, index) =>
           String(meta.budgetWindow!.startYear + index)
         )
@@ -310,7 +359,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     reformPolicyId: reformPolicyId ? String(reformPolicyId) : undefined,
     baselinePolicyId: baselinePolicyId ? String(baselinePolicyId) : undefined,
     region,
-    years: requestedYears.filter((year) => year !== reportYear),
+    years: runsAllowed ? requestedYears.filter((year) => year !== reportYear) : [],
   });
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths, report?.countryId);
@@ -321,7 +370,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       calibration,
       programs: trackRecordPrograms(trackRecord),
     },
-    shared?.record.validation ?? null
+    shared?.record.validation ?? null,
+    report?.id
   );
 
   const title = meta?.title || report?.label || 'Impact report';
@@ -331,6 +381,22 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // against, so the side panel comes with the finished report.
   const layout = (main: React.ReactNode) => (
     <div style={{ width: '100%', minWidth: 0 }}>{main}</div>
+  );
+
+  const transferDialog = reportRecord && runsBlocked && (
+    <SavedReportTransferDialog
+      open={transferPutOffFor !== userReportId}
+      onOpenChange={(open) => !open && setTransferPutOffFor(userReportId)}
+      report={reportRecord}
+      missingParameters={missingParameters}
+      keepsLink={isAccount}
+      findReform={(reformId) => reformStore.findById(reformId)}
+      title={reportRecord.title || title}
+      sourceNote={reportRecord.sourceNote || meta?.sourceNote || ''}
+      currentLink={userReportId}
+      // The saved report now points at the new run, which is not blocked.
+      onTransferred={() => setTransferPutOffFor(userReportId)}
+    />
   );
 
   // Unreadable stored provenance says so, until the report is opened without it.
@@ -356,7 +422,22 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     );
   }
 
-  if (!output || isLoading || awaitingProvisions) {
+  // Without stored results there is nothing to show but why.
+  if (runsBlocked && !output) {
+    return layout(
+      <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
+        <Title order={1} style={{ margin: 0 }}>
+          {title}
+        </Title>
+        <MissingParametersNotice subject="This report" parameterPaths={missingParameters} />
+        {transferDialog}
+      </Stack>
+    );
+  }
+
+  // Until the policies are checked, nothing on the page may calculate: the
+  // results wait, as they wait for the policies' details.
+  if (!output || isLoading || awaitingProvisions || !policiesChecked) {
     if (unresolvable) {
       return layout(
         <Stack
@@ -396,13 +477,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           </Title>
           <ReportCalculationError
             message={calcStatus.error?.message}
-            scope={
-              regionLabel
-                ? `for ${regionLabel}`
-                : report?.countryId === 'uk'
-                  ? 'UK-wide'
-                  : 'nationwide'
-            }
+            scope={calculationScope}
             // The reform comes back as a draft to edit; without it, Build starts blank.
             onEdit={
               meta?.provisions.length && report
@@ -433,6 +508,21 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           alignItems: 'center',
         }}
       >
+        {/* A UK report's local areas calculate alongside its national run, once runs are allowed. */}
+        {runsAllowed &&
+          report?.countryId === 'uk' &&
+          report.status !== 'complete' &&
+          !householdReport &&
+          !isUKLocalLevelRegion(region) && (
+            <UKLocalAreaAutoStart
+              output={null}
+              resultsRunning
+              region={region}
+              year={reportYear}
+              reformPolicyId={reformPolicyId}
+              baselinePolicyId={baselinePolicyId}
+            />
+          )}
         {calcStatus.status === 'pending' ? (
           <RunProgress
             title={
@@ -502,14 +592,21 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     }
   };
   const shownOutput = otherYear ? (yearEconomy?.output ?? null) : output;
+  // A failed year, said plainly: the API's error as a reader can act on it
+  // (a year outside the model's data in the API's own words), not the raw
+  // response, and a retry only where one can help.
+  const yearError =
+    yearEconomy?.status === 'error'
+      ? describeCalculationError(yearEconomy.message, calculationScope)
+      : null;
   const yearPending =
     otherYear && yearEconomy?.status !== 'complete' ? (
-      yearEconomy?.status === 'error' ? (
+      yearError ? (
         <ErrorState
           compact
           title={`Could not calculate ${reportYearLabel(year, report?.countryId)}`}
-          description={yearEconomy.message}
-          onRetry={yearEconomy.retry}
+          description={yearError.body}
+          onRetry={yearError.retryable ? yearEconomy?.retry : undefined}
         />
       ) : (
         <RunProgress
@@ -521,23 +618,39 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       )
     ) : undefined;
 
-  return (
+  const reportView = (
     <ReportView
       title={title}
       heading={coverTitle}
       sourceNote={meta?.sourceNote || ''}
       populationLabel={regionLabel ?? nationalPopulationLabel(report?.countryId)}
       // A window asked for in Build opens running.
-      budgetWindow={meta?.budgetWindow}
+      budgetWindow={runsAllowed ? meta?.budgetWindow : undefined}
       provisions={meta?.provisions ?? []}
       overviewLead={
         <>
+          {runsBlocked && (
+            <MissingParametersNotice subject="This report" parameterPaths={missingParameters}>
+              Its stored results are shown as they were calculated.
+            </MissingParametersNotice>
+          )}
           {!meta && metadata.status === 'error' && (
             <LeadError>
               <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
             </LeadError>
           )}
-          {baselineUnknown && (
+          {/* On the v1 routes the report shows without its changes, as before. */}
+          {!meta && reformPolicyFailed && V3_API_ROUTES === 'v2' && (
+            <LeadError>
+              <ErrorState
+                compact
+                title="Could not load the reform policy"
+                description="The results show, but the changes it makes are missing."
+                onRetry={retry}
+              />
+            </LeadError>
+          )}
+          {baselineUnknown && !runsBlocked && (
             <LeadError>
               <ErrorState
                 compact
@@ -552,6 +665,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       customBaselineLabel={customBaselineLabel}
       baselineUnknown={baselineUnknown}
       baseline={runBaseline}
+      runsBlocked={runsBlocked}
       year={year}
       region={region}
       reformPolicyId={reformPolicyId}
@@ -601,5 +715,15 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       calibrationPin={pin}
       trackRecord={trackRecord}
     />
+  );
+  // Beside the report, not in one of its sections: it opens on whichever
+  // section the link names.
+  return transferDialog ? (
+    <>
+      {transferDialog}
+      {reportView}
+    </>
+  ) : (
+    reportView
   );
 }

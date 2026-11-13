@@ -12,7 +12,7 @@ import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';
 import { getVariableDisplayText } from '@/utils/householdDisplayText';
 import {
   formatVariableValue,
-  getParameterAtInstant,
+  getParameterNamedParts,
   shouldShowVariable,
 } from '@/utils/householdValues';
 
@@ -48,6 +48,9 @@ export default function VariableArithmetic({
   const reportYear = useReportYear();
   const variables = useSelector((state: RootState) => state.metadata.variables);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const partParameterValues = useSelector(
+    (state: RootState) => state.metadata.v2PartParameterValues
+  );
   const entities = useSelector((state: RootState) => state.metadata.entities);
   const metadata = useMemo(
     () => ({ variables, parameters, entities }) as MetadataState,
@@ -67,13 +70,12 @@ export default function VariableArithmetic({
   let addsArray: string[] = [];
   let subtractsArray: string[] = [];
 
+  // A parameter name stands for the list it holds in the report's year: from
+  // the whole parameter list on v1, from the variables' part values on v2.
+  const instant = `${reportYear}-01-01`;
   if (variable.adds) {
     if (typeof variable.adds === 'string') {
-      // It's a parameter name - resolve it
-      const parameter = parameters[variable.adds];
-      if (parameter) {
-        addsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
-      }
+      addsArray = getParameterNamedParts(variable.adds, instant, parameters, partParameterValues);
     } else if (Array.isArray(variable.adds)) {
       addsArray = variable.adds;
     }
@@ -81,11 +83,12 @@ export default function VariableArithmetic({
 
   if (variable.subtracts) {
     if (typeof variable.subtracts === 'string') {
-      // It's a parameter name - resolve it
-      const parameter = parameters[variable.subtracts];
-      if (parameter) {
-        subtractsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
-      }
+      subtractsArray = getParameterNamedParts(
+        variable.subtracts,
+        instant,
+        parameters,
+        partParameterValues
+      );
     } else if (Array.isArray(variable.subtracts)) {
       subtractsArray = variable.subtracts;
     }

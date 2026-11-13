@@ -12,6 +12,7 @@ import {
   loadReformIntoDraft,
   setDraftBaseline,
   setDraftLabel,
+  setDraftWindowYears,
   startDraftReform,
   updateDraftProvisionValue,
   useDraftReform,
@@ -20,8 +21,17 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   seedDeductionMetadata,
+  seedModelYears,
+  UK_REGIONS,
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { UK_PERSONAL_ALLOWANCE_PROVISION } from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
+import {
+  UK_FIRST_SUPPORTED_YEAR,
+  UK_LAST_SUPPORTED_YEAR,
+} from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
+import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import { US_LAST_SUPPORTED_YEAR } from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockCreate = vi.fn();
@@ -51,14 +61,24 @@ function HeaderHarness() {
   ) : null;
 }
 
-function renderHeader() {
+function renderHeader(countryId = 'us') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
       <HeaderHarness />
-    </QueryClientProvider>
+    </QueryClientProvider>,
+    countryId
   );
 }
+
+/** A change to a parameter that `seedDeductionMetadata` gives the model. */
+const SEEDED_CHANGE = {
+  path: 'gov.irs.income.exemption.amount',
+  breadcrumb: 'IRS → Income → Exemption → Amount',
+  unit: 'currency-USD',
+  baselineValue: 5000,
+  value: 6000,
+};
 
 describe('DraftHeader', () => {
   beforeEach(() => {
@@ -167,16 +187,11 @@ describe('DraftHeader', () => {
   test('given a budget window is chosen then the draft and its run take it', async () => {
     Element.prototype.scrollIntoView ??= vi.fn();
     Element.prototype.hasPointerCapture ??= vi.fn(() => false);
-    seedDeductionMetadata();
+    // The US model's years as its metadata lists them: a ten-year window from 2026 fits.
+    seedDeductionMetadata({ lastYear: US_LAST_SUPPORTED_YEAR });
     const user = userEvent.setup();
-    // A change to run.
-    addDraftProvision('us', {
-      path: 'gov.irs.credits.eitc.max',
-      breadcrumb: 'IRS → Credits → EITC → Maximum',
-      unit: 'currency-USD',
-      baselineValue: 600,
-      value: 900,
-    });
+    // A change to run, to a parameter the seeded model has.
+    addDraftProvision('us', SEEDED_CHANGE);
     renderHeader();
 
     // One control: the year, and the years of budget from it.
@@ -189,6 +204,67 @@ describe('DraftHeader', () => {
     expect(getDraftReform()?.windowYears).toBe(10);
     await user.click(screen.getByRole('button', { name: /run 2026–2035 report/i }));
     expect(mockRun.mock.calls[0][5]).toMatchObject({ fromDraft: true, windowYears: 10 });
+  });
+
+  test('given a change to a parameter the model no longer has then saving and running are off, and the notice names it', async () => {
+    // Given: a draft kept from before the model dropped the parameter
+    seedDeductionMetadata();
+    addDraftProvision('us', SEEDED_CHANGE);
+    addDraftProvision('us', {
+      path: REMOVED_US_PARAMETER,
+      breadcrumb: REMOVED_US_PARAMETER,
+      unit: 'currency-USD',
+      baselineValue: 0,
+      value: 1000,
+    });
+
+    // When
+    renderHeader();
+
+    // Then
+    const notice = await screen.findByRole('alert');
+    expect(notice).toHaveTextContent(/this reform cannot be run/i);
+    expect(
+      within(notice)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent)
+    ).toEqual([REMOVED_US_PARAMETER]);
+    expect(notice).toHaveTextContent(/remove it from the reform to save or run it/i);
+    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+  });
+
+  test('given a parameter the model no longer has left at its earlier value then nothing is checked, and saving and running go ahead', () => {
+    // Given: saving and running leave an unchanged parameter out, so they send nothing for it
+    seedDeductionMetadata();
+    addDraftProvision('us', SEEDED_CHANGE);
+    addDraftProvision('us', {
+      path: REMOVED_US_PARAMETER,
+      breadcrumb: REMOVED_US_PARAMETER,
+      unit: 'currency-USD',
+      baselineValue: 1000,
+      value: 1000,
+    });
+
+    // When
+    renderHeader();
+
+    // Then
+    expect(screen.queryByText(/cannot be run/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+  });
+
+  test("given the model's parameters have not loaded then a draft's changes are not checked", () => {
+    // Given: no metadata yet
+    addDraftProvision('us', SEEDED_CHANGE);
+
+    // When
+    renderHeader();
+
+    // Then
+    expect(screen.queryByText(/cannot be run/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeEnabled();
   });
 
   describe('given a run', () => {
@@ -511,6 +587,43 @@ describe('DraftHeader', () => {
       expect(screen.queryByRole('option', { name: 'Empty' })).not.toBeInTheDocument();
     });
 
+    test('then a saved reform that sets parameters the model no longer has cannot be chosen, and says why', async () => {
+      const user = userEvent.setup();
+      mockFindMine.mockResolvedValue([
+        PLAN_B,
+        {
+          ...PLAN_B,
+          id: 'rf-removed',
+          label: 'Old plan',
+          missingParameters: [REMOVED_US_PARAMETER],
+        },
+      ]);
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: 'Compared with: Current law' }));
+      const option = await screen.findByRole('option', { name: /Old plan/ });
+      expect(option).toHaveAttribute('aria-disabled', 'true');
+      expect(option).toHaveTextContent(
+        `Uses parameters the model no longer has: ${REMOVED_US_PARAMETER}`
+      );
+      await user.click(option);
+
+      expect(getDraftReform()?.baselineReformId).toBeUndefined();
+    });
+
+    test('then a chosen comparison that sets parameters the model no longer has stops the run, and names them', async () => {
+      mockFindMine.mockResolvedValue([{ ...PLAN_B, missingParameters: [REMOVED_US_PARAMETER] }]);
+      addDraftProvision('us', CHANGED);
+      setDraftBaseline('rf-plan-b');
+      renderHeader();
+
+      const notice = await screen.findByRole('alert');
+      expect(notice).toHaveTextContent(/Plan B.*cannot be run/);
+      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
+    });
+
     test('then a chosen comparison holds the run until the saved reforms load', async () => {
       mockFindMine.mockReturnValue(new Promise(() => {}));
       addDraftProvision('us', CHANGED);
@@ -560,13 +673,7 @@ describe('DraftHeader', () => {
   test('given a state is chosen then the draft and its run take it', async () => {
     const user = userEvent.setup();
     seedDeductionMetadata({ regions: US_REGIONS });
-    addDraftProvision('us', {
-      path: 'gov.irs.credits.eitc.max',
-      breadcrumb: 'IRS → Credits → EITC → Maximum',
-      unit: 'currency-USD',
-      baselineValue: 600,
-      value: 900,
-    });
+    addDraftProvision('us', SEEDED_CHANGE);
     renderHeader();
 
     await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
@@ -889,5 +996,59 @@ describe('DraftHeader', () => {
 
     expect(getDraftReform()).toBeNull();
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+  describe('given a UK draft and the years the UK model covers', () => {
+    beforeEach(() => {
+      // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+      clearDraftReform();
+      startDraftReform('uk', 'manual');
+      addDraftProvision('uk', UK_PERSONAL_ALLOWANCE_PROVISION);
+      seedModelYears({
+        countryId: 'uk',
+        firstYear: UK_FIRST_SUPPORTED_YEAR,
+        lastYear: UK_LAST_SUPPORTED_YEAR,
+        regions: UK_REGIONS,
+      });
+    });
+
+    test('given the budget choices then none runs past the last year the model covers', async () => {
+      // Given
+      const user = userEvent.setup();
+      renderHeader('uk');
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Year: 2026' }));
+
+      // Then
+      const budgetChoices = (await screen.findAllByRole('tab')).map((tab) => tab.textContent);
+      expect(budgetChoices).toEqual(['1 year', '3 years', '5 years', '7 years']);
+    });
+
+    test('given a ten-year window kept in the draft then the bar shows it ending on the last year', () => {
+      // Given
+      setDraftWindowYears(10);
+
+      // When
+      renderHeader('uk');
+
+      // Then
+      expect(screen.getByRole('button', { name: 'Years: 2026–2032' })).toBeInTheDocument();
+    });
+
+    test('given a ten-year window kept in the draft then the run scores only the years up to the last one', async () => {
+      // Given
+      setDraftWindowYears(10);
+      const user = userEvent.setup();
+      renderHeader('uk');
+
+      // When
+      await user.click(screen.getByRole('button', { name: /^save and run/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][5]).toMatchObject({ windowYears: 7 });
+    });
   });
 });

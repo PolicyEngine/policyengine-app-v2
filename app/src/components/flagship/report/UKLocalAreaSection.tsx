@@ -11,8 +11,9 @@ import { useUKLocalAreaOutput } from '@/hooks/useUKLocalAreaOutput';
  * result without them (.py 6.10.0 on) shows the compute panel; its button sends one
  * breakdown request for the report's region and year, and the maps replace
  * the panel when the run completes, with notes on the areas disclosure
- * control withheld or published as approximate. The hex layout comes with
- * the results, so nothing is drawn before then.
+ * control withheld or published as approximate. Nothing is drawn before
+ * then: the maps have no results to colour, though the hex map's positions
+ * come from the app's own layout files.
  */
 export default function UKLocalAreaSection({
   output,

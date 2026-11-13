@@ -46,7 +46,6 @@ const UK_NATION_BY_REGION: Record<string, UKNation> = {
   'country/england': 'england',
   'country/wales': 'wales',
   'country/scotland': 'scotland',
-  'country/ni': 'northern_ireland',
   'country/northern_ireland': 'northern_ireland',
 };
 

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 
 import { IconChevronDown, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { colors, spacing, typography } from '@/designTokens';
+import { useV3SearchCatalog } from '@/hooks/useV3SearchCatalog';
 import {
   currentLawForYear,
   DraftProvision,
@@ -20,7 +21,6 @@ import { provisionName, summarizeIntervals } from '@/libs/flagship/draftLabels';
 import { ParameterGroup, parameterGroup } from '@/libs/flagship/parameterGroups';
 import { growthOf, growthPhrase, setValueFromYear } from '@/libs/flagship/uprating';
 import { getDateRange } from '@/libs/metadataUtils';
-import { selectAddableParameterPaths } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 import { formatCurrentLaw, formatValue } from '@/utils/parameterValues';
 import ProvisionDetails from './ProvisionDetails';
@@ -170,7 +170,8 @@ export default function DraftTable({
   addRow?: React.ReactNode;
 }) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const draftable = useSelector(selectAddableParameterPaths);
+  // The parameters a draft can take: their groups show as one table row.
+  const draftable = useV3SearchCatalog().addablePaths;
   const lastYear = Number(useSelector(getDateRange).maxDate.slice(0, 4));
   const focus = useProvisionFocus();
   // One row open at a time: the one being worked on.

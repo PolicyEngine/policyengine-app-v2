@@ -1,0 +1,30 @@
+{
+  "range_gbp": [
+    500,
+    5000
+  ],
+  "validation_interval_gbp": 2,
+  "points_per_series": 2251,
+  "series": 4,
+  "liability_checks": 18008,
+  "interpolation_checks": 9004,
+  "chart_interval_gbp": 100,
+  "savings_breakpoints_gbp": [
+    500,
+    1000
+  ],
+  "trading_breakpoints_gbp": [
+    1000,
+    1333.3333333333333,
+    3000,
+    4000
+  ],
+  "chart_rows": {
+    "savings": 46,
+    "trading": 47
+  },
+  "maximum_model_error_gbp": 2.2737367544323206e-13,
+  "maximum_chart_interpolation_error_gbp": 0.0033000000000242835,
+  "tolerance_gbp": 0.01,
+  "method": "All four series checked against pe.uk at every £2; both scenarios compared with independent tax arithmetic; plotted linear interpolation compared with the engine tax changes. The non-integer expense-choice breakpoint is additionally calculated with pe.uk."
+}

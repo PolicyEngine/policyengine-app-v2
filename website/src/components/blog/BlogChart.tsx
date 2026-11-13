@@ -9,8 +9,8 @@
  * Posts carry data, not styling. Styles are inline token variables because
  * the website's Tailwind build uses a prefix that ui-kit's utility classes lack.
  *
- * Types: "bar" (below), "waterfall" (BlogWaterfallChart.tsx) and "stateMap"
- * (BlogStateMap.tsx). Every type takes an optional "title", "subtitle" and
+ * Types: "bar" (below), "line" (BlogLineChart.tsx), "waterfall"
+ * (BlogWaterfallChart.tsx) and "stateMap" (BlogStateMap.tsx). Every type takes an optional "title", "subtitle" and
  * "source"; an invalid spec renders nothing.
  *
  * Spec (type "bar"):
@@ -22,8 +22,29 @@
  *   "data": [{ "group": "All people", "census": 0.07 }, ...],
  *   "yLabel": "...",
  *   "format": { "decimals": 2, "suffix": " pp", "signed": true },
+ *   "valueLabels": false,
+ *   "orientation": "horizontal",
+ *   "legend": false,
+ *   "stacked": true,
  *   "source": "..."
  * }
+ *
+ * "valueLabels" (default true) prints each bar's value at its end. Set it to
+ * false when several series make the labels overlap; the tooltip still
+ * gives each value.
+ *
+ * "orientation" (default "vertical") sets the direction the bars run.
+ * "horizontal" lists the categories down the left and runs the bars along a
+ * quantitative x-axis, which suits long category lists and ranked data.
+ * "yLabel" then labels that value axis.
+ *
+ * "legend" (default true) shows the series names. Set it to false for a
+ * single series that the title or subtitle already names.
+ *
+ * "stacked" (default false) stacks the series in each row, in series order
+ * from zero, and labels each stack's end with the row's total. List first
+ * the series readers should compare across rows, since only it shares a
+ * baseline.
  */
 
 import { type ReactNode, useId } from "react";
@@ -58,6 +79,7 @@ import {
   niceTicks,
   validSharedFields,
 } from "./blogChartUtils";
+import { type BlogLineSpec, LineBody, parseLineSpec } from "./BlogLineChart";
 import {
   type BlogStateMapSpec,
   StateMapBody,
@@ -87,17 +109,34 @@ export interface BlogBarChartSpec {
   data: BlogChartRow[];
   yLabel?: string;
   format?: BlogChartFormat;
+  valueLabels?: boolean;
+  orientation?: "vertical" | "horizontal";
+  legend?: boolean;
+  stacked?: boolean;
   source?: string;
   height?: number;
 }
 
 export type BlogChartSpec =
   | BlogBarChartSpec
+  | BlogLineSpec
   | BlogWaterfallSpec
   | BlogStateMapSpec;
 
 function parseBarSpec(s: Record<string, unknown>): BlogBarChartSpec | null {
   if (s.type !== "bar" || typeof s.xKey !== "string") return null;
+  if (s.valueLabels !== undefined && typeof s.valueLabels !== "boolean") {
+    return null;
+  }
+  if (
+    s.orientation !== undefined &&
+    s.orientation !== "vertical" &&
+    s.orientation !== "horizontal"
+  ) {
+    return null;
+  }
+  if (s.legend !== undefined && typeof s.legend !== "boolean") return null;
+  if (s.stacked !== undefined && typeof s.stacked !== "boolean") return null;
   if (!Array.isArray(s.series) || s.series.length === 0) return null;
   if (!Array.isArray(s.data) || s.data.length === 0) return null;
   if (
@@ -134,6 +173,8 @@ export function parseBlogChartSpec(raw: string): BlogChartSpec | null {
   switch (spec.type) {
     case "bar":
       return parseBarSpec(spec);
+    case "line":
+      return parseLineSpec(spec);
     case "waterfall":
       return parseWaterfallSpec(spec);
     case "stateMap":
@@ -150,16 +191,44 @@ interface ValueLabelProps {
   height?: unknown;
   value?: unknown;
   format: BlogChartFormat;
+  horizontal?: boolean;
 }
 
-/** Value label above a positive bar and below a negative one; the unit lives on the axis. */
-function ValueLabel({ x, y, width, height, value, format }: ValueLabelProps) {
+/**
+ * Value label at the bar's end: above a positive bar and below a negative
+ * one, or right and left of them when the bars run horizontally. The unit
+ * lives on the axis.
+ */
+function ValueLabel({
+  x,
+  y,
+  width,
+  height,
+  value,
+  format,
+  horizontal = false,
+}: ValueLabelProps) {
   const v = Number(value);
   if (!Number.isFinite(v)) return null;
   const nx = Number(x),
     ny = Number(y),
     nw = Number(width),
     nh = Number(height);
+  if (horizontal) {
+    const left = Math.min(nx, nx + nw);
+    const right = Math.max(nx, nx + nw);
+    return (
+      <text
+        x={v >= 0 ? right + 6 : left - 6}
+        y={ny + nh / 2}
+        textAnchor={v >= 0 ? "start" : "end"}
+        dominantBaseline="central"
+        style={{ ...AXIS_STYLE, fill: "var(--text-secondary)" }}
+      >
+        {formatChartValue(v, { ...format, suffix: "" })}
+      </text>
+    );
+  }
   const top = Math.min(ny, ny + nh);
   const bottom = Math.max(ny, ny + nh);
   return (
@@ -181,47 +250,100 @@ function BarBody({ spec }: { spec: BlogBarChartSpec }) {
       (s) => typeof row[s.key] === "number" && (row[s.key] as number) < 0,
     ),
   );
-  const values = spec.data.flatMap((row) =>
+  const rowValues = (row: BlogChartRow) =>
     spec.series
       .map((s) => row[s.key])
-      .filter((v): v is number => typeof v === "number"),
+      .filter((v): v is number => typeof v === "number");
+  const rowTotal = (row: BlogChartRow) =>
+    rowValues(row).reduce((sum, v) => sum + v, 0);
+  // A stack reaches its row's total, so the axis must cover the totals too.
+  const values = spec.data.flatMap((row) =>
+    spec.stacked ? [...rowValues(row), rowTotal(row)] : rowValues(row),
   );
   const axis = niceTicks(values);
   const tickFormat = (v: number) =>
     formatChartValue(v, { ...format, decimals: axis.decimals });
+  const horizontal = spec.orientation === "horizontal";
+  const valueAxis = {
+    tick: AXIS_STYLE,
+    axisLine: false,
+    tickLine: false,
+    tickFormatter: tickFormat,
+    domain: axis.domain,
+    ticks: axis.ticks,
+  };
+  const categoryAxis = {
+    dataKey: spec.xKey,
+    tick: AXIS_STYLE,
+    axisLine: false,
+    tickLine: false,
+  };
+  // Room for the longest category name down the left of horizontal bars.
+  const longest = Math.max(
+    ...spec.data.map((row) => String(row[spec.xKey] ?? "").length),
+  );
+  const categoryWidth = Math.min(180, 16 + 8 * longest);
+  const height =
+    spec.height ??
+    (horizontal ? Math.max(200, 48 + 36 * spec.data.length) : 360);
 
   return (
-    <ResponsiveContainer width="100%" height={spec.height ?? 360}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart
         data={spec.data}
-        margin={{ top: 24, right: 16, bottom: 8, left: 8 }}
+        layout={horizontal ? "vertical" : "horizontal"}
+        margin={
+          horizontal
+            ? { top: 8, right: 48, bottom: spec.yLabel ? 24 : 8, left: 8 }
+            : { top: 24, right: 16, bottom: 8, left: 8 }
+        }
       >
-        <CartesianGrid {...GRID_STYLE} vertical={false} />
-        <XAxis
-          dataKey={spec.xKey}
-          tick={AXIS_STYLE}
-          axisLine={false}
-          tickLine={false}
+        <CartesianGrid
+          {...GRID_STYLE}
+          vertical={horizontal}
+          horizontal={!horizontal}
         />
-        <YAxis
-          tick={AXIS_STYLE}
-          axisLine={false}
-          tickLine={false}
-          tickFormatter={tickFormat}
-          domain={axis.domain}
-          ticks={axis.ticks}
-          label={
-            spec.yLabel
-              ? {
-                  value: spec.yLabel,
-                  angle: -90,
-                  position: "insideLeft",
-                  style: { ...AXIS_STYLE, textAnchor: "middle" },
-                }
-              : undefined
-          }
-        />
-        {hasNegative && <ReferenceLine y={0} stroke="var(--border-dark)" />}
+        {horizontal ? (
+          <XAxis
+            type="number"
+            {...valueAxis}
+            label={
+              spec.yLabel
+                ? {
+                    value: spec.yLabel,
+                    position: "insideBottom",
+                    offset: -16,
+                    style: { ...AXIS_STYLE, textAnchor: "middle" },
+                  }
+                : undefined
+            }
+          />
+        ) : (
+          <XAxis {...categoryAxis} />
+        )}
+        {horizontal ? (
+          <YAxis type="category" {...categoryAxis} width={categoryWidth} />
+        ) : (
+          <YAxis
+            {...valueAxis}
+            label={
+              spec.yLabel
+                ? {
+                    value: spec.yLabel,
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { ...AXIS_STYLE, textAnchor: "middle" },
+                  }
+                : undefined
+            }
+          />
+        )}
+        {hasNegative &&
+          (horizontal ? (
+            <ReferenceLine x={0} stroke="var(--border-dark)" />
+          ) : (
+            <ReferenceLine y={0} stroke="var(--border-dark)" />
+          ))}
         <Tooltip
           {...TOOLTIP_STYLE}
           cursor={{ fill: "var(--background-tertiary)" }}
@@ -230,22 +352,52 @@ function BarBody({ spec }: { spec: BlogBarChartSpec }) {
             String(name),
           ]}
         />
-        <Legend {...LEGEND_STYLE} iconType="square" />
-        {spec.series.map((s, i) => (
-          <Bar
-            key={s.key}
-            dataKey={s.key}
-            name={s.name}
-            fill={chartColor(s.color, i)}
-            radius={[2, 2, 0, 0]}
-            isAnimationActive={false}
-          >
-            <LabelList
+        {spec.legend !== false && (
+          <Legend {...LEGEND_STYLE} iconType="square" />
+        )}
+        {spec.series.map((s, i) => {
+          const last = i === spec.series.length - 1;
+          // In a stack only the outer segment gets rounded corners and the
+          // label, which gives the row's total.
+          const rounded = !spec.stacked || last;
+          const labelled =
+            spec.valueLabels !== false && (!spec.stacked || last);
+          return (
+            <Bar
+              key={s.key}
               dataKey={s.key}
-              content={(props) => <ValueLabel {...props} format={format} />}
-            />
-          </Bar>
-        ))}
+              name={s.name}
+              fill={chartColor(s.color, i)}
+              stackId={spec.stacked ? "stack" : undefined}
+              radius={
+                rounded
+                  ? horizontal
+                    ? [0, 2, 2, 0]
+                    : [2, 2, 0, 0]
+                  : [0, 0, 0, 0]
+              }
+              isAnimationActive={false}
+            >
+              {labelled && (
+                <LabelList
+                  dataKey={s.key}
+                  content={(props) => (
+                    <ValueLabel
+                      {...props}
+                      value={
+                        spec.stacked && typeof props.index === "number"
+                          ? rowTotal(spec.data[props.index])
+                          : props.value
+                      }
+                      format={format}
+                      horizontal={horizontal}
+                    />
+                  )}
+                />
+              )}
+            </Bar>
+          );
+        })}
       </BarChart>
     </ResponsiveContainer>
   );
@@ -325,6 +477,7 @@ export function BlogChart({ data }: { data: string | string[] }) {
   return (
     <ChartFigure spec={spec}>
       {spec.type === "bar" && <BarBody spec={spec} />}
+      {spec.type === "line" && <LineBody spec={spec} />}
       {spec.type === "waterfall" && <WaterfallBody spec={spec} />}
       {spec.type === "stateMap" && <StateMapBody spec={spec} />}
     </ChartFigure>

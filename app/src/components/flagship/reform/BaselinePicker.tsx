@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconCheck, IconChevronDown, IconScale } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
@@ -16,9 +16,13 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
+import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { provisionAdjusts, provisionIntervals, type DraftReform } from '@/libs/draftReform';
+import { reformMissingParameters } from '@/libs/flagship/missingParameters';
 import { sameReformParameters } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
+import { reformParameterNames } from '@/libs/flagship/v3ParameterNames';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
 
@@ -51,6 +55,10 @@ export function useDraftBaseline(draft: DraftReform) {
   const reform = draft.baselineReformId
     ? options.find((option) => option.id === draft.baselineReformId)
     : undefined;
+  // Current law for the comparison's parameters: on the v2 routes they
+  // load once it is chosen (the draft's own load with the draft).
+  const baselineNames = useMemo(() => (reform ? reformParameterNames([reform]) : []), [reform]);
+  const baselineParameters = useEnsureV3Parameters(baselineNames);
   const forRun: RunReportBaseline | undefined = reform && {
     reformId: reform.id,
     label: savedReformName(reform),
@@ -71,8 +79,23 @@ export function useDraftBaseline(draft: DraftReform) {
     options,
     reform,
     forRun,
-    /** The chosen comparison is not known until the saved reforms load. */
-    pending: !!draft.baselineReformId && isPending,
+    /**
+     * The parameters the chosen comparison's policy sets that the model no
+     * longer has: while there are any, the draft cannot run against it.
+     */
+    missingParameters: reformMissingParameters(reform),
+    /**
+     * The chosen comparison is not known until the saved reforms load, nor
+     * what it changes until current law for its parameters is in.
+     */
+    pending: (!!draft.baselineReformId && isPending) || (!!reform && baselineParameters.waiting),
+    /**
+     * Current law for the comparison's parameters failed to load (on the v2
+     * routes; on v1 it comes with the whole metadata): what it changes is
+     * unknown, so the run waits for a retry.
+     */
+    failed: !!reform && V3_API_ROUTES === 'v2' && baselineParameters.status === 'error',
+    retry: baselineParameters.retry,
     /** The draft changes just what its comparison changes: the report would show no change. */
     matchesDraft:
       !!reform && draftChanges.length > 0 && sameReformParameters(baselineChanges, draftChanges),
@@ -217,18 +240,40 @@ export default function BaselinePicker({ value, onChange, reforms }: BaselinePic
                   <span style={{ color: colors.text.tertiary }}>No saved reforms yet</span>
                 </CommandItem>
               ) : (
-                reforms.map((reform) => (
-                  <CommandItem
-                    key={reform.id}
-                    value={reform.id}
-                    keywords={[savedReformName(reform)]}
-                    onSelect={() => choose(reform.id)}
-                    style={{ justifyContent: 'space-between', gap: spacing.sm, cursor: 'pointer' }}
-                  >
-                    <span className="tw:truncate">{savedReformName(reform)}</span>
-                    {check(reform.id === selected?.id)}
-                  </CommandItem>
-                ))
+                reforms.map((reform) => {
+                  // A reform that cannot run cannot be compared with.
+                  const missingParameters = reformMissingParameters(reform);
+                  const unavailable = missingParameters.length > 0;
+                  return (
+                    <CommandItem
+                      key={reform.id}
+                      value={reform.id}
+                      keywords={[savedReformName(reform)]}
+                      onSelect={() => choose(reform.id)}
+                      disabled={unavailable}
+                      style={{
+                        justifyContent: 'space-between',
+                        gap: spacing.sm,
+                        cursor: unavailable ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      <span className="tw:flex tw:min-w-0 tw:flex-col">
+                        <span className="tw:truncate">{savedReformName(reform)}</span>
+                        {unavailable && (
+                          <span
+                            style={{
+                              fontSize: typography.fontSize.xs,
+                              color: colors.text.tertiary,
+                            }}
+                          >
+                            Uses parameters the model no longer has: {missingParameters.join(', ')}
+                          </span>
+                        )}
+                      </span>
+                      {check(reform.id === selected?.id)}
+                    </CommandItem>
+                  );
+                })
               )}
             </CommandGroup>
           </CommandList>

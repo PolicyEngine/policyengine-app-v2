@@ -35,8 +35,30 @@ export interface V2PageResult<T> {
   has_more: boolean;
 }
 
-/** An unauthenticated user is this browser's; a standard user signs in with Auth0. */
-export type UserType = 'unauthenticated' | 'standard';
+/**
+ * Every user type, from fewest permissions to most: each type has every
+ * permission of the types before it. An unauthenticated user is this
+ * browser's; a signed-in user (Auth0) is standard, author or admin, as the
+ * API stores it.
+ */
+export const USER_TYPES = ['unauthenticated', 'standard', 'author', 'admin'] as const;
+export type UserType = (typeof USER_TYPES)[number];
+
+export function isUserType(value: unknown): value is UserType {
+  return typeof value === 'string' && (USER_TYPES as readonly string[]).includes(value);
+}
+
+/**
+ * Whether `userType` has every permission of `minimum`: it is `minimum` or
+ * comes after it in `USER_TYPES`. The Public API's
+ * `user_type_meets_minimum` decides the same way. False when either is not
+ * in `USER_TYPES`.
+ */
+export function userTypeMeetsMinimum(userType: UserType, minimum: UserType): boolean {
+  const userTypeRank = USER_TYPES.indexOf(userType);
+  const minimumRank = USER_TYPES.indexOf(minimum);
+  return userTypeRank !== -1 && minimumRank !== -1 && userTypeRank >= minimumRank;
+}
 
 export interface MeItem {
   /** The PolicyEngine user ID that owns every association. */
@@ -112,6 +134,12 @@ export interface UserReportItem extends AssociationItemBase {
   last_run_at: string | null;
 }
 
+/** A household saved to the user: a v2 household, a v1 one, or both. */
+export interface UserHouseholdItem extends AssociationItemBase {
+  household_id: string | null;
+  legacy_household_id: number | null;
+}
+
 /**
  * A saved report as anyone holding its link reads it (`/v2/shared-reports`):
  * the owner and the owner's saved-reform IDs are left out, and the reform it
@@ -136,21 +164,8 @@ export interface SharedReportItem {
 
 /* Create and patch bodies (strict on the server: unknown keys are a 400). */
 
-export interface UserPolicyCreateBody {
-  country_id: AssociationCountryId;
-  legacy_policy_id: number;
-  name?: string | null;
-  description?: string | null;
-  baseline?: BaselineWire | null;
-  provenance?: ProvenanceWire | null;
-}
-
-export type UserPolicyPatchBody = Partial<
-  Pick<
-    UserPolicyCreateBody,
-    'legacy_policy_id' | 'name' | 'description' | 'baseline' | 'provenance'
-  >
->;
+// The `/v2/user-policies` bodies are the generated UserPolicyCreateRequest
+// and UserPolicyPatchRequest (see api/reformStore.ts).
 
 export interface UserReportCreateBody {
   country_id: AssociationCountryId;
@@ -166,9 +181,22 @@ export interface UserReportCreateBody {
   last_run_at?: string | null;
 }
 
+export interface UserHouseholdCreateBody {
+  country_id: AssociationCountryId;
+  legacy_household_id: number;
+  name?: string | null;
+  description?: string | null;
+}
+
+/** The fields a saved report's update may change; `legacy_report_id` repoints it to another run. */
+export type UserReportPatchBody = Partial<Omit<UserReportCreateBody, 'country_id'>>;
+
 /* /v2/me/export */
 
-/** Everything saved to the account, in every country; downloaded as is. */
+/**
+ * Everything saved to the account, in every country. The downloaded file
+ * leaves out `user` and each record's `user_id` (see DownloadMyData).
+ */
 export interface MeExportResult {
   /** Null for a signed-out browser that has saved nothing yet. */
   user: MeItem | null;

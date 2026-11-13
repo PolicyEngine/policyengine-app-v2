@@ -1,4 +1,4 @@
-import { fireEvent, screen, userEvent } from '@test-utils';
+import { createEvent, fireEvent, screen, userEvent } from '@test-utils';
 
 export const WEBSITE_URL = 'https://policyengine.org';
 
@@ -47,22 +47,33 @@ export function linkRows(menu: HTMLElement, from = 0) {
 
 /**
  * Whether the page cancels a click on `row`, which would stop the browser
- * following the link (a Cmd/Ctrl-click opening a new tab, say). A listener on
- * window, after every handler on the page, records the answer and then
+ * following the link (a Cmd/Ctrl-click opening a new tab, say). A recorder on
+ * window has the last word on this click alone: it is added once the click
+ * reaches document, so it runs after any window listener the page added
+ * during the click, and it ignores other clicks dispatched meanwhile. It then
  * cancels the click itself, because jsdom cannot follow it. A click the page
- * stops before it reaches window is answered by the dispatch's own result.
+ * stops before document is answered by the click's own flag.
  */
 export function clickIsCancelled(row: HTMLElement, init: MouseEventInit) {
+  const click = createEvent.click(row, init);
   let cancelledByPage: boolean | undefined;
   const record = (event: Event) => {
-    cancelledByPage = event.defaultPrevented;
-    event.preventDefault();
+    if (event === click) {
+      cancelledByPage = event.defaultPrevented;
+      event.preventDefault();
+    }
   };
-  window.addEventListener('click', record);
+  const addRecorder = (event: Event) => {
+    if (event === click) {
+      window.addEventListener('click', record);
+    }
+  };
+  document.addEventListener('click', addRecorder);
   try {
-    const notCancelled = fireEvent.click(row, init);
-    return cancelledByPage ?? !notCancelled;
+    fireEvent(row, click);
   } finally {
+    document.removeEventListener('click', addRecorder);
     window.removeEventListener('click', record);
   }
+  return cancelledByPage ?? click.defaultPrevented;
 }

@@ -24,6 +24,7 @@ import {
   locationLabels,
   topicLabels,
 } from "@/data/posts/postTransformers";
+import { getAuthorName } from "@/lib/authors";
 import { extractMarkdownFromNotebook } from "@/lib/notebookUtils";
 import { formatPostDate } from "@/lib/postDate";
 import authorsData from "@/data/posts/authors.json";
@@ -32,13 +33,6 @@ import { colors, spacing, typography } from "@/designTokens";
 const authors = authorsData as AuthorsCollection;
 
 const SCROLL_OFFSET_PX = 72;
-
-function formatAuthorName(authorId: string): string {
-  return authorId
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
 
 interface ArticleClientProps {
   post: BlogPost;
@@ -356,7 +350,7 @@ function PostBody({
             <MoreOn post={post} countryId={countryId} />
           </div>
         </div>
-        <div style={{ flex: 3 }}>
+        <div style={{ flex: 3, minWidth: 0 }}>
           {bodyContent}
           <AuthorSection post={post} countryId={countryId} />
         </div>
@@ -407,7 +401,7 @@ function Authorship({
           textDecoration: "none",
         }}
       >
-        {formatAuthorName(id)}
+        {getAuthorName(id)}
       </Link>
     </span>
   ));
@@ -476,7 +470,7 @@ function AuthorSection({
           >
             {author.headshot && (
               <OptimisedImage
-                alt={author.name}
+                alt={getAuthorName(authorId)}
                 src={`/assets/authors/${author.headshot}`}
                 width={70}
                 height={70}
@@ -500,7 +494,7 @@ function AuthorSection({
                     textDecoration: "none",
                   }}
                 >
-                  {formatAuthorName(authorId)}
+                  {getAuthorName(authorId)}
                 </Link>
               </Text>
               <Text size="xs" style={{ color: colors.gray[500] }}>

@@ -1,5 +1,86 @@
 [
   {
+    "title": "How states tax military retired pay in 2026",
+    "description": "Twenty-eight states exempt all military retired pay from income tax in 2026. We calculate how the pay changes federal and state income tax for two couples in every state.",
+    "date": "2026-11-11 08:00:00",
+    "tags": ["us", "policy", "tax"],
+    "authors": ["max-ghenis", "david-trimmer"],
+    "filename": "military-retired-pay-state-taxes-2026.md",
+    "image": "military-retired-pay-state-taxes-2026/cover.webp"
+  },
+  {
+    "title": "Autumn Budget 2026: our briefing on what it means for households",
+    "description": "We estimate the seven household measures we model cost \u00a33.11 billion in 2026-27 and raise net income by \u00a3107 per household on average that year. From 2028-29 they raise \u00a3166 million to \u00a3301 million a year, because the higher rates on property income bring in more than the other measures cost.",
+    "date": "2026-10-29 07:00:00",
+    "tags": ["uk", "autumn-budget", "policy", "featured"],
+    "authors": ["max-ghenis", "vahid-ahmadi", "maria-juaristi"],
+    "filename": "uk-autumn-budget-2026-briefing.md",
+    "image": "uk-autumn-budget-2026-briefing/cover.webp"
+  },
+  {
+    "title": "The Carer's Allowance earnings taper in the Autumn Budget 2026",
+    "description": "From some point in 2030-31, the Carer's Allowance taper lets carers in England and Wales whose net earnings exceed the Weekly Earnings Limit keep part of the allowance, instead of losing all of it. We show how the limit (a projected \u00a3234 a week in 2031-32) and its \u00a31-for-\u00a31 taper work, and how they pass through to income tax and Universal Credit.",
+    "date": "2026-10-28 20:39:00",
+    "tags": ["uk", "policy", "autumn-budget"],
+    "authors": ["anthony-volk"],
+    "filename": "carers-allowance-taper.md",
+    "image": "carers-allowance-taper/cover.webp"
+  },
+  {
+    "title": "Autumn Budget 2026: raising the trading allowance",
+    "description": "The trading allowance rises from £1,000 to £3,000. We show how receipts and actual expenses determine the income tax reduction.",
+    "date": "2026-10-28 14:00:00",
+    "tags": ["uk", "policy", "tax", "autumn-budget"],
+    "authors": ["ziming-hua"],
+    "filename": "uk-autumn-budget-2026-trading-allowance.md",
+    "image": "uk-autumn-budget-2026-trading-allowance/cover.webp"
+  },
+  {
+    "title": "Autumn Budget 2026: higher tax on property income",
+    "description": "Worked examples of the additional two percentage point property income tax increase from April 2027, including landlords' mortgage-interest relief and the treatment of Scotland.",
+    "date": "2026-10-28 14:00:00",
+    "tags": ["uk", "policy", "tax", "autumn-budget"],
+    "authors": ["ziming-hua"],
+    "filename": "uk-autumn-budget-2026-property-income-tax.md",
+    "image": "uk-autumn-budget-2026-property-income-tax/cover.webp"
+  },
+  {
+    "title": "The fuel duty cut extension in the Autumn Budget 2026",
+    "description": "The Budget keeps fuel duty at 52.95p a litre to 30 June 2027. We show how the duty and VAT on each litre change, and what this means for households by the fuel they use.",
+    "date": "2026-10-28 19:00:00",
+    "tags": ["uk", "policy", "tax", "autumn-budget"],
+    "authors": ["pavel-makarchuk"],
+    "filename": "fuel-duty-cut-extension.md",
+    "image": "fuel-duty-cut-extension/cover-illustration.webp"
+  },
+  {
+    "title": "Analysis of the Autumn Budget 2026 energy bill measures",
+    "description": "PolicyEngine estimates the £100 Household Energy Payment and the zero rate of VAT on domestic electricity cost £2.81 billion in 2026-27 and raise household net income by an average of £96.",
+    "date": "2026-10-28 18:30:00",
+    "tags": ["uk", "autumn-budget", "policy", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "budget-2026-energy-bills.md",
+    "image": "budget-2026-energy-bills/cover.webp"
+  },
+  {
+    "title": "The Pension Tax Allowance in the Autumn Budget 2026",
+    "description": "From April 2027, the Pension Tax Allowance removes income tax for most pensioners with total income up to the full new State Pension. We show how the \u00a394 allowance and its \u00a31-in-\u00a33 taper work, and how they pass through to Pension Credit, Housing Benefit and Council Tax Reduction.",
+    "date": "2026-10-28 18:00:00",
+    "tags": ["uk", "policy", "tax", "autumn-budget"],
+    "authors": ["pavel-makarchuk"],
+    "filename": "pension-tax-allowance.md",
+    "image": "pension-tax-allowance/cover-illustration.webp"
+  },
+  {
+    "title": "The adjusted Triple Lock in the Autumn Budget 2026",
+    "description": "From April 2030, the government plans to raise the State Pension by the higher of inflation and 2.5%, or by more to hold its April 2029 value relative to earnings. The government would spend \u00a30.5 billion less on the State Pension in 2039-40 on the OBR's central path and \u00a310.9 billion less if the pension outpaces earnings under the Triple Lock, as the OBR assumes.",
+    "date": "2026-10-28 17:00:00",
+    "tags": ["uk", "policy", "autumn-budget"],
+    "authors": ["max-ghenis"],
+    "filename": "uk-triple-lock-budget-2026.md",
+    "image": "uk-triple-lock-budget-2026/cover-illustration.webp"
+  },
+  {
     "title": "High value council tax surcharge: revenue by constituency",
     "description": "We estimate the surcharge raises \u00a3410 million in 2028-29 from owner-occupied main residences in England before behavioural responses, 39% of it from 10 constituencies.",
     "date": "2026-10-22 12:00:00",
@@ -1798,5 +1879,14 @@
     "authors": ["vahid-ahmadi"],
     "filename": "multi-agent-workflows-policy-research.md",
     "image": "multi-agent-workflows-policy-research.webp"
+  },
+  {
+    "title": "Federal tax inflation adjustments for tax year 2027",
+    "description": "PolicyEngine has updated its federal tax parameters to the IRS's 2027 inflation-adjusted amounts.",
+    "date": "2026-11-11 11:00:00",
+    "tags": ["us", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "federal-tax-inflation-adjustments-2027.md",
+    "image": "federal-tax-inflation-adjustments-2027/cover.webp"
   }
 ]

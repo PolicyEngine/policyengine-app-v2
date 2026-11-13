@@ -88,3 +88,22 @@ export function folderTrail(index: PolicyTreeIndex, path: string): ParameterTree
   }
   return trail;
 }
+
+/**
+ * How many of `addablePaths` sit at or below each folder, by path, as
+ * buildPolicyTreeIndex counts the whole tree: a parameter counts for every
+ * folder its path runs through (`a.b[0].c` counts for `a`, `a.b` and
+ * `a.b[0]`). A folder missing from the map has nothing a draft can add.
+ */
+export function addableCountsByFolder(addablePaths: Iterable<string>): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const path of addablePaths) {
+    for (let index = 1; index < path.length; index += 1) {
+      if (path[index] === '.' || path[index] === '[') {
+        const folder = path.slice(0, index);
+        counts.set(folder, (counts.get(folder) ?? 0) + 1);
+      }
+    }
+  }
+  return counts;
+}

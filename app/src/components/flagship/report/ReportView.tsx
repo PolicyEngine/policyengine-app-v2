@@ -6,12 +6,14 @@ import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { CalibrationPin } from '@/components/flagship/CalibrationMatches';
 import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
 import BudgetWindowSummary from '@/components/flagship/report/BudgetWindowSummary';
-import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
+import CongressionalDistrictSection from '@/components/flagship/report/CongressionalDistrictSection';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import HouseholdImpactSection from '@/components/flagship/report/household/HouseholdImpactSection';
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportValidation from '@/components/flagship/report/ReportValidation';
+import UKLocalAreaAutoStart from '@/components/flagship/report/UKLocalAreaAutoStart';
+import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
 import UKLocalAreaSection from '@/components/flagship/report/UKLocalAreaSection';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
@@ -20,8 +22,10 @@ import ReportContents, {
   type DistrictsCardCopy,
   type ReportMetric,
 } from '@/components/flagship/ReportContents';
+import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import type { ModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Tabs, TabsContent, TabsList, TabsTrigger, Text, Title } from '@/components/ui';
+import { congressionalDistrictScope } from '@/contexts/congressional-district/utils';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -50,11 +54,26 @@ const UK_DISTRICTS_CARD_COPY: DistrictsCardCopy = {
   action: 'Explore local areas',
   preview: 'Compare income changes across constituencies and local authorities on a map.',
 };
-/** The card for results without area impacts, which a separate run calculates on request. */
+/**
+ * The card for results without area impacts, which a separate run
+ * calculates in the background (UKLocalAreaAutoStart).
+ */
 const UK_DISTRICTS_COMPUTE_CARD_COPY: DistrictsCardCopy = {
   ...UK_DISTRICTS_CARD_COPY,
   preview:
-    'Calculate income changes across constituencies and local authorities, and compare them on a map.',
+    'Compare income changes across constituencies and local authorities on a map. They calculate in the background, in a few minutes.',
+};
+
+/**
+ * The card for a nationwide US report's results: its congressional
+ * districts come from each state's own run, on request
+ * (CongressionalDistrictSection), not from the nationwide result.
+ */
+const US_DISTRICTS_COMPUTE_CARD_COPY: DistrictsCardCopy = {
+  title: 'District impacts',
+  action: 'Explore districts',
+  preview:
+    'Compare income changes across districts on a map. Each state’s districts come from a run on its own data, which takes a few minutes.',
 };
 
 function SectionHeading({ id, title }: { id: string; title: string }) {
@@ -113,6 +132,12 @@ export interface ReportViewProps {
   baselineUnknown?: boolean;
   /** What the adjust panel's runs compare with; current law when unset. */
   baseline?: RunReportBaseline;
+  /**
+   * The report's policies set parameters the model no longer has. Its
+   * stored results show, but nothing on the page starts a calculation: no
+   * household, no local-area breakdown, and no recompute.
+   */
+  runsBlocked?: boolean;
   year: string;
   region?: string;
   reformPolicyId?: string;
@@ -168,6 +193,7 @@ export default function ReportView({
   customBaselineLabel,
   baselineUnknown = false,
   baseline,
+  runsBlocked = false,
   year,
   region,
   reformPolicyId,
@@ -280,9 +306,7 @@ export default function ReportView({
 
   // Whether the report's scope has districts at all, results loaded or not:
   // nationwide or one state. showUSDistricts also needs the run's policies.
-  const districtScope =
-    countryId === 'us' &&
-    (!region || region.toLowerCase() === 'us' || region.toLowerCase().startsWith('state/'));
+  const districtScope = countryId === 'us' && congressionalDistrictScope(region) !== null;
   const showUSDistricts = canShowCongressionalDistrictImpactCard({
     countryId,
     reformPolicyId,
@@ -296,6 +320,9 @@ export default function ReportView({
       })
     : (storedMetrics ?? []);
 
+  // One heading for the household tab's states that draw one: waiting for
+  // the variables, the section itself, and the policies not known yet.
+  const householdHeading = <SectionHeading id="household" title="Household" />;
   const tabPanel = (id: string, content: ReactNode) => (
     <TabsContent
       value={id}
@@ -434,11 +461,16 @@ export default function ReportView({
                       districtsCopy={
                         isUK
                           ? output &&
+                            !runsBlocked &&
                             !hasUKLocalAreaImpacts(output) &&
                             outputServesLocalAreaBreakdowns(output)
                             ? UK_DISTRICTS_COMPUTE_CARD_COPY
                             : UK_DISTRICTS_CARD_COPY
-                          : undefined
+                          : output &&
+                              showUSDistricts &&
+                              congressionalDistrictScope(region) === 'nationwide'
+                            ? US_DISTRICTS_COMPUTE_CARD_COPY
+                            : undefined
                       }
                       showDistricts={showDistrictsSection}
                       onOpen={openReportSection}
@@ -456,6 +488,16 @@ export default function ReportView({
                     )}
                     {overviewFooter}
                   </Stack>
+                )}
+                {/* The local-area run starts with the results, not when its tab opens; never when blocked. */}
+                {output && isUK && showDistrictsSection && !showUSDistricts && !runsBlocked && (
+                  <UKLocalAreaAutoStart
+                    output={output}
+                    region={region}
+                    year={year}
+                    reformPolicyId={reformPolicyId}
+                    baselinePolicyId={baselinePolicyId}
+                  />
                 )}
                 {tabPanel(
                   'economy',
@@ -489,18 +531,36 @@ export default function ReportView({
                           year={year}
                           region={region}
                         >
-                          <DistrictImpactCard output={output} />
+                          <CongressionalDistrictSection output={output} />
                         </CongressionalDistrictDataProvider>
                       )}
-                      {output && !showUSDistricts && isUK && (
-                        <UKLocalAreaSection
-                          output={output}
-                          region={region}
-                          year={year}
-                          reformPolicyId={reformPolicyId}
-                          baselinePolicyId={baselinePolicyId}
-                        />
-                      )}
+                      {/* Blocked, the maps show what the stored results hold, with no breakdown to run. */}
+                      {output &&
+                        !showUSDistricts &&
+                        isUK &&
+                        (runsBlocked ? (
+                          <>
+                            <Text
+                              style={{
+                                fontSize: typography.fontSize.sm,
+                                color: colors.text.secondary,
+                              }}
+                            >
+                              Local-area results cannot be calculated for this report, because it
+                              uses parameters the model no longer has. Only results it already holds
+                              are shown.
+                            </Text>
+                            <UKLocalAreaMaps output={output} region={region} />
+                          </>
+                        ) : (
+                          <UKLocalAreaSection
+                            output={output}
+                            region={region}
+                            year={year}
+                            reformPolicyId={reformPolicyId}
+                            baselinePolicyId={baselinePolicyId}
+                          />
+                        ))}
                       {output && !showUSDistricts && !isUK && (
                         <Text
                           style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
@@ -513,22 +573,39 @@ export default function ReportView({
                 {tabPanel(
                   'household',
                   <Stack style={{ gap: spacing.md }}>
-                    <SectionHeading id="household" title="Household" />
                     {/* A household runs on the report's own policies, once they exist. */}
-                    {reformPolicyId && baselinePolicyId ? (
-                      <HouseholdImpactSection
-                        // New policies, year or region start a new form, with nothing run.
-                        key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
-                        countryId={countryId}
-                        year={year}
-                        region={region}
-                        baselinePolicyId={baselinePolicyId}
-                        reformPolicyId={reformPolicyId}
-                        reformPaths={provisions.map((provision) => provision.path)}
-                        reformChangesNothing={!!output && isSocietyWideReportNoOp(output)}
-                      />
+                    {runsBlocked ? (
+                      <Text
+                        style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+                      >
+                        Households cannot be calculated for this report, because it uses parameters
+                        the model no longer has.
+                      </Text>
+                    ) : reformPolicyId && baselinePolicyId ? (
+                      // The builder and breakdown read every variable (v2 loads them in the
+                      // background). The section draws its own heading once it shows; until
+                      // then the gate shows it, above the placeholder or a failure.
+                      <V3VariablesGate
+                        label="Loading the household builder"
+                        heading={householdHeading}
+                      >
+                        <HouseholdImpactSection
+                          // The section sets its heading's line, with "Compare all" at the right.
+                          heading={householdHeading}
+                          // New policies, year or region start a new form, with nothing run.
+                          key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
+                          countryId={countryId}
+                          year={year}
+                          region={region}
+                          baselinePolicyId={baselinePolicyId}
+                          reformPolicyId={reformPolicyId}
+                          reformPaths={provisions.map((provision) => provision.path)}
+                          reformChangesNothing={!!output && isSocietyWideReportNoOp(output)}
+                        />
+                      </V3VariablesGate>
                     ) : (
                       <>
+                        {householdHeading}
                         <Text
                           style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
                         >
@@ -569,6 +646,7 @@ export default function ReportView({
           year={year}
           baseline={baseline}
           baselineUnknown={baselineUnknown}
+          runsBlocked={runsBlocked}
           budgetWindow={budgetWindow}
         />
       </div>

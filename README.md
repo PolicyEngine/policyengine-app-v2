@@ -79,7 +79,13 @@ build time (see `calculator-app/.env.example`), alongside
 | `NEXT_PUBLIC_AUTH0_DOMAIN` | Auth0 (custom) domain |
 | `NEXT_PUBLIC_AUTH0_CLIENT_ID` | SPA application for the environment |
 | `NEXT_PUBLIC_AUTH0_AUDIENCE` | PolicyEngine API resource server identifier |
-| `NEXT_PUBLIC_API_URL` | PolicyEngine API origin (default `https://api.policyengine.org`); set to the staging API on staging |
+
+The browser sends every PolicyEngine API request, with the user's token or
+unauthenticated user, to the calculator's own route,
+`/api/policyengine/{API path}`. The route adds the calculator's server
+credential and calls the API that `POLICYENGINE_API_URL` names: production
+on production deployments, the staging service on previews and in local
+work (see `calculator-app/.env.example`).
 
 - On the US and UK workspace, saved reforms and reports always go to the
   PolicyEngine API. Signed in, they belong to the account. Signed out, they

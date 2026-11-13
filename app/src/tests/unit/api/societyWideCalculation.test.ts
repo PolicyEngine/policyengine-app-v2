@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
 import {
+  deleteFailedSocietyWideCalculation,
+  EconomyCalculationError,
+  failedCalculationOf,
   fetchLocalAreaBreakdown,
   fetchSocietyWideCalculation,
   isLocalAreaBreakdown,
@@ -24,6 +27,9 @@ import {
   BREAKDOWN_YEAR,
   EMPTY_BREAKDOWN_RESULT,
   EXPECTED_BREAKDOWN_WITH_BUNDLE,
+  LIST_SHAPE_BREAKDOWN_RESULT_WITH_WITHHELD_CODES,
+  LISTED_CONSTITUENCY_WITHHELD_CODES,
+  LISTED_LOCAL_AUTHORITY_WITHHELD_CODES,
   mockErrorResponseWithBody,
   NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
   NATIONAL_UK_RESULT_WITH_NULL_AREAS,
@@ -32,21 +38,43 @@ import {
   OLDER_UK_BODY_WITH_AREAS,
   PLAIN_TEXT_ERROR_BODY,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
+  DELETABLE_FAILED_CALCULATION_BODY,
+  DELETE_FAILED_MESSAGE,
+  DELETE_NOT_A_FAILURE_BODY,
+  DELETE_NOTHING_STORED_BODY,
+  DELETE_REFUSED_SECONDS,
+  DELETE_TOO_SOON_BODY,
+  economyCalculationError,
   ERROR_MESSAGES,
+  FAILED_CALCULATION_BODY,
   HTTP_STATUS,
   mockCompletedResponse,
   mockCompletedResponseWithBundleBesideResult,
   mockCompletedResponseWithBundleInResult,
+  mockDeleteResponse,
   mockErrorCalculationResponse,
   mockErrorResponse,
+  mockFailedCalculationResponse,
   mockNetworkError,
   mockPendingResponse,
   mockSuccessResponse,
   mockUSPolicyEngineBundle,
+  READ_DELETE_AFTER_SECONDS,
+  READ_RETRY_AFTER_SECONDS,
+  STATE_ECONOMY_PARAMS,
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
+  UNEXPECTED_DELETE_ANSWERS,
+  UNREAD_DELETE_AFTER_SECONDS_BODIES,
+  UNREAD_RETRY_AFTER_SECONDS_BODIES,
+  UNREADABLE_DELETE_REFUSAL_BODIES,
 } from '@/tests/fixtures/api/societyWideMocks';
+import {
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_REGION_CODE,
+} from '@/tests/fixtures/models/regionMocks';
 import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 
 global.fetch = vi.fn();
@@ -278,6 +306,55 @@ describe('societyWide API', () => {
       ).rejects.toThrow(
         ERROR_MESSAGES.CALCULATION_FAILED(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Error')
       );
+    });
+
+    test('given a failed calculation answered with 502 then the error carries the status and the parsed body, with the same message', async () => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(mockFailedCalculationResponse());
+
+      // When
+      const error = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.US,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: 'state/ca', time_period: CURRENT_YEAR }
+      ).catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({
+        status: HTTP_STATUS.BAD_GATEWAY,
+        body: FAILED_CALCULATION_BODY,
+        message: ERROR_MESSAGES.CALCULATION_FAILED(
+          HTTP_STATUS.BAD_GATEWAY,
+          JSON.stringify(FAILED_CALCULATION_BODY)
+        ),
+      });
+    });
+
+    test('given an error page in place of the answer then the error carries the status and no body', async () => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(
+        mockErrorResponseWithBody(
+          HTTP_STATUS.SERVICE_UNAVAILABLE,
+          'Service Unavailable',
+          PLAIN_TEXT_ERROR_BODY
+        )
+      );
+
+      // When
+      const error = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.US,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: 'state/ca', time_period: CURRENT_YEAR }
+      ).catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({ status: HTTP_STATUS.SERVICE_UNAVAILABLE, body: null });
     });
 
     test('given network error then propagates error', async () => {
@@ -594,6 +671,32 @@ describe('societyWide API', () => {
       expect(response.result).toEqual(EXPECTED_BREAKDOWN_WITH_BUNDLE);
     });
 
+    test('given a completed breakdown that lists its withheld codes then returns the lists as they came', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse({
+          status: 'ok',
+          result: LIST_SHAPE_BREAKDOWN_RESULT_WITH_WITHHELD_CODES,
+        })
+      );
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      const breakdown = response.result as LocalAreaBreakdown;
+      expect(breakdown.constituency_withheld_codes).toEqual(LISTED_CONSTITUENCY_WITHHELD_CODES);
+      expect(breakdown.local_authority_withheld_codes).toEqual(
+        LISTED_LOCAL_AUTHORITY_WITHHELD_CODES
+      );
+      expect(Object.keys(breakdown.constituency_impact.by_constituency)).toHaveLength(1);
+    });
+
     test('given a bundle without versions then the breakdown keeps its own versions', async () => {
       // Given
       (global.fetch as any).mockResolvedValue(
@@ -701,5 +804,374 @@ describe('societyWide API', () => {
         `Local-area breakdown failed (500): ${PLAIN_TEXT_ERROR_BODY}`
       );
     });
+  });
+});
+
+describe('failedCalculationOf through the calculator route', () => {
+  const ECONOMY_PARAMETERS = { region: 'us', time_period: CURRENT_YEAR };
+
+  test("given the route's own 502, such as the Public API being unreachable, then it is a failed request, not a failed calculation", async () => {
+    // Given
+    (global.fetch as any).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: 'error',
+          message: 'The Public API could not be reached.',
+          result: null,
+        }),
+        {
+          status: HTTP_STATUS.BAD_GATEWAY,
+          headers: { 'Content-Type': 'application/json', 'X-PolicyEngine-Route-Error': 'true' },
+        }
+      )
+    );
+
+    // When
+    const error = await fetchSocietyWideCalculation('us', '2', '1', ECONOMY_PARAMETERS).catch(
+      (caught: unknown) => caught
+    );
+
+    // Then
+    expect(error).toBeInstanceOf(EconomyCalculationError);
+    expect(failedCalculationOf(error)).toBeNull();
+  });
+
+  test("given the Public API's own 502 for a failed calculation, passed on by the route, then it is a failed calculation", async () => {
+    // Given
+    (global.fetch as any).mockResolvedValue(
+      new Response(JSON.stringify(FAILED_CALCULATION_BODY), {
+        status: HTTP_STATUS.BAD_GATEWAY,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    // When
+    const error = await fetchSocietyWideCalculation('us', '2', '1', ECONOMY_PARAMETERS).catch(
+      (caught: unknown) => caught
+    );
+
+    // Then
+    expect(failedCalculationOf(error)).toEqual({
+      retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds,
+      deleteAfterSeconds: null,
+    });
+  });
+});
+
+describe('failedCalculationOf', () => {
+  test('given a 502 with the Public API error body then gives the seconds it keeps the failure', () => {
+    // When
+    const failure = failedCalculationOf(
+      economyCalculationError(HTTP_STATUS.BAD_GATEWAY, FAILED_CALCULATION_BODY)
+    );
+
+    // Then
+    expect(failure).toEqual({
+      retryAfterSeconds: FAILED_CALCULATION_BODY.retry_after_seconds,
+      deleteAfterSeconds: null,
+    });
+  });
+
+  test.each(READ_RETRY_AFTER_SECONDS)(
+    'given retry_after_seconds %s then the failure has those seconds',
+    (_case, seconds) => {
+      // When
+      const failure = failedCalculationOf(
+        economyCalculationError(HTTP_STATUS.BAD_GATEWAY, {
+          ...FAILED_CALCULATION_BODY,
+          retry_after_seconds: seconds,
+        })
+      );
+
+      // Then
+      expect(failure).toEqual({ retryAfterSeconds: seconds, deleteAfterSeconds: null });
+    }
+  );
+
+  test.each(UNREAD_RETRY_AFTER_SECONDS_BODIES)(
+    'given retry_after_seconds %s then the failure has no seconds',
+    (_case, body) => {
+      // When
+      const failure = failedCalculationOf(economyCalculationError(HTTP_STATUS.BAD_GATEWAY, body));
+
+      // Then
+      expect(failure).toEqual({ retryAfterSeconds: null, deleteAfterSeconds: null });
+    }
+  );
+
+  test.each(READ_DELETE_AFTER_SECONDS)(
+    'given delete_after_seconds %s then the failure has those seconds until a DELETE is accepted',
+    (_case, seconds) => {
+      // When
+      const failure = failedCalculationOf(
+        economyCalculationError(HTTP_STATUS.BAD_GATEWAY, {
+          ...DELETABLE_FAILED_CALCULATION_BODY,
+          delete_after_seconds: seconds,
+        })
+      );
+
+      // Then
+      expect(failure).toEqual({
+        retryAfterSeconds: DELETABLE_FAILED_CALCULATION_BODY.retry_after_seconds,
+        deleteAfterSeconds: seconds,
+      });
+    }
+  );
+
+  test.each(UNREAD_DELETE_AFTER_SECONDS_BODIES)(
+    'given delete_after_seconds %s then the failure cannot be deleted',
+    (_case, body) => {
+      // When
+      const failure = failedCalculationOf(economyCalculationError(HTTP_STATUS.BAD_GATEWAY, body));
+
+      // Then
+      expect(failure?.deleteAfterSeconds).toBeNull();
+    }
+  );
+
+  test.each([
+    ['a 502 without an error body', economyCalculationError(HTTP_STATUS.BAD_GATEWAY, null)],
+    [
+      'a 502 whose body is a list',
+      economyCalculationError(HTTP_STATUS.BAD_GATEWAY, [FAILED_CALCULATION_BODY]),
+    ],
+    [
+      'another status with an error body',
+      economyCalculationError(HTTP_STATUS.SERVICE_UNAVAILABLE, FAILED_CALCULATION_BODY),
+    ],
+    [
+      'a plain Error whose message reads like one',
+      new Error(
+        `Society-wide calculation failed (502): ${JSON.stringify(FAILED_CALCULATION_BODY)}`
+      ),
+    ],
+  ])('given %s then it is not a failed calculation', (_case, error) => {
+    // When
+    const failure = failedCalculationOf(error);
+
+    // Then
+    expect(failure).toBeNull();
+  });
+});
+
+describe('deleteFailedSocietyWideCalculation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const deleteFailure = (params = STATE_ECONOMY_PARAMS, countryId: string = TEST_COUNTRIES.US) =>
+    deleteFailedSocietyWideCalculation(
+      countryId,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      params
+    );
+
+  test('given a state then it sends DELETE to the URL the economy request uses', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
+    mockFetch.mockResolvedValueOnce(mockSuccessResponse(mockPendingResponse) as any);
+    await fetchSocietyWideCalculation(
+      TEST_COUNTRIES.US,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      STATE_ECONOMY_PARAMS
+    );
+
+    // When
+    await deleteFailure();
+
+    // Then
+    const [[economyUrl], [deleteUrl, deleteInit]] = mockFetch.mock.calls;
+    expect(deleteUrl).toBe(economyUrl);
+    expect(deleteInit).toMatchObject({ method: 'DELETE' });
+  });
+
+  test('given a saved region code for Northern Ireland then the DELETE names the region the app uses', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
+
+    // When
+    await deleteFailure(
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR },
+      TEST_COUNTRIES.UK
+    );
+
+    // Then
+    const requestUrl = requestUrlOf(String(mockFetch.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  test('given 204 then the stored failure was deleted', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(mockDeleteResponse(HTTP_STATUS.NO_CONTENT) as any);
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'deleted' });
+  });
+
+  test('given 404 with the Public API error body then nothing was stored', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockDeleteResponse(HTTP_STATUS.NOT_FOUND, JSON.stringify(DELETE_NOTHING_STORED_BODY)) as any
+    );
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'nothing-stored' });
+  });
+
+  test.each([
+    [HTTP_STATUS.NOT_FOUND, { status: 'error', message: 'Unknown route.', result: null }],
+    [
+      HTTP_STATUS.CONFLICT,
+      { status: 'error', message: 'Conflict.', result: null, delete_after_seconds: 5 },
+    ],
+  ])(
+    "given the calculator route's own %i then the DELETE failed, whatever the body says",
+    async (status, body) => {
+      // Given
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockDeleteResponse(status, JSON.stringify(body), {
+          'X-PolicyEngine-Route-Error': 'true',
+        }) as any
+      );
+
+      // When
+      const outcome = await deleteFailure().catch((caught: unknown) => caught);
+
+      // Then
+      expect(outcome).toBeInstanceOf(EconomyCalculationError);
+      expect((outcome as EconomyCalculationError).status).toBe(status);
+      expect((outcome as EconomyCalculationError).writtenByRoute).toBe(true);
+    }
+  );
+
+  test('given 409 with delete_after_seconds then the DELETE was too soon, with the seconds left', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockDeleteResponse(HTTP_STATUS.CONFLICT, JSON.stringify(DELETE_TOO_SOON_BODY)) as any
+    );
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'too-soon', deleteAfterSeconds: DELETE_REFUSED_SECONDS });
+  });
+
+  test('given 409 with delete_after_seconds null then the stored result is not a failure', async () => {
+    // Given
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockDeleteResponse(HTTP_STATUS.CONFLICT, JSON.stringify(DELETE_NOT_A_FAILURE_BODY)) as any
+    );
+
+    // When
+    const deletion = await deleteFailure();
+
+    // Then
+    expect(deletion).toEqual({ outcome: 'not-a-failure' });
+  });
+
+  test.each(UNREADABLE_DELETE_REFUSAL_BODIES)(
+    'given 409 %s then it throws an error with the status and the parsed body',
+    async (_case, body, parsed) => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockDeleteResponse(HTTP_STATUS.CONFLICT, body) as any
+      );
+
+      // When
+      const error = await deleteFailure().catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({ status: HTTP_STATUS.CONFLICT, body: parsed });
+    }
+  );
+
+  test.each(UNEXPECTED_DELETE_ANSWERS)(
+    'given %s then it throws an error that names the DELETE, with the status and the parsed body',
+    async (_case, status, body, parsed) => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue(mockDeleteResponse(status, body) as any);
+
+      // When
+      const error = await deleteFailure().catch((caught: unknown) => caught);
+
+      // Then
+      expect(error).toBeInstanceOf(EconomyCalculationError);
+      expect(error).toMatchObject({
+        status,
+        body: parsed,
+        message: DELETE_FAILED_MESSAGE(status, body || String(status)),
+      });
+    }
+  );
+
+  test('given a network error then it propagates', async () => {
+    // Given
+    vi.mocked(global.fetch).mockRejectedValue(mockNetworkError);
+
+    // When
+    const deletion = deleteFailure();
+
+    // Then
+    await expect(deletion).rejects.toThrow(ERROR_MESSAGES.NETWORK_ERROR);
+  });
+});
+
+describe('societyWide API Northern Ireland region', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('given a national request for country/ni then it asks for country/northern_ireland', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockSuccessResponse(mockPendingResponse) as any);
+
+    // When
+    await fetchSocietyWideCalculation(
+      TEST_COUNTRIES.UK,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR }
+    );
+
+    // Then
+    const requestUrl = requestUrlOf(String(mockFetch.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  test('given a local-area breakdown for country/ni then it asks for country/northern_ireland', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValue(mockSuccessResponse(mockPendingResponse) as any);
+
+    // When
+    await fetchLocalAreaBreakdown(
+      TEST_COUNTRIES.UK,
+      TEST_POLICY_IDS.REFORM,
+      TEST_POLICY_IDS.BASELINE,
+      { region: LEGACY_NORTHERN_IRELAND_REGION_CODE, time_period: CURRENT_YEAR }
+    );
+
+    // Then
+    const requestUrl = requestUrlOf(String(mockFetch.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('region')).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 });

@@ -1,45 +1,11 @@
 import type { NextConfig } from "next";
 import { appZoneRewrites } from "./src/data/appZoneRoutes";
-
-const tealSquareLogoPath = "/assets/logos/policyengine/teal-square.png";
-
-const policyEngineIconRewrites = [
-  { source: "/favicon.ico", destination: tealSquareLogoPath },
-  { source: "/apple-touch-icon.png", destination: tealSquareLogoPath },
-  { source: "/logo192.png", destination: tealSquareLogoPath },
-  { source: "/logo512.png", destination: tealSquareLogoPath },
-  { source: "/policyengine-logo.png", destination: tealSquareLogoPath },
-  { source: "/icon.svg", destination: "/favicon.svg" },
-  { source: "/policyengine-favicon.svg", destination: "/favicon.svg" },
-  {
-    source: "/:countryId/:appSlug/favicon.ico",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/apple-touch-icon.png",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/logo192.png",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/logo512.png",
-    destination: tealSquareLogoPath,
-  },
-  {
-    source: "/:countryId/:appSlug/policyengine-logo.png",
-    destination: tealSquareLogoPath,
-  },
-  { source: "/:countryId/:appSlug/favicon.svg", destination: "/favicon.svg" },
-  { source: "/:countryId/:appSlug/icon.svg", destination: "/favicon.svg" },
-  {
-    source: "/:countryId/:appSlug/policyengine-favicon.svg",
-    destination: "/favicon.svg",
-  },
-];
+import { policyEngineIconRewrites } from "./src/data/policyEngineIconRewrites";
 
 const nextConfig: NextConfig = {
+  // Workspace packages that ship TypeScript source rather than a build.
+  transpilePackages: ["@policyengine/public-api-forwarding"],
+
   // Vercel's image optimiser (/_vercel/image) only accepts widths from this
   // allowlist (imageSizes ∪ deviceSizes). For Next.js projects this config is
   // the source of truth — the `images` block in vercel.json is ignored — and
@@ -160,6 +126,19 @@ const nextConfig: NextConfig = {
         source: "/pe84",
         destination: "/us/pe84",
         permanent: true,
+      },
+      // The Autumn Budget 2026 dashboard's chosen address. The dashboard
+      // serves /uk/autumn-budget-2026 until its basePath moves (dashboard
+      // #212, after Budget day); then this pair is reversed.
+      {
+        source: "/uk/budgets/autumn-2026",
+        destination: "/uk/autumn-budget-2026",
+        permanent: false,
+      },
+      {
+        source: "/uk/budgets/autumn-2026/:path*",
+        destination: "/uk/autumn-budget-2026/:path*",
+        permanent: false,
       },
       // Vanity redirects to the standalone PolicyBench site (external).
       // policybench.org is country-agnostic, so both the bare and

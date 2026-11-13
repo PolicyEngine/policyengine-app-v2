@@ -16,6 +16,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@policyengine/public-api-forwarding": "workspace:*",
     "@policyengine/ui-kit": "^0.4.0",
     "@tabler/icons-react": "^3.31.0",
     "class-variance-authority": "^0.7.1",

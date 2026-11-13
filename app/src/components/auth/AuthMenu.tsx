@@ -1,4 +1,6 @@
-import { IconLogout, IconUserCircle } from '@tabler/icons-react';
+import { useState } from 'react';
+import { IconBuilding, IconLogout, IconUserCircle } from '@tabler/icons-react';
+import { adminUsersPath } from '@/components/settings/settingsPages';
 import {
   Button,
   DropdownMenu,
@@ -11,13 +13,17 @@ import {
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserType } from '@/hooks/useUserType';
 import { useAuthStatus, type AuthContextValue } from '@/libs/auth/AuthContext';
-import { isAssociationCountry } from '@/types/v2User';
+import { isAssociationCountry, userTypeMeetsMinimum } from '@/types/v2User';
 
 interface AuthMenuProps {
   /** 'inverse' for the teal calculator header; 'default' for light bars. */
   variant?: 'default' | 'inverse';
 }
+
+/** The account menu's items show a pointer, as links do, instead of the menu's default arrow. */
+const MENU_ITEM_CLASS = 'tw:cursor-pointer';
 
 /** The name or email to show for the signed-in user (from the Auth0 ID token). */
 export function accountDisplayName(auth: Pick<AuthContextValue, 'profile'>): string {
@@ -31,13 +37,12 @@ function initialOf(name: string): string {
 /**
  * The v3 header's sign-in control: "Sign in" when signed out (with a note
  * when the last session ended on its own), the user menu (My account,
- * Sign out) when signed in, and nothing when sign-in is disabled or
- * outside the US and UK.
+ * Admin for admins, Sign out) when signed in, and nothing when
+ * sign-in is disabled or outside the US and UK.
  */
 export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
   const auth = useAuthStatus();
   const countryId = useCurrentCountry();
-  const nav = useAppNavigate();
   const inverse = variant === 'inverse';
 
   // Accounts hold US and UK work only; elsewhere v3 stays in this browser.
@@ -79,11 +84,43 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
     );
   }
 
+  return <SignedInAccountMenu auth={auth} countryId={countryId} inverse={inverse} />;
+}
+
+/**
+ * The signed-in user's menu. It reads the user's type (`GET /v2/me`) while
+ * the header shows, not only once the menu opens, so that for an admin
+ * "Admin" is normally there when the menu opens. Whether the
+ * item shows is decided as the menu opens and kept until it closes: an
+ * answer that arrives while it is open changes the next opening only, so
+ * no item is added above "Sign out" while the user is choosing one.
+ */
+function SignedInAccountMenu({
+  auth,
+  countryId,
+  inverse,
+}: {
+  auth: AuthContextValue;
+  countryId: string;
+  inverse: boolean;
+}) {
+  const nav = useAppNavigate();
+  const userType = useUserType();
+  const isAdmin = userType !== null && userTypeMeetsMinimum(userType, 'admin');
+  const [open, setOpen] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const name = accountDisplayName(auth);
   const email = auth.profile?.email;
 
+  const changeOpen = (nextOpen: boolean) => {
+    if (nextOpen) {
+      setShowAdmin(isAdmin);
+    }
+    setOpen(nextOpen);
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={changeOpen}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -124,11 +161,23 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => nav.push(`/${countryId}/account`)}>
+        <DropdownMenuItem
+          className={MENU_ITEM_CLASS}
+          onSelect={() => nav.push(`/${countryId}/account`)}
+        >
           <IconUserCircle size={16} />
           My account
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => auth.signOut()}>
+        {showAdmin && (
+          <DropdownMenuItem
+            className={MENU_ITEM_CLASS}
+            onSelect={() => nav.push(adminUsersPath(countryId))}
+          >
+            <IconBuilding size={16} />
+            Admin
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem className={MENU_ITEM_CLASS} onSelect={() => auth.signOut()}>
           <IconLogout size={16} />
           Sign out
         </DropdownMenuItem>

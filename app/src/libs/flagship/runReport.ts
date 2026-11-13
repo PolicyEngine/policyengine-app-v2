@@ -12,6 +12,7 @@ import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { baselineProvisions, customBaseline } from '@/libs/flagship/reportBaseline';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import type { ReportMetadata } from '@/types/metadata/reportMetadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { coercePolicyParameterValue, resolvePolicyParameterValueSpec } from '@/utils/valueCoercion';
@@ -222,11 +223,18 @@ export interface RunFlagshipReportArgs {
    * With accounts (US/UK): the report store for this session's user, the
    * account or this browser's unauthenticated user. The run then writes
    * exactly one `/v2/user-reports` row — with the title, source note,
-   * provisions and reform links — instead of the browser record.
+   * provisions and reform links — instead of the browser record, or, with
+   * `savedReportId`, repoints that row instead.
    */
   accountReportStore?: FlagshipReportStore | null;
   /** The model's parameters, to check and type each value as v2 does. */
   parameters?: ParameterMetadataCollection;
+  /**
+   * A saved report this run replaces: its record is repointed at the new
+   * v1 report, with the provisions run, instead of a new record saved.
+   * An account record keeps its ID, so its link opens the new results.
+   */
+  savedReportId?: string;
 }
 
 /**
@@ -291,6 +299,64 @@ export async function createReformPolicy(
   return Number(policyResponse.result.policy_id);
 }
 
+/** What a report's records are for: its population, its two policies and its year. */
+export interface ReportRecordsRequest {
+  /** A state or congressional district as the API names it; the whole country when unset. */
+  region?: string;
+  baselinePolicyId: number | string;
+  reformPolicyId: number | string;
+  year: number | string;
+}
+
+/**
+ * Sends one of the records' requests, e.g. through a concurrency limit.
+ * By default each request is sent at once.
+ */
+export type ReportRecordsRunner = <Result>(request: () => Promise<Result>) => Promise<Result>;
+
+const sendAtOnce: ReportRecordsRunner = (request) => request();
+
+/**
+ * Creates, or reuses, a report's two simulations (the baseline's and the
+ * reform's, on the same population) and the base report that pairs them
+ * for the year. The Public API reuses a simulation with the same
+ * population and policy, and a base report with the same simulations,
+ * year and cache version, so a report that already exists comes back as
+ * stored, with its status and output. Each of the three requests goes
+ * through `run`.
+ */
+export async function createReportRecords(
+  countryId: CountryId,
+  { region, baselinePolicyId, reformPolicyId, year }: ReportRecordsRequest,
+  run: ReportRecordsRunner = sendAtOnce
+): Promise<ReportMetadata> {
+  const populationId = region ?? countryId;
+  const [baseline, reform] = await Promise.all([
+    run(() =>
+      createSimulation(countryId, {
+        population_id: populationId,
+        population_type: 'geography',
+        policy_id: Number(baselinePolicyId),
+      })
+    ),
+    run(() =>
+      createSimulation(countryId, {
+        population_id: populationId,
+        population_type: 'geography',
+        policy_id: Number(reformPolicyId),
+      })
+    ),
+  ]);
+
+  return run(() =>
+    createReport(countryId, {
+      simulation_1_id: Number(baseline.result.simulation_id),
+      simulation_2_id: Number(reform.result.simulation_id),
+      year: String(year),
+    })
+  );
+}
+
 /**
  * Runs a report and records it. Answers the report's link: the account
  * row's ID with accounts, otherwise the v1 report's (see reportLink).
@@ -308,6 +374,7 @@ export async function runFlagshipReport({
   baseline: requestedBaseline,
   accountReportStore,
   parameters,
+  savedReportId,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -324,30 +391,17 @@ export async function runFlagshipReport({
         : currentLawId),
   ]);
 
-  const [baseline, reform] = await Promise.all([
-    createSimulation(countryId, {
-      population_id: region ?? countryId,
-      population_type: 'geography',
-      policy_id: baselineId,
-    }),
-    createSimulation(countryId, {
-      population_id: region ?? countryId,
-      population_type: 'geography',
-      policy_id: reformPolicyId,
-    }),
-  ]);
-
-  const payload = {
-    simulation_1_id: Number(baseline.result.simulation_id),
-    simulation_2_id: Number(reform.result.simulation_id),
-    year: String(year),
-  };
-
-  // The v1 report comes first. Then exactly one record of it: through the
-  // API with accounts, whose ID is the report's link (anyone can open it),
-  // otherwise this browser's flagship record, with the v1 report's ID as
-  // the link (v3 never writes the legacy report keys).
-  const reportMetadata = await createReport(countryId, payload);
+  // The v1 report comes first. Then exactly one record of it, new or (with
+  // savedReportId) the saved report repointed at it: through the API with
+  // accounts, whose ID is the report's link (anyone can open it), otherwise
+  // this browser's flagship record, with the v1 report's ID as the link
+  // (v3 never writes the legacy report keys).
+  const reportMetadata = await createReportRecords(countryId, {
+    region,
+    baselinePolicyId: baselineId,
+    reformPolicyId,
+    year,
+  });
   const reportId = String(reportMetadata.id);
   const budgetWindow =
     windowYears && windowYears > 1 ? { startYear: year, windowSize: windowYears } : undefined;
@@ -379,11 +433,19 @@ export async function runFlagshipReport({
     baselineReformId: comparison?.reformId ?? null,
   };
 
+  // A saved report moved onto this run keeps its record and its links.
+  const repointed = { apiReportId: reportId, provisions, year: String(year) };
   let link = reportId;
   if (accountReportStore) {
     // A failure fails the run, so a report that opens is one that was saved.
-    link = (await accountReportStore.create(record)).id;
+    link = savedReportId
+      ? (await accountReportStore.update(savedReportId, repointed)).id
+      : (await accountReportStore.create(record)).id;
     rememberAccountReportMeta(link, meta);
+  } else if (savedReportId) {
+    // The saved report must move, or it would still point at the old run.
+    await new LocalStorageFlagshipReportStore().update(savedReportId, repointed);
+    saveReportMeta(reportId, meta);
   } else {
     saveReportMeta(reportId, meta);
     // Best-effort: the run already succeeded, and the link opens without it.

@@ -50,7 +50,7 @@ const UK_COUNTRY_NAMES: Record<string, string> = {
   england: 'England',
   scotland: 'Scotland',
   wales: 'Wales',
-  ni: 'Northern Ireland',
+  northern_ireland: 'Northern Ireland',
 };
 
 /**

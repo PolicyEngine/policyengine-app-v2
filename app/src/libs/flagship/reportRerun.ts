@@ -21,6 +21,12 @@ export interface RerunSettingsOptions {
   savedReform?: (reformId: string) => Reform | undefined;
   /** The current-law policy, to tell a report compared with a reform from one against current law. */
   currentLawPolicyId?: number;
+  /**
+   * Fail, rather than fall back, when the API's record of the report or
+   * its baseline simulation cannot be read or no year is known: a
+   * transfer replaces the saved report's run, so it must not guess them.
+   */
+  requireRun?: boolean;
 }
 
 /**
@@ -38,7 +44,7 @@ export interface RerunSettingsOptions {
 export async function rerunSettings(
   countryId: CountryId,
   report: FlagshipReportRecord,
-  { savedReform, currentLawPolicyId }: RerunSettingsOptions = {}
+  { savedReform, currentLawPolicyId, requireRun = false }: RerunSettingsOptions = {}
 ): Promise<RerunSettings> {
   const meta = readReportMeta(reportLink(report));
   let year = report.year;
@@ -51,8 +57,14 @@ export async function rerunSettings(
     const population = simulation.population_type === 'geography' ? simulation.population_id : '';
     region = population && population !== countryId ? population : undefined;
     baselinePolicyId = Number(simulation.policy_id) || undefined;
-  } catch {
+  } catch (error) {
+    if (requireRun) {
+      throw error;
+    }
     region = undefined;
+  }
+  if (requireRun && !Number(year)) {
+    throw new Error('The report’s year could not be read');
   }
   const recordWindow =
     report.budgetWindowYears && report.budgetWindowYears > 1 ? report.budgetWindowYears : undefined;
@@ -90,13 +102,15 @@ function savedBaseline(
       : undefined;
   }
   const reform = savedReform?.(report.baselineReformId);
+  const label = reform?.label || 'Untitled reform';
+  // The saved reform's own v1 policy; one saved only as a v2 policy has
+  // none, so the run makes one from its parameters, as Build's runs do.
   const policyId = baselinePolicyId ?? (Number(reform?.policyId) || undefined);
-  if (!policyId) {
-    throw new Error('The report’s comparison could not be read');
+  if (policyId) {
+    return { reformId: report.baselineReformId, label, policyId };
   }
-  return {
-    reformId: report.baselineReformId,
-    label: reform?.label || 'Untitled reform',
-    policyId,
-  };
+  if (reform && !reform.parametersUnavailable && reform.parameters.length > 0) {
+    return { reformId: report.baselineReformId, label, parameters: reform.parameters };
+  }
+  throw new Error('The report’s comparison could not be read');
 }

@@ -247,3 +247,38 @@ export const mockDcFitRows: CalibrationTargetRow[] = [
     }
   ),
 ];
+
+/** A UK programme's targets as the dashboard sorts them, largest gap first. */
+const ucRow = (
+  name: string,
+  measure: 'total' | 'count',
+  target: number,
+  relativeError: number
+): CalibrationTargetRow => ({
+  name,
+  source: 'dwp',
+  sourceLabel: 'Department for Work and Pensions',
+  variable: 'dwp.universal_credit',
+  policyengineVariables: ['universal_credit'],
+  measure,
+  breakdown: name,
+  level: 'country',
+  geography: 'Great Britain',
+  period: 2025,
+  target,
+  estimate: target * (1 + relativeError),
+  relativeError,
+  targetRole: null,
+  sourceUrl: null,
+  targetLabel: name,
+  variableLabel: 'Universal Credit',
+  currency: measure === 'total' ? 'GBP' : undefined,
+});
+export const UC_SPENDING_ROW = ucRow('Universal Credit expenditure', 'total', 76.1e9, -0.0004);
+export const UC_HOUSEHOLDS_ROW = ucRow('Universal Credit households', 'count', 6.2e6, 0.003);
+/** Eight band targets, each with a larger gap than the two totals. */
+export const UC_BAND_ROWS = Array.from({ length: 8 }, (_, index) =>
+  ucRow(`Payment band ${index + 1}`, 'count', 40_000, 0.1 - index * 0.01)
+);
+/** The dashboard's order: the bands' larger gaps first, the totals last. */
+export const UC_TARGETS_BY_GAP = [...UC_BAND_ROWS, UC_HOUSEHOLDS_ROW, UC_SPENDING_ROW];

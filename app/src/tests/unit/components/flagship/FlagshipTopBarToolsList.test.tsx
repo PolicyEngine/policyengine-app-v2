@@ -1,5 +1,5 @@
 import { renderWithCountry } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import { countryIds } from '@/libs/countries';
 import {
@@ -11,38 +11,45 @@ import {
   WEBSITE_URL,
 } from '@/tests/fixtures/components/flagship/topBarFixtures';
 
-// A made-up Tools menu, so these cases hold whichever tools apps.json marks:
-// the bar links whatever the menu lists, in the menu's order (not alphabetical
-// here, so a re-sort would show), one tool is still a group, and a country
-// with no tools gets no rows.
-const { MOCK_TOOLS } = vi.hoisted(() => ({
-  MOCK_TOOLS: {
-    us: [
-      { slug: 'zeta-tool', label: 'Zeta tool' },
-      { slug: 'alpha-tool', label: 'Alpha tool' },
-    ],
-    ca: [{ slug: 'only-tool', label: 'Only tool' }],
-  } as Record<string, { slug: string; label: string }[]>,
-}));
+type Tool = { slug: string; label: string };
+
+// A made-up Tools menu, set per test, so these cases hold whichever tools
+// apps.json marks: the bar links whatever the menu lists, in the menu's order
+// (not alphabetical here, so a re-sort would show), one tool is still a group,
+// and a country with no tools gets no rows.
+const mockTools = vi.hoisted(() => ({ current: [] as Tool[] }));
 
 // Fresh copies each call, as the real accessor returns, so a bar that sorts or
 // edits what it gets can't change these expectations too.
 vi.mock('@/utils/toolsMenu', () => ({
-  getToolsMenuEntries: (countryId: string) =>
-    (MOCK_TOOLS[countryId] ?? []).map((tool) => ({ ...tool })),
+  getToolsMenuEntries: () => mockTools.current.map((tool) => ({ ...tool })),
 }));
 
-const COUNTRIES_WITHOUT_TOOLS = countryIds.filter((countryId) => !(countryId in MOCK_TOOLS));
+const SEVERAL_TOOLS: Tool[] = [
+  { slug: 'zeta-tool', label: 'Zeta tool' },
+  { slug: 'alpha-tool', label: 'Alpha tool' },
+];
+const ONE_TOOL: Tool[] = [{ slug: 'only-tool', label: 'Only tool' }];
+
+const WITH_TOOLS = countryIds.flatMap((countryId) => [
+  [countryId, 'several tools', SEVERAL_TOOLS] as const,
+  [countryId, 'one tool', ONE_TOOL] as const,
+]);
 
 function renderTopBar(countryId: string) {
   return renderWithCountry(<FlagshipTopBar />, countryId, `/${countryId}/build`);
 }
 
 describe('FlagshipTopBar with another Tools menu', () => {
-  test.each(Object.entries(MOCK_TOOLS))(
-    'given %s then both menus link its tools after Research, in the menu order',
-    async (countryId, tools) => {
+  beforeEach(() => {
+    mockTools.current = [];
+  });
+
+  test.each(WITH_TOOLS)(
+    'given %s with %s then both menus link them after Research, in the menu order',
+    async (countryId, _case, tools) => {
       // Given
+      mockTools.current = [...tools];
       const { unmount } = renderTopBar(countryId);
 
       // When
@@ -68,8 +75,8 @@ describe('FlagshipTopBar with another Tools menu', () => {
     }
   );
 
-  test.each(COUNTRIES_WITHOUT_TOOLS)(
-    'given %s, with no tools, then neither menu has tool rows',
+  test.each(countryIds)(
+    'given %s with no tools then neither menu has tool rows',
     async (countryId) => {
       // Given
       const { unmount } = renderTopBar(countryId);
@@ -92,10 +99,4 @@ describe('FlagshipTopBar with another Tools menu', () => {
       ]);
     }
   );
-
-  test('given the mock then it covers a country with several tools, one with one, and one with none', () => {
-    expect(MOCK_TOOLS.us.length).toBeGreaterThan(1);
-    expect(MOCK_TOOLS.ca).toHaveLength(1);
-    expect(COUNTRIES_WITHOUT_TOOLS.length).toBeGreaterThan(0);
-  });
 });

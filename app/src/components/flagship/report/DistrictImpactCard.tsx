@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { IconX } from '@tabler/icons-react';
-import { normalizeDistrictId } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
+import {
+  districtErrorSummary,
+  normalizeDistrictId,
+} from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { DistrictChoroplethMap } from '@/components/flagship/report/DistrictChoroplethMap';
 import { Button, SegmentedControl, Stack, Text } from '@/components/ui';
@@ -460,6 +463,8 @@ export default function DistrictImpactCard({
   output,
   districts,
   modes,
+  pendingStates,
+  failedStates,
 }: {
   /** The full results, whose district breakdown the card maps. */
   output?: SocietyWideReportOutput;
@@ -467,6 +472,13 @@ export default function DistrictImpactCard({
   districts?: DistrictImpactRow[];
   /** The views to offer, e.g. without "Relative" where the data lacks it. */
   modes?: CongressionalMode[];
+  /**
+   * With districts from each state's own run: the states (`state/ca`) still
+   * to come, whose districts are not called missing or marked on the map.
+   */
+  pendingStates?: string[];
+  /** With districts from each state's own run: the states that failed, which are marked. */
+  failedStates?: string[];
 }) {
   const { labelLookup, stateCode } = useCongressionalDistrictData();
   const modeOptions = modes
@@ -637,23 +649,15 @@ export default function DistrictImpactCard({
   );
 
   // Detect districts that are expected from metadata but missing from the saved report output.
-  const savedErrorSummary = useMemo(() => {
-    if (!savedDistricts) {
-      return { errorDistrictCount: 0, errorStateAbbrs: [] as string[] };
-    }
-
-    const savedSet = new Set(savedDistricts.map((d) => d.district));
-    const missingStates = new Set<string>();
-    let count = 0;
-    const expectedDistrictIds = savedDistrictAvailability?.expectedDistrictIds ?? [];
-    expectedDistrictIds.forEach((districtId) => {
-      if (!savedSet.has(districtId)) {
-        count++;
-        missingStates.add(districtId.split('-')[0]);
-      }
-    });
-    return { errorDistrictCount: count, errorStateAbbrs: Array.from(missingStates) };
-  }, [labelLookup, savedDistrictAvailability, savedDistricts, stateCode]);
+  const savedErrorSummary = useMemo(
+    () =>
+      districtErrorSummary(
+        savedDistricts,
+        savedDistrictAvailability?.expectedDistrictIds ?? [],
+        pendingStates || failedStates ? { pendingStates, failedStates } : undefined
+      ),
+    [failedStates, pendingStates, savedDistrictAvailability, savedDistricts]
+  );
 
   const visibleErrorCount =
     savedErrorSummary.errorDistrictCount + (isOutcomeMode ? payloadOutcomeData.missingCount : 0);

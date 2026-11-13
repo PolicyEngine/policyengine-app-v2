@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, within } from '@test-utils';
+import { fetchRespondingTo, render, screen, userEvent, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { BillEconomy } from '@/hooks/useBillEconomy';
 import BillReportPage from '@/pages/flagship/BillReport.page';
@@ -7,6 +7,7 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
+import { CALCULATOR_ROUTES_NOT_SERVED } from '@/tests/fixtures/libs/flagship/calculatorRouteMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL, UNLISTED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -100,6 +101,8 @@ describe('BillReportPage', () => {
     mockUseBillEconomy.mockReturnValue(economy());
     mockIsAlreadyCurrentLaw.mockReturnValue(undefined);
     mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
+    // The calculator's own routes are not served here, so its checks read as unavailable.
+    vi.stubGlobal('fetch', fetchRespondingTo(CALCULATOR_ROUTES_NOT_SERVED));
     // Tests that seed metadata must not leave it loaded for the next one.
     store.dispatch(clearMetadata());
   });
@@ -610,6 +613,26 @@ describe('BillReportPage', () => {
       await within(panel).findByText('District map: 2 · absolute, winner-pct, loser-pct')
     ).toBeInTheDocument();
     expect(mockFetchTrackerBillDistricts).toHaveBeenCalledWith(TRACKED_BILL.id);
+  });
+
+  test('given a federal bill’s full results then the districts tab offers the state runs, not the nationwide districts', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockUseBillEconomy.mockReturnValue(
+      economy({ status: 'complete', output: createMockSocietyWideOutput() })
+    );
+    renderReport();
+    await user.click(await screen.findByRole('tab', { name: 'Districts' }));
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
+
+    // Then
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByRole('button', { name: 'Compute district impacts' })
+    ).toBeInTheDocument();
+    expect(within(panel).queryByText(/District map: full results/)).not.toBeInTheDocument();
   });
 
   test('given a bill with no mapped provisions then it says the results cannot be calculated', async () => {

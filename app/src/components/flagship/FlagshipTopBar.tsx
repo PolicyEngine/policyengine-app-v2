@@ -21,6 +21,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDraftReform } from '@/libs/draftReform';
 import { getToolsMenuEntries } from '@/utils/toolsMenu';
 import AuthMenu from '../auth/AuthMenu';
+import CountrySelector from '../homeHeader/CountrySelector';
 import FlagshipBrand from './FlagshipBrand';
 
 const NAV_ITEMS = [
@@ -63,7 +64,9 @@ export const FLAGSHIP_TOP_BAR_HEIGHT = 56;
  * website links as one group, in one slim bar across the top. Two
  * destinations do not earn a sidebar's width. On a phone the sections
  * and the links fold into one menu, so the bar keeps room for the brand,
- * the draft and the account menu.
+ * the draft, the country selector and the account menu. The country
+ * selector is the legacy header's (HomeHeader), placed as it is there:
+ * after the sections, and just before a phone's menu button.
  */
 export default function FlagshipTopBar() {
   const nav = useAppNavigate();
@@ -193,7 +196,8 @@ export default function FlagshipTopBar() {
         </DropdownMenu>
       </nav>
 
-      {/* The draft chip, a phone's menu and the sign-in / user menu sit together on the right. */}
+      {/* The draft chip, the country selector, a phone's menu and the
+          sign-in / user menu sit together on the right. */}
       <div
         className="tw:gap-sm tw:sm:gap-lg"
         style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}
@@ -224,6 +228,10 @@ export default function FlagshipTopBar() {
             <span className="tw:max-sm:hidden"> {parameterWord}</span>
           </button>
         )}
+
+        {/* As tall as the sections and the more menu (34px); on a phone,
+            as large as the menu button beside it (40px). */}
+        <CountrySelector triggerClassName="tw:size-[34px] tw:max-sm:size-10" />
 
         {/* A phone's one menu: the sections, then the website links as in More. */}
         <DropdownMenu>

@@ -18,6 +18,10 @@ import {
   startDraftReform,
   updateDraftProvisionValue,
 } from '@/libs/draftReform';
+import {
+  LEGACY_NORTHERN_IRELAND_REGION_CODE,
+  NORTHERN_IRELAND_REGION_CODE,
+} from '@/tests/fixtures/models/regionMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const CTC_PROVISION = {
@@ -320,5 +324,33 @@ describe('draftReform', () => {
     expect(isEditableValue(2200)).toBe(true);
     expect(isEditableValue(['employee_medicare_tax'])).toBe(false);
     expect(isEditableValue('CITIZEN')).toBe(false);
+  });
+});
+
+describe('draftReform Northern Ireland region', () => {
+  /** A UK draft this browser kept while the Public API listed Northern Ireland as "country/ni". */
+  const legacyNorthernIrelandDraft = {
+    countryId: 'uk',
+    label: 'Personal allowance in Northern Ireland',
+    provisions: [PERSONAL_ALLOWANCE],
+    population: { scope: 'national', region: LEGACY_NORTHERN_IRELAND_REGION_CODE },
+    source: 'manual',
+  };
+
+  beforeEach(() => {
+    localStorage.clear();
+    clearDraftReform();
+  });
+
+  it('given a stored draft for country/ni then the draft reads country/northern_ireland', () => {
+    localStorage.setItem('pe-draft-reform', JSON.stringify(legacyNorthernIrelandDraft));
+
+    expect(getDraftReform()?.population.region).toBe(NORTHERN_IRELAND_REGION_CODE);
+  });
+
+  it('given a set-aside draft for country/ni then resuming it reads country/northern_ireland', () => {
+    localStorage.setItem('pe-draft-reform:uk', JSON.stringify(legacyNorthernIrelandDraft));
+
+    expect(resumeDraftFor('uk')?.population.region).toBe(NORTHERN_IRELAND_REGION_CODE);
   });
 });

@@ -24,6 +24,7 @@ import type {
   SharedReportItem,
   UserReportCreateBody,
   UserReportItem,
+  UserReportPatchBody,
 } from '@/types/v2User';
 
 /**
@@ -44,6 +45,10 @@ export interface FlagshipReportRecord {
   provisions: RunReportProvision[];
   /** The simulated year; localStorage records only (the report itself carries it). */
   year?: string;
+  /**
+   * When the report ran: when it was saved, or when it last ran on the
+   * same saved report (an account row's `last_run_at`).
+   */
   createdAt: string;
   /** Saved reform this report came from, when known. */
   reformId?: string | null;
@@ -60,6 +65,18 @@ export interface FlagshipReportRecord {
 
 export type NewFlagshipReport = Omit<FlagshipReportRecord, 'id' | 'createdAt' | 'validation'>;
 
+/**
+ * What an update may change: the v1 report a saved report points at, and
+ * the provisions and year that report ran. The record keeps its ID, which
+ * is its link, and its saved-reform links. A new `apiReportId` is a new
+ * run: the record is dated by it, and its validation pin is dropped for
+ * the new run to be pinned. Only a browser record keeps `year`; an
+ * account row reads it from its v1 report.
+ */
+export type FlagshipReportUpdates = Partial<
+  Pick<FlagshipReportRecord, 'apiReportId' | 'provisions' | 'year'>
+>;
+
 /** Newest first. */
 function newestFirst(records: FlagshipReportRecord[]): FlagshipReportRecord[] {
   return [...records].sort((first, second) => second.createdAt.localeCompare(first.createdAt));
@@ -74,6 +91,8 @@ export interface FlagshipReportStore {
   findByApiReportId: (apiReportId: string) => Promise<FlagshipReportRecord | null>;
   /** Pins the validation snapshot to a record. */
   saveValidation: (id: string, snapshot: ReportValidationSnapshot) => Promise<FlagshipReportRecord>;
+  /** Changes only the supplied fields; a new `apiReportId` repoints the record to another run. */
+  update: (id: string, updates: FlagshipReportUpdates) => Promise<FlagshipReportRecord>;
 }
 
 /** A provision's growth settings on the wire, each only when set. */
@@ -147,7 +166,7 @@ export function parseReportItem(item: UserReportItem): ReportParseResult<Flagshi
       title: item.name,
       sourceNote: item.source_note,
       provisions: provisionsFromWire(item.provisions),
-      createdAt: item.created_at,
+      createdAt: item.last_run_at ?? item.created_at,
       reformId: item.user_policy_id,
       validation: validationFromWire(item.validation),
       budgetWindowYears: item.budget_window_years ?? null,
@@ -172,7 +191,7 @@ export function parseSharedReportItem(
       title: item.name,
       sourceNote: item.source_note,
       provisions: provisionsFromWire(item.provisions),
-      createdAt: item.created_at,
+      createdAt: item.last_run_at ?? item.created_at,
       reformId: null,
       validation: validationFromWire(item.validation),
       budgetWindowYears: item.budget_window_years ?? null,
@@ -278,6 +297,22 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
   ): Promise<FlagshipReportRecord> {
     return recordFromItem(await this.routes.patch(id, { validation: validationToWire(snapshot) }));
   }
+
+  /** The row keeps no year: the v1 report it points at carries it. */
+  async update(id: string, updates: FlagshipReportUpdates): Promise<FlagshipReportRecord> {
+    const body: UserReportPatchBody = {};
+    if (updates.apiReportId !== undefined) {
+      body.legacy_report_id = Number(updates.apiReportId);
+      // Pointing at another v1 report is running the report again: the old
+      // run's pin does not describe it.
+      body.validation = null;
+      body.last_run_at = new Date().toISOString();
+    }
+    if (updates.provisions !== undefined) {
+      body.provisions = provisionsToWire(updates.provisions);
+    }
+    return recordFromItem(await this.routes.patch(id, body));
+  }
 }
 
 export const FLAGSHIP_REPORTS_KEY = 'pe-flagship-reports';
@@ -299,10 +334,15 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
 
   private write(entries: unknown[]): void {
     try {
-      localStorage.setItem(FLAGSHIP_REPORTS_KEY, JSON.stringify(entries));
+      this.writeOrFail(entries);
     } catch {
       // Reports simply won't persist locally.
     }
+  }
+
+  /** Writes, failing when the browser refuses: an update must not report a change it did not make. */
+  private writeOrFail(entries: unknown[]): void {
+    localStorage.setItem(FLAGSHIP_REPORTS_KEY, JSON.stringify(entries));
   }
 
   /** The readable records, in the current shape; an unreadable entry is left out. */
@@ -362,6 +402,25 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
     const updated = { ...found.record, validation: snapshot };
     found.entries[found.index] = stampReportRecord(updated);
     this.write(found.entries);
+    return updated;
+  }
+
+  async update(id: string, updates: FlagshipReportUpdates): Promise<FlagshipReportRecord> {
+    const found = this.findStored('id', id);
+    if (!found) {
+      throw new Error('Report not found');
+    }
+    const updated: FlagshipReportRecord = {
+      ...found.record,
+      // Only the supplied fields, as the account store sends them.
+      ...Object.fromEntries(Object.entries(updates).filter(([, value]) => value !== undefined)),
+      // A new run, dated now, whose validation is pinned afresh.
+      ...(updates.apiReportId !== undefined
+        ? { createdAt: new Date().toISOString(), validation: null }
+        : {}),
+    };
+    found.entries[found.index] = stampReportRecord(updated);
+    this.writeOrFail(found.entries);
     return updated;
   }
 }

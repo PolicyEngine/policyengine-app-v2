@@ -3,6 +3,7 @@ import { IconChevronDown, IconSearch } from '@tabler/icons-react';
 import { areaEstimateFields } from '@/adapters/ukAreaEstimateFields';
 import {
   UK_AREA_NOUNS,
+  UK_WITHHELD_AREA_TEXT,
   type UKAreaLevel,
   type UKBreakdownWithheldAreas,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
@@ -38,6 +39,7 @@ import {
   ukNationFromRegion,
 } from '@/components/visualization/choropleth/ukAreaBoundaries';
 import { UKAreaChoroplethMap } from '@/components/visualization/choropleth/UKAreaChoroplethMap';
+import { placeUKHexMap } from '@/components/visualization/choropleth/ukHexLayout';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import { colors, spacing, typography } from '@/designTokens';
 import type { ReportOutputSocietyWideByConstituency } from '@/types/metadata/ReportOutputSocietyWideByConstituency';
@@ -254,13 +256,29 @@ export default function UKLocalAreaMaps({
           id: name,
           label: name,
           value: area[field],
-          x: area.x,
-          y: area.y,
           ...(area.code && { code: area.code }),
           ...areaEstimateFields(area, field),
         };
       }),
     [areas, mode]
+  );
+
+  // A level the breakdown supplied is disclosure-controlled: the areas of
+  // the region it leaves out are the ones withheld, or, when the breakdown
+  // lists its withheld codes, the listed ones. A saved level has none.
+  const levelWithheld = withheld?.[level] !== undefined;
+  const listedWithheldCodes = withheld?.[level]?.listedCodes;
+  // The hex map places each area by its code in the app's layout, tiled,
+  // leaves off any it cannot place, and draws the withheld ones as not
+  // reported and any others the result leaves out as having no data.
+  const hexMap = useMemo(
+    () =>
+      placeUKHexMap(level, mapData, {
+        disclosureControlled: levelWithheld,
+        region,
+        listedWithheldCodes,
+      }),
+    [level, mapData, levelWithheld, region, listedWithheldCodes]
   );
 
   const decimals = useMemo(() => percentDecimals(mapData.map((point) => point.value)), [mapData]);
@@ -385,8 +403,11 @@ export default function UKLocalAreaMaps({
                 config={{ ...mapConfig, height: GEOGRAPHIC_MAP_HEIGHT }}
                 focusNation={ukNationFromRegion(region)}
                 exportRef={mapRef}
-                // A breakdown's missing areas are the ones disclosure control withheld.
-                missingAreaText={withheld ? 'Not published' : undefined}
+                // A breakdown level's missing areas are the ones disclosure control
+                // withheld, or only the listed ones when it lists them; a saved
+                // level's have no data.
+                missingAreaText={levelWithheld ? UK_WITHHELD_AREA_TEXT : undefined}
+                missingAreaTextCodes={listedWithheldCodes}
                 navigable
                 selectedId={selectedArea ? selectedName : null}
                 onAreaClick={toggleSelected}
@@ -394,7 +415,10 @@ export default function UKLocalAreaMaps({
               />
             ) : (
               <HexagonalMap
-                data={mapData}
+                data={hexMap.points}
+                missingAreas={hexMap.withheldAreas}
+                missingAreaText={UK_WITHHELD_AREA_TEXT}
+                noDataAreas={hexMap.noDataAreas}
                 config={{
                   ...mapConfig,
                   // The legend reads in the rankings' units: pounds or percentages.

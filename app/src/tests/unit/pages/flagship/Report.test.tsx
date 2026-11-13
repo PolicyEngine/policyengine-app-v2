@@ -42,6 +42,8 @@ vi.mock('@/hooks/useFlagshipReport', () => ({
     policies: mockPolicies.current,
     isLoading: false,
     failedPolicyIds: mockFailedPolicyIds.current,
+    policiesChecked: true,
+    missingParameters: [],
     retry: mockRetry,
   }),
 }));
@@ -324,9 +326,10 @@ describe('FlagshipReportPage', () => {
     await user.click(screen.getByRole('tab', { name: 'Validation' }));
 
     const panel = screen.getByRole('tabpanel');
-    expect(
-      await within(panel).findByRole('table', { name: 'Related reforms' })
-    ).toBeInTheDocument();
+    await user.click(
+      await within(panel).findByRole('button', { name: 'Show 1 related reform score' })
+    );
+    expect(within(panel).getByRole('table', { name: 'Related reforms' })).toBeInTheDocument();
     expect(within(panel).getByRole('button', { name: 'CTC extension' })).toBeInTheDocument();
     expect(
       within(panel).queryByText('No external estimate is available for this reform.')

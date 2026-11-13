@@ -1,6 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { transformConstituencyRelativeChange } from '@/adapters/constituency/constituencyDataAdapter';
-import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
+import {
+  UK_WITHHELD_AREA_TEXT,
+  type UKWithheldAreas,
+} from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
 import UKAreaDisclosureNotes from '@/components/report/UKAreaDisclosureNotes';
@@ -11,6 +14,7 @@ import {
   ukNationFromRegion,
   type MapVisualizationType,
 } from '@/components/visualization/choropleth';
+import { placeUKHexMap } from '@/components/visualization/choropleth/ukHexLayout';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -43,6 +47,17 @@ export function RelativeChangeByConstituency({
   const areas = (output as ReportOutputSocietyWideUK).constituency_impact?.by_constituency;
   // One point per area, for the geographic and hex maps alike
   const mapData = useMemo(() => (areas ? transformConstituencyRelativeChange(areas) : []), [areas]);
+  // The hex map places each constituency by its code in the app's layout, as v3's
+  // does, and draws the ones a breakdown withheld as not reported.
+  // When the breakdown lists its withheld codes, only those are; the others
+  // it leaves out have no data.
+  const disclosureControlled = withheld !== undefined;
+  const listedWithheldCodes = withheld?.listedCodes;
+  const hexMap = useMemo(
+    () =>
+      placeUKHexMap('constituency', mapData, { disclosureControlled, region, listedWithheldCodes }),
+    [mapData, disclosureControlled, region, listedWithheldCodes]
+  );
   const notes = <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />;
 
   if (!mapData.length) {
@@ -84,12 +99,17 @@ export function RelativeChangeByConstituency({
           }}
           focusNation={ukNationFromRegion(region)}
           exportRef={mapRef}
-          // A breakdown's missing areas are the ones disclosure control withheld.
-          missingAreaText={withheld === undefined ? undefined : 'Not published'}
+          // A breakdown's missing areas are the ones disclosure control withheld,
+          // or only the listed ones when it lists them.
+          missingAreaText={withheld === undefined ? undefined : UK_WITHHELD_AREA_TEXT}
+          missingAreaTextCodes={listedWithheldCodes}
         />
       ) : (
         <HexagonalMap
-          data={mapData}
+          data={hexMap.points}
+          missingAreas={hexMap.withheldAreas}
+          missingAreaText={UK_WITHHELD_AREA_TEXT}
+          noDataAreas={hexMap.noDataAreas}
           config={{
             colorScale: {
               colors: DIVERGING_GRAY_TEAL.colors,

@@ -71,6 +71,17 @@ export const policyKeys = {
   byUser: (userId: string) => [...policyKeys.all, 'user_id', userId] as const,
 };
 
+/**
+ * A v1 policy as `GET /{country}/policy/{id}` returns it, per country:
+ * its raw parameter map and the parameters the model no longer has. Saved
+ * reforms and v3 reports read policies through it, once each.
+ */
+export const v1PolicyKey = (countryId: string, policyId: string) =>
+  ['v1-policy', countryId, policyId] as const;
+
+/** How long a fetched v1 policy stays cached without a reader. */
+export const V1_POLICY_GC_TIME = 30 * 60 * 1000;
+
 export const householdKeys = {
   all: ['households'] as const,
   byId: (householdId: string) => [...householdKeys.all, 'household_id', householdId] as const,
@@ -134,4 +145,20 @@ export const householdVariationKeys = {
       'person',
       personName,
     ] as const,
+};
+
+/**
+ * The Public API's admin user routes, per signed-in session (`subject`), so
+ * another account signing in on the same browser never reads them.
+ */
+export const adminUserKeys = {
+  all: (subject: string | null) => ['admin-users', subject] as const,
+  /** Every search's key starts with this. */
+  searches: (subject: string | null) => [...adminUserKeys.all(subject), 'search'] as const,
+  search: (subject: string | null, email: string) =>
+    [...adminUserKeys.searches(subject), email] as const,
+  user: (subject: string | null, userId: string) =>
+    [...adminUserKeys.all(subject), 'user', userId] as const,
+  typeChanges: (subject: string | null, userId: string) =>
+    [...adminUserKeys.all(subject), 'user-type-changes', userId] as const,
 };
