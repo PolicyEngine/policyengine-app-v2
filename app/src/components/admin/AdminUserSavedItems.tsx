@@ -14,11 +14,14 @@ import {
   Title,
 } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
+import type { AdminSavedPolicy } from '@/hooks/useAdminSavedPolicy';
 import { useAdminUserSavedItems } from '@/hooks/useAdminUserSavedItems';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CountryId } from '@/libs/countries';
 import { getCountryLabel } from '@/utils/geographyUtils';
+import AdminSavedPolicyPanel from './AdminSavedPolicyPanel';
 import { formatAdminDate } from './adminUserFormat';
+import NewTabLink from './NewTabLink';
 
 /** One saved record, whatever its kind, as its table shows it. */
 interface SavedItemRow {
@@ -33,6 +36,10 @@ interface SavedItemRow {
   createdAt: string;
   /** Reports only: when it last ran, or null if it never has. */
   lastRunAt?: string | null;
+  /** Policies only: the saved policy, which its name opens in a panel. */
+  policy?: AdminSavedPolicy;
+  /** Reports only: the report's page, which its name opens in a new tab. */
+  reportPath?: string;
 }
 
 /** One kind of saved record: policies, households, simulations or reports. */
@@ -41,7 +48,8 @@ interface SavedItemKind {
   heading: string;
   tableLabel: string;
   emptyMessage: string;
-  targetIdHeader: string;
+  /** The heading of the column of IDs the records point to; null for none. */
+  targetIdHeader: string | null;
   rows: SavedItemRow[];
   showsLastRun: boolean;
 }
@@ -52,7 +60,8 @@ function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
       heading: 'Policies',
       tableLabel: 'Saved policies',
       emptyMessage: 'No saved policies.',
-      targetIdHeader: 'Policy ID',
+      // Each name opens the policy itself, which says more than its ID.
+      targetIdHeader: null,
       showsLastRun: false,
       rows: savedItems.policies.map((policy) => ({
         id: policy.id,
@@ -61,6 +70,7 @@ function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
         targetId: policy.policy_id,
         legacyTargetId: policy.legacy_policy_id,
         createdAt: policy.created_at,
+        policy,
       })),
     },
     {
@@ -97,7 +107,8 @@ function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
       heading: 'Reports',
       tableLabel: 'Saved reports',
       emptyMessage: 'No saved reports.',
-      targetIdHeader: 'Report ID',
+      // Each name opens the report itself, which says more than its ID.
+      targetIdHeader: null,
       showsLastRun: true,
       rows: savedItems.reports.map((report) => ({
         id: report.id,
@@ -107,6 +118,9 @@ function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
         legacyTargetId: report.legacy_report_id,
         createdAt: report.created_at,
         lastRunAt: report.last_run_at,
+        // A saved report's own ID is its link, which anyone can open, in
+        // the country it was saved in.
+        reportPath: `/${report.country_id}/report/${report.id}`,
       })),
     },
   ];
@@ -120,7 +134,39 @@ function targetIdLabel({ targetId, legacyTargetId }: SavedItemRow): string {
   return labels.length > 0 ? labels.join(', ') : 'None';
 }
 
-function SavedItemKindTable({ kind, countryId }: { kind: SavedItemKind; countryId: CountryId }) {
+/** Opens a saved policy's panel; `opener` takes focus back when it closes. */
+type OpenPolicy = (policy: AdminSavedPolicy, opener: HTMLElement) => void;
+
+/** A record's name: for a policy, a control that opens it; for a report, a link to it. */
+function SavedItemName({ row, onOpenPolicy }: { row: SavedItemRow; onOpenPolicy: OpenPolicy }) {
+  const name = row.name ?? 'No name';
+  const { policy, reportPath } = row;
+  if (policy) {
+    return (
+      <Button
+        variant="link"
+        className="tw:h-auto tw:p-0 tw:whitespace-normal tw:text-left"
+        onClick={(event) => onOpenPolicy(policy, event.currentTarget)}
+      >
+        {name}
+      </Button>
+    );
+  }
+  if (reportPath) {
+    return <NewTabLink href={reportPath}>{name}</NewTabLink>;
+  }
+  return name;
+}
+
+function SavedItemKindTable({
+  kind,
+  countryId,
+  onOpenPolicy,
+}: {
+  kind: SavedItemKind;
+  countryId: CountryId;
+  onOpenPolicy: OpenPolicy;
+}) {
   return (
     <Stack gap="xs">
       <Title order={4} style={{ margin: 0, fontSize: typography.fontSize.sm }}>
@@ -136,7 +182,7 @@ function SavedItemKindTable({ kind, countryId }: { kind: SavedItemKind; countryI
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Country</TableHead>
-              <TableHead>{kind.targetIdHeader}</TableHead>
+              {kind.targetIdHeader !== null && <TableHead>{kind.targetIdHeader}</TableHead>}
               <TableHead>Saved</TableHead>
               {kind.showsLastRun && <TableHead>Last run</TableHead>}
             </TableRow>
@@ -144,11 +190,15 @@ function SavedItemKindTable({ kind, countryId }: { kind: SavedItemKind; countryI
           <TableBody>
             {kind.rows.map((row) => (
               <TableRow key={row.id}>
-                <TableCell style={{ whiteSpace: 'normal' }}>{row.name ?? 'No name'}</TableCell>
-                <TableCell>{getCountryLabel(row.countryId)}</TableCell>
-                <TableCell style={{ whiteSpace: 'normal', wordBreak: 'break-all' }}>
-                  {targetIdLabel(row)}
+                <TableCell style={{ whiteSpace: 'normal' }}>
+                  <SavedItemName row={row} onOpenPolicy={onOpenPolicy} />
                 </TableCell>
+                <TableCell>{getCountryLabel(row.countryId)}</TableCell>
+                {kind.targetIdHeader !== null && (
+                  <TableCell style={{ whiteSpace: 'normal', wordBreak: 'break-all' }}>
+                    {targetIdLabel(row)}
+                  </TableCell>
+                )}
                 <TableCell>{formatAdminDate(row.createdAt, countryId)}</TableCell>
                 {kind.showsLastRun && (
                   <TableCell>
@@ -171,6 +221,12 @@ function SavedItemKindTable({ kind, countryId }: { kind: SavedItemKind; countryI
 function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHeading: () => void }) {
   const countryId = useCurrentCountry();
   const savedItems = useAdminUserSavedItems(userId);
+  const [openPolicy, setOpenPolicy] = useState<AdminSavedPolicy | null>(null);
+  const policyOpenerRef = useRef<HTMLElement | null>(null);
+  const openPolicyFrom: OpenPolicy = (policy, opener) => {
+    policyOpenerRef.current = opener;
+    setOpenPolicy(policy);
+  };
 
   // Each showing reads once and keeps nothing from an earlier one (see
   // `useAdminUserSavedItems`), so an error here never has items to keep.
@@ -208,8 +264,18 @@ function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHead
   return (
     <Stack gap="lg">
       {savedItemKinds(savedItems.data).map((kind) => (
-        <SavedItemKindTable key={kind.heading} kind={kind} countryId={countryId} />
+        <SavedItemKindTable
+          key={kind.heading}
+          kind={kind}
+          countryId={countryId}
+          onOpenPolicy={openPolicyFrom}
+        />
       ))}
+      <AdminSavedPolicyPanel
+        policy={openPolicy}
+        onClose={() => setOpenPolicy(null)}
+        returnFocusTo={policyOpenerRef}
+      />
     </Stack>
   );
 }

@@ -19,6 +19,7 @@ import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { readV1Policy } from '@/libs/flagship/policyChecks';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
+import { v2PolicyKey } from '@/libs/queryKeys';
 import { selectV2Catalog, selectV2ParameterIds } from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
@@ -64,10 +65,6 @@ export function useV3SavedWork(): V3SavedWork {
     return { account: null, scope: 'browser' };
   }, [status, subject, browserUserId, countryId, client]);
 }
-
-/** A v2 policy (`GET /v2/policies/{id}`), per country. */
-const v2PolicyKey = (countryId: string, policyId: string) =>
-  ['v2-policy', countryId, policyId] as const;
 
 /** How long a fetched v2 policy stays cached without a reader. */
 const SAVED_POLICY_GC_TIME = 30 * 60 * 1000;

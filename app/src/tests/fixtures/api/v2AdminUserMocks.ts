@@ -244,11 +244,16 @@ export function answerAdminApi(
   return state;
 }
 
+/** A request's method: its `init`'s, else a `Request`'s own (the Public API client sends those). */
+export function requestMethodOf(input: RequestInfo | URL, init: RequestInit | undefined): string {
+  return init?.method ?? (input instanceof Request ? input.method : 'GET');
+}
+
 /** Each request `fetchMock` received, as method and path with its query. */
 export function sentRequests(fetchMock: Mock): string[] {
   return fetchMock.mock.calls.map((call) => {
-    const [url, init] = call as [string, RequestInit];
-    return `${init.method ?? 'GET'} ${publicApiPathOf(url)}${requestUrlOf(url).search}`;
+    const [input, init] = call as [RequestInfo | URL, RequestInit | undefined];
+    return `${requestMethodOf(input, init)} ${publicApiPathOf(input)}${requestUrlOf(input).search}`;
   });
 }
 

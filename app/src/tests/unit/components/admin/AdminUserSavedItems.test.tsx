@@ -1,8 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { cleanup, render, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { UserSavedItems } from '@/api/v2AdminUserSavedItems';
 import { formatAdminDate } from '@/components/admin/adminUserFormat';
 import AdminUsersPage from '@/pages/flagship/AdminUsers.page';
+import { clearMetadata } from '@/reducers/metadataReducer';
+import { store } from '@/store';
 import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   ALAN,
@@ -13,12 +16,19 @@ import {
   sentRequests,
 } from '@/tests/fixtures/api/v2AdminUserMocks';
 import {
+  answerPolicyReads,
   answerSavedItems,
+  GRACE_SAVED_ITEMS,
   REPORT_LAST_RUN_AT,
+  SAVED_ITEM_IDS,
   SAVED_ITEM_NAMES,
+  SAVED_POLICY_PARAMETER,
   SAVED_TARGET_IDS,
+  savedPolicy,
+  savedReport,
 } from '@/tests/fixtures/api/v2AdminUserSavedItemsMocks';
 import { errorResponse, TIMESTAMPS } from '@/tests/fixtures/api/v2UserMocks';
+import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import {
   createProductionLikeQueryClient,
   createTestQueryClient,
@@ -48,10 +58,14 @@ function savedItemsReads(userId: string): string[] {
  * Renders the admin page over the fake Public API, Grace's saved items
  * included, and opens `email`'s details from the list of users.
  */
-async function openUserDetails(email: string, queryClient: QueryClient = createTestQueryClient()) {
+async function openUserDetails(
+  email: string,
+  queryClient: QueryClient = createTestQueryClient(),
+  savedItemsByUserId?: Readonly<Record<string, UserSavedItems>>
+) {
   const user = userEvent.setup();
   const apiState = answerAdminApi(fetchMock);
-  answerSavedItems(fetchMock, apiState);
+  answerSavedItems(fetchMock, apiState, savedItemsByUserId);
   render(
     <UserSessionProviders
       queryClient={queryClient}
@@ -102,6 +116,9 @@ async function letRetriesRun() {
 
 const SAVED_DATE = formatAdminDate(TIMESTAMPS.CREATED, 'us');
 
+/** What a link that opens a new tab adds to its text, for screen readers. */
+const NEW_TAB_NOTE = ' (opens in a new tab)';
+
 beforeEach(() => {
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
@@ -148,7 +165,7 @@ describe('AdminUserSavedItems', () => {
     expect(screen.getByRole('heading', { name: 'Saved items' })).toHaveFocus();
   });
 
-  test('given saved policies then each shows its name, country, policy ID and date saved', async () => {
+  test('given saved policies then each shows its name, country and date saved, without the policy ID', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!);
 
@@ -158,8 +175,8 @@ describe('AdminUserSavedItems', () => {
 
     // Then
     expect(rowsOf('Saved policies')).toEqual([
-      [SAVED_ITEM_NAMES.US_POLICY, 'United States', SAVED_TARGET_IDS.V2_POLICY, SAVED_DATE],
-      ['No name', 'United Kingdom', `${SAVED_TARGET_IDS.V1_POLICY} (v1)`, SAVED_DATE],
+      [SAVED_ITEM_NAMES.US_POLICY, 'United States', SAVED_DATE],
+      ['No name', 'United Kingdom', SAVED_DATE],
     ]);
   });
 
@@ -190,9 +207,8 @@ describe('AdminUserSavedItems', () => {
       ],
       reports: [
         [
-          SAVED_ITEM_NAMES.REPORT,
+          `${SAVED_ITEM_NAMES.REPORT}${NEW_TAB_NOTE}`,
           'United States',
-          `${SAVED_TARGET_IDS.V1_REPORT} (v1)`,
           SAVED_DATE,
           formatAdminDate(REPORT_LAST_RUN_AT, 'us'),
         ],
@@ -236,7 +252,7 @@ describe('AdminUserSavedItems', () => {
     ]);
   });
 
-  test('given the saved items are shown then the view offers nothing that changes them', async () => {
+  test('given the saved items are shown then its only controls open the policies and the report, and none changes them', async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!);
 
@@ -247,9 +263,16 @@ describe('AdminUserSavedItems', () => {
     // Then
     const section = savedItemsSection();
     const controls = ['button', 'link', 'textbox', 'checkbox', 'combobox', 'menuitem'].flatMap(
-      (role) => within(section).queryAllByRole(role)
+      (role) =>
+        within(section)
+          .queryAllByRole(role)
+          .map((control) => `${role}: ${control.textContent}`)
     );
-    expect(controls).toEqual([]);
+    expect(controls).toEqual([
+      `button: ${SAVED_ITEM_NAMES.US_POLICY}`,
+      'button: No name',
+      `link: ${SAVED_ITEM_NAMES.REPORT}${NEW_TAB_NOTE}`,
+    ]);
   });
 
   test('given the saved items are shown then only reads were sent', async () => {
@@ -509,5 +532,214 @@ describe('AdminUserSavedItems', () => {
 
     // Then
     expect(savedItemsReads(GRACE.id)).toHaveLength(1);
+  });
+});
+
+describe('AdminUserSavedItems policies and reports', () => {
+  /** The panel's parameter rows, as the text of their cells. */
+  function parameterRowsIn(panel: HTMLElement): string[][] {
+    const table = within(panel).getByRole('table', { name: 'Parameters' });
+    return within(table)
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) =>
+        within(row)
+          .getAllByRole('cell')
+          .map((cell) => cell.textContent ?? '')
+      );
+  }
+
+  /**
+   * Shows `email`'s saved items (`savedItems` in place of Grace's), with
+   * the policy reads answered; returns the policy paths read.
+   */
+  async function showSavedItems(email: string, savedItems?: UserSavedItems) {
+    const { user } = await openUserDetails(
+      email,
+      createTestQueryClient(),
+      savedItems ? { [GRACE.id]: savedItems } : undefined
+    );
+    const policyReads = answerPolicyReads(fetchMock);
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+    return { user, policyReads };
+  }
+
+  async function openPolicy(user: ReturnType<typeof userEvent.setup>, name: string) {
+    const savedPolicies = screen.getByRole('table', { name: 'Saved policies' });
+    await user.click(within(savedPolicies).getByRole('button', { name }));
+    return screen.findByRole('dialog', { name });
+  }
+
+  beforeEach(() => {
+    seedDeductionMetadata();
+  });
+
+  afterEach(() => {
+    store.dispatch(clearMetadata());
+  });
+
+  test("given a saved report then its name opens the report's page in a new tab", async () => {
+    // When
+    await showSavedItems(GRACE.email!);
+
+    // Then
+    const link = within(screen.getByRole('table', { name: 'Saved reports' })).getByRole('link', {
+      name: `${SAVED_ITEM_NAMES.REPORT}${NEW_TAB_NOTE}`,
+    });
+    expect([
+      link.getAttribute('href'),
+      link.getAttribute('target'),
+      link.getAttribute('rel'),
+    ]).toEqual([`/us/report/${SAVED_ITEM_IDS.REPORT}`, '_blank', 'noopener noreferrer']);
+  });
+
+  test("given a report saved in another country then its link opens it in that country's site", async () => {
+    // Given
+    const ukReport = savedReport({ country_id: 'uk', name: SAVED_ITEM_NAMES.REPORT });
+
+    // When
+    await showSavedItems(GRACE.email!, { ...GRACE_SAVED_ITEMS, reports: [ukReport] });
+
+    // Then
+    const link = within(screen.getByRole('table', { name: 'Saved reports' })).getByRole('link');
+    expect(link.getAttribute('href')).toBe(`/uk/report/${SAVED_ITEM_IDS.REPORT}`);
+  });
+
+  test('given the admin opens a policy then a panel shows its parameters as the reforms page does', async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(panel).findByRole('table', { name: 'Parameters' });
+
+    // Then
+    expect({
+      headings: within(panel)
+        .getAllByRole('columnheader')
+        .map((heading) => heading.textContent),
+      rows: parameterRowsIn(panel),
+    }).toEqual({
+      headings: ['Parameter', 'Current law', 'Reform', 'From'],
+      rows: [
+        [
+          SAVED_POLICY_PARAMETER.LABEL,
+          SAVED_POLICY_PARAMETER.CURRENT_LAW_2026,
+          '$3,600',
+          'from 2026',
+        ],
+      ],
+    });
+  });
+
+  test('given the admin opens a policy then the panel says how many provisions it has and when it was saved', async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+
+    // Then
+    expect(await within(panel).findByText('1 provision · saved Oct 12, 2026')).toBeInTheDocument();
+  });
+
+  test('given a policy saved before the detailed-save API then the panel reads its v1 policy', async () => {
+    // Given
+    const v1Policy = savedPolicy({
+      name: SAVED_ITEM_NAMES.US_POLICY,
+      legacy_policy_id: SAVED_TARGET_IDS.V1_POLICY,
+    });
+    const { user, policyReads } = await showSavedItems(GRACE.email!, {
+      ...GRACE_SAVED_ITEMS,
+      policies: [v1Policy],
+    });
+
+    // When
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(panel).findByRole('table', { name: 'Parameters' });
+
+    // Then
+    expect({ reads: policyReads, rows: parameterRowsIn(panel) }).toEqual({
+      reads: [`/us/policy/${SAVED_TARGET_IDS.V1_POLICY}`],
+      rows: [
+        [
+          SAVED_POLICY_PARAMETER.LABEL,
+          SAVED_POLICY_PARAMETER.CURRENT_LAW_2026,
+          '$3,000',
+          '2026 only',
+        ],
+      ],
+    });
+  });
+
+  test("given a policy saved in another country then the panel links to that country's admin page and reads no policy", async () => {
+    // Given
+    const { user, policyReads } = await showSavedItems(GRACE.email!);
+
+    // When
+    const panel = await openPolicy(user, 'No name');
+
+    // Then
+    const link = within(panel).getByRole('link', {
+      name: `Open the United Kingdom admin page${NEW_TAB_NOTE}`,
+    });
+    expect({
+      href: link.getAttribute('href'),
+      target: link.getAttribute('target'),
+      reads: policyReads,
+    }).toEqual({ href: '/uk/admin/users', target: '_blank', reads: [] });
+  });
+
+  test('given the policy cannot be read then the panel says so, and trying again shows it', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    answerPolicyReads(fetchMock, { v2: {}, v1: {} });
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    expect(await within(panel).findByRole('alert')).toHaveTextContent(
+      'We could not load this policy'
+    );
+    answerPolicyReads(fetchMock);
+
+    // When
+    await user.click(within(panel).getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(await within(panel).findByRole('table', { name: 'Parameters' })).toBeInTheDocument();
+  });
+
+  test("given the panel is open then closing it returns focus to the policy's name", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+
+    // When
+    await user.click(within(panel).getByRole('button', { name: 'Close' }));
+
+    // Then
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(
+      within(screen.getByRole('table', { name: 'Saved policies' })).getByRole('button', {
+        name: SAVED_ITEM_NAMES.US_POLICY,
+      })
+    ).toHaveFocus();
+  });
+
+  test('given the admin opens policies then only reads were sent', async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+    const usPanel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(usPanel).findByRole('table', { name: 'Parameters' });
+    await user.click(within(usPanel).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // When
+    await openPolicy(user, 'No name');
+
+    // Then
+    const methods = new Set(sentRequests(fetchMock).map((request) => request.split(' ')[0]));
+    expect([...methods]).toEqual(['GET']);
   });
 });

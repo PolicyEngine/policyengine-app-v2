@@ -7,11 +7,18 @@ import {
   ADMIN_API_MESSAGES,
   ADMIN_USER_IDS,
   GRACE,
+  requestMethodOf,
   type answerAdminApi,
 } from '@/tests/fixtures/api/v2AdminUserMocks';
-import { errorResponse, okResponse, TIMESTAMPS } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  errorResponse,
+  itemResponse,
+  okResponse,
+  TIMESTAMPS,
+} from '@/tests/fixtures/api/v2UserMocks';
 import { isAssociationCountry } from '@/types/v2User';
 
+type V2Policy = components['schemas']['PolicyItem'];
 type SavedPolicy = components['schemas']['UserPolicyItem'];
 type SavedHousehold = components['schemas']['UserHouseholdItem'];
 type SavedSimulation = components['schemas']['UserSimulationItem'];
@@ -159,6 +166,83 @@ export const GRACE_SAVED_ITEMS: UserSavedItems = {
     }),
   ],
 };
+
+/**
+ * The parameter the saved policies below change. With `seedDeductionMetadata`
+ * its current law is $2,000 in 2025 and $2,200 from 2026.
+ */
+export const SAVED_POLICY_PARAMETER = {
+  NAME: 'gov.irs.credits.ctc.amount.base',
+  LABEL: 'Child tax credit base amount',
+  CURRENT_LAW_2026: '$2,200',
+} as const;
+
+/** The v2 policy Grace's US policy points to: the base amount at $3,600 from 2026 on. */
+export const GRACE_V2_POLICY: V2Policy = {
+  id: SAVED_TARGET_IDS.V2_POLICY,
+  country_id: 'us',
+  tax_benefit_model_id: 'c1000000-0000-4000-8000-000000000001',
+  created_at: TIMESTAMPS.CREATED,
+  updated_at: TIMESTAMPS.CREATED,
+  parameter_values: [
+    {
+      id: 'c2000000-0000-4000-8000-000000000001',
+      parameter_id: 'c3000000-0000-4000-8000-000000000001',
+      parameter_name: SAVED_POLICY_PARAMETER.NAME,
+      value: 3600,
+      start_date: '2026-01-01T00:00:00Z',
+      end_date: null,
+    },
+  ],
+  missing_parameters: [],
+};
+
+/** A v1 policy's `policy_json`: the base amount at $3,000 in 2026 only. */
+export const V1_POLICY_JSON = {
+  [SAVED_POLICY_PARAMETER.NAME]: { '2026-01-01.2026-12-31': 3000 },
+} as const;
+
+/** The policies `answerPolicyReads` knows, by country and ID. */
+interface KnownPolicies {
+  /** v2 policies, by ID. */
+  v2: Readonly<Record<string, V2Policy>>;
+  /** v1 policies' `policy_json`, by `{country}/{id}`. */
+  v1: Readonly<Record<string, Record<string, unknown>>>;
+}
+
+/**
+ * Makes `fetchMock` also answer the policy reads a saved policy's panel
+ * sends: `GET /v2/policies/{policy_id}` and `GET /{country}/policy/{id}`.
+ * An unknown policy is a 404. Returns the paths read, in order.
+ */
+export function answerPolicyReads(
+  fetchMock: Mock,
+  policies: KnownPolicies = {
+    v2: { [GRACE_V2_POLICY.id]: GRACE_V2_POLICY },
+    v1: { [`us/${SAVED_TARGET_IDS.V1_POLICY}`]: V1_POLICY_JSON },
+  }
+) {
+  const policyReads: string[] = [];
+  const answerAsBefore = fetchMock.getMockImplementation()!;
+  fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const path = publicApiPathOf(input);
+    const v2PolicyRoute = /^\/v2\/policies\/([^/]+)$/.exec(path);
+    const v1PolicyRoute = /^\/(\w+)\/policy\/(\d+)$/.exec(path);
+    if (requestMethodOf(input, init) !== 'GET' || (!v2PolicyRoute && !v1PolicyRoute)) {
+      return answerAsBefore(input, init);
+    }
+    policyReads.push(path);
+    if (v2PolicyRoute) {
+      const policy = policies.v2[v2PolicyRoute[1]];
+      return policy ? itemResponse(policy) : errorResponse(404, 'Policy not found.');
+    }
+    const policyJson = policies.v1[`${v1PolicyRoute![1]}/${v1PolicyRoute![2]}`];
+    return policyJson
+      ? okResponse({ id: Number(v1PolicyRoute![2]), policy_json: policyJson })
+      : errorResponse(404, 'Policy not found.');
+  });
+  return policyReads;
+}
 
 /**
  * Makes `fetchMock`, already set up by `answerAdminApi`, also answer
