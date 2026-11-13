@@ -258,9 +258,9 @@ export function answerSavedItems(
   }
 ) {
   const answerAsBefore = fetchMock.getMockImplementation()!;
-  fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+  fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
     const savedItemsRoute = /^\/v2\/admin\/users\/([^/]+)\/saved-items$/.exec(publicApiPathOf(url));
-    if (!savedItemsRoute || (init.method ?? 'GET') !== 'GET') {
+    if (!savedItemsRoute || requestMethodOf(url, init) !== 'GET') {
       return answerAsBefore(url, init);
     }
     const user = apiState.users.find((candidate) => candidate.id === savedItemsRoute[1]);

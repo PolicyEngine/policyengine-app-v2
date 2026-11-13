@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
 import type { RefObject } from 'react';
+import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import ReformParameterTable from '@/components/flagship/ReformParameterTable';
+import { adminUsersPath } from '@/components/settings/settingsPages';
 import {
   Button,
   Sheet,
@@ -13,11 +15,14 @@ import {
   Title,
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { useAdminSavedPolicyParameters, type AdminSavedPolicy } from '@/hooks/useAdminSavedPolicy';
+import {
+  useAdminSavedPolicyContent,
+  type AdminSavedPolicy,
+  type AdminSavedPolicyContent,
+} from '@/hooks/useAdminSavedPolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { reformParameterNames } from '@/libs/flagship/v3ParameterNames';
-import type { Parameter } from '@/types/subIngredients/parameter';
 import { getCountryLabel } from '@/utils/geographyUtils';
 import NewTabLink from './NewTabLink';
 
@@ -28,30 +33,31 @@ const SECONDARY_TEXT: React.CSSProperties = {
 };
 
 /** "1 provision · saved Oct 12, 2026", as the reforms page says it; the date alone until read. */
-function savedLine(createdAt: string, parameters: Parameter[] | undefined): string {
+function savedLine(createdAt: string, content: AdminSavedPolicyContent | undefined): string {
   const saved = dayjs(createdAt).format('MMM D, YYYY');
-  if (parameters === undefined) {
+  if (content === undefined) {
     return `Saved ${saved}`;
   }
-  const count = parameters.length;
+  const count = content.parameters.length;
   return `${count} ${count === 1 ? 'provision' : 'provisions'} · saved ${saved}`;
 }
 
 /**
  * The parameters of a policy saved in this page's country, as the reforms
- * page shows a saved reform's: names and current law come from the loaded
- * metadata, so only this country's policies can be shown.
+ * page shows a saved reform's: the parameters the model no longer has, then
+ * the table. Names and current law come from the loaded metadata, so only
+ * this country's policies can be shown.
  */
 function PolicyParameters({
-  parameters,
+  content,
   error,
   onRetry,
 }: {
-  parameters: Parameter[] | undefined;
+  content: AdminSavedPolicyContent | undefined;
   error: Error | null;
   onRetry: () => void;
 }) {
-  const metadata = useEnsureV3Parameters(parameters ? reformParameterNames([{ parameters }]) : []);
+  const metadata = useEnsureV3Parameters(content ? reformParameterNames([content]) : []);
   if (error) {
     return (
       <Stack gap="sm" align="start">
@@ -64,7 +70,7 @@ function PolicyParameters({
       </Stack>
     );
   }
-  if (parameters === undefined) {
+  if (content === undefined) {
     return (
       <Stack role="status" aria-live="polite" gap="sm" align="start">
         <Spinner size="sm" />
@@ -75,13 +81,18 @@ function PolicyParameters({
     );
   }
   return (
-    <ReformParameterTable
-      reformParameters={parameters}
-      reformHeading="Reform"
-      metadataReady={metadata.status === 'ready'}
-      metadataFailed={metadata.status === 'error'}
-      onRetryMetadata={metadata.retry}
-    />
+    <>
+      {content.missingParameters.length > 0 && (
+        <MissingParametersNotice subject="This policy" parameterPaths={content.missingParameters} />
+      )}
+      <ReformParameterTable
+        reformParameters={content.parameters}
+        reformHeading="Reform"
+        metadataReady={metadata.status === 'ready'}
+        metadataFailed={metadata.status === 'error'}
+        onRetryMetadata={metadata.retry}
+      />
+    </>
   );
 }
 
@@ -89,7 +100,7 @@ function PolicyParameters({
 function PolicyDetails({ policy }: { policy: AdminSavedPolicy }) {
   const countryId = useCurrentCountry();
   const inThisCountry = policy.country_id === countryId;
-  const read = useAdminSavedPolicyParameters(policy, inThisCountry);
+  const read = useAdminSavedPolicyContent(policy, inThisCountry);
   const countryLabel = getCountryLabel(policy.country_id);
   return (
     <Stack style={{ gap: spacing.xl, padding: spacing.xl }}>
@@ -105,7 +116,7 @@ function PolicyDetails({ policy }: { policy: AdminSavedPolicy }) {
       </Stack>
       {inThisCountry ? (
         <PolicyParameters
-          parameters={read.data}
+          content={read.data}
           error={read.error}
           onRetry={() => void read.refetch()}
         />
@@ -117,7 +128,7 @@ function PolicyDetails({ policy }: { policy: AdminSavedPolicy }) {
             This policy was saved in the {countryLabel}. Its parameters show on the {countryLabel}{' '}
             admin page.
           </Text>
-          <NewTabLink href={`/${policy.country_id}/admin/users`}>
+          <NewTabLink href={adminUsersPath(policy.country_id)}>
             {`Open the ${countryLabel} admin page`}
           </NewTabLink>
         </Stack>

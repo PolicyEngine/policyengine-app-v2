@@ -178,10 +178,10 @@ export function answerAdminApi(
     return user ? itemResponse(user) : errorResponse(404, ADMIN_API_MESSAGES.NO_SIGNED_IN_USER);
   }
 
-  fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+  fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
     const requestUrl = requestUrlOf(url);
     const path = publicApiPathOf(url);
-    const method = init.method ?? 'GET';
+    const method = requestMethodOf(url, init);
     if (path === '/v2/me' && method === 'GET') {
       return itemResponse(signedInUser);
     }
@@ -209,7 +209,7 @@ export function answerAdminApi(
       return userResponse(userRoute[1]);
     }
     if (userRoute && method === 'PATCH') {
-      const body: unknown = JSON.parse(String(init.body));
+      const body: unknown = JSON.parse(String(init?.body));
       if (!isUserTypePatchBody(body)) {
         return errorResponse(422, 'The request does not match the schema.');
       }
@@ -268,8 +268,8 @@ export function holdRequests(
 ) {
   const answerAsBefore = fetchMock.getMockImplementation()!;
   const heldRequests: Array<() => void> = [];
-  fetchMock.mockImplementation((url: string, init: RequestInit) => {
-    if (!shouldHold(init.method ?? 'GET', publicApiPathOf(url))) {
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (!shouldHold(requestMethodOf(url, init), publicApiPathOf(url))) {
       return answerAsBefore(url, init);
     }
     return new Promise<Response>((resolve) => {
@@ -309,9 +309,9 @@ export function answerAsDemotedAdmin(fetchMock: Mock) {
 export function holdAnswersOfUserReads(fetchMock: Mock, userId: string) {
   const answerAsBefore = fetchMock.getMockImplementation()!;
   const heldDeliveries: Array<() => void> = [];
-  fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+  fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
     const isReadOfTheUser =
-      (init.method ?? 'GET') === 'GET' && publicApiPathOf(url) === `/v2/admin/users/${userId}`;
+      requestMethodOf(url, init) === 'GET' && publicApiPathOf(url) === `/v2/admin/users/${userId}`;
     if (!isReadOfTheUser) {
       return answerAsBefore(url, init);
     }

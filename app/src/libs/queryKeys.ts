@@ -86,6 +86,9 @@ export const V1_POLICY_GC_TIME = 30 * 60 * 1000;
 export const v2PolicyKey = (countryId: string, policyId: string) =>
   ['v2-policy', countryId, policyId] as const;
 
+/** How long a fetched v2 policy stays cached without a reader. */
+export const V2_POLICY_GC_TIME = 30 * 60 * 1000;
+
 export const householdKeys = {
   all: ['households'] as const,
   byId: (householdId: string) => [...householdKeys.all, 'household_id', householdId] as const,

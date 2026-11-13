@@ -19,6 +19,7 @@ import {
   answerPolicyReads,
   answerSavedItems,
   GRACE_SAVED_ITEMS,
+  GRACE_V2_POLICY,
   REPORT_LAST_RUN_AT,
   SAVED_ITEM_IDS,
   SAVED_ITEM_NAMES,
@@ -29,6 +30,7 @@ import {
 } from '@/tests/fixtures/api/v2AdminUserSavedItemsMocks';
 import { errorResponse, TIMESTAMPS } from '@/tests/fixtures/api/v2UserMocks';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
 import {
   createProductionLikeQueryClient,
   createTestQueryClient,
@@ -118,6 +120,12 @@ const SAVED_DATE = formatAdminDate(TIMESTAMPS.CREATED, 'us');
 
 /** What a link that opens a new tab adds to its text, for screen readers. */
 const NEW_TAB_NOTE = ' (opens in a new tab)';
+
+/** A v1 policy ID no policy has. */
+const UNKNOWN_V1_POLICY_ID = 404404;
+
+/** A parameter path the model no longer has. */
+const REMOVED_PARAMETER = 'gov.irs.credits.ctc.removed';
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -553,10 +561,16 @@ describe('AdminUserSavedItems policies and reports', () => {
    * Shows `email`'s saved items (`savedItems` in place of Grace's), with
    * the policy reads answered; returns the policy paths read.
    */
-  async function showSavedItems(email: string, savedItems?: UserSavedItems) {
+  async function showSavedItems(
+    email: string,
+    {
+      savedItems,
+      queryClient = createTestQueryClient(),
+    }: { savedItems?: UserSavedItems; queryClient?: QueryClient } = {}
+  ) {
     const { user } = await openUserDetails(
       email,
-      createTestQueryClient(),
+      queryClient,
       savedItems ? { [GRACE.id]: savedItems } : undefined
     );
     const policyReads = answerPolicyReads(fetchMock);
@@ -599,7 +613,9 @@ describe('AdminUserSavedItems policies and reports', () => {
     const ukReport = savedReport({ country_id: 'uk', name: SAVED_ITEM_NAMES.REPORT });
 
     // When
-    await showSavedItems(GRACE.email!, { ...GRACE_SAVED_ITEMS, reports: [ukReport] });
+    await showSavedItems(GRACE.email!, {
+      savedItems: { ...GRACE_SAVED_ITEMS, reports: [ukReport] },
+    });
 
     // Then
     const link = within(screen.getByRole('table', { name: 'Saved reports' })).getByRole('link');
@@ -651,8 +667,7 @@ describe('AdminUserSavedItems policies and reports', () => {
       legacy_policy_id: SAVED_TARGET_IDS.V1_POLICY,
     });
     const { user, policyReads } = await showSavedItems(GRACE.email!, {
-      ...GRACE_SAVED_ITEMS,
-      policies: [v1Policy],
+      savedItems: { ...GRACE_SAVED_ITEMS, policies: [v1Policy] },
     });
 
     // When
@@ -741,5 +756,97 @@ describe('AdminUserSavedItems policies and reports', () => {
     // Then
     const methods = new Set(sentRequests(fetchMock).map((request) => request.split(' ')[0]));
     expect([...methods]).toEqual(['GET']);
+  });
+  test('given a v1 policy that cannot be read then the panel says so after one read', async () => {
+    // Given
+    const unreadablePolicy = savedPolicy({
+      name: SAVED_ITEM_NAMES.US_POLICY,
+      legacy_policy_id: UNKNOWN_V1_POLICY_ID,
+    });
+    const { user, policyReads } = await showSavedItems(GRACE.email!, {
+      savedItems: { ...GRACE_SAVED_ITEMS, policies: [unreadablePolicy] },
+      queryClient: createProductionLikeQueryClient(),
+    });
+
+    // When
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+
+    // Then
+    expect(await within(panel).findByRole('alert')).toHaveTextContent(
+      'We could not load this policy'
+    );
+    expect(policyReads).toEqual([`/us/policy/${UNKNOWN_V1_POLICY_ID}`]);
+  });
+
+  test('given a saved policy that points to no policy then the panel says so and reads nothing', async () => {
+    // Given
+    const pointsNowhere = savedPolicy({ name: SAVED_ITEM_NAMES.US_POLICY });
+    const { user, policyReads } = await showSavedItems(GRACE.email!, {
+      savedItems: { ...GRACE_SAVED_ITEMS, policies: [pointsNowhere] },
+      queryClient: createProductionLikeQueryClient(),
+    });
+
+    // When
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+
+    // Then
+    expect(await within(panel).findByRole('alert')).toHaveTextContent(
+      'This saved policy points to no policy.'
+    );
+    expect(policyReads).toEqual([]);
+  });
+
+  test('given a policy that sets a parameter the model no longer has then the panel names it, as the reforms page does', async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    answerPolicyReads(fetchMock, {
+      v2: {
+        [GRACE_V2_POLICY.id]: { ...GRACE_V2_POLICY, missing_parameters: [REMOVED_PARAMETER] },
+      },
+      v1: {},
+    });
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // When
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(panel).findByRole('table', { name: 'Parameters' });
+
+    // Then
+    expect(within(panel).getByRole('alert')).toHaveTextContent(
+      `This policy cannot be run, because it changes a parameter that PolicyEngine’s model no longer has:${REMOVED_PARAMETER}`
+    );
+  });
+
+  test("given the parameters' metadata cannot load then the panel offers to load it again", async () => {
+    // Given
+    store.dispatch(clearMetadata());
+    seedMetadataError();
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+
+    // Then
+    expect(await within(panel).findByText('Could not load the parameters')).toBeInTheDocument();
+    expect(within(panel).getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
+  test("given the panel is open then Escape closes it and returns focus to the policy's name", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+    const panel = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(panel).findByRole('table', { name: 'Parameters' });
+
+    // When
+    await user.keyboard('{Escape}');
+
+    // Then
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(
+      within(screen.getByRole('table', { name: 'Saved policies' })).getByRole('button', {
+        name: SAVED_ITEM_NAMES.US_POLICY,
+      })
+    ).toHaveFocus();
   });
 });

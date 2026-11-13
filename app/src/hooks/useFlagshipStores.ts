@@ -19,7 +19,7 @@ import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { readV1Policy } from '@/libs/flagship/policyChecks';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
-import { v2PolicyKey } from '@/libs/queryKeys';
+import { V2_POLICY_GC_TIME, v2PolicyKey } from '@/libs/queryKeys';
 import { selectV2Catalog, selectV2ParameterIds } from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
@@ -66,9 +66,6 @@ export function useV3SavedWork(): V3SavedWork {
   }, [status, subject, browserUserId, countryId, client]);
 }
 
-/** How long a fetched v2 policy stays cached without a reader. */
-const SAVED_POLICY_GC_TIME = 30 * 60 * 1000;
-
 /**
  * The reform store for this session. Which policies an account's reforms
  * point at (v1 or `/v2/policies`) follows V3_API_ROUTES (see
@@ -103,7 +100,7 @@ export function useReformStore(): ReformStore {
             queryKey: v2PolicyKey(countryId, policyId),
             queryFn: () => fetchV2PolicyItem(countryId, policyId),
             staleTime: Infinity,
-            gcTime: SAVED_POLICY_GC_TIME,
+            gcTime: V2_POLICY_GC_TIME,
           }),
       }),
     [account, loadParameters, queryClient, reduxStore]
