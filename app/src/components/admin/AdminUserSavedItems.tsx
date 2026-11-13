@@ -21,14 +21,14 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CountryId } from '@/libs/countries';
 import { isFlagshipShellEnabled } from '@/libs/featureFlags';
 import { getCountryLabel } from '@/utils/geographyUtils';
-import AdminSavedItemPanel from './AdminSavedItemPanel';
+import AdminSavedItemDialog from './AdminSavedItemDialog';
 import { formatAdminDate } from './adminUserFormat';
 import NewTabLink from './NewTabLink';
 import SavedHouseholdDetails from './SavedHouseholdDetails';
 import SavedPolicyDetails from './SavedPolicyDetails';
 
-/** A saved policy or household, which the panel shows. */
-type PanelItem =
+/** A saved policy or household, which the dialog shows. */
+type OpenedItem =
   | { kind: 'policy'; policy: AdminSavedPolicy }
   | { kind: 'household'; household: AdminSavedHousehold };
 
@@ -41,8 +41,8 @@ interface SavedItemRow {
   createdAt: string;
   /** Reports only: when it last ran, or null if it never has. */
   lastRunAt?: string | null;
-  /** Policies and households: the record, which its name opens in the panel. */
-  panelItem?: PanelItem;
+  /** Policies and households: the record, which its name opens in the dialog. */
+  openedItem?: OpenedItem;
   /** Reports only: the report's page, which its name opens in a new tab. */
   reportPath?: string;
   /** Reports only, without `reportPath`: why the report can't be opened. */
@@ -76,7 +76,7 @@ function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
         name: policy.name,
         countryId: policy.country_id,
         createdAt: policy.created_at,
-        panelItem: { kind: 'policy', policy },
+        openedItem: { kind: 'policy', policy },
       })),
     },
     {
@@ -89,7 +89,7 @@ function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
         name: household.name,
         countryId: household.country_id,
         createdAt: household.created_at,
-        panelItem: { kind: 'household', household },
+        openedItem: { kind: 'household', household },
       })),
     },
     {
@@ -117,19 +117,19 @@ function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
   ];
 }
 
-/** Opens a saved policy or household in the panel; `opener` takes focus back when it closes. */
-type OpenInPanel = (item: PanelItem, opener: HTMLElement) => void;
+/** Opens a saved policy or household in the dialog; `opener` takes focus back when it closes. */
+type OpenSavedItem = (item: OpenedItem, opener: HTMLElement) => void;
 
 /** A record's name: for a policy or household, a control that opens it; for a report, a link to it. */
-function SavedItemName({ row, onOpen }: { row: SavedItemRow; onOpen: OpenInPanel }) {
+function SavedItemName({ row, onOpen }: { row: SavedItemRow; onOpen: OpenSavedItem }) {
   const name = row.name ?? 'No name';
-  const { panelItem, reportPath, unavailableNote } = row;
-  if (panelItem) {
+  const { openedItem, reportPath, unavailableNote } = row;
+  if (openedItem) {
     return (
       <Button
         variant="link"
         className="tw:h-auto tw:p-0 tw:whitespace-normal tw:text-left"
-        onClick={(event) => onOpen(panelItem, event.currentTarget)}
+        onClick={(event) => onOpen(openedItem, event.currentTarget)}
       >
         {name}
       </Button>
@@ -158,7 +158,7 @@ function SavedItemKindTable({
 }: {
   kind: SavedItemKind;
   countryId: CountryId;
-  onOpen: OpenInPanel;
+  onOpen: OpenSavedItem;
 }) {
   return (
     <Stack gap="xs">
@@ -209,11 +209,11 @@ function SavedItemKindTable({
 function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHeading: () => void }) {
   const countryId = useCurrentCountry();
   const savedItems = useAdminUserSavedItems(userId);
-  const [panelItem, setPanelItem] = useState<PanelItem | null>(null);
-  const panelOpenerRef = useRef<HTMLElement | null>(null);
-  const openInPanel: OpenInPanel = (item, opener) => {
-    panelOpenerRef.current = opener;
-    setPanelItem(item);
+  const [openedItem, setOpenedItem] = useState<OpenedItem | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const openSavedItem: OpenSavedItem = (item, opener) => {
+    openerRef.current = opener;
+    setOpenedItem(item);
   };
 
   // Each showing reads once and keeps nothing from an earlier one (see
@@ -256,21 +256,25 @@ function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHead
           key={kind.heading}
           kind={kind}
           countryId={countryId}
-          onOpen={openInPanel}
+          onOpen={openSavedItem}
         />
       ))}
-      <AdminSavedItemPanel
-        open={panelItem !== null}
-        onClose={() => setPanelItem(null)}
-        returnFocusTo={panelOpenerRef}
+      <AdminSavedItemDialog
+        open={openedItem !== null}
+        onClose={() => setOpenedItem(null)}
+        returnFocusTo={openerRef}
       >
-        {panelItem?.kind === 'policy' && (
-          <SavedPolicyDetails key={panelItem.policy.id} policy={panelItem.policy} />
+        {openedItem?.kind === 'policy' && (
+          <SavedPolicyDetails
+            key={openedItem.policy.id}
+            policy={openedItem.policy}
+            savedItems={savedItems.data}
+          />
         )}
-        {panelItem?.kind === 'household' && (
-          <SavedHouseholdDetails key={panelItem.household.id} household={panelItem.household} />
+        {openedItem?.kind === 'household' && (
+          <SavedHouseholdDetails key={openedItem.household.id} household={openedItem.household} />
         )}
-      </AdminSavedItemPanel>
+      </AdminSavedItemDialog>
     </Stack>
   );
 }

@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { IconArrowRight, IconRefresh } from '@tabler/icons-react';
+import { IconArrowRight, IconExternalLink, IconRefresh } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
@@ -131,6 +131,40 @@ function ReportBaseline({
 }
 
 /**
+ * How a report row opens its report: in this tab, at its page in a new
+ * tab, or not at all.
+ */
+type ReportOpening =
+  | { in: 'thisTab'; open: () => void }
+  | { in: 'newTab'; href: string }
+  | { in: 'nowhere' };
+
+/** A report row's way to its report, labelled for how far the report got. */
+function OpenReport({ opening, done }: { opening: ReportOpening; done: boolean }) {
+  const label = done ? 'View results' : 'Open';
+  if (opening.in === 'thisTab') {
+    return (
+      <Button size="sm" variant="outline" onClick={opening.open} style={{ width: '100%' }}>
+        {label}
+        <IconArrowRight size={14} />
+      </Button>
+    );
+  }
+  if (opening.in === 'newTab') {
+    return (
+      <Button asChild size="sm" variant="outline" style={{ width: '100%' }}>
+        <a href={opening.href} target="_blank" rel="noopener noreferrer">
+          {label}
+          <IconExternalLink size={14} aria-hidden />
+          <span className="tw:sr-only"> (opens in a new tab)</span>
+        </a>
+      </Button>
+    );
+  }
+  return null;
+}
+
+/**
  * One report: what it scored, when its results are from, and the two ways
  * on — its stored results as of that run, or a fresh run of the same
  * report on today's model.
@@ -139,7 +173,7 @@ function ReportRow({
   countryId,
   report,
   first,
-  onOpen,
+  opening,
   onRerun,
   rerunning,
   reformName,
@@ -147,7 +181,7 @@ function ReportRow({
   countryId: CountryId;
   report: FlagshipReportRecord;
   first: boolean;
-  onOpen: () => void;
+  opening: ReportOpening;
   onRerun?: () => void;
   rerunning: boolean;
   reformName?: (reformId: string) => string | null | undefined;
@@ -221,10 +255,7 @@ function ReportRow({
         )}
       </span>
       <span style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Button size="sm" variant="outline" onClick={onOpen} style={{ width: '100%' }}>
-          {done ? 'View results' : 'Open'}
-          <IconArrowRight size={14} />
-        </Button>
+        <OpenReport opening={opening} done={done} />
       </span>
     </div>
   );
@@ -242,6 +273,9 @@ export default function ReformReports({
   onRerun,
   rerunning = false,
   reformName,
+  openIn = 'thisTab',
+  cannotOpenReason,
+  emptyNote = 'No reports yet. Run one with “View full impact report”.',
 }: {
   countryId: CountryId;
   reports: FlagshipReportRecord[];
@@ -251,9 +285,26 @@ export default function ReformReports({
   rerunning?: boolean;
   /** A saved reform's name, for the reform a report was compared with. */
   reformName?: (reformId: string) => string | null | undefined;
+  /** Where a report opens: in this tab, or at its page in a new one. */
+  openIn?: 'thisTab' | 'newTab';
+  /** Why the reports can't be opened: shown in place of their ways to open them. */
+  cannotOpenReason?: string;
+  /** What the list says when no report was run from the reform. */
+  emptyNote?: string;
 }) {
   const nav = useAppNavigate();
   const sorted = [...reports].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  // A report opens at its link: the account row's ID, which anyone can
+  // open, or in this browser the v1 report's number.
+  const openingFor = (report: FlagshipReportRecord): ReportOpening => {
+    if (cannotOpenReason) {
+      return { in: 'nowhere' };
+    }
+    const path = `/${countryId}/report/${reportLink(report)}`;
+    return openIn === 'newTab'
+      ? { in: 'newTab', href: path }
+      : { in: 'thisTab', open: () => nav.push(path) };
+  };
 
   return (
     <section
@@ -272,25 +323,32 @@ export default function ReformReports({
       </Text>
       {sorted.length === 0 ? (
         <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          No reports yet. Run one with “View full impact report”.
+          {emptyNote}
         </Text>
       ) : (
-        <Stack style={{ gap: 0 }}>
-          {sorted.map((report, index) => (
-            <ReportRow
-              key={report.id}
-              countryId={countryId}
-              report={report}
-              first={index === 0}
-              // A report opens at its link: the account row's ID, which anyone
-              // can open, or in this browser the v1 report's number.
-              onOpen={() => nav.push(`/${countryId}/report/${reportLink(report)}`)}
-              onRerun={onRerun && (() => onRerun(report))}
-              rerunning={rerunning}
-              reformName={reformName}
-            />
-          ))}
-        </Stack>
+        <>
+          {cannotOpenReason && (
+            <Text
+              style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+            >
+              {cannotOpenReason}
+            </Text>
+          )}
+          <Stack style={{ gap: 0 }}>
+            {sorted.map((report, index) => (
+              <ReportRow
+                key={report.id}
+                countryId={countryId}
+                report={report}
+                first={index === 0}
+                opening={openingFor(report)}
+                onRerun={onRerun && (() => onRerun(report))}
+                rerunning={rerunning}
+                reformName={reformName}
+              />
+            ))}
+          </Stack>
+        </>
       )}
     </section>
   );

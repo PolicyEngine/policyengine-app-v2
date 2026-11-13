@@ -20,7 +20,7 @@ import {
   SavedItemReadError,
   savedOn,
   SECONDARY_TEXT,
-} from './AdminSavedItemPanel';
+} from './AdminSavedItemDialog';
 
 /** A row of a household table, an input and its value, in the parameter table's style. */
 const VALUE_ROW: React.CSSProperties = {
@@ -198,7 +198,7 @@ function HouseholdValues({
 }
 
 /**
- * One of a user's saved households in the admin page's panel, read only:
+ * One of a user's saved households in the admin page's dialog, read only:
  * its name, how many people it has, its year and when it was saved, then
  * the inputs set for each person and for each group, in its year. Labels,
  * units and options come from the page's country's model, so a household

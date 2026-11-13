@@ -2,10 +2,10 @@ import dayjs from 'dayjs';
 import type { ReactNode, RefObject } from 'react';
 import {
   Button,
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
   Spinner,
   Stack,
   Text,
@@ -14,7 +14,7 @@ import {
 import { colors, spacing, typography } from '@/designTokens';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
-/** The panel's quieter text: the line under its title, notes and loading. */
+/** The dialog's quieter text: the line under its title, notes and loading. */
 export const SECONDARY_TEXT: React.CSSProperties = {
   margin: 0,
   fontSize: typography.fontSize.sm,
@@ -26,10 +26,13 @@ export function savedOn(createdAt: string): string {
   return dayjs(createdAt).format('MMM D, YYYY');
 }
 
-/** What a panel shows: "policy" or "household". */
+/** What a dialog shows: "policy" or "household". */
 export type SavedItemSubject = 'policy' | 'household';
 
-/** The saved item's name and, under it, a line about it; they name and describe the panel. */
+/**
+ * The saved item's name and, under it, a line about it, as the reforms page
+ * heads a saved reform; they name and describe the dialog.
+ */
 export function SavedItemHeader({
   name,
   description,
@@ -38,17 +41,21 @@ export function SavedItemHeader({
   description: string;
 }) {
   return (
-    // Clear of the panel's close button, in its top right corner.
+    // Clear of the dialog's close button, in its top right corner.
     <Stack style={{ gap: spacing.xs, paddingRight: spacing['2xl'] }}>
-      {/* A name without spaces wraps too, rather than running under the close button. */}
-      <SheetTitle asChild>
-        <Title order={2} style={{ margin: 0, overflowWrap: 'anywhere' }}>
+      {/*
+        A name without spaces wraps too, rather than running under the close
+        button. The class name keeps the reforms page's heading size (Title's
+        order 1), which DialogTitle's own text size and line height replace.
+      */}
+      <DialogTitle asChild className="tw:text-4xl tw:font-bold">
+        <Title order={1} style={{ margin: 0, overflowWrap: 'anywhere' }}>
           {name ?? 'No name'}
         </Title>
-      </SheetTitle>
-      <SheetDescription asChild>
+      </DialogTitle>
+      <DialogDescription asChild>
         <Text style={SECONDARY_TEXT}>{description}</Text>
-      </SheetDescription>
+      </DialogDescription>
     </Stack>
   );
 }
@@ -111,13 +118,22 @@ export function SavedItemLoading({ subject }: { subject: SavedItemSubject }) {
 }
 
 /**
- * A panel over the admin page showing one of a user's saved items, read
- * only. `children` is the item's content, starting with a
- * `SavedItemHeader`, which names the panel. When it closes, focus goes back
- * to `returnFocusTo`, the control that opened it: the panel has no trigger
- * of its own to return focus to.
+ * The width the reforms page shows a saved reform at (`WorkspaceLayout`'s
+ * reading width, 760px), with the dialog's padding on each side, and never
+ * wider than the window less a margin.
  */
-export default function AdminSavedItemPanel({
+const DIALOG_MAX_WIDTH = `min(calc(760px + 2 * ${spacing.xl}), calc(100% - 2rem))`;
+
+/**
+ * A modal dialog over the admin page showing one of a user's saved items,
+ * read only, at the width the reforms page shows a saved reform. It is
+ * never taller than the window: its content scrolls under the close
+ * button. `children` is the item's content, starting with a
+ * `SavedItemHeader`, which names the dialog. When it closes, focus goes
+ * back to `returnFocusTo`, the control that opened it: the dialog has no
+ * trigger of its own to return focus to.
+ */
+export default function AdminSavedItemDialog({
   open,
   onClose,
   returnFocusTo,
@@ -129,21 +145,23 @@ export default function AdminSavedItemPanel({
   children: ReactNode;
 }) {
   return (
-    <Sheet open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       {open && (
-        <SheetContent
-          side="right"
-          // An explicit width: this theme's spacing scale names 2xl 24px, which
-          // Tailwind's named max-width classes (max-w-2xl) would use.
-          className="tw:w-full tw:sm:max-w-[42rem] tw:overflow-y-auto"
+        <DialogContent
+          className="tw:flex tw:flex-col tw:gap-0 tw:overflow-hidden tw:p-0"
+          // Inline, so it holds at every window width over the dialog's own
+          // max-width classes (32rem from Tailwind's sm breakpoint).
+          style={{ maxWidth: DIALOG_MAX_WIDTH, maxHeight: 'calc(100% - 2rem)' }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             returnFocusTo.current?.focus();
           }}
         >
-          <Stack style={{ gap: spacing.xl, padding: spacing.xl }}>{children}</Stack>
-        </SheetContent>
+          <div className="tw:min-h-0 tw:overflow-y-auto" style={{ padding: spacing.xl }}>
+            <Stack style={{ gap: spacing.xl }}>{children}</Stack>
+          </div>
+        </DialogContent>
       )}
-    </Sheet>
+    </Dialog>
   );
 }

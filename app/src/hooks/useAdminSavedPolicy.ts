@@ -20,7 +20,7 @@ export type AdminSavedPolicy = components['schemas']['UserPolicyItem'];
 
 type V2Policy = components['schemas']['PolicyItem'];
 
-/** What a saved policy's panel shows of the policy it points to. */
+/** What a saved policy's dialog shows of the policy it points to. */
 export interface AdminSavedPolicyContent {
   /** The parameters it sets, each with the periods it sets them for. */
   parameters: Parameter[];
@@ -35,7 +35,7 @@ export interface AdminSavedPolicyContent {
  *
  * Policies never change, so each is read once and kept, under the keys the
  * reform stores read them by. As the reform stores read them, a failed read
- * is not retried: the panel offers "Try again". A record that points to
+ * is not retried: the dialog offers "Try again". A record that points to
  * neither kind of policy fails.
  */
 export function useAdminSavedPolicyContent(policy: AdminSavedPolicy) {

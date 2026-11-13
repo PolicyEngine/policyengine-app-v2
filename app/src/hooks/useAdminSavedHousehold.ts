@@ -18,7 +18,7 @@ const householdFromV1 = (read: V1HouseholdMetadataEnvelope) => Household.fromV1M
  * public and changes nothing.
  *
  * Households never change, so each is read once and kept. As the policy
- * reads, a failed read is not retried: the panel offers "Try again". A
+ * reads, a failed read is not retried: the dialog offers "Try again". A
  * record that points only to a v2
  * household (`household_id`) fails without a read: the calculator does not
  * forward `GET /v2/households/{id}`.
