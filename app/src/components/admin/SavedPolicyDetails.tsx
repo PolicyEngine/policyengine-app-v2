@@ -1,4 +1,4 @@
-import { parseReportItem, type FlagshipReportRecord } from '@/api/flagshipReportStore';
+import { parseReportItem } from '@/api/flagshipReportStore';
 import type { UserSavedItems } from '@/api/v2AdminUserSavedItems';
 import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import ReformParameterTable from '@/components/flagship/ReformParameterTable';
@@ -10,8 +10,8 @@ import {
 } from '@/hooks/useAdminSavedPolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
-import type { CountryId } from '@/libs/countries';
 import { isFlagshipShellEnabled } from '@/libs/featureFlags';
+import { readableReports } from '@/libs/flagship/reportSchema';
 import { reformParameterNames } from '@/libs/flagship/v3ParameterNames';
 import type { UserReportItem } from '@/types/v2User';
 import { getCountryLabel } from '@/utils/geographyUtils';
@@ -66,8 +66,9 @@ function PolicyParameters({
 /**
  * An exported saved report as the app's own type of one. The export is
  * typed from the Public API's schema, which leaves a provision's `unit` and
- * `intervals` optional and its `growth_round` any string; `parseReportItem`
- * reads the result through the report schema, which checks those fields.
+ * `intervals` optional and its `growth_round` any string. `parseReportItem`
+ * fills in a missing unit and intervals, and the report schema it reads the
+ * result through refuses any other `growth_round`.
  */
 function asUserReportItem(report: UserSavedItems['reports'][number]): UserReportItem {
   return report as UserReportItem;
@@ -86,17 +87,21 @@ function PolicyReports({
   policy: AdminSavedPolicy;
   savedItems: Pick<UserSavedItems, 'policies' | 'reports'>;
 }) {
-  const reports = savedItems.reports
-    .filter((report) => report.user_policy_id === policy.id)
-    .flatMap((report): FlagshipReportRecord[] => {
-      const parsed = parseReportItem(asUserReportItem(report));
-      return parsed.ok ? [parsed.value] : [];
-    });
+  const reports = readableReports(
+    savedItems.reports
+      .filter((report) => report.user_policy_id === policy.id)
+      .map((report) => parseReportItem(asUserReportItem(report)))
+  );
+  // A policy a report was compared with, as the saved policies table names it.
+  const policyName = (policyId: string) => {
+    const saved = savedItems.policies.find((candidate) => candidate.id === policyId);
+    return saved ? (saved.name ?? 'No name') : undefined;
+  };
   return (
     <ReformReports
-      countryId={policy.country_id as CountryId}
+      countryId={policy.country_id}
       reports={reports}
-      reformName={(policyId) => savedItems.policies.find((saved) => saved.id === policyId)?.name}
+      reformName={policyName}
       openIn="newTab"
       cannotOpenReason={
         isFlagshipShellEnabled(policy.country_id)

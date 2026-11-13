@@ -128,20 +128,25 @@ const DIALOG_MAX_WIDTH = `min(calc(760px + 2 * ${spacing.xl}), calc(100% - 2rem)
  * A modal dialog over the admin page showing one of a user's saved items,
  * read only, at the width the reforms page shows a saved reform. It is
  * never taller than the window: its content scrolls under the close
- * button. `children` is the item's content, starting with a
- * `SavedItemHeader`, which names the dialog. When it closes, focus goes
- * back to `returnFocusTo`, the control that opened it: the dialog has no
- * trigger of its own to return focus to.
+ * button, in a region named `contentLabel` that takes keyboard focus, so
+ * the keyboard can scroll it though it may hold nothing else to focus.
+ * `children` is the item's content, starting with a `SavedItemHeader`,
+ * which names the dialog. When it closes, focus goes back to
+ * `returnFocusTo`, the control that opened it: the dialog has no trigger
+ * of its own to return focus to.
  */
 export default function AdminSavedItemDialog({
   open,
   onClose,
   returnFocusTo,
+  contentLabel,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   returnFocusTo: RefObject<HTMLElement | null>;
+  /** What the content is, such as "Saved policy". */
+  contentLabel: string;
   children: ReactNode;
 }) {
   return (
@@ -157,7 +162,16 @@ export default function AdminSavedItemDialog({
             returnFocusTo.current?.focus();
           }}
         >
-          <div className="tw:min-h-0 tw:overflow-y-auto" style={{ padding: spacing.xl }}>
+          <div
+            role="region"
+            aria-label={contentLabel}
+            // A scrolling region with perhaps nothing else to focus: without
+            // focus of its own, the keyboard couldn't scroll it.
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            className="tw:min-h-0 tw:overflow-y-auto"
+            style={{ padding: spacing.xl }}
+          >
             <Stack style={{ gap: spacing.xl }}>{children}</Stack>
           </div>
         </DialogContent>

@@ -109,10 +109,15 @@ function ReportBaseline({
   const namedLabel =
     readReportMeta(reportLink(report))?.baseline?.label ??
     (report.baselineReformId ? reformName?.(report.baselineReformId) || UNNAMED_COMPARISON : null);
-  const currentLawPolicyId = useSelector((state: RootState) => state.metadata.currentLawId);
+  // Current law is the loaded metadata's, which is the page's country's. A
+  // report of another country (the admin page lists them) can't be judged
+  // against it, so its baseline is neither read nor named.
+  const currentLawPolicyId = useSelector((state: RootState) =>
+    state.metadata.currentCountry === countryId ? state.metadata.currentLawId : undefined
+  );
   const baselinePolicyId = useBaselinePolicyId(
     countryId,
-    namedLabel ? undefined : baselineSimulationId
+    namedLabel || !currentLawPolicyId ? undefined : baselineSimulationId
   );
   const label =
     namedLabel ??
@@ -135,14 +140,14 @@ function ReportBaseline({
  * tab, or not at all.
  */
 type ReportOpening =
-  | { in: 'thisTab'; open: () => void }
-  | { in: 'newTab'; href: string }
-  | { in: 'nowhere' };
+  | { kind: 'thisTab'; open: () => void }
+  | { kind: 'newTab'; href: string }
+  | { kind: 'nowhere' };
 
 /** A report row's way to its report, labelled for how far the report got. */
 function OpenReport({ opening, done }: { opening: ReportOpening; done: boolean }) {
   const label = done ? 'View results' : 'Open';
-  if (opening.in === 'thisTab') {
+  if (opening.kind === 'thisTab') {
     return (
       <Button size="sm" variant="outline" onClick={opening.open} style={{ width: '100%' }}>
         {label}
@@ -150,7 +155,7 @@ function OpenReport({ opening, done }: { opening: ReportOpening; done: boolean }
       </Button>
     );
   }
-  if (opening.in === 'newTab') {
+  if (opening.kind === 'newTab') {
     return (
       <Button asChild size="sm" variant="outline" style={{ width: '100%' }}>
         <a href={opening.href} target="_blank" rel="noopener noreferrer">
@@ -287,7 +292,7 @@ export default function ReformReports({
   reformName?: (reformId: string) => string | null | undefined;
   /** Where a report opens: in this tab, or at its page in a new one. */
   openIn?: 'thisTab' | 'newTab';
-  /** Why the reports can't be opened: shown in place of their ways to open them. */
+  /** Why the reports can't be opened: shown once above them, and no report has a way to open it. */
   cannotOpenReason?: string;
   /** What the list says when no report was run from the reform. */
   emptyNote?: string;
@@ -298,12 +303,12 @@ export default function ReformReports({
   // open, or in this browser the v1 report's number.
   const openingFor = (report: FlagshipReportRecord): ReportOpening => {
     if (cannotOpenReason) {
-      return { in: 'nowhere' };
+      return { kind: 'nowhere' };
     }
     const path = `/${countryId}/report/${reportLink(report)}`;
     return openIn === 'newTab'
-      ? { in: 'newTab', href: path }
-      : { in: 'thisTab', open: () => nav.push(path) };
+      ? { kind: 'newTab', href: path }
+      : { kind: 'thisTab', open: () => nav.push(path) };
   };
 
   return (
