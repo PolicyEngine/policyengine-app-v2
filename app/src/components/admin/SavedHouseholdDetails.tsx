@@ -5,6 +5,7 @@ import {
   PARAMETER_ROW,
   PARAMETER_VALUE,
 } from '@/components/flagship/ReformParameterTable';
+import { savedOn } from '@/components/flagship/SavedReformView';
 import { Stack, Text, Title } from '@/components/ui';
 import { spacing, typography } from '@/designTokens';
 import { useAdminSavedHousehold, type AdminSavedHousehold } from '@/hooks/useAdminSavedHousehold';
@@ -18,7 +19,6 @@ import {
   SavedItemHeader,
   SavedItemLoading,
   SavedItemReadError,
-  savedOn,
   SECONDARY_TEXT,
 } from './AdminSavedItemDialog';
 
@@ -214,7 +214,7 @@ export default function SavedHouseholdDetails({ household }: { household: AdminS
     <>
       <SavedItemHeader
         name={household.name}
-        description={householdDescription(household.created_at, read.data)}
+        summary={householdDescription(household.created_at, read.data)}
       />
       {!inThisCountry && (
         <OtherCountryNote

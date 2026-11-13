@@ -1,5 +1,5 @@
-import dayjs from 'dayjs';
-import type { ReactNode, RefObject } from 'react';
+import type { ReactElement, ReactNode, RefObject } from 'react';
+import { SavedItemHeading } from '@/components/flagship/SavedReformView';
 import {
   Button,
   Dialog,
@@ -9,53 +9,51 @@ import {
   Spinner,
   Stack,
   Text,
-  Title,
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
-/** The dialog's quieter text: the line under its title, notes and loading. */
+/** The dialog's quieter text: its notes and loading, as the heading's summary reads. */
 export const SECONDARY_TEXT: React.CSSProperties = {
   margin: 0,
   fontSize: typography.fontSize.sm,
   color: colors.text.secondary,
 };
 
-/** "Oct 12, 2026", as the reforms page says when a reform was saved. */
-export function savedOn(createdAt: string): string {
-  return dayjs(createdAt).format('MMM D, YYYY');
-}
-
 /** What a dialog shows: "policy" or "household". */
 export type SavedItemSubject = 'policy' | 'household';
 
 /**
- * The saved item's name and, under it, a line about it, as the reforms page
- * heads a saved reform; they name and describe the dialog.
+ * A heading's title as the dialog's title, which names the dialog. The
+ * class name keeps the reforms page's heading size (Title's order 1),
+ * which DialogTitle's own text size and line height would replace.
  */
-export function SavedItemHeader({
-  name,
-  description,
-}: {
-  name: string | null;
-  description: string;
-}) {
+export function asDialogTitle(title: ReactElement): ReactElement {
   return (
-    <Stack style={{ gap: spacing.xs }}>
-      {/*
-        A name without spaces wraps too, rather than running under the close
-        button. The class name keeps the reforms page's heading size (Title's
-        order 1), which DialogTitle's own text size and line height replace.
-      */}
-      <DialogTitle asChild className="tw:text-4xl tw:font-bold">
-        <Title order={1} style={{ margin: 0, overflowWrap: 'anywhere' }}>
-          {name ?? 'No name'}
-        </Title>
-      </DialogTitle>
-      <DialogDescription asChild>
-        <Text style={SECONDARY_TEXT}>{description}</Text>
-      </DialogDescription>
-    </Stack>
+    <DialogTitle asChild className="tw:text-4xl tw:font-bold">
+      {title}
+    </DialogTitle>
+  );
+}
+
+/** A heading's summary as the dialog's description. */
+export function asDialogDescription(summary: ReactElement): ReactElement {
+  return <DialogDescription asChild>{summary}</DialogDescription>;
+}
+
+/**
+ * A saved item's name ("No name" when it has none) and, under it, its
+ * summary, in the heading the reforms page gives a saved reform; they name
+ * and describe the dialog.
+ */
+export function SavedItemHeader({ name, summary }: { name: string | null; summary: string }) {
+  return (
+    <SavedItemHeading
+      name={name ?? 'No name'}
+      summary={summary}
+      wrapTitle={asDialogTitle}
+      wrapSummary={asDialogDescription}
+    />
   );
 }
 

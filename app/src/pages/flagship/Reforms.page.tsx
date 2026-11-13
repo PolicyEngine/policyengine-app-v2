@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IconArrowLeft,
@@ -21,10 +20,9 @@ import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
 import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import MissingParametersTransferDialog from '@/components/flagship/MissingParametersTransferDialog';
 import ProvisionList from '@/components/flagship/ProvisionList';
-import ReformParameterTable, {
-  parameterBreadcrumb,
-} from '@/components/flagship/ReformParameterTable';
-import ReformReports, { LatestReportBadge } from '@/components/flagship/ReformReports';
+import { parameterBreadcrumb } from '@/components/flagship/ReformParameterTable';
+import { LatestReportBadge } from '@/components/flagship/ReformReports';
+import SavedReformView from '@/components/flagship/SavedReformView';
 import SavedReportTransferDialog from '@/components/flagship/SavedReportTransferDialog';
 import {
   CARD_GRID_STYLE,
@@ -754,7 +752,6 @@ export default function ReformsPage() {
   // ---- Detail: one of your reforms (read only: changes are made in Build) ----
   if (selectedReform) {
     const reformName = selectedReform.label || 'Untitled reform';
-    const count = selectedReform.parameters.length;
     // The store starts with no parameters; names and current law need them.
     const metadataReady = viewedParameters.status === 'ready';
     // What the report would run, as Build runs it (dated changes
@@ -772,180 +769,183 @@ export default function ReformsPage() {
     const missingParameters = reformMissingParameters(selectedReform);
     return (
       <WorkspaceLayout>
-        <Stack style={{ gap: spacing.xl }}>
-          {backLink}
-          <Stack style={{ gap: spacing.xs }}>
-            <Title order={1} style={{ margin: 0 }}>
-              {reformName}
-            </Title>
-            <Text
-              style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}
-            >
-              {selectedReform.parametersUnavailable
-                ? 'Changes could not be loaded'
-                : `${count} ${count === 1 ? 'provision' : 'provisions'}`}
-              {selectedReform.createdAt
-                ? ` · saved ${dayjs(selectedReform.createdAt).format('MMM D, YYYY')}`
-                : ''}
-            </Text>
-          </Stack>
-          {missingParameters.length > 0 && (
-            <MissingParametersNotice subject="This reform" parameterPaths={missingParameters} />
-          )}
-          <MissingParametersTransferDialog
-            open={missingParameters.length > 0 && reformTransferPutOffFor !== selectedReform.id}
-            onOpenChange={(open) => !open && setReformTransferPutOffFor(selectedReform.id!)}
-            subject="reform"
-            parameterPaths={missingParameters}
-            transferLabel="Transfer to a new policy"
-            transferNote="Transferring saves the reform’s other changes as a new policy. It keeps its name and baseline, and the reports already run from it keep their results."
-            nothingLeft={
-              parametersWithout(selectedReform.parameters, missingParameters).length === 0
-            }
-            transferring={reformTransfer.isPending}
-            error={reformTransfer.error?.message ?? null}
-            onTransfer={() => reformTransfer.mutate(selectedReform)}
-          />
-          {selectedReform.parametersUnavailable && (
-            <Stack role="alert" style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
-              <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
-                This reform's changes could not be loaded, so it cannot be run right now. Nothing
-                about it has changed.
-              </Text>
-              <Button variant="outline" onClick={invalidate}>
-                Try again
-              </Button>
-            </Stack>
-          )}
-
-          <ReformParameterTable
-            reformParameters={selectedReform.parameters}
-            reformHeading="Your reform"
-            metadataReady={metadataReady}
-            metadataFailed={parametersFailed}
-            onRetryMetadata={viewedParameters.retry}
-          />
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: spacing.sm,
-            }}
-          >
-            <Button
-              onClick={async () => {
-                // A report of these values already exists, done or still
-                // computing: open it at its link rather than starting the
-                // wait again.
-                const reformReports = await Promise.all(
-                  reportsFor(selectedReform.id).map(async (report) => ({
-                    ...report,
-                    year: await reportYear(report),
-                    baselinePolicyId: await reportBaselinePolicyId(report),
-                  }))
-                );
-                const latest = latestMatchingReport(
-                  selectedReform,
-                  reformReports,
-                  runYear,
-                  currentLawPolicyId
-                );
-                if (latest) {
-                  nav.push(`/${countryId}/report/${reportLink(latest)}`);
-                  return;
+        <SavedReformView
+          lead={backLink}
+          name={reformName}
+          savedAt={selectedReform.createdAt}
+          subject="This reform"
+          reformHeading="Your reform"
+          changes={{
+            read: true,
+            parameters: selectedReform.parameters,
+            missingParameters,
+            unavailable: selectedReform.parametersUnavailable,
+            metadataReady,
+            metadataFailed: parametersFailed,
+            onRetryMetadata: viewedParameters.retry,
+          }}
+          notes={
+            <>
+              <MissingParametersTransferDialog
+                open={missingParameters.length > 0 && reformTransferPutOffFor !== selectedReform.id}
+                onOpenChange={(open) => !open && setReformTransferPutOffFor(selectedReform.id!)}
+                subject="reform"
+                parameterPaths={missingParameters}
+                transferLabel="Transfer to a new policy"
+                transferNote="Transferring saves the reform’s other changes as a new policy. It keeps its name and baseline, and the reports already run from it keep their results."
+                nothingLeft={
+                  parametersWithout(selectedReform.parameters, missingParameters).length === 0
                 }
-                void runReport.run(
-                  reformName,
-                  SOURCE_LABELS[selectedReform.provenance.source],
-                  runProvisions,
-                  // Links the report record to the saved reform it came from.
-                  selectedReform.id,
-                  runYear
-                );
-              }}
-              disabled={
-                runReport.isRunning ||
-                selectedReform.parametersUnavailable ||
-                missingParameters.length > 0 ||
-                changesNothing ||
-                parametersWaiting ||
-                parametersFailed
-              }
-              title={
-                changesNothing
-                  ? 'Adjust at least one value from current law to run the report'
-                  : undefined
-              }
-            >
-              <IconChartBar size={16} />
-              {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
-            </Button>
-            <DeleteReformDialog
-              name={reformName}
-              reportCount={reportsFor(selectedReform.id).length}
-              disabled={deleteMutation.isPending}
-              onConfirm={() => deleteMutation.mutate(selectedReform.id!)}
-            />
-          </div>
-          {changesNothing && (
-            <Text
-              style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
-            >
-              Nothing in this reform differs from current law. Adjust at least one value to run the
-              report.
-            </Text>
-          )}
-          {rerunMissingParameters.length > 0 && (
-            <MissingParametersNotice
-              subject="This report"
-              parameterPaths={rerunMissingParameters}
-            />
-          )}
-          {reportToTransfer && (
-            <SavedReportTransferDialog
-              // A report opened for transfer starts with no earlier transfer's error.
-              key={reportToTransfer.report.id}
-              open
-              onOpenChange={(open) => !open && setReportToTransfer(null)}
-              report={reportToTransfer.report}
-              missingParameters={reportToTransfer.missingParameters}
-              keepsLink={isAccount}
-              findReform={savedReform}
-              title={reportToTransfer.report.title || selectedReform.label || 'Untitled reform'}
-              sourceNote={
-                reportToTransfer.report.sourceNote ||
-                SOURCE_LABELS[selectedReform.provenance.source]
-              }
-              onTransferred={() => {
-                setReportToTransfer(null);
-                // The new run sets none of them, so the notice goes with the dialog.
-                setRerunMissingParameters([]);
-              }}
-            />
-          )}
-          {(runReport.error || rerunError) && (
-            <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
-              {runReport.error || rerunError}
-            </Text>
-          )}
-          {deleteMutation.isError && (
-            <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
-              Could not delete the reform. Try again.
-            </Text>
-          )}
-
-          <ReformReports
-            countryId={countryId}
-            reports={reportsFor(selectedReform.id)}
-            rerunning={runReport.isRunning || rerunChecking}
-            reformName={(reformId) => {
+                transferring={reformTransfer.isPending}
+                error={reformTransfer.error?.message ?? null}
+                onTransfer={() => reformTransfer.mutate(selectedReform)}
+              />
+              {selectedReform.parametersUnavailable && (
+                <Stack role="alert" style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
+                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
+                    This reform's changes could not be loaded, so it cannot be run right now.
+                    Nothing about it has changed.
+                  </Text>
+                  <Button variant="outline" onClick={invalidate}>
+                    Try again
+                  </Button>
+                </Stack>
+              )}
+            </>
+          }
+          actions={
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: spacing.sm,
+                }}
+              >
+                <Button
+                  onClick={async () => {
+                    // A report of these values already exists, done or still
+                    // computing: open it at its link rather than starting the
+                    // wait again.
+                    const reformReports = await Promise.all(
+                      reportsFor(selectedReform.id).map(async (report) => ({
+                        ...report,
+                        year: await reportYear(report),
+                        baselinePolicyId: await reportBaselinePolicyId(report),
+                      }))
+                    );
+                    const latest = latestMatchingReport(
+                      selectedReform,
+                      reformReports,
+                      runYear,
+                      currentLawPolicyId
+                    );
+                    if (latest) {
+                      nav.push(`/${countryId}/report/${reportLink(latest)}`);
+                      return;
+                    }
+                    void runReport.run(
+                      reformName,
+                      SOURCE_LABELS[selectedReform.provenance.source],
+                      runProvisions,
+                      // Links the report record to the saved reform it came from.
+                      selectedReform.id,
+                      runYear
+                    );
+                  }}
+                  disabled={
+                    runReport.isRunning ||
+                    selectedReform.parametersUnavailable ||
+                    missingParameters.length > 0 ||
+                    changesNothing ||
+                    parametersWaiting ||
+                    parametersFailed
+                  }
+                  title={
+                    changesNothing
+                      ? 'Adjust at least one value from current law to run the report'
+                      : undefined
+                  }
+                >
+                  <IconChartBar size={16} />
+                  {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
+                </Button>
+                <DeleteReformDialog
+                  name={reformName}
+                  reportCount={reportsFor(selectedReform.id).length}
+                  disabled={deleteMutation.isPending}
+                  onConfirm={() => deleteMutation.mutate(selectedReform.id!)}
+                />
+              </div>
+              {changesNothing && (
+                <Text
+                  style={{
+                    margin: 0,
+                    fontSize: typography.fontSize.xs,
+                    color: colors.text.tertiary,
+                  }}
+                >
+                  Nothing in this reform differs from current law. Adjust at least one value to run
+                  the report.
+                </Text>
+              )}
+              {rerunMissingParameters.length > 0 && (
+                <MissingParametersNotice
+                  subject="This report"
+                  parameterPaths={rerunMissingParameters}
+                />
+              )}
+              {reportToTransfer && (
+                <SavedReportTransferDialog
+                  // A report opened for transfer starts with no earlier transfer's error.
+                  key={reportToTransfer.report.id}
+                  open
+                  onOpenChange={(open) => !open && setReportToTransfer(null)}
+                  report={reportToTransfer.report}
+                  missingParameters={reportToTransfer.missingParameters}
+                  keepsLink={isAccount}
+                  findReform={savedReform}
+                  title={reportToTransfer.report.title || selectedReform.label || 'Untitled reform'}
+                  sourceNote={
+                    reportToTransfer.report.sourceNote ||
+                    SOURCE_LABELS[selectedReform.provenance.source]
+                  }
+                  onTransferred={() => {
+                    setReportToTransfer(null);
+                    // The new run sets none of them, so the notice goes with the dialog.
+                    setRerunMissingParameters([]);
+                  }}
+                />
+              )}
+              {(runReport.error || rerunError) && (
+                <Text
+                  role="alert"
+                  style={{ fontSize: typography.fontSize.sm, color: colors.error }}
+                >
+                  {runReport.error || rerunError}
+                </Text>
+              )}
+              {deleteMutation.isError && (
+                <Text
+                  role="alert"
+                  style={{ fontSize: typography.fontSize.sm, color: colors.error }}
+                >
+                  Could not delete the reform. Try again.
+                </Text>
+              )}
+            </>
+          }
+          reports={{
+            countryId,
+            reports: reportsFor(selectedReform.id),
+            rerunning: runReport.isRunning || rerunChecking,
+            reformName: (reformId) => {
               const reform = savedReform(reformId);
               return reform ? reform.label || 'Untitled reform' : undefined;
-            }}
-            onRerun={async (report) => {
+            },
+            onRerun: async (report) => {
               setRerunError(null);
               setRerunMissingParameters([]);
               // Its own policies, as it ran them: a re-run runs the same
@@ -1025,9 +1025,9 @@ export default function ReformsPage() {
                 year,
                 runSettings
               );
-            }}
-          />
-        </Stack>
+            },
+          }}
+        />
       </WorkspaceLayout>
     );
   }
