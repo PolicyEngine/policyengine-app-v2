@@ -1,0 +1,127 @@
+year,scenario,band,employees_m,share_in_family_on_uc,share_with_total_income_above_frozen_allowance,average_extra_income_tax,average_extra_ni,average_extra_income_tax_and_ni,average_benefit_change,average_net_income_change,average_net_income_change_on_uc,average_net_income_change_not_on_uc,suppressed,approximate
+2026-27,ni_tracks_allowance,"up to £12,570",1.798,0.29,0.367,220.0,13.0,232.0,6.0,-226.0,,-303.0,average_net_income_change_on_uc,average_extra_ni;average_benefit_change
+2026-27,ni_tracks_allowance,"£12,570 to £16,080",1.415,0.192,0.97,405.0,136.0,541.0,38.0,-503.0,-184.0,-578.0,,share_with_total_income_above_frozen_allowance
+2026-27,ni_tracks_allowance,"£16,080 to £20,000",1.353,0.207,1.0,716.0,281.0,997.0,111.0,-886.0,-441.0,-1002.0,,
+2026-27,ni_tracks_allowance,"£20,000 to £25,000",3.216,0.089,1.0,750.0,281.0,1031.0,47.0,-984.0,-465.0,-1035.0,,
+2026-27,ni_tracks_allowance,"£25,000 to £30,000",3.848,0.08,1.0,740.0,281.0,1021.0,43.0,-978.0,-445.0,-1024.0,,
+2026-27,ni_tracks_allowance,"£30,000 to £50,270",9.097,0.039,1.0,751.0,280.0,1031.0,20.0,-1011.0,-465.0,-1033.0,,
+2026-27,ni_tracks_allowance,"£50,270 to £100,000",5.155,0.005,1.0,1308.0,281.0,1589.0,3.0,-1586.0,-792.0,-1589.0,,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc
+2026-27,ni_tracks_allowance,"over £100,000",1.487,,1.0,665.0,281.0,946.0,,-945.0,,,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc;average_net_income_change_not_on_uc,
+2026-27,ni_tracks_allowance,all employees,27.368,0.075,0.957,795.0,256.0,1051.0,27.0,-1024.0,-316.0,-1081.0,,
+2026-27,ni_sep_cpi_from_jul22,"up to £12,570",1.798,0.29,0.367,220.0,11.0,231.0,6.0,-224.0,,-301.0,average_net_income_change_on_uc,average_extra_ni;average_benefit_change
+2026-27,ni_sep_cpi_from_jul22,"£12,570 to £16,080",1.415,0.192,0.97,405.0,132.0,537.0,38.0,-499.0,-182.0,-574.0,,share_with_total_income_above_frozen_allowance
+2026-27,ni_sep_cpi_from_jul22,"£16,080 to £20,000",1.353,0.207,1.0,716.0,242.0,959.0,107.0,-852.0,-424.0,-964.0,,
+2026-27,ni_sep_cpi_from_jul22,"£20,000 to £25,000",3.216,0.089,1.0,750.0,242.0,992.0,45.0,-947.0,-446.0,-996.0,,
+2026-27,ni_sep_cpi_from_jul22,"£25,000 to £30,000",3.848,0.08,1.0,740.0,242.0,983.0,42.0,-941.0,-427.0,-985.0,,
+2026-27,ni_sep_cpi_from_jul22,"£30,000 to £50,270",9.097,0.039,1.0,751.0,242.0,993.0,20.0,-973.0,-447.0,-994.0,,
+2026-27,ni_sep_cpi_from_jul22,"£50,270 to £100,000",5.155,0.005,1.0,1308.0,242.0,1551.0,3.0,-1547.0,-766.0,-1551.0,,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc
+2026-27,ni_sep_cpi_from_jul22,"over £100,000",1.487,,1.0,665.0,242.0,908.0,,-907.0,,-907.0,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc,
+2026-27,ni_sep_cpi_from_jul22,all employees,27.368,0.075,0.957,795.0,221.0,1017.0,26.0,-990.0,-304.0,-1046.0,,
+2026-27,ni_p2p_from_jul22,"up to £12,570",1.798,0.29,0.367,220.0,7.0,227.0,6.0,-220.0,-34.0,-296.0,,average_extra_ni;average_benefit_change;average_net_income_change_on_uc
+2026-27,ni_p2p_from_jul22,"£12,570 to £16,080",1.415,0.192,0.97,405.0,98.0,503.0,35.0,-468.0,-169.0,-539.0,,share_with_total_income_above_frozen_allowance
+2026-27,ni_p2p_from_jul22,"£16,080 to £20,000",1.353,0.207,1.0,716.0,138.0,855.0,95.0,-760.0,-376.0,-860.0,,
+2026-27,ni_p2p_from_jul22,"£20,000 to £25,000",3.216,0.089,1.0,750.0,138.0,888.0,40.0,-848.0,-397.0,-892.0,,
+2026-27,ni_p2p_from_jul22,"£25,000 to £30,000",3.848,0.08,1.0,740.0,138.0,879.0,37.0,-841.0,-378.0,-881.0,,
+2026-27,ni_p2p_from_jul22,"£30,000 to £50,270",9.097,0.039,1.0,751.0,138.0,889.0,18.0,-872.0,-398.0,-891.0,,
+2026-27,ni_p2p_from_jul22,"£50,270 to £100,000",5.155,0.005,1.0,1308.0,138.0,1447.0,3.0,-1443.0,-696.0,-1447.0,,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc
+2026-27,ni_p2p_from_jul22,"over £100,000",1.487,,1.0,665.0,138.0,804.0,,-803.0,,-803.0,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc,
+2026-27,ni_p2p_from_jul22,all employees,27.368,0.075,0.957,795.0,128.0,923.0,23.0,-899.0,-272.0,-950.0,,
+2026-27,allowance_only,"up to £12,570",1.798,0.29,0.367,220.0,0.0,220.0,6.0,,,,average_net_income_change;average_net_income_change_on_uc;average_net_income_change_not_on_uc,average_benefit_change
+2026-27,allowance_only,"£12,570 to £16,080",1.415,0.192,0.97,405.0,0.0,405.0,26.0,-379.0,-127.0,-439.0,,share_with_total_income_above_frozen_allowance
+2026-27,allowance_only,"£16,080 to £20,000",1.353,0.207,1.0,716.0,0.0,716.0,80.0,-637.0,-312.0,-722.0,,
+2026-27,allowance_only,"£20,000 to £25,000",3.216,0.089,1.0,750.0,0.0,750.0,34.0,-716.0,-332.0,-754.0,,
+2026-27,allowance_only,"£25,000 to £30,000",3.848,0.08,1.0,740.0,0.0,740.0,32.0,-709.0,-314.0,-743.0,,
+2026-27,allowance_only,"£30,000 to £50,270",9.097,0.039,1.0,751.0,0.0,751.0,15.0,-736.0,-333.0,-752.0,,
+2026-27,allowance_only,"£50,270 to £100,000",5.155,0.005,1.0,1308.0,0.0,1308.0,3.0,-1305.0,,-1309.0,average_net_income_change_on_uc,share_in_family_on_uc;average_benefit_change
+2026-27,allowance_only,"over £100,000",1.487,,1.0,665.0,0.0,665.0,,,,-665.0,share_in_family_on_uc;average_benefit_change;average_net_income_change;average_net_income_change_on_uc,
+2026-27,allowance_only,all employees,27.368,0.075,0.957,795.0,0.0,795.0,20.0,-776.0,-226.0,-820.0,,
+2026-27,ni_sep_cpi_from_2021,"up to £12,570",1.798,0.29,0.367,220.0,-2.0,218.0,6.0,-212.0,,,average_net_income_change_on_uc;average_net_income_change_not_on_uc,average_extra_ni;average_benefit_change
+2026-27,ni_sep_cpi_from_2021,"£12,570 to £16,080",1.415,0.192,0.97,405.0,-24.0,381.0,23.0,-358.0,-116.0,-415.0,,share_with_total_income_above_frozen_allowance
+2026-27,ni_sep_cpi_from_2021,"£16,080 to £20,000",1.353,0.207,1.0,716.0,-24.0,692.0,77.0,-616.0,-301.0,-698.0,,
+2026-27,ni_sep_cpi_from_2021,"£20,000 to £25,000",3.216,0.089,1.0,750.0,-24.0,726.0,32.0,-694.0,-321.0,-730.0,,
+2026-27,ni_sep_cpi_from_2021,"£25,000 to £30,000",3.848,0.08,1.0,740.0,-24.0,717.0,31.0,-686.0,-303.0,-719.0,,
+2026-27,ni_sep_cpi_from_2021,"£30,000 to £50,270",9.097,0.039,1.0,751.0,-24.0,727.0,14.0,-713.0,-321.0,-729.0,,
+2026-27,ni_sep_cpi_from_2021,"£50,270 to £100,000",5.155,0.005,1.0,1308.0,-24.0,1284.0,3.0,-1281.0,-587.0,-1285.0,,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc
+2026-27,ni_sep_cpi_from_2021,"over £100,000",1.487,,1.0,665.0,-24.0,,,-641.0,,-641.0,share_in_family_on_uc;average_extra_income_tax_and_ni;average_benefit_change;average_net_income_change_on_uc,
+2026-27,ni_sep_cpi_from_2021,all employees,27.368,0.075,0.957,795.0,-22.0,773.0,19.0,-754.0,-217.0,-797.0,,
+2026-27,obr_thresholds,"up to £12,570",1.798,0.29,0.367,260.0,,,,,,-330.0,average_extra_ni;average_extra_income_tax_and_ni;average_benefit_change;average_net_income_change;average_net_income_change_on_uc,
+2026-27,obr_thresholds,"£12,570 to £16,080",1.415,0.192,0.97,440.0,-30.0,,,,,,average_extra_income_tax_and_ni;average_benefit_change;average_net_income_change;average_net_income_change_on_uc;average_net_income_change_not_on_uc,share_with_total_income_above_frozen_allowance
+2026-27,obr_thresholds,"£16,080 to £20,000",1.353,0.207,1.0,720.0,-20.0,700.0,80.0,-620.0,-300.0,-700.0,,
+2026-27,obr_thresholds,"£20,000 to £25,000",3.216,0.089,1.0,760.0,,740.0,30.0,-710.0,-320.0,-740.0,average_extra_ni,
+2026-27,obr_thresholds,"£25,000 to £30,000",3.848,0.08,1.0,750.0,-20.0,730.0,30.0,-700.0,-300.0,-730.0,,
+2026-27,obr_thresholds,"£30,000 to £50,270",9.097,0.039,1.0,780.0,-30.0,750.0,10.0,-740.0,-320.0,-760.0,,
+2026-27,obr_thresholds,"£50,270 to £100,000",5.155,0.005,1.0,2520.0,-640.0,1880.0,0.0,-1880.0,,-1890.0,average_net_income_change_on_uc,share_in_family_on_uc;average_benefit_change
+2026-27,obr_thresholds,"over £100,000",1.487,,1.0,3290.0,-880.0,2420.0,,-2420.0,,-2420.0,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc,
+2026-27,obr_thresholds,all employees,27.368,0.075,0.957,1180.0,-190.0,1000.0,20.0,-980.0,,-1040.0,average_net_income_change_on_uc,
+2026-27,hmrc_ten_percent,"up to £12,570",1.798,0.29,0.367,110.0,0.0,110.0,0.0,-100.0,,-140.0,average_net_income_change_on_uc,average_benefit_change
+2026-27,hmrc_ten_percent,"£12,570 to £16,080",1.415,0.192,0.97,220.0,0.0,220.0,20.0,-210.0,-80.0,-240.0,,share_with_total_income_above_frozen_allowance
+2026-27,hmrc_ten_percent,"£16,080 to £20,000",1.353,0.207,1.0,260.0,0.0,260.0,30.0,-230.0,-110.0,-270.0,,
+2026-27,hmrc_ten_percent,"£20,000 to £25,000",3.216,0.089,1.0,280.0,0.0,280.0,10.0,-260.0,-120.0,-280.0,,
+2026-27,hmrc_ten_percent,"£25,000 to £30,000",3.848,0.08,1.0,270.0,0.0,270.0,10.0,-260.0,,-270.0,average_net_income_change_on_uc,
+2026-27,hmrc_ten_percent,"£30,000 to £50,270",9.097,0.039,1.0,290.0,0.0,290.0,10.0,-290.0,-120.0,-300.0,,
+2026-27,hmrc_ten_percent,"£50,270 to £100,000",5.155,0.005,1.0,1030.0,0.0,1030.0,0.0,-1020.0,,-1030.0,average_net_income_change_on_uc,share_in_family_on_uc;average_benefit_change
+2026-27,hmrc_ten_percent,"over £100,000",1.487,,1.0,,0.0,,,,,,share_in_family_on_uc;average_extra_income_tax;average_extra_income_tax_and_ni;average_benefit_change;average_net_income_change;average_net_income_change_on_uc;average_net_income_change_not_on_uc,
+2026-27,hmrc_ten_percent,all employees,27.368,0.075,0.957,440.0,0.0,440.0,10.0,-440.0,-80.0,-470.0,,
+2027-28,ni_tracks_allowance,"up to £12,570",1.731,0.291,0.38,272.0,15.0,287.0,7.0,-279.0,,,average_net_income_change_on_uc;average_net_income_change_not_on_uc,average_extra_ni;average_benefit_change
+2027-28,ni_tracks_allowance,"£12,570 to £16,650",1.531,0.193,0.984,489.0,164.0,652.0,47.0,-605.0,-224.0,-696.0,,share_with_total_income_above_frozen_allowance
+2027-28,ni_tracks_allowance,"£16,650 to £20,000",1.215,0.214,1.0,836.0,326.0,1162.0,134.0,-1028.0,-511.0,-1169.0,,
+2027-28,ni_tracks_allowance,"£20,000 to £25,000",2.87,0.099,1.0,874.0,326.0,1200.0,61.0,-1140.0,-539.0,-1206.0,,
+2027-28,ni_tracks_allowance,"£25,000 to £30,000",3.927,0.074,1.0,867.0,326.0,1193.0,47.0,-1146.0,-525.0,-1196.0,,
+2027-28,ni_tracks_allowance,"£30,000 to £50,270",9.206,0.04,1.0,877.0,326.0,1203.0,25.0,-1179.0,-539.0,-1205.0,,
+2027-28,ni_tracks_allowance,"£50,270 to £100,000",5.401,0.009,1.0,1516.0,326.0,1842.0,7.0,-1836.0,-729.0,-1845.0,,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc
+2027-28,ni_tracks_allowance,"over £100,000",1.616,,1.0,804.0,326.0,1130.0,,-1129.0,,,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc;average_net_income_change_not_on_uc,
+2027-28,ni_tracks_allowance,all employees,27.498,0.074,0.96,935.0,298.0,1233.0,32.0,-1201.0,-368.0,-1268.0,,
+2027-28,ni_sep_cpi_from_jul22,"up to £12,570",1.731,0.291,0.38,272.0,13.0,285.0,7.0,-278.0,,,average_net_income_change_on_uc;average_net_income_change_not_on_uc,average_extra_ni;average_benefit_change
+2027-28,ni_sep_cpi_from_jul22,"£12,570 to £16,650",1.531,0.193,0.984,489.0,160.0,649.0,47.0,-602.0,-223.0,-693.0,,share_with_total_income_above_frozen_allowance
+2027-28,ni_sep_cpi_from_jul22,"£16,650 to £20,000",1.215,0.214,1.0,836.0,288.0,1124.0,129.0,-994.0,-493.0,-1131.0,,
+2027-28,ni_sep_cpi_from_jul22,"£20,000 to £25,000",2.87,0.099,1.0,874.0,288.0,1162.0,59.0,-1104.0,-521.0,-1168.0,,
+2027-28,ni_sep_cpi_from_jul22,"£25,000 to £30,000",3.927,0.074,1.0,867.0,288.0,1155.0,45.0,-1110.0,-507.0,-1158.0,,
+2027-28,ni_sep_cpi_from_jul22,"£30,000 to £50,270",9.206,0.04,1.0,877.0,288.0,1165.0,24.0,-1141.0,-520.0,-1167.0,,
+2027-28,ni_sep_cpi_from_jul22,"£50,270 to £100,000",5.401,0.009,1.0,1516.0,288.0,1804.0,,-1798.0,-707.0,-1807.0,average_benefit_change,share_in_family_on_uc;average_net_income_change_on_uc
+2027-28,ni_sep_cpi_from_jul22,"over £100,000",1.616,,1.0,804.0,288.0,1092.0,,-1091.0,,-1091.0,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc,
+2027-28,ni_sep_cpi_from_jul22,all employees,27.498,0.074,0.96,935.0,264.0,1199.0,31.0,-1168.0,-357.0,-1233.0,,
+2027-28,ni_p2p_from_jul22,"up to £12,570",1.731,0.291,0.38,272.0,9.0,281.0,7.0,-274.0,-33.0,-373.0,,average_extra_ni;average_benefit_change;average_net_income_change_on_uc
+2027-28,ni_p2p_from_jul22,"£12,570 to £16,650",1.531,0.193,0.984,489.0,128.0,617.0,44.0,-573.0,-210.0,-660.0,,share_with_total_income_above_frozen_allowance
+2027-28,ni_p2p_from_jul22,"£16,650 to £20,000",1.215,0.214,1.0,836.0,180.0,1016.0,117.0,-899.0,-443.0,-1023.0,,
+2027-28,ni_p2p_from_jul22,"£20,000 to £25,000",2.87,0.099,1.0,874.0,180.0,1054.0,53.0,-1001.0,-470.0,-1060.0,,
+2027-28,ni_p2p_from_jul22,"£25,000 to £30,000",3.927,0.074,1.0,867.0,180.0,1047.0,41.0,-1006.0,-456.0,-1050.0,,
+2027-28,ni_p2p_from_jul22,"£30,000 to £50,270",9.206,0.04,1.0,877.0,180.0,1057.0,21.0,-1036.0,-469.0,-1059.0,,
+2027-28,ni_p2p_from_jul22,"£50,270 to £100,000",5.401,0.009,1.0,1516.0,180.0,1696.0,6.0,-1690.0,-645.0,-1699.0,,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc
+2027-28,ni_p2p_from_jul22,"over £100,000",1.616,,1.0,804.0,180.0,984.0,,-983.0,,-983.0,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc,
+2027-28,ni_p2p_from_jul22,all employees,27.498,0.074,0.96,935.0,166.0,1101.0,28.0,-1073.0,-323.0,-1134.0,,
+2027-28,allowance_only,"up to £12,570",1.731,0.291,0.38,272.0,0.0,272.0,7.0,-265.0,,,average_net_income_change_on_uc;average_net_income_change_not_on_uc,average_benefit_change
+2027-28,allowance_only,"£12,570 to £16,650",1.531,0.193,0.984,489.0,0.0,489.0,32.0,-456.0,-156.0,-528.0,,share_with_total_income_above_frozen_allowance
+2027-28,allowance_only,"£16,650 to £20,000",1.215,0.214,1.0,836.0,0.0,836.0,96.0,-740.0,-361.0,-843.0,,
+2027-28,allowance_only,"£20,000 to £25,000",2.87,0.099,1.0,874.0,0.0,874.0,44.0,-830.0,-384.0,-880.0,,
+2027-28,allowance_only,"£25,000 to £30,000",3.927,0.074,1.0,867.0,0.0,867.0,34.0,-833.0,-373.0,-870.0,,
+2027-28,allowance_only,"£30,000 to £50,270",9.206,0.04,1.0,877.0,0.0,877.0,18.0,-860.0,-384.0,-879.0,,
+2027-28,allowance_only,"£50,270 to £100,000",5.401,0.009,1.0,1516.0,0.0,1516.0,,-1511.0,,-1519.0,average_benefit_change;average_net_income_change_on_uc,share_in_family_on_uc
+2027-28,allowance_only,"over £100,000",1.616,,1.0,804.0,0.0,804.0,,-803.0,,-803.0,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc,
+2027-28,allowance_only,all employees,27.498,0.074,0.96,935.0,0.0,935.0,23.0,-912.0,-263.0,-964.0,,
+2027-28,ni_sep_cpi_from_2021,"up to £12,570",1.731,0.291,0.38,272.0,1.0,272.0,7.0,-266.0,,,average_net_income_change_on_uc;average_net_income_change_not_on_uc,average_extra_ni;average_benefit_change
+2027-28,ni_sep_cpi_from_2021,"£12,570 to £16,650",1.531,0.193,0.984,489.0,9.0,498.0,33.0,-465.0,-160.0,-538.0,,share_with_total_income_above_frozen_allowance
+2027-28,ni_sep_cpi_from_2021,"£16,650 to £20,000",1.215,0.214,1.0,836.0,9.0,845.0,97.0,-748.0,-365.0,-852.0,,
+2027-28,ni_sep_cpi_from_2021,"£20,000 to £25,000",2.87,0.099,1.0,874.0,9.0,884.0,44.0,-840.0,-389.0,-889.0,,
+2027-28,ni_sep_cpi_from_2021,"£25,000 to £30,000",3.927,0.074,1.0,867.0,9.0,876.0,34.0,-842.0,-377.0,-879.0,,
+2027-28,ni_sep_cpi_from_2021,"£30,000 to £50,270",9.206,0.04,1.0,877.0,9.0,887.0,18.0,-869.0,-389.0,-889.0,,
+2027-28,ni_sep_cpi_from_2021,"£50,270 to £100,000",5.401,0.009,1.0,1516.0,9.0,1525.0,,-1520.0,,-1528.0,average_benefit_change;average_net_income_change_on_uc,share_in_family_on_uc
+2027-28,ni_sep_cpi_from_2021,"over £100,000",1.616,,1.0,804.0,9.0,,,-813.0,,-813.0,share_in_family_on_uc;average_extra_income_tax_and_ni;average_benefit_change;average_net_income_change_on_uc,
+2027-28,ni_sep_cpi_from_2021,all employees,27.498,0.074,0.96,935.0,9.0,944.0,23.0,-921.0,-266.0,-973.0,,
+2027-28,obr_thresholds,"up to £12,570",1.731,0.291,0.38,310.0,,,,,,-410.0,average_extra_ni;average_extra_income_tax_and_ni;average_benefit_change;average_net_income_change;average_net_income_change_on_uc,
+2027-28,obr_thresholds,"£12,570 to £16,650",1.531,0.193,0.984,520.0,0.0,520.0,30.0,-490.0,-160.0,-570.0,,share_with_total_income_above_frozen_allowance
+2027-28,obr_thresholds,"£16,650 to £20,000",1.215,0.214,1.0,830.0,0.0,,90.0,-740.0,,,average_extra_income_tax_and_ni;average_net_income_change_on_uc;average_net_income_change_not_on_uc,
+2027-28,obr_thresholds,"£20,000 to £25,000",2.87,0.099,1.0,,0.0,880.0,40.0,-840.0,-380.0,-890.0,average_extra_income_tax,
+2027-28,obr_thresholds,"£25,000 to £30,000",3.927,0.074,1.0,870.0,0.0,,30.0,-840.0,,,average_extra_income_tax_and_ni;average_net_income_change_on_uc;average_net_income_change_not_on_uc,
+2027-28,obr_thresholds,"£30,000 to £50,270",9.206,0.04,1.0,900.0,0.0,900.0,20.0,-880.0,-380.0,-910.0,,
+2027-28,obr_thresholds,"£50,270 to £100,000",5.401,0.009,1.0,2800.0,-670.0,2140.0,,-2130.0,,-2150.0,average_benefit_change;average_net_income_change_on_uc,share_in_family_on_uc
+2027-28,obr_thresholds,"over £100,000",1.616,,1.0,3680.0,-970.0,2710.0,,-2710.0,,-2710.0,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc,
+2027-28,obr_thresholds,all employees,27.498,0.074,0.96,1370.0,-190.0,1180.0,20.0,-1160.0,,,average_net_income_change_on_uc;average_net_income_change_not_on_uc,
+2027-28,hmrc_ten_percent,"up to £12,570",1.731,0.291,0.38,120.0,0.0,120.0,,-110.0,,-150.0,average_benefit_change;average_net_income_change_on_uc,
+2027-28,hmrc_ten_percent,"£12,570 to £16,650",1.531,0.193,0.984,240.0,0.0,240.0,20.0,-220.0,-90.0,-260.0,,share_with_total_income_above_frozen_allowance
+2027-28,hmrc_ten_percent,"£16,650 to £20,000",1.215,0.214,1.0,270.0,0.0,270.0,30.0,-240.0,-110.0,-270.0,,
+2027-28,hmrc_ten_percent,"£20,000 to £25,000",2.87,0.099,1.0,280.0,0.0,280.0,10.0,-260.0,-120.0,-280.0,,
+2027-28,hmrc_ten_percent,"£25,000 to £30,000",3.927,0.074,1.0,270.0,0.0,270.0,10.0,-260.0,-120.0,-280.0,,
+2027-28,hmrc_ten_percent,"£30,000 to £50,270",9.206,0.04,1.0,300.0,0.0,300.0,10.0,-290.0,-120.0,-300.0,,
+2027-28,hmrc_ten_percent,"£50,270 to £100,000",5.401,0.009,1.0,1040.0,0.0,1040.0,0.0,-1040.0,-360.0,-1040.0,,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc
+2027-28,hmrc_ten_percent,"over £100,000",1.616,,1.0,960.0,0.0,960.0,,-960.0,,-960.0,share_in_family_on_uc;average_benefit_change;average_net_income_change_on_uc,
+2027-28,hmrc_ten_percent,all employees,27.498,0.074,0.96,460.0,0.0,460.0,10.0,-450.0,-90.0,-480.0,,
