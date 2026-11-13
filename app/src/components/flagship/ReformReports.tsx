@@ -109,15 +109,19 @@ function ReportBaseline({
   const namedLabel =
     readReportMeta(reportLink(report))?.baseline?.label ??
     (report.baselineReformId ? reformName?.(report.baselineReformId) || UNNAMED_COMPARISON : null);
-  // Current law is the loaded metadata's, which is the page's country's. A
-  // report of another country (the admin page lists them) can't be judged
-  // against it, so its baseline is neither read nor named.
+  // Current law is the loaded metadata's, which is the page's country's,
+  // read while it loads. A list of another country's reports (the admin
+  // page shows them) can't be judged against it, so their baselines are
+  // neither read nor named.
+  const inMetadataCountry = useSelector(
+    (state: RootState) => state.metadata.currentCountry === countryId
+  );
   const currentLawPolicyId = useSelector((state: RootState) =>
-    state.metadata.currentCountry === countryId ? state.metadata.currentLawId : undefined
+    inMetadataCountry ? state.metadata.currentLawId : undefined
   );
   const baselinePolicyId = useBaselinePolicyId(
     countryId,
-    namedLabel || !currentLawPolicyId ? undefined : baselineSimulationId
+    namedLabel || !inMetadataCountry ? undefined : baselineSimulationId
   );
   const label =
     namedLabel ??

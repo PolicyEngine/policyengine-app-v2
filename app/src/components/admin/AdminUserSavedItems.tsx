@@ -263,7 +263,7 @@ function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHead
         open={openedItem !== null}
         onClose={() => setOpenedItem(null)}
         returnFocusTo={openerRef}
-        contentLabel={openedItem?.kind === 'household' ? 'Saved household' : 'Saved policy'}
+        subject={openedItem?.kind ?? 'policy'}
       >
         {openedItem?.kind === 'policy' && (
           <SavedPolicyDetails

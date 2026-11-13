@@ -41,8 +41,7 @@ export function SavedItemHeader({
   description: string;
 }) {
   return (
-    // Clear of the dialog's close button, in its top right corner.
-    <Stack style={{ gap: spacing.xs, paddingRight: spacing['2xl'] }}>
+    <Stack style={{ gap: spacing.xs }}>
       {/*
         A name without spaces wraps too, rather than running under the close
         button. The class name keeps the reforms page's heading size (Title's
@@ -118,18 +117,24 @@ export function SavedItemLoading({ subject }: { subject: SavedItemSubject }) {
 }
 
 /**
- * The width the reforms page shows a saved reform at (`WorkspaceLayout`'s
- * reading width, 760px), with the dialog's padding on each side, and never
- * wider than the window less a margin.
+ * The content's padding. On the right it clears the close button, which
+ * the content scrolls under: the button ends 32px from the dialog's edge.
  */
-const DIALOG_MAX_WIDTH = `min(calc(760px + 2 * ${spacing.xl}), calc(100% - 2rem))`;
+const CONTENT_PADDING = `${spacing.xl} ${spacing['3xl']} ${spacing.xl} ${spacing.xl}`;
+
+/**
+ * The width the reforms page shows a saved reform at (`WorkspaceLayout`'s
+ * reading width, 760px), with the content's padding, and never wider than
+ * the window less a margin.
+ */
+const DIALOG_MAX_WIDTH = `min(calc(760px + ${spacing.xl} + ${spacing['3xl']}), calc(100% - 2rem))`;
 
 /**
  * A modal dialog over the admin page showing one of a user's saved items,
  * read only, at the width the reforms page shows a saved reform. It is
  * never taller than the window: its content scrolls under the close
- * button, in a region named `contentLabel` that takes keyboard focus, so
- * the keyboard can scroll it though it may hold nothing else to focus.
+ * button, in a region ("Saved policy") that takes keyboard focus, so the
+ * keyboard can scroll it though it may hold nothing else to focus.
  * `children` is the item's content, starting with a `SavedItemHeader`,
  * which names the dialog. When it closes, focus goes back to
  * `returnFocusTo`, the control that opened it: the dialog has no trigger
@@ -139,14 +144,14 @@ export default function AdminSavedItemDialog({
   open,
   onClose,
   returnFocusTo,
-  contentLabel,
+  subject,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   returnFocusTo: RefObject<HTMLElement | null>;
-  /** What the content is, such as "Saved policy". */
-  contentLabel: string;
+  /** What the dialog shows, which names its content. */
+  subject: SavedItemSubject;
   children: ReactNode;
 }) {
   return (
@@ -164,13 +169,14 @@ export default function AdminSavedItemDialog({
         >
           <div
             role="region"
-            aria-label={contentLabel}
+            aria-label={`Saved ${subject}`}
             // A scrolling region with perhaps nothing else to focus: without
             // focus of its own, the keyboard couldn't scroll it.
             // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0}
-            className="tw:min-h-0 tw:overflow-y-auto"
-            style={{ padding: spacing.xl }}
+            // Its focus ring is drawn inside it: the dialog clips anything outside.
+            className="tw:min-h-0 tw:overflow-y-auto tw:outline-none tw:focus-visible:ring-2 tw:focus-visible:ring-ring tw:focus-visible:ring-inset"
+            style={{ padding: CONTENT_PADDING }}
           >
             <Stack style={{ gap: spacing.xl }}>{children}</Stack>
           </div>
