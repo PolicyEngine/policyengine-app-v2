@@ -1046,6 +1046,22 @@ describe('AdminUserSavedItems policies and reports', () => {
     ).toBeInTheDocument();
   });
 
+  test("given a report run from another of the user's policies then the policy's dialog leaves it out", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!, {
+      savedItems: {
+        ...GRACE_SAVED_ITEMS,
+        reports: [reportFromPolicy({ user_policy_id: SAVED_ITEM_IDS.UK_POLICY })],
+      },
+    });
+
+    // When
+    const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+
+    // Then
+    expect(reportsIn(dialog).textContent).toBe('ReportsNo reports yet.');
+  });
+
   test('given a policy no report was run from then the dialog says it has no reports', async () => {
     // Given
     const { user } = await showSavedItems(GRACE.email!);
@@ -1169,7 +1185,7 @@ describe('AdminUserSavedItems policies and reports', () => {
     expect([...methods]).toEqual(['GET']);
   });
 
-  test("given the policy's dialog is open then its content can take keyboard focus, so it scrolls without a mouse", async () => {
+  test("given the policy's dialog opens then its content takes keyboard focus, so it scrolls without a mouse", async () => {
     // Given
     const { user } = await showSavedItems(GRACE.email!);
 
@@ -1177,12 +1193,12 @@ describe('AdminUserSavedItems policies and reports', () => {
     const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
 
     // Then
-    expect(
-      within(dialog).getByRole('region', { name: 'Saved policy' }).getAttribute('tabindex')
-    ).toBe('0');
+    const content = within(dialog).getByRole('region', { name: 'Saved policy' });
+    await waitFor(() => expect(content).toHaveFocus());
+    expect(content.getAttribute('tabindex')).toBe('0');
   });
 
-  test("given the household's dialog is open then its content can take keyboard focus, so it scrolls without a mouse", async () => {
+  test("given the household's dialog opens then its content takes keyboard focus, so it scrolls without a mouse", async () => {
     // Given
     const { user } = await showSavedItems(GRACE.email!);
 
@@ -1190,9 +1206,9 @@ describe('AdminUserSavedItems policies and reports', () => {
     const dialog = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
 
     // Then
-    expect(
-      within(dialog).getByRole('region', { name: 'Saved household' }).getAttribute('tabindex')
-    ).toBe('0');
+    const content = within(dialog).getByRole('region', { name: 'Saved household' });
+    await waitFor(() => expect(content).toHaveFocus());
+    expect(content.getAttribute('tabindex')).toBe('0');
   });
 
   test("given the admin opens a household then it opens in a modal dialog, headed with the household's name", async () => {
