@@ -30,6 +30,8 @@ import {
   savedHousehold,
   savedPolicy,
   savedReport,
+  UK_V1_HOUSEHOLD_JSON,
+  UK_V1_POLICY_JSON,
 } from '@/tests/fixtures/api/v2AdminUserSavedItemsMocks';
 import { errorResponse, TIMESTAMPS } from '@/tests/fixtures/api/v2UserMocks';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
@@ -554,15 +556,22 @@ describe('AdminUserSavedItems policies and reports', () => {
     {
       savedItems,
       queryClient = createTestQueryClient(),
-    }: { savedItems?: UserSavedItems; queryClient?: QueryClient } = {}
+      policies,
+      households,
+    }: {
+      savedItems?: UserSavedItems;
+      queryClient?: QueryClient;
+      policies?: Parameters<typeof answerPolicyReads>[1];
+      households?: Parameters<typeof answerHouseholdReads>[1];
+    } = {}
   ) {
     const { user } = await openUserDetails(
       email,
       queryClient,
       savedItems ? { [GRACE.id]: savedItems } : undefined
     );
-    const policyReads = answerPolicyReads(fetchMock);
-    const householdReads = answerHouseholdReads(fetchMock);
+    const policyReads = answerPolicyReads(fetchMock, policies);
+    const householdReads = answerHouseholdReads(fetchMock, households);
     await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
     await screen.findByRole('table', { name: 'Saved policies' });
     return { user, policyReads, householdReads };
@@ -710,22 +719,28 @@ describe('AdminUserSavedItems policies and reports', () => {
     });
   });
 
-  test("given a policy saved in another country then the panel links to that country's admin page and reads no policy", async () => {
+  test('given a policy saved in another country then the panel shows its parameters by their paths, without current law, and says why', async () => {
     // Given
-    const { user, policyReads } = await showSavedItems(GRACE.email!);
+    const { user, policyReads } = await showSavedItems(GRACE.email!, {
+      policies: { v2: {}, v1: { [`uk/${SAVED_TARGET_IDS.V1_POLICY}`]: UK_V1_POLICY_JSON } },
+    });
 
     // When
     const panel = await openPolicy(user, 'No name');
+    await within(panel).findByRole('table', { name: 'Parameters' });
 
     // Then
-    const link = within(panel).getByRole('link', {
-      name: `Open the United Kingdom admin page${NEW_TAB_NOTE}`,
-    });
     expect({
-      href: link.getAttribute('href'),
-      target: link.getAttribute('target'),
+      note: within(panel).getByText(/^This policy was saved in the United Kingdom\./).textContent,
+      rows: parameterRowsIn(panel),
       reads: policyReads,
-    }).toEqual({ href: '/uk/admin/users', target: '_blank', reads: [] });
+    }).toEqual({
+      note: 'This policy was saved in the United Kingdom. This page loads the United States model only, so its parameters show by their paths, without current law or units.',
+      rows: [
+        ['Gov.hmrc.income_tax.allowances.personal_allowance.amount', '—', '15000', 'from 2026'],
+      ],
+      reads: [`/uk/policy/${SAVED_TARGET_IDS.V1_POLICY}`],
+    });
   });
 
   test('given the policy cannot be read then the panel says so, and trying again shows it', async () => {
@@ -887,9 +902,84 @@ describe('AdminUserSavedItems policies and reports', () => {
         ['Age', '40'],
         ['Employment income', '$50,000'],
       ],
+      'Your partner': [
+        ['Age', '38'],
+        ['Employment income', '$30,000'],
+      ],
       'Your first dependent': [['Age', '10']],
-      'Your household': [['State', 'CA']],
+      'Your second dependent': [['Age', '7']],
+      'Your household': [['State', 'California']],
+      'Your tax unit': [['Childcare expenses', '$1,000']],
+      'Your household (SPM unit)': [['Pre-subsidy childcare expenses', '$2,000']],
     });
+  });
+
+  test("given a household with values in several years then the panel shows its latest year's values", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!, {
+      households: {
+        [`us/${SAVED_TARGET_IDS.V1_HOUSEHOLD}`]: {
+          people: { you: { age: { 2025: 39, 2026: 40 } } },
+          households: { 'your household': { members: ['you'] } },
+        },
+      },
+    });
+
+    // When
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+    await within(panel).findByRole('table', { name: 'You' });
+
+    // Then
+    expect({
+      description: within(panel).getByText(/^1 person/).textContent,
+      tables: householdTablesIn(panel),
+    }).toEqual({
+      description: '1 person · 2026 · saved Oct 12, 2026',
+      tables: { You: [['Age', '40']] },
+    });
+  });
+
+  test('given a household with no people then the panel says so', async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!, {
+      households: { [`us/${SAVED_TARGET_IDS.V1_HOUSEHOLD}`]: { people: {}, households: {} } },
+    });
+
+    // When
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+
+    // Then
+    expect(await within(panel).findByText('This household has no people.')).toBeInTheDocument();
+  });
+
+  test('given a household that cannot be read then the panel says so after one read', async () => {
+    // Given
+    const { user, householdReads } = await showSavedItems(GRACE.email!, {
+      queryClient: createProductionLikeQueryClient(),
+      households: {},
+    });
+
+    // When
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+
+    // Then
+    expect(await within(panel).findByRole('alert')).toHaveTextContent(
+      'We could not load this household'
+    );
+    expect(householdReads).toEqual([`/us/household/${SAVED_TARGET_IDS.V1_HOUSEHOLD}`]);
+  });
+
+  test('given the admin opens a household then only reads were sent', async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+    await within(panel).findByRole('table', { name: 'You' });
+
+    // Then
+    const methods = new Set(sentRequests(fetchMock).map((request) => request.split(' ')[0]));
+    expect([...methods]).toEqual(['GET']);
   });
 
   test('given the admin opens a household then the panel says how many people it has, its year and when it was saved', async () => {
@@ -901,13 +991,15 @@ describe('AdminUserSavedItems policies and reports', () => {
 
     // Then
     expect(
-      await within(panel).findByText('2 people · 2026 · saved Oct 12, 2026')
+      await within(panel).findByText('4 people · 2026 · saved Oct 12, 2026')
     ).toBeInTheDocument();
     expect(householdReads).toEqual([`/us/household/${SAVED_TARGET_IDS.V1_HOUSEHOLD}`]);
   });
 
-  test("given a household saved in another country then its panel links to that country's admin page and reads no household", async () => {
+  test("given a household saved in another country then the panel shows its inputs without this country's names and units, and says why", async () => {
     // Given
+    store.dispatch(clearMetadata());
+    seedDeductionMetadata({ variables: HOUSEHOLD_VARIABLES });
     const ukHousehold = savedHousehold({
       name: SAVED_ITEM_NAMES.HOUSEHOLD,
       country_id: 'uk',
@@ -915,18 +1007,29 @@ describe('AdminUserSavedItems policies and reports', () => {
     });
     const { user, householdReads } = await showSavedItems(GRACE.email!, {
       savedItems: savedItemsWithHousehold(ukHousehold),
+      households: { [`uk/${SAVED_TARGET_IDS.V1_HOUSEHOLD}`]: UK_V1_HOUSEHOLD_JSON },
     });
 
     // When
     const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+    await within(panel).findByRole('table', { name: 'You' });
 
     // Then
-    const link = within(panel).getByRole('link', {
-      name: `Open the United Kingdom admin page${NEW_TAB_NOTE}`,
-    });
-    expect({ href: link.getAttribute('href'), reads: householdReads }).toEqual({
-      href: '/uk/admin/users',
-      reads: [],
+    expect({
+      note: within(panel).getByText(/^This household was saved in the United Kingdom\./)
+        .textContent,
+      tables: householdTablesIn(panel),
+      reads: householdReads,
+    }).toEqual({
+      note: 'This household was saved in the United Kingdom. This page loads the United States model only, so its inputs show by their names in the model, without units.',
+      tables: {
+        You: [
+          ['Age', '30'],
+          ['Employment income', '30000'],
+        ],
+        'Your household': [['Region', 'LONDON']],
+      },
+      reads: [`/uk/household/${SAVED_TARGET_IDS.V1_HOUSEHOLD}`],
     });
   });
 
@@ -966,7 +1069,10 @@ describe('AdminUserSavedItems policies and reports', () => {
     expect(await within(panel).findByRole('alert')).toHaveTextContent(
       'This household is a v2 household, which this page cannot show yet.'
     );
-    expect(householdReads).toEqual([]);
+    expect({
+      v1Reads: householdReads,
+      v2Reads: sentRequests(fetchMock).filter((request) => request.includes('/v2/households')),
+    }).toEqual({ v1Reads: [], v2Reads: [] });
   });
 
   test("given the household's panel is open then closing it returns focus to the household's name", async () => {

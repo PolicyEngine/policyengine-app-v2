@@ -246,7 +246,8 @@ export function answerPolicyReads(
 
 /**
  * The model variables Grace's household sets, as v1 metadata lists them, so
- * the household's panel names them and formats their values.
+ * the household's panel names them, formats their values and names the
+ * state.
  */
 export const HOUSEHOLD_VARIABLES = {
   age: { name: 'age', label: 'Age', unit: 'year', entity: 'person' },
@@ -256,28 +257,83 @@ export const HOUSEHOLD_VARIABLES = {
     unit: 'currency-USD',
     entity: 'person',
   },
-  state_name: { name: 'state_name', label: 'State', unit: null, entity: 'household' },
+  state_name: {
+    name: 'state_name',
+    label: 'State',
+    unit: null,
+    entity: 'household',
+    possibleValues: [
+      { value: 'CA', label: 'California' },
+      { value: 'NY', label: 'New York' },
+    ],
+  },
+  tax_unit_childcare_expenses: {
+    name: 'tax_unit_childcare_expenses',
+    label: 'Childcare expenses',
+    unit: 'currency-USD',
+    entity: 'tax_unit',
+  },
+  spm_unit_pre_subsidy_childcare_expenses: {
+    name: 'spm_unit_pre_subsidy_childcare_expenses',
+    label: 'Pre-subsidy childcare expenses',
+    unit: 'currency-USD',
+    entity: 'spm_unit',
+  },
 };
 
+const GRACE_HOUSEHOLD_MEMBERS = [
+  'you',
+  'your partner',
+  'your first dependent',
+  'your second dependent',
+];
+
 /**
- * The v1 household Grace's saved household points to, in 2026: an adult
- * earning $50,000 and a child of 10, in California.
+ * The v1 household Grace's saved household points to, in 2026: a married
+ * couple earning $50,000 and $30,000 with children of 10 and 7, in
+ * California, with $1,000 of childcare expenses in the tax unit and $2,000
+ * before subsidies in the SPM unit, which v1 names "your household" too.
  */
 export const V1_HOUSEHOLD_JSON = {
   people: {
     you: { age: { 2026: 40 }, employment_income: { 2026: 50000 } },
+    'your partner': { age: { 2026: 38 }, employment_income: { 2026: 30000 } },
     'your first dependent': { age: { 2026: 10 } },
+    'your second dependent': { age: { 2026: 7 } },
   },
-  families: { 'your family': { members: ['you', 'your first dependent'] } },
-  tax_units: { 'your tax unit': { members: ['you', 'your first dependent'] } },
-  spm_units: { 'your household': { members: ['you', 'your first dependent'] } },
+  families: { 'your family': { members: GRACE_HOUSEHOLD_MEMBERS } },
+  tax_units: {
+    'your tax unit': {
+      members: GRACE_HOUSEHOLD_MEMBERS,
+      tax_unit_childcare_expenses: { 2026: 1000 },
+    },
+  },
+  spm_units: {
+    'your household': {
+      members: GRACE_HOUSEHOLD_MEMBERS,
+      spm_unit_pre_subsidy_childcare_expenses: { 2026: 2000 },
+    },
+  },
   marital_units: {
-    'your marital unit': { members: ['you'] },
+    'your marital unit': { members: ['you', 'your partner'] },
     "your first dependent's marital unit": { members: ['your first dependent'] },
+    "your second dependent's marital unit": { members: ['your second dependent'] },
   },
   households: {
-    'your household': { members: ['you', 'your first dependent'], state_name: { 2026: 'CA' } },
+    'your household': { members: GRACE_HOUSEHOLD_MEMBERS, state_name: { 2026: 'CA' } },
   },
+};
+
+/** A UK v1 household: one adult of 30 earning £30,000, in London. */
+export const UK_V1_HOUSEHOLD_JSON = {
+  people: { you: { age: { 2026: 30 }, employment_income: { 2026: 30000 } } },
+  benunits: { 'your benefit unit': { members: ['you'] } },
+  households: { 'your household': { members: ['you'], region: { 2026: 'LONDON' } } },
+};
+
+/** A UK v1 policy's `policy_json`: the personal allowance at £15,000 from 2026 on. */
+export const UK_V1_POLICY_JSON = {
+  'gov.hmrc.income_tax.allowances.personal_allowance.amount': { '2026-01-01.2100-12-31': 15000 },
 };
 
 /**

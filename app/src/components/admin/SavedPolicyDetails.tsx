@@ -9,7 +9,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { reformParameterNames } from '@/libs/flagship/v3ParameterNames';
 import {
-  OtherCountryNotice,
+  OtherCountryNote,
   SavedItemHeader,
   SavedItemLoading,
   SavedItemReadError,
@@ -51,22 +51,28 @@ function PolicyParameters({ content }: { content: AdminSavedPolicyContent }) {
 /**
  * One of a user's saved policies in the admin page's panel, read only, as
  * the reforms page shows a saved reform: its name, how many provisions it
- * has and when it was saved, and its parameters against current law. Only
- * a policy saved in this page's country is read and shown.
+ * has and when it was saved, and its parameters against current law. Names
+ * and current law come from the page's country's model, so a policy saved
+ * in another country shows its parameters by their paths, and says so.
  */
 export default function SavedPolicyDetails({ policy }: { policy: AdminSavedPolicy }) {
   const countryId = useCurrentCountry();
-  const inThisCountry = policy.country_id === countryId;
-  const read = useAdminSavedPolicyContent(policy, inThisCountry);
+  const read = useAdminSavedPolicyContent(policy);
   return (
     <>
       <SavedItemHeader
         name={policy.name}
         description={policyDescription(policy.created_at, read.data)}
       />
-      {!inThisCountry ? (
-        <OtherCountryNotice subject="policy" countryId={policy.country_id} />
-      ) : read.error ? (
+      {policy.country_id !== countryId && (
+        <OtherCountryNote
+          subject="policy"
+          itemCountryId={policy.country_id}
+          pageCountryId={countryId}
+          shownAs="its parameters show by their paths, without current law or units"
+        />
+      )}
+      {read.error ? (
         <SavedItemReadError
           subject="policy"
           error={read.error}

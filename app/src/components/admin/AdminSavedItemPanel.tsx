@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
 import type { ReactNode, RefObject } from 'react';
-import { adminUsersPath } from '@/components/settings/settingsPages';
 import {
   Button,
   Sheet,
@@ -14,7 +13,6 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { getCountryLabel } from '@/utils/geographyUtils';
-import NewTabLink from './NewTabLink';
 
 /** The panel's quieter text: the line under its title, notes and loading. */
 export const SECONDARY_TEXT: React.CSSProperties = {
@@ -54,27 +52,26 @@ export function SavedItemHeader({
 }
 
 /**
- * For an item saved in another country: names and values come from this
- * country's metadata, which cannot describe another country's, so the
- * panel links to that country's admin page instead.
+ * For an item saved in another country than the page's: names, current law
+ * and units come from the page's country's model, which cannot describe
+ * another country's, so the item shows as it is stored. `shownAs` says how:
+ * "its parameters show by their paths, without current law or units".
  */
-export function OtherCountryNotice({
+export function OtherCountryNote({
   subject,
-  countryId,
+  itemCountryId,
+  pageCountryId,
+  shownAs,
 }: {
   subject: SavedItemSubject;
-  countryId: string;
+  itemCountryId: string;
+  pageCountryId: string;
+  shownAs: string;
 }) {
-  const countryLabel = getCountryLabel(countryId);
   return (
-    <Stack gap="sm" align="start">
-      <Text style={SECONDARY_TEXT}>
-        This {subject} was saved in the {countryLabel}. It shows on the {countryLabel} admin page.
-      </Text>
-      <NewTabLink
-        href={adminUsersPath(countryId)}
-      >{`Open the ${countryLabel} admin page`}</NewTabLink>
-    </Stack>
+    <Text style={SECONDARY_TEXT}>
+      {`This ${subject} was saved in the ${getCountryLabel(itemCountryId)}. This page loads the ${getCountryLabel(pageCountryId)} model only, so ${shownAs}.`}
+    </Text>
   );
 }
 

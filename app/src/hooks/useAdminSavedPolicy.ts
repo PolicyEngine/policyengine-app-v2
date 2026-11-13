@@ -34,10 +34,10 @@ export interface AdminSavedPolicyContent {
  *
  * Policies never change, so each is read once and kept, under the keys the
  * reform stores read them by. As the reform stores read them, a failed read
- * is not retried: the panel offers "Try again". With `enabled` false
- * nothing is read. A record that points to neither kind of policy fails.
+ * is not retried: the panel offers "Try again". A record that points to
+ * neither kind of policy fails.
  */
-export function useAdminSavedPolicyContent(policy: AdminSavedPolicy, enabled: boolean) {
+export function useAdminSavedPolicyContent(policy: AdminSavedPolicy) {
   const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
   const countryId = policy.country_id;
   const v2PolicyId = policy.policy_id;
@@ -65,7 +65,6 @@ export function useAdminSavedPolicyContent(policy: AdminSavedPolicy, enabled: bo
           : parametersFromPolicyJson(read.policy_json, parameterMetadata),
       missingParameters: policyMissingParameters(read),
     }),
-    enabled,
     staleTime: Infinity,
     gcTime: v2PolicyId ? V2_POLICY_GC_TIME : V1_POLICY_GC_TIME,
     retry: false,

@@ -18,12 +18,12 @@ const householdFromV1 = (read: V1HouseholdMetadataEnvelope) => Household.fromV1M
  * public and changes nothing.
  *
  * Households never change, so each is read once and kept. As the policy
- * reads, a failed read is not retried: the panel offers "Try again". With
- * `enabled` false nothing is read. A record that points only to a v2
+ * reads, a failed read is not retried: the panel offers "Try again". A
+ * record that points only to a v2
  * household (`household_id`) fails without a read: the calculator does not
  * forward `GET /v2/households/{id}`.
  */
-export function useAdminSavedHousehold(household: AdminSavedHousehold, enabled: boolean) {
+export function useAdminSavedHousehold(household: AdminSavedHousehold) {
   const countryId = household.country_id;
   const v1HouseholdId = isLegacyId(household.legacy_household_id)
     ? String(household.legacy_household_id)
@@ -46,7 +46,6 @@ export function useAdminSavedHousehold(household: AdminSavedHousehold, enabled: 
       );
     },
     select: householdFromV1,
-    enabled,
     staleTime: Infinity,
     gcTime: V1_HOUSEHOLD_GC_TIME,
     retry: false,

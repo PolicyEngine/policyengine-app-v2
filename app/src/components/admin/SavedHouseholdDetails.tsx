@@ -1,14 +1,19 @@
 import { useSelector } from 'react-redux';
+import {
+  displayValue,
+  PARAMETER_HEADING,
+  PARAMETER_ROW,
+  PARAMETER_VALUE,
+} from '@/components/flagship/ReformParameterTable';
 import { Stack, Text, Title } from '@/components/ui';
-import { colors, spacing, typography } from '@/designTokens';
+import { spacing, typography } from '@/designTokens';
 import { useAdminSavedHousehold, type AdminSavedHousehold } from '@/hooks/useAdminSavedHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import type { Household } from '@/models/Household';
+import type { Household, HouseholdVariableEntry } from '@/models/Household';
 import type { RootState } from '@/store';
-import { extractGroupEntities, type EntityVariable } from '@/utils/householdIndividuals';
 import { formatValue } from '@/utils/parameterValues';
 import {
-  OtherCountryNotice,
+  OtherCountryNote,
   SavedItemHeader,
   SavedItemLoading,
   SavedItemReadError,
@@ -16,93 +21,147 @@ import {
   SECONDARY_TEXT,
 } from './AdminSavedItemPanel';
 
-/** A row of a household table: the input's name and its value, as the policy table's rows look. */
+/** A row of a household table, an input and its value, in the parameter table's style. */
 const VALUE_ROW: React.CSSProperties = {
-  display: 'grid',
+  ...PARAMETER_ROW,
   gridTemplateColumns: 'minmax(0, 1fr) minmax(120px, 220px)',
-  alignItems: 'center',
-  columnGap: spacing.md,
-  padding: `${spacing.sm} 0`,
-  borderBottom: `1px solid ${colors.border.light}`,
 };
 
-const VALUE_HEADING: React.CSSProperties = {
-  fontSize: typography.fontSize.xs,
-  fontWeight: typography.fontWeight.medium,
-  color: colors.text.secondary,
+type VariablesMetadata = RootState['metadata']['variables'];
+
+/** The household model's group kinds, as a table's name says them. */
+const GROUP_KIND_NAMES: Record<string, string> = {
+  households: 'household',
+  taxUnits: 'tax unit',
+  spmUnits: 'SPM unit',
+  families: 'family',
+  maritalUnits: 'marital unit',
+  benunits: 'benefit unit',
 };
 
-const VALUE_NAME: React.CSSProperties = {
-  fontSize: typography.fontSize.sm,
-  fontWeight: typography.fontWeight.medium,
-  color: colors.text.primary,
-};
-
-const VALUE: React.CSSProperties = {
-  fontSize: typography.fontSize.sm,
-  color: colors.text.primary,
-  fontVariantNumeric: 'tabular-nums',
-};
-
-/** One person's or one group's values, named by `name`. */
-interface ValueSet {
-  name: string;
-  values: EntityVariable[];
+/** "your first dependent" → "Your first dependent"; "tax_unit_0" → "Tax unit 0". */
+function readableKey(key: string): string {
+  const words = key.replace(/_/g, ' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 /**
- * Each person's values, then each group's (the household's state, a tax
- * unit's values) that sets any, as the report pages read a household.
+ * A group's table name: its own key, which v1 households make readable
+ * ("your tax unit"), followed by its kind when the key doesn't say it, since
+ * v1 names the household and the SPM unit both "your household".
  */
-function valueSets(household: Household, variables: RootState['metadata']['variables']) {
-  const sets: ValueSet[] = [];
-  for (const entity of extractGroupEntities(household, variables)) {
-    for (const instance of entity.instances) {
-      if (entity.entityType === 'people') {
-        sets.push({ name: instance.name, values: instance.members[0]?.variables ?? [] });
-      } else if (instance.variables && instance.variables.length > 0) {
-        sets.push({ name: instance.name, values: instance.variables });
-      }
-    }
+function groupName(entityName: string, groupKey: string): string {
+  const name = readableKey(groupKey);
+  const kind = GROUP_KIND_NAMES[entityName] ?? readableKey(entityName).toLowerCase();
+  return name.toLowerCase().includes(kind.toLowerCase()) ? name : `${name} (${kind})`;
+}
+
+/** One input as its row shows it. */
+interface ValueRow {
+  name: string;
+  label: string;
+  value: string;
+}
+
+/** One person's or one group's inputs. */
+interface ValueSet {
+  key: string;
+  name: string;
+  rows: ValueRow[];
+}
+
+/**
+ * The value an input holds in `year`, the household's year (the latest
+ * year it sets anything for); an input with no value that year shows its
+ * latest one.
+ */
+function valueInYear(value: HouseholdVariableEntry['value'], year: number | null): unknown {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
   }
-  return sets;
+  const byYear = value as Record<string, unknown>;
+  if (year !== null && String(year) in byYear) {
+    return byYear[String(year)];
+  }
+  const latestYear = Object.keys(byYear).sort().at(-1);
+  return latestYear === undefined ? null : byYear[latestYear];
 }
 
-/** A value as the policy table reads it: True/False, money and percentages by the input's unit. */
-function displayValue(value: unknown, unit: string | undefined): string {
-  return typeof value === 'boolean' ? (value ? 'True' : 'False') : formatValue(value, unit ?? null);
+/**
+ * An input's row. With `variables` (this country's model) it takes the
+ * input's label, its unit and, for a choice, the chosen option's label;
+ * without, its name in the model and its stored value.
+ */
+function valueRow(
+  { name, value }: HouseholdVariableEntry,
+  year: number | null,
+  variables: VariablesMetadata | undefined
+): ValueRow {
+  const variable = variables?.[name];
+  const stored = valueInYear(value, year);
+  const option = Array.isArray(variable?.possibleValues)
+    ? (variable.possibleValues as Array<{ value: unknown; label: string }>).find(
+        (possibleValue) => possibleValue.value === stored
+      )
+    : undefined;
+  return {
+    name,
+    label: variable?.label ?? readableKey(name),
+    value: option
+      ? option.label
+      : typeof stored === 'boolean'
+        ? displayValue(stored, null)
+        : formatValue(stored, variable?.unit ?? null),
+  };
 }
 
-function ValueTable({
-  valueSet,
-  variables,
-}: {
-  valueSet: ValueSet;
-  variables: RootState['metadata']['variables'];
-}) {
+/** Each person's inputs, then each group's that sets any (the household's state, a tax unit's). */
+function valueSets(household: Household, variables: VariablesMetadata | undefined): ValueSet[] {
+  const year = household.year;
+  const people = household.personNames.map((person) => ({
+    key: `people:${person}`,
+    name: readableKey(person),
+    rows: household
+      .getPersonVariableEntries(person)
+      .map((entry) => valueRow(entry, year, variables)),
+  }));
+  const groups = household
+    .getConfiguredGroupsWithVariables()
+    .map(({ entityName, groupName: groupKey, variables: entries }) => ({
+      key: `${entityName}:${groupKey}`,
+      name: groupName(entityName, groupKey),
+      rows: entries.map((entry) => valueRow(entry, year, variables)),
+    }));
+  return [...people, ...groups];
+}
+
+function ValueTable({ valueSet }: { valueSet: ValueSet }) {
   return (
     <Stack style={{ gap: spacing.xs }}>
       <Title order={3} style={{ margin: 0, fontSize: typography.fontSize.base }}>
         {valueSet.name}
       </Title>
-      {valueSet.values.length === 0 ? (
+      {valueSet.rows.length === 0 ? (
         <Text style={SECONDARY_TEXT}>No values set.</Text>
       ) : (
         <div role="table" aria-label={valueSet.name}>
           <div role="row" style={{ ...VALUE_ROW, paddingTop: 0 }}>
             {['Input', 'Value'].map((heading) => (
-              <span key={heading} role="columnheader" style={VALUE_HEADING}>
+              <span key={heading} role="columnheader" style={PARAMETER_HEADING}>
                 {heading}
               </span>
             ))}
           </div>
-          {valueSet.values.map((value) => (
-            <div key={value.paramName} role="row" style={VALUE_ROW}>
-              <span role="cell" style={VALUE_NAME}>
-                {variables?.[value.paramName]?.label ?? value.label}
+          {valueSet.rows.map((row) => (
+            <div key={row.name} role="row" style={VALUE_ROW}>
+              <span role="cell" style={PARAMETER_VALUE}>
+                {row.label}
               </span>
-              <span role="cell" style={VALUE}>
-                {displayValue(value.value, value.unit)}
+              <span
+                role="cell"
+                style={{ ...PARAMETER_VALUE, fontWeight: typography.fontWeight.normal }}
+              >
+                {row.value}
               </span>
             </div>
           ))}
@@ -112,7 +171,7 @@ function ValueTable({
   );
 }
 
-/** "2 people · 2026 · saved Oct 12, 2026"; the date alone until read. */
+/** "4 people · 2026 · saved Oct 12, 2026"; the date alone until read. */
 function householdDescription(createdAt: string, household: Household | undefined) {
   if (household === undefined) {
     return `Saved ${savedOn(createdAt)}`;
@@ -125,27 +184,54 @@ function householdDescription(createdAt: string, household: Household | undefine
   ].join(' · ');
 }
 
+/** The household's inputs, or that it has no people. */
+function HouseholdValues({
+  household,
+  variables,
+}: {
+  household: Household;
+  variables: VariablesMetadata | undefined;
+}) {
+  if (household.personNames.length === 0) {
+    return <Text style={SECONDARY_TEXT}>This household has no people.</Text>;
+  }
+  return (
+    <>
+      {valueSets(household, variables).map((valueSet) => (
+        <ValueTable key={valueSet.key} valueSet={valueSet} />
+      ))}
+    </>
+  );
+}
+
 /**
  * One of a user's saved households in the admin page's panel, read only:
  * its name, how many people it has, its year and when it was saved, then
- * the values set for each person and for the household. Names and units
- * come from the loaded metadata, so only a household saved in this page's
- * country is read and shown.
+ * the inputs set for each person and for each group, in its year. Labels,
+ * units and options come from the page's country's model, so a household
+ * saved in another country shows its inputs by their names in the model,
+ * and says so.
  */
 export default function SavedHouseholdDetails({ household }: { household: AdminSavedHousehold }) {
   const countryId = useCurrentCountry();
-  const variables = useSelector((state: RootState) => state.metadata.variables);
+  const pageVariables = useSelector((state: RootState) => state.metadata.variables);
   const inThisCountry = household.country_id === countryId;
-  const read = useAdminSavedHousehold(household, inThisCountry);
+  const read = useAdminSavedHousehold(household);
   return (
     <>
       <SavedItemHeader
         name={household.name}
         description={householdDescription(household.created_at, read.data)}
       />
-      {!inThisCountry ? (
-        <OtherCountryNotice subject="household" countryId={household.country_id} />
-      ) : read.error ? (
+      {!inThisCountry && (
+        <OtherCountryNote
+          subject="household"
+          itemCountryId={household.country_id}
+          pageCountryId={countryId}
+          shownAs="its inputs show by their names in the model, without units"
+        />
+      )}
+      {read.error ? (
         <SavedItemReadError
           subject="household"
           error={read.error}
@@ -154,9 +240,10 @@ export default function SavedHouseholdDetails({ household }: { household: AdminS
       ) : read.data === undefined ? (
         <SavedItemLoading subject="household" />
       ) : (
-        valueSets(read.data, variables).map((valueSet) => (
-          <ValueTable key={valueSet.name} valueSet={valueSet} variables={variables} />
-        ))
+        <HouseholdValues
+          household={read.data}
+          variables={inThisCountry ? pageVariables : undefined}
+        />
       )}
     </>
   );

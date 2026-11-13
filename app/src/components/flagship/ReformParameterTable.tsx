@@ -12,7 +12,7 @@ import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
 /** A saved reform's parameter rows: name, current law, the reform's value, when it starts. */
-const PARAMETER_ROW: React.CSSProperties = {
+export const PARAMETER_ROW: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'minmax(0, 1fr) minmax(88px, 140px) minmax(120px, 180px) minmax(64px, 96px)',
   alignItems: 'center',
@@ -21,13 +21,13 @@ const PARAMETER_ROW: React.CSSProperties = {
   borderBottom: `1px solid ${colors.border.light}`,
 };
 
-const PARAMETER_HEADING: React.CSSProperties = {
+export const PARAMETER_HEADING: React.CSSProperties = {
   fontSize: typography.fontSize.xs,
   fontWeight: typography.fontWeight.medium,
   color: colors.text.secondary,
 };
 
-const PARAMETER_VALUE: React.CSSProperties = {
+export const PARAMETER_VALUE: React.CSSProperties = {
   fontSize: typography.fontSize.sm,
   fontWeight: typography.fontWeight.medium,
   color: colors.text.primary,
@@ -42,7 +42,7 @@ const PARAMETER_MUTED: React.CSSProperties = {
 };
 
 /** A value as the row reads it: True/False, as Build's switch says. */
-function displayValue(value: unknown, unit: string | null): string {
+export function displayValue(value: unknown, unit: string | null): string {
   return typeof value === 'boolean' ? (value ? 'True' : 'False') : formatValue(value, unit);
 }
 
