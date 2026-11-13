@@ -10,6 +10,7 @@ import { spacing, typography } from '@/designTokens';
 import { useAdminSavedHousehold, type AdminSavedHousehold } from '@/hooks/useAdminSavedHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { Household, HouseholdVariableEntry } from '@/models/Household';
+import { flattenForYear } from '@/models/household/utils';
 import type { RootState } from '@/store';
 import { formatValue } from '@/utils/parameterValues';
 import {
@@ -39,9 +40,16 @@ const GROUP_KIND_NAMES: Record<string, string> = {
   benunits: 'benefit unit',
 };
 
-/** "your first dependent" → "Your first dependent"; "tax_unit_0" → "Tax unit 0". */
+/**
+ * A model key as words: "your first dependent" → "Your first dependent",
+ * "employment_income" → "Employment income", and the app's generated group
+ * keys, "taxUnit1" → "Tax unit 1".
+ */
 function readableKey(key: string): string {
-  const words = key.replace(/_/g, ' ');
+  const words = key
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z0-9])/g, '$1 $2')
+    .toLowerCase();
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
@@ -71,23 +79,6 @@ interface ValueSet {
 }
 
 /**
- * The value an input holds in `year`, the household's year (the latest
- * year it sets anything for); an input with no value that year shows its
- * latest one.
- */
-function valueInYear(value: HouseholdVariableEntry['value'], year: number | null): unknown {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    return value;
-  }
-  const byYear = value as Record<string, unknown>;
-  if (year !== null && String(year) in byYear) {
-    return byYear[String(year)];
-  }
-  const latestYear = Object.keys(byYear).sort().at(-1);
-  return latestYear === undefined ? null : byYear[latestYear];
-}
-
-/**
  * An input's row. With `variables` (this country's model) it takes the
  * input's label, its unit and, for a choice, the chosen option's label;
  * without, its name in the model and its stored value.
@@ -98,7 +89,9 @@ function valueRow(
   variables: VariablesMetadata | undefined
 ): ValueRow {
   const variable = variables?.[name];
-  const stored = valueInYear(value, year);
+  // The household's year is the latest year it sets anything for; an input
+  // with no value that year shows its latest one.
+  const stored = flattenForYear(value, year);
   const option = Array.isArray(variable?.possibleValues)
     ? (variable.possibleValues as Array<{ value: unknown; label: string }>).find(
         (possibleValue) => possibleValue.value === stored
@@ -228,7 +221,7 @@ export default function SavedHouseholdDetails({ household }: { household: AdminS
           subject="household"
           itemCountryId={household.country_id}
           pageCountryId={countryId}
-          shownAs="its inputs show by their names in the model, without units"
+          shownAs="its inputs show without their labels, units or option names"
         />
       )}
       {read.error ? (

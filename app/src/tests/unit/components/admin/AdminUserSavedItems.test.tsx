@@ -622,6 +622,7 @@ describe('AdminUserSavedItems policies and reports', () => {
     // render it again after the test.
     cleanup();
     store.dispatch(clearMetadata());
+    vi.unstubAllEnvs();
   });
 
   test("given a saved report then its name opens the report's page in a new tab", async () => {
@@ -639,8 +640,9 @@ describe('AdminUserSavedItems policies and reports', () => {
     ]).toEqual([`/us/report/${SAVED_ITEM_IDS.REPORT}`, '_blank', 'noopener noreferrer']);
   });
 
-  test("given a report saved in another country then its link opens it in that country's site", async () => {
+  test("given a report saved in another country that has the v3 interface then its link opens it in that country's site", async () => {
     // Given
+    vi.stubEnv('VITE_FLAGSHIP_SHELL_UK', 'true');
     const ukReport = savedReport({ country_id: 'uk', name: SAVED_ITEM_NAMES.REPORT });
 
     // When
@@ -651,6 +653,26 @@ describe('AdminUserSavedItems policies and reports', () => {
     // Then
     const link = within(screen.getByRole('table', { name: 'Saved reports' })).getByRole('link');
     expect(link.getAttribute('href')).toBe(`/uk/report/${SAVED_ITEM_IDS.REPORT}`);
+  });
+
+  test('given a report saved in a country still on the older interface then its name is not a link, and the row says why', async () => {
+    // Given
+    const ukReport = savedReport({ country_id: 'uk', name: SAVED_ITEM_NAMES.REPORT });
+
+    // When
+    await showSavedItems(GRACE.email!, {
+      savedItems: { ...GRACE_SAVED_ITEMS, reports: [ukReport] },
+    });
+
+    // Then
+    const savedReports = screen.getByRole('table', { name: 'Saved reports' });
+    expect({
+      links: within(savedReports).queryAllByRole('link'),
+      nameCell: rowsOf('Saved reports')[0][0],
+    }).toEqual({
+      links: [],
+      nameCell: `${SAVED_ITEM_NAMES.REPORT}Can't be opened while the United Kingdom uses the older interface.`,
+    });
   });
 
   test('given the admin opens a policy then a panel shows its parameters as the reforms page does', async () => {
@@ -721,8 +743,17 @@ describe('AdminUserSavedItems policies and reports', () => {
 
   test('given a policy saved in another country then the panel shows its parameters by their paths, without current law, and says why', async () => {
     // Given
+    // It also sets a parameter whose path the page's US metadata has too.
     const { user, policyReads } = await showSavedItems(GRACE.email!, {
-      policies: { v2: {}, v1: { [`uk/${SAVED_TARGET_IDS.V1_POLICY}`]: UK_V1_POLICY_JSON } },
+      policies: {
+        v2: {},
+        v1: {
+          [`uk/${SAVED_TARGET_IDS.V1_POLICY}`]: {
+            ...UK_V1_POLICY_JSON,
+            [SAVED_POLICY_PARAMETER.NAME]: { '2026-01-01.2100-12-31': 3000 },
+          },
+        },
+      },
     });
 
     // When
@@ -738,6 +769,12 @@ describe('AdminUserSavedItems policies and reports', () => {
       note: 'This policy was saved in the United Kingdom. This page loads the United States model only, so its parameters show by their paths, without current law or units.',
       rows: [
         ['Gov.hmrc.income_tax.allowances.personal_allowance.amount', '—', '15000', 'from 2026'],
+        [
+          `${SAVED_POLICY_PARAMETER.NAME[0].toUpperCase()}${SAVED_POLICY_PARAMETER.NAME.slice(1)}`,
+          '—',
+          '3000',
+          'from 2026',
+        ],
       ],
       reads: [`/uk/policy/${SAVED_TARGET_IDS.V1_POLICY}`],
     });
@@ -939,6 +976,34 @@ describe('AdminUserSavedItems policies and reports', () => {
     });
   });
 
+  test("given a household whose groups have the app's generated keys then each group is named readably", async () => {
+    // Given
+    store.dispatch(clearMetadata());
+    seedDeductionMetadata({ variables: HOUSEHOLD_VARIABLES });
+    const { user } = await showSavedItems(GRACE.email!, {
+      households: {
+        [`us/${SAVED_TARGET_IDS.V1_HOUSEHOLD}`]: {
+          people: { you: { age: { 2026: 40 } } },
+          tax_units: {
+            taxUnit1: { members: ['you'], tax_unit_childcare_expenses: { 2026: 500 } },
+          },
+          households: { household1: { members: ['you'], state_name: { 2026: 'NY' } } },
+        },
+      },
+    });
+
+    // When
+    const panel = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+    await within(panel).findByRole('table', { name: 'You' });
+
+    // Then
+    expect(householdTablesIn(panel)).toEqual({
+      You: [['Age', '40']],
+      'Household 1': [['State', 'New York']],
+      'Tax unit 1': [['Childcare expenses', '$500']],
+    });
+  });
+
   test('given a household with no people then the panel says so', async () => {
     // Given
     const { user } = await showSavedItems(GRACE.email!, {
@@ -1021,7 +1086,7 @@ describe('AdminUserSavedItems policies and reports', () => {
       tables: householdTablesIn(panel),
       reads: householdReads,
     }).toEqual({
-      note: 'This household was saved in the United Kingdom. This page loads the United States model only, so its inputs show by their names in the model, without units.',
+      note: 'This household was saved in the United Kingdom. This page loads the United States model only, so its inputs show without their labels, units or option names.',
       tables: {
         You: [
           ['Age', '30'],

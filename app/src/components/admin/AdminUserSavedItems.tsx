@@ -19,6 +19,7 @@ import type { AdminSavedPolicy } from '@/hooks/useAdminSavedPolicy';
 import { useAdminUserSavedItems } from '@/hooks/useAdminUserSavedItems';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CountryId } from '@/libs/countries';
+import { isFlagshipShellEnabled } from '@/libs/featureFlags';
 import { getCountryLabel } from '@/utils/geographyUtils';
 import AdminSavedItemPanel from './AdminSavedItemPanel';
 import { formatAdminDate } from './adminUserFormat';
@@ -44,6 +45,8 @@ interface SavedItemRow {
   panelItem?: PanelItem;
   /** Reports only: the report's page, which its name opens in a new tab. */
   reportPath?: string;
+  /** Reports only, without `reportPath`: why the report can't be opened. */
+  unavailableNote?: string;
 }
 
 /** One kind of saved record: policies, households or reports. */
@@ -101,8 +104,14 @@ function savedItemKinds(savedItems: UserSavedItems): SavedItemKind[] {
         createdAt: report.created_at,
         lastRunAt: report.last_run_at,
         // A saved report's own ID is its link, which anyone can open, in
-        // the country it was saved in.
-        reportPath: `/${report.country_id}/report/${report.id}`,
+        // the country it was saved in. The report page is part of the v3
+        // interface, which redirects to the older one's reports list in a
+        // country whose v3 interface is off.
+        ...(isFlagshipShellEnabled(report.country_id)
+          ? { reportPath: `/${report.country_id}/report/${report.id}` }
+          : {
+              unavailableNote: `Can't be opened while the ${getCountryLabel(report.country_id)} uses the older interface.`,
+            }),
       })),
     },
   ];
@@ -114,7 +123,7 @@ type OpenInPanel = (item: PanelItem, opener: HTMLElement) => void;
 /** A record's name: for a policy or household, a control that opens it; for a report, a link to it. */
 function SavedItemName({ row, onOpen }: { row: SavedItemRow; onOpen: OpenInPanel }) {
   const name = row.name ?? 'No name';
-  const { panelItem, reportPath } = row;
+  const { panelItem, reportPath, unavailableNote } = row;
   if (panelItem) {
     return (
       <Button
@@ -128,6 +137,16 @@ function SavedItemName({ row, onOpen }: { row: SavedItemRow; onOpen: OpenInPanel
   }
   if (reportPath) {
     return <NewTabLink href={reportPath}>{name}</NewTabLink>;
+  }
+  if (unavailableNote) {
+    return (
+      <Stack gap="xs">
+        <span>{name}</span>
+        <Text size="xs" style={{ margin: 0, color: colors.text.secondary }}>
+          {unavailableNote}
+        </Text>
+      </Stack>
+    );
   }
   return name;
 }

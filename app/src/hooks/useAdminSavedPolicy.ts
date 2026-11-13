@@ -7,6 +7,7 @@ import {
   parametersFromV2Policy,
 } from '@/api/reformStore';
 import { isLegacyId } from '@/api/v2Associations';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { policyMissingParameters } from '@/libs/flagship/missingParameters';
 import { fetchV1Policy } from '@/libs/flagship/policyChecks';
 import { V1_POLICY_GC_TIME, v1PolicyKey, V2_POLICY_GC_TIME, v2PolicyKey } from '@/libs/queryKeys';
@@ -38,8 +39,11 @@ export interface AdminSavedPolicyContent {
  * neither kind of policy fails.
  */
 export function useAdminSavedPolicyContent(policy: AdminSavedPolicy) {
-  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
+  const pageCountryId = useCurrentCountry();
+  const storeParameters = useSelector((state: RootState) => state.metadata.parameters);
   const countryId = policy.country_id;
+  // The page's metadata describes its own country's parameters only.
+  const parameterMetadata = countryId === pageCountryId ? storeParameters : undefined;
   const v2PolicyId = policy.policy_id;
   const v1PolicyId = isLegacyId(policy.legacy_policy_id) ? String(policy.legacy_policy_id) : null;
   return useQuery<V2Policy | PolicyMetadata, Error, AdminSavedPolicyContent>({

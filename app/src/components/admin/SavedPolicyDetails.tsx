@@ -28,10 +28,17 @@ function policyDescription(createdAt: string, content: AdminSavedPolicyContent |
 /**
  * The policy's parameters, as the reforms page shows a saved reform's: the
  * parameters the model no longer has, then the table. Names and current
- * law come from the loaded metadata.
+ * law come from the loaded metadata, for a policy of the page's country;
+ * another country's policy shows without them.
  */
-function PolicyParameters({ content }: { content: AdminSavedPolicyContent }) {
-  const metadata = useEnsureV3Parameters(reformParameterNames([content]));
+function PolicyParameters({
+  content,
+  inPageCountry,
+}: {
+  content: AdminSavedPolicyContent;
+  inPageCountry: boolean;
+}) {
+  const metadata = useEnsureV3Parameters(inPageCountry ? reformParameterNames([content]) : []);
   return (
     <>
       {content.missingParameters.length > 0 && (
@@ -40,9 +47,10 @@ function PolicyParameters({ content }: { content: AdminSavedPolicyContent }) {
       <ReformParameterTable
         reformParameters={content.parameters}
         reformHeading="Reform"
-        metadataReady={metadata.status === 'ready'}
-        metadataFailed={metadata.status === 'error'}
+        metadataReady={!inPageCountry || metadata.status === 'ready'}
+        metadataFailed={inPageCountry && metadata.status === 'error'}
         onRetryMetadata={metadata.retry}
+        withoutMetadata={!inPageCountry}
       />
     </>
   );
@@ -57,6 +65,7 @@ function PolicyParameters({ content }: { content: AdminSavedPolicyContent }) {
  */
 export default function SavedPolicyDetails({ policy }: { policy: AdminSavedPolicy }) {
   const countryId = useCurrentCountry();
+  const inPageCountry = policy.country_id === countryId;
   const read = useAdminSavedPolicyContent(policy);
   return (
     <>
@@ -64,7 +73,7 @@ export default function SavedPolicyDetails({ policy }: { policy: AdminSavedPolic
         name={policy.name}
         description={policyDescription(policy.created_at, read.data)}
       />
-      {policy.country_id !== countryId && (
+      {!inPageCountry && (
         <OtherCountryNote
           subject="policy"
           itemCountryId={policy.country_id}
@@ -81,7 +90,7 @@ export default function SavedPolicyDetails({ policy }: { policy: AdminSavedPolic
       ) : read.data === undefined ? (
         <SavedItemLoading subject="policy" />
       ) : (
-        <PolicyParameters content={read.data} />
+        <PolicyParameters content={read.data} inPageCountry={inPageCountry} />
       )}
     </>
   );

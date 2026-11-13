@@ -70,7 +70,16 @@ interface ReformParameterTableProps {
   /** Whether loading them failed: the table gives way to a retry. */
   metadataFailed: boolean;
   onRetryMetadata: () => void;
+  /**
+   * Show the parameters without the page's metadata: by their paths,
+   * without current law or units. For a policy saved in another country,
+   * whose parameters the page's country's model can't describe.
+   */
+  withoutMetadata?: boolean;
 }
+
+/** No parameters' metadata, for a table shown without it. */
+const NO_PARAMETER_METADATA: RootState['metadata']['parameters'] = {};
 
 /**
  * A saved reform's parameters, read only: each parameter's name and place
@@ -84,9 +93,11 @@ export default function ReformParameterTable({
   metadataReady,
   metadataFailed,
   onRetryMetadata,
+  withoutMetadata = false,
 }: ReformParameterTableProps) {
   const countryId = useCurrentCountry();
-  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const storeParameters = useSelector((state: RootState) => state.metadata.parameters);
+  const parameters = withoutMetadata ? NO_PARAMETER_METADATA : storeParameters;
 
   /** Current law for a parameter in `year`. */
   const currentLawAt = (path: string, year: number) => {
