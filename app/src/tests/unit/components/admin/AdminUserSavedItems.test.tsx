@@ -18,6 +18,7 @@ import {
 import {
   answerHouseholdReads,
   answerPolicyReads,
+  answerReportReads,
   answerSavedItems,
   GRACE_SAVED_ITEMS,
   GRACE_V2_POLICY,
@@ -32,6 +33,7 @@ import {
   savedReport,
   UK_V1_HOUSEHOLD_JSON,
   UK_V1_POLICY_JSON,
+  v1Report,
 } from '@/tests/fixtures/api/v2AdminUserSavedItemsMocks';
 import { errorResponse, TIMESTAMPS } from '@/tests/fixtures/api/v2UserMocks';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
@@ -534,6 +536,29 @@ describe('AdminUserSavedItems', () => {
 });
 
 describe('AdminUserSavedItems policies and reports', () => {
+  /** A report Grace ran from her US policy, saved with the default saved report's name. */
+  function reportFromUsPolicy(overrides: Parameters<typeof savedReport>[0] = {}) {
+    return savedReport({
+      name: SAVED_ITEM_NAMES.REPORT,
+      legacy_report_id: SAVED_TARGET_IDS.V1_REPORT,
+      user_policy_id: SAVED_ITEM_IDS.US_POLICY,
+      last_run_at: REPORT_LAST_RUN_AT,
+      ...overrides,
+    });
+  }
+
+  /** The dialog's list of reports run from the policy, once its report rows have their status. */
+  function reportsIn(dialog: HTMLElement): HTMLElement {
+    return within(dialog).getByRole('region', { name: 'Reports' });
+  }
+
+  /** Each report row's text, in the order the list shows them. */
+  function reportRowsIn(dialog: HTMLElement): string[] {
+    return Array.from(reportsIn(dialog).querySelectorAll('[data-report-row]')).map(
+      (row) => row.textContent ?? ''
+    );
+  }
+
   /** The panel's parameter rows, as the text of their cells. */
   function parameterRowsIn(panel: HTMLElement): string[][] {
     const table = within(panel).getByRole('table', { name: 'Parameters' });
@@ -558,11 +583,13 @@ describe('AdminUserSavedItems policies and reports', () => {
       queryClient = createTestQueryClient(),
       policies,
       households,
+      reports,
     }: {
       savedItems?: UserSavedItems;
       queryClient?: QueryClient;
       policies?: Parameters<typeof answerPolicyReads>[1];
       households?: Parameters<typeof answerHouseholdReads>[1];
+      reports?: Parameters<typeof answerReportReads>[1];
     } = {}
   ) {
     const { user } = await openUserDetails(
@@ -572,9 +599,10 @@ describe('AdminUserSavedItems policies and reports', () => {
     );
     const policyReads = answerPolicyReads(fetchMock, policies);
     const householdReads = answerHouseholdReads(fetchMock, households);
+    const reportReads = answerReportReads(fetchMock, reports);
     await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
     await screen.findByRole('table', { name: 'Saved policies' });
-    return { user, policyReads, householdReads };
+    return { user, policyReads, householdReads, reportReads };
   }
 
   async function openHousehold(user: ReturnType<typeof userEvent.setup>, name: string) {
@@ -923,6 +951,156 @@ describe('AdminUserSavedItems policies and reports', () => {
       })
     ).toHaveFocus();
   });
+  test("given the admin opens a policy then it opens in a modal dialog, headed with the policy's name as the reforms page heads a saved reform", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+
+    // Then
+    expect({
+      kind: dialog.getAttribute('data-slot'),
+      heading: within(dialog).getByRole('heading', { level: 1 }).textContent,
+    }).toEqual({ kind: 'dialog-content', heading: SAVED_ITEM_NAMES.US_POLICY });
+  });
+
+  test('given reports run from a policy then the dialog lists them as the reforms page does, newest first, each opening its page in a new tab', async () => {
+    // Given
+    const OLDER_REPORT_ID = 'a4000000-0000-4000-8000-000000000002';
+    const OLDER_V1_REPORT_ID = 616;
+    const { user } = await showSavedItems(GRACE.email!, {
+      savedItems: {
+        ...GRACE_SAVED_ITEMS,
+        reports: [
+          reportFromUsPolicy({
+            id: OLDER_REPORT_ID,
+            legacy_report_id: OLDER_V1_REPORT_ID,
+            last_run_at: null,
+          }),
+          reportFromUsPolicy(),
+        ],
+      },
+      reports: {
+        [`us/${SAVED_TARGET_IDS.V1_REPORT}`]: v1Report(),
+        [`us/${OLDER_V1_REPORT_ID}`]: v1Report({
+          id: OLDER_V1_REPORT_ID,
+          year: '2027',
+          status: 'pending',
+          finished_at: null,
+        }),
+      },
+    });
+
+    // When
+    const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(reportsIn(dialog)).findByText('Done');
+
+    // Then
+    expect({
+      rows: reportRowsIn(dialog),
+      links: within(reportsIn(dialog))
+        .getAllByRole('link')
+        .map((link) => [link.getAttribute('href'), link.getAttribute('target')]),
+    }).toEqual({
+      rows: [
+        `2026 reportResults from Oct 14, 2026DoneView results${NEW_TAB_NOTE}`,
+        `2027 reportRun Oct 12, 2026Open${NEW_TAB_NOTE}`,
+      ],
+      links: [
+        [`/us/report/${SAVED_ITEM_IDS.REPORT}`, '_blank'],
+        [`/us/report/${OLDER_REPORT_ID}`, '_blank'],
+      ],
+    });
+  });
+
+  test("given a report compared with another of the user's saved policies then its row names that policy", async () => {
+    // Given
+    const COMPARISON_POLICY_ID = 'a1000000-0000-4000-8000-000000000003';
+    const COMPARISON_POLICY_NAME = 'Child Tax Credit at $3,000';
+    const { user } = await showSavedItems(GRACE.email!, {
+      savedItems: {
+        ...GRACE_SAVED_ITEMS,
+        policies: [
+          ...GRACE_SAVED_ITEMS.policies,
+          savedPolicy({ id: COMPARISON_POLICY_ID, name: COMPARISON_POLICY_NAME }),
+        ],
+        reports: [reportFromUsPolicy({ baseline_user_policy_id: COMPARISON_POLICY_ID })],
+      },
+    });
+
+    // When
+    const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(reportsIn(dialog)).findByText('Done');
+
+    // Then
+    expect(
+      within(reportsIn(dialog)).getByText(`Compared with ${COMPARISON_POLICY_NAME}`)
+    ).toBeInTheDocument();
+  });
+
+  test('given a policy no report was run from then the dialog says it has no reports', async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+
+    // Then
+    expect(reportsIn(dialog).textContent).toBe('ReportsNo reports yet.');
+  });
+
+  test('given a policy saved in a country still on the older interface then its reports show without links, and the dialog says why', async () => {
+    // Given
+    const UK_V1_REPORT_ID = 617;
+    const { user } = await showSavedItems(GRACE.email!, {
+      savedItems: {
+        ...GRACE_SAVED_ITEMS,
+        reports: [
+          reportFromUsPolicy({
+            country_id: 'uk',
+            legacy_report_id: UK_V1_REPORT_ID,
+            user_policy_id: SAVED_ITEM_IDS.UK_POLICY,
+          }),
+        ],
+      },
+      policies: {
+        v2: {},
+        v1: { [`uk/${SAVED_TARGET_IDS.V1_POLICY}`]: UK_V1_POLICY_JSON },
+      },
+      reports: {
+        [`uk/${UK_V1_REPORT_ID}`]: v1Report({ id: UK_V1_REPORT_ID, country_id: 'uk' }),
+      },
+    });
+
+    // When
+    const dialog = await openPolicy(user, 'No name');
+    await within(reportsIn(dialog)).findByText('Done');
+
+    // Then
+    expect({
+      links: within(reportsIn(dialog)).queryAllByRole('link'),
+      note: within(reportsIn(dialog)).getByText(/^These reports can't be opened/).textContent,
+    }).toEqual({
+      links: [],
+      note: "These reports can't be opened while the United Kingdom uses the older interface.",
+    });
+  });
+
+  test("given the admin opens a household then it opens in a modal dialog, headed with the household's name", async () => {
+    // Given
+    const { user } = await showSavedItems(GRACE.email!);
+
+    // When
+    const dialog = await openHousehold(user, SAVED_ITEM_NAMES.HOUSEHOLD);
+
+    // Then
+    expect({
+      kind: dialog.getAttribute('data-slot'),
+      heading: within(dialog).getByRole('heading', { level: 1 }).textContent,
+    }).toEqual({ kind: 'dialog-content', heading: SAVED_ITEM_NAMES.HOUSEHOLD });
+  });
+
   test('given the admin opens a household then a panel shows the values set for each person and for the household', async () => {
     // Given
     store.dispatch(clearMetadata());

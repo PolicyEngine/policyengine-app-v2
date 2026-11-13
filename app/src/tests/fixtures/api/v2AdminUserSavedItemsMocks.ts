@@ -16,6 +16,7 @@ import {
   okResponse,
   TIMESTAMPS,
 } from '@/tests/fixtures/api/v2UserMocks';
+import type { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { isAssociationCountry } from '@/types/v2User';
 
 type V2Policy = components['schemas']['PolicyItem'];
@@ -371,6 +372,55 @@ export function answerHouseholdReads(
       : errorResponse(404, 'Household not found.');
   });
   return householdReads;
+}
+
+/** When Grace's v1 report finished computing, a day after its saved report last ran. */
+export const V1_REPORT_FINISHED_AT = '2026-10-14T15:12:00Z';
+
+/**
+ * A v1 report as `GET /{country}/report/{id}` returns it: by default the
+ * report Grace's saved report points to, done, for 2026.
+ */
+export function v1Report(overrides: Partial<ReportMetadata> = {}): ReportMetadata {
+  return {
+    id: SAVED_TARGET_IDS.V1_REPORT,
+    country_id: 'us',
+    simulation_1_id: '7001',
+    simulation_2_id: '7002',
+    year: '2026',
+    api_version: '1.0.0',
+    status: 'complete',
+    output: null,
+    finished_at: V1_REPORT_FINISHED_AT,
+    ...overrides,
+  };
+}
+
+/**
+ * Makes `fetchMock` also answer the v1 report reads a saved policy's
+ * reports send, `GET /{country}/report/{id}`, from `reports`, by
+ * `{country}/{id}`. An unknown report is a 404. Returns the paths read, in
+ * order.
+ */
+export function answerReportReads(
+  fetchMock: Mock,
+  reports: Readonly<Record<string, ReportMetadata>> = {
+    [`us/${SAVED_TARGET_IDS.V1_REPORT}`]: v1Report(),
+  }
+) {
+  const reportReads: string[] = [];
+  const answerAsBefore = fetchMock.getMockImplementation()!;
+  fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const path = publicApiPathOf(input);
+    const reportRoute = /^\/(\w+)\/report\/(\d+)$/.exec(path);
+    if (requestMethodOf(input, init) !== 'GET' || !reportRoute) {
+      return answerAsBefore(input, init);
+    }
+    reportReads.push(path);
+    const report = reports[`${reportRoute[1]}/${reportRoute[2]}`];
+    return report ? okResponse(report) : errorResponse(404, 'Report not found.');
+  });
+  return reportReads;
 }
 
 /**
