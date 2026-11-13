@@ -40,8 +40,9 @@ export function SavedItemHeader({
   return (
     // Clear of the panel's close button, in its top right corner.
     <Stack style={{ gap: spacing.xs, paddingRight: spacing['2xl'] }}>
+      {/* A name without spaces wraps too, rather than running under the close button. */}
       <SheetTitle asChild>
-        <Title order={2} style={{ margin: 0 }}>
+        <Title order={2} style={{ margin: 0, overflowWrap: 'anywhere' }}>
           {name ?? 'No name'}
         </Title>
       </SheetTitle>
