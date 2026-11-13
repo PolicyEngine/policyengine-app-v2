@@ -111,12 +111,16 @@ describe('SavedReformView', () => {
     // Then
     expect({
       summary: screen.getByText(/saved/i).textContent,
-      placeholder: screen.getByText('Loading the changes…'),
       table: screen.queryByRole('table', { name: 'Parameters' }),
+      placeholderBetweenHeadingAndReports: inDocumentOrder([
+        screen.getByRole('heading', { level: 1, name: REFORM_NAME }),
+        screen.getByText('Loading the changes…'),
+        screen.getByRole('region', { name: 'Reports' }),
+      ]),
     }).toEqual({
       summary: 'Saved Oct 12, 2026',
-      placeholder: expect.any(HTMLElement),
       table: null,
+      placeholderBetweenHeadingAndReports: true,
     });
   });
 

@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode, RefObject } from 'react';
-import { SavedItemHeading } from '@/components/flagship/SavedReformView';
+import { SAVED_ITEM_SUMMARY_STYLE, SavedItemHeading } from '@/components/flagship/SavedReformView';
+import { WORKSPACE_READING_WIDTH } from '@/components/flagship/WorkspaceLayout';
 import {
   Button,
   Dialog,
@@ -10,51 +11,43 @@ import {
   Stack,
   Text,
 } from '@/components/ui';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
-/** The dialog's quieter text: its notes and loading, as the heading's summary reads. */
-export const SECONDARY_TEXT: React.CSSProperties = {
-  margin: 0,
-  fontSize: typography.fontSize.sm,
-  color: colors.text.secondary,
-};
+/** The dialog's quieter text: its notes and loading, in the heading's summary style. */
+export const SECONDARY_TEXT = SAVED_ITEM_SUMMARY_STYLE;
 
 /** What a dialog shows: "policy" or "household". */
 export type SavedItemSubject = 'policy' | 'household';
 
 /**
- * A heading's title as the dialog's title, which names the dialog. The
- * class name keeps the reforms page's heading size (Title's order 1),
- * which DialogTitle's own text size and line height would replace.
+ * How a saved item's heading names and describes the dialog: its title as
+ * the dialog's title and its summary as the dialog's description. The
+ * title's class name keeps the reforms page's heading size (Title's order
+ * 1), which DialogTitle's own text size and line height would replace.
  */
-export function asDialogTitle(title: ReactElement): ReactElement {
-  return (
+export const DIALOG_HEADING = {
+  wrapTitle: (title: ReactElement): ReactElement => (
     <DialogTitle asChild className="tw:text-4xl tw:font-bold">
       {title}
     </DialogTitle>
-  );
-}
+  ),
+  wrapSummary: (summary: ReactElement): ReactElement => (
+    <DialogDescription asChild>{summary}</DialogDescription>
+  ),
+};
 
-/** A heading's summary as the dialog's description. */
-export function asDialogDescription(summary: ReactElement): ReactElement {
-  return <DialogDescription asChild>{summary}</DialogDescription>;
+/** A saved item's name in its dialog: its own, or "No name". */
+export function dialogName(name: string | null): string {
+  return name ?? 'No name';
 }
 
 /**
- * A saved item's name ("No name" when it has none) and, under it, its
- * summary, in the heading the reforms page gives a saved reform; they name
- * and describe the dialog.
+ * A saved item's name and, under it, its summary, in the heading the
+ * reforms page gives a saved reform; they name and describe the dialog.
  */
 export function SavedItemHeader({ name, summary }: { name: string | null; summary: string }) {
-  return (
-    <SavedItemHeading
-      name={name ?? 'No name'}
-      summary={summary}
-      wrapTitle={asDialogTitle}
-      wrapSummary={asDialogDescription}
-    />
-  );
+  return <SavedItemHeading name={dialogName(name)} summary={summary} {...DIALOG_HEADING} />;
 }
 
 /**
@@ -122,10 +115,10 @@ const CONTENT_PADDING = `${spacing.xl} ${spacing['3xl']} ${spacing.xl} ${spacing
 
 /**
  * The width the reforms page shows a saved reform at (`WorkspaceLayout`'s
- * reading width, 760px), with the content's padding and the dialog's 1px
- * border on each side, and never wider than the window less a margin.
+ * reading width), with the content's padding and the dialog's 1px border on
+ * each side, and never wider than the window less a margin.
  */
-const DIALOG_MAX_WIDTH = `min(calc(760px + ${spacing.xl} + ${spacing['3xl']} + 2px), calc(100% - 2rem))`;
+const DIALOG_MAX_WIDTH = `min(calc(${WORKSPACE_READING_WIDTH}px + ${spacing.xl} + ${spacing['3xl']} + 2px), calc(100% - 2rem))`;
 
 /**
  * A modal dialog over the admin page showing one of a user's saved items,
@@ -133,8 +126,9 @@ const DIALOG_MAX_WIDTH = `min(calc(760px + ${spacing.xl} + ${spacing['3xl']} + 2
  * never taller than the window: its content scrolls under the close
  * button, in a region ("Saved policy") that takes keyboard focus, so the
  * keyboard can scroll it though it may hold nothing else to focus.
- * `children` is the item's content, starting with a `SavedItemHeader`,
- * which names the dialog. When it closes, focus goes back to
+ * `children` is the item's content, starting with its heading in the
+ * dialog's title and description (`DIALOG_HEADING`), which names the
+ * dialog. When it closes, focus goes back to
  * `returnFocusTo`, the control that opened it: the dialog has no trigger
  * of its own to return focus to.
  */

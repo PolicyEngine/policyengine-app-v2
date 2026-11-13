@@ -41,6 +41,13 @@ export function savedReformSummary(
   return saved ? `${changesText} · saved ${saved}` : changesText;
 }
 
+/** The summary's style under a saved item's name, which notes beside it share. */
+export const SAVED_ITEM_SUMMARY_STYLE: React.CSSProperties = {
+  margin: 0,
+  fontSize: typography.fontSize.sm,
+  color: colors.text.secondary,
+};
+
 /** Wraps part of a heading, such as a dialog's title around the name. */
 type HeadingWrapper = (part: ReactElement) => ReactElement;
 
@@ -70,11 +77,7 @@ export function SavedItemHeading({
           {name}
         </Title>
       )}
-      {wrapSummary(
-        <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          {summary}
-        </Text>
-      )}
+      {wrapSummary(<Text style={SAVED_ITEM_SUMMARY_STYLE}>{summary}</Text>)}
     </Stack>
   );
 }

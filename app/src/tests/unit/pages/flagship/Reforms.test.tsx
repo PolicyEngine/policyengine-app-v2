@@ -677,7 +677,7 @@ describe('ReformsPage', () => {
     expect(mockFindMine).toHaveBeenCalledWith('us');
   });
 
-  test('given a saved reform is opened then it shows in the saved-reform view the admin page shares, whose title wraps a name without spaces', async () => {
+  test('given a saved reform is opened then its title wraps a name without spaces, as the saved-reform view the admin page shares does', async () => {
     // Given
     seedDeductionMetadata();
     const UNSPACED_NAME = 'CTC_to_3600_for_children_under_6_written_without_any_spaces';

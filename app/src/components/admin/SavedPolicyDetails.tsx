@@ -10,8 +10,8 @@ import { reformParameterNames } from '@/libs/flagship/v3ParameterNames';
 import type { UserReportItem } from '@/types/v2User';
 import { getCountryLabel } from '@/utils/geographyUtils';
 import {
-  asDialogDescription,
-  asDialogTitle,
+  DIALOG_HEADING,
+  dialogName,
   OtherCountryNote,
   SavedItemLoading,
   SavedItemReadError,
@@ -93,10 +93,9 @@ export default function SavedPolicyDetails({
   };
   return (
     <SavedReformView
-      name={policy.name ?? 'No name'}
+      name={dialogName(policy.name)}
       savedAt={policy.created_at}
-      wrapTitle={asDialogTitle}
-      wrapSummary={asDialogDescription}
+      {...DIALOG_HEADING}
       subject="This policy"
       reformHeading="Reform"
       changes={changes}
