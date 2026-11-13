@@ -36,6 +36,14 @@ const P = UTILITY_PREFIX;
  */
 const containerSize = (name: string) => `var(--tw-container-${name})`;
 
+/** A declaration a compile puts in a class's rule. */
+interface ClassDeclaration {
+  /** The class, as the source writes it. */
+  name: string;
+  /** The property and its value, as in "max-width: 24rem". */
+  declaration: string;
+}
+
 interface SpacingSizedClass {
   /** The class, as the source writes it. */
   name: string;
@@ -60,7 +68,7 @@ async function classDeclarations(appDir: string, css: string, from: string) {
   const result = await postcss([
     tailwindcss({ base: appDir, optimize: false }),
   ]).process(css, { from });
-  const declarations = new Map<string, SpacingSizedClass>();
+  const declarations = new Map<string, ClassDeclaration>();
   result.root.walkDecls((decl) => {
     const context: string[] = [];
     let names: string[] = [];
@@ -78,12 +86,12 @@ async function classDeclarations(appDir: string, css: string, from: string) {
         context.unshift(`@${(node as AtRule).name} ${(node as AtRule).params}`);
       }
     }
-    const tailwindDeclaration = `${decl.prop}: ${decl.value}`;
+    const declaration = `${decl.prop}: ${decl.value}`;
     for (const name of names) {
-      declarations.set(
-        `${name} | ${context.join(" > ")} { ${tailwindDeclaration} }`,
-        { name, tailwindDeclaration },
-      );
+      declarations.set(`${name} | ${context.join(" > ")} { ${declaration} }`, {
+        name,
+        declaration,
+      });
     }
   });
   return declarations;
@@ -121,9 +129,12 @@ async function spacingSizedClasses(
     ),
   );
   const found = new Map<string, SpacingSizedClass>();
-  for (const [key, entry] of withoutSpacingSizes) {
+  for (const [key, { name, declaration }] of withoutSpacingSizes) {
     if (!withTheme.has(key)) {
-      found.set(`${entry.name} ${entry.tailwindDeclaration}`, entry);
+      found.set(`${name} ${declaration}`, {
+        name,
+        tailwindDeclaration: declaration,
+      });
     }
   }
   return [...found.values()].sort((a, b) =>
