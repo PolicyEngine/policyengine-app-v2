@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { IconTrash } from '@tabler/icons-react';
 import type { AdminUserItem } from '@/api/v2AdminUsers';
 import { AppLink } from '@/components/AppLink';
+import { accountPath } from '@/components/settings/settingsPages';
 import { Button, Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -62,7 +63,7 @@ export default function DeleteUserAccount({
         {label}
         <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
           This is your own account. To delete it, use your{' '}
-          <AppLink to={`/${countryId}/account`}>account page</AppLink>.
+          <AppLink to={accountPath(countryId)}>account page</AppLink>.
         </Text>
       </Stack>
     );
