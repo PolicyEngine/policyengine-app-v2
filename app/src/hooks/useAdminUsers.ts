@@ -50,7 +50,7 @@ export function isRefusedOrMissing(error: unknown): boolean {
 }
 
 /** Retries temporary failures only (network errors, 5xx), as often as the client's default would. */
-function retryTemporaryFailures(queryClient: QueryClient) {
+export function retryTemporaryFailures(queryClient: QueryClient) {
   const defaultRetry = queryClient.getDefaultOptions().queries?.retry;
   return (failureCount: number, error: Error): boolean => {
     if (isRefusedOrMissing(error)) {

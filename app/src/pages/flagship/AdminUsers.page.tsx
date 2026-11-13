@@ -68,10 +68,11 @@ function AdminUsers() {
 
 /**
  * The admin users page (`/{countryId}/admin/users`): admins find signed-in
- * users, change their types, read each user's type changes and delete
- * their accounts. Everyone else, signed out included, gets a not-found page
- * once their type is known, and no admin route is called for them. Until it
- * is known the page says it is loading, or shows why /v2/me failed.
+ * users, change their types, read each user's type changes and saved
+ * items, and delete their accounts. Everyone else, signed out included,
+ * gets a not-found page once their type is known, and no admin route is
+ * called for them. Until it is known the page says it is loading, or shows
+ * why /v2/me failed.
  */
 export default function AdminUsersPage() {
   const userType = useUserType();

@@ -34,6 +34,7 @@ import {
   SIGNED_IN_USER_TYPES,
   USER_TYPE_LABELS,
 } from './adminUserFormat';
+import AdminUserSavedItems from './AdminUserSavedItems';
 import ChangeUserTypeDialog, {
   type ChangeOutcomeMessage,
   type UserTypeConfirmation,
@@ -138,7 +139,7 @@ function DetailsMessage({ heading, children }: { heading: string; children: Reac
 
 /**
  * One user's details, a control to change their type, their type changes,
- * and a control to delete their account.
+ * their saved items, and a control to delete their account.
  */
 export default function AdminUserDetails({ userId }: { userId: string }) {
   const countryId = useCurrentCountry();
@@ -366,6 +367,8 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           </Stack>
 
           <UserTypeChangeHistory userId={userId} />
+
+          <AdminUserSavedItems userId={userId} />
 
           {signedInUserId !== null && (
             <DeleteUserAccount
