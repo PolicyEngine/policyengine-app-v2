@@ -46,7 +46,7 @@ The wage channel is close to distributionally flat: gains run from 2.55% in the 
 
 ## How the tax-benefit system cushions the shock
 
-The tax-benefit system converts each market-income loss into a smaller disposable-income loss; Figure 3 decomposes this by decile. Benefit entitlements — Universal Credit in particular — rise as displaced earners qualify for means-tested support, and income tax and National Insurance liabilities fall as earnings disappear. In decile 8, which loses most, the tax-benefit system absorbs about 27% of the market-income loss. In the top decile the capital uplift offsets, on average, the earnings lost by displaced workers. The loss profile is therefore hump-shaped: over 20 draws the largest loss, 2.86% of disposable income, falls in decile 8. The bottom decile's result depends on how households are ranked, because a few heavily weighted households with large personal pension contributions sit in it under the HBAI ranking, so we do not report a bottom-decile result.
+The tax-benefit system converts each market-income loss into a smaller disposable-income loss; Figure 3 decomposes this by decile. Benefit entitlements — Universal Credit in particular — rise as displaced earners qualify for means-tested support, and income tax and National Insurance liabilities fall as earnings disappear. In decile 8, which loses most, higher benefits and lower taxes offset about 21% of the market-income loss. In the top decile the capital uplift offsets, on average, the earnings lost by displaced workers. The loss profile is therefore hump-shaped: over 20 draws the largest loss, 2.86% of disposable income, falls in decile 8. The bottom decile's result depends on how households are ranked, because a few heavily weighted households with large personal pension contributions sit in it under the HBAI ranking, so we do not report a bottom-decile result.
 
 <iframe src="https://uk-ai-study.vercel.app/chart-decomposition.html" width="100%" height="523" frameborder="0"></iframe>
 
@@ -82,7 +82,7 @@ Figure 7 puts the fiscal and poverty consequences of each allocation in one char
 
 Displacement is not the only way labour markets adjust. In US evidence from [Acemoglu and Restrepo (2022)](https://www.nber.org/papers/w28920), task displacement operated chiefly through relative wage declines rather than job loss. The wage-margin family moves the same aggregate earnings loss to wage cuts instead of displacement, using occupation-level gradients including the expertise measure of [Hosseini and Lichtinger (2026b)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6059674); Table 3 traces the transition between the two margins.
 
-Delivering the same gross earnings loss through wage cuts costs the Exchequer £18.6 billion, against £7.4 billion through displacement in the same draw, because cuts shave earnings taxed at marginal rates while displacement removes whole earnings and is partly offset by means-tested benefits. The BHC poverty rise falls from 1.95 to 0.19 percentage points, and the Gini rise from 1.50 to 0.29 points.
+Delivering the same gross earnings loss through wage cuts costs the Exchequer £18.6 billion, against £7.4 billion through displacement in the same draw, because cuts remove earnings taxed at marginal rates, while displacement removes whole earnings, including the part covered by tax allowances and National Insurance thresholds, so it forgoes less tax per pound of lost earnings; that difference outweighs the extra means-tested benefits that displacement triggers. The BHC poverty rise falls from 1.95 to 0.19 percentage points, and the Gini rise from 1.50 to 0.29 points.
 
 <iframe src="https://uk-ai-study.vercel.app/embed-wagemargin.html" width="100%" height="630" frameborder="0"></iframe>
 
@@ -92,7 +92,7 @@ Under exposure-proportional incidence, workers aged 16–24 account for 8.0% of 
 
 <iframe src="https://uk-ai-study.vercel.app/chart-age.html" width="100%" height="476" frameborder="0"></iframe>
 
-Exposure also carries a gender gradient: employed women have a mean exposure score of 0.33 against 0.22 for employed men, reflecting women's concentration in administrative, professional and associate-professional work. Women hold 49.1% of employment but account for 53.4% of the displaced in the central scenario, echoing the international evidence that female employment is more exposed to generative AI ([ILO, 2025](https://www.ilo.org/sites/default/files/2025-05/WP140_web.pdf)). Household income falls by 1.5% for women and by 1.5% for men. Income pooling within couples may mute the individual asymmetry at the household level; we offer this as a hypothesis rather than a finding.
+Exposure also carries a gender gradient: employed women have a mean exposure score of 0.33 against 0.22 for employed men, reflecting women's concentration in administrative, professional and associate-professional work. Women hold 49.1% of employment but account for 53.4% of the displaced in the central scenario, echoing the international evidence that female employment is more exposed to generative AI ([ILO, 2025](https://www.ilo.org/sites/default/files/2025-05/WP140_web.pdf)). In a single draw, household income falls by 1.51% for women and by 1.47% for men. Income pooling within couples may mute the individual asymmetry at the household level; we offer this as a hypothesis rather than a finding.
 
 ## Poverty impact
 
@@ -110,7 +110,7 @@ Measured inequality rises in every displacement scenario we examine. Under the w
 
 ## Policy responses
 
-If the shock is structural rather than cyclical, the existing tax-benefit system already cushions part of it — about 27% of the market-income loss in the decile facing the largest loss — and the remaining question is what further reductions in hardship would cost. We simulate three stylised responses on top of the central shock, each in force for 2026 only:
+If the shock is structural rather than cyclical, the existing tax-benefit system already cushions part of it — about 21% of the market-income loss in the decile facing the largest loss — and the remaining question is what further reductions in hardship would cost. We simulate three stylised responses on top of the central shock, each in force for 2026 only:
 
 - **R1: Wage insurance** — in the spirit of trade-adjustment proposals, displaced workers receive 50% of their lost earnings, capped at £15,000 a year. It is modelled as a non-taxable transfer disregarded by means tests, representing the upper end of plausible implementations.
 - **R2: Universal Credit standard allowance +20%** — a demand-side boost within the existing architecture, implemented as a parameter reform inside PolicyEngine so all interactions with the taper (the rate at which UC is withdrawn as earnings rise), the benefit cap and linked (passported) entitlements are captured.
