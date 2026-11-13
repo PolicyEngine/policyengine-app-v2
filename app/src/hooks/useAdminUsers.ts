@@ -37,7 +37,8 @@ export const ADMIN_USER_PAGE_SIZE = 50;
 /** react-query's own number of retries, when the query client sets none. */
 const REACT_QUERY_DEFAULT_RETRIES = 3;
 
-type UserSearchData = InfiniteData<AdminUserPageResult, number>;
+/** A search's loaded pages, each read at its offset. */
+export type UserSearchData = InfiniteData<AdminUserPageResult, number>;
 
 /**
  * Whether an admin route refused (403: the signed-in user is no longer an

@@ -106,7 +106,11 @@ export interface paths {
     get: operations['get_user_v2_admin_users__user_id__get'];
     put?: never;
     post?: never;
-    delete?: never;
+    /**
+     * Delete a signed-in user's account and all of their saved records
+     * @description Admins only. Deletes the user exactly as DELETE /v2/me deletes the caller's own account: obtains Auth0 Management credentials first when they are configured, then deletes the user's legacy user mappings, the user (identities and saved records cascade), and the Auth0 users of the user's sign-in identities. An unauthenticated user's ID is not found (404). Admins may delete their own account here too: as with DELETE /v2/me, the only admin's deletion is refused (409); otherwise the account is deleted and the admin's next request has no user, so the admin routes answer 403. Each deletion is recorded with the admin's and the deleted user's IDs.
+     */
+    delete: operations['delete_user_v2_admin_users__user_id__delete'];
     options?: never;
     head?: never;
     /**
@@ -5107,7 +5111,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description Account data was deleted but the Auth0 user could not be removed; retrying is safe. */
+      /** @description Account data was deleted, but an Auth0 user of the account's sign-in identities could not be deleted; every one was tried. A retry with the same token is safe, but it deletes only the Auth0 user of the token's own identity: an Auth0 user of another identity that failed stays, and must be deleted in Auth0. */
       502: {
         headers: {
           [name: string]: unknown;
@@ -5628,6 +5632,107 @@ export interface operations {
         };
       };
       /** @description User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  delete_user_v2_admin_users__user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No signed-in user has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The user is the only admin, which happens only when admins delete their own account; make another user an admin first. Nothing was deleted. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The account's data was deleted, but some Auth0 users of its sign-in identities from this Public API's Auth0 tenant could not be deleted; every one was tried. The message says how many of them remain. It names no email, subject or token. A retry answers 404, since the user is gone: find the remaining Auth0 users in Auth0 by the email the admin user routes showed for the user before the deletion, and delete them there. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Auth0 Management credentials could not be obtained, or persistence is unavailable; nothing was deleted. */
       503: {
         headers: {
           [name: string]: unknown;

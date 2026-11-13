@@ -17,6 +17,7 @@ import {
   okResponse,
   pageResponse,
   policyItem,
+  routeErrorResponse,
   TEST_ACCESS_TOKEN,
   TEST_API_BASE,
 } from '@/tests/fixtures/api/v2UserMocks';
@@ -90,6 +91,31 @@ describe('v2UserClient', () => {
         status,
         message: expect.stringMatching(expected),
       });
+    }
+  );
+
+  test.each([
+    ['the Public API wrote', () => errorResponse(502, 'Some Auth0 users remain'), true],
+    [
+      "the calculator's route wrote",
+      () => routeErrorResponse(502, 'The Public API could not be reached.'),
+      false,
+    ],
+    ['has no error envelope', () => new Response('<h1>Bad gateway</h1>', { status: 502 }), false],
+  ])(
+    'given a 502 that %s then the error says whether the Public API answered',
+    async (_source, failedResponse, fromPublicApi) => {
+      // Given
+      const { fetchMock, context } = createTestApiContext();
+      fetchMock.mockResolvedValue(failedResponse());
+
+      // When
+      const failure = context.client
+        .request('DELETE', 'admin/users/some-user')
+        .catch((caught: unknown) => caught);
+
+      // Then
+      expect(await failure).toMatchObject({ status: 502, fromPublicApi });
     }
   );
 

@@ -24,6 +24,7 @@ import {
   useReadAdminUserNow,
 } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useAdminUserDeletionUnderWay } from '@/hooks/useDeleteAdminUser';
 import { useMe } from '@/hooks/useMe';
 import { getCountryLabel } from '@/utils/geographyUtils';
 import {
@@ -38,6 +39,7 @@ import ChangeUserTypeDialog, {
   type ChangeOutcomeMessage,
   type UserTypeConfirmation,
 } from './ChangeUserTypeDialog';
+import DeleteUserAccount, { type DeletedAccount } from './DeleteUserAccount';
 import UserTypeChangeHistory from './UserTypeChangeHistory';
 
 /** Labels and values in two columns, the labels as wide as the widest. */
@@ -135,7 +137,10 @@ function DetailsMessage({ heading, children }: { heading: string; children: Reac
   );
 }
 
-/** One user's details, a control to change their type, their type changes and their saved items. */
+/**
+ * One user's details, a control to change their type, their type changes,
+ * their saved items, and a control to delete their account.
+ */
 export default function AdminUserDetails({ userId }: { userId: string }) {
   const countryId = useCurrentCountry();
   const adminUser = useAdminUser(userId);
@@ -162,8 +167,31 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
   const typeGroupLabelId = `${idPrefix}-type-label`;
   const typeOptionId = (userType: SignedInUserType) => `${idPrefix}-type-${userType}`;
   const heading = adminUser.data ? adminUserLabel(adminUser.data) : 'User';
+  // Set once the admin deletes the user's account; shown in place of the user.
+  const [deletedAccount, setDeletedAccount] = useState<DeletedAccount | null>(null);
+  // While it runs, a read may find the user gone before the deletion
+  // answers; the details stay until it does, so its answer is shown.
+  const deletionUnderWay = useAdminUserDeletionUnderWay(userId);
 
-  if (adminUser.isError && isV2ApiError(adminUser.error, 404)) {
+  if (deletedAccount) {
+    return (
+      <DetailsMessage heading={deletedAccount.userLabel}>
+        <Text role="status" style={{ margin: 0, color: colors.text.secondary }}>
+          This user&apos;s account was deleted.
+        </Text>
+        {deletedAccount.auth0UsersLeftMessage && (
+          <Stack role="alert" gap="xs" style={{ color: colors.error }}>
+            <Text style={{ margin: 0 }}>{deletedAccount.auth0UsersLeftMessage}</Text>
+            {deletedAccount.email && (
+              <Text style={{ margin: 0 }}>This user&apos;s email was {deletedAccount.email}.</Text>
+            )}
+          </Stack>
+        )}
+      </DetailsMessage>
+    );
+  }
+
+  if (!deletionUnderWay && adminUser.isError && isV2ApiError(adminUser.error, 404)) {
     return (
       <DetailsMessage heading={heading}>
         <Text role="status" style={{ margin: 0, color: colors.text.secondary }}>
@@ -175,7 +203,10 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
 
   // A user already read stays on the screen when a later read fails for a
   // while (a network error, a 5xx), but not after a 403.
-  if (adminUser.data === undefined || (adminUser.isError && isRefusedOrMissing(adminUser.error))) {
+  if (
+    adminUser.data === undefined ||
+    (!deletionUnderWay && adminUser.isError && isRefusedOrMissing(adminUser.error))
+  ) {
     if (adminUser.isError) {
       return (
         <DetailsMessage heading={heading}>
@@ -338,6 +369,14 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           <UserTypeChangeHistory userId={userId} />
 
           <AdminUserSavedItems userId={userId} />
+
+          {signedInUserId !== null && (
+            <DeleteUserAccount
+              user={user}
+              isOwnAccount={user.id === signedInUserId}
+              onDeleted={setDeletedAccount}
+            />
+          )}
         </Stack>
       </CardContent>
 

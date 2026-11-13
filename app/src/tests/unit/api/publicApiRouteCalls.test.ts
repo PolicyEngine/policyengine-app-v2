@@ -25,6 +25,7 @@ import {
 } from '@/api/societyWideCalculation';
 import {
   changeAdminUserType,
+  deleteAdminUser,
   fetchAdminUser,
   fetchUserTypeChanges,
   searchAdminUsers,
@@ -229,6 +230,12 @@ const PUBLIC_API_CALLS: ReadonlyArray<[string, () => Promise<unknown>, string, s
     () => fetchUserTypeChanges(browserUserClient(), SAVED_RECORD_ID),
     'GET',
     `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`,
+  ],
+  [
+    "an admin's deletion of a user's account",
+    () => deleteAdminUser(browserUserClient(), SAVED_RECORD_ID),
+    'DELETE',
+    `/v2/admin/users/${SAVED_RECORD_ID}`,
   ],
   [
     "a user's saved items, read by an admin",
