@@ -8,7 +8,7 @@
     "/v2/me": {
       "get": {
         "summary": "Read the current user",
-        "description": "For a bearer access token, returns the PolicyEngine user, creating it on the first call with primary_country set from country_id. For the PolicyEngine-Unauthenticated-User header, returns the browser's unauthenticated user, or 404 before its first saved record; reading never creates one.",
+        "description": "For a bearer access token, returns the PolicyEngine user, creating it on the first call with primary_country set from country_id. For the PolicyEngine-Unauthenticated-User header, returns the browser's unauthenticated user, or 404 before its first saved record; reading never creates one. latest_type_change is the user's most recent type change until it is dismissed, else null.",
         "operationId": "get_me_v2_me_get",
         "security": [
           {
@@ -41,7 +41,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MeDetailResponse"
+                  "$ref": "#/components/schemas/MeReadResponse"
                 }
               }
             }
@@ -696,10 +696,325 @@
         }
       }
     },
+    "/v2/me/invitations/accept": {
+      "post": {
+        "summary": "Accept an admin's email invitation with its token",
+        "description": "Signed-in users only. A user with no account yet gets one, with primary_country from country_id. The signed-in user's email is read from Auth0 first and never stored; then the token, the inviting admin, the email's verification and its match with the invited address are checked, in that order, and each refusal names its code. On success the user gets the invited type, unless they already have it or a higher one, the invitation is marked accepted, and a type change is recorded and emailed to the user.",
+        "operationId": "accept_invitation_v2_me_invitations_accept_post",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationAcceptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationAcceptanceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The supplied references or countries contradict each other.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required; the unauthenticated-user header alone can't accept an invitation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "code email_mismatch: the signed-in user's verified email isn't the invited address, compared whole and ignoring case. The invitation stays open. A machine (client-credentials) principal is also refused with 403, without a code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2CodedErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 403 Accept Invitation V2 Me Invitations Accept Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist or belongs to another user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "code inviter_not_admin: the admin who sent the invitation is no longer an admin. code email_not_verified: Auth0 has no verified email for the signed-in user yet; try again once it is verified. A conflict with stored state is also 409, without a code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2CodedErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 409 Accept Invitation V2 Me Invitations Accept Post"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "The token can't be accepted. code invitation_not_found: no invitation has it, including a link replaced by a resend; invitation_revoked: it was revoked or replaced by a newer invitation; invitation_expired; invitation_accepted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2CodedErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema, or a referenced v1 artifact or linked record does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "code auth0_unavailable: the signed-in user's email couldn't be read from Auth0; try again shortly. Persistence being unavailable is also 503, without a code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2CodedErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 503 Accept Invitation V2 Me Invitations Accept Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/me/type-changes/{type_change_id}/dismiss": {
+      "post": {
+        "summary": "Dismiss the notice of a type change",
+        "description": "Signed-in users only. GET /v2/me then stops reporting the change as latest_type_change. Dismissing it again changes nothing.",
+        "operationId": "dismiss_type_change_v2_me_type_changes__type_change_id__dismiss_post",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type_change_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Type Change Id"
+            }
+          },
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "The supplied references or countries contradict each other.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token, or a canonical UUID in the PolicyEngine-Unauthenticated-User header, is required; that UUID may not name a signed-in account. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Machine (client-credentials) principals are not permitted, and unauthenticated users cannot edit account details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The signed-in user has no type change with this ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with stored state, such as a record maintained by the v1 saved-policy mirror.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema, or a referenced v1 artifact or linked record does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v2/admin/users": {
       "get": {
         "summary": "List signed-in users, newest first",
-        "description": "Admins only. With email, lists only users with an email address containing it, ignoring case; % and _ match themselves. Unauthenticated users are never listed.",
+        "description": "Admins only. With email, lists only users with an email address containing it, ignoring case; every character matches itself. The search covers stored emails and, with Auth0 user profiles configured, Auth0 emails: an Auth0 email matches when it contains the text, or, for fewer than three characters, starts with it. Auth0's search is eventually consistent, so a just-changed email may be missing. Text with < or >, which no email address holds, is refused (422), and so is text that more than 200 Auth0 users match: enter more of it. When Auth0 can't answer the search, the response is 503. Each user's email, first_name and last_name are read from Auth0 for this request and never stored; when Auth0 has none, or can't answer, the stored values are returned. Unauthenticated users are never listed.",
         "operationId": "list_users_v2_admin_users_get",
         "security": [
           {
@@ -747,7 +1062,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 320,
-                  "description": "Part of a user's email address, matched ignoring case"
+                  "description": "Part of a user's email address, matched ignoring case. Text with < or > is refused (422), and so is text that more than 200 Auth0 users match"
                 },
                 {
                   "type": "null"
@@ -819,7 +1134,7 @@
             }
           },
           "422": {
-            "description": "The request does not match the schema.",
+            "description": "The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -839,7 +1154,7 @@
             }
           },
           "503": {
-            "description": "User authentication or persistence is unavailable.",
+            "description": "User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0.",
             "content": {
               "application/json": {
                 "schema": {
@@ -854,7 +1169,7 @@
     "/v2/admin/users/{user_id}": {
       "get": {
         "summary": "Read one signed-in user",
-        "description": "Admins only. An unauthenticated user's ID is not found (404).",
+        "description": "Admins only. An unauthenticated user's ID is not found (404). Each user's email, first_name and last_name are read from Auth0 for this request and never stored; when Auth0 has none, or can't answer, the stored values are returned.",
         "operationId": "get_user_v2_admin_users__user_id__get",
         "security": [
           {
@@ -938,7 +1253,7 @@
             }
           },
           "422": {
-            "description": "The request does not match the schema.",
+            "description": "The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -958,7 +1273,7 @@
             }
           },
           "503": {
-            "description": "User authentication or persistence is unavailable.",
+            "description": "User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0.",
             "content": {
               "application/json": {
                 "schema": {
@@ -971,7 +1286,7 @@
       },
       "patch": {
         "summary": "Change a signed-in user's type",
-        "description": "Admins only. Records the change in the user's type history. Setting the type the user already has changes and records nothing, whatever expected_user_type is. Otherwise expected_user_type, the user's type as the admin last read it, must still be the stored type: when it differs, the change is refused (409) and nothing is written. Only the type is compared, so a type changed and changed back since the read is not detected. Demoting the last admin is refused (409) too.",
+        "description": "Admins only. Records the change in the user's type history. Setting the type the user already has changes and records nothing, whatever expected_user_type is. Otherwise expected_user_type, the user's type as the admin last read it, must still be the stored type: when it differs, the change is refused (409) and nothing is written. Only the type is compared, so a type changed and changed back since the read is not detected. Demoting the last admin is refused (409) too. The change is committed before the response's email and names are read; Each user's email, first_name and last_name are read from Auth0 for this request and never stored; when Auth0 has none, or can't answer, the stored values are returned.",
         "operationId": "change_user_type_v2_admin_users__user_id__patch",
         "security": [
           {
@@ -1065,7 +1380,7 @@
             }
           },
           "422": {
-            "description": "The request does not match the schema.",
+            "description": "The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1085,7 +1400,7 @@
             }
           },
           "503": {
-            "description": "User authentication or persistence is unavailable.",
+            "description": "User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1100,7 +1415,7 @@
     "/v2/admin/users/{user_id}/user-type-changes": {
       "get": {
         "summary": "Read a signed-in user's recorded type changes, newest first",
-        "description": "Admins only.",
+        "description": "Admins only. changed_by_email is the admin's email, read from Auth0 for this request and never stored; when Auth0 has none, or can't answer, it is the stored one.",
         "operationId": "list_user_type_changes_v2_admin_users__user_id__user_type_changes_get",
         "security": [
           {
@@ -1184,6 +1499,428 @@
             }
           },
           "422": {
+            "description": "The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/admin/invitations": {
+      "post": {
+        "summary": "Invite an email address to become an author or admin",
+        "description": "Admins only. Creates the invitation and emails its link to the address; an open invitation to the same address, compared ignoring case, is revoked first, so its link stops working. The email is sent through Postmark after the invitation commits, and retried a few times; when every attempt fails, or Postmark isn't configured, the invitation stays open with last_sent_at null and last_send_error naming why. The link is valid for 7 days. The response is 201 even when the send failed.",
+        "operationId": "create_invitation_v2_admin_invitations_post",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInvitationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List open invitations, newest first",
+        "description": "Admins only. Lists the invitations that are neither accepted nor revoked, expired ones included (expired is true).",
+        "operationId": "list_invitations_v2_admin_invitations_get",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Zero-based result offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Zero-based result offset"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of returned resources",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of returned resources"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInvitationPageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/admin/invitations/{invitation_id}/resend": {
+      "post": {
+        "summary": "Email an open invitation again with a new link",
+        "description": "Admins only. Gives the invitation a new link, so the earlier one stops working, and a new 7-day expiry, makes the caller its inviting admin, and emails it again. An expired invitation can be resent. The email is sent through Postmark after the invitation commits, and retried a few times; when every attempt fails, or Postmark isn't configured, the invitation stays open with last_sent_at null and last_send_error naming why. The link is valid for 7 days.",
+        "operationId": "resend_invitation_v2_admin_invitations__invitation_id__resend_post",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invitation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invitation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInvitationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No open invitation has this ID: it is unknown, accepted or revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/admin/invitations/{invitation_id}": {
+      "delete": {
+        "summary": "Revoke an open invitation",
+        "description": "Admins only. The invitation's link stops working.",
+        "operationId": "revoke_invitation_v2_admin_invitations__invitation_id__delete",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invitation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invitation Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No open invitation has this ID: it is unknown, accepted or revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
             "description": "The request does not match the schema.",
             "content": {
               "application/json": {
@@ -1218,8 +1955,8 @@
     },
     "/v2/user-reports": {
       "post": {
-        "summary": "Save a v1 report for the current user",
-        "description": "Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Stage 12A accepts legacy_report_id only (the requested v1 report output ID), checked in the v1 database. An optional user_policy_id must name the same user's saved policy in the same country.",
+        "summary": "Save a report for the current user",
+        "description": "Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Names a detailed-save report (report_id), which must be stored in the country (404 otherwise), or a v1 report output (legacy_report_id), checked in the v1 database; naming both is refused with 400, since v1 report numbers are not connected to detailed-save reports. An optional user_policy_id must name the same user's saved policy in the same country.",
         "operationId": "create_user_report_v2_user_reports_post",
         "security": [
           {
@@ -2053,8 +2790,8 @@
     },
     "/v2/user-simulations": {
       "post": {
-        "summary": "Save a v1 simulation for the current user",
-        "description": "Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Stage 12A accepts legacy_simulation_id only, checked in the v1 database.",
+        "summary": "Save a simulation for the current user",
+        "description": "Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Names a detailed-save simulation (simulation_id), which must be of the country's model (404 otherwise), or a v1 simulation (legacy_simulation_id), checked in the v1 database; naming both is refused with 400.",
         "operationId": "create_user_simulation_v2_user_simulations_post",
         "security": [
           {
@@ -4725,6 +5462,162 @@
         }
       }
     },
+    "/v2/household-calculations": {
+      "post": {
+        "summary": "Calculate a stored household under a stored policy",
+        "operationId": "submit_household_calculation_v2_household_calculations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdCalculationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdCalculationSubmittedResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The household, policy or calculation does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema; the country does not offer household calculations; the household has no default year; the policy sets parameters the running catalog version does not have (code missing_parameters, which names them); or the simulation service refuses the caller's data, with its reason in the message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2MissingParametersErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 422 Submit Household Calculation V2 Household Calculations Post"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The calculation failed unexpectedly, or a succeeded calculation's stored result cannot be read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The simulation service accepted the calculation, so its job exists, but its answer cannot be read; it failed (500); it answered a status the Public API does not expect, such as 200, a redirect, 408, 409 or 501; its answer was lost after the submission may have reached it; or a proxy in front of it answered 502, 504, or a 503 without the simulation service's code, in its place. In each case it may have created the job, and no route finds a job without its ID. Submit the household calculation again; if the first request went through, this creates a second job. The message gives the simulation service's status and code, or what came in place of its answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No job of the submission will run: the simulation service cannot be reached, or the Public API has no URL or credentials for it; it refuses a household, policy or catalog version the Public API has already checked (400); its authentication, routing, body-size or rate limits refuse the request; it answers its own 503, naming its code, because it is not configured, cannot read its manifest or database, or Modal refused the call; or it refuses in a shape the Public API cannot read. Or v2 storage is unavailable. Of the simulation service's answers, the message gives the reason only for a 400, otherwise only its status and code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/household-calculations/{calculation_id}": {
+      "get": {
+        "summary": "Read a household calculation and its result",
+        "operationId": "get_household_calculation_v2_household_calculations__calculation_id__get",
+        "parameters": [
+          {
+            "name": "calculation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Calculation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdCalculationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The household, policy or calculation does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The calculation failed unexpectedly, or a succeeded calculation's stored result cannot be read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The simulation service or v2 storage is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v2/policies": {
       "post": {
         "summary": "Create or find an immutable policy",
@@ -5120,6 +6013,540 @@
           },
           "503": {
             "description": "Supabase policy persistence is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/reports": {
+      "post": {
+        "summary": "Create an economy report",
+        "description": "Checks that the country has economy reports and stores each named policy, and that the running catalog version has every parameter those policies set, then has the simulation service create the report, its two simulations and their runs on its default worker's PolicyEngine.py version, and start the run. Answers the report as stored, with its pending run; read it again to follow the run. A created report that cannot be read back answers 502 with its report_id, and one whose run the simulation service failed before answering 503 answers 503 with its report_id.",
+        "operationId": "create_report_v2_reports_post",
+        "parameters": [
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The body and query name different countries.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A policy the report names is not stored in the country.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 16 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema; the country has no economy reports (such as a household-only country); a policy the report names sets parameters the running catalog version does not have (code missing_parameters, which names them; the baseline's policy is checked first); or the simulation service cannot run the report: its 422, or its 400 for a region, dataset or dynamic it does not have. The message says which; for the simulation service's refusal, it gives the service's code, when it gave one, and its reason, but not its status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2MissingParametersErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 422 Create Report V2 Reports Post"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The simulation service may have created the report, but its answer does not say so. The answer was lost after the request may have reached it, or a proxy in front of it answered 502 or 504 in its place: the message says the service may have received the request, but its answer was lost. Or it failed (500), answered 503 in a shape the Public API cannot read or naming only another record, or answered a status the Public API does not expect, which its route may answer after writing rows: the message says it may have created the report, but failed, with its status and code but not its reason. Either message asks the caller to submit the report again, which creates a second report if the first request went through. Or it created the report, but its answer cannot be read. Or it created the report, but the report cannot be read back: the answer gives its report_id, to read with GET /v2/reports/{report_id} rather than submitting it again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CreatedReportUnreadableResponse"
+                    }
+                  ],
+                  "title": "Response 502 Create Report V2 Reports Post"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The simulation service created nothing: it cannot be reached or is not configured; it answered a readable 503 naming no record, and the message gives its status and code; it answered a 400 naming no region, dataset or dynamic of the caller's (such as a catalog version missing while a release deploys), and the message gives its code and reason; it answered 400 or 422 in a shape the Public API cannot read; or it answered 401, 403, 404, 405, 413 or 429, which are sent before its route runs. Or the v2 database, or the catalog the policies are checked against, cannot be read. Or the service created the report, then Modal refused the run's call and the service failed the run: its 503 named the report, with its status and code, and the answer gives its report_id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnavailableAfterReportCreatedResponse"
+                    }
+                  ],
+                  "title": "Response 503 Create Report V2 Reports Post"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List chosen economy reports",
+        "description": "Lists the country's economy reports among the report_id values (at most 25), in the order named and once each, with their newest runs but without results, read in one query. Unknown reports, other countries' and reports of other kinds are left out.",
+        "operationId": "list_reports_v2_reports_get",
+        "parameters": [
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          },
+          {
+            "name": "report_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              "minItems": 1,
+              "maxItems": 25,
+              "description": "A report to list; repeat the key for each report",
+              "title": "Report Id"
+            },
+            "description": "A report to list; repeat the key for each report"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The v2 database or the simulation service is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/reports/{report_id}": {
+      "get": {
+        "summary": "Read an economy report",
+        "description": "Returns the report, its newest run whatever its status and versions, the versions the Public API runs now, and, once the newest run has succeeded, its result in today's economy result format. A report with no run, such as one migrated from v1, answers its definition with no result; reading starts no run.",
+        "operationId": "get_report_v2_reports__report_id__get",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No report has this ID in this country.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema, or the report is a household report or a budget window, which this route does not read yet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The newest run succeeded but its stored result cannot be read, or the operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The v2 database or the simulation service is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/simulations": {
+      "post": {
+        "summary": "Create an economy simulation",
+        "description": "Checks that the country has economy calculations and stores the named policy, and that the running catalog version has every parameter it sets, then has the simulation service create the simulation and its first run on its default worker's PolicyEngine.py version, and start the run. Answers the simulation as stored, with its pending run. A created simulation that cannot be read back answers 502 with its simulation_id, and one whose run the simulation service failed before answering 503 answers 503 with its simulation_id.",
+        "operationId": "create_simulation_v2_simulations_post",
+        "parameters": [
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The body and query name different countries.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The policy the simulation names is not stored in the country.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 16 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema; the country has no economy calculations; the policy sets parameters the running catalog version does not have (code missing_parameters, which names them); or the simulation service cannot run the simulation: its 422, or its 400 for a region, dataset or dynamic it does not have. The message says which; for the simulation service's refusal, it gives the service's code, when it gave one, and its reason, but not its status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2MissingParametersErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 422 Create Simulation V2 Simulations Post"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The simulation service may have created the simulation, but its answer does not say so. The answer was lost after the request may have reached it, or a proxy in front of it answered 502 or 504 in its place: the message says the service may have received the request, but its answer was lost. Or it failed (500), answered 503 in a shape the Public API cannot read or naming only another record, or answered a status the Public API does not expect, which its route may answer after writing rows: the message says it may have created the simulation, but failed, with its status and code but not its reason. Either message asks the caller to submit the simulation again, which creates a second simulation if the first request went through. Or it created the simulation, but its answer cannot be read. Or it created the simulation, but the simulation cannot be read back: the answer gives its simulation_id, to read with GET /v2/simulations/{simulation_id} rather than submitting it again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CreatedSimulationUnreadableResponse"
+                    }
+                  ],
+                  "title": "Response 502 Create Simulation V2 Simulations Post"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The simulation service created nothing: it cannot be reached or is not configured; it answered a readable 503 naming no record, and the message gives its status and code; it answered a 400 naming no region, dataset or dynamic of the caller's (such as a catalog version missing while a release deploys), and the message gives its code and reason; it answered 400 or 422 in a shape the Public API cannot read; or it answered 401, 403, 404, 405, 413 or 429, which are sent before its route runs. Or the v2 database, or the catalog the policy is checked against, cannot be read. Or the service created the simulation, then Modal refused the run's call and the service failed the run: its 503 named the simulation, with its status and code, and the answer gives its simulation_id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnavailableAfterSimulationCreatedResponse"
+                    }
+                  ],
+                  "title": "Response 503 Create Simulation V2 Simulations Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/simulations/{simulation_id}": {
+      "get": {
+        "summary": "Read a simulation",
+        "description": "Returns the simulation, its newest run whatever its year, status and versions, and the versions the Public API runs now. A simulation belongs to the country whose model its catalog version is of; reading starts no run.",
+        "operationId": "get_simulation_v2_simulations__simulation_id__get",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Simulation Id"
+            }
+          },
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No simulation of this country's model has this ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The v2 database or the simulation service is unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8939,6 +10366,186 @@
         "title": "AccountPatchRequest",
         "description": "Explicitly supplied account presentation fields."
       },
+      "AdminInvitationItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "user_type": {
+            "type": "string",
+            "enum": [
+              "author",
+              "admin"
+            ],
+            "title": "User Type"
+          },
+          "invited_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited By User Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "expired": {
+            "type": "boolean",
+            "title": "Expired"
+          },
+          "last_sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sent At"
+          },
+          "last_send_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Send Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "user_type",
+          "invited_by_user_id",
+          "created_at",
+          "expires_at",
+          "expired",
+          "last_sent_at",
+          "last_send_error"
+        ],
+        "title": "AdminInvitationItem",
+        "description": "An invitation as admins see it.\n\n``invited_by_user_id`` is the admin who created or last resent it, null\nonce that account is deleted. ``expired`` says ``expires_at`` has passed:\nit can't be accepted, but it can be resent. ``last_sent_at`` is when\nPostmark accepted the email with the current link, null when the last\nsend failed or wasn't tried; ``last_send_error`` then names why, as a\nshort identifier such as ``not_configured``, ``timeout``, ``http_500``\nor ``postmark_406`` (an address Postmark suppresses)."
+      },
+      "AdminInvitationPageResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/AdminInvitationPageResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "AdminInvitationPageResponse",
+        "description": "Success response holding one page of open invitations."
+      },
+      "AdminInvitationPageResult": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminInvitationItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "offset",
+          "limit",
+          "has_more"
+        ],
+        "title": "AdminInvitationPageResult",
+        "description": "One page of open invitations, newest first."
+      },
+      "AdminInvitationResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/AdminInvitationResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "AdminInvitationResponse",
+        "description": "Success response holding one invitation."
+      },
+      "AdminInvitationResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/AdminInvitationItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item"
+        ],
+        "title": "AdminInvitationResult",
+        "description": "Result holding one invitation in ``item``."
+      },
       "AdminUserItem": {
         "properties": {
           "id": {
@@ -9030,7 +10637,7 @@
           "last_seen_at"
         ],
         "title": "AdminUserItem",
-        "description": "A signed-in user as admins see it.\n\n``email`` is the email of the most recently seen of the user's sign-in\nidentities that has one, else the user's own. ``last_seen_at`` is when the\nuser's most recently seen identity was last seen."
+        "description": "A signed-in user as admins see it.\n\nWith Auth0 user profile settings, ``email``, ``first_name`` and\n``last_name`` are read from Auth0 for each request and never stored: the\nuser's sign-in identities from the users' Auth0 tenant are looked up, the\nmost recently seen first, and a verified email comes before an unverified\none. Where Auth0 has no value, or can't answer, the stored value is\nreturned: the email of the most recently seen of the user's identities\nthat has one, else the user's own, and the user's stored names. When\nneither has a first or last name, Auth0's full name, if it isn't an\nemail address, is the first name. ``last_seen_at`` is when the user's\nmost recently seen identity was last seen."
       },
       "AdminUserPageResponse": {
         "properties": {
@@ -9127,6 +10734,292 @@
         "title": "AdminUserResult",
         "description": "One signed-in user."
       },
+      "AgePoverty": {
+        "properties": {
+          "child": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          },
+          "adult": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          },
+          "senior": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          },
+          "all": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "child",
+          "adult",
+          "senior",
+          "all"
+        ],
+        "title": "AgePoverty",
+        "description": "Poverty rates for children, adults, seniors and everyone."
+      },
+      "BaselineReformValue": {
+        "properties": {
+          "baseline": {
+            "type": "number",
+            "title": "Baseline"
+          },
+          "reform": {
+            "type": "number",
+            "title": "Reform"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseline",
+          "reform"
+        ],
+        "title": "BaselineReformValue",
+        "description": "A measure's value under the baseline and under the reform."
+      },
+      "BudgetaryImpact": {
+        "properties": {
+          "tax_revenue_impact": {
+            "type": "number",
+            "title": "Tax Revenue Impact"
+          },
+          "state_tax_revenue_impact": {
+            "type": "number",
+            "title": "State Tax Revenue Impact"
+          },
+          "benefit_spending_impact": {
+            "type": "number",
+            "title": "Benefit Spending Impact"
+          },
+          "budgetary_impact": {
+            "type": "number",
+            "title": "Budgetary Impact"
+          },
+          "households": {
+            "type": "number",
+            "title": "Households"
+          },
+          "baseline_net_income": {
+            "type": "number",
+            "title": "Baseline Net Income"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tax_revenue_impact",
+          "state_tax_revenue_impact",
+          "benefit_spending_impact",
+          "budgetary_impact",
+          "households",
+          "baseline_net_income"
+        ],
+        "title": "BudgetaryImpact",
+        "description": "The reform's headline budget effect in the simulated year.\n\nImpacts are reform minus baseline totals in the country's currency;\n``budgetary_impact`` is ``tax_revenue_impact`` minus\n``benefit_spending_impact``, and ``state_tax_revenue_impact`` is US state\nincome tax (0 for the UK). ``households`` is the weighted number of\nhouseholds and ``baseline_net_income`` their total baseline net income."
+      },
+      "CliffImpact": {
+        "properties": {
+          "baseline": {
+            "$ref": "#/components/schemas/CliffImpactInSimulation"
+          },
+          "reform": {
+            "$ref": "#/components/schemas/CliffImpactInSimulation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseline",
+          "reform"
+        ],
+        "title": "CliffImpact",
+        "description": "Exposure to tax-benefit cliffs under the baseline and under the reform."
+      },
+      "CliffImpactInSimulation": {
+        "properties": {
+          "cliff_gap": {
+            "type": "number",
+            "title": "Cliff Gap"
+          },
+          "cliff_share": {
+            "type": "number",
+            "title": "Cliff Share"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cliff_gap",
+          "cliff_share"
+        ],
+        "title": "CliffImpactInSimulation",
+        "description": "Net income lost to a small earnings rise, and the share of adults on a cliff."
+      },
+      "CongressionalDistrictImpact": {
+        "properties": {
+          "district": {
+            "type": "string",
+            "title": "District"
+          },
+          "average_household_income_change": {
+            "type": "number",
+            "title": "Average Household Income Change"
+          },
+          "relative_household_income_change": {
+            "type": "number",
+            "title": "Relative Household Income Change"
+          },
+          "winner_percentage": {
+            "type": "number",
+            "title": "Winner Percentage"
+          },
+          "loser_percentage": {
+            "type": "number",
+            "title": "Loser Percentage"
+          },
+          "no_change_percentage": {
+            "type": "number",
+            "title": "No Change Percentage"
+          },
+          "population": {
+            "type": "number",
+            "title": "Population"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "district",
+          "average_household_income_change",
+          "relative_household_income_change",
+          "winner_percentage",
+          "loser_percentage",
+          "no_change_percentage",
+          "population"
+        ],
+        "title": "CongressionalDistrictImpact",
+        "description": "The reform's impact in one US congressional district.\n\n``district`` is the state and two-digit number, such as ``\"CA-12\"``; an\nat-large district is ``01``. The percentages are the shares of people\nwhose household net income rises, falls or stays the same."
+      },
+      "CongressionalDistrictImpacts": {
+        "properties": {
+          "districts": {
+            "items": {
+              "$ref": "#/components/schemas/CongressionalDistrictImpact"
+            },
+            "type": "array",
+            "title": "Districts"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "districts"
+        ],
+        "title": "CongressionalDistrictImpacts",
+        "description": "The reform's impact in each congressional district of a US state report."
+      },
+      "ConstituencyImpact": {
+        "properties": {
+          "average_household_income_change": {
+            "type": "number",
+            "title": "Average Household Income Change"
+          },
+          "relative_household_income_change": {
+            "type": "number",
+            "title": "Relative Household Income Change"
+          },
+          "population": {
+            "type": "number",
+            "title": "Population"
+          },
+          "disclosure_tier": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "reported",
+                  "approximate"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disclosure Tier"
+          },
+          "average_household_income_change_lower": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Household Income Change Lower"
+          },
+          "average_household_income_change_upper": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Household Income Change Upper"
+          },
+          "relative_household_income_change_lower": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Household Income Change Lower"
+          },
+          "relative_household_income_change_upper": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Household Income Change Upper"
+          },
+          "constituency_code": {
+            "type": "string",
+            "title": "Constituency Code"
+          },
+          "constituency_name": {
+            "type": "string",
+            "title": "Constituency Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "average_household_income_change",
+          "relative_household_income_change",
+          "population",
+          "disclosure_tier",
+          "average_household_income_change_lower",
+          "average_household_income_change_upper",
+          "relative_household_income_change_lower",
+          "relative_household_income_change_upper",
+          "constituency_code",
+          "constituency_name"
+        ],
+        "title": "ConstituencyImpact",
+        "description": "The reform's impact in one UK parliamentary constituency."
+      },
       "CountryItem": {
         "properties": {
           "id": {
@@ -9194,6 +11087,88 @@
         "title": "CountryListResult",
         "description": "Every served country, ordered by ``id``."
       },
+      "CreatedReportUnreadableResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error",
+            "title": "Status",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Message"
+          },
+          "report_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Report Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "report_id"
+        ],
+        "title": "CreatedReportUnreadableResponse",
+        "description": "The 502 answer when the created report cannot be read back.\n\nThe simulation service created ``report_id``, so the caller reads it\nwith ``GET /v2/reports/{report_id}`` rather than submitting it again."
+      },
+      "CreatedSimulationUnreadableResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error",
+            "title": "Status",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Message"
+          },
+          "simulation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Simulation Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "simulation_id"
+        ],
+        "title": "CreatedSimulationUnreadableResponse",
+        "description": "The 502 answer when the created simulation cannot be read back.\n\nThe simulation service created ``simulation_id``, so the caller reads it\nwith ``GET /v2/simulations/{simulation_id}`` rather than submitting it\nagain."
+      },
+      "DecileChange": {
+        "properties": {
+          "average": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Average"
+          },
+          "relative": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Relative"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "average",
+          "relative"
+        ],
+        "title": "DecileChange",
+        "description": "The change in average household net income in each decile, ``\"1\"`` to ``\"10\"``.\n\n``average`` is the absolute change and ``relative`` the change as a\nfraction of the decile's baseline average."
+      },
       "DeploymentResponse": {
         "properties": {
           "policyengine_version": {
@@ -9232,6 +11207,165 @@
         "title": "DeploymentResponse",
         "description": "The policyengine.py version this revision serves, and since when.\n\n``policyengine_version_live_since`` is when this .py version first went\nlive: redeploys that keep the version keep the date. It is null on a\nrevision deployed before the deploy recorded it, outside Cloud Run, or\nwhen the version the deploy dated is not the installed one."
       },
+      "EconomyResult": {
+        "properties": {
+          "spm_provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SPMComparisonProvenance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "data_version": {
+            "type": "string",
+            "title": "Data Version"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/BudgetaryImpact"
+          },
+          "detailed_budget": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ProgramBudget"
+            },
+            "type": "object",
+            "title": "Detailed Budget"
+          },
+          "decile": {
+            "$ref": "#/components/schemas/DecileChange"
+          },
+          "inequality": {
+            "$ref": "#/components/schemas/InequalityChange"
+          },
+          "poverty": {
+            "$ref": "#/components/schemas/PovertyByAge"
+          },
+          "poverty_by_gender": {
+            "$ref": "#/components/schemas/PovertyByGender"
+          },
+          "poverty_by_race": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PovertyByRace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "intra_decile": {
+            "$ref": "#/components/schemas/IntraDecileShares"
+          },
+          "wealth_decile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecileChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "intra_wealth_decile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntraDecileShares"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "labor_supply_response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LaborSupplyResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "constituency_impact": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ConstituencyImpact"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Constituency Impact"
+          },
+          "local_authority_impact": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/LocalAuthorityImpact"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Authority Impact"
+          },
+          "congressional_district_impact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CongressionalDistrictImpacts"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cliff_impact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CliffImpact"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "spm_provenance",
+          "model_version",
+          "data_version",
+          "budget",
+          "detailed_budget",
+          "decile",
+          "inequality",
+          "poverty",
+          "poverty_by_gender",
+          "poverty_by_race",
+          "intra_decile",
+          "wealth_decile",
+          "intra_wealth_decile",
+          "labor_supply_response",
+          "constituency_impact",
+          "local_authority_impact",
+          "congressional_district_impact",
+          "cliff_impact"
+        ],
+        "title": "EconomyResult",
+        "description": "A report run's single-year economy result, in the format the app reads.\n\n``model_version`` is the country package version the run used, and\n``data_version`` the data release. ``spm_provenance`` is the baseline's\nand reform's SPM calculation receipts the simulation service stored, as\nthe Public API's ``SPMComparisonProvenance`` (serialized, as the Public\nAPI serializes it elsewhere, with package names as its runtime version\nkeys), or null. ``wealth_decile`` and ``intra_wealth_decile`` are UK-only;\n``poverty_by_race`` and ``congressional_district_impact`` US-only; the\nconstituency and local-authority impacts are UK-only and null when the\nrun did not compute them. ``labor_supply_response`` and ``cliff_impact``\nare null when the run did not compute them."
+      },
       "FiniteJsonValue": {
         "anyOf": [
           {
@@ -9263,6 +11397,24 @@
           }
         ]
       },
+      "GenderPoverty": {
+        "properties": {
+          "male": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          },
+          "female": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "male",
+          "female"
+        ],
+        "title": "GenderPoverty",
+        "description": "Poverty rates for males and females."
+      },
       "HealthNotReadyResponse": {
         "properties": {
           "status": {
@@ -9292,6 +11444,516 @@
         ],
         "title": "HealthResponse",
         "description": "Health-check result showing that the API has warmed up and can serve requests."
+      },
+      "HouseholdCalculationAxis": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "count": {
+            "type": "integer",
+            "maximum": 10000,
+            "minimum": 1,
+            "title": "Count"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Max"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period"
+          },
+          "index": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "count",
+          "min",
+          "max"
+        ],
+        "title": "HouseholdCalculationAxis",
+        "description": "One input varied across points.\n\nThe variable ``name`` takes ``count`` evenly spaced values from ``min`` to\n``max`` in ``period`` (the household's ``default_year`` when omitted), for\nthe entity member at position ``index`` (the first when omitted)."
+      },
+      "HouseholdCalculationErrorItem": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "input_errors": {
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Input Errors"
+          },
+          "spm_error": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spm Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "input_errors",
+          "spm_error"
+        ],
+        "title": "HouseholdCalculationErrorItem",
+        "description": "Why a calculation failed.\n\n``code`` is the household function's error code: ``invalid_inputs``,\nwith ``input_errors`` naming each input the country model does not\nrecognize; ``invalid_household``; ``invalid_spm_selection``, with\n``spm_error``; ``bundle_mismatch``; or ``calculation_failed``. It is null\nwhen the calculation failed for another reason, such as a household\nfunction that raised or was cancelled; ``message`` is then the job's\none-line error, such as ``household_function_error: …`` or\n``household_function_cancelled: …``, and submitting again may succeed."
+      },
+      "HouseholdCalculationItem": {
+        "properties": {
+          "calculation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Calculation Id"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "household_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Household Id"
+          },
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "catalog_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Catalog Version Id"
+          },
+          "country_package_version": {
+            "type": "string",
+            "title": "Country Package Version"
+          },
+          "policyengine_version": {
+            "type": "string",
+            "title": "Policyengine Version"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseholdCalculationOutputItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseholdCalculationErrorItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "calculation_id",
+          "country_id",
+          "household_id",
+          "policy_id",
+          "year",
+          "catalog_version_id",
+          "country_package_version",
+          "policyengine_version",
+          "status",
+          "created_at",
+          "started_at",
+          "completed_at",
+          "result",
+          "error"
+        ],
+        "title": "HouseholdCalculationItem",
+        "description": "A household calculation and its outcome.\n\n``status`` moves from ``pending`` through ``running`` to ``succeeded``,\nwith ``result``, or ``failed``, with ``error``. ``catalog_version_id``,\n``country_package_version`` and ``policyengine_version`` are those the\ncalculation runs with."
+      },
+      "HouseholdCalculationOutputItem": {
+        "properties": {
+          "household": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Household"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "spm_config": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spm Config"
+          },
+          "spm_provenance": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spm Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "household",
+          "warnings",
+          "spm_config",
+          "spm_provenance"
+        ],
+        "title": "HouseholdCalculationOutputItem",
+        "description": "A succeeded calculation's household.\n\n``household`` is the stored household in the situation shape (people and\ngroups keyed by their record IDs) with each calculated value filled in by\nperiod. ``warnings`` lists inputs the country model ignored. In the US,\n``spm_config`` is the SPM selection the calculation applied and\n``spm_provenance`` its receipt; both are null elsewhere."
+      },
+      "HouseholdCalculationRequest": {
+        "properties": {
+          "country_id": {
+            "type": "string",
+            "enum": [
+              "us",
+              "uk"
+            ],
+            "title": "Country Id",
+            "description": "Supported PolicyEngine country ID"
+          },
+          "household_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Household Id"
+          },
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "axes": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "$ref": "#/components/schemas/HouseholdCalculationAxis"
+                  },
+                  "type": "array",
+                  "maxItems": 32,
+                  "minItems": 1
+                },
+                "type": "array",
+                "maxItems": 8
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Axes"
+          },
+          "add_missing_variables": {
+            "type": "boolean",
+            "title": "Add Missing Variables",
+            "default": false
+          },
+          "spm": {
+            "$ref": "#/components/schemas/SPMSelection",
+            "title": "Spm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "country_id",
+          "household_id"
+        ],
+        "title": "HouseholdCalculationRequest",
+        "description": "A stored household to calculate under a stored policy, or current law.\n\n``household_id`` and ``policy_id`` name records of ``country_id`` stored\nthrough ``/v2/households`` and ``/v2/policies``; without ``policy_id`` the\nhousehold is calculated under current law, for the household's\n``default_year``. Each group in ``axes`` varies its inputs together across\n``count`` points; several groups form a grid of at most 10,000 points.\n``add_missing_variables`` adds every variable the household lacks before\ncalculating. ``spm`` selects the SPM forecast scenario and geography for\na US household. Each submission starts a new calculation."
+      },
+      "HouseholdCalculationResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/HouseholdCalculationResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "HouseholdCalculationResponse",
+        "description": "Success response holding one calculation."
+      },
+      "HouseholdCalculationResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/HouseholdCalculationItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item"
+        ],
+        "title": "HouseholdCalculationResult",
+        "description": "Result holding one calculation in ``item``."
+      },
+      "HouseholdCalculationSubmittedItem": {
+        "properties": {
+          "calculation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Calculation Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "household_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Household Id"
+          },
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "calculation_id",
+          "status",
+          "country_id",
+          "household_id",
+          "policy_id",
+          "year"
+        ],
+        "title": "HouseholdCalculationSubmittedItem",
+        "description": "A calculation the simulation service accepted.\n\nPoll ``GET /v2/household-calculations/{calculation_id}`` until ``status``\nis ``succeeded`` or ``failed``. ``year`` is the household's default year,\nwhich is calculated."
+      },
+      "HouseholdCalculationSubmittedResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/HouseholdCalculationSubmittedResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "HouseholdCalculationSubmittedResponse",
+        "description": "Success response holding the accepted calculation."
+      },
+      "HouseholdCalculationSubmittedResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/HouseholdCalculationSubmittedItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item"
+        ],
+        "title": "HouseholdCalculationSubmittedResult",
+        "description": "Result holding the accepted calculation in ``item``."
       },
       "HouseholdCreateRequest": {
         "properties": {
@@ -9581,7 +12243,457 @@
         "title": "HouseholdPersonRecord",
         "description": "One person in a household.\n\n``memberships`` maps each of the country's entity collections to the ``id``\nof the group the person belongs to, and must name every collection."
       },
+      "InequalityChange": {
+        "properties": {
+          "gini": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          },
+          "top_10_pct_share": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          },
+          "top_1_pct_share": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "gini",
+          "top_10_pct_share",
+          "top_1_pct_share"
+        ],
+        "title": "InequalityChange",
+        "description": "The Gini coefficient and the top 10% and top 1% income shares."
+      },
+      "IntraDecileShares": {
+        "properties": {
+          "deciles": {
+            "additionalProperties": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Deciles"
+          },
+          "all": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "All"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "deciles",
+          "all"
+        ],
+        "title": "IntraDecileShares",
+        "description": "Shares of people in each decile who gain or lose, by size of the change.\n\n``deciles`` lists each category's share for deciles 1 to 10 in order, and\n``all`` is each category's mean over those deciles."
+      },
+      "InvitationAcceptRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "InvitationAcceptRequest",
+        "description": "The token from an invitation's link, from its ``#token=`` fragment."
+      },
+      "InvitationAcceptanceItem": {
+        "properties": {
+          "user_type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
+            "title": "User Type"
+          },
+          "previous_user_type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
+            "title": "Previous User Type"
+          },
+          "type_changed": {
+            "type": "boolean",
+            "title": "Type Changed"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user_type",
+          "previous_user_type",
+          "type_changed"
+        ],
+        "title": "InvitationAcceptanceItem",
+        "description": "The user's type after accepting an invitation, and before.\n\n``type_changed`` is false when the user already had the invited type or a\nhigher one: an invitation never lowers a type."
+      },
+      "InvitationAcceptanceResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/InvitationAcceptanceResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "InvitationAcceptanceResponse",
+        "description": "Success response holding an accepted invitation's outcome."
+      },
+      "InvitationAcceptanceResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/InvitationAcceptanceItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item"
+        ],
+        "title": "InvitationAcceptanceResult",
+        "description": "Result holding the accepted invitation's outcome in ``item``."
+      },
+      "InvitationCreateRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "minLength": 3,
+            "pattern": "^[^@\\s<>]+@[^@\\s<>]+$",
+            "title": "Email"
+          },
+          "user_type": {
+            "type": "string",
+            "enum": [
+              "author",
+              "admin"
+            ],
+            "title": "User Type"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email",
+          "user_type"
+        ],
+        "title": "InvitationCreateRequest",
+        "description": "The address an admin invites, and the type the invitation grants.\n\n``email`` is stripped of surrounding whitespace and must be one address:\nan @ with text on both sides and no whitespace, < or >."
+      },
       "JsonValue": {},
+      "LaborSupplyDecileValues": {
+        "properties": {
+          "income": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Income"
+          },
+          "substitution": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Substitution"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "income",
+          "substitution"
+        ],
+        "title": "LaborSupplyDecileValues",
+        "description": "Income- and substitution-effect responses by income decile number."
+      },
+      "LaborSupplyDeciles": {
+        "properties": {
+          "average": {
+            "$ref": "#/components/schemas/LaborSupplyDecileValues"
+          },
+          "relative": {
+            "$ref": "#/components/schemas/LaborSupplyDecileValues"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "average",
+          "relative"
+        ],
+        "title": "LaborSupplyDeciles",
+        "description": "Labour supply responses by decile: per household, and relative to earnings."
+      },
+      "LaborSupplyHours": {
+        "properties": {
+          "baseline": {
+            "type": "number",
+            "title": "Baseline"
+          },
+          "reform": {
+            "type": "number",
+            "title": "Reform"
+          },
+          "change": {
+            "type": "number",
+            "title": "Change"
+          },
+          "income_effect": {
+            "type": "number",
+            "title": "Income Effect"
+          },
+          "substitution_effect": {
+            "type": "number",
+            "title": "Substitution Effect"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseline",
+          "reform",
+          "change",
+          "income_effect",
+          "substitution_effect"
+        ],
+        "title": "LaborSupplyHours",
+        "description": "Total weekly hours under the baseline and reform, and the change's effects."
+      },
+      "LaborSupplyRelativeResponse": {
+        "properties": {
+          "income": {
+            "type": "number",
+            "title": "Income"
+          },
+          "substitution": {
+            "type": "number",
+            "title": "Substitution"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "income",
+          "substitution"
+        ],
+        "title": "LaborSupplyRelativeResponse",
+        "description": "Income- and substitution-effect responses relative to baseline earnings."
+      },
+      "LaborSupplyResponse": {
+        "properties": {
+          "substitution_lsr": {
+            "type": "number",
+            "title": "Substitution Lsr"
+          },
+          "income_lsr": {
+            "type": "number",
+            "title": "Income Lsr"
+          },
+          "relative_lsr": {
+            "$ref": "#/components/schemas/LaborSupplyRelativeResponse"
+          },
+          "total_change": {
+            "type": "number",
+            "title": "Total Change"
+          },
+          "revenue_change": {
+            "type": "number",
+            "title": "Revenue Change"
+          },
+          "decile": {
+            "$ref": "#/components/schemas/LaborSupplyDeciles"
+          },
+          "hours": {
+            "$ref": "#/components/schemas/LaborSupplyHours"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "substitution_lsr",
+          "income_lsr",
+          "relative_lsr",
+          "total_change",
+          "revenue_change",
+          "decile",
+          "hours"
+        ],
+        "title": "LaborSupplyResponse",
+        "description": "The behavioural labour supply response to the reform.\n\n``income_lsr`` and ``substitution_lsr`` are the earnings changes from the\ntwo effects, and ``total_change`` their sum."
+      },
+      "LatestTypeChangeItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "previous_user_type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
+            "title": "Previous User Type"
+          },
+          "user_type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "author",
+              "admin"
+            ],
+            "title": "User Type"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Changed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "previous_user_type",
+          "user_type",
+          "changed_at"
+        ],
+        "title": "LatestTypeChangeItem",
+        "description": "The user's most recent type change, from ``previous_user_type``."
+      },
+      "LocalAuthorityImpact": {
+        "properties": {
+          "average_household_income_change": {
+            "type": "number",
+            "title": "Average Household Income Change"
+          },
+          "relative_household_income_change": {
+            "type": "number",
+            "title": "Relative Household Income Change"
+          },
+          "population": {
+            "type": "number",
+            "title": "Population"
+          },
+          "disclosure_tier": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "reported",
+                  "approximate"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disclosure Tier"
+          },
+          "average_household_income_change_lower": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Household Income Change Lower"
+          },
+          "average_household_income_change_upper": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Household Income Change Upper"
+          },
+          "relative_household_income_change_lower": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Household Income Change Lower"
+          },
+          "relative_household_income_change_upper": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Household Income Change Upper"
+          },
+          "local_authority_code": {
+            "type": "string",
+            "title": "Local Authority Code"
+          },
+          "local_authority_name": {
+            "type": "string",
+            "title": "Local Authority Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "average_household_income_change",
+          "relative_household_income_change",
+          "population",
+          "disclosure_tier",
+          "average_household_income_change_lower",
+          "average_household_income_change_upper",
+          "relative_household_income_change_lower",
+          "relative_household_income_change_upper",
+          "local_authority_code",
+          "local_authority_name"
+        ],
+        "title": "LocalAuthorityImpact",
+        "description": "The reform's impact in one UK local authority."
+      },
       "MeDetailResponse": {
         "properties": {
           "status": {
@@ -9782,6 +12894,55 @@
         ],
         "title": "MeItem",
         "description": "The current user: a signed-in account or a browser's unauthenticated user.\n\n``user_type`` says which: ``unauthenticated``, or the signed-in user's\nstored type, ``standard``, ``author`` or ``admin``, where each type has\nevery permission of the types before it. An unauthenticated user has no\nprimary country, and only a signed-in user can set its names or primary\ncountry."
+      },
+      "MeReadResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/MeReadResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "MeReadResponse",
+        "description": "Success response holding the current user and their latest type change."
+      },
+      "MeReadResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/MeItem"
+          },
+          "latest_type_change": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LatestTypeChangeItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item",
+          "latest_type_change"
+        ],
+        "title": "MeReadResult",
+        "description": "The current user, and their most recent type change until it is dismissed.\n\n``latest_type_change`` is null when the user's type never changed, when\nits most recent change was dismissed, and for an unauthenticated user."
       },
       "MeUpgradeResponse": {
         "properties": {
@@ -10683,6 +13844,9 @@
           },
           "economy_options": {
             "$ref": "#/components/schemas/MetadataEconomyOptions"
+          },
+          "spm": {
+            "$ref": "#/components/schemas/MetadataSPMAvailability"
           }
         },
         "additionalProperties": false,
@@ -10696,10 +13860,11 @@
           "basic_inputs",
           "regions",
           "datasets",
-          "economy_options"
+          "economy_options",
+          "spm"
         ],
         "title": "MetadataModelCatalogResult",
-        "description": "The small parts of one catalog version, read when a client starts.\n\npolicyengine_version names the selected catalog version, so a client can\nrequest its other parts for that exact version. catalog_format is null,\nand entities and basic_inputs are empty, for a version published before\ncatalog format 2. Variables, parameters and their values are served by\ntheir own routes."
+        "description": "The small parts of one catalog version, read when a client starts.\n\npolicyengine_version names the selected catalog version, so a client can\nrequest its other parts for that exact version. catalog_format is null,\nand entities and basic_inputs are empty, for a version published before\ncatalog format 2. ``spm`` says whether the version offers SPM settings.\nVariables, parameters and their values are served by their own routes."
       },
       "MetadataModelDetailResponse": {
         "properties": {
@@ -11835,6 +15000,56 @@
         "title": "MetadataRegionType",
         "description": "The geographic level of a region."
       },
+      "MetadataSPMAvailability": {
+        "properties": {
+          "available": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available"
+          },
+          "settings_schema": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings Schema"
+          },
+          "defaults": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Defaults"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "available"
+        ],
+        "title": "MetadataSPMAvailability",
+        "description": "Whether a catalog version offers SPM settings for a household.\n\nWhen ``available``, ``settings_schema`` is the JSON schema of a\nhousehold's ``spm`` selection and ``defaults`` the certified selection\nthat applies to every field a household leaves out. A version without\nthem (any country but the US, or a bundle without certified SPM\nsupport) is not available, and both are null. ``available`` is null\nwhile catalog publication has not recorded the version's availability,\nbecause the simulation service didn't serve its PolicyEngine.py version\nor its versions couldn't be read: whether it offers SPM settings is not\nknown yet."
+      },
       "MetadataTimePeriodOption": {
         "properties": {
           "name": {
@@ -12112,6 +15327,60 @@
         ],
         "title": "MetadataVariablePageResponse",
         "description": "Success response holding one page of variables."
+      },
+      "PackageVersionsItem": {
+        "properties": {
+          "country_package_version": {
+            "type": "string",
+            "title": "Country Package Version"
+          },
+          "policyengine_version": {
+            "type": "string",
+            "title": "Policyengine Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "country_package_version",
+          "policyengine_version"
+        ],
+        "title": "PackageVersionsItem",
+        "description": "A country package version and the PolicyEngine.py version beside it."
+      },
+      "PolicyChoice": {
+        "properties": {
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "dynamic_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dynamic Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PolicyChoice",
+        "description": "A simulation's stored policy and dynamic; neither means current law."
       },
       "PolicyCreateRequest": {
         "properties": {
@@ -12479,6 +15748,119 @@
         "title": "PolicyProvenanceItem",
         "description": "Stored v3 reform provenance as responses publish it.\n\nIt mirrors the contract without the input bounds and ignores unknown keys,\nso any stored row serializes."
       },
+      "PovertyByAge": {
+        "properties": {
+          "poverty": {
+            "$ref": "#/components/schemas/AgePoverty"
+          },
+          "deep_poverty": {
+            "$ref": "#/components/schemas/AgePoverty"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "poverty",
+          "deep_poverty"
+        ],
+        "title": "PovertyByAge",
+        "description": "Poverty and deep poverty rates by age group.\n\nIn the US these are the SPM poverty and deep SPM poverty rates; in the UK,\nrelative and absolute poverty before housing costs."
+      },
+      "PovertyByGender": {
+        "properties": {
+          "poverty": {
+            "$ref": "#/components/schemas/GenderPoverty"
+          },
+          "deep_poverty": {
+            "$ref": "#/components/schemas/GenderPoverty"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "poverty",
+          "deep_poverty"
+        ],
+        "title": "PovertyByGender",
+        "description": "Poverty and deep poverty rates by gender."
+      },
+      "PovertyByRace": {
+        "properties": {
+          "poverty": {
+            "$ref": "#/components/schemas/RacePoverty"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "poverty"
+        ],
+        "title": "PovertyByRace",
+        "description": "US poverty rates by race; there is no deep poverty breakdown."
+      },
+      "ProgramBudget": {
+        "properties": {
+          "baseline": {
+            "type": "number",
+            "title": "Baseline"
+          },
+          "reform": {
+            "type": "number",
+            "title": "Reform"
+          },
+          "difference": {
+            "type": "number",
+            "title": "Difference"
+          },
+          "is_tax": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Tax"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseline",
+          "reform",
+          "difference",
+          "is_tax"
+        ],
+        "title": "ProgramBudget",
+        "description": "One program's baseline and reform totals, and reform minus baseline.\n\n``is_tax`` says whether the program is a tax or a benefit, and is null for\nresults stored before the flag was recorded."
+      },
+      "RacePoverty": {
+        "properties": {
+          "white": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          },
+          "black": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          },
+          "hispanic": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          },
+          "other": {
+            "$ref": "#/components/schemas/BaselineReformValue"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "white",
+          "black",
+          "hispanic",
+          "other"
+        ],
+        "title": "RacePoverty",
+        "description": "US poverty rates by race and ethnicity."
+      },
       "ReportCalibration": {
         "properties": {
           "release_id": {
@@ -12715,6 +16097,332 @@
         ],
         "title": "ReportCalibrationWorstItem",
         "description": "The calibration target that one match fits worst, with its relative error."
+      },
+      "ReportCreateRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "economy",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "year": {
+            "type": "integer",
+            "maximum": 2200,
+            "minimum": 1900,
+            "title": "Year",
+            "description": "The year"
+          },
+          "region_code": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^\\S+$",
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1,
+                "pattern": "^\\S+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/PolicyChoice"
+          },
+          "reform": {
+            "$ref": "#/components/schemas/PolicyChoice"
+          },
+          "include_cliffs": {
+            "type": "boolean",
+            "title": "Include Cliffs",
+            "default": false
+          },
+          "spm": {
+            "$ref": "#/components/schemas/SPMSelection",
+            "title": "Spm"
+          },
+          "country_id": {
+            "type": "string",
+            "enum": [
+              "us",
+              "uk"
+            ],
+            "title": "Country Id",
+            "description": "Supported PolicyEngine country ID"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "year",
+          "region_code",
+          "baseline",
+          "reform",
+          "country_id"
+        ],
+        "title": "ReportCreateRequest",
+        "description": "An economy report to create; ``country_id`` must match the query's.\n\nEach simulation's empty object is current law. No field names a\nPolicyEngine.py version: the simulation service runs its default\nworker's."
+      },
+      "ReportDetailResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ReportDetailResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "ReportDetailResponse",
+        "description": "Success response holding one report."
+      },
+      "ReportDetailResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/ReportItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item"
+        ],
+        "title": "ReportDetailResult",
+        "description": "Result holding one report in ``item``."
+      },
+      "ReportItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "economy",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "region_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
+          "baseline_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reform_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "options": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Options"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_run",
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportRunItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EconomyResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "country_id",
+          "kind",
+          "label",
+          "description",
+          "year",
+          "region_code",
+          "dataset_name",
+          "baseline_simulation",
+          "reform_simulation",
+          "options",
+          "created_at",
+          "status",
+          "run",
+          "current_versions",
+          "result"
+        ],
+        "title": "ReportItem",
+        "description": "An economy report with its newest run's result.\n\n``result`` is the single-year economy result, in the format the app reads\ntoday, once the newest run has succeeded, and null otherwise."
+      },
+      "ReportListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ReportListResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "ReportListResponse",
+        "description": "Success response holding the listed reports."
+      },
+      "ReportListResult": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReportSummaryItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ReportListResult",
+        "description": "The listed reports in ``items``, in the order named, without results."
       },
       "ReportProvision": {
         "properties": {
@@ -13008,6 +16716,116 @@
         "title": "ReportProvisionItem",
         "description": "One parameter the report's reform changes, with its baseline and reform values.\n\n``intervals`` gives the reform's dated values when they vary over time. The\n``growth`` keys, present only when set, say how a value set from one year on\nmoves in later years and how grown values round."
       },
+      "ReportRunItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "trigger": {
+            "type": "string",
+            "enum": [
+              "initial",
+              "manual",
+              "system"
+            ],
+            "title": "Trigger"
+          },
+          "country_package_version": {
+            "type": "string",
+            "title": "Country Package Version"
+          },
+          "policyengine_version": {
+            "type": "string",
+            "title": "Policyengine Version"
+          },
+          "baseline_simulation_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Simulation Run Id"
+          },
+          "reform_simulation_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reform Simulation Run Id"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "trigger",
+          "country_package_version",
+          "policyengine_version",
+          "baseline_simulation_run_id",
+          "reform_simulation_run_id",
+          "error_message",
+          "created_at",
+          "started_at",
+          "completed_at"
+        ],
+        "title": "ReportRunItem",
+        "description": "One calculation of a report, on one country package and .py version.\n\n``status`` is ``pending``, ``running``, ``succeeded`` or ``failed``, and\n``error_message`` says why a failed run failed. ``trigger`` is\n``initial`` for the run the report's creation started."
+      },
       "ReportScorecard": {
         "properties": {
           "programs": {
@@ -13044,6 +16862,191 @@
         ],
         "title": "ReportScorecardItem",
         "description": "The programs on the scorecard saved with a report's validation."
+      },
+      "ReportSimulationItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "dynamic_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dynamic Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "policy_id",
+          "dynamic_id"
+        ],
+        "title": "ReportSimulationItem",
+        "description": "A simulation a report compares; a null policy or dynamic is current law."
+      },
+      "ReportSummaryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "economy",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "region_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
+          "baseline_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reform_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "options": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Options"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_run",
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportRunItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "country_id",
+          "kind",
+          "label",
+          "description",
+          "year",
+          "region_code",
+          "dataset_name",
+          "baseline_simulation",
+          "reform_simulation",
+          "options",
+          "created_at",
+          "status",
+          "run",
+          "current_versions"
+        ],
+        "title": "ReportSummaryItem",
+        "description": "An economy report comparing a baseline and a reform simulation.\n\n``status`` is the newest run's, or ``not_run`` for a report with no run.\n``run`` is the newest run, whatever its status and versions;\n``current_versions`` are the versions the Public API runs now, so a\nnewest run on other versions is out of date. ``options`` are the options\nthe report was created with."
       },
       "ReportValidation": {
         "properties": {
@@ -13125,6 +17128,174 @@
         ],
         "title": "ReportValidationItem",
         "description": "The validation snapshot saved with a report.\n\nIt records when the report was matched and with which map model version,\nand optionally the calibration results and scorecard."
+      },
+      "SPMComparisonProvenance": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "canonical-spm-comparison-v2",
+            "title": "Schema Version"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/SPMExecutionProvenance"
+          },
+          "reform": {
+            "$ref": "#/components/schemas/SPMExecutionProvenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "baseline",
+          "reform"
+        ],
+        "title": "SPMComparisonProvenance",
+        "description": "Compact baseline and reform receipts for a society-wide result."
+      },
+      "SPMExecutionProvenance": {
+        "properties": {
+          "receipt": {
+            "$ref": "#/components/schemas/SPMProvenance"
+          },
+          "execution_count": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Execution Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "receipt",
+          "execution_count"
+        ],
+        "title": "SPMExecutionProvenance",
+        "description": "One shared compact receipt and the executions that produced it."
+      },
+      "SPMProvenance": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "canonical-spm-provenance-v2",
+            "title": "Schema Version"
+          },
+          "forecast_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^\\S+$",
+            "title": "Forecast Id"
+          },
+          "forecast_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Forecast Sha256"
+          },
+          "scenario": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^\\S+$",
+            "title": "Scenario"
+          },
+          "geography_kind": {
+            "type": "string",
+            "enum": [
+              "county",
+              "national",
+              "metro"
+            ],
+            "title": "Geography Kind"
+          },
+          "geography_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geography Id"
+          },
+          "county_vintage": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$",
+            "title": "County Vintage"
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "years": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Years"
+          },
+          "runtime_versions": {
+            "$ref": "#/components/schemas/SPMRuntimeVersions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "forecast_id",
+          "forecast_sha256",
+          "scenario",
+          "geography_kind",
+          "geography_id",
+          "county_vintage",
+          "as_of",
+          "years",
+          "runtime_versions"
+        ],
+        "title": "SPMProvenance",
+        "description": "Compact public receipt for one canonical SPM execution."
+      },
+      "SPMRuntimeVersions": {
+        "properties": {
+          "policyengine": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Policyengine"
+          },
+          "policyengine-core": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Policyengine-Core"
+          },
+          "policyengine-us": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Policyengine-Us"
+          },
+          "spm-calculator": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Spm-Calculator"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policyengine",
+          "policyengine-core",
+          "policyengine-us",
+          "spm-calculator"
+        ],
+        "title": "SPMRuntimeVersions",
+        "description": "Package versions required to reproduce one certified SPM execution."
       },
       "SPMSelection": {
         "oneOf": [
@@ -13315,6 +17486,18 @@
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
+          "report_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Id"
+          },
           "legacy_report_id": {
             "anyOf": [
               {
@@ -13421,6 +17604,7 @@
         "required": [
           "id",
           "country_id",
+          "report_id",
           "legacy_report_id",
           "name",
           "source_note",
@@ -13433,7 +17617,351 @@
           "updated_at"
         ],
         "title": "SharedUserReportItem",
-        "description": "A saved report as anyone holding its link reads it."
+        "description": "A saved report as anyone holding its link reads it.\n\n``report_id`` is the detailed-save report it shows, and\n``legacy_report_id`` the v1 report output; one of them is set."
+      },
+      "SimulationCreateRequest": {
+        "properties": {
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "dynamic_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dynamic Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "economy",
+            "title": "Kind"
+          },
+          "year": {
+            "type": "integer",
+            "maximum": 2200,
+            "minimum": 1900,
+            "title": "Year",
+            "description": "The year"
+          },
+          "region_code": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^\\S+$",
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1,
+                "pattern": "^\\S+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
+          "country_id": {
+            "type": "string",
+            "enum": [
+              "us",
+              "uk"
+            ],
+            "title": "Country Id",
+            "description": "Supported PolicyEngine country ID"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "year",
+          "region_code",
+          "country_id"
+        ],
+        "title": "SimulationCreateRequest",
+        "description": "An economy simulation to create; ``country_id`` must match the query's.\n\nNo field names a PolicyEngine.py version: the simulation service runs its\ndefault worker's."
+      },
+      "SimulationDetailResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/SimulationDetailResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "SimulationDetailResponse",
+        "description": "Success response holding one simulation."
+      },
+      "SimulationDetailResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/SimulationItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item"
+        ],
+        "title": "SimulationDetailResult",
+        "description": "Result holding one simulation in ``item``."
+      },
+      "SimulationItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "economy",
+              "household"
+            ],
+            "title": "Kind"
+          },
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "dynamic_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dynamic Id"
+          },
+          "household_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Household Id"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "region_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_run",
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SimulationRunItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "country_id",
+          "kind",
+          "policy_id",
+          "dynamic_id",
+          "household_id",
+          "year",
+          "region_code",
+          "dataset_name",
+          "created_at",
+          "status",
+          "run",
+          "current_versions"
+        ],
+        "title": "SimulationItem",
+        "description": "A simulation, its newest run and the versions the Public API runs now.\n\nA null ``policy_id`` or ``dynamic_id`` is current law. An economy\nsimulation names its region and dataset, a household simulation its\nhousehold. ``status`` is the newest run's, or ``not_run``; a newest run\non other versions than ``current_versions`` is out of date."
+      },
+      "SimulationRunItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "country_package_version": {
+            "type": "string",
+            "title": "Country Package Version"
+          },
+          "policyengine_version": {
+            "type": "string",
+            "title": "Policyengine Version"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "year",
+          "status",
+          "country_package_version",
+          "policyengine_version",
+          "error_message",
+          "created_at",
+          "started_at",
+          "completed_at"
+        ],
+        "title": "SimulationRunItem",
+        "description": "One calculation of a simulation, for one year on one package version pair."
       },
       "UKHouseholdDocument": {
         "properties": {
@@ -13543,6 +18071,62 @@
       "USHouseholdDocument-Output": {
         "additionalProperties": true,
         "type": "object"
+      },
+      "UnavailableAfterReportCreatedResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error",
+            "title": "Status",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Message"
+          },
+          "report_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Report Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "report_id"
+        ],
+        "title": "UnavailableAfterReportCreatedResponse",
+        "description": "The 503 answer when the simulation service failed a new report's run.\n\nThe message gives the service's status and code. ``report_id`` names the\nreport, which ``GET /v2/reports/{report_id}`` reads with its failed run."
+      },
+      "UnavailableAfterSimulationCreatedResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error",
+            "title": "Status",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Message"
+          },
+          "simulation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Simulation Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "simulation_id"
+        ],
+        "title": "UnavailableAfterSimulationCreatedResponse",
+        "description": "The 503 answer when the simulation service failed a new simulation's run.\n\nThe message gives the service's status and code. ``simulation_id`` names\nthe simulation, which ``GET /v2/simulations/{simulation_id}`` reads with\nits failed run."
       },
       "UserHouseholdCreateRequest": {
         "properties": {
@@ -14353,12 +18937,32 @@
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
+          "report_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Id"
+          },
           "legacy_report_id": {
-            "type": "integer",
-            "maximum": 9223372036854776000,
-            "minimum": 1,
-            "title": "Legacy Report Id",
-            "description": "Exact v1 database identifier (a JSON integer)"
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9223372036854776000,
+                "minimum": 1,
+                "description": "Exact v1 database identifier (a JSON integer)"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legacy Report Id"
           },
           "user_policy_id": {
             "anyOf": [
@@ -14390,8 +18994,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "country_id",
-          "legacy_report_id"
+          "country_id"
         ],
         "title": "UserReportCreateRequest",
         "description": "Association fields; the owner is taken from the request credential."
@@ -14614,7 +19217,7 @@
           "updated_at"
         ],
         "title": "UserReportItem",
-        "description": "A report saved by a user, with the user's name, notes and saved presentation.\n\n``legacy_report_id`` is the v1 report output it shows. ``user_policy_id`` is\nthe user's saved reform the report was run from, and\n``baseline_user_policy_id`` the saved reform it was compared with instead of\ncurrent law; each is null when not set or once that reform is deleted.\n``budget_window_years`` is null for a report without a budget window."
+        "description": "A report saved by a user, with the user's name, notes and saved presentation.\n\n``report_id`` is the detailed-save report it shows, and\n``legacy_report_id`` the v1 report output; one of them is set, and only\nsaved reports the production migration wrote hold both. ``user_policy_id`` is\nthe user's saved reform the report was run from, and\n``baseline_user_policy_id`` the saved reform it was compared with instead of\ncurrent law; each is null when not set or once that reform is deleted.\n``budget_window_years`` is null for a report without a budget window."
       },
       "UserReportPageResponse": {
         "properties": {
@@ -14760,6 +19363,19 @@
             ],
             "title": "Last Run At"
           },
+          "report_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Id"
+          },
           "legacy_report_id": {
             "anyOf": [
               {
@@ -14817,12 +19433,32 @@
             "title": "Country Id",
             "description": "Supported PolicyEngine country ID"
           },
+          "simulation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Simulation Id"
+          },
           "legacy_simulation_id": {
-            "type": "integer",
-            "maximum": 9223372036854776000,
-            "minimum": 1,
-            "title": "Legacy Simulation Id",
-            "description": "Exact v1 database identifier (a JSON integer)"
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9223372036854776000,
+                "minimum": 1,
+                "description": "Exact v1 database identifier (a JSON integer)"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legacy Simulation Id"
           },
           "name": {
             "anyOf": [
@@ -14852,8 +19488,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "country_id",
-          "legacy_simulation_id"
+          "country_id"
         ],
         "title": "UserSimulationCreateRequest",
         "description": "Association fields; the owner is taken from the request credential."
@@ -14987,7 +19622,7 @@
           "updated_at"
         ],
         "title": "UserSimulationItem",
-        "description": "A simulation saved by a user, with the user's name and description for it.\n\n``legacy_simulation_id`` is the v1 simulation it saves. Associations can be\nrenamed, pointed at another v1 simulation of the same country, or deleted."
+        "description": "A simulation saved by a user, with the user's name and description for it.\n\n``simulation_id`` is the detailed-save simulation it saves, and\n``legacy_simulation_id`` the v1 simulation; one of them is set, and only\nsaved simulations the production migration wrote hold both. Associations\ncan be renamed or deleted, and pointed at another simulation of the same\ncountry through the reference they hold: another detailed-save simulation\nthrough ``simulation_id``, another v1 simulation through\n``legacy_simulation_id``. An update that would leave both set is refused,\nand the simulation's own kind (economy or household) is not checked."
       },
       "UserSimulationPageResponse": {
         "properties": {
@@ -15048,6 +19683,19 @@
       },
       "UserSimulationPatchRequest": {
         "properties": {
+          "simulation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Simulation Id"
+          },
           "legacy_simulation_id": {
             "anyOf": [
               {
@@ -15149,6 +19797,7 @@
             "type": "string",
             "enum": [
               "admin_route",
+              "invitation",
               "script"
             ],
             "title": "Source"
@@ -15172,7 +19821,7 @@
           "created_at"
         ],
         "title": "UserTypeChangeItem",
-        "description": "One recorded change of a signed-in user's type.\n\n``source`` is ``admin_route`` for a change an admin made through these\nroutes, named by ``changed_by_user_id`` and ``changed_by_email``, and\n``script`` for one the type script made, which names no admin.\n``changed_by_user_id`` is also null once that admin's account is deleted."
+        "description": "One recorded change of a signed-in user's type.\n\n``source`` is ``admin_route`` for a change an admin made through these\nroutes, named by ``changed_by_user_id`` and ``changed_by_email``,\n``invitation`` for one the user made by accepting an admin's email\ninvitation, which names that admin, and ``script`` for one the type\nscript made, which names no admin. ``changed_by_user_id`` is also null\nonce that admin's account is deleted.\n``changed_by_email`` is read from Auth0 like an admin user item's email,\nelse stored."
       },
       "UserTypeChangeListResponse": {
         "properties": {
@@ -15246,6 +19895,35 @@
         "title": "UserTypePatchRequest",
         "description": "The signed-in type an admin gives a user, and the type the admin last read.\n\nexpected_user_type is the user's type as the admin last read it. When the\nrequest would change the type and the stored type differs from\nexpected_user_type, the change is refused (409) and nothing is written.\nWhen the user already has user_type, nothing changes (200), whatever\nexpected_user_type is. Only the type is compared: a type changed and\nchanged back since the read is not detected."
       },
+      "V2CodedErrorResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error",
+            "title": "Status",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Message"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "code"
+        ],
+        "title": "V2CodedErrorResponse",
+        "description": "An error that also names its reason with a stable ``code``.\n\nClients choose what to do from ``code``, not from ``message``, which is\nfor people and may change."
+      },
       "V2ErrorResponse": {
         "properties": {
           "status": {
@@ -15267,6 +19945,42 @@
         ],
         "title": "V2ErrorResponse",
         "description": "Strict error response shared by every API v2 resource."
+      },
+      "V2MissingParametersErrorResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error",
+            "title": "Status",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Message"
+          },
+          "code": {
+            "type": "string",
+            "const": "missing_parameters",
+            "title": "Code",
+            "default": "missing_parameters"
+          },
+          "missing_parameters": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Parameters"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "missing_parameters"
+        ],
+        "title": "V2MissingParametersErrorResponse",
+        "description": "A refused calculation whose policy sets parameters the catalog lacks.\n\n``missing_parameters`` names each parameter the policy sets that the\nrunning catalog version does not have, sorted; the calculation would\notherwise run without those values."
       }
     },
     "securitySchemes": {

@@ -6,10 +6,18 @@ import { isRefusedOrMissing, useUserTypeChanges } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { formatAdminDateTime, USER_TYPE_LABELS } from './adminUserFormat';
 
-/** Who made a change: an admin through the admin routes, or the type script. */
+/**
+ * Who made a change: an admin through the admin routes, the user by
+ * accepting an admin's invitation, or the type script.
+ */
 function changeAuthor(change: UserTypeChangeItem): string {
   if (change.source === 'script') {
     return 'Set by the type script';
+  }
+  if (change.source === 'invitation') {
+    return change.changed_by_email
+      ? `Accepted an invitation from ${change.changed_by_email}`
+      : "Accepted an admin's invitation";
   }
   // The admin's email is null when the admin has none, or once their account is deleted.
   return change.changed_by_email ? `Changed by ${change.changed_by_email}` : 'Changed by an admin';

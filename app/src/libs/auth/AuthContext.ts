@@ -20,6 +20,11 @@ export interface AuthProfile {
   picture: string | null;
 }
 
+export interface SignInOptions {
+  /** Opens Auth0 on its sign-up screen instead of sign-in. */
+  signUp?: boolean;
+}
+
 export interface AuthContextValue {
   status: AuthStatus;
   /** From the ID token while signed in; null otherwise. */
@@ -30,8 +35,11 @@ export interface AuthContextValue {
   sessionEnded: boolean;
   /** Why the last sign-in did not complete, when it did not. */
   error: Error | null;
-  /** Redirects to the hosted sign-in page; returns to `returnTo` (default: here). */
-  signIn: (returnTo?: string) => Promise<void>;
+  /**
+   * Redirects to the hosted sign-in page, or its sign-up screen; returns to
+   * `returnTo` (default: here).
+   */
+  signIn: (returnTo?: string, options?: SignInOptions) => Promise<void>;
   signOut: () => Promise<void>;
   /**
    * An access token for the PolicyEngine API, or null when signed out or

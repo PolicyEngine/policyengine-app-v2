@@ -131,6 +131,15 @@ export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
   operation('account', ['GET', 'DELETE'], '/v2/me'),
   operation('account export', ['GET'], '/v2/me/export'),
   operation('account upgrade', ['POST'], '/v2/me/upgrade'),
+  operation('type change dismissal', ['POST'], `/v2/me/type-changes/${UUID}/dismiss`),
+
+  // Invitations to become an author or admin (api/v2Invitations.ts): admins
+  // send, resend and revoke them with their own token, and the Public API
+  // refuses callers below admin; the invitee, signed in, accepts one.
+  operation('admin invitations', ['GET', 'POST'], '/v2/admin/invitations'),
+  operation('admin invitation', ['DELETE'], `/v2/admin/invitations/${UUID}`),
+  operation('admin invitation resend', ['POST'], `/v2/admin/invitations/${UUID}/resend`),
+  operation('invitation acceptance', ['POST'], '/v2/me/invitations/accept'),
 
   // Admins' reads and type changes of signed-in users (api/v2AdminUsers.ts).
   // Each carries the signed-in admin's own token, which the route forwards;

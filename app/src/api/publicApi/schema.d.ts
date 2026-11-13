@@ -13,7 +13,7 @@ export interface paths {
     };
     /**
      * Read the current user
-     * @description For a bearer access token, returns the PolicyEngine user, creating it on the first call with primary_country set from country_id. For the PolicyEngine-Unauthenticated-User header, returns the browser's unauthenticated user, or 404 before its first saved record; reading never creates one.
+     * @description For a bearer access token, returns the PolicyEngine user, creating it on the first call with primary_country set from country_id. For the PolicyEngine-Unauthenticated-User header, returns the browser's unauthenticated user, or 404 before its first saved record; reading never creates one. latest_type_change is the user's most recent type change until it is dismissed, else null.
      */
     get: operations['get_me_v2_me_get'];
     put?: never;
@@ -72,6 +72,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v2/me/invitations/accept': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Accept an admin's email invitation with its token
+     * @description Signed-in users only. A user with no account yet gets one, with primary_country from country_id. The signed-in user's email is read from Auth0 first and never stored; then the token, the inviting admin, the email's verification and its match with the invited address are checked, in that order, and each refusal names its code. On success the user gets the invited type, unless they already have it or a higher one, the invitation is marked accepted, and a type change is recorded and emailed to the user.
+     */
+    post: operations['accept_invitation_v2_me_invitations_accept_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/me/type-changes/{type_change_id}/dismiss': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Dismiss the notice of a type change
+     * @description Signed-in users only. GET /v2/me then stops reporting the change as latest_type_change. Dismissing it again changes nothing.
+     */
+    post: operations['dismiss_type_change_v2_me_type_changes__type_change_id__dismiss_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v2/admin/users': {
     parameters: {
       query?: never;
@@ -81,7 +121,7 @@ export interface paths {
     };
     /**
      * List signed-in users, newest first
-     * @description Admins only. With email, lists only users with an email address containing it, ignoring case; % and _ match themselves. Unauthenticated users are never listed.
+     * @description Admins only. With email, lists only users with an email address containing it, ignoring case; every character matches itself. The search covers stored emails and, with Auth0 user profiles configured, Auth0 emails: an Auth0 email matches when it contains the text, or, for fewer than three characters, starts with it. Auth0's search is eventually consistent, so a just-changed email may be missing. Text with < or >, which no email address holds, is refused (422), and so is text that more than 200 Auth0 users match: enter more of it. When Auth0 can't answer the search, the response is 503. Each user's email, first_name and last_name are read from Auth0 for this request and never stored; when Auth0 has none, or can't answer, the stored values are returned. Unauthenticated users are never listed.
      */
     get: operations['list_users_v2_admin_users_get'];
     put?: never;
@@ -101,7 +141,7 @@ export interface paths {
     };
     /**
      * Read one signed-in user
-     * @description Admins only. An unauthenticated user's ID is not found (404).
+     * @description Admins only. An unauthenticated user's ID is not found (404). Each user's email, first_name and last_name are read from Auth0 for this request and never stored; when Auth0 has none, or can't answer, the stored values are returned.
      */
     get: operations['get_user_v2_admin_users__user_id__get'];
     put?: never;
@@ -111,7 +151,7 @@ export interface paths {
     head?: never;
     /**
      * Change a signed-in user's type
-     * @description Admins only. Records the change in the user's type history. Setting the type the user already has changes and records nothing, whatever expected_user_type is. Otherwise expected_user_type, the user's type as the admin last read it, must still be the stored type: when it differs, the change is refused (409) and nothing is written. Only the type is compared, so a type changed and changed back since the read is not detected. Demoting the last admin is refused (409) too.
+     * @description Admins only. Records the change in the user's type history. Setting the type the user already has changes and records nothing, whatever expected_user_type is. Otherwise expected_user_type, the user's type as the admin last read it, must still be the stored type: when it differs, the change is refused (409) and nothing is written. Only the type is compared, so a type changed and changed back since the read is not detected. Demoting the last admin is refused (409) too. The change is committed before the response's email and names are read; Each user's email, first_name and last_name are read from Auth0 for this request and never stored; when Auth0 has none, or can't answer, the stored values are returned.
      */
     patch: operations['change_user_type_v2_admin_users__user_id__patch'];
     trace?: never;
@@ -125,12 +165,76 @@ export interface paths {
     };
     /**
      * Read a signed-in user's recorded type changes, newest first
-     * @description Admins only.
+     * @description Admins only. changed_by_email is the admin's email, read from Auth0 for this request and never stored; when Auth0 has none, or can't answer, it is the stored one.
      */
     get: operations['list_user_type_changes_v2_admin_users__user_id__user_type_changes_get'];
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/admin/invitations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List open invitations, newest first
+     * @description Admins only. Lists the invitations that are neither accepted nor revoked, expired ones included (expired is true).
+     */
+    get: operations['list_invitations_v2_admin_invitations_get'];
+    put?: never;
+    /**
+     * Invite an email address to become an author or admin
+     * @description Admins only. Creates the invitation and emails its link to the address; an open invitation to the same address, compared ignoring case, is revoked first, so its link stops working. The email is sent through Postmark after the invitation commits, and retried a few times; when every attempt fails, or Postmark isn't configured, the invitation stays open with last_sent_at null and last_send_error naming why. The link is valid for 7 days. The response is 201 even when the send failed.
+     */
+    post: operations['create_invitation_v2_admin_invitations_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/admin/invitations/{invitation_id}/resend': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Email an open invitation again with a new link
+     * @description Admins only. Gives the invitation a new link, so the earlier one stops working, and a new 7-day expiry, makes the caller its inviting admin, and emails it again. An expired invitation can be resent. The email is sent through Postmark after the invitation commits, and retried a few times; when every attempt fails, or Postmark isn't configured, the invitation stays open with last_sent_at null and last_send_error naming why. The link is valid for 7 days.
+     */
+    post: operations['resend_invitation_v2_admin_invitations__invitation_id__resend_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/admin/invitations/{invitation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke an open invitation
+     * @description Admins only. The invitation's link stops working.
+     */
+    delete: operations['revoke_invitation_v2_admin_invitations__invitation_id__delete'];
     options?: never;
     head?: never;
     patch?: never;
@@ -147,8 +251,8 @@ export interface paths {
     get: operations['get_user_reports_v2_user_reports_get'];
     put?: never;
     /**
-     * Save a v1 report for the current user
-     * @description Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Stage 12A accepts legacy_report_id only (the requested v1 report output ID), checked in the v1 database. An optional user_policy_id must name the same user's saved policy in the same country.
+     * Save a report for the current user
+     * @description Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Names a detailed-save report (report_id), which must be stored in the country (404 otherwise), or a v1 report output (legacy_report_id), checked in the v1 database; naming both is refused with 400, since v1 report numbers are not connected to detailed-save reports. An optional user_policy_id must name the same user's saved policy in the same country.
      */
     post: operations['create_user_report_v2_user_reports_post'];
     delete?: never;
@@ -207,8 +311,8 @@ export interface paths {
     get: operations['get_user_simulations_v2_user_simulations_get'];
     put?: never;
     /**
-     * Save a v1 simulation for the current user
-     * @description Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Stage 12A accepts legacy_simulation_id only, checked in the v1 database.
+     * Save a simulation for the current user
+     * @description Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Names a detailed-save simulation (simulation_id), which must be of the country's model (404 otherwise), or a v1 simulation (legacy_simulation_id), checked in the v1 database; naming both is refused with 400.
      */
     post: operations['create_user_simulation_v2_user_simulations_post'];
     delete?: never;
@@ -357,6 +461,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v2/household-calculations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Calculate a stored household under a stored policy */
+    post: operations['submit_household_calculation_v2_household_calculations_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/household-calculations/{calculation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read a household calculation and its result */
+    get: operations['get_household_calculation_v2_household_calculations__calculation_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v2/policies': {
     parameters: {
       query?: never;
@@ -384,6 +522,90 @@ export interface paths {
     };
     /** Read one immutable policy */
     get: operations['get_policy_v2_policies__policy_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/reports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List chosen economy reports
+     * @description Lists the country's economy reports among the report_id values (at most 25), in the order named and once each, with their newest runs but without results, read in one query. Unknown reports, other countries' and reports of other kinds are left out.
+     */
+    get: operations['list_reports_v2_reports_get'];
+    put?: never;
+    /**
+     * Create an economy report
+     * @description Checks that the country has economy reports and stores each named policy, and that the running catalog version has every parameter those policies set, then has the simulation service create the report, its two simulations and their runs on its default worker's PolicyEngine.py version, and start the run. Answers the report as stored, with its pending run; read it again to follow the run. A created report that cannot be read back answers 502 with its report_id, and one whose run the simulation service failed before answering 503 answers 503 with its report_id.
+     */
+    post: operations['create_report_v2_reports_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/reports/{report_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read an economy report
+     * @description Returns the report, its newest run whatever its status and versions, the versions the Public API runs now, and, once the newest run has succeeded, its result in today's economy result format. A report with no run, such as one migrated from v1, answers its definition with no result; reading starts no run.
+     */
+    get: operations['get_report_v2_reports__report_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/simulations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create an economy simulation
+     * @description Checks that the country has economy calculations and stores the named policy, and that the running catalog version has every parameter it sets, then has the simulation service create the simulation and its first run on its default worker's PolicyEngine.py version, and start the run. Answers the simulation as stored, with its pending run. A created simulation that cannot be read back answers 502 with its simulation_id, and one whose run the simulation service failed before answering 503 answers 503 with its simulation_id.
+     */
+    post: operations['create_simulation_v2_simulations_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/simulations/{simulation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read a simulation
+     * @description Returns the simulation, its newest run whatever its year, status and versions, and the versions the Public API runs now. A simulation belongs to the country whose model its catalog version is of; reading starts no run.
+     */
+    get: operations['get_simulation_v2_simulations__simulation_id__get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -812,12 +1034,114 @@ export interface components {
       primary_country?: ('us' | 'uk') | null;
     };
     /**
+     * AdminInvitationItem
+     * @description An invitation as admins see it.
+     *
+     *     ``invited_by_user_id`` is the admin who created or last resent it, null
+     *     once that account is deleted. ``expired`` says ``expires_at`` has passed:
+     *     it can't be accepted, but it can be resent. ``last_sent_at`` is when
+     *     Postmark accepted the email with the current link, null when the last
+     *     send failed or wasn't tried; ``last_send_error`` then names why, as a
+     *     short identifier such as ``not_configured``, ``timeout``, ``http_500``
+     *     or ``postmark_406`` (an address Postmark suppresses).
+     */
+    AdminInvitationItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Email */
+      email: string;
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'author' | 'admin';
+      /** Invited By User Id */
+      invited_by_user_id: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Expires At
+       * Format: date-time
+       */
+      expires_at: string;
+      /** Expired */
+      expired: boolean;
+      /** Last Sent At */
+      last_sent_at: string | null;
+      /** Last Send Error */
+      last_send_error: string | null;
+    };
+    /**
+     * AdminInvitationPageResponse
+     * @description Success response holding one page of open invitations.
+     */
+    AdminInvitationPageResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['AdminInvitationPageResult'];
+    };
+    /**
+     * AdminInvitationPageResult
+     * @description One page of open invitations, newest first.
+     */
+    AdminInvitationPageResult: {
+      /** Items */
+      items: components['schemas']['AdminInvitationItem'][];
+      /** Offset */
+      offset: number;
+      /** Limit */
+      limit: number;
+      /** Has More */
+      has_more: boolean;
+    };
+    /**
+     * AdminInvitationResponse
+     * @description Success response holding one invitation.
+     */
+    AdminInvitationResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['AdminInvitationResult'];
+    };
+    /**
+     * AdminInvitationResult
+     * @description Result holding one invitation in ``item``.
+     */
+    AdminInvitationResult: {
+      item: components['schemas']['AdminInvitationItem'];
+    };
+    /**
      * AdminUserItem
      * @description A signed-in user as admins see it.
      *
-     *     ``email`` is the email of the most recently seen of the user's sign-in
-     *     identities that has one, else the user's own. ``last_seen_at`` is when the
-     *     user's most recently seen identity was last seen.
+     *     With Auth0 user profile settings, ``email``, ``first_name`` and
+     *     ``last_name`` are read from Auth0 for each request and never stored: the
+     *     user's sign-in identities from the users' Auth0 tenant are looked up, the
+     *     most recently seen first, and a verified email comes before an unverified
+     *     one. Where Auth0 has no value, or can't answer, the stored value is
+     *     returned: the email of the most recently seen of the user's identities
+     *     that has one, else the user's own, and the user's stored names. When
+     *     neither has a first or last name, Auth0's full name, if it isn't an
+     *     email address, is the first name. ``last_seen_at`` is when the user's
+     *     most recently seen identity was last seen.
      */
     AdminUserItem: {
       /**
@@ -898,6 +1222,126 @@ export interface components {
       item: components['schemas']['AdminUserItem'];
     };
     /**
+     * AgePoverty
+     * @description Poverty rates for children, adults, seniors and everyone.
+     */
+    AgePoverty: {
+      child: components['schemas']['BaselineReformValue'];
+      adult: components['schemas']['BaselineReformValue'];
+      senior: components['schemas']['BaselineReformValue'];
+      all: components['schemas']['BaselineReformValue'];
+    };
+    /**
+     * BaselineReformValue
+     * @description A measure's value under the baseline and under the reform.
+     */
+    BaselineReformValue: {
+      /** Baseline */
+      baseline: number;
+      /** Reform */
+      reform: number;
+    };
+    /**
+     * BudgetaryImpact
+     * @description The reform's headline budget effect in the simulated year.
+     *
+     *     Impacts are reform minus baseline totals in the country's currency;
+     *     ``budgetary_impact`` is ``tax_revenue_impact`` minus
+     *     ``benefit_spending_impact``, and ``state_tax_revenue_impact`` is US state
+     *     income tax (0 for the UK). ``households`` is the weighted number of
+     *     households and ``baseline_net_income`` their total baseline net income.
+     */
+    BudgetaryImpact: {
+      /** Tax Revenue Impact */
+      tax_revenue_impact: number;
+      /** State Tax Revenue Impact */
+      state_tax_revenue_impact: number;
+      /** Benefit Spending Impact */
+      benefit_spending_impact: number;
+      /** Budgetary Impact */
+      budgetary_impact: number;
+      /** Households */
+      households: number;
+      /** Baseline Net Income */
+      baseline_net_income: number;
+    };
+    /**
+     * CliffImpact
+     * @description Exposure to tax-benefit cliffs under the baseline and under the reform.
+     */
+    CliffImpact: {
+      baseline: components['schemas']['CliffImpactInSimulation'];
+      reform: components['schemas']['CliffImpactInSimulation'];
+    };
+    /**
+     * CliffImpactInSimulation
+     * @description Net income lost to a small earnings rise, and the share of adults on a cliff.
+     */
+    CliffImpactInSimulation: {
+      /** Cliff Gap */
+      cliff_gap: number;
+      /** Cliff Share */
+      cliff_share: number;
+    };
+    /**
+     * CongressionalDistrictImpact
+     * @description The reform's impact in one US congressional district.
+     *
+     *     ``district`` is the state and two-digit number, such as ``"CA-12"``; an
+     *     at-large district is ``01``. The percentages are the shares of people
+     *     whose household net income rises, falls or stays the same.
+     */
+    CongressionalDistrictImpact: {
+      /** District */
+      district: string;
+      /** Average Household Income Change */
+      average_household_income_change: number;
+      /** Relative Household Income Change */
+      relative_household_income_change: number;
+      /** Winner Percentage */
+      winner_percentage: number;
+      /** Loser Percentage */
+      loser_percentage: number;
+      /** No Change Percentage */
+      no_change_percentage: number;
+      /** Population */
+      population: number;
+    };
+    /**
+     * CongressionalDistrictImpacts
+     * @description The reform's impact in each congressional district of a US state report.
+     */
+    CongressionalDistrictImpacts: {
+      /** Districts */
+      districts: components['schemas']['CongressionalDistrictImpact'][];
+    };
+    /**
+     * ConstituencyImpact
+     * @description The reform's impact in one UK parliamentary constituency.
+     */
+    ConstituencyImpact: {
+      /** Average Household Income Change */
+      average_household_income_change: number;
+      /** Relative Household Income Change */
+      relative_household_income_change: number;
+      /** Population */
+      population: number;
+      /** Disclosure Tier */
+      disclosure_tier: ('reported' | 'approximate') | null;
+      /** Average Household Income Change Lower */
+      average_household_income_change_lower: number | null;
+      /** Average Household Income Change Upper */
+      average_household_income_change_upper: number | null;
+      /** Relative Household Income Change Lower */
+      relative_household_income_change_lower: number | null;
+      /** Relative Household Income Change Upper */
+      relative_household_income_change_upper: number | null;
+      /** Constituency Code */
+      constituency_code: string;
+      /** Constituency Name */
+      constituency_name: string;
+    };
+    /**
      * CountryItem
      * @description One served country and the calculations it supports.
      *
@@ -938,6 +1382,68 @@ export interface components {
       items: components['schemas']['CountryItem'][];
     };
     /**
+     * CreatedReportUnreadableResponse
+     * @description The 502 answer when the created report cannot be read back.
+     *
+     *     The simulation service created ``report_id``, so the caller reads it
+     *     with ``GET /v2/reports/{report_id}`` rather than submitting it again.
+     */
+    CreatedReportUnreadableResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /**
+       * Report Id
+       * Format: uuid
+       */
+      report_id: string;
+    };
+    /**
+     * CreatedSimulationUnreadableResponse
+     * @description The 502 answer when the created simulation cannot be read back.
+     *
+     *     The simulation service created ``simulation_id``, so the caller reads it
+     *     with ``GET /v2/simulations/{simulation_id}`` rather than submitting it
+     *     again.
+     */
+    CreatedSimulationUnreadableResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /**
+       * Simulation Id
+       * Format: uuid
+       */
+      simulation_id: string;
+    };
+    /**
+     * DecileChange
+     * @description The change in average household net income in each decile, ``"1"`` to ``"10"``.
+     *
+     *     ``average`` is the absolute change and ``relative`` the change as a
+     *     fraction of the decile's baseline average.
+     */
+    DecileChange: {
+      /** Average */
+      average: {
+        [key: string]: number;
+      };
+      /** Relative */
+      relative: {
+        [key: string]: number;
+      };
+    };
+    /**
      * DeploymentResponse
      * @description The policyengine.py version this revision serves, and since when.
      *
@@ -954,6 +1460,48 @@ export interface components {
       /** Revision */
       revision: string | null;
     };
+    /**
+     * EconomyResult
+     * @description A report run's single-year economy result, in the format the app reads.
+     *
+     *     ``model_version`` is the country package version the run used, and
+     *     ``data_version`` the data release. ``spm_provenance`` is the baseline's
+     *     and reform's SPM calculation receipts the simulation service stored, as
+     *     the Public API's ``SPMComparisonProvenance`` (serialized, as the Public
+     *     API serializes it elsewhere, with package names as its runtime version
+     *     keys), or null. ``wealth_decile`` and ``intra_wealth_decile`` are UK-only;
+     *     ``poverty_by_race`` and ``congressional_district_impact`` US-only; the
+     *     constituency and local-authority impacts are UK-only and null when the
+     *     run did not compute them. ``labor_supply_response`` and ``cliff_impact``
+     *     are null when the run did not compute them.
+     */
+    EconomyResult: {
+      spm_provenance: components['schemas']['SPMComparisonProvenance'] | null;
+      /** Model Version */
+      model_version: string;
+      /** Data Version */
+      data_version: string;
+      budget: components['schemas']['BudgetaryImpact'];
+      /** Detailed Budget */
+      detailed_budget: {
+        [key: string]: components['schemas']['ProgramBudget'];
+      };
+      decile: components['schemas']['DecileChange'];
+      inequality: components['schemas']['InequalityChange'];
+      poverty: components['schemas']['PovertyByAge'];
+      poverty_by_gender: components['schemas']['PovertyByGender'];
+      poverty_by_race: components['schemas']['PovertyByRace'] | null;
+      intra_decile: components['schemas']['IntraDecileShares'];
+      wealth_decile: components['schemas']['DecileChange'] | null;
+      intra_wealth_decile: components['schemas']['IntraDecileShares'] | null;
+      labor_supply_response: components['schemas']['LaborSupplyResponse'] | null;
+      /** Constituency Impact */
+      constituency_impact: components['schemas']['ConstituencyImpact'][] | null;
+      /** Local Authority Impact */
+      local_authority_impact: components['schemas']['LocalAuthorityImpact'][] | null;
+      congressional_district_impact: components['schemas']['CongressionalDistrictImpacts'] | null;
+      cliff_impact: components['schemas']['CliffImpact'] | null;
+    };
     FiniteJsonValue:
       | components['schemas']['FiniteJsonValue'][]
       | {
@@ -963,6 +1511,14 @@ export interface components {
       | boolean
       | number
       | null;
+    /**
+     * GenderPoverty
+     * @description Poverty rates for males and females.
+     */
+    GenderPoverty: {
+      male: components['schemas']['BaselineReformValue'];
+      female: components['schemas']['BaselineReformValue'];
+    };
     /**
      * HealthNotReadyResponse
      * @description Health-check result while warmup runs or the configuration is invalid.
@@ -984,6 +1540,245 @@ export interface components {
        * @constant
        */
       status: 'healthy';
+    };
+    /**
+     * HouseholdCalculationAxis
+     * @description One input varied across points.
+     *
+     *     The variable ``name`` takes ``count`` evenly spaced values from ``min`` to
+     *     ``max`` in ``period`` (the household's ``default_year`` when omitted), for
+     *     the entity member at position ``index`` (the first when omitted).
+     */
+    HouseholdCalculationAxis: {
+      /** Name */
+      name: string;
+      /** Count */
+      count: number;
+      /** Min */
+      min: number;
+      /** Max */
+      max: number;
+      /** Period */
+      period?: string | number | null;
+      /** Index */
+      index?: number | null;
+    };
+    /**
+     * HouseholdCalculationErrorItem
+     * @description Why a calculation failed.
+     *
+     *     ``code`` is the household function's error code: ``invalid_inputs``,
+     *     with ``input_errors`` naming each input the country model does not
+     *     recognize; ``invalid_household``; ``invalid_spm_selection``, with
+     *     ``spm_error``; ``bundle_mismatch``; or ``calculation_failed``. It is null
+     *     when the calculation failed for another reason, such as a household
+     *     function that raised or was cancelled; ``message`` is then the job's
+     *     one-line error, such as ``household_function_error: …`` or
+     *     ``household_function_cancelled: …``, and submitting again may succeed.
+     */
+    HouseholdCalculationErrorItem: {
+      /** Code */
+      code: string | null;
+      /** Message */
+      message: string;
+      /** Input Errors */
+      input_errors: {
+        [key: string]: components['schemas']['JsonValue'];
+      }[];
+      /** Spm Error */
+      spm_error: {
+        [key: string]: components['schemas']['JsonValue'];
+      } | null;
+    };
+    /**
+     * HouseholdCalculationItem
+     * @description A household calculation and its outcome.
+     *
+     *     ``status`` moves from ``pending`` through ``running`` to ``succeeded``,
+     *     with ``result``, or ``failed``, with ``error``. ``catalog_version_id``,
+     *     ``country_package_version`` and ``policyengine_version`` are those the
+     *     calculation runs with.
+     */
+    HouseholdCalculationItem: {
+      /**
+       * Calculation Id
+       * Format: uuid
+       */
+      calculation_id: string;
+      /** Country Id */
+      country_id: string;
+      /**
+       * Household Id
+       * Format: uuid
+       */
+      household_id: string;
+      /** Policy Id */
+      policy_id: string | null;
+      /** Year */
+      year: number;
+      /**
+       * Catalog Version Id
+       * Format: uuid
+       */
+      catalog_version_id: string;
+      /** Country Package Version */
+      country_package_version: string;
+      /** Policyengine Version */
+      policyengine_version: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'pending' | 'running' | 'succeeded' | 'failed';
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Started At */
+      started_at: string | null;
+      /** Completed At */
+      completed_at: string | null;
+      result: components['schemas']['HouseholdCalculationOutputItem'] | null;
+      error: components['schemas']['HouseholdCalculationErrorItem'] | null;
+    };
+    /**
+     * HouseholdCalculationOutputItem
+     * @description A succeeded calculation's household.
+     *
+     *     ``household`` is the stored household in the situation shape (people and
+     *     groups keyed by their record IDs) with each calculated value filled in by
+     *     period. ``warnings`` lists inputs the country model ignored. In the US,
+     *     ``spm_config`` is the SPM selection the calculation applied and
+     *     ``spm_provenance`` its receipt; both are null elsewhere.
+     */
+    HouseholdCalculationOutputItem: {
+      /** Household */
+      household: {
+        [key: string]: components['schemas']['JsonValue'];
+      };
+      /** Warnings */
+      warnings: string[];
+      /** Spm Config */
+      spm_config: {
+        [key: string]: components['schemas']['JsonValue'];
+      } | null;
+      /** Spm Provenance */
+      spm_provenance: {
+        [key: string]: components['schemas']['JsonValue'];
+      } | null;
+    };
+    /**
+     * HouseholdCalculationRequest
+     * @description A stored household to calculate under a stored policy, or current law.
+     *
+     *     ``household_id`` and ``policy_id`` name records of ``country_id`` stored
+     *     through ``/v2/households`` and ``/v2/policies``; without ``policy_id`` the
+     *     household is calculated under current law, for the household's
+     *     ``default_year``. Each group in ``axes`` varies its inputs together across
+     *     ``count`` points; several groups form a grid of at most 10,000 points.
+     *     ``add_missing_variables`` adds every variable the household lacks before
+     *     calculating. ``spm`` selects the SPM forecast scenario and geography for
+     *     a US household. Each submission starts a new calculation.
+     */
+    HouseholdCalculationRequest: {
+      /**
+       * Country Id
+       * @description Supported PolicyEngine country ID
+       * @enum {string}
+       */
+      country_id: 'us' | 'uk';
+      /**
+       * Household Id
+       * Format: uuid
+       */
+      household_id: string;
+      /** Policy Id */
+      policy_id?: string | null;
+      /** Axes */
+      axes?: components['schemas']['HouseholdCalculationAxis'][][] | null;
+      /**
+       * Add Missing Variables
+       * @default false
+       */
+      add_missing_variables: boolean;
+      /** Spm */
+      spm?: components['schemas']['SPMSelection'];
+    };
+    /**
+     * HouseholdCalculationResponse
+     * @description Success response holding one calculation.
+     */
+    HouseholdCalculationResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['HouseholdCalculationResult'];
+    };
+    /**
+     * HouseholdCalculationResult
+     * @description Result holding one calculation in ``item``.
+     */
+    HouseholdCalculationResult: {
+      item: components['schemas']['HouseholdCalculationItem'];
+    };
+    /**
+     * HouseholdCalculationSubmittedItem
+     * @description A calculation the simulation service accepted.
+     *
+     *     Poll ``GET /v2/household-calculations/{calculation_id}`` until ``status``
+     *     is ``succeeded`` or ``failed``. ``year`` is the household's default year,
+     *     which is calculated.
+     */
+    HouseholdCalculationSubmittedItem: {
+      /**
+       * Calculation Id
+       * Format: uuid
+       */
+      calculation_id: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'pending' | 'running' | 'succeeded' | 'failed';
+      /** Country Id */
+      country_id: string;
+      /**
+       * Household Id
+       * Format: uuid
+       */
+      household_id: string;
+      /** Policy Id */
+      policy_id: string | null;
+      /** Year */
+      year: number;
+    };
+    /**
+     * HouseholdCalculationSubmittedResponse
+     * @description Success response holding the accepted calculation.
+     */
+    HouseholdCalculationSubmittedResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['HouseholdCalculationSubmittedResult'];
+    };
+    /**
+     * HouseholdCalculationSubmittedResult
+     * @description Result holding the accepted calculation in ``item``.
+     */
+    HouseholdCalculationSubmittedResult: {
+      item: components['schemas']['HouseholdCalculationSubmittedItem'];
     };
     /**
      * HouseholdCreateRequest
@@ -1135,7 +1930,220 @@ export interface components {
         [key: string]: string;
       };
     };
+    /**
+     * InequalityChange
+     * @description The Gini coefficient and the top 10% and top 1% income shares.
+     */
+    InequalityChange: {
+      gini: components['schemas']['BaselineReformValue'];
+      top_10_pct_share: components['schemas']['BaselineReformValue'];
+      top_1_pct_share: components['schemas']['BaselineReformValue'];
+    };
+    /**
+     * IntraDecileShares
+     * @description Shares of people in each decile who gain or lose, by size of the change.
+     *
+     *     ``deciles`` lists each category's share for deciles 1 to 10 in order, and
+     *     ``all`` is each category's mean over those deciles.
+     */
+    IntraDecileShares: {
+      /** Deciles */
+      deciles: {
+        [key: string]: number[];
+      };
+      /** All */
+      all: {
+        [key: string]: number;
+      };
+    };
+    /**
+     * InvitationAcceptRequest
+     * @description The token from an invitation's link, from its ``#token=`` fragment.
+     */
+    InvitationAcceptRequest: {
+      /** Token */
+      token: string;
+    };
+    /**
+     * InvitationAcceptanceItem
+     * @description The user's type after accepting an invitation, and before.
+     *
+     *     ``type_changed`` is false when the user already had the invited type or a
+     *     higher one: an invitation never lowers a type.
+     */
+    InvitationAcceptanceItem: {
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'standard' | 'author' | 'admin';
+      /**
+       * Previous User Type
+       * @enum {string}
+       */
+      previous_user_type: 'standard' | 'author' | 'admin';
+      /** Type Changed */
+      type_changed: boolean;
+    };
+    /**
+     * InvitationAcceptanceResponse
+     * @description Success response holding an accepted invitation's outcome.
+     */
+    InvitationAcceptanceResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['InvitationAcceptanceResult'];
+    };
+    /**
+     * InvitationAcceptanceResult
+     * @description Result holding the accepted invitation's outcome in ``item``.
+     */
+    InvitationAcceptanceResult: {
+      item: components['schemas']['InvitationAcceptanceItem'];
+    };
+    /**
+     * InvitationCreateRequest
+     * @description The address an admin invites, and the type the invitation grants.
+     *
+     *     ``email`` is stripped of surrounding whitespace and must be one address:
+     *     an @ with text on both sides and no whitespace, < or >.
+     */
+    InvitationCreateRequest: {
+      /** Email */
+      email: string;
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'author' | 'admin';
+    };
     JsonValue: unknown;
+    /**
+     * LaborSupplyDecileValues
+     * @description Income- and substitution-effect responses by income decile number.
+     */
+    LaborSupplyDecileValues: {
+      /** Income */
+      income: {
+        [key: string]: number;
+      };
+      /** Substitution */
+      substitution: {
+        [key: string]: number;
+      };
+    };
+    /**
+     * LaborSupplyDeciles
+     * @description Labour supply responses by decile: per household, and relative to earnings.
+     */
+    LaborSupplyDeciles: {
+      average: components['schemas']['LaborSupplyDecileValues'];
+      relative: components['schemas']['LaborSupplyDecileValues'];
+    };
+    /**
+     * LaborSupplyHours
+     * @description Total weekly hours under the baseline and reform, and the change's effects.
+     */
+    LaborSupplyHours: {
+      /** Baseline */
+      baseline: number;
+      /** Reform */
+      reform: number;
+      /** Change */
+      change: number;
+      /** Income Effect */
+      income_effect: number;
+      /** Substitution Effect */
+      substitution_effect: number;
+    };
+    /**
+     * LaborSupplyRelativeResponse
+     * @description Income- and substitution-effect responses relative to baseline earnings.
+     */
+    LaborSupplyRelativeResponse: {
+      /** Income */
+      income: number;
+      /** Substitution */
+      substitution: number;
+    };
+    /**
+     * LaborSupplyResponse
+     * @description The behavioural labour supply response to the reform.
+     *
+     *     ``income_lsr`` and ``substitution_lsr`` are the earnings changes from the
+     *     two effects, and ``total_change`` their sum.
+     */
+    LaborSupplyResponse: {
+      /** Substitution Lsr */
+      substitution_lsr: number;
+      /** Income Lsr */
+      income_lsr: number;
+      relative_lsr: components['schemas']['LaborSupplyRelativeResponse'];
+      /** Total Change */
+      total_change: number;
+      /** Revenue Change */
+      revenue_change: number;
+      decile: components['schemas']['LaborSupplyDeciles'];
+      hours: components['schemas']['LaborSupplyHours'];
+    };
+    /**
+     * LatestTypeChangeItem
+     * @description The user's most recent type change, from ``previous_user_type``.
+     */
+    LatestTypeChangeItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Previous User Type
+       * @enum {string}
+       */
+      previous_user_type: 'standard' | 'author' | 'admin';
+      /**
+       * User Type
+       * @enum {string}
+       */
+      user_type: 'standard' | 'author' | 'admin';
+      /**
+       * Changed At
+       * Format: date-time
+       */
+      changed_at: string;
+    };
+    /**
+     * LocalAuthorityImpact
+     * @description The reform's impact in one UK local authority.
+     */
+    LocalAuthorityImpact: {
+      /** Average Household Income Change */
+      average_household_income_change: number;
+      /** Relative Household Income Change */
+      relative_household_income_change: number;
+      /** Population */
+      population: number;
+      /** Disclosure Tier */
+      disclosure_tier: ('reported' | 'approximate') | null;
+      /** Average Household Income Change Lower */
+      average_household_income_change_lower: number | null;
+      /** Average Household Income Change Upper */
+      average_household_income_change_upper: number | null;
+      /** Relative Household Income Change Lower */
+      relative_household_income_change_lower: number | null;
+      /** Relative Household Income Change Upper */
+      relative_household_income_change_upper: number | null;
+      /** Local Authority Code */
+      local_authority_code: string;
+      /** Local Authority Name */
+      local_authority_name: string;
+    };
     /**
      * MeDetailResponse
      * @description Success response holding the current user.
@@ -1224,6 +2232,32 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+    };
+    /**
+     * MeReadResponse
+     * @description Success response holding the current user and their latest type change.
+     */
+    MeReadResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['MeReadResult'];
+    };
+    /**
+     * MeReadResult
+     * @description The current user, and their most recent type change until it is dismissed.
+     *
+     *     ``latest_type_change`` is null when the user's type never changed, when
+     *     its most recent change was dismissed, and for an unauthenticated user.
+     */
+    MeReadResult: {
+      item: components['schemas']['MeItem'];
+      latest_type_change: components['schemas']['LatestTypeChangeItem'] | null;
     };
     /**
      * MeUpgradeResponse
@@ -1631,8 +2665,8 @@ export interface components {
      *     policyengine_version names the selected catalog version, so a client can
      *     request its other parts for that exact version. catalog_format is null,
      *     and entities and basic_inputs are empty, for a version published before
-     *     catalog format 2. Variables, parameters and their values are served by
-     *     their own routes.
+     *     catalog format 2. ``spm`` says whether the version offers SPM settings.
+     *     Variables, parameters and their values are served by their own routes.
      */
     MetadataModelCatalogResult: {
       /** Policyengine Version */
@@ -1650,6 +2684,7 @@ export interface components {
       /** Datasets */
       datasets: components['schemas']['MetadataDataset'][];
       economy_options: components['schemas']['MetadataEconomyOptions'];
+      spm: components['schemas']['MetadataSPMAvailability'];
     };
     /**
      * MetadataModelDetailResponse
@@ -2166,6 +3201,32 @@ export interface components {
       | 'city'
       | 'place';
     /**
+     * MetadataSPMAvailability
+     * @description Whether a catalog version offers SPM settings for a household.
+     *
+     *     When ``available``, ``settings_schema`` is the JSON schema of a
+     *     household's ``spm`` selection and ``defaults`` the certified selection
+     *     that applies to every field a household leaves out. A version without
+     *     them (any country but the US, or a bundle without certified SPM
+     *     support) is not available, and both are null. ``available`` is null
+     *     while catalog publication has not recorded the version's availability,
+     *     because the simulation service didn't serve its PolicyEngine.py version
+     *     or its versions couldn't be read: whether it offers SPM settings is not
+     *     known yet.
+     */
+    MetadataSPMAvailability: {
+      /** Available */
+      available: boolean | null;
+      /** Settings Schema */
+      settings_schema?: {
+        [key: string]: components['schemas']['JsonValue'];
+      } | null;
+      /** Defaults */
+      defaults?: {
+        [key: string]: components['schemas']['JsonValue'];
+      } | null;
+    };
+    /**
      * MetadataTimePeriodOption
      * @description A year that can be chosen for an economy calculation.
      */
@@ -2259,6 +3320,26 @@ export interface components {
       /** Message */
       message?: null;
       result: components['schemas']['MetadataPageResult_MetadataVariable_'];
+    };
+    /**
+     * PackageVersionsItem
+     * @description A country package version and the PolicyEngine.py version beside it.
+     */
+    PackageVersionsItem: {
+      /** Country Package Version */
+      country_package_version: string;
+      /** Policyengine Version */
+      policyengine_version: string;
+    };
+    /**
+     * PolicyChoice
+     * @description A simulation's stored policy and dynamic; neither means current law.
+     */
+    PolicyChoice: {
+      /** Policy Id */
+      policy_id?: string | null;
+      /** Dynamic Id */
+      dynamic_id?: string | null;
     };
     /**
      * PolicyCreateRequest
@@ -2450,6 +3531,59 @@ export interface components {
       confidence?: string | null;
     };
     /**
+     * PovertyByAge
+     * @description Poverty and deep poverty rates by age group.
+     *
+     *     In the US these are the SPM poverty and deep SPM poverty rates; in the UK,
+     *     relative and absolute poverty before housing costs.
+     */
+    PovertyByAge: {
+      poverty: components['schemas']['AgePoverty'];
+      deep_poverty: components['schemas']['AgePoverty'];
+    };
+    /**
+     * PovertyByGender
+     * @description Poverty and deep poverty rates by gender.
+     */
+    PovertyByGender: {
+      poverty: components['schemas']['GenderPoverty'];
+      deep_poverty: components['schemas']['GenderPoverty'];
+    };
+    /**
+     * PovertyByRace
+     * @description US poverty rates by race; there is no deep poverty breakdown.
+     */
+    PovertyByRace: {
+      poverty: components['schemas']['RacePoverty'];
+    };
+    /**
+     * ProgramBudget
+     * @description One program's baseline and reform totals, and reform minus baseline.
+     *
+     *     ``is_tax`` says whether the program is a tax or a benefit, and is null for
+     *     results stored before the flag was recorded.
+     */
+    ProgramBudget: {
+      /** Baseline */
+      baseline: number;
+      /** Reform */
+      reform: number;
+      /** Difference */
+      difference: number;
+      /** Is Tax */
+      is_tax: boolean | null;
+    };
+    /**
+     * RacePoverty
+     * @description US poverty rates by race and ethnicity.
+     */
+    RacePoverty: {
+      white: components['schemas']['BaselineReformValue'];
+      black: components['schemas']['BaselineReformValue'];
+      hispanic: components['schemas']['BaselineReformValue'];
+      other: components['schemas']['BaselineReformValue'];
+    };
+    /**
      * ReportCalibration
      * @description Calibration results for one geography, with at most 500 variable matches.
      */
@@ -2547,6 +3681,144 @@ export interface components {
       relative_error?: number | null;
     };
     /**
+     * ReportCreateRequest
+     * @description An economy report to create; ``country_id`` must match the query's.
+     *
+     *     Each simulation's empty object is current law. No field names a
+     *     PolicyEngine.py version: the simulation service runs its default
+     *     worker's.
+     */
+    ReportCreateRequest: {
+      /**
+       * Kind
+       * @constant
+       */
+      kind: 'economy';
+      /** Label */
+      label: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Year
+       * @description The year
+       */
+      year: number;
+      /** Region Code */
+      region_code: string;
+      /** Dataset Name */
+      dataset_name?: string | null;
+      baseline: components['schemas']['PolicyChoice'];
+      reform: components['schemas']['PolicyChoice'];
+      /**
+       * Include Cliffs
+       * @default false
+       */
+      include_cliffs: boolean;
+      /** Spm */
+      spm?: components['schemas']['SPMSelection'];
+      /**
+       * Country Id
+       * @description Supported PolicyEngine country ID
+       * @enum {string}
+       */
+      country_id: 'us' | 'uk';
+    };
+    /**
+     * ReportDetailResponse
+     * @description Success response holding one report.
+     */
+    ReportDetailResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['ReportDetailResult'];
+    };
+    /**
+     * ReportDetailResult
+     * @description Result holding one report in ``item``.
+     */
+    ReportDetailResult: {
+      item: components['schemas']['ReportItem'];
+    };
+    /**
+     * ReportItem
+     * @description An economy report with its newest run's result.
+     *
+     *     ``result`` is the single-year economy result, in the format the app reads
+     *     today, once the newest run has succeeded, and null otherwise.
+     */
+    ReportItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Country Id */
+      country_id: string;
+      /**
+       * Kind
+       * @constant
+       */
+      kind: 'economy';
+      /** Label */
+      label: string;
+      /** Description */
+      description: string | null;
+      /** Year */
+      year: number | null;
+      /** Region Code */
+      region_code: string | null;
+      /** Dataset Name */
+      dataset_name: string | null;
+      baseline_simulation: components['schemas']['ReportSimulationItem'] | null;
+      reform_simulation: components['schemas']['ReportSimulationItem'] | null;
+      /** Options */
+      options: {
+        [key: string]: components['schemas']['JsonValue'];
+      };
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'not_run' | 'pending' | 'running' | 'succeeded' | 'failed';
+      run: components['schemas']['ReportRunItem'] | null;
+      current_versions: components['schemas']['PackageVersionsItem'];
+      result: components['schemas']['EconomyResult'] | null;
+    };
+    /**
+     * ReportListResponse
+     * @description Success response holding the listed reports.
+     */
+    ReportListResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['ReportListResult'];
+    };
+    /**
+     * ReportListResult
+     * @description The listed reports in ``items``, in the order named, without results.
+     */
+    ReportListResult: {
+      /** Items */
+      items: components['schemas']['ReportSummaryItem'][];
+    };
+    /**
      * ReportProvision
      * @description One provision of the report's reform: a parameter's baseline and reform values.
      *
@@ -2638,6 +3910,53 @@ export interface components {
       growth_round?: string | null;
     };
     /**
+     * ReportRunItem
+     * @description One calculation of a report, on one country package and .py version.
+     *
+     *     ``status`` is ``pending``, ``running``, ``succeeded`` or ``failed``, and
+     *     ``error_message`` says why a failed run failed. ``trigger`` is
+     *     ``initial`` for the run the report's creation started.
+     */
+    ReportRunItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'pending' | 'running' | 'succeeded' | 'failed';
+      /**
+       * Trigger
+       * @enum {string}
+       */
+      trigger: 'initial' | 'manual' | 'system';
+      /** Country Package Version */
+      country_package_version: string;
+      /** Policyengine Version */
+      policyengine_version: string;
+      /**
+       * Baseline Simulation Run Id
+       * Format: uuid
+       */
+      baseline_simulation_run_id: string;
+      /** Reform Simulation Run Id */
+      reform_simulation_run_id: string | null;
+      /** Error Message */
+      error_message: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Started At */
+      started_at: string | null;
+      /** Completed At */
+      completed_at: string | null;
+    };
+    /**
      * ReportScorecard
      * @description The programs on the report's validation scorecard, at most 200 names.
      */
@@ -2652,6 +3971,73 @@ export interface components {
     ReportScorecardItem: {
       /** Programs */
       programs: string[];
+    };
+    /**
+     * ReportSimulationItem
+     * @description A simulation a report compares; a null policy or dynamic is current law.
+     */
+    ReportSimulationItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Policy Id */
+      policy_id: string | null;
+      /** Dynamic Id */
+      dynamic_id: string | null;
+    };
+    /**
+     * ReportSummaryItem
+     * @description An economy report comparing a baseline and a reform simulation.
+     *
+     *     ``status`` is the newest run's, or ``not_run`` for a report with no run.
+     *     ``run`` is the newest run, whatever its status and versions;
+     *     ``current_versions`` are the versions the Public API runs now, so a
+     *     newest run on other versions is out of date. ``options`` are the options
+     *     the report was created with.
+     */
+    ReportSummaryItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Country Id */
+      country_id: string;
+      /**
+       * Kind
+       * @constant
+       */
+      kind: 'economy';
+      /** Label */
+      label: string;
+      /** Description */
+      description: string | null;
+      /** Year */
+      year: number | null;
+      /** Region Code */
+      region_code: string | null;
+      /** Dataset Name */
+      dataset_name: string | null;
+      baseline_simulation: components['schemas']['ReportSimulationItem'] | null;
+      reform_simulation: components['schemas']['ReportSimulationItem'] | null;
+      /** Options */
+      options: {
+        [key: string]: components['schemas']['JsonValue'];
+      };
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'not_run' | 'pending' | 'running' | 'succeeded' | 'failed';
+      run: components['schemas']['ReportRunItem'] | null;
+      current_versions: components['schemas']['PackageVersionsItem'];
     };
     /**
      * ReportValidation
@@ -2682,6 +4068,73 @@ export interface components {
       map_model_version: string;
       calibration?: components['schemas']['ReportCalibrationItem'] | null;
       scorecard?: components['schemas']['ReportScorecardItem'] | null;
+    };
+    /**
+     * SPMComparisonProvenance
+     * @description Compact baseline and reform receipts for a society-wide result.
+     */
+    SPMComparisonProvenance: {
+      /**
+       * Schema Version
+       * @constant
+       */
+      schema_version: 'canonical-spm-comparison-v2';
+      baseline: components['schemas']['SPMExecutionProvenance'];
+      reform: components['schemas']['SPMExecutionProvenance'];
+    };
+    /**
+     * SPMExecutionProvenance
+     * @description One shared compact receipt and the executions that produced it.
+     */
+    SPMExecutionProvenance: {
+      receipt: components['schemas']['SPMProvenance'];
+      /** Execution Count */
+      execution_count: number;
+    };
+    /**
+     * SPMProvenance
+     * @description Compact public receipt for one canonical SPM execution.
+     */
+    SPMProvenance: {
+      /**
+       * Schema Version
+       * @constant
+       */
+      schema_version: 'canonical-spm-provenance-v2';
+      /** Forecast Id */
+      forecast_id: string;
+      /** Forecast Sha256 */
+      forecast_sha256: string;
+      /** Scenario */
+      scenario: string;
+      /**
+       * Geography Kind
+       * @enum {string}
+       */
+      geography_kind: 'county' | 'national' | 'metro';
+      /** Geography Id */
+      geography_id: string | null;
+      /** County Vintage */
+      county_vintage: string;
+      /** As Of */
+      as_of: string | null;
+      /** Years */
+      years: string[];
+      runtime_versions: components['schemas']['SPMRuntimeVersions'];
+    };
+    /**
+     * SPMRuntimeVersions
+     * @description Package versions required to reproduce one certified SPM execution.
+     */
+    SPMRuntimeVersions: {
+      /** Policyengine */
+      policyengine: string;
+      /** Policyengine-Core */
+      'policyengine-core': string;
+      /** Policyengine-Us */
+      'policyengine-us': string;
+      /** Spm-Calculator */
+      'spm-calculator': string;
     };
     /**
      * SPMSelection
@@ -2751,6 +4204,9 @@ export interface components {
     /**
      * SharedUserReportItem
      * @description A saved report as anyone holding its link reads it.
+     *
+     *     ``report_id`` is the detailed-save report it shows, and
+     *     ``legacy_report_id`` the v1 report output; one of them is set.
      */
     SharedUserReportItem: {
       /**
@@ -2764,6 +4220,8 @@ export interface components {
        * @enum {string}
        */
       country_id: 'us' | 'uk';
+      /** Report Id */
+      report_id: string | null;
       /** Legacy Report Id */
       legacy_report_id: number | null;
       /** Name */
@@ -2788,6 +4246,141 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+    };
+    /**
+     * SimulationCreateRequest
+     * @description An economy simulation to create; ``country_id`` must match the query's.
+     *
+     *     No field names a PolicyEngine.py version: the simulation service runs its
+     *     default worker's.
+     */
+    SimulationCreateRequest: {
+      /** Policy Id */
+      policy_id?: string | null;
+      /** Dynamic Id */
+      dynamic_id?: string | null;
+      /**
+       * Kind
+       * @constant
+       */
+      kind: 'economy';
+      /**
+       * Year
+       * @description The year
+       */
+      year: number;
+      /** Region Code */
+      region_code: string;
+      /** Dataset Name */
+      dataset_name?: string | null;
+      /**
+       * Country Id
+       * @description Supported PolicyEngine country ID
+       * @enum {string}
+       */
+      country_id: 'us' | 'uk';
+    };
+    /**
+     * SimulationDetailResponse
+     * @description Success response holding one simulation.
+     */
+    SimulationDetailResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['SimulationDetailResult'];
+    };
+    /**
+     * SimulationDetailResult
+     * @description Result holding one simulation in ``item``.
+     */
+    SimulationDetailResult: {
+      item: components['schemas']['SimulationItem'];
+    };
+    /**
+     * SimulationItem
+     * @description A simulation, its newest run and the versions the Public API runs now.
+     *
+     *     A null ``policy_id`` or ``dynamic_id`` is current law. An economy
+     *     simulation names its region and dataset, a household simulation its
+     *     household. ``status`` is the newest run's, or ``not_run``; a newest run
+     *     on other versions than ``current_versions`` is out of date.
+     */
+    SimulationItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Country Id */
+      country_id: string;
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'economy' | 'household';
+      /** Policy Id */
+      policy_id: string | null;
+      /** Dynamic Id */
+      dynamic_id: string | null;
+      /** Household Id */
+      household_id: string | null;
+      /** Year */
+      year: number | null;
+      /** Region Code */
+      region_code: string | null;
+      /** Dataset Name */
+      dataset_name: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'not_run' | 'pending' | 'running' | 'succeeded' | 'failed';
+      run: components['schemas']['SimulationRunItem'] | null;
+      current_versions: components['schemas']['PackageVersionsItem'];
+    };
+    /**
+     * SimulationRunItem
+     * @description One calculation of a simulation, for one year on one package version pair.
+     */
+    SimulationRunItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Year */
+      year: number;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'pending' | 'running' | 'succeeded' | 'failed';
+      /** Country Package Version */
+      country_package_version: string;
+      /** Policyengine Version */
+      policyengine_version: string;
+      /** Error Message */
+      error_message: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Started At */
+      started_at: string | null;
+      /** Completed At */
+      completed_at: string | null;
     };
     /**
      * UKHouseholdDocument
@@ -2826,6 +4419,51 @@ export interface components {
     };
     'USHouseholdDocument-Output': {
       [key: string]: unknown;
+    };
+    /**
+     * UnavailableAfterReportCreatedResponse
+     * @description The 503 answer when the simulation service failed a new report's run.
+     *
+     *     The message gives the service's status and code. ``report_id`` names the
+     *     report, which ``GET /v2/reports/{report_id}`` reads with its failed run.
+     */
+    UnavailableAfterReportCreatedResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /**
+       * Report Id
+       * Format: uuid
+       */
+      report_id: string;
+    };
+    /**
+     * UnavailableAfterSimulationCreatedResponse
+     * @description The 503 answer when the simulation service failed a new simulation's run.
+     *
+     *     The message gives the service's status and code. ``simulation_id`` names
+     *     the simulation, which ``GET /v2/simulations/{simulation_id}`` reads with
+     *     its failed run.
+     */
+    UnavailableAfterSimulationCreatedResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /**
+       * Simulation Id
+       * Format: uuid
+       */
+      simulation_id: string;
     };
     /**
      * UserHouseholdCreateRequest
@@ -3121,11 +4759,10 @@ export interface components {
        * @enum {string}
        */
       country_id: 'us' | 'uk';
-      /**
-       * Legacy Report Id
-       * @description Exact v1 database identifier (a JSON integer)
-       */
-      legacy_report_id: number;
+      /** Report Id */
+      report_id?: string | null;
+      /** Legacy Report Id */
+      legacy_report_id?: number | null;
       /** User Policy Id */
       user_policy_id?: string | null;
       /** Baseline User Policy Id */
@@ -3157,7 +4794,9 @@ export interface components {
      * UserReportItem
      * @description A report saved by a user, with the user's name, notes and saved presentation.
      *
-     *     ``legacy_report_id`` is the v1 report output it shows. ``user_policy_id`` is
+     *     ``report_id`` is the detailed-save report it shows, and
+     *     ``legacy_report_id`` the v1 report output; one of them is set, and only
+     *     saved reports the production migration wrote hold both. ``user_policy_id`` is
      *     the user's saved reform the report was run from, and
      *     ``baseline_user_policy_id`` the saved reform it was compared with instead of
      *     current law; each is null when not set or once that reform is deleted.
@@ -3262,6 +4901,8 @@ export interface components {
       budget_window_years?: number | null;
       /** Last Run At */
       last_run_at?: string | null;
+      /** Report Id */
+      report_id?: string | null;
       /** Legacy Report Id */
       legacy_report_id?: number | null;
       /** User Policy Id */
@@ -3280,11 +4921,10 @@ export interface components {
        * @enum {string}
        */
       country_id: 'us' | 'uk';
-      /**
-       * Legacy Simulation Id
-       * @description Exact v1 database identifier (a JSON integer)
-       */
-      legacy_simulation_id: number;
+      /** Simulation Id */
+      simulation_id?: string | null;
+      /** Legacy Simulation Id */
+      legacy_simulation_id?: number | null;
       /** Name */
       name?: string | null;
       /** Description */
@@ -3316,8 +4956,14 @@ export interface components {
      * UserSimulationItem
      * @description A simulation saved by a user, with the user's name and description for it.
      *
-     *     ``legacy_simulation_id`` is the v1 simulation it saves. Associations can be
-     *     renamed, pointed at another v1 simulation of the same country, or deleted.
+     *     ``simulation_id`` is the detailed-save simulation it saves, and
+     *     ``legacy_simulation_id`` the v1 simulation; one of them is set, and only
+     *     saved simulations the production migration wrote hold both. Associations
+     *     can be renamed or deleted, and pointed at another simulation of the same
+     *     country through the reference they hold: another detailed-save simulation
+     *     through ``simulation_id``, another v1 simulation through
+     *     ``legacy_simulation_id``. An update that would leave both set is refused,
+     *     and the simulation's own kind (economy or household) is not checked.
      */
     UserSimulationItem: {
       /**
@@ -3392,6 +5038,8 @@ export interface components {
      * @description Explicitly supplied mutable link or presentation fields.
      */
     UserSimulationPatchRequest: {
+      /** Simulation Id */
+      simulation_id?: string | null;
       /** Legacy Simulation Id */
       legacy_simulation_id?: number | null;
       /** Name */
@@ -3404,9 +5052,13 @@ export interface components {
      * @description One recorded change of a signed-in user's type.
      *
      *     ``source`` is ``admin_route`` for a change an admin made through these
-     *     routes, named by ``changed_by_user_id`` and ``changed_by_email``, and
-     *     ``script`` for one the type script made, which names no admin.
-     *     ``changed_by_user_id`` is also null once that admin's account is deleted.
+     *     routes, named by ``changed_by_user_id`` and ``changed_by_email``,
+     *     ``invitation`` for one the user made by accepting an admin's email
+     *     invitation, which names that admin, and ``script`` for one the type
+     *     script made, which names no admin. ``changed_by_user_id`` is also null
+     *     once that admin's account is deleted.
+     *     ``changed_by_email`` is read from Auth0 like an admin user item's email,
+     *     else stored.
      */
     UserTypeChangeItem: {
       /**
@@ -3437,7 +5089,7 @@ export interface components {
        * Source
        * @enum {string}
        */
-      source: 'admin_route' | 'script';
+      source: 'admin_route' | 'invitation' | 'script';
       /**
        * Created At
        * Format: date-time
@@ -3491,6 +5143,25 @@ export interface components {
       expected_user_type: 'standard' | 'author' | 'admin';
     };
     /**
+     * V2CodedErrorResponse
+     * @description An error that also names its reason with a stable ``code``.
+     *
+     *     Clients choose what to do from ``code``, not from ``message``, which is
+     *     for people and may change.
+     */
+    V2CodedErrorResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /** Code */
+      code: string;
+    };
+    /**
      * V2ErrorResponse
      * @description Strict error response shared by every API v2 resource.
      */
@@ -3503,6 +5174,32 @@ export interface components {
       status: 'error';
       /** Message */
       message: string;
+    };
+    /**
+     * V2MissingParametersErrorResponse
+     * @description A refused calculation whose policy sets parameters the catalog lacks.
+     *
+     *     ``missing_parameters`` names each parameter the policy sets that the
+     *     running catalog version does not have, sorted; the calculation would
+     *     otherwise run without those values.
+     */
+    V2MissingParametersErrorResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /**
+       * Code
+       * @default missing_parameters
+       * @constant
+       */
+      code: 'missing_parameters';
+      /** Missing Parameters */
+      missing_parameters: string[];
     };
   };
   responses: never;
@@ -3531,7 +5228,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['MeDetailResponse'];
+          'application/json': components['schemas']['MeReadResponse'];
         };
       };
       /** @description The supplied references or countries contradict each other. */
@@ -4047,6 +5744,233 @@ export interface operations {
       };
     };
   };
+  accept_invitation_v2_me_invitations_accept_post: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InvitationAcceptRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InvitationAcceptanceResponse'];
+        };
+      };
+      /** @description The supplied references or countries contradict each other. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required; the unauthenticated-user header alone can't accept an invitation. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description code email_mismatch: the signed-in user's verified email isn't the invited address, compared whole and ignoring case. The invitation stays open. A machine (client-credentials) principal is also refused with 403, without a code. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2CodedErrorResponse']
+            | components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The record does not exist or belongs to another user. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description code inviter_not_admin: the admin who sent the invitation is no longer an admin. code email_not_verified: Auth0 has no verified email for the signed-in user yet; try again once it is verified. A conflict with stored state is also 409, without a code. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2CodedErrorResponse']
+            | components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The token can't be accepted. code invitation_not_found: no invitation has it, including a link replaced by a resend; invitation_revoked: it was revoked or replaced by a newer invitation; invitation_expired; invitation_accepted. */
+      410: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2CodedErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema, or a referenced v1 artifact or linked record does not exist. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description code auth0_unavailable: the signed-in user's email couldn't be read from Auth0; try again shortly. Persistence being unavailable is also 503, without a code. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2CodedErrorResponse']
+            | components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  dismiss_type_change_v2_me_type_changes__type_change_id__dismiss_post: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
+      header?: never;
+      path: {
+        type_change_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The supplied references or countries contradict each other. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description A valid bearer access token, or a canonical UUID in the PolicyEngine-Unauthenticated-User header, is required; that UUID may not name a signed-in account. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Machine (client-credentials) principals are not permitted, and unauthenticated users cannot edit account details. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The signed-in user has no type change with this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The change conflicts with stored state, such as a record maintained by the v1 saved-policy mirror. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema, or a referenced v1 artifact or linked record does not exist. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
   list_users_v2_admin_users_get: {
     parameters: {
       query?: {
@@ -4116,7 +6040,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The request does not match the schema. */
+      /** @description The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it. */
       422: {
         headers: {
           [name: string]: unknown;
@@ -4134,7 +6058,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description User authentication or persistence is unavailable. */
+      /** @description User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0. */
       503: {
         headers: {
           [name: string]: unknown;
@@ -4210,7 +6134,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The request does not match the schema. */
+      /** @description The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it. */
       422: {
         headers: {
           [name: string]: unknown;
@@ -4228,7 +6152,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description User authentication or persistence is unavailable. */
+      /** @description User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0. */
       503: {
         headers: {
           [name: string]: unknown;
@@ -4308,7 +6232,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The request does not match the schema. */
+      /** @description The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it. */
       422: {
         headers: {
           [name: string]: unknown;
@@ -4326,7 +6250,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description User authentication or persistence is unavailable. */
+      /** @description User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0. */
       503: {
         headers: {
           [name: string]: unknown;
@@ -4386,6 +6310,331 @@ export interface operations {
       };
       /** @description The user's type is no longer the expected one, or the change would leave no admin. */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  list_invitations_v2_admin_invitations_get: {
+    parameters: {
+      query?: {
+        /** @description Zero-based result offset */
+        offset?: number;
+        /** @description Maximum number of returned resources */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminInvitationPageResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  create_invitation_v2_admin_invitations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InvitationCreateRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminInvitationResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  resend_invitation_v2_admin_invitations__invitation_id__resend_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        invitation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminInvitationResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No open invitation has this ID: it is unknown, accepted or revoked. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  revoke_invitation_v2_admin_invitations__invitation_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        invitation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No open invitation has this ID: it is unknown, accepted or revoked. */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -6920,6 +9169,135 @@ export interface operations {
       };
     };
   };
+  submit_household_calculation_v2_household_calculations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HouseholdCalculationRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HouseholdCalculationSubmittedResponse'];
+        };
+      };
+      /** @description The household, policy or calculation does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema; the country does not offer household calculations; the household has no default year; the policy sets parameters the running catalog version does not have (code missing_parameters, which names them); or the simulation service refuses the caller's data, with its reason in the message. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2MissingParametersErrorResponse']
+            | components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The calculation failed unexpectedly, or a succeeded calculation's stored result cannot be read. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The simulation service accepted the calculation, so its job exists, but its answer cannot be read; it failed (500); it answered a status the Public API does not expect, such as 200, a redirect, 408, 409 or 501; its answer was lost after the submission may have reached it; or a proxy in front of it answered 502, 504, or a 503 without the simulation service's code, in its place. In each case it may have created the job, and no route finds a job without its ID. Submit the household calculation again; if the first request went through, this creates a second job. The message gives the simulation service's status and code, or what came in place of its answer. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No job of the submission will run: the simulation service cannot be reached, or the Public API has no URL or credentials for it; it refuses a household, policy or catalog version the Public API has already checked (400); its authentication, routing, body-size or rate limits refuse the request; it answers its own 503, naming its code, because it is not configured, cannot read its manifest or database, or Modal refused the call; or it refuses in a shape the Public API cannot read. Or v2 storage is unavailable. Of the simulation service's answers, the message gives the reason only for a 400, otherwise only its status and code. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  get_household_calculation_v2_household_calculations__calculation_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        calculation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HouseholdCalculationResponse'];
+        };
+      };
+      /** @description The household, policy or calculation does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The calculation failed unexpectedly, or a succeeded calculation's stored result cannot be read. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The simulation service or v2 storage is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
   get_policies_v2_policies_get: {
     parameters: {
       query: {
@@ -7189,6 +9567,372 @@ export interface operations {
         };
       };
       /** @description Supabase policy persistence is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  list_reports_v2_reports_get: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+        /** @description A report to list; repeat the key for each report */
+        report_id: string[];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ReportListResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The v2 database or the simulation service is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  create_report_v2_reports_post: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReportCreateRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ReportDetailResponse'];
+        };
+      };
+      /** @description The body and query name different countries. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description A policy the report names is not stored in the country. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 16 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema; the country has no economy reports (such as a household-only country); a policy the report names sets parameters the running catalog version does not have (code missing_parameters, which names them; the baseline's policy is checked first); or the simulation service cannot run the report: its 422, or its 400 for a region, dataset or dynamic it does not have. The message says which; for the simulation service's refusal, it gives the service's code, when it gave one, and its reason, but not its status. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2MissingParametersErrorResponse']
+            | components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The simulation service may have created the report, but its answer does not say so. The answer was lost after the request may have reached it, or a proxy in front of it answered 502 or 504 in its place: the message says the service may have received the request, but its answer was lost. Or it failed (500), answered 503 in a shape the Public API cannot read or naming only another record, or answered a status the Public API does not expect, which its route may answer after writing rows: the message says it may have created the report, but failed, with its status and code but not its reason. Either message asks the caller to submit the report again, which creates a second report if the first request went through. Or it created the report, but its answer cannot be read. Or it created the report, but the report cannot be read back: the answer gives its report_id, to read with GET /v2/reports/{report_id} rather than submitting it again. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2ErrorResponse']
+            | components['schemas']['CreatedReportUnreadableResponse'];
+        };
+      };
+      /** @description The simulation service created nothing: it cannot be reached or is not configured; it answered a readable 503 naming no record, and the message gives its status and code; it answered a 400 naming no region, dataset or dynamic of the caller's (such as a catalog version missing while a release deploys), and the message gives its code and reason; it answered 400 or 422 in a shape the Public API cannot read; or it answered 401, 403, 404, 405, 413 or 429, which are sent before its route runs. Or the v2 database, or the catalog the policies are checked against, cannot be read. Or the service created the report, then Modal refused the run's call and the service failed the run: its 503 named the report, with its status and code, and the answer gives its report_id. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2ErrorResponse']
+            | components['schemas']['UnavailableAfterReportCreatedResponse'];
+        };
+      };
+    };
+  };
+  get_report_v2_reports__report_id__get: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
+      header?: never;
+      path: {
+        report_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ReportDetailResponse'];
+        };
+      };
+      /** @description No report has this ID in this country. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema, or the report is a household report or a budget window, which this route does not read yet. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The newest run succeeded but its stored result cannot be read, or the operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The v2 database or the simulation service is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  create_simulation_v2_simulations_post: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SimulationCreateRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SimulationDetailResponse'];
+        };
+      };
+      /** @description The body and query name different countries. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The policy the simulation names is not stored in the country. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 16 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema; the country has no economy calculations; the policy sets parameters the running catalog version does not have (code missing_parameters, which names them); or the simulation service cannot run the simulation: its 422, or its 400 for a region, dataset or dynamic it does not have. The message says which; for the simulation service's refusal, it gives the service's code, when it gave one, and its reason, but not its status. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2MissingParametersErrorResponse']
+            | components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The simulation service may have created the simulation, but its answer does not say so. The answer was lost after the request may have reached it, or a proxy in front of it answered 502 or 504 in its place: the message says the service may have received the request, but its answer was lost. Or it failed (500), answered 503 in a shape the Public API cannot read or naming only another record, or answered a status the Public API does not expect, which its route may answer after writing rows: the message says it may have created the simulation, but failed, with its status and code but not its reason. Either message asks the caller to submit the simulation again, which creates a second simulation if the first request went through. Or it created the simulation, but its answer cannot be read. Or it created the simulation, but the simulation cannot be read back: the answer gives its simulation_id, to read with GET /v2/simulations/{simulation_id} rather than submitting it again. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2ErrorResponse']
+            | components['schemas']['CreatedSimulationUnreadableResponse'];
+        };
+      };
+      /** @description The simulation service created nothing: it cannot be reached or is not configured; it answered a readable 503 naming no record, and the message gives its status and code; it answered a 400 naming no region, dataset or dynamic of the caller's (such as a catalog version missing while a release deploys), and the message gives its code and reason; it answered 400 or 422 in a shape the Public API cannot read; or it answered 401, 403, 404, 405, 413 or 429, which are sent before its route runs. Or the v2 database, or the catalog the policy is checked against, cannot be read. Or the service created the simulation, then Modal refused the run's call and the service failed the run: its 503 named the simulation, with its status and code, and the answer gives its simulation_id. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2ErrorResponse']
+            | components['schemas']['UnavailableAfterSimulationCreatedResponse'];
+        };
+      };
+    };
+  };
+  get_simulation_v2_simulations__simulation_id__get: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
+      header?: never;
+      path: {
+        simulation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SimulationDetailResponse'];
+        };
+      };
+      /** @description No simulation of this country's model has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The v2 database or the simulation service is unavailable. */
       503: {
         headers: {
           [name: string]: unknown;

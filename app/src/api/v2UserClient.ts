@@ -19,14 +19,20 @@ export const UNAUTHENTICATED_USER_HEADER = 'PolicyEngine-Unauthenticated-User';
 /** Largest page the list routes serve. */
 export const V2_MAX_PAGE_SIZE = 500;
 
-/** A failed signed-in request: HTTP status (0 for a network failure) and the API's message. */
+/**
+ * A failed signed-in request: HTTP status (0 for a network failure), the
+ * API's message, and the API's `code` when its error names one (such as
+ * `email_not_verified`), else null.
+ */
 export class V2ApiError extends Error {
   readonly status: number;
+  readonly code: string | null;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code: string | null = null) {
     super(message);
     this.name = 'V2ApiError';
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -182,7 +188,11 @@ export function createV2UserClient({
 
     const envelope = await readEnvelope(response);
     if (!response.ok) {
-      throw new V2ApiError(response.status, failureMessage(response.status, envelope?.message));
+      throw new V2ApiError(
+        response.status,
+        failureMessage(response.status, envelope?.message),
+        typeof envelope?.code === 'string' ? envelope.code : null
+      );
     }
     if (!envelope || envelope.status !== 'ok') {
       throw new V2ApiError(

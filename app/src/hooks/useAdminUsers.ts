@@ -49,7 +49,7 @@ export function isRefusedOrMissing(error: unknown): boolean {
 }
 
 /** Retries temporary failures only (network errors, 5xx), as often as the client's default would. */
-function retryTemporaryFailures(queryClient: QueryClient) {
+export function retryTemporaryFailures(queryClient: QueryClient) {
   const defaultRetry = queryClient.getDefaultOptions().queries?.retry;
   return (failureCount: number, error: Error): boolean => {
     if (isRefusedOrMissing(error)) {
@@ -73,7 +73,7 @@ function retryTemporaryFailures(queryClient: QueryClient) {
  * user may have been demoted, and once `/v2/me` says so the page shows
  * "Page not found".
  */
-function useReadMeAgainOnRefusal() {
+export function useReadMeAgainOnRefusal() {
   const { subject } = useAuthStatus();
   const countryId = useCountryContext();
   const queryClient = useQueryClient();

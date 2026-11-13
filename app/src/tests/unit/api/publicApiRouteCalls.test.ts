@@ -30,7 +30,14 @@ import {
   searchAdminUsers,
 } from '@/api/v2AdminUsers';
 import { AccountAssociationRoutes } from '@/api/v2Associations';
-import { deleteMe, exportMe, fetchMe, upgradeAccount } from '@/api/v2Me';
+import {
+  acceptInvitation,
+  createInvitation,
+  listInvitations,
+  resendInvitation,
+  revokeInvitation,
+} from '@/api/v2Invitations';
+import { deleteMe, dismissTypeChange, exportMe, fetchMe, upgradeAccount } from '@/api/v2Me';
 import { createV2UserClient } from '@/api/v2UserClient';
 import { matchAllowedOperation, PUBLIC_API_ROUTE_PREFIX } from '@/libs/publicApiRoute/allowList';
 import type { Report } from '@/types/ingredients/Report';
@@ -228,6 +235,42 @@ const PUBLIC_API_CALLS: ReadonlyArray<[string, () => Promise<unknown>, string, s
     () => fetchUserTypeChanges(browserUserClient(), SAVED_RECORD_ID),
     'GET',
     `/v2/admin/users/${SAVED_RECORD_ID}/user-type-changes`,
+  ],
+  [
+    'the pending invitations',
+    () => listInvitations(browserUserClient()),
+    'GET',
+    '/v2/admin/invitations',
+  ],
+  [
+    'an invitation',
+    () => createInvitation(browserUserClient(), { email: 'grace@example.org', userType: 'author' }),
+    'POST',
+    '/v2/admin/invitations',
+  ],
+  [
+    "an invitation's resend",
+    () => resendInvitation(browserUserClient(), SAVED_RECORD_ID),
+    'POST',
+    `/v2/admin/invitations/${SAVED_RECORD_ID}/resend`,
+  ],
+  [
+    "an invitation's revocation",
+    () => revokeInvitation(browserUserClient(), SAVED_RECORD_ID),
+    'DELETE',
+    `/v2/admin/invitations/${SAVED_RECORD_ID}`,
+  ],
+  [
+    "an invitation's acceptance",
+    () => acceptInvitation(browserUserClient(), 'us', 'invitation-token'),
+    'POST',
+    '/v2/me/invitations/accept',
+  ],
+  [
+    "a type change's dismissal",
+    () => dismissTypeChange(browserUserClient(), 'us', SAVED_RECORD_ID),
+    'POST',
+    `/v2/me/type-changes/${SAVED_RECORD_ID}/dismiss`,
   ],
   ['the account export', () => exportMe(browserUserClient(), 'us'), 'GET', '/v2/me/export'],
   ['the account deletion', () => deleteMe(browserUserClient(), 'us'), 'DELETE', '/v2/me'],
