@@ -148,6 +148,8 @@ export default function ReformParameterTable({
           // current law in its own first year.
           const periods = parameter.values.length > 0 ? parameter.values : [];
           const breadcrumb = parameterBreadcrumb(parameter.name, parameters);
+          // Without a label the name is the dotted path, which has no spaces.
+          const unlabelled = !parameters?.[parameter.name];
           const parts = breadcrumb.split(' → ');
           const name = parts[parts.length - 1] ?? parameter.name;
           const context = parts.slice(0, -1).join(' → ');
@@ -160,10 +162,9 @@ export default function ReformParameterTable({
                   lineHeight: '20px',
                   fontWeight: typography.fontWeight.medium,
                   color: colors.text.primary,
-                  // A parameter without a label shows its dotted path, which
-                  // has no spaces: it wraps rather than running into the
-                  // next column.
-                  overflowWrap: 'anywhere',
+                  // A dotted path wraps rather than running into the next
+                  // column. Labels wrap at their spaces, as before.
+                  overflowWrap: unlabelled ? 'anywhere' : undefined,
                 }}
               >
                 {name.charAt(0).toUpperCase() + name.slice(1)}
