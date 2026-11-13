@@ -160,6 +160,10 @@ export default function ReformParameterTable({
                   lineHeight: '20px',
                   fontWeight: typography.fontWeight.medium,
                   color: colors.text.primary,
+                  // A parameter without a label shows its dotted path, which
+                  // has no spaces: it wraps rather than running into the
+                  // next column.
+                  overflowWrap: 'anywhere',
                 }}
               >
                 {name.charAt(0).toUpperCase() + name.slice(1)}

@@ -182,7 +182,8 @@ function SavedItemKindTable({
           <TableBody>
             {kind.rows.map((row) => (
               <TableRow key={row.id}>
-                <TableCell style={{ whiteSpace: 'normal' }}>
+                {/* A name without spaces wraps too, rather than widening the column. */}
+                <TableCell style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
                   <SavedItemName row={row} onOpen={onOpen} />
                 </TableCell>
                 <TableCell>{getCountryLabel(row.countryId)}</TableCell>
