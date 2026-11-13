@@ -834,6 +834,23 @@ describe('AdminUserSavedItems policies and reports', () => {
     expect(await within(panel).findByRole('table', { name: 'Parameters' })).toBeInTheDocument();
   });
 
+  test("given the policy cannot be read then the dialog's summary says its changes could not be loaded, as the reforms page says of a reform", async () => {
+    // Given
+    const { user } = await openUserDetails(GRACE.email!);
+    answerPolicyReads(fetchMock, { v2: {}, v1: {} });
+    await user.click(screen.getByRole('button', { name: SHOW_SAVED_ITEMS }));
+    await screen.findByRole('table', { name: 'Saved policies' });
+
+    // When
+    const dialog = await openPolicy(user, SAVED_ITEM_NAMES.US_POLICY);
+    await within(dialog).findByRole('alert');
+
+    // Then
+    expect(
+      within(dialog).getByText('Changes could not be loaded · saved Oct 12, 2026')
+    ).toBeInTheDocument();
+  });
+
   test("given the panel is open then closing it returns focus to the policy's name", async () => {
     // Given
     const { user } = await showSavedItems(GRACE.email!);
