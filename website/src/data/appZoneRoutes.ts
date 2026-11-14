@@ -22,6 +22,11 @@ function withDeepRoute(route: AppZoneRoute): AppZoneRoute[] {
 
 export const appZoneRoutes: AppZoneRoute[] = [
   {
+    source: "/us/rent-and-property-taxes",
+    destination:
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes",
+  },
+  {
     source: "/uk/energy-autumn-budget",
     destination:
       "https://uk-energy-autumn-budget.vercel.app/uk/energy-autumn-budget",
@@ -341,6 +346,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
 ];
 
 export const appZoneAssetRoutes: AppZoneRoute[] = [
+  {
+    source: "/_zones/property-tax-relief/:path*",
+    destination:
+      "https://property-tax-relief.vercel.app/_zones/property-tax-relief/:path*",
+  },
   {
     source: "/2025-year-in-review/:path*",
     destination:

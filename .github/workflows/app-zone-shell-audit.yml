@@ -34,11 +34,16 @@ jobs:
       - name: Run app-zone audit unit tests
         run: node --test .github/scripts/audit-app-zone-shell.test.mjs
 
-      - name: Install Playwright
-        run: npm install --no-save playwright
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.21"
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
 
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: node node_modules/playwright/cli.js install --with-deps chromium
 
       - name: Run app-zone shell audit
         env:
