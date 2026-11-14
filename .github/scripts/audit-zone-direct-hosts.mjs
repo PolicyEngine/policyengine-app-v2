@@ -117,7 +117,10 @@ const PAGE_HEADERS = [
  * Only add to this list: the audit fails if any of these stops redirecting,
  * so a zone can't silently go back to serving its pages off the site.
  */
-export const DIRECT_HOST_REDIRECTS = ["/us/ballot-measures-2026"];
+export const DIRECT_HOST_REDIRECTS = [
+  "/us/aca-calc",
+  "/us/ballot-measures-2026",
+];
 
 /**
  * Statuses that say nothing about the redirect: an SSO or bot challenge, a
