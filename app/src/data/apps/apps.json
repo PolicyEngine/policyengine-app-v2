@@ -1,6 +1,15 @@
 [
   {
     "type": "iframe",
+    "slug": "rent-and-property-taxes",
+    "title": "Rent and property taxes across states",
+    "description": "Explore a research draft of rent and property-tax relief across all 50 states and the District of Columbia, with program sources, eligibility summaries and explicit coverage limits.",
+    "source": "https://property-tax-relief.vercel.app/us/rent-and-property-taxes",
+    "tags": ["us", "policy", "interactives", "tax"],
+    "countryId": "us"
+  },
+  {
+    "type": "iframe",
     "slug": "energy-autumn-budget",
     "title": "Energy bills and the Autumn Budget 2026",
     "description": "Estimate what UK households will pay for energy at forecast prices in 2026-27 and 2027-28, and what Autumn Budget support options would cost and who they would reach, modelled with PolicyEngine UK.",
