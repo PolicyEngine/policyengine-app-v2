@@ -1,5 +1,14 @@
 [
   {
+    "title": "How we cut our pull request checks from 2.4 hours to 66 minutes",
+    "description": "From October 9 to 22, PolicyEngine ran 60 or more automated test jobs at once, GitHub's limit on its Team plan, for at least 67 hours, and jobs on our US model waited a median 22 minutes to start. After we moved to GitHub Enterprise Cloud and split our longest tests, those jobs started in a median 3 seconds, and checks that passed on the first try took a median 66 minutes.",
+    "date": "2026-11-14 12:00:00",
+    "tags": ["us", "org", "technical"],
+    "authors": ["max-ghenis", "ziming-hua"],
+    "filename": "github-actions-60-job-limit.md",
+    "image": "github-actions-60-job-limit/cover.webp"
+  },
+  {
     "title": "How states tax military retired pay in 2026",
     "description": "Twenty-eight states exempt all military retired pay from income tax in 2026. We calculate how the pay changes federal and state income tax for two couples in every state.",
     "date": "2026-11-11 08:00:00",
