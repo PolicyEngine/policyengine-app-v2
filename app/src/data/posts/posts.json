@@ -1,7 +1,7 @@
 [
   {
-    "title": "How we cut our pull request checks from 2.4 hours to 66 minutes",
-    "description": "From October 9 to 22, PolicyEngine ran 60 or more automated test jobs at once, GitHub's limit on its Team plan, for at least 67 hours, and jobs on our US model waited a median 22 minutes to start. After we moved to GitHub Enterprise Cloud and split our longest tests, those jobs started in a median 3 seconds, and checks that passed on the first try took a median 66 minutes.",
+    "title": "How we cut our US model's pull request checks from 2.4 hours to 66 minutes",
+    "description": "From October 9 to 22, PolicyEngine's automated checks hit the GitHub Team plan's limit of 60 jobs at once for at least 67 hours. Jobs on pull requests to our US model waited a median 22 minutes to start, partly behind caps we had set. After we moved to GitHub Enterprise Cloud, lifted the caps and split our longest tests, checks that passed on the first try finished in a median 66 minutes, down from 2.4 hours.",
     "date": "2026-11-14 12:00:00",
     "tags": ["us", "org", "technical"],
     "authors": ["max-ghenis", "ziming-hua"],
