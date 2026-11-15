@@ -381,6 +381,11 @@ export const appZoneRewrites: AppZoneRoute[] = [
     destination:
       "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/methods/",
   },
+  {
+    source: "/us/rent-and-property-taxes/calculator",
+    destination:
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/calculator/",
+  },
   ...appZoneRoutes.flatMap(withDeepRoute),
   ...appZoneAssetRoutes,
 ];
