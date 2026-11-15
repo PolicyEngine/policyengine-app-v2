@@ -43,7 +43,7 @@
     "title": "The good work effect: how high-quality work can lead a jobs recovery",
     "outlet": "New Economics Foundation",
     "date": "2026-07-28",
-    "url": "https://neweconomics.org/2026/07/the-good-work-effect",
+    "url": "https://new-economicsf.files.svdcdn.com/production/files/The-good-work-effect-final.pdf",
     "image": "nef-good-work-effect-cover.jpg",
     "tags": ["uk", "policy"],
     "featured": true
@@ -106,10 +106,10 @@
     "tags": ["uk", "policy"]
   },
   {
-    "title": "Distribution of Personal Income",
+    "title": "Technical document: a methodology for distributing personal income",
     "outlet": "U.S. Bureau of Economic Analysis",
     "date": "2026-06-16",
-    "url": "https://www.bea.gov/data/special-topics/distribution-of-personal-income",
+    "url": "https://apps.bea.gov/data/special-topics/distribution-of-personal-income/national/technical-document.pdf",
     "image": "bea-distribution-personal-income.webp",
     "tags": ["us", "technical"],
     "featured": true
@@ -170,7 +170,7 @@
     "title": "Supporting children and incentivizing employment: The future of the Earned Income Tax Credit and the Child Tax Credit",
     "outlet": "Brookings Institution",
     "date": "2026-07-13",
-    "url": "https://www.brookings.edu/articles/supporting-children-and-incentivizing-employment-the-future-of-the-earned-income-tax-credit-and-the-child-tax-credit/",
+    "url": "https://www.brookings.edu/wp-content/uploads/2026/06/Supporting_children_and_incentivizing_employment_July2026.pdf",
     "image": "brookings-eitc-ctc-future.jpg",
     "tags": ["us", "policy"]
   },
@@ -178,13 +178,13 @@
     "title": "One Big Beautiful Bill? A preliminary assessment",
     "outlet": "Brookings Institution",
     "date": "2026-03-23",
-    "url": "https://www.brookings.edu/articles/one-big-beautiful-bill-a-preliminary-assessment/",
+    "url": "https://www.brookings.edu/wp-content/uploads/2026/03/OBBBA_Preliminary_Assessment_2026-03-23-1.pdf",
     "image": "brookings-big-beautiful-bill.jpg",
     "tags": ["us", "policy"]
   },
   {
     "title": "Immigration fiscal impact calculator",
-    "outlet": "Joint Economic Committee (U.S. Senate)",
+    "outlet": "Joint Economic Committee Republicans",
     "date": "2026-03-17",
     "url": "https://www.jec.senate.gov/public/index.cfm/republicans/2026/3/immigration-fiscal-impact-calculator",
     "image": "jec-immigration.webp",
@@ -193,7 +193,7 @@
   },
   {
     "title": "The true cost of subsidizing childcare",
-    "outlet": "UHERO (University of Hawaii Economic Research Organization)",
+    "outlet": "UHERO (University of Hawaiʻi Economic Research Organization)",
     "date": "2026-05-01",
     "url": "https://uhero.hawaii.edu/the-true-cost-of-subsidizing-childcare/",
     "image": "uhero-childcare-2026-05.webp",
@@ -452,7 +452,7 @@
   },
   {
     "title": "Hawaiʻi's unnecessary benefit cliff: how one small policy change could deliver tens of millions in federally-funded SNAP benefits",
-    "outlet": "UHERO (University of Hawai'i)",
+    "outlet": "UHERO (University of Hawaiʻi Economic Research Organization)",
     "date": "2024-09-23",
     "url": "https://uhero.hawaii.edu/hawai%CA%BBis-unnecessary-benefit-cliff-how-one-small-policy-change-could-deliver-in-45m-per-year-in-federally-funded-snap-benefits/",
     "image": "uhero-snap.webp",

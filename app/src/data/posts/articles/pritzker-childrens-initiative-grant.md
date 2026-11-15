@@ -14,7 +14,7 @@ We will expand PolicyEngine's rules engine to model Temporary Assistance for Nee
 
 ### Training and consultation
 
-We will provide training sessions and analytical support to national partners working on prenatal-to-age-three policy, including current PolicyEngine users the [Niskanen Center](niskanen-center-analysis) and the [Prenatal-to-3 Policy Impact Center](https://pn3policy.org/), whose [Policy Impact Calculator](https://pn3policy.org/2023-policy-impact-calculator/) uses PolicyEngine for tax calculations. Through webinars and direct consultation, we aim to reach leaders in at least 30 states who can use PolicyEngine's tools for child poverty analysis.
+We will provide training sessions and analytical support to national partners working on prenatal-to-age-three policy, including current PolicyEngine users the [Niskanen Center](niskanen-center-analysis) and the [Prenatal-to-3 Policy Impact Center](https://pn3policy.org/), whose [Policy Impact Calculator](https://pn3policy.org/policy-impact-calculator/) uses PolicyEngine for tax calculations. Through webinars and direct consultation, we aim to reach leaders in at least 30 states who can use PolicyEngine's tools for child poverty analysis.
 
 ## About the Pritzker Children's Initiative
 
