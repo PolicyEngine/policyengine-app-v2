@@ -3,7 +3,7 @@
     "type": "iframe",
     "slug": "rent-and-property-taxes",
     "title": "Rent and property taxes across states",
-    "description": "Explore a research draft of rent and property-tax relief across all 50 states and the District of Columbia, with program sources, eligibility summaries and explicit coverage limits.",
+    "description": "Compare selected income-tax credits and deductions for rent and property taxes, alongside rebates and bill programs, using program-specific 2025 reference periods across all 50 states and DC. Research draft with explicit coverage limits.",
     "source": "https://property-tax-relief.vercel.app/us/rent-and-property-taxes",
     "tags": ["us", "policy", "interactives", "tax"],
     "countryId": "us"
