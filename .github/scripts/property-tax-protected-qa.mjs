@@ -24,7 +24,7 @@ export const CONFIG = Object.freeze({
       name: "property-tax-relief",
     },
   },
-  childSha: "1910e9e5086cd634c49a8a87a285703189ab1e56",
+  childSha: "62b668978ccdb79cf4dd8ac88816e7de54e96209",
   childAlias: "property-tax-relief.vercel.app",
   toolPath: "/us/rent-and-property-taxes/",
   assetPath: "/_zones/property-tax-relief/",

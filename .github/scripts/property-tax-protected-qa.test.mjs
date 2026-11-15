@@ -28,6 +28,8 @@ vi.mock("playwright", () => {
 });
 
 const HOST_SHA = "a".repeat(40);
+const REVIEWED_CHILD_SHA = "62b668978ccdb79cf4dd8ac88816e7de54e96209";
+const PREVIOUS_CHILD_SHA = "1910e9e5086cd634c49a8a87a285703189ab1e56";
 const deployment = (role) => ({
   id: `dpl_${role}12345678901234567890`,
   projectId: CONFIG.projects[role].id,
@@ -399,6 +401,29 @@ describe("generated credential invariants", () => {
 });
 
 describe("protected QA provenance", () => {
+  test("given the reviewed report source then pin the workflow and harness to that same commit", () => {
+    const workflow = readFileSync(
+      new URL("../workflows/app-zone-shell-audit.yml", import.meta.url),
+      "utf8",
+    );
+    const childCheckout = workflow.match(
+      /repository: PolicyEngine\/property-tax-relief\r?\n\s+ref: ([a-f0-9]{40})\r?\n\s+path: qa-child/,
+    );
+    expect(CONFIG.childSha).toBe(REVIEWED_CHILD_SHA);
+    expect(childCheckout?.[1]).toBe(REVIEWED_CHILD_SHA);
+  });
+  test("given the previous child Git deployment then reject it under the reviewed report pin", () => {
+    expect(() =>
+      validateDeployment(
+        {
+          ...deployment("child"),
+          gitSource: { type: "github", sha: PREVIOUS_CHILD_SHA },
+        },
+        "child",
+        CONFIG.childSha,
+      ),
+    ).toThrow("SOURCE_NOT_BOUND");
+  });
   test("given a manual build receipt then require source archive and complete byte manifest", () => {
     const m = manifest();
     const files = Object.fromEntries(
@@ -421,6 +446,13 @@ describe("protected QA provenance", () => {
     expect(validateBuildReceipt(receipt, m.child.id, "d".repeat(64))).toBe(
       receipt,
     );
+    expect(() =>
+      validateBuildReceipt(
+        { ...receipt, sourceCommit: PREVIOUS_CHILD_SHA },
+        m.child.id,
+        "d".repeat(64),
+      ),
+    ).toThrow("BUILD_RECEIPT_SOURCE_DIFFERS");
     expect(() =>
       validateBuildReceipt(receipt, m.child.id, "e".repeat(64)),
     ).toThrow();
@@ -445,6 +477,17 @@ describe("protected QA provenance", () => {
     expect(
       validateDeployment(manual, "child", CONFIG.childSha, receipt).sourceKind,
     ).toBe("reviewed-manual-build");
+    expect(() =>
+      validateDeployment(
+        {
+          ...manual,
+          meta: { ...manual.meta, sourceCommit: PREVIOUS_CHILD_SHA },
+        },
+        "child",
+        CONFIG.childSha,
+        { ...receipt, sourceCommit: PREVIOUS_CHILD_SHA },
+      ),
+    ).toThrow("SOURCE_NOT_BOUND");
     expect(() =>
       validateDeployment(
         {
