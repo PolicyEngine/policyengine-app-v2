@@ -449,7 +449,7 @@ export function inspectTopShellData(
   };
 }
 
-async function inspectTopShell(page) {
+export async function inspectTopShell(page) {
   const elements = await page.evaluate((selector) => {
     const candidates = Array.from(document.querySelectorAll(selector));
 

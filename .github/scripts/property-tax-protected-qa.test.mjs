@@ -5,10 +5,13 @@ import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { JSDOM } from "jsdom";
+import { REQUIRED_NAV_LABELS } from "./audit-app-zone-shell.mjs";
 import {
   CONFIG,
   assertAllowedUrl,
   assertApplicationPage,
+  assertApplicationShell,
   failureEvidence,
   makeTransport,
   runPreflight,
@@ -1108,5 +1111,155 @@ describe("sanitized redirect diagnostics", () => {
       status: "BLOCKED",
       code: "QA_FAILED",
     });
+  });
+});
+
+describe("shared visible top-shell assertion", () => {
+  // Fake DOM fixtures only: JSDOM has no layout. Rectangles below are explicitly
+  // synthetic, while selection, attributes, text and inline styles use real DOM APIs.
+  function fakeShellPage({ brand = true, missing, variant = "visible" } = {}) {
+    const position = variant === "above" ? -100 : variant === "below" ? 600 : 8;
+    const size =
+      variant === "zero-width"
+        ? 'data-width="0"'
+        : variant === "zero-height"
+          ? 'data-height="0"'
+          : "";
+    const style = ["display:none", "visibility:hidden", "opacity:0"].includes(
+      variant,
+    )
+      ? variant
+      : "";
+    const content = `<img alt="${brand ? "PolicyEngine" : "Other brand"}" style="${style}">${REQUIRED_NAV_LABELS.filter(
+      (label) => label !== missing,
+    )
+      .map(
+        (label) =>
+          `<a href="/us/${label.toLowerCase()}" style="${style}">${label}</a>`,
+      )
+      .join("")}`;
+    const footer =
+      '<footer data-top="600"><img alt="PolicyEngine"><a>Research</a><a>Model</a><a>API</a><a>Donate</a></footer>';
+    const fixture = `${variant === "footer-only" ? "" : `<div data-top="${position}" ${size} style="position:sticky;top:0">${content}</div>`}<nav><a>Read the report</a><a>Data and methods</a></nav>${footer}`;
+    return {
+      evaluate: vi.fn(async (callback, selector) => {
+        const dom = new JSDOM(fixture);
+        expect(dom.window.document.querySelector("header")).toBeNull();
+        for (const element of dom.window.document.querySelectorAll("*")) {
+          element.getBoundingClientRect = () => {
+            const top = Number(
+              element.closest("[data-top]")?.getAttribute("data-top") ?? 8,
+            );
+            const width = Number(
+              element.closest("[data-width]")?.getAttribute("data-width") ??
+                120,
+            );
+            const height = Number(
+              element.closest("[data-height]")?.getAttribute("data-height") ??
+                40,
+            );
+            return { width, height, top, bottom: top + height };
+          };
+        }
+        vi.stubGlobal("document", dom.window.document);
+        vi.stubGlobal("window", dom.window);
+        try {
+          return callback(selector);
+        } finally {
+          vi.unstubAllGlobals();
+          dom.window.close();
+        }
+      }),
+    };
+  }
+
+  test("given a visible div shell with logo and four anchors then pass without a header tag", async () => {
+    const page = fakeShellPage();
+    await expect(assertApplicationShell(page)).resolves.toBeUndefined();
+    expect(page.evaluate).toHaveBeenCalledTimes(1);
+  });
+
+  test("given navigation without the top brand then reject despite branded footer", async () => {
+    await expect(
+      assertApplicationShell(fakeShellPage({ brand: false })),
+    ).rejects.toThrow("SHELL_MISSING");
+  });
+
+  test.each(REQUIRED_NAV_LABELS)(
+    "given missing visible %s then reject despite footer navigation",
+    async (missing) => {
+      await expect(
+        assertApplicationShell(fakeShellPage({ missing })),
+      ).rejects.toThrow("SHELL_MISSING");
+    },
+  );
+
+  test.each([
+    "display:none",
+    "visibility:hidden",
+    "opacity:0",
+    "zero-width",
+    "zero-height",
+    "above",
+    "below",
+    "footer-only",
+  ])(
+    "given a %s shell fixture then reject its invisible or misplaced brand/navigation",
+    async (variant) => {
+      await expect(
+        assertApplicationShell(fakeShellPage({ variant })),
+      ).rejects.toThrow("SHELL_MISSING");
+    },
+  );
+
+  test("given generated brand/nav/visibility fixtures then retain the complete visible-shell guard", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.boolean(),
+        fc.option(fc.constantFrom(...REQUIRED_NAV_LABELS), { nil: undefined }),
+        fc.constantFrom(
+          "visible",
+          "display:none",
+          "visibility:hidden",
+          "opacity:0",
+          "zero-width",
+          "zero-height",
+          "above",
+          "below",
+          "footer-only",
+        ),
+        async (brand, missing, variant) => {
+          const assertion = assertApplicationShell(
+            fakeShellPage({ brand, missing, variant }),
+          );
+          if (brand && missing === undefined && variant === "visible")
+            await expect(assertion).resolves.toBeUndefined();
+          else await expect(assertion).rejects.toThrow("SHELL_MISSING");
+        },
+      ),
+      { numRuns: 100, seed: 20261124 },
+    );
+  });
+
+  test("given the shared audit is imported then never run main or perform a request", async () => {
+    const fetcher = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("NO_NETWORK_IN_FIXTURE"));
+    const output = vi.spyOn(console, "log").mockImplementation(() => {});
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const originalExitCode = process.exitCode;
+    try {
+      const audit =
+        await import("./audit-app-zone-shell.mjs?protected-qa-import-fixture");
+      expect(audit.inspectTopShell).toBeTypeOf("function");
+      expect(fetcher).not.toHaveBeenCalled();
+      expect(output).not.toHaveBeenCalled();
+      expect(errors).not.toHaveBeenCalled();
+      expect(process.exitCode).toBe(originalExitCode);
+    } finally {
+      fetcher.mockRestore();
+      output.mockRestore();
+      errors.mockRestore();
+    }
   });
 });

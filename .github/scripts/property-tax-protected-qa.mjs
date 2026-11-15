@@ -7,6 +7,10 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
+import {
+  inspectTopShell,
+  REQUIRED_NAV_LABELS,
+} from "./audit-app-zone-shell.mjs";
 
 export const CONFIG = Object.freeze({
   teamId: "team_xsyTmFLMLGbHH7Qxu70R5G4r",
@@ -294,6 +298,14 @@ export function assertApplicationPage(response, kind = "tool") {
         kind === "host" ? "PolicyEngine" : "Rent and property taxes",
       ),
     "APPLICATION_NOT_REACHED",
+  );
+}
+
+export async function assertApplicationShell(page) {
+  const { hasBrand, navHits } = await inspectTopShell(page);
+  requireQa(
+    hasBrand && REQUIRED_NAV_LABELS.every((label) => navHits.includes(label)),
+    "SHELL_MISSING",
   );
 }
 
@@ -793,27 +805,7 @@ async function browserQa(manifest, transport) {
           (await page.locator(".state-tile").count()) === 51,
           "PROFILE_COUNT",
         );
-        const shell = await page.locator("header").evaluateAll((headers) =>
-          headers
-            .map(
-              (header) =>
-                header.innerText +
-                " " +
-                Array.from(header.querySelectorAll("[alt], [aria-label]"))
-                  .map(
-                    (e) =>
-                      e.getAttribute("alt") ?? e.getAttribute("aria-label"),
-                  )
-                  .join(" "),
-            )
-            .join(" "),
-        );
-        requireQa(
-          ["PolicyEngine", "Research", "Model", "API", "Donate"].every(
-            (label) => shell.includes(label),
-          ),
-          "SHELL_MISSING",
-        );
+        await assertApplicationShell(page);
         const escapedLinks = await page.locator('a[href^="/"]').evaluateAll(
           (links, prefix) =>
             links.some((link) => {
