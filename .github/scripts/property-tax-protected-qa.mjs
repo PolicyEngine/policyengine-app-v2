@@ -32,6 +32,14 @@ class QaError extends Error {}
 // Only evidence created at the validated byte comparison can enter failure.json.
 // Arbitrary error properties and messages must never become diagnostic payloads.
 const mismatchDetails = new WeakMap();
+const runtimeCaptures = new WeakMap();
+const runtimeDiagnostic = Object.freeze({
+  path: "/_zones/property-tax-relief/_next/static/chunks/turbopack-2ldtdtmjp3oyl.js",
+  expectedSha256:
+    "c2938fab495210b87d9f735375cb0ed03787e4072a770f349ba7bae0a28217bf",
+  file: "mismatched-turbopack-runtime.js",
+  maxBytes: 32 * 1024,
+});
 export function failureEvidence(error) {
   const trusted = error instanceof QaError;
   const mismatch = trusted ? mismatchDetails.get(error) : undefined;
@@ -40,6 +48,76 @@ export function failureEvidence(error) {
     code: trusted ? error.message : "QA_FAILED",
     ...(mismatch ? { mismatch } : {}),
   };
+}
+export function writeFailureEvidence(error, directory = OUTPUT) {
+  const failure = failureEvidence(error);
+  const runtime = runtimeCaptures.get(error);
+  mkdirSync(directory, { recursive: true });
+  if (runtime) {
+    writeFileSync(resolve(directory, runtimeDiagnostic.file), runtime, {
+      flag: "wx",
+      mode: 0o600,
+    });
+    failure.runtimeArtifact = {
+      file: runtimeDiagnostic.file,
+      bytes: runtime.length,
+      sha256: digest(runtime),
+    };
+  }
+  writeFileSync(resolve(directory, "failure.json"), JSON.stringify(failure));
+  return failure;
+}
+
+function containsEncodedKey(body, keys) {
+  const text = body.toString("utf8").toLowerCase();
+  return [keys.hostKey, keys.childKey].some((secret) => {
+    const bytes = Buffer.from(secret);
+    const hex = (byte) => byte.toString(16).padStart(2, "0");
+    // Encoding checks only prevent diagnostic leaks; build hashes use raw bytes.
+    const variants = [
+      secret,
+      encodeURIComponent(secret),
+      [...bytes].map((byte) => `%${hex(byte)}`).join(""),
+      bytes.toString("base64"),
+      bytes.toString("base64").replace(/=+$/, ""),
+      bytes.toString("base64url"),
+      bytes.toString("hex"),
+      [...secret]
+        .map((char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`)
+        .join(""),
+      [...bytes].map((byte) => `\\x${hex(byte)}`).join(""),
+      [...secret].map((char) => `&#${char.charCodeAt(0)};`).join(""),
+      [...secret]
+        .map((char) => `&#x${char.charCodeAt(0).toString(16)};`)
+        .join(""),
+    ];
+    return variants.some((value) => text.includes(value.toLowerCase()));
+  });
+}
+
+function retainKnownRuntime(error, file, path, expectedSha256, manifest, keys) {
+  const text = file.body.toString("utf8");
+  const mediaType = file.contentType.split(";", 1)[0];
+  if (
+    path === runtimeDiagnostic.path &&
+    expectedSha256 === runtimeDiagnostic.expectedSha256 &&
+    file.url === manifest.child.origin + runtimeDiagnostic.path &&
+    file.status === 200 &&
+    ["application/javascript", "text/javascript"].includes(mediaType) &&
+    file.body.length >= 512 &&
+    file.body.length <= runtimeDiagnostic.maxBytes &&
+    Buffer.from(text, "utf8").equals(file.body) &&
+    text.startsWith("(()=>{") &&
+    ["globalThis.TURBOPACK", "TURBOPACK_ASSET_SUFFIX", "registerChunk"].every(
+      (signature) => text.includes(signature),
+    ) &&
+    !/<(?:!doctype|html|head|body|form|title)\b|Authentication Required|Vercel Authentication|Log in to Vercel|Security Checkpoint/i.test(
+      text,
+    ) &&
+    !containsEncodedKey(file.body, keys)
+  ) {
+    runtimeCaptures.set(error, Buffer.from(file.body));
+  }
 }
 const requireQa = (condition, code) => {
   if (!condition) throw new QaError(code);
@@ -355,6 +433,7 @@ export async function runPreflight(manifest, keys, fetcher = fetch) {
             actualSha256,
           }),
         );
+        retainKnownRuntime(error, file, path, hash, manifest, keys);
         throw error;
       }
     }
@@ -870,9 +949,7 @@ if (
     .then(() => console.log("Protected QA phase completed"))
     .catch((error) => {
       // Never log fetch/browser exceptions: they may contain auth headers or raw bodies.
-      const failure = failureEvidence(error);
-      mkdirSync(OUTPUT, { recursive: true });
-      writeFileSync(resolve(OUTPUT, "failure.json"), JSON.stringify(failure));
+      const failure = writeFailureEvidence(error);
       console.error(`Protected QA blocked: ${failure.code}`);
       process.exitCode = 1;
     });

@@ -2,6 +2,9 @@
 import { describe, expect, test, vi } from "vitest";
 import fc from "fast-check";
 import { createHash } from "node:crypto";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   CONFIG,
   assertAllowedUrl,
@@ -14,6 +17,7 @@ import {
   validateDeployment,
   validateInventory,
   validateStaticCsv,
+  writeFailureEvidence,
 } from "./property-tax-protected-qa.mjs";
 
 vi.mock("playwright", () => {
@@ -42,6 +46,208 @@ const html = (text = "Rent and property taxes across states. PolicyEngine") =>
     headers: { "content-type": "text/html" },
   });
 const keys = { hostKey: "FAKE_HOST_KEY", childKey: "FAKE_CHILD_KEY" };
+
+const RUNTIME_PATH =
+  "/_zones/property-tax-relief/_next/static/chunks/turbopack-2ldtdtmjp3oyl.js";
+const EXPECTED_RUNTIME_SHA =
+  "c2938fab495210b87d9f735375cb0ed03787e4072a770f349ba7bae0a28217bf";
+const RUNTIME_ARTIFACT = "mismatched-turbopack-runtime.js";
+const runtime = (extra = "") =>
+  `(()=>{var r=globalThis.TURBOPACK;var s=self.TURBOPACK_ASSET_SUFFIX;function registerChunk(){};${"/* public generated runtime */".repeat(20)}${extra}})();`;
+
+async function runtimeMismatch({
+  path = RUNTIME_PATH,
+  hash = EXPECTED_RUNTIME_SHA,
+  status = 200,
+  contentType = "application/javascript; charset=utf-8",
+  body = runtime(),
+  redirect = false,
+  credentials = keys,
+} = {}) {
+  const m = manifest();
+  m.child.sourceKind = "reviewed-manual-build";
+  m.child.buildReceipt = { files: { [path]: hash } };
+  const fetcher = vi.fn(async () => {
+    if (fetcher.mock.calls.length === 1) return html();
+    if (redirect && fetcher.mock.calls.length === 2)
+      return new Response(null, {
+        status: 307,
+        headers: { location: CONFIG.assetPath + "_next/static/other.js" },
+      });
+    return new Response(body, {
+      status,
+      headers: {
+        "content-type": contentType,
+        "set-cookie": "PRIVATE_COOKIE=value",
+        "x-private-debug": "PRIVATE_HEADER",
+      },
+    });
+  });
+  try {
+    await runPreflight(m, credentials, fetcher);
+  } catch (error) {
+    return { error, fetcher };
+  }
+  throw new Error("Expected blocking runtime mismatch");
+}
+
+function withFailureArtifact(error, check) {
+  const directory = mkdtempSync(join(tmpdir(), "protected-qa-fake-"));
+  try {
+    const evidence = writeFailureEvidence(error, directory);
+    check({ evidence, directory, files: readdirSync(directory) });
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+describe("fixed public runtime diagnostic", () => {
+  test("given the exact mismatched public runtime then retain bytes while QA stays blocked before host auth", async () => {
+    const body = runtime();
+    const { error, fetcher } = await runtimeMismatch({ body });
+    withFailureArtifact(error, ({ evidence, directory, files }) => {
+      expect(files.sort()).toEqual(["failure.json", RUNTIME_ARTIFACT].sort());
+      expect(readFileSync(join(directory, RUNTIME_ARTIFACT))).toEqual(
+        Buffer.from(body),
+      );
+      expect(evidence).toMatchObject({
+        status: "BLOCKED",
+        code: "DEPLOYED_BUILD_DIFFERS",
+        runtimeArtifact: {
+          file: RUNTIME_ARTIFACT,
+          bytes: Buffer.byteLength(body),
+          sha256: createHash("sha256").update(body).digest("hex"),
+        },
+      });
+      const receipt = readFileSync(join(directory, "failure.json"), "utf8");
+      expect(JSON.parse(receipt)).toEqual(evidence);
+      for (const value of [
+        body,
+        "PRIVATE_HEADER",
+        "PRIVATE_COOKIE",
+        ...Object.values(keys),
+      ])
+        expect(receipt).not.toContain(value);
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(
+      fetcher.mock.calls.every(
+        ([, options]) =>
+          options.headers.get("x-vercel-protection-bypass") === keys.childKey &&
+          !options.headers.has("x-vercel-set-bypass-cookie"),
+      ),
+    ).toBe(true);
+  });
+
+  test.each([
+    ["another asset", { path: CONFIG.assetPath + "_next/static/other.js" }],
+    ["another expected build", { hash: "0".repeat(64) }],
+    ["redirected asset", { redirect: true }],
+    ["non200", { status: 404 }],
+    ["HTML MIME", { contentType: "text/html" }],
+    ["generic MIME", { contentType: "application/octet-stream" }],
+    [
+      "missing runtime signature",
+      { body: "(()=>{/* other JavaScript */})();" },
+    ],
+    [
+      "too small",
+      {
+        body: "(()=>{globalThis.TURBOPACK;self.TURBOPACK_ASSET_SUFFIX;registerChunk})();",
+      },
+    ],
+    ["too large", { body: runtime("x".repeat(32 * 1024)) }],
+    [
+      "HTML auth body with runtime markers",
+      { body: runtime("<html><title>Authentication Required</title></html>") },
+    ],
+  ])("given %s then never retain response bytes", async (_name, options) => {
+    const { error } = await runtimeMismatch(options);
+    withFailureArtifact(error, ({ evidence, files }) => {
+      expect(files).toEqual(["failure.json"]);
+      expect(evidence.status).toBe("BLOCKED");
+      expect(evidence).not.toHaveProperty("runtimeArtifact");
+    });
+  });
+
+  const encodings = {
+    raw: (value) => value,
+    url: (value) => encodeURIComponent(value),
+    percentBytes: (value) =>
+      [...Buffer.from(value)]
+        .map((byte) => `%${byte.toString(16).padStart(2, "0")}`)
+        .join(""),
+    base64: (value) => Buffer.from(value).toString("base64"),
+    base64Unpadded: (value) =>
+      Buffer.from(value).toString("base64").replace(/=+$/, ""),
+    base64url: (value) => Buffer.from(value).toString("base64url"),
+    hex: (value) => Buffer.from(value).toString("hex"),
+    unicode: (value) =>
+      [...value]
+        .map((char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`)
+        .join(""),
+    jsHex: (value) =>
+      [...Buffer.from(value)]
+        .map((byte) => `\\x${byte.toString(16).padStart(2, "0")}`)
+        .join(""),
+    htmlDecimal: (value) =>
+      [...value].map((char) => `&#${char.charCodeAt(0)};`).join(""),
+    htmlHex: (value) =>
+      [...value]
+        .map((char) => `&#x${char.charCodeAt(0).toString(16)};`)
+        .join(""),
+  };
+  test.each(Object.entries(encodings))(
+    "given a %s encoded key reflection in otherwise valid runtime then retain no bytes",
+    async (_encoding, encode) => {
+      const credentials = {
+        hostKey: "FAKE_HOST+/=KEY",
+        childKey: "FAKE_CHILD+/=KEY",
+      };
+      for (const secret of Object.values(credentials)) {
+        const { error } = await runtimeMismatch({
+          credentials,
+          body: runtime(`/*${encode(secret)}*/`),
+        });
+        withFailureArtifact(error, ({ evidence, files }) => {
+          expect(files).toEqual(["failure.json"]);
+          expect(evidence.status).toBe("BLOCKED");
+          expect(evidence).not.toHaveProperty("runtimeArtifact");
+          expect(JSON.stringify(evidence)).not.toContain(secret);
+        });
+      }
+    },
+  );
+
+  test("given generated encoded credentials then no public runtime artifact is retained", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.stringMatching(/^[A-Za-z][A-Za-z0-9]{15,31}$/),
+        fc.constantFrom(...Object.keys(encodings)),
+        async (secret, encoding) => {
+          const { error } = await runtimeMismatch({
+            credentials: { hostKey: secret, childKey: "OTHER_FAKE_KEY" },
+            body: runtime(`/*${encodings[encoding](secret)}*/`),
+          });
+          withFailureArtifact(error, ({ evidence, files }) => {
+            expect(files).toEqual(["failure.json"]);
+            expect(evidence).not.toHaveProperty("runtimeArtifact");
+          });
+        },
+      ),
+      { numRuns: 100, seed: 20261119 },
+    );
+  });
+
+  test("given a forged capture on an arbitrary error then retain only the sanitized failure receipt", () => {
+    const error = new Error(keys.childKey);
+    error.runtimeArtifact = { body: runtime(keys.hostKey) };
+    withFailureArtifact(error, ({ evidence, files }) => {
+      expect(files).toEqual(["failure.json"]);
+      expect(evidence).toEqual({ status: "BLOCKED", code: "QA_FAILED" });
+    });
+  });
+});
 
 describe("generated credential invariants", () => {
   const label = fc.stringMatching(/^[a-z][a-z0-9]{0,15}$/);

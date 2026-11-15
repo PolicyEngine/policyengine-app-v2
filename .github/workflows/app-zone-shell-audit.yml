@@ -172,6 +172,7 @@ jobs:
             output/property-tax-protected-qa/browser.json
             output/property-tax-protected-qa/recheck.json
             output/property-tax-protected-qa/failure.json
+            output/property-tax-protected-qa/mismatched-turbopack-runtime.js
             output/property-tax-protected-qa/*-desktop.png
             output/property-tax-protected-qa/*-mobile.png
             output/property-tax-protected-qa/*-inventory.csv
