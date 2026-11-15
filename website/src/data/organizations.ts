@@ -40,12 +40,19 @@ export type CountryId = "uk" | "us";
 
 export type UseCategory = "government" | "research" | "services";
 
-/** The groups on the users page, in page order. */
-export const USE_CATEGORIES: { id: UseCategory; title: string }[] = [
-  { id: "government", title: "Government" },
-  { id: "research", title: "Research" },
-  { id: "services", title: "Services built on PolicyEngine" },
-];
+/**
+ * The groups on the users page and their headings, in page order. The record
+ * type makes a new category a compile error until it has a heading here.
+ */
+const useCategoryTitles: Record<UseCategory, string> = {
+  government: "Government",
+  research: "Research",
+  services: "Benefit services",
+};
+
+export const USE_CATEGORIES = (
+  Object.keys(useCategoryTitles) as UseCategory[]
+).map((id) => ({ id, title: useCategoryTitles[id] }));
 
 /**
  * What an organization does with PolicyEngine, for the users page
@@ -58,16 +65,23 @@ export interface OrganizationUse {
   rank: number;
   /** One active-voice sentence on what the organization does with PolicyEngine. */
   description: string;
-  /** The page or document that shows the use. */
-  source: {
-    label: string;
-    url: string;
-    /**
-     * Who published the source: the organization itself, or PolicyEngine where
-     * no page of the organization's describes the use.
-     */
-    publisher: "organization" | "policyengine";
-  };
+  /**
+   * The organization's own site, for the name on the users page. Set it where
+   * `link`, which the logo strip uses, points at one article instead.
+   */
+  site?: string;
+  /** The pages or documents that show the use, in the order the page lists them. */
+  sources: [OrganizationUseSource, ...OrganizationUseSource[]];
+}
+
+export interface OrganizationUseSource {
+  label: string;
+  url: string;
+  /**
+   * Who published the source: the organization itself, or PolicyEngine where
+   * no page of the organization's describes the use.
+   */
+  publisher: "organization" | "policyengine";
 }
 
 export interface Organization {
@@ -115,12 +129,21 @@ export const organizations: Record<string, Organization> = {
       category: "government",
       rank: 1,
       description:
-        "No 10's data science team and PolicyEngine co-founder Nikhil Woodruff, a No10 Innovation Fellow from summer 2025, built 10ds-microsim on PolicyEngine to estimate how policy reforms affect living standards, local area incomes and distributional impacts.",
-      source: {
-        label: "No10 Innovation Fellowship article, January 2026",
-        url: "https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation/",
-        publisher: "organization",
-      },
+        "The data science team at No 10 Downing Street and PolicyEngine co-founder Nikhil Woodruff, a No10 Innovation Fellow from summer 2025, built the 10ds-microsim package on PolicyEngine to estimate how policy reforms affect living standards and local area incomes, and their distributional impacts; the team uses the results as supplementary, experimental analysis.",
+      site: "https://www.gov.uk/government/organisations/prime-ministers-office-10-downing-street",
+      sources: [
+        {
+          label:
+            "Nikhil Woodruff's No10 Innovation Fellowship article, January 2026",
+          url: "https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation/",
+          publisher: "organization",
+        },
+        {
+          label: "PolicyEngine blog post, January 2026",
+          url: "https://www.policyengine.org/uk/research/policyengine-10-downing-street",
+          publisher: "policyengine",
+        },
+      ],
     },
   },
   houseOfLords: {
@@ -142,12 +165,15 @@ export const organizations: Record<string, Organization> = {
       category: "research",
       rank: 3,
       description:
-        "Tax Policy Associates ran PolicyEngine UK to check its cost estimate for Universities UK's proposed employer National Insurance exemption for under-25s.",
-      source: {
-        label: "Tax Policy Associates article, September 2026",
-        url: "https://taxpolicy.org.uk/2026/09/10/universities-uk-national-insurance-proposal/",
-        publisher: "organization",
-      },
+        "Tax Policy Associates ran PolicyEngine UK to check its own cost estimate for Universities UK's proposed employer National Insurance exemption for under-25s.",
+      site: "https://taxpolicy.org.uk/",
+      sources: [
+        {
+          label: "Tax Policy Associates article, September 2026",
+          url: "https://taxpolicy.org.uk/2026/09/10/universities-uk-national-insurance-proposal/",
+          publisher: "organization",
+        },
+      ],
     },
   },
   nef: {
@@ -161,12 +187,15 @@ export const organizations: Record<string, Organization> = {
       category: "research",
       rank: 5,
       description:
-        "The New Economics Foundation used a microsimulation model that PolicyEngine UK built to compare an employer National Insurance exemption for hiring inactive or disabled workers with cuts to Personal Independence Payment.",
-      source: {
-        label: "New Economics Foundation press release, July 2026",
-        url: "https://neweconomics.org/2026/07/insecure-low-quality-work-a-major-driver-of-uks-neets-and-inactivity-crisis",
-        publisher: "organization",
-      },
+        "The New Economics Foundation, with modelling help from PolicyEngine staff, used a microsimulation model that PolicyEngine built to compare an employer National Insurance exemption for hiring inactive or disabled workers with the previous government's planned cut to Personal Independence Payment.",
+      site: "https://neweconomics.org/",
+      sources: [
+        {
+          label: "New Economics Foundation press release, July 2026",
+          url: "https://neweconomics.org/2026/07/insecure-low-quality-work-a-major-driver-of-uks-neets-and-inactivity-crisis",
+          publisher: "organization",
+        },
+      ],
     },
   },
   ggf: {
@@ -201,12 +230,15 @@ export const organizations: Record<string, Organization> = {
       category: "research",
       rank: 2,
       description:
-        "The National Institute of Economic and Social Research used PolicyEngine in its UK Living Standards Review 2025 to estimate how tax and benefit changes would affect poverty and incomes, and what each would cost.",
-      source: {
-        label: "UK Living Standards Review 2025",
-        url: "https://niesr.ac.uk/wp-content/uploads/2025/03/JC871-NIESR-UK-Living-Standards-Review-2025-final-version.pdf",
-        publisher: "organization",
-      },
+        "The National Institute of Economic and Social Research, with help from PolicyEngine staff, used PolicyEngine in its UK Living Standards Review 2025 to estimate how tax and benefit changes would affect poverty and the incomes of the bottom tenth of earners, and what each would cost.",
+      sources: [
+        {
+          label:
+            "National Institute of Economic and Social Research report, March 2025",
+          url: "https://niesr.ac.uk/wp-content/uploads/2025/03/JC871-NIESR-UK-Living-Standards-Review-2025-final-version.pdf",
+          publisher: "organization",
+        },
+      ],
     },
   },
   green_party: {
@@ -301,11 +333,13 @@ export const organizations: Record<string, Organization> = {
       rank: 1,
       description:
         "MyFriendBen powers the rules engine behind its benefits screener with PolicyEngine.",
-      source: {
-        label: "MyFriendBen's About page",
-        url: "https://www.myfriendben.org/about-us/",
-        publisher: "organization",
-      },
+      sources: [
+        {
+          label: "MyFriendBen About page",
+          url: "https://www.myfriendben.org/about-us/",
+          publisher: "organization",
+        },
+      ],
     },
   },
   gary: {
@@ -366,11 +400,13 @@ export const organizations: Record<string, Organization> = {
       rank: 3,
       description:
         "Mirza uses PolicyEngine's API to screen families for federal and state benefit programs.",
-      source: {
-        label: "PolicyEngine post, December 2025",
-        url: "https://www.policyengine.org/us/research/us-giving-tuesday-2025",
-        publisher: "policyengine",
-      },
+      sources: [
+        {
+          label: "PolicyEngine blog post, December 2025",
+          url: "https://www.policyengine.org/us/research/us-giving-tuesday-2025",
+          publisher: "policyengine",
+        },
+      ],
     },
   },
   starlight: {
@@ -382,12 +418,14 @@ export const organizations: Record<string, Organization> = {
       category: "services",
       rank: 4,
       description:
-        "Starlight powers benefits discovery with PolicyEngine's API.",
-      source: {
-        label: "PolicyEngine's 2025 year in review",
-        url: "https://www.policyengine.org/us/2025-year-in-review",
-        publisher: "policyengine",
-      },
+        "Starlight has used PolicyEngine's API to power benefits discovery.",
+      sources: [
+        {
+          label: "PolicyEngine 2025 year in review",
+          url: "https://www.policyengine.org/us/2025-year-in-review",
+          publisher: "policyengine",
+        },
+      ],
     },
   },
   ppp: {
@@ -406,12 +444,19 @@ export const organizations: Record<string, Organization> = {
       category: "government",
       rank: 2,
       description:
-        "The Bureau of Economic Analysis runs PolicyEngine to estimate tax liabilities in its distribution of personal income statistics, nationally and by state, from 2021 on.",
-      source: {
-        label: "BEA technical document, 2026",
-        url: "https://apps.bea.gov/data/special-topics/distribution-of-personal-income/national/technical-document.pdf",
-        publisher: "organization",
-      },
+        "The Bureau of Economic Analysis runs PolicyEngine to estimate tax liabilities for 2021 and later years in its statistics on the distribution of personal income: the national series and the prototype state series.",
+      sources: [
+        {
+          label: "Bureau of Economic Analysis technical document, June 2026",
+          url: "https://apps.bea.gov/data/special-topics/distribution-of-personal-income/national/technical-document.pdf",
+          publisher: "organization",
+        },
+        {
+          label: "Bureau of Economic Analysis state methods summary, July 2026",
+          url: "https://www.bea.gov/sites/default/files/2026-07/Summary%20of%20Methodological%20Updates%20to%20Distribution%20of%20Personal%20Income%20by%20State-July26.pdf",
+          publisher: "organization",
+        },
+      ],
     },
   },
   jecRepublicans: {
@@ -423,27 +468,13 @@ export const organizations: Record<string, Organization> = {
       rank: 3,
       description:
         "The Joint Economic Committee Republicans used PolicyEngine's microsimulation model to estimate individual tax liability and SNAP benefits in their Immigration Fiscal Impact Calculator.",
-      source: {
-        label: "Immigration Fiscal Impact Calculator, March 2026",
-        url: "https://www.jec.senate.gov/public/index.cfm/republicans/2026/3/immigration-fiscal-impact-calculator",
-        publisher: "organization",
-      },
-    },
-  },
-  hmTreasury: {
-    name: "HM Treasury",
-    link: "https://www.gov.uk/government/organisations/hm-treasury",
-    countries: ["uk"],
-    use: {
-      category: "government",
-      rank: 4,
-      description:
-        "HM Treasury piloted PolicyEngine UK and compared its outputs with the department's existing model; its transparency record says HMT does not currently use PolicyEngine.",
-      source: {
-        label: "HM Treasury algorithmic transparency record",
-        url: "https://www.gov.uk/algorithmic-transparency-records/hmt-modelling-policy-engine",
-        publisher: "organization",
-      },
+      sources: [
+        {
+          label: "Joint Economic Committee Republicans calculator, March 2026",
+          url: "https://www.jec.senate.gov/public/index.cfm/republicans/2026/3/immigration-fiscal-impact-calculator",
+          publisher: "organization",
+        },
+      ],
     },
   },
   brookings: {
@@ -454,12 +485,14 @@ export const organizations: Record<string, Organization> = {
       category: "research",
       rank: 1,
       description:
-        "Brookings authors Sarah Calame and Tara Watson used the PolicyEngine microsimulation model to estimate the cost, poverty effects and distributional effects of a hypothetical plan to fully separate the Earned Income Tax Credit and Child Tax Credit.",
-      source: {
-        label: "Brookings report, July 2026",
-        url: "https://www.brookings.edu/wp-content/uploads/2026/06/Supporting_children_and_incentivizing_employment_July2026.pdf",
-        publisher: "organization",
-      },
+        "Brookings authors Sarah Calame and Tara Watson used the PolicyEngine microsimulation model to estimate the cost, poverty effects and distributional effects of a hypothetical plan to make the Earned Income Tax Credit a credit for workers only and pay child benefits only through the Child Tax Credit.",
+      sources: [
+        {
+          label: "Brookings report, July 2026",
+          url: "https://www.brookings.edu/wp-content/uploads/2026/06/Supporting_children_and_incentivizing_employment_July2026.pdf",
+          publisher: "organization",
+        },
+      ],
     },
   },
   uhero: {
@@ -470,12 +503,19 @@ export const organizations: Record<string, Organization> = {
       category: "research",
       rank: 4,
       description:
-        "UHERO based its 2024 analysis of Hawaiʻi's SNAP benefit cliff on an enriched version of PolicyEngine's model.",
-      source: {
-        label: "UHERO analysis, September 2024",
-        url: "https://uhero.hawaii.edu/hawai%CA%BBis-unnecessary-benefit-cliff-how-one-small-policy-change-could-deliver-in-45m-per-year-in-federally-funded-snap-benefits/",
-        publisher: "organization",
-      },
+        "UHERO based its 2024 analysis of Hawaiʻi's SNAP benefit cliff on an enriched version of PolicyEngine's model, and used PolicyEngine US for the household calculations in its May 2026 brief on the cost of subsidizing child care.",
+      sources: [
+        {
+          label: "UHERO analysis, September 2024",
+          url: "https://uhero.hawaii.edu/hawai%CA%BBis-unnecessary-benefit-cliff-how-one-small-policy-change-could-deliver-in-45m-per-year-in-federally-funded-snap-benefits/",
+          publisher: "organization",
+        },
+        {
+          label: "UHERO brief, May 2026",
+          url: "https://uhero.hawaii.edu/the-true-cost-of-subsidizing-childcare/",
+          publisher: "organization",
+        },
+      ],
     },
   },
   ppi: {
@@ -487,11 +527,14 @@ export const organizations: Record<string, Organization> = {
       rank: 6,
       description:
         "The Progress and Poverty Institute, with the Center for Land Economics, modeled three property-tax relief policies in PolicyEngine for the Maine Legislature's Real Estate Property Tax Relief Task Force.",
-      source: {
-        label: "Report to the Maine task force, June 2026",
-        url: "https://legislature.maine.gov/doc/12515",
-        publisher: "organization",
-      },
+      sources: [
+        {
+          label:
+            "Progress and Poverty Institute report to the Maine task force, June 2026",
+          url: "https://legislature.maine.gov/doc/12515",
+          publisher: "organization",
+        },
+      ],
     },
   },
   amplifi: {
@@ -503,11 +546,13 @@ export const organizations: Record<string, Organization> = {
       rank: 2,
       description:
         "Amplifi powers the eligibility screening calculations in its Benefit Navigator with PolicyEngine.",
-      source: {
-        label: "About the Benefit Navigator",
-        url: "https://www.amplifi.org/about-benefit-navigator",
-        publisher: "organization",
-      },
+      sources: [
+        {
+          label: "Amplifi Benefit Navigator page",
+          url: "https://www.amplifi.org/about-benefit-navigator",
+          publisher: "organization",
+        },
+      ],
     },
   },
   studentBasicNeedsCoalition: {
@@ -518,12 +563,14 @@ export const organizations: Record<string, Organization> = {
       category: "services",
       rank: 5,
       description:
-        "The Student Basic Needs Coalition powers its Impactica Labs toolkit for SNAP benefit access with PolicyEngine.",
-      source: {
-        label: "PolicyEngine's 2025 year in review",
-        url: "https://www.policyengine.org/us/2025-year-in-review",
-        publisher: "policyengine",
-      },
+        "The Student Basic Needs Coalition uses an Impactica Labs toolkit for SNAP benefit access that PolicyEngine powers.",
+      sources: [
+        {
+          label: "PolicyEngine 2025 year in review",
+          url: "https://www.policyengine.org/us/2025-year-in-review",
+          publisher: "policyengine",
+        },
+      ],
     },
   },
 };

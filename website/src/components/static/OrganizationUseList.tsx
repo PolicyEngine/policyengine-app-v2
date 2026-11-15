@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { OrganizationWithUse } from "@/data/organizations";
 
 const externalLinkProps = {
@@ -16,7 +17,7 @@ function OrganizationUseRow({
     <li className="tw:grid tw:gap-x-3xl tw:gap-y-sm tw:py-2xl tw:border-t tw:border-border-light tw:md:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
       <h3 className="tw:text-lg tw:font-semibold tw:leading-snug">
         <a
-          href={link}
+          href={use.site ?? link}
           {...externalLinkProps}
           className="tw:text-gray-900 tw:no-underline tw:hover:text-text-link tw:hover:underline"
         >
@@ -28,14 +29,19 @@ function OrganizationUseRow({
           {use.description}
         </p>
         <p className="tw:mt-sm tw:text-sm tw:text-gray-600">
-          Source:{" "}
-          <a
-            href={use.source.url}
-            {...externalLinkProps}
-            className="tw:text-text-link tw:underline tw:underline-offset-2 tw:hover:text-text-link-hover"
-          >
-            {use.source.label}
-          </a>
+          {use.sources.length > 1 ? "Sources" : "Source"}:{" "}
+          {use.sources.map((source, index) => (
+            <Fragment key={source.url}>
+              {index > 0 && (index === use.sources.length - 1 ? " and " : ", ")}
+              <a
+                href={source.url}
+                {...externalLinkProps}
+                className="tw:text-text-link tw:underline tw:underline-offset-2 tw:hover:text-text-link-hover"
+              >
+                {source.label}
+              </a>
+            </Fragment>
+          ))}
         </p>
       </div>
     </li>
@@ -65,10 +71,7 @@ export default function OrganizationUseList({
       >
         {title}
       </h2>
-      <ul
-        aria-labelledby={headingId}
-        className="tw:m-0 tw:list-none tw:p-0 tw:border-b tw:border-border-light"
-      >
+      <ul className="tw:m-0 tw:list-none tw:p-0 tw:border-b tw:border-border-light">
         {organizations.map((organization) => (
           <OrganizationUseRow
             key={organization.name}

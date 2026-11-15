@@ -311,14 +311,15 @@ export default function CitationsClient({ countryId }: { countryId: string }) {
         description={
           <>
             PolicyEngine research and tools cited in the press and by
-            policymakers.{" "}
+            policymakers. The{" "}
             <Link
               href={`/${countryId}/users`}
               className="tw:text-text-link tw:underline tw:underline-offset-2 tw:hover:text-text-link-hover"
             >
               Who uses PolicyEngine
             </Link>{" "}
-            lists the organizations that use its models and API.
+            page lists {countryId === "uk" ? "organisations" : "organizations"}{" "}
+            that have used PolicyEngine&apos;s models and API.
           </>
         }
       />

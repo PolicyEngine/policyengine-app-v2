@@ -148,6 +148,21 @@ describe('HeaderNavigation', () => {
       expect(researchLink).toHaveAttribute('href', `${WEBSITE_URL}/uk/research`);
     });
 
+    test('given calculator mode then the About menu links to the website users page', async () => {
+      // Given
+      const user = userEvent.setup();
+      renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US, '/us', 'calculator');
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'About' }));
+
+      // Then
+      expect(screen.getByRole('link', { name: 'Who uses PolicyEngine' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/us/users`
+      );
+    });
+
     test('given calculator mode then donate link uses absolute URL', () => {
       // When
       renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US, '/us', 'calculator');

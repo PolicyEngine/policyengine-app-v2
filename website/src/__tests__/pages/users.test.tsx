@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import fc from "fast-check";
 import { describe, expect, test, vi } from "vitest";
 
@@ -7,7 +13,8 @@ vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
 }));
 
-import UsersPage from "../../app/[countryId]/users/page";
+import CitationsClient from "../../app/[countryId]/citations/CitationsClient";
+import UsersPage, { metadata } from "../../app/[countryId]/users/page";
 import sitemap from "@/app/sitemap";
 import Header from "@/components/Header";
 import {
@@ -41,6 +48,10 @@ describe("users page", () => {
     );
   });
 
+  test("given the page then its browser title asks who uses PolicyEngine", () => {
+    expect(metadata.title).toBe("Who uses PolicyEngine");
+  });
+
   test("given the data file then the page has entries to render", () => {
     expect(organizationsWithUse.length).toBeGreaterThan(0);
   });
@@ -55,16 +66,35 @@ describe("users page", () => {
       expect(row).not.toBeNull();
       expect(within(heading).getByRole("link")).toHaveAttribute(
         "href",
-        org.link,
+        org.use.site ?? org.link,
       );
       expect(
         within(row as HTMLElement).getByText(org.use.description),
       ).toBeInTheDocument();
+      for (const source of org.use.sources) {
+        expect(
+          within(row as HTMLElement).getByRole("link", { name: source.label }),
+        ).toHaveAttribute("href", source.url);
+      }
+      // The name goes to the organization's site, never to one of its sources
+      expect(org.use.sources.map((source) => source.url)).not.toContain(
+        org.use.site ?? org.link,
+      );
+      // The name link and one link per source, and no others
+      const links = within(row as HTMLElement).getAllByRole("link");
+      expect(links).toHaveLength(1 + org.use.sources.length);
+      // Each leaves the site, in a new tab
+      for (const link of links) {
+        expect(link).toHaveAttribute("target", "_blank");
+        expect(link).toHaveAttribute("rel", "noopener noreferrer");
+      }
+      // The row sits in the section that its group's heading names
+      const category = USE_CATEGORIES.find(
+        (candidate) => candidate.id === org.use.category,
+      );
       expect(
-        within(row as HTMLElement).getByRole("link", {
-          name: org.use.source.label,
-        }),
-      ).toHaveAttribute("href", org.use.source.url);
+        screen.getByRole("region", { name: category?.title }),
+      ).toContainElement(row as HTMLElement);
     },
   );
 
@@ -85,7 +115,7 @@ describe("users page", () => {
     const us = screen
       .getAllByRole("heading", { level: 3 })
       .map((heading) => heading.textContent);
-    document.body.innerHTML = "";
+    cleanup();
     await renderUsersPage(UK);
     const uk = screen
       .getAllByRole("heading", { level: 3 })
@@ -117,10 +147,28 @@ describe("users page", () => {
     );
   });
 
-  test("given the UK route then the introduction uses UK spelling", async () => {
+  test("given the UK route then the page's own text uses UK spelling", async () => {
     await renderUsersPage(UK);
 
-    expect(screen.getByText(/what the organisation does/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/the organisation's own page or document/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/open-source licence,/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/the policies these organisations analyse\./),
+    ).toBeInTheDocument();
+  });
+
+  test("given the US route then the page's own text uses US spelling", async () => {
+    await renderUsersPage(US);
+
+    expect(
+      screen.getByText(/the organization's own page or document/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/open-source license,/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/the policies these organizations analyze\./),
+    ).toBeInTheDocument();
   });
 
   test("given the page then it links to the citations page for that country", async () => {
@@ -137,14 +185,22 @@ describe("users page entries", () => {
   test.each(organizationsWithUse.map((org) => [org.name, org] as const))(
     "given %s then its entry is one sentence with an https source",
     (_name, org) => {
-      const { description, source } = org.use;
+      const { description, sources } = org.use;
 
       expect(description.trim()).toBe(description);
       expect(description).toMatch(/^[A-Z0-9].*\.$/);
       expect(description).not.toMatch(/\n/);
-      expect(source.label.trim()).not.toBe("");
-      expect(new URL(source.url).protocol).toBe("https:");
-      expect(new URL(org.link).protocol).toBe("https:");
+      // No second sentence starts inside it
+      expect(description).not.toMatch(/[.!?]\s+[A-Z]/);
+      expect(sources.length).toBeGreaterThan(0);
+      for (const source of sources) {
+        expect(source.label.trim()).not.toBe("");
+        expect(new URL(source.url).protocol).toBe("https:");
+      }
+      expect(new Set(sources.map((source) => source.label)).size).toBe(
+        sources.length,
+      );
+      expect(new URL(org.use.site ?? org.link).protocol).toBe("https:");
     },
   );
 
@@ -156,6 +212,20 @@ describe("users page entries", () => {
       expect(org.use.description).not.toMatch(
         /\b(grants?|funds?|funded|funders?|funding|donat\w*)\b/i,
       );
+    },
+  );
+
+  // A reader must see when a claim rests on PolicyEngine's own page.
+  test.each(organizationsWithUse.map((org) => [org.name, org] as const))(
+    "given %s then each source PolicyEngine published says so in its label",
+    (_name, org) => {
+      for (const source of org.use.sources) {
+        const onPolicyEngineSite = /(^|\.)policyengine\.org$/.test(
+          new URL(source.url).hostname,
+        );
+        expect(source.publisher === "policyengine").toBe(onPolicyEngineSite);
+        expect(/^PolicyEngine\b/.test(source.label)).toBe(onPolicyEngineSite);
+      }
     },
   );
 
@@ -191,14 +261,13 @@ describe("getOrganizationUses", () => {
         category: fc.constantFrom<UseCategory>(...categoryIds),
         rank: fc.integer({ min: -50, max: 50 }),
         description: fc.string(),
-        source: fc.record({
-          label: fc.string(),
-          url: fc.constant("https://example.org/source"),
-          publisher: fc.constantFrom<"organization" | "policyengine">(
-            "organization",
-            "policyengine",
-          ),
-        }),
+        sources: fc.constant<OrganizationWithUse["use"]["sources"]>([
+          {
+            label: "Example source",
+            url: "https://example.org/source",
+            publisher: "organization",
+          },
+        ]),
       }),
     },
     { requiredKeys: ["name", "link", "countries"] },
@@ -265,8 +334,19 @@ describe("links to the users page", () => {
     fireEvent.click(within(desktopNav).getByRole("button", { name: "About" }));
 
     expect(
-      within(desktopNav).getByRole("link", { name: "Users" }),
+      within(desktopNav).getByRole("link", { name: "Who uses PolicyEngine" }),
     ).toHaveAttribute("href", "/us/users");
+  });
+
+  test("given the UK citations page then its introduction links to the UK users page", () => {
+    render(<CitationsClient countryId={UK} />);
+
+    expect(
+      screen.getByRole("link", { name: "Who uses PolicyEngine" }),
+    ).toHaveAttribute("href", "/uk/users");
+    expect(
+      screen.getByText(/page lists organisations that have used/),
+    ).toBeInTheDocument();
   });
 
   test.each([US, UK])(

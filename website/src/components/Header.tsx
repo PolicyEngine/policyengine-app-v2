@@ -853,7 +853,7 @@ export default function Header() {
       hasDropdown: true,
       dropdownItems: [
         { label: "Team", href: `/${countryId}/team` },
-        { label: "Users", href: `/${countryId}/users` },
+        { label: "Who uses PolicyEngine", href: `/${countryId}/users` },
         { label: "Supporters", href: `/${countryId}/supporters` },
         { label: "Citations", href: `/${countryId}/citations` },
         { label: "Events", href: `/${countryId}/events` },
