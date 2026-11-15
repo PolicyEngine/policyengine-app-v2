@@ -310,6 +310,29 @@ export const organizations: Record<string, Organization> = {
     logo: nisk,
     link: "https://www.niskanencenter.org/",
     countries: ["us"],
+    use: {
+      category: "research",
+      rank: 7,
+      description:
+        "Since 2024, Niskanen Center researchers Joshua McCabe and Leah Sargeant have used PolicyEngine to estimate what federal and state child tax credit, earned income tax credit and baby bonus proposals would cost and how they would affect child poverty and incomes.",
+      sources: [
+        {
+          label: "Niskanen Center report, March 2024",
+          url: "https://www.niskanencenter.org/building-a-stronger-foundation-for-american-families-options-for-child-tax-credit-reform/",
+          publisher: "organization",
+        },
+        {
+          label: "Niskanen Center report, April 2025",
+          url: "https://www.niskanencenter.org/newborn-needs-the-case-for-an-american-baby-bonus/",
+          publisher: "organization",
+        },
+        {
+          label: "Niskanen Center commentary, January 2026",
+          url: "https://www.niskanencenter.org/rhode-island-child-tax-credit-would-be-bold-simple-and-fiscally-responsible/",
+          publisher: "organization",
+        },
+      ],
+    },
   },
   cfi: {
     name: "Colorado Fiscal Institute",
@@ -322,6 +345,24 @@ export const organizations: Record<string, Organization> = {
     logo: pn3policy,
     link: "https://www.pn3policy.org/",
     countries: ["us"],
+    use: {
+      category: "research",
+      rank: 8,
+      description:
+        "The Prenatal-to-3 Policy Impact Center at Vanderbilt University has used PolicyEngine in its Policy Impact Calculator since the 2024 edition, to compute federal and state income taxes, the federal Earned Income Tax Credit and payroll taxes.",
+      sources: [
+        {
+          label: "Prenatal-to-3 Policy Impact Center methods document, 2024",
+          url: "https://pn3policy.org/wp-content/uploads/2024/10/PN3PIC_MethodsSources_PolicyImpactCalculator.pdf",
+          publisher: "organization",
+        },
+        {
+          label: "Prenatal-to-3 Policy Impact Center methods document, 2026",
+          url: "https://pn3policy.org/wp-content/uploads/2026/08/PN3PIC_MethodsSources_PolicyImpactCalculator_2026.pdf",
+          publisher: "organization",
+        },
+      ],
+    },
   },
   mothers_outreach_network: {
     name: "Mothers Outreach Network",
@@ -575,6 +616,29 @@ export const organizations: Record<string, Organization> = {
           label: "PolicyEngine 2025 year in review",
           url: "https://www.policyengine.org/us/2025-year-in-review",
           publisher: "policyengine",
+        },
+      ],
+    },
+  },
+  livingWageInstitute: {
+    name: "Living Wage Institute",
+    link: "https://www.livingwage.institute/",
+    countries: ["us"],
+    use: {
+      category: "research",
+      rank: 9,
+      description:
+        "Starting with its 2026 data, the Living Wage Institute uses PolicyEngine's TAXSIM emulator to estimate federal and state income taxes and payroll taxes for the living wage figures it publishes on the MIT Living Wage Calculator.",
+      sources: [
+        {
+          label: "Living Wage Institute post, March 2026",
+          url: "https://www.livingwage.institute/post/how-we-re-improving-tax-calculations-in-partnership-with-policyengine",
+          publisher: "organization",
+        },
+        {
+          label: "Living Wage Institute technical documentation, February 2026",
+          url: "https://livingwage.mit.edu/resources/living_wage_technical_documentation.pdf",
+          publisher: "organization",
         },
       ],
     },

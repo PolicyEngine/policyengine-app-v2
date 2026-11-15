@@ -76,6 +76,31 @@ exports[`users page entries > given the entries then they match the reviewed cop
           "https://legislature.maine.gov/doc/12515",
         ],
       },
+      {
+        "name": "Niskanen Center",
+        "sentence": "Since 2024, Niskanen Center researchers Joshua McCabe and Leah Sargeant have used PolicyEngine to estimate what federal and state child tax credit, earned income tax credit and baby bonus proposals would cost and how they would affect child poverty and incomes.",
+        "sources": [
+          "https://www.niskanencenter.org/building-a-stronger-foundation-for-american-families-options-for-child-tax-credit-reform/",
+          "https://www.niskanencenter.org/newborn-needs-the-case-for-an-american-baby-bonus/",
+          "https://www.niskanencenter.org/rhode-island-child-tax-credit-would-be-bold-simple-and-fiscally-responsible/",
+        ],
+      },
+      {
+        "name": "Prenatal-to-3 Policy Impact Center",
+        "sentence": "The Prenatal-to-3 Policy Impact Center at Vanderbilt University has used PolicyEngine in its Policy Impact Calculator since the 2024 edition, to compute federal and state income taxes, the federal Earned Income Tax Credit and payroll taxes.",
+        "sources": [
+          "https://pn3policy.org/wp-content/uploads/2024/10/PN3PIC_MethodsSources_PolicyImpactCalculator.pdf",
+          "https://pn3policy.org/wp-content/uploads/2026/08/PN3PIC_MethodsSources_PolicyImpactCalculator_2026.pdf",
+        ],
+      },
+      {
+        "name": "Living Wage Institute",
+        "sentence": "Starting with its 2026 data, the Living Wage Institute uses PolicyEngine's TAXSIM emulator to estimate federal and state income taxes and payroll taxes for the living wage figures it publishes on the MIT Living Wage Calculator.",
+        "sources": [
+          "https://www.livingwage.institute/post/how-we-re-improving-tax-calculations-in-partnership-with-policyengine",
+          "https://livingwage.mit.edu/resources/living_wage_technical_documentation.pdf",
+        ],
+      },
     ],
     "group": "Research",
   },
