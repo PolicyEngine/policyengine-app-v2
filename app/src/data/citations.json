@@ -1,13 +1,5 @@
 [
   {
-    "title": "Congressional Hackathon 7.0 Report",
-    "outlet": "U.S. House of Representatives",
-    "date": "2026-09-22",
-    "url": "https://www.house.gov/sites/default/files/2026-09/Hackathon%207.0%20Report_2026.09.22.pdf",
-    "image": "house-hackathon-7.jpg",
-    "tags": ["us", "technical"]
-  },
-  {
     "title": "State Tax Liability and Post-Tax Income Estimates by State using the Current Population Survey Annual Social and Economic Supplement Tax Model",
     "outlet": "U.S. Census Bureau",
     "date": "2026-09-15",
@@ -64,14 +56,6 @@
     "tags": ["us", "tax"]
   },
   {
-    "title": "Living Wage Benchmark Series: 2026 Technical Documentation",
-    "outlet": "Living Wage Institute (MIT Living Wage Calculator)",
-    "date": "2026-02-15",
-    "url": "https://livingwage.mit.edu/resources/living_wage_technical_documentation.pdf",
-    "image": "lwi-benchmark-technical-documentation.jpg",
-    "tags": ["us", "technical"]
-  },
-  {
     "title": "Rules as Code for a More Transparent and Efficient Global Economy",
     "outlet": "Think7 (T7)",
     "date": "2025-04-02",
@@ -86,14 +70,6 @@
     "url": "https://www.express.co.uk/finance/personalfinance/2034211/rachel-reevesl-tax-hikes-cost-british-families",
     "image": "express-reeves-tax-hikes.jpg",
     "tags": ["uk", "tax"]
-  },
-  {
-    "title": "Amazon-hosted AI tool for UK military recruitment ‘carries risk of data breach’",
-    "outlet": "The Guardian",
-    "date": "2024-12-17",
-    "url": "https://www.theguardian.com/technology/2024/dec/17/amazon-hosted-ai-tool-for-uk-military-recruitment-carries-risk-of-data-breach",
-    "image": "guardian-ai-transparency-records.jpg",
-    "tags": ["uk", "technical"]
   },
   {
     "title": "Cost-of-living crisis: How does the Government's response compare to our proposal?",
