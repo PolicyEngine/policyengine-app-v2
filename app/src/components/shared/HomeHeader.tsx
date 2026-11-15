@@ -88,6 +88,7 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
       hasDropdown: true,
       dropdownItems: [
         { label: 'Team', href: getWebsitePath('/team') },
+        { label: 'Users', href: getWebsitePath('/users') },
         { label: 'Supporters', href: getWebsitePath('/supporters') },
         { label: 'Citations', href: getWebsitePath('/citations') },
         { label: 'Events', href: getWebsitePath('/events') },

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import HeroSection from "@/components/static/HeroSection";
 import OptimisedImage from "@/components/ui/OptimisedImage";
@@ -307,7 +308,19 @@ export default function CitationsClient({ countryId }: { countryId: string }) {
     <div>
       <HeroSection
         title="Citations"
-        description="PolicyEngine research and tools cited in the press and by policymakers."
+        description={
+          <>
+            PolicyEngine research and tools cited in the press and by
+            policymakers.{" "}
+            <Link
+              href={`/${countryId}/users`}
+              className="tw:text-text-link tw:underline tw:underline-offset-2 tw:hover:text-text-link-hover"
+            >
+              Who uses PolicyEngine
+            </Link>{" "}
+            lists the organizations that use its models and API.
+          </>
+        }
       />
 
       <Container size="xl" className="tw:py-xl">

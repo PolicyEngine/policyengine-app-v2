@@ -38,16 +38,55 @@ import usc from "../../../app/src/images/logos/orgs/usc.png";
 
 export type CountryId = "uk" | "us";
 
+export type UseCategory = "government" | "research" | "services";
+
+/** The groups on the users page, in page order. */
+export const USE_CATEGORIES: { id: UseCategory; title: string }[] = [
+  { id: "government", title: "Government" },
+  { id: "research", title: "Research" },
+  { id: "services", title: "Services built on PolicyEngine" },
+];
+
+/**
+ * What an organization does with PolicyEngine, for the users page
+ * (/[countryId]/users). Each entry makes a public claim about a third party:
+ * get approval for the wording before adding or changing one.
+ */
+export interface OrganizationUse {
+  category: UseCategory;
+  /** Position within the category, ascending. */
+  rank: number;
+  /** One active-voice sentence on what the organization does with PolicyEngine. */
+  description: string;
+  /** The page or document that shows the use. */
+  source: {
+    label: string;
+    url: string;
+    /**
+     * Who published the source: the organization itself, or PolicyEngine where
+     * no page of the organization's describes the use.
+     */
+    publisher: "organization" | "policyengine";
+  };
+}
+
 export interface Organization {
   name: string;
-  logo: { src: string };
+  /** Organizations without a logo stay out of the home page logo strip. */
+  logo?: { src: string };
   link: string;
   countries: CountryId[];
   /** Render a white-on-transparent logo in black. */
   darkenLogo?: boolean;
   /** Shown first in the logo strip, in ascending order; the rest are shuffled. */
   priority?: number;
+  /** Lists the organization on the users page. */
+  use?: OrganizationUse;
 }
+
+export type LogoOrganization = Organization & { logo: { src: string } };
+
+export type OrganizationWithUse = Organization & { use: OrganizationUse };
 
 export const organizations: Record<string, Organization> = {
   // Both UK and US
@@ -72,6 +111,17 @@ export const organizations: Record<string, Organization> = {
     countries: ["uk"],
 
     priority: 1,
+    use: {
+      category: "government",
+      rank: 1,
+      description:
+        "No 10's data science team and PolicyEngine co-founder Nikhil Woodruff, a No10 Innovation Fellow from summer 2025, built 10ds-microsim on PolicyEngine to estimate how policy reforms affect living standards, local area incomes and distributional impacts.",
+      source: {
+        label: "No10 Innovation Fellowship article, January 2026",
+        url: "https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation/",
+        publisher: "organization",
+      },
+    },
   },
   houseOfLords: {
     name: "House of Lords",
@@ -88,6 +138,17 @@ export const organizations: Record<string, Organization> = {
     countries: ["uk"],
 
     priority: 3,
+    use: {
+      category: "research",
+      rank: 3,
+      description:
+        "Tax Policy Associates ran PolicyEngine UK to check its cost estimate for Universities UK's proposed employer National Insurance exemption for under-25s.",
+      source: {
+        label: "Tax Policy Associates article, September 2026",
+        url: "https://taxpolicy.org.uk/2026/09/10/universities-uk-national-insurance-proposal/",
+        publisher: "organization",
+      },
+    },
   },
   nef: {
     name: "New Economics Foundation",
@@ -96,6 +157,17 @@ export const organizations: Record<string, Organization> = {
     countries: ["uk"],
 
     priority: 5,
+    use: {
+      category: "research",
+      rank: 5,
+      description:
+        "The New Economics Foundation used a microsimulation model that PolicyEngine UK built to compare an employer National Insurance exemption for hiring inactive or disabled workers with cuts to Personal Independence Payment.",
+      source: {
+        label: "New Economics Foundation press release, July 2026",
+        url: "https://neweconomics.org/2026/07/insecure-low-quality-work-a-major-driver-of-uks-neets-and-inactivity-crisis",
+        publisher: "organization",
+      },
+    },
   },
   ggf: {
     name: "Good Growth Foundation",
@@ -125,6 +197,17 @@ export const organizations: Record<string, Organization> = {
     logo: niesr,
     link: "https://www.niesr.ac.uk/",
     countries: ["uk"],
+    use: {
+      category: "research",
+      rank: 2,
+      description:
+        "The National Institute of Economic and Social Research used PolicyEngine in its UK Living Standards Review 2025 to estimate how tax and benefit changes would affect poverty and incomes, and what each would cost.",
+      source: {
+        label: "UK Living Standards Review 2025",
+        url: "https://niesr.ac.uk/wp-content/uploads/2025/03/JC871-NIESR-UK-Living-Standards-Review-2025-final-version.pdf",
+        publisher: "organization",
+      },
+    },
   },
   green_party: {
     name: "Green Party of England and Wales",
@@ -213,6 +296,17 @@ export const organizations: Record<string, Organization> = {
     logo: myfriendben,
     link: "https://www.myfriendben.org/",
     countries: ["us"],
+    use: {
+      category: "services",
+      rank: 1,
+      description:
+        "MyFriendBen powers the rules engine behind its benefits screener with PolicyEngine.",
+      source: {
+        label: "MyFriendBen's About page",
+        url: "https://www.myfriendben.org/about-us/",
+        publisher: "organization",
+      },
+    },
   },
   gary: {
     name: "Gary Community Ventures",
@@ -267,12 +361,34 @@ export const organizations: Record<string, Organization> = {
     logo: mirza,
     link: "https://heymirza.com/",
     countries: ["us"],
+    use: {
+      category: "services",
+      rank: 3,
+      description:
+        "Mirza uses PolicyEngine's API to screen families for federal and state benefit programs.",
+      source: {
+        label: "PolicyEngine post, December 2025",
+        url: "https://www.policyengine.org/us/research/us-giving-tuesday-2025",
+        publisher: "policyengine",
+      },
+    },
   },
   starlight: {
     name: "Starlight",
     logo: starlight,
     link: "https://www.get-starlight.com/",
     countries: ["us"],
+    use: {
+      category: "services",
+      rank: 4,
+      description:
+        "Starlight powers benefits discovery with PolicyEngine's API.",
+      source: {
+        label: "PolicyEngine's 2025 year in review",
+        url: "https://www.policyengine.org/us/2025-year-in-review",
+        publisher: "policyengine",
+      },
+    },
   },
   ppp: {
     name: "People's Policy Project",
@@ -280,10 +396,161 @@ export const organizations: Record<string, Organization> = {
     link: "https://www.peoplespolicyproject.org/",
     countries: ["us"],
   },
+
+  // On the users page only: no logo in the strip
+  bea: {
+    name: "Bureau of Economic Analysis",
+    link: "https://www.bea.gov/",
+    countries: ["us"],
+    use: {
+      category: "government",
+      rank: 2,
+      description:
+        "The Bureau of Economic Analysis runs PolicyEngine to estimate tax liabilities in its distribution of personal income statistics, nationally and by state, from 2021 on.",
+      source: {
+        label: "BEA technical document, 2026",
+        url: "https://apps.bea.gov/data/special-topics/distribution-of-personal-income/national/technical-document.pdf",
+        publisher: "organization",
+      },
+    },
+  },
+  jecRepublicans: {
+    name: "Joint Economic Committee Republicans",
+    link: "https://www.jec.senate.gov/public/index.cfm/republicans/",
+    countries: ["us"],
+    use: {
+      category: "government",
+      rank: 3,
+      description:
+        "The Joint Economic Committee Republicans used PolicyEngine's microsimulation model to estimate individual tax liability and SNAP benefits in their Immigration Fiscal Impact Calculator.",
+      source: {
+        label: "Immigration Fiscal Impact Calculator, March 2026",
+        url: "https://www.jec.senate.gov/public/index.cfm/republicans/2026/3/immigration-fiscal-impact-calculator",
+        publisher: "organization",
+      },
+    },
+  },
+  hmTreasury: {
+    name: "HM Treasury",
+    link: "https://www.gov.uk/government/organisations/hm-treasury",
+    countries: ["uk"],
+    use: {
+      category: "government",
+      rank: 4,
+      description:
+        "HM Treasury piloted PolicyEngine UK and compared its outputs with the department's existing model; its transparency record says HMT does not currently use PolicyEngine.",
+      source: {
+        label: "HM Treasury algorithmic transparency record",
+        url: "https://www.gov.uk/algorithmic-transparency-records/hmt-modelling-policy-engine",
+        publisher: "organization",
+      },
+    },
+  },
+  brookings: {
+    name: "Brookings Institution",
+    link: "https://www.brookings.edu/",
+    countries: ["us"],
+    use: {
+      category: "research",
+      rank: 1,
+      description:
+        "Brookings authors Sarah Calame and Tara Watson used the PolicyEngine microsimulation model to estimate the cost, poverty effects and distributional effects of a hypothetical plan to fully separate the Earned Income Tax Credit and Child Tax Credit.",
+      source: {
+        label: "Brookings report, July 2026",
+        url: "https://www.brookings.edu/wp-content/uploads/2026/06/Supporting_children_and_incentivizing_employment_July2026.pdf",
+        publisher: "organization",
+      },
+    },
+  },
+  uhero: {
+    name: "UHERO at the University of Hawaiʻi",
+    link: "https://uhero.hawaii.edu/",
+    countries: ["us"],
+    use: {
+      category: "research",
+      rank: 4,
+      description:
+        "UHERO based its 2024 analysis of Hawaiʻi's SNAP benefit cliff on an enriched version of PolicyEngine's model.",
+      source: {
+        label: "UHERO analysis, September 2024",
+        url: "https://uhero.hawaii.edu/hawai%CA%BBis-unnecessary-benefit-cliff-how-one-small-policy-change-could-deliver-in-45m-per-year-in-federally-funded-snap-benefits/",
+        publisher: "organization",
+      },
+    },
+  },
+  ppi: {
+    name: "Progress and Poverty Institute",
+    link: "https://progressandpovertyinstitute.org/",
+    countries: ["us"],
+    use: {
+      category: "research",
+      rank: 6,
+      description:
+        "The Progress and Poverty Institute, with the Center for Land Economics, modeled three property-tax relief policies in PolicyEngine for the Maine Legislature's Real Estate Property Tax Relief Task Force.",
+      source: {
+        label: "Report to the Maine task force, June 2026",
+        url: "https://legislature.maine.gov/doc/12515",
+        publisher: "organization",
+      },
+    },
+  },
+  amplifi: {
+    name: "Amplifi",
+    link: "https://www.amplifi.org/",
+    countries: ["us"],
+    use: {
+      category: "services",
+      rank: 2,
+      description:
+        "Amplifi powers the eligibility screening calculations in its Benefit Navigator with PolicyEngine.",
+      source: {
+        label: "About the Benefit Navigator",
+        url: "https://www.amplifi.org/about-benefit-navigator",
+        publisher: "organization",
+      },
+    },
+  },
+  studentBasicNeedsCoalition: {
+    name: "Student Basic Needs Coalition",
+    link: "https://studentbasicneeds.com/",
+    countries: ["us"],
+    use: {
+      category: "services",
+      rank: 5,
+      description:
+        "The Student Basic Needs Coalition powers its Impactica Labs toolkit for SNAP benefit access with PolicyEngine.",
+      source: {
+        label: "PolicyEngine's 2025 year in review",
+        url: "https://www.policyengine.org/us/2025-year-in-review",
+        publisher: "policyengine",
+      },
+    },
+  },
 };
 
-export function getOrgsForCountry(countryId: string): Organization[] {
-  return Object.values(organizations).filter((org) =>
-    org.countries.includes(countryId as CountryId),
+/** The organizations in a country's home page logo strip. */
+export function getOrgsForCountry(countryId: string): LogoOrganization[] {
+  return Object.values(organizations).filter(
+    (org): org is LogoOrganization =>
+      org.logo !== undefined && org.countries.includes(countryId as CountryId),
   );
+}
+
+/** The users page's entries, grouped by category in page order. */
+export function getOrganizationUses(
+  source: Record<string, Organization> = organizations,
+): {
+  id: UseCategory;
+  title: string;
+  organizations: OrganizationWithUse[];
+}[] {
+  const withUse = Object.values(source).filter(
+    (org): org is OrganizationWithUse => org.use !== undefined,
+  );
+  return USE_CATEGORIES.map((category) => ({
+    ...category,
+    organizations: withUse
+      .filter((org) => org.use.category === category.id)
+      .sort((a, b) => a.use.rank - b.use.rank),
+  }));
 }
