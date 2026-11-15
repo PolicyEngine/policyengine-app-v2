@@ -11,7 +11,7 @@
     "title": "State Tax Liability and Post-Tax Income Estimates by State using the Current Population Survey Annual Social and Economic Supplement Tax Model",
     "outlet": "U.S. Census Bureau",
     "date": "2026-09-15",
-    "url": "https://www.census.gov/library/working-papers/2026/demo/sehsd-wp2026-19.html",
+    "url": "https://www2.census.gov/library/working-papers/2026/demo/sehsd-wp2026-19.pdf",
     "image": "census-state-tax-liability-2026.jpg",
     "tags": ["us", "tax"]
   },
@@ -19,7 +19,7 @@
     "title": "The MyFriendBen Benefits Screener: Findings from Implementation in Colorado and North Carolina",
     "outlet": "Urban Institute",
     "date": "2026-08-25",
-    "url": "https://www.urban.org/research/publication/myfriendben-benefits-screener",
+    "url": "https://www.urban.org/sites/default/files/2026-08/The_MyFriendBen_Benefits_Screener.pdf",
     "image": "urban-myfriendben-screener.jpg",
     "tags": ["us", "policy"]
   },
@@ -43,7 +43,7 @@
     "title": "Bridging the Information Gap: How Organizations Can Assess and Use Benefits Screeners",
     "outlet": "Aspen Institute",
     "date": "2026-07-01",
-    "url": "https://www.aspeninstitute.org/publications/assessing-benefits-screeners/",
+    "url": "https://www.aspeninstitute.org/wp-content/uploads/2026/07/bridging-the-gap-LF-6.23.26R.pdf",
     "image": "aspen-benefits-screeners.jpg",
     "tags": ["us", "policy"]
   },
@@ -59,7 +59,7 @@
     "title": "California Billionaires: Wealth, Taxes, and Wealth Tax Revenue Estimates",
     "outlet": "National Bureau of Economic Research",
     "date": "2026-05-25",
-    "url": "https://www.nber.org/papers/w35218",
+    "url": "https://www.nber.org/system/files/working_papers/w35218/w35218.pdf",
     "image": "nber-california-billionaires.jpg",
     "tags": ["us", "tax"]
   },
@@ -75,7 +75,7 @@
     "title": "Rules as Code for a More Transparent and Efficient Global Economy",
     "outlet": "Think7 (T7)",
     "date": "2025-04-02",
-    "url": "https://www.think7.org/publications/rules-as-code-for-a-more-transparent-and-efficient-global-economy/",
+    "url": "https://www.think7.org/documents/3386/T7_TF2_Rapson_et_al.pdf",
     "image": "t7-rules-as-code.jpg",
     "tags": ["global", "technical"]
   },
