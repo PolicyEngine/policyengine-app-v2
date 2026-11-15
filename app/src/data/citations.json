@@ -1,5 +1,21 @@
 [
   {
+    "title": "The 2026 Budget Statement: Fiscal and Distributional Effects – UKMOD Projections",
+    "outlet": "Centre for Microsimulation and Policy Analysis, University of Essex",
+    "date": "2026-11-12",
+    "url": "https://www.iser.essex.ac.uk/research/publications/working-papers/cempa/cempa13-26",
+    "image": "iser-cempa-budget-2026.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "The U.S. Retirement System: Fast Facts",
+    "outlet": "Economic Innovation Group",
+    "date": "2026-09-18",
+    "url": "https://eig.org/retirement-fast-facts/",
+    "image": "eig-retirement-fast-facts.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
     "title": "State Tax Liability and Post-Tax Income Estimates by State using the Current Population Survey Annual Social and Economic Supplement Tax Model",
     "outlet": "U.S. Census Bureau",
     "date": "2026-09-15",
@@ -64,12 +80,36 @@
     "tags": ["global", "technical"]
   },
   {
+    "title": "Survey of overseas trends in the use of digital technology in the legislative drafting process (in Japanese)",
+    "outlet": "Digital Agency of Japan",
+    "date": "2025-03-31",
+    "url": "https://www.digital.go.jp/assets/contents/node/basic_page/field_ref_resources/7f49ac76-91f1-44ba-91bd-2114973fcc61/2fc433c3/20250530-policies_legal-practice_outline_01.pdf",
+    "image": "japan-digital-agency-legislative-drafting.jpg",
+    "tags": ["global", "technical"]
+  },
+  {
     "title": "Rachel Reeves' 4 tax hikes set to cost British families over £1,000 per year",
     "outlet": "Daily Express",
     "date": "2025-03-29",
     "url": "https://www.express.co.uk/finance/personalfinance/2034211/rachel-reevesl-tax-hikes-cost-british-families",
     "image": "express-reeves-tax-hikes.jpg",
     "tags": ["uk", "tax"]
+  },
+  {
+    "title": "HispanIA 2040: How artificial intelligence will improve our future",
+    "outlet": "Government of Spain, National Office of Foresight and Strategy",
+    "date": "2025-03-10",
+    "url": "https://futuros.gob.es/sites/default/files/2025-03/HispanIA-2040-Report-EN.pdf",
+    "image": "hispania-2040.jpg",
+    "tags": ["global", "technical"]
+  },
+  {
+    "title": "Tax Microsimulation at The Budget Lab",
+    "outlet": "The Budget Lab at Yale",
+    "date": "2024-04-12",
+    "url": "https://budgetlab.yale.edu/research/tax-microsimulation-budget-lab",
+    "image": "yale-budget-lab-tax-microsimulation.jpg",
+    "tags": ["us", "technical"]
   },
   {
     "title": "Cost-of-living crisis: How does the Government's response compare to our proposal?",
