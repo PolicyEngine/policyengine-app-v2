@@ -78,8 +78,9 @@ export interface OrganizationUseSource {
   label: string;
   url: string;
   /**
-   * Who published the source: the organization itself, or PolicyEngine where
-   * no page of the organization's describes the use.
+   * Who published the source: the organization itself or PolicyEngine. A
+   * PolicyEngine source's label starts with "PolicyEngine", so a reader can
+   * tell (a test holds this).
    */
   publisher: "organization" | "policyengine";
 }

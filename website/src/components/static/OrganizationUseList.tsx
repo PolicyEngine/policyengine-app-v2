@@ -6,6 +6,17 @@ const externalLinkProps = {
   rel: "noopener noreferrer",
 } as const;
 
+/**
+ * What goes before the source at `index`: "A and B" for two sources, and
+ * "A; B; and C" for more, since a label can hold a comma of its own.
+ */
+function sourceSeparator(index: number, count: number): string {
+  if (count === 2) {
+    return " and ";
+  }
+  return index === count - 1 ? "; and " : "; ";
+}
+
 function OrganizationUseRow({
   organization,
 }: {
@@ -32,7 +43,7 @@ function OrganizationUseRow({
           {use.sources.length > 1 ? "Sources" : "Source"}:{" "}
           {use.sources.map((source, index) => (
             <Fragment key={source.url}>
-              {index > 0 && (index === use.sources.length - 1 ? " and " : ", ")}
+              {index > 0 && sourceSeparator(index, use.sources.length)}
               <a
                 href={source.url}
                 {...externalLinkProps}

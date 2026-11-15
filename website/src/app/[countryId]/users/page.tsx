@@ -32,7 +32,7 @@ export default async function UsersPage({
     <div>
       <HeroSection
         title="Who uses PolicyEngine"
-        description={`Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its source: the ${organisationText}'s own page or document, or PolicyEngine's where the ${organisationText} has published none.`}
+        description="Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its sources. A label that starts with PolicyEngine marks a page PolicyEngine published."
       />
       <ContentSection>
         {groups.map((group) => (

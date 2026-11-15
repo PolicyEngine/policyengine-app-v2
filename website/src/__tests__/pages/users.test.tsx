@@ -77,13 +77,13 @@ describe("users page", () => {
           within(row as HTMLElement).getByRole("link", { name: source.label }),
         ).toHaveAttribute("href", source.url);
       }
-      // The source line names each source in order: "Source: A" or
-      // "Sources: A and B" (commas before the last "and" for three or more)
+      // The source line names each source in order: "Source: A",
+      // "Sources: A and B", or "Sources: A; B; and C"
       const labels = org.use.sources.map((source) => source.label);
       const listed =
-        labels.length === 1
-          ? labels[0]
-          : `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
+        labels.length <= 2
+          ? labels.join(" and ")
+          : `${labels.slice(0, -1).join("; ")}; and ${labels[labels.length - 1]}`;
       expect(
         within(row as HTMLElement).getByText(/^Sources?:/).textContent,
       ).toBe(`${labels.length === 1 ? "Source" : "Sources"}: ${listed}`);
@@ -173,7 +173,7 @@ describe("users page", () => {
 
     expect(
       screen.getByText(
-        "Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its source: the organisation's own page or document, or PolicyEngine's where the organisation has published none.",
+        "Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its sources. A label that starts with PolicyEngine marks a page PolicyEngine published.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByText(/open-source licence,/)).toBeInTheDocument();
@@ -200,7 +200,7 @@ describe("users page", () => {
 
     expect(
       screen.getByText(
-        "Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its source: the organization's own page or document, or PolicyEngine's where the organization has published none.",
+        "Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its sources. A label that starts with PolicyEngine marks a page PolicyEngine published.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByText(/open-source license,/)).toBeInTheDocument();
@@ -229,7 +229,7 @@ describe("source line", () => {
   test.each([
     [["A"], "Source: A"],
     [["A", "B"], "Sources: A and B"],
-    [["A", "B", "C"], "Sources: A, B and C"],
+    [["A", "B", "C"], "Sources: A; B; and C"],
   ])("given sources %j then the line reads %s", (labels, line) => {
     const [first, ...rest] = labels.map(source);
     render(
