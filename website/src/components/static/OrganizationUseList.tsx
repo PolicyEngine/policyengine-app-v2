@@ -82,7 +82,11 @@ export default function OrganizationUseList({
       >
         {title}
       </h2>
-      <ul className="tw:m-0 tw:list-none tw:p-0 tw:border-b tw:border-border-light">
+      {/* Safari stops announcing a list once its markers go, so name the role. */}
+      <ul
+        role="list"
+        className="tw:m-0 tw:list-none tw:p-0 tw:border-b tw:border-border-light"
+      >
         {organizations.map((organization) => (
           <OrganizationUseRow
             key={organization.name}

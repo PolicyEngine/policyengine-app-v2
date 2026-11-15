@@ -34,7 +34,7 @@ exports[`users page entries > given the entries then they match the reviewed cop
     "entries": [
       {
         "name": "Brookings Institution",
-        "sentence": "Brookings authors Sarah Calame and Tara Watson used the PolicyEngine microsimulation model to estimate the cost, poverty effects and distributional effects of a hypothetical plan to make the Earned Income Tax Credit a credit for workers only and pay child benefits only through the Child Tax Credit.",
+        "sentence": "Brookings authors Sarah Calame and Tara Watson used the PolicyEngine microsimulation model to estimate the cost, poverty effects and distributional effects of a hypothetical plan to make the Earned Income Tax Credit the same for workers with and without children and pay child benefits only through the Child Tax Credit.",
         "sources": [
           "https://www.brookings.edu/wp-content/uploads/2026/06/Supporting_children_and_incentivizing_employment_July2026.pdf",
         ],
@@ -63,9 +63,10 @@ exports[`users page entries > given the entries then they match the reviewed cop
       },
       {
         "name": "New Economics Foundation",
-        "sentence": "The New Economics Foundation, with modelling help from PolicyEngine staff, used a microsimulation model that PolicyEngine built to compare an employer National Insurance exemption for hiring inactive or disabled workers with the previous government's planned cut to Personal Independence Payment.",
+        "sentence": "The New Economics Foundation, with modelling help from PolicyEngine staff, used a microsimulation model that PolicyEngine built to compare an employer National Insurance exemption for hiring inactive or disabled workers with a previously proposed cut to Personal Independence Payment.",
         "sources": [
           "https://neweconomics.org/2026/07/insecure-low-quality-work-a-major-driver-of-uks-neets-and-inactivity-crisis",
+          "https://new-economicsf.files.svdcdn.com/production/files/The-good-work-effect-final.pdf",
         ],
       },
       {

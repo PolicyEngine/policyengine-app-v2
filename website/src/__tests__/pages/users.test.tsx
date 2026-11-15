@@ -13,6 +13,29 @@ vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
 }));
 
+// The citations page draws a card for each record. These tests read only its
+// introduction, so two records stand in for the full list.
+vi.mock("@/data/citations.json", () => ({
+  default: [
+    {
+      title: "Example US report",
+      outlet: "Example Institute",
+      date: "2026-01-15",
+      url: "https://example.org/us-report",
+      image: "example-us.jpg",
+      tags: ["us", "policy"],
+    },
+    {
+      title: "Example UK report",
+      outlet: "Example Foundation",
+      date: "2026-02-15",
+      url: "https://example.org/uk-report",
+      image: "example-uk.jpg",
+      tags: ["uk", "policy"],
+    },
+  ],
+}));
+
 import CitationsClient from "../../app/[countryId]/citations/CitationsClient";
 import UsersPage, { metadata } from "../../app/[countryId]/users/page";
 import sitemap from "@/app/sitemap";
@@ -99,6 +122,11 @@ describe("users page", () => {
         expect(link).toHaveAttribute("target", "_blank");
         expect(link).toHaveAttribute("rel", "noopener noreferrer");
       }
+      // Its list names its role, which Safari needs once the markers go
+      expect((row as HTMLElement).parentElement).toHaveAttribute(
+        "role",
+        "list",
+      );
       // The row sits in the section that its group's heading names
       const category = USE_CATEGORIES.find(
         (candidate) => candidate.id === org.use.category,
@@ -168,19 +196,26 @@ describe("users page", () => {
     );
   });
 
-  test("given the UK route then the page's own text uses UK spelling", async () => {
-    await renderUsersPage(UK);
+  test.each([US, UK])(
+    "given the %s route then the page's own text reads the same",
+    async (countryId) => {
+      await renderUsersPage(countryId);
 
-    expect(
-      screen.getByText(
-        "Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its sources. A label that starts with PolicyEngine marks a page PolicyEngine published.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/open-source licence,/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/the policies these organisations analyse\./),
-    ).toBeInTheDocument();
-  });
+      expect(
+        screen.getByText(
+          "Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its sources. A label that starts with PolicyEngine marks a page PolicyEngine published.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /^Anyone can use PolicyEngine's open-source software without telling us, so this page lists the uses we can point to a source for\./,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("We take no policy positions."),
+      ).toBeInTheDocument();
+    },
+  );
 
   test("given the UK route then no US spelling shows outside the entries", async () => {
     await renderUsersPage(UK);
@@ -191,22 +226,8 @@ describe("users page", () => {
       .filter((element) => element.closest("li") === null)
       .map((element) => element.textContent)
       .join(" ");
-    expect(ownText).toMatch(/organisation/);
+    expect(ownText).toMatch(/Who uses PolicyEngine/);
     expect(ownText).not.toMatch(/organiz|license|analyz/i);
-  });
-
-  test("given the US route then the page's own text uses US spelling", async () => {
-    await renderUsersPage(US);
-
-    expect(
-      screen.getByText(
-        "Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its sources. A label that starts with PolicyEngine marks a page PolicyEngine published.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/open-source license,/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/the policies these organizations analyze\./),
-    ).toBeInTheDocument();
   });
 
   test("given the page then it links to the citations page for that country", async () => {

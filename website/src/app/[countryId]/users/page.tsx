@@ -8,7 +8,7 @@ import { getOrganizationUses } from "@/data/organizations";
 export const metadata: Metadata = {
   title: "Who uses PolicyEngine",
   description:
-    "Governments, researchers and benefit services that have used PolicyEngine, with how each one used it and a link to its source.",
+    "Governments, researchers and benefit services that have used PolicyEngine, with how each one used it and links to its sources.",
 };
 
 const linkClassName =
@@ -20,10 +20,6 @@ export default async function UsersPage({
   params: Promise<{ countryId: string }>;
 }) {
   const { countryId } = await params;
-  const isUk = countryId === "uk";
-  const organisationText = isUk ? "organisation" : "organization";
-  const licenceText = isUk ? "licence" : "license";
-  const analyseText = isUk ? "analyse" : "analyze";
   const groups = getOrganizationUses().filter(
     (group) => group.organizations.length > 0,
   );
@@ -47,8 +43,9 @@ export default async function UsersPage({
       <ContentSection variant="secondary">
         <div className="tw:max-w-[42rem] tw:text-base tw:leading-relaxed">
           <p>
-            We publish PolicyEngine&apos;s software under an open-source{" "}
-            {licenceText}, so this page lists only the uses we know of. Email{" "}
+            Anyone can use PolicyEngine&apos;s open-source software without
+            telling us, so this page lists the uses we can point to a source
+            for. Email{" "}
             <a href="mailto:hello@policyengine.org" className={linkClassName}>
               hello@policyengine.org
             </a>{" "}
@@ -62,10 +59,7 @@ export default async function UsersPage({
             page lists articles, reports and official documents that cite
             PolicyEngine&apos;s research and tools.
           </p>
-          <p className="tw:mt-lg">
-            PolicyEngine takes no position on the policies these{" "}
-            {organisationText}s {analyseText}.
-          </p>
+          <p className="tw:mt-lg">We take no policy positions.</p>
         </div>
       </ContentSection>
     </div>

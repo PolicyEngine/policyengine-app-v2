@@ -188,12 +188,17 @@ export const organizations: Record<string, Organization> = {
       category: "research",
       rank: 5,
       description:
-        "The New Economics Foundation, with modelling help from PolicyEngine staff, used a microsimulation model that PolicyEngine built to compare an employer National Insurance exemption for hiring inactive or disabled workers with the previous government's planned cut to Personal Independence Payment.",
+        "The New Economics Foundation, with modelling help from PolicyEngine staff, used a microsimulation model that PolicyEngine built to compare an employer National Insurance exemption for hiring inactive or disabled workers with a previously proposed cut to Personal Independence Payment.",
       site: "https://neweconomics.org/",
       sources: [
         {
           label: "New Economics Foundation press release, July 2026",
           url: "https://neweconomics.org/2026/07/insecure-low-quality-work-a-major-driver-of-uks-neets-and-inactivity-crisis",
+          publisher: "organization",
+        },
+        {
+          label: "New Economics Foundation report, July 2026",
+          url: "https://new-economicsf.files.svdcdn.com/production/files/The-good-work-effect-final.pdf",
           publisher: "organization",
         },
       ],
@@ -486,7 +491,7 @@ export const organizations: Record<string, Organization> = {
       category: "research",
       rank: 1,
       description:
-        "Brookings authors Sarah Calame and Tara Watson used the PolicyEngine microsimulation model to estimate the cost, poverty effects and distributional effects of a hypothetical plan to make the Earned Income Tax Credit a credit for workers only and pay child benefits only through the Child Tax Credit.",
+        "Brookings authors Sarah Calame and Tara Watson used the PolicyEngine microsimulation model to estimate the cost, poverty effects and distributional effects of a hypothetical plan to make the Earned Income Tax Credit the same for workers with and without children and pay child benefits only through the Child Tax Credit.",
       sources: [
         {
           label: "Brookings report, July 2026",
