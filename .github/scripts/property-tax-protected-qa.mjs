@@ -1,0 +1,854 @@
+/** Supplemental Linux QA. Never run this module with deployment credentials locally.
+ * Protection semantics: https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation
+ * No automatic auth across rewrites: https://vercel.com/changelog/deployment-protection-now-supports-protected-rewrites
+ */
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
+
+export const CONFIG = Object.freeze({
+  teamId: "team_xsyTmFLMLGbHH7Qxu70R5G4r",
+  projects: {
+    host: {
+      id: "prj_akr348YnU4ccf5uo9BH3hocEr4lv",
+      name: "policyengine-website",
+    },
+    child: {
+      id: "prj_qUqoE05tPicB8fy1oCtvIZ9limeH",
+      name: "property-tax-relief",
+    },
+  },
+  childSha: "1910e9e5086cd634c49a8a87a285703189ab1e56",
+  childAlias: "property-tax-relief.vercel.app",
+  toolPath: "/us/rent-and-property-taxes/",
+  assetPath: "/_zones/property-tax-relief/",
+});
+const OUTPUT = resolve("output/property-tax-protected-qa");
+const CHILD = resolve("qa-child");
+const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+class QaError extends Error {}
+const requireQa = (condition, code) => {
+  if (!condition) throw new QaError(code);
+};
+const shaPattern = /^[a-f0-9]{40}$/;
+const deploymentPattern = /^dpl_[A-Za-z0-9]{10,80}$/;
+
+export function validateBuildReceipt(
+  receipt,
+  deploymentId,
+  sourceArchiveSha256,
+) {
+  requireQa(
+    receipt?.version === 1 &&
+      receipt.deploymentId === deploymentId &&
+      receipt.sourceCommit === CONFIG.childSha &&
+      receipt.sourceArchiveSha256 === sourceArchiveSha256 &&
+      /^[a-f0-9]{64}$/.test(sourceArchiveSha256),
+    "BUILD_RECEIPT_SOURCE_DIFFERS",
+  );
+  const entries = Object.entries(receipt.files ?? {});
+  requireQa(entries.length > 5 && entries.length <= 200, "BAD_BUILD_MANIFEST");
+  const mockManifest = {
+    host: { origin: "https://host.vercel.app" },
+    child: { origin: "https://child.vercel.app" },
+  };
+  for (const [path, hash] of entries) {
+    assertAllowedUrl(mockManifest.child.origin + path, mockManifest);
+    requireQa(/^[a-f0-9]{64}$/.test(hash), "BAD_BUILD_MANIFEST");
+  }
+  for (const path of [
+    CONFIG.toolPath,
+    CONFIG.toolPath + "report/",
+    CONFIG.toolPath + "methods/",
+    CONFIG.toolPath + "data/inventory.json",
+    CONFIG.toolPath + "data/inventory.csv",
+  ]) {
+    requireQa(Object.hasOwn(receipt.files, path), "BUILD_FILE_MISSING");
+  }
+  requireQa(
+    entries.some(([p]) => p.startsWith(CONFIG.assetPath)),
+    "BUILD_ASSETS_MISSING",
+  );
+  return receipt;
+}
+
+export function validateDeployment(value, role, expectedSha, buildReceipt) {
+  requireQa(
+    CONFIG.projects[role] && shaPattern.test(expectedSha),
+    "BAD_IDENTITY",
+  );
+  requireQa(deploymentPattern.test(value?.id ?? ""), "BAD_DEPLOYMENT_ID");
+  requireQa(value.projectId === CONFIG.projects[role].id, "WRONG_PROJECT");
+  requireQa(value.readyState === "READY", "DEPLOYMENT_NOT_READY");
+  requireQa(role !== "host" || value.target === null, "HOST_NOT_PREVIEW");
+  // Custom commit metadata alone is not source provenance. A manual child also
+  // requires an operator-reviewed archive/build receipt and remote byte checks.
+  const gitBound =
+    value.gitSource?.type === "github" && value.gitSource.sha === expectedSha;
+  const manualBound =
+    role === "child" &&
+    !value.gitSource &&
+    value.meta?.sourceCommit === expectedSha &&
+    buildReceipt?.deploymentId === value.id &&
+    buildReceipt.sourceCommit === expectedSha &&
+    value.meta.sourceArchiveSha256 === buildReceipt.sourceArchiveSha256;
+  requireQa(gitBound || manualBound, "SOURCE_NOT_BOUND");
+  requireQa(
+    !value.meta?.githubCommitSha || value.meta.githubCommitSha === expectedSha,
+    "CONFLICTING_SOURCE",
+  );
+  requireQa(!value.ownerId || value.ownerId === CONFIG.teamId, "WRONG_TEAM");
+  requireQa(
+    typeof value.url === "string" &&
+      /^[a-z0-9][a-z0-9-]*\.vercel\.app$/.test(value.url) &&
+      value.url !== CONFIG.childAlias,
+    "BAD_DEPLOYMENT_ORIGIN",
+  );
+  return {
+    id: value.id,
+    projectId: value.projectId,
+    sha: expectedSha,
+    origin: `https://${value.url}`,
+    sourceKind: manualBound ? "reviewed-manual-build" : "github",
+    ...(manualBound ? { buildReceipt } : {}),
+  };
+}
+
+export function validateAlias(alias, manifest) {
+  requireQa(
+    alias?.alias === CONFIG.childAlias &&
+      alias.projectId === CONFIG.projects.child.id &&
+      alias.deploymentId === manifest.child.id &&
+      (!alias.deployment || alias.deployment.id === manifest.child.id),
+    "ALIAS_NOT_BOUND",
+  );
+  return alias.deploymentId;
+}
+
+export function assertAllowedUrl(
+  url,
+  manifest,
+  method = "GET",
+  purpose = "tool",
+) {
+  requireQa(["GET", "HEAD"].includes(method), "METHOD_NOT_ALLOWED");
+  requireQa(
+    typeof url === "string" && !/[\\%\s]/.test(url) && !url.includes(".."),
+    "BAD_URL",
+  );
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new QaError("BAD_URL");
+  }
+  requireQa(
+    parsed.protocol === "https:" &&
+      !parsed.username &&
+      !parsed.password &&
+      !parsed.port &&
+      !parsed.search &&
+      !parsed.hash,
+    "BAD_URL",
+  );
+  const surface = ["host", "child"].find(
+    (r) => parsed.origin === manifest[r].origin,
+  );
+  requireQa(surface, "ORIGIN_NOT_ALLOWED");
+  const hostOnly = ["bootstrap", "cookie-only"].includes(purpose);
+  const toolBase = CONFIG.toolPath.slice(0, -1);
+  requireQa(
+    hostOnly
+      ? surface === "host" && parsed.pathname === "/us"
+      : purpose === "tool" &&
+          (parsed.pathname === toolBase ||
+            parsed.pathname.startsWith(CONFIG.toolPath) ||
+            parsed.pathname.startsWith(CONFIG.assetPath)),
+    "PATH_NOT_ALLOWED",
+  );
+  return { parsed, surface };
+}
+
+async function readBounded(response, limit = 12 * 1024 * 1024) {
+  if (!response.body) return Buffer.alloc(0);
+  const chunks = [];
+  let length = 0;
+  for await (const chunk of response.body) {
+    length += chunk.length;
+    if (length > limit) {
+      throw new QaError("BODY_LIMIT");
+    }
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
+
+export function assertApplicationPage(response, kind = "tool") {
+  const text = response.body.toString("utf8");
+  const plain = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+  requireQa(
+    response.status === 200 &&
+      response.contentType.includes("text/html") &&
+      !/Authentication Required|Vercel Authentication|Log in to Vercel|Security Checkpoint/i.test(
+        plain,
+      ) &&
+      plain.includes(
+        kind === "host" ? "PolicyEngine" : "Rent and property taxes",
+      ),
+    "APPLICATION_NOT_REACHED",
+  );
+}
+
+function evidence(response) {
+  const url = new URL(response.url);
+  // Only emit recognized titles, never arbitrary page/auth-wall contents.
+  const title = response.body
+    .toString("utf8")
+    .match(/<title>([^<]*)<\/title>/i)?.[1];
+  return {
+    origin: url.origin,
+    path: url.pathname,
+    status: response.status,
+    contentType: response.contentType,
+    sha256: digest(response.body),
+    title:
+      ["Rent and property taxes", "Sources and methods", "PolicyEngine"].find(
+        (label) => title?.startsWith(label),
+      ) ?? "unrecognized",
+  };
+}
+
+export function makeTransport(manifest, keys, fetcher = fetch) {
+  requireQa(
+    typeof keys?.hostKey === "string" &&
+      keys.hostKey.length > 0 &&
+      typeof keys?.childKey === "string" &&
+      keys.childKey.length > 0,
+    "MISSING_KEYS",
+  );
+  let hostCookie = "";
+  let requests = 0;
+  let bytes = 0;
+  const records = [];
+  async function get(url, purpose = "tool", redirects = 0) {
+    const { parsed, surface } = assertAllowedUrl(url, manifest, "GET", purpose);
+    requireQa(++requests <= 400 && redirects <= 3, "REDIRECT_LIMIT");
+    const headers = new Headers({ accept: "*/*" });
+    if (surface === "host" && hostCookie) headers.set("cookie", hostCookie);
+    if (purpose === "bootstrap") {
+      headers.set("x-vercel-protection-bypass", keys.hostKey);
+      headers.set("x-vercel-set-bypass-cookie", "true");
+    } else if (purpose !== "cookie-only") {
+      headers.set("x-vercel-protection-bypass", keys.childKey);
+    }
+    let raw;
+    try {
+      raw = await fetcher(parsed.href, {
+        method: "GET",
+        headers,
+        redirect: "manual",
+        signal: AbortSignal.timeout(30_000),
+      });
+    } catch {
+      throw new QaError("REQUEST_FAILED");
+    }
+    const body = await readBounded(raw);
+    bytes += body.length;
+    requireQa(bytes <= 128 * 1024 * 1024, "TOTAL_BODY_LIMIT");
+    requireQa(
+      ![keys.hostKey, keys.childKey, hostCookie.split("=")[1]]
+        .filter(Boolean)
+        .some(
+          (secret) =>
+            body.includes(Buffer.from(secret)) ||
+            [...raw.headers].some(
+              ([name, value]) =>
+                name !== "set-cookie" && value.includes(secret),
+            ),
+        ),
+      "SECRET_REFLECTED",
+    );
+    const result = {
+      url: parsed.href,
+      status: raw.status,
+      body,
+      contentType: raw.headers.get("content-type") ?? "",
+      headers: raw.headers,
+    };
+    records.push(evidence(result));
+    if ([301, 302, 303, 307, 308].includes(raw.status)) {
+      requireQa(raw.headers.has("location"), "BAD_REDIRECT");
+      let next;
+      try {
+        next = new URL(raw.headers.get("location"), parsed).href;
+      } catch {
+        throw new QaError("BAD_REDIRECT");
+      }
+      assertAllowedUrl(
+        next,
+        manifest,
+        "GET",
+        purpose === "bootstrap" ? "cookie-only" : purpose,
+      );
+      requireQa(new URL(next).origin === parsed.origin, "REDIRECT_ORIGIN");
+      if (purpose !== "bootstrap") return get(next, purpose, redirects + 1);
+    }
+    return result;
+  }
+  function acceptHostCookie(response) {
+    const lines = response.headers.getSetCookie();
+    const candidates = lines.filter((line) => line.startsWith("_vercel_jwt="));
+    requireQa(candidates.length === 1, "BAD_COOKIE");
+    const cookie = candidates[0];
+    const domain = cookie.match(/;\s*domain=([^;]+)/i)?.[1];
+    requireQa(
+      /;\s*secure(?:;|$)/i.test(cookie) &&
+        /;\s*httponly(?:;|$)/i.test(cookie) &&
+        /;\s*path=\/(?:;|$)/i.test(cookie) &&
+        (!domain || domain === new URL(manifest.host.origin).hostname) &&
+        /^_vercel_jwt=[A-Za-z0-9._~-]+;/.test(cookie),
+      "BAD_COOKIE",
+    );
+    hostCookie = cookie.split(";")[0];
+  }
+  return { get, acceptHostCookie, records };
+}
+
+export async function runPreflight(manifest, keys, fetcher = fetch) {
+  const transport = makeTransport(manifest, keys, fetcher);
+  const child = await transport.get(manifest.child.origin + CONFIG.toolPath);
+  assertApplicationPage(child);
+  if (manifest.child.sourceKind === "reviewed-manual-build") {
+    for (const [path, hash] of Object.entries(
+      manifest.child.buildReceipt.files,
+    )) {
+      const file = await transport.get(manifest.child.origin + path);
+      requireQa(
+        file.status === 200 && digest(file.body) === hash,
+        "DEPLOYED_BUILD_DIFFERS",
+      );
+    }
+  }
+  const bootstrap = await transport.get(
+    manifest.host.origin + "/us",
+    "bootstrap",
+  );
+  requireQa(
+    [302, 303, 307, 308].includes(bootstrap.status),
+    "BOOTSTRAP_FAILED",
+  );
+  transport.acceptHostCookie(bootstrap);
+  const host = await transport.get(manifest.host.origin + "/us", "cookie-only");
+  assertApplicationPage(host, "host");
+  const proxied = await transport.get(manifest.host.origin + CONFIG.toolPath);
+  assertApplicationPage(proxied);
+  requireQa(
+    digest(child.body) === digest(proxied.body),
+    "PROXIED_BODY_DIFFERS",
+  );
+  return {
+    transport,
+    evidence: [child, bootstrap, host, proxied].map(evidence),
+  };
+}
+
+export function validateInventory(actual, source) {
+  let received, expected;
+  try {
+    received = JSON.parse(actual);
+    expected = JSON.parse(source);
+  } catch {
+    throw new QaError("BAD_INVENTORY");
+  }
+  requireQa(
+    Array.isArray(received) &&
+      received.length === 51 &&
+      received.reduce((sum, state) => sum + state.programs.length, 0) === 119 &&
+      JSON.stringify(received) === JSON.stringify(expected),
+    "INVENTORY_DIFFERS",
+  );
+  return true;
+}
+
+export function validateStaticCsv(actual, sourceInventory) {
+  // Static12-field CSV and browser17-field CSV have intentionally different schemas.
+  const text = actual.toString("utf8");
+  const rows = [];
+  let row = [],
+    cell = "",
+    quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"' && quoted && text[i + 1] === '"') {
+      cell += '"';
+      i++;
+    } else if (c === '"') quoted = !quoted;
+    else if (c === "," && !quoted) {
+      row.push(cell);
+      cell = "";
+    } else if ((c === "\n" || c === "\r") && !quoted) {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+    } else cell += c;
+  }
+  requireQa(!quoted, "BAD_CSV");
+  if (cell || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+  const expected = [
+    [
+      "state",
+      "code",
+      "reference_year",
+      "program",
+      "category",
+      "scope",
+      "tenures",
+      "refundable",
+      "income_limits",
+      "maximum_benefit",
+      "program_year",
+      "sources",
+    ],
+  ];
+  for (const state of JSON.parse(sourceInventory)) {
+    for (const p of state.programs.length ? state.programs : [null]) {
+      expected.push(
+        p
+          ? [
+              state.name,
+              state.code,
+              "2025",
+              p.name,
+              p.category,
+              p.scope,
+              p.tenures.join(" | "),
+              p.refundable === null ? "" : p.refundable ? "True" : "False",
+              p.incomeLimits,
+              p.maximumBenefit,
+              p.programYear,
+              p.sources.map((s) => s.url).join(" | "),
+            ]
+          : [
+              state.name,
+              state.code,
+              "2025",
+              "No program recorded",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              state.sources.map((s) => s.url).join(" | "),
+            ],
+      );
+    }
+  }
+  requireQa(
+    JSON.stringify(rows) === JSON.stringify(expected),
+    "STATIC_CSV_DIFFERS",
+  );
+  return true;
+}
+
+async function apiJson(path, token) {
+  requireQa(token, "MISSING_METADATA_TOKEN");
+  const url = new URL(path, "https://api.vercel.com");
+  requireQa(url.origin === "https://api.vercel.com", "BAD_METADATA_ORIGIN");
+  url.searchParams.set("teamId", CONFIG.teamId);
+  let response;
+  try {
+    response = await fetch(url, {
+      headers: { authorization: `Bearer ${token}` },
+      redirect: "error",
+      signal: AbortSignal.timeout(30_000),
+    });
+  } catch {
+    throw new QaError("METADATA_REQUEST_FAILED");
+  }
+  requireQa(response.ok, "METADATA_HTTP_FAILED");
+  try {
+    return JSON.parse(await readBounded(response, 2 * 1024 * 1024));
+  } catch {
+    throw new QaError("METADATA_BODY_FAILED");
+  }
+}
+
+async function metadata(env) {
+  const token = env.VERCEL_QA_METADATA_TOKEN;
+  const result = { version: 1, createdAt: new Date().toISOString() };
+  for (const role of ["host", "child"]) {
+    const id = env[`QA_${role.toUpperCase()}_DEPLOYMENT_ID`];
+    requireQa(deploymentPattern.test(id ?? ""), "BAD_DEPLOYMENT_ID");
+    const raw = await apiJson(`/v13/deployments/${id}`, token);
+    requireQa(raw.id === id, "DEPLOYMENT_ID_DIFFERS");
+    let receipt;
+    if (role === "child" && !raw.gitSource) {
+      const bytes = Buffer.from(env.QA_CHILD_BUILD_RECEIPT ?? "");
+      requireQa(
+        digest(bytes) === env.QA_CHILD_BUILD_RECEIPT_SHA256,
+        "BUILD_RECEIPT_HASH_DIFFERS",
+      );
+      const archive = execFileSync(
+        "git",
+        ["archive", "--format=tar", CONFIG.childSha],
+        { cwd: CHILD, maxBuffer: 32 * 1024 * 1024 },
+      );
+      try {
+        receipt = validateBuildReceipt(JSON.parse(bytes), id, digest(archive));
+      } catch (error) {
+        if (error instanceof QaError) throw error;
+        throw new QaError("BAD_BUILD_RECEIPT");
+      }
+    }
+    result[role] = validateDeployment(
+      raw,
+      role,
+      role === "host" ? env.GITHUB_SHA : CONFIG.childSha,
+      receipt,
+    );
+  }
+  validateAlias(
+    await apiJson(`/v4/aliases/${CONFIG.childAlias}`, token),
+    result,
+  );
+  return result;
+}
+
+async function recheck(manifest, env) {
+  const fresh = await metadata(env);
+  requireQa(
+    ["host", "child"].every(
+      (r) => JSON.stringify(fresh[r]) === JSON.stringify(manifest[r]),
+    ),
+    "DEPLOYMENT_MOVED",
+  );
+}
+
+function expectedAsset(pathname, manifest) {
+  if (manifest.child.sourceKind === "reviewed-manual-build") {
+    const expected = manifest.child.buildReceipt.files[pathname];
+    requireQa(/^[a-f0-9]{64}$/.test(expected ?? ""), "ASSET_NOT_IN_RECEIPT");
+    return expected;
+  }
+  const relative = pathname.startsWith(CONFIG.assetPath)
+    ? pathname.slice(CONFIG.assetPath.length)
+    : pathname.slice(CONFIG.toolPath.length);
+  const root = resolve(CHILD, "out");
+  const file = resolve(root, relative);
+  requireQa(file.startsWith(root + sep), "BAD_ASSET_PATH");
+  return digest(readFileSync(file));
+}
+
+async function browserQa(manifest, transport) {
+  // This import and launch are unreachable during metadata/preflight modes.
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch({ headless: true });
+  const counts = {};
+  try {
+    for (const surface of ["child", "host"]) {
+      const context = await browser.newContext({
+        viewport: { width: 1280, height: 900 },
+        serviceWorkers: "block",
+      });
+      const failures = [];
+      const resources = [];
+      try {
+        await context.route("**/*", async (route) => {
+          try {
+            requireQa(route.request().method() === "GET", "METHOD_NOT_ALLOWED");
+            const url = route.request().url();
+            const { parsed } = assertAllowedUrl(url, manifest);
+            requireQa(
+              parsed.origin === manifest[surface].origin,
+              "SURFACE_ESCAPE",
+            );
+            const response = await transport.get(url);
+            requireQa(response.status === 200, "RESOURCE_HTTP_FAILED");
+            const type = route.request().resourceType();
+            if (["script", "stylesheet", "font", "image"].includes(type)) {
+              requireQa(
+                digest(response.body) ===
+                  expectedAsset(parsed.pathname, manifest),
+                "ASSET_DIFFERS",
+              );
+              resources.push({ type, ...evidence(response) });
+            }
+            await route.fulfill({
+              status: response.status,
+              // fetch decodes compression; never replay content-encoding/length or Set-Cookie.
+              headers: Object.fromEntries(
+                [...response.headers].filter(([name]) =>
+                  [
+                    "content-type",
+                    "content-security-policy",
+                    "content-security-policy-report-only",
+                    "x-frame-options",
+                    "x-content-type-options",
+                    "referrer-policy",
+                    "permissions-policy",
+                    "cross-origin-resource-policy",
+                    "cross-origin-opener-policy",
+                    "cross-origin-embedder-policy",
+                  ].includes(name),
+                ),
+              ),
+              body: response.body,
+            });
+          } catch {
+            failures.push("NETWORK_CHECK_FAILED");
+            await route.abort();
+          }
+        });
+        const page = await context.newPage();
+        page.on("pageerror", () => failures.push("PAGE_ERROR"));
+        page.on("console", (message) => {
+          if (message.type() === "error") failures.push("CONSOLE_ERROR");
+        });
+        await page.goto(manifest[surface].origin + CONFIG.toolPath, {
+          waitUntil: "networkidle",
+          timeout: 45_000,
+        });
+        requireQa(
+          (await page.locator(".state-tile").count()) === 51,
+          "PROFILE_COUNT",
+        );
+        const shell = await page.locator("header").evaluateAll((headers) =>
+          headers
+            .map(
+              (header) =>
+                header.innerText +
+                " " +
+                Array.from(header.querySelectorAll("[alt], [aria-label]"))
+                  .map(
+                    (e) =>
+                      e.getAttribute("alt") ?? e.getAttribute("aria-label"),
+                  )
+                  .join(" "),
+            )
+            .join(" "),
+        );
+        requireQa(
+          ["PolicyEngine", "Research", "Model", "API", "Donate"].every(
+            (label) => shell.includes(label),
+          ),
+          "SHELL_MISSING",
+        );
+        const escapedLinks = await page.locator('a[href^="/"]').evaluateAll(
+          (links, prefix) =>
+            links.some((link) => {
+              const href = link.getAttribute("href");
+              return href !== prefix.slice(0, -1) && !href.startsWith(prefix);
+            }),
+          CONFIG.toolPath,
+        );
+        requireQa(!escapedLinks, "LINK_SCOPE_ESCAPE");
+        await page
+          .getByLabel("State or program", { exact: true })
+          .fill("Wisconsin");
+        await page
+          .getByRole("heading", { name: "Wisconsin", exact: true })
+          .waitFor();
+        await page.screenshot({
+          path: resolve(OUTPUT, `${surface}-desktop.png`),
+          fullPage: true,
+        });
+        await page.setViewportSize({ width: 390, height: 844 });
+        requireQa(
+          !(await page.evaluate(
+            () => document.documentElement.scrollWidth > innerWidth + 1,
+          )),
+          "MOBILE_OVERFLOW",
+        );
+        await page.screenshot({
+          path: resolve(OUTPUT, `${surface}-mobile.png`),
+          fullPage: true,
+        });
+        await page
+          .getByRole("link", { name: "Read the report", exact: true })
+          .click();
+        requireQa(
+          (await page.locator(".report-profile").count()) === 51,
+          "REPORT_COUNT",
+        );
+        await page
+          .getByRole("link", { name: "Data and methods", exact: true })
+          .click();
+        await page
+          .getByRole("heading", { name: "Sources and methods.", exact: true })
+          .waitFor();
+        await page.goto(manifest[surface].origin + CONFIG.toolPath, {
+          waitUntil: "networkidle",
+        });
+        const downloadEvent = page.waitForEvent("download");
+        await page
+          .getByRole("button", {
+            name: "Download full inventory (CSV)",
+            exact: true,
+          })
+          .click();
+        const download = await downloadEvent;
+        const downloadPath = await download.path();
+        requireQa(downloadPath, "BROWSER_DOWNLOAD_FAILED");
+        const browserCsv = readFileSync(downloadPath);
+        const { inventoryCsv } = await import(
+          pathToFileURL(resolve(CHILD, "lib/inventory.ts")).href
+        );
+        const sourceInventory = readFileSync(
+          resolve(CHILD, "public/data/inventory.json"),
+        );
+        requireQa(
+          browserCsv.toString("utf8").replace(/^\uFEFF/, "") ===
+            inventoryCsv(JSON.parse(sourceInventory)),
+          "BROWSER_CSV_DIFFERS",
+        );
+        writeFileSync(
+          resolve(OUTPUT, `${surface}-browser-inventory.csv`),
+          browserCsv,
+        );
+        for (const name of ["inventory.json", "inventory.csv"]) {
+          const response = await transport.get(
+            manifest[surface].origin + CONFIG.toolPath + `data/${name}`,
+          );
+          requireQa(response.status === 200, "DOWNLOAD_HTTP_FAILED");
+          const expected = readFileSync(resolve(CHILD, "public/data", name));
+          if (name.endsWith("json")) validateInventory(response.body, expected);
+          else {
+            requireQa(response.body.equals(expected), "CSV_DIFFERS");
+            validateStaticCsv(response.body, sourceInventory);
+          }
+          // Only save bytes after matching the pinned public source export.
+          writeFileSync(resolve(OUTPUT, `${surface}-${name}`), response.body);
+        }
+        requireQa(
+          resources.some((r) => r.type === "script") &&
+            resources.some((r) => r.type === "stylesheet"),
+          "NO_RENDER_ASSETS",
+        );
+        requireQa(failures.length === 0, "BROWSER_CHECK_FAILED");
+        counts[surface] = { jurisdictions: 51, programs: 119, resources };
+      } finally {
+        await context.close();
+      }
+    }
+  } finally {
+    await browser.close();
+  }
+  return counts;
+}
+
+function checkCi(env) {
+  requireQa(process.platform === "linux" && env.CI === "true", "LINUX_CI_ONLY");
+  requireQa(
+    env.GITHUB_REPOSITORY === "PolicyEngine/policyengine-app-v2" &&
+      env.GITHUB_EVENT_NAME === "workflow_dispatch" &&
+      env.GITHUB_REF === "refs/heads/codex/rent-property-tax-tool" &&
+      shaPattern.test(env.GITHUB_SHA ?? ""),
+    "UNTRUSTED_DISPATCH",
+  );
+  requireQa(
+    execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim() ===
+      env.GITHUB_SHA,
+    "CHECKOUT_DIFFERS",
+  );
+  requireQa(
+    execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: CHILD,
+      encoding: "utf8",
+    }).trim() === CONFIG.childSha,
+    "CHILD_CHECKOUT_DIFFERS",
+  );
+  for (const cwd of [process.cwd(), CHILD]) {
+    requireQa(
+      execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], {
+        cwd,
+        encoding: "utf8",
+      }).trim() === "",
+      "TRACKED_SOURCE_DIRTY",
+    );
+  }
+}
+
+export async function main(phase, env = process.env) {
+  checkCi(env);
+  requireQa(
+    ["metadata", "preflight", "browser", "recheck"].includes(phase),
+    "BAD_PHASE",
+  );
+  mkdirSync(OUTPUT, { recursive: true });
+  const manifestFile = resolve(OUTPUT, "manifest.json");
+  if (phase === "metadata") {
+    writeFileSync(manifestFile, JSON.stringify(await metadata(env), null, 2));
+    return;
+  }
+  const manifestBytes = readFileSync(manifestFile);
+  const manifest = JSON.parse(manifestBytes);
+  requireQa(
+    manifest.host.sha === env.GITHUB_SHA &&
+      manifest.child.sha === CONFIG.childSha,
+    "MANIFEST_SOURCE_DIFFERS",
+  );
+  requireQa(
+    Date.now() - Date.parse(manifest.createdAt) < 30 * 60_000,
+    "MANIFEST_EXPIRED",
+  );
+  if (phase === "recheck") {
+    await recheck(manifest, env);
+    writeFileSync(
+      resolve(OUTPUT, "recheck.json"),
+      JSON.stringify({ status: "PASS", manifestSha256: digest(manifestBytes) }),
+    );
+    return;
+  }
+  if (phase === "browser") {
+    const prior = JSON.parse(readFileSync(resolve(OUTPUT, "preflight.json")));
+    requireQa(
+      prior.status === "PASS" && prior.manifestSha256 === digest(manifestBytes),
+      "PREFLIGHT_REQUIRED",
+    );
+  }
+  const { transport, evidence: preflight } = await runPreflight(manifest, {
+    hostKey: env.PROPERTY_TAX_QA_HOST_BYPASS,
+    childKey: env.PROPERTY_TAX_QA_CHILD_BYPASS,
+  });
+  const result = {
+    status: "PASS",
+    phase,
+    manifestSha256: digest(manifestBytes),
+    preflight,
+  };
+  if (phase === "browser")
+    result.browser = await browserQa(manifest, transport);
+  writeFileSync(
+    resolve(OUTPUT, `${phase}.json`),
+    JSON.stringify(result, null, 2),
+  );
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+) {
+  const phase = process.argv[2];
+  main(phase)
+    .then(() => console.log("Protected QA phase completed"))
+    .catch((error) => {
+      // Never log fetch/browser exceptions: they may contain auth headers or raw bodies.
+      const code = error instanceof QaError ? error.message : "QA_FAILED";
+      mkdirSync(OUTPUT, { recursive: true });
+      writeFileSync(
+        resolve(OUTPUT, "failure.json"),
+        JSON.stringify({ status: "BLOCKED", code }),
+      );
+      console.error(`Protected QA blocked: ${code}`);
+      process.exitCode = 1;
+    });
+}

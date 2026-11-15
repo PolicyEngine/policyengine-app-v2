@@ -8,6 +8,24 @@ on:
       - ".github/scripts/audit-app-zone-shell.test.mjs"
       - ".github/workflows/app-zone-shell-audit.yml"
   workflow_dispatch:
+    inputs:
+      protected_qa:
+        description: Supplemental protected report QA; begin with preflight
+        type: choice
+        default: "off"
+        options: ["off", "preflight", "browser"]
+      host_deployment_id:
+        description: Immutable Vercel host preview deployment ID
+        type: string
+      child_deployment_id:
+        description: Immutable Vercel child deployment ID
+        type: string
+      child_build_receipt:
+        description: Root-reviewed manual child build receipt JSON (empty for Git builds)
+        type: string
+      child_build_receipt_sha256:
+        description: SHA256 of the exact reviewed receipt JSON bytes
+        type: string
   schedule:
     - cron: "17 9 * * *"
 
@@ -67,3 +85,94 @@ jobs:
 
           A zone child stopped rendering the PolicyEngine site shell, or a route is down or erroring. Every embedded tool renders the shell itself (CLAUDE.md → Embedded sites → The shell rule); the child repo's own CI shell guard should catch this at PR time — fix the child and check why its guard did not."
           fi
+
+  protected-report-qa:
+    name: Supplemental protected report QA
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.protected_qa == 'preflight' || inputs.protected_qa == 'browser') &&
+      github.repository == 'PolicyEngine/policyengine-app-v2' &&
+      github.ref == 'refs/heads/codex/rent-property-tax-tool'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    env:
+      QA_HOST_DEPLOYMENT_ID: ${{ inputs.host_deployment_id }}
+      QA_CHILD_DEPLOYMENT_ID: ${{ inputs.child_deployment_id }}
+      QA_CHILD_BUILD_RECEIPT: ${{ inputs.child_build_receipt }}
+      QA_CHILD_BUILD_RECEIPT_SHA256: ${{ inputs.child_build_receipt_sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: PolicyEngine/property-tax-relief
+          ref: 1910e9e5086cd634c49a8a87a285703189ab1e56
+          path: qa-child
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          check-latest: true
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.21"
+      - name: Install frozen host dependencies
+        run: bun install --frozen-lockfile
+      - name: Test credential boundaries without credentials
+        run: node node_modules/vitest/vitest.mjs run .github/scripts/property-tax-protected-qa.test.mjs --environment node --maxWorkers 4
+      - name: Build pinned child without deployment credentials
+        working-directory: qa-child
+        run: |
+          bun install --frozen-lockfile
+          bun run build:zone
+      - name: Validate deployment, source and alias identities before bypass credentials
+        id: metadata
+        env:
+          VERCEL_QA_METADATA_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: node .github/scripts/property-tax-protected-qa.mjs metadata
+      - name: Run only the bounded auth matrix
+        id: preflight
+        env:
+          PROPERTY_TAX_QA_HOST_BYPASS: ${{ secrets.PROPERTY_TAX_QA_HOST_BYPASS }}
+          PROPERTY_TAX_QA_CHILD_BYPASS: ${{ secrets.PROPERTY_TAX_QA_CHILD_BYPASS }}
+        run: node .github/scripts/property-tax-protected-qa.mjs preflight
+      - name: Recheck source and alias after preflight
+        if: always() && steps.metadata.outcome == 'success'
+        env:
+          VERCEL_QA_METADATA_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: node .github/scripts/property-tax-protected-qa.mjs recheck
+      - name: Install Chromium only for requested browser phase
+        if: success() && inputs.protected_qa == 'browser'
+        run: node node_modules/playwright/cli.js install --with-deps chromium
+      - name: Check actual rendered protected child and host preview
+        if: success() && inputs.protected_qa == 'browser'
+        env:
+          PROPERTY_TAX_QA_HOST_BYPASS: ${{ secrets.PROPERTY_TAX_QA_HOST_BYPASS }}
+          PROPERTY_TAX_QA_CHILD_BYPASS: ${{ secrets.PROPERTY_TAX_QA_CHILD_BYPASS }}
+        run: node .github/scripts/property-tax-protected-qa.mjs browser
+      - name: Recheck source and alias after browser phase
+        if: always() && steps.metadata.outcome == 'success' && inputs.protected_qa == 'browser'
+        env:
+          VERCEL_QA_METADATA_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: node .github/scripts/property-tax-protected-qa.mjs recheck
+      - name: Upload sanitized supplemental QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: protected-report-qa
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            output/property-tax-protected-qa/manifest.json
+            output/property-tax-protected-qa/preflight.json
+            output/property-tax-protected-qa/browser.json
+            output/property-tax-protected-qa/recheck.json
+            output/property-tax-protected-qa/failure.json
+            output/property-tax-protected-qa/*-desktop.png
+            output/property-tax-protected-qa/*-mobile.png
+            output/property-tax-protected-qa/*-inventory.csv
+            output/property-tax-protected-qa/*-inventory.json
