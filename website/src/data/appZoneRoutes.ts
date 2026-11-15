@@ -24,7 +24,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
   {
     source: "/us/rent-and-property-taxes",
     destination:
-      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes",
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/",
   },
   {
     source: "/uk/energy-autumn-budget",
@@ -368,6 +368,18 @@ export const appZoneRewrites: AppZoneRoute[] = [
     source: "/uk/2025-year-in-review",
     destination:
       "https://policyengine-2025-year-in-review.vercel.app/2025-year-in-review/uk",
+  },
+  // This static-export zone uses trailing slashes for pages. Keep these exact
+  // page destinations ahead of its broad route, which also serves files.
+  {
+    source: "/us/rent-and-property-taxes/report",
+    destination:
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/report/",
+  },
+  {
+    source: "/us/rent-and-property-taxes/methods",
+    destination:
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/methods/",
   },
   ...appZoneRoutes.flatMap(withDeepRoute),
   ...appZoneAssetRoutes,
