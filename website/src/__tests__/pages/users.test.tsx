@@ -76,6 +76,16 @@ describe("users page", () => {
           within(row as HTMLElement).getByRole("link", { name: source.label }),
         ).toHaveAttribute("href", source.url);
       }
+      // The source line names each source in order: "Source: A" or
+      // "Sources: A and B" (commas before the last "and" for three or more)
+      const labels = org.use.sources.map((source) => source.label);
+      const listed =
+        labels.length === 1
+          ? labels[0]
+          : `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
+      expect(
+        within(row as HTMLElement).getByText(/^Sources?:/).textContent,
+      ).toBe(`${labels.length === 1 ? "Source" : "Sources"}: ${listed}`);
       // The name goes to the organization's site, never to one of its sources
       expect(org.use.sources.map((source) => source.url)).not.toContain(
         org.use.site ?? org.link,
@@ -139,6 +149,16 @@ describe("users page", () => {
     );
   });
 
+  test("given the page then government comes first, then research, then benefit services", async () => {
+    await renderUsersPage(US);
+
+    expect(
+      screen
+        .getAllByRole("heading", { level: 2 })
+        .map((heading) => heading.textContent),
+    ).toEqual(["Government", "Research", "Benefit services"]);
+  });
+
   test("given the page then No 10 leads it", async () => {
     await renderUsersPage(US);
 
@@ -151,7 +171,9 @@ describe("users page", () => {
     await renderUsersPage(UK);
 
     expect(
-      screen.getByText(/the organisation's own page or document/),
+      screen.getByText(
+        "Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its source: the organisation's own page or document, or PolicyEngine's where the organisation has published none.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText(/open-source licence,/)).toBeInTheDocument();
     expect(
@@ -163,7 +185,9 @@ describe("users page", () => {
     await renderUsersPage(US);
 
     expect(
-      screen.getByText(/the organization's own page or document/),
+      screen.getByText(
+        "Governments, researchers and benefit services have used PolicyEngine's open-source models and API. Each entry says how and links to its source: the organization's own page or document, or PolicyEngine's where the organization has published none.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText(/open-source license,/)).toBeInTheDocument();
     expect(
@@ -200,6 +224,9 @@ describe("users page entries", () => {
       expect(new Set(sources.map((source) => source.label)).size).toBe(
         sources.length,
       );
+      expect(new Set(sources.map((source) => source.url)).size).toBe(
+        sources.length,
+      );
       expect(new URL(org.use.site ?? org.link).protocol).toBe("https:");
     },
   );
@@ -228,6 +255,21 @@ describe("users page entries", () => {
       }
     },
   );
+
+  // Each entry is a public claim about another organization. This snapshot
+  // makes any change to the list or its wording a visible, deliberate edit.
+  test("given the entries then they match the reviewed copy", () => {
+    expect(
+      getOrganizationUses().map((group) => ({
+        group: group.title,
+        entries: group.organizations.map((org) => ({
+          name: org.name,
+          sentence: org.use.description,
+          sources: org.use.sources.map((source) => source.url),
+        })),
+      })),
+    ).toMatchSnapshot();
+  });
 
   test("given each category then no two entries share a rank", () => {
     for (const { id } of USE_CATEGORIES) {
@@ -338,16 +380,24 @@ describe("links to the users page", () => {
     ).toHaveAttribute("href", "/us/users");
   });
 
-  test("given the UK citations page then its introduction links to the UK users page", () => {
-    render(<CitationsClient countryId={UK} />);
+  test.each([
+    [US, "organizations"],
+    [UK, "organisations"],
+  ])(
+    "given the %s citations page then its introduction links to that country's users page",
+    (countryId, organisationsText) => {
+      render(<CitationsClient countryId={countryId} />);
 
-    expect(
-      screen.getByRole("link", { name: "Who uses PolicyEngine" }),
-    ).toHaveAttribute("href", "/uk/users");
-    expect(
-      screen.getByText(/page lists organisations that have used/),
-    ).toBeInTheDocument();
-  });
+      expect(
+        screen.getByRole("link", { name: "Who uses PolicyEngine" }),
+      ).toHaveAttribute("href", `/${countryId}/users`);
+      expect(
+        screen.getByText(
+          new RegExp(`page lists ${organisationsText} that have used`),
+        ),
+      ).toBeInTheDocument();
+    },
+  );
 
   test.each([US, UK])(
     "given %s then the sitemap lists its users page",
