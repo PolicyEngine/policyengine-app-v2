@@ -29,6 +29,18 @@ const OUTPUT = resolve("output/property-tax-protected-qa");
 const CHILD = resolve("qa-child");
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 class QaError extends Error {}
+// Only evidence created at the validated byte comparison can enter failure.json.
+// Arbitrary error properties and messages must never become diagnostic payloads.
+const mismatchDetails = new WeakMap();
+export function failureEvidence(error) {
+  const trusted = error instanceof QaError;
+  const mismatch = trusted ? mismatchDetails.get(error) : undefined;
+  return {
+    status: "BLOCKED",
+    code: trusted ? error.message : "QA_FAILED",
+    ...(mismatch ? { mismatch } : {}),
+  };
+}
 const requireQa = (condition, code) => {
   if (!condition) throw new QaError(code);
 };
@@ -325,10 +337,26 @@ export async function runPreflight(manifest, keys, fetcher = fetch) {
       manifest.child.buildReceipt.files,
     )) {
       const file = await transport.get(manifest.child.origin + path);
-      requireQa(
-        file.status === 200 && digest(file.body) === hash,
-        "DEPLOYED_BUILD_DIFFERS",
-      );
+      const actualSha256 = digest(file.body);
+      if (file.status !== 200 || actualSha256 !== hash) {
+        const error = new QaError("DEPLOYED_BUILD_DIFFERS");
+        // The transport already validated this path and rejected reflected secrets.
+        // Retain the MIME essence only, never arbitrary header parameters or bodies.
+        const mediaType = file.contentType.match(
+          /^([A-Za-z0-9!#$&^_.+-]+\/[A-Za-z0-9!#$&^_.+-]+)(?:;|$)/,
+        )?.[1];
+        mismatchDetails.set(
+          error,
+          Object.freeze({
+            path,
+            status: file.status,
+            contentType: mediaType ?? "unrecognized",
+            expectedSha256: hash,
+            actualSha256,
+          }),
+        );
+        throw error;
+      }
     }
   }
   const bootstrap = await transport.get(
@@ -842,13 +870,10 @@ if (
     .then(() => console.log("Protected QA phase completed"))
     .catch((error) => {
       // Never log fetch/browser exceptions: they may contain auth headers or raw bodies.
-      const code = error instanceof QaError ? error.message : "QA_FAILED";
+      const failure = failureEvidence(error);
       mkdirSync(OUTPUT, { recursive: true });
-      writeFileSync(
-        resolve(OUTPUT, "failure.json"),
-        JSON.stringify({ status: "BLOCKED", code }),
-      );
-      console.error(`Protected QA blocked: ${code}`);
+      writeFileSync(resolve(OUTPUT, "failure.json"), JSON.stringify(failure));
+      console.error(`Protected QA blocked: ${failure.code}`);
       process.exitCode = 1;
     });
 }

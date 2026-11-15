@@ -1,10 +1,12 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from "vitest";
 import fc from "fast-check";
+import { createHash } from "node:crypto";
 import {
   CONFIG,
   assertAllowedUrl,
   assertApplicationPage,
+  failureEvidence,
   makeTransport,
   runPreflight,
   validateAlias,
@@ -442,23 +444,90 @@ describe("bounded preflight", () => {
     expect(fetcher.mock.calls.at(-1)[1].headers.has("cookie")).toBe(false);
   });
 
-  test("given a manual deployed-byte mismatch then never send the host key", async () => {
+  test.each([200, 404])(
+    "given a manual deployed-byte mismatch with status%s then emit only sanitized evidence before host auth",
+    async (status) => {
+      const m = manifest();
+      m.child.sourceKind = "reviewed-manual-build";
+      m.child.buildReceipt = {
+        files: { [CONFIG.toolPath + "data/inventory.csv"]: "0".repeat(64) },
+      };
+      const body = "PRIVATE_RAW_RESPONSE_MUST_NOT_BE_RECORDED";
+      const fetcher = vi.fn(async () =>
+        fetcher.mock.calls.length === 1
+          ? html()
+          : new Response(body, {
+              status,
+              headers: {
+                "content-type":
+                  "application/octet-stream; debug=PRIVATE_HEADER",
+                "set-cookie": "PRIVATE_COOKIE=value",
+              },
+            }),
+      );
+      let failure;
+      try {
+        await runPreflight(m, keys, fetcher);
+      } catch (error) {
+        failure = failureEvidence(error);
+      }
+      expect(failure).toEqual({
+        status: "BLOCKED",
+        code: "DEPLOYED_BUILD_DIFFERS",
+        mismatch: {
+          path: CONFIG.toolPath + "data/inventory.csv",
+          status,
+          contentType: "application/octet-stream",
+          expectedSha256: "0".repeat(64),
+          actualSha256: createHash("sha256").update(body).digest("hex"),
+        },
+      });
+      const serialized = JSON.stringify(failure);
+      for (const value of [
+        body,
+        "PRIVATE_HEADER",
+        "PRIVATE_COOKIE",
+        keys.hostKey,
+        keys.childKey,
+        m.child.origin,
+      ])
+        expect(serialized).not.toContain(value);
+      expect(fetcher.mock.calls).toHaveLength(2);
+      expect(
+        fetcher.mock.calls.every(
+          ([, options]) =>
+            options.headers.get("x-vercel-protection-bypass") === keys.childKey,
+        ),
+      ).toBe(true);
+    },
+  );
+
+  test("given a reflected key then do not attach deployed-byte mismatch evidence", async () => {
     const m = manifest();
     m.child.sourceKind = "reviewed-manual-build";
     m.child.buildReceipt = {
       files: { [CONFIG.toolPath + "data/inventory.csv"]: "0".repeat(64) },
     };
-    const fetcher = vi.fn(async () => html());
-    await expect(runPreflight(m, keys, fetcher)).rejects.toThrow(
-      "DEPLOYED_BUILD_DIFFERS",
+    const fetcher = vi.fn(async () =>
+      fetcher.mock.calls.length === 1 ? html() : new Response(keys.childKey),
     );
-    expect(fetcher.mock.calls).toHaveLength(2);
-    expect(
-      fetcher.mock.calls.every(
-        ([, options]) =>
-          options.headers.get("x-vercel-protection-bypass") === keys.childKey,
-      ),
-    ).toBe(true);
+    let failure;
+    try {
+      await runPreflight(m, keys, fetcher);
+    } catch (error) {
+      failure = failureEvidence(error);
+    }
+    expect(failure).toEqual({ status: "BLOCKED", code: "SECRET_REFLECTED" });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  test("given arbitrary error strings or forged evidence then keep only a constant failure code", () => {
+    const error = new Error(`https://example.invalid/?key=${keys.hostKey}`);
+    error.mismatch = { path: keys.childKey, body: "PRIVATE_BODY" };
+    expect(failureEvidence(error)).toEqual({
+      status: "BLOCKED",
+      code: "QA_FAILED",
+    });
   });
 
   test("given broad-domain cookie or failed auth then stop before later stages", async () => {
