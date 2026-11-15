@@ -17,6 +17,7 @@ import CitationsClient from "../../app/[countryId]/citations/CitationsClient";
 import UsersPage, { metadata } from "../../app/[countryId]/users/page";
 import sitemap from "@/app/sitemap";
 import Header from "@/components/Header";
+import OrganizationUseList from "@/components/static/OrganizationUseList";
 import {
   getOrganizationUses,
   getOrgsForCountry,
@@ -181,6 +182,19 @@ describe("users page", () => {
     ).toBeInTheDocument();
   });
 
+  test("given the UK route then no US spelling shows outside the entries", async () => {
+    await renderUsersPage(UK);
+
+    const main = screen.getByRole("heading", { level: 1 }).closest("div")
+      ?.parentElement as HTMLElement;
+    const ownText = [...main.querySelectorAll("h1, h2, p")]
+      .filter((element) => element.closest("li") === null)
+      .map((element) => element.textContent)
+      .join(" ");
+    expect(ownText).toMatch(/organisation/);
+    expect(ownText).not.toMatch(/organiz|license|analyz/i);
+  });
+
   test("given the US route then the page's own text uses US spelling", async () => {
     await renderUsersPage(US);
 
@@ -202,6 +216,48 @@ describe("users page", () => {
       "href",
       "/uk/citations",
     );
+  });
+});
+
+describe("source line", () => {
+  const source = (label: string) => ({
+    label,
+    url: `https://example.org/${label.toLowerCase()}`,
+    publisher: "organization" as const,
+  });
+
+  test.each([
+    [["A"], "Source: A"],
+    [["A", "B"], "Sources: A and B"],
+    [["A", "B", "C"], "Sources: A, B and C"],
+  ])("given sources %j then the line reads %s", (labels, line) => {
+    const [first, ...rest] = labels.map(source);
+    render(
+      <OrganizationUseList
+        id="example"
+        title="Example group"
+        organizations={[
+          {
+            name: "Example organization",
+            link: "https://example.org/",
+            countries: ["us"],
+            use: {
+              category: "research",
+              rank: 1,
+              description: "Example organization ran PolicyEngine.",
+              sources: [first, ...rest],
+            },
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText(/^Sources?:/).textContent).toBe(line);
+    expect(
+      within(screen.getByText(/^Sources?:/))
+        .getAllByRole("link")
+        .map((link) => link.getAttribute("href")),
+    ).toEqual(labels.map((label) => source(label).url));
   });
 });
 
