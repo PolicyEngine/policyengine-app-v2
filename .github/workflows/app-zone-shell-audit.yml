@@ -110,7 +110,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: PolicyEngine/property-tax-relief
-          ref: 1910e9e5086cd634c49a8a87a285703189ab1e56
+          ref: 62b668978ccdb79cf4dd8ac88816e7de54e96209
           path: qa-child
           persist-credentials: false
       - uses: actions/setup-node@v4
