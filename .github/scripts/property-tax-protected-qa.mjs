@@ -325,7 +325,11 @@ export function makeTransport(manifest, keys, fetcher = fetch) {
   async function get(url, purpose = "tool", redirects = 0) {
     const { parsed, surface } = assertAllowedUrl(url, manifest, "GET", purpose);
     requireQa(++requests <= 400 && redirects <= 3, "REDIRECT_LIMIT");
-    const headers = new Headers({ accept: "*/*" });
+    // Request-scoped automation setting: https://vercel.com/docs/vercel-toolbar/managing-toolbar
+    const headers = new Headers({
+      accept: "*/*",
+      "x-vercel-skip-toolbar": "1",
+    });
     if (surface === "host" && hostCookie) headers.set("cookie", hostCookie);
     if (purpose === "bootstrap") {
       headers.set("x-vercel-protection-bypass", keys.hostKey);

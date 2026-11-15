@@ -365,6 +365,7 @@ describe("generated credential invariants", () => {
             accept: "*/*",
             "x-vercel-protection-bypass": generatedKeys.hostKey,
             "x-vercel-set-bypass-cookie": "true",
+            "x-vercel-skip-toolbar": "1",
           });
           const purpose =
             surface === "host" && cookieOnly ? "cookie-only" : "tool";
@@ -375,6 +376,7 @@ describe("generated credential invariants", () => {
           await transport.get(m[surface].origin + path, purpose);
           expect(Object.fromEntries(fetcher.mock.calls[1][1].headers)).toEqual({
             accept: "*/*",
+            "x-vercel-skip-toolbar": "1",
             ...(surface === "host" ? { cookie } : {}),
             ...(purpose === "tool"
               ? { "x-vercel-protection-bypass": generatedKeys.childKey }
@@ -506,6 +508,7 @@ describe("protected QA provenance", () => {
 describe("credential request boundaries", () => {
   test.each([
     "https://attacker.example/us/rent-and-property-taxes/",
+    "https://api.vercel.com/v13/deployments/dpl_nonexistent1234567890",
     "https://host-123456-policy-engine.vercel.app.attacker.example/us/rent-and-property-taxes/",
     "http://host-123456-policy-engine.vercel.app/us/rent-and-property-taxes/",
     "https://user@host-123456-policy-engine.vercel.app/us/rent-and-property-taxes/",
@@ -532,7 +535,7 @@ describe("credential request boundaries", () => {
     ).toThrow();
   });
 
-  test("given tool requests then only the child key is sent without ambient headers", async () => {
+  test("given tool requests then isolate the child key and include the nonsecret automation header", async () => {
     const fetcher = vi.fn(async () => html());
     const m = manifest();
     await makeTransport(m, keys, fetcher).get(m.host.origin + CONFIG.toolPath);
@@ -543,6 +546,7 @@ describe("credential request boundaries", () => {
     );
     expect(options.headers.has("authorization")).toBe(false);
     expect(options.headers.has("cookie")).toBe(false);
+    expect(options.headers.get("x-vercel-skip-toolbar")).toBe("1");
   });
 
   test("given an off-origin redirect then do not forward any credentials", async () => {
@@ -618,6 +622,57 @@ describe("credential request boundaries", () => {
 });
 
 describe("bounded preflight", () => {
+  test.each([true, false])(
+    "given a fake toolbar server honoring skip header=%s then preserve exact build-byte validation",
+    async (honorsSkipHeader) => {
+      const m = manifest();
+      const buildRuntime = runtime();
+      m.child.sourceKind = "reviewed-manual-build";
+      m.child.buildReceipt = {
+        files: {
+          [RUNTIME_PATH]: createHash("sha256")
+            .update(buildRuntime)
+            .digest("hex"),
+        },
+      };
+      const fetcher = vi.fn(async (url, options) => {
+        if (url === m.child.origin + RUNTIME_PATH) {
+          const suppressed =
+            honorsSkipHeader &&
+            options.headers.get("x-vercel-skip-toolbar") === "1";
+          return new Response(
+            buildRuntime + (suppressed ? "" : ";/* MOCK_TOOLBAR_APPEND */"),
+            { headers: { "content-type": "application/javascript" } },
+          );
+        }
+        if (options.headers.has("x-vercel-set-bypass-cookie"))
+          return new Response(null, {
+            status: 307,
+            headers: {
+              location: "/us",
+              "set-cookie": "_vercel_jwt=FAKE_COOKIE; Path=/; Secure; HttpOnly",
+            },
+          });
+        return html();
+      });
+      if (honorsSkipHeader) {
+        const result = await runPreflight(m, keys, fetcher);
+        expect(result.evidence).toHaveLength(4);
+        expect(fetcher).toHaveBeenCalledTimes(5);
+      } else {
+        await expect(runPreflight(m, keys, fetcher)).rejects.toThrow(
+          "DEPLOYED_BUILD_DIFFERS",
+        );
+        expect(fetcher).toHaveBeenCalledTimes(2);
+      }
+      expect(
+        fetcher.mock.calls.every(
+          ([, options]) => options.headers.get("x-vercel-skip-toolbar") === "1",
+        ),
+      ).toBe(true);
+    },
+  );
+
   test("given success then bootstrap only host and never serialize the cookie", async () => {
     const m = manifest();
     const fetcher = vi.fn(async (url, options) => {
