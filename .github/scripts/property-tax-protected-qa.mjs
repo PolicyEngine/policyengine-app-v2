@@ -29,9 +29,10 @@ const OUTPUT = resolve("output/property-tax-protected-qa");
 const CHILD = resolve("qa-child");
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 class QaError extends Error {}
-// Only evidence created at the validated byte comparison can enter failure.json.
+// Only evidence created at validated transport/build guards can enter failure.json.
 // Arbitrary error properties and messages must never become diagnostic payloads.
 const mismatchDetails = new WeakMap();
+const redirectDetails = new WeakMap();
 const runtimeCaptures = new WeakMap();
 const runtimeDiagnostic = Object.freeze({
   path: "/_zones/property-tax-relief/_next/static/chunks/turbopack-2ldtdtmjp3oyl.js",
@@ -43,10 +44,12 @@ const runtimeDiagnostic = Object.freeze({
 export function failureEvidence(error) {
   const trusted = error instanceof QaError;
   const mismatch = trusted ? mismatchDetails.get(error) : undefined;
+  const redirect = trusted ? redirectDetails.get(error) : undefined;
   return {
     status: "BLOCKED",
     code: trusted ? error.message : "QA_FAILED",
     ...(mismatch ? { mismatch } : {}),
+    ...(redirect ? { redirect } : {}),
   };
 }
 export function writeFailureEvidence(error, directory = OUTPUT) {
@@ -68,9 +71,12 @@ export function writeFailureEvidence(error, directory = OUTPUT) {
   return failure;
 }
 
-function containsEncodedKey(body, keys) {
+function containsEncodedKey(body, keys, extraSecrets = []) {
   const text = body.toString("utf8").toLowerCase();
-  return [keys.hostKey, keys.childKey].some((secret) => {
+  const secrets = [keys.hostKey, keys.childKey, ...extraSecrets].filter(
+    Boolean,
+  );
+  return secrets.some((secret) => {
     const bytes = Buffer.from(secret);
     const hex = (byte) => byte.toString(16).padStart(2, "0");
     // Encoding checks only prevent diagnostic leaks; build hashes use raw bytes.
@@ -322,8 +328,27 @@ export function makeTransport(manifest, keys, fetcher = fetch) {
   let requests = 0;
   let bytes = 0;
   const records = [];
-  async function get(url, purpose = "tool", redirects = 0) {
+  async function request(url, purpose, redirects, context) {
     const { parsed, surface } = assertAllowedUrl(url, manifest, "GET", purpose);
+    context.attempt =
+      ["tool", "bootstrap", "cookie-only"].includes(purpose) &&
+      Number.isInteger(redirects) &&
+      redirects >= 0 &&
+      redirects <= 4 &&
+      requests < 401
+        ? Object.freeze({
+            surface,
+            ...(!containsEncodedKey(Buffer.from(parsed.pathname), keys, [
+              hostCookie,
+              hostCookie.split("=")[1],
+            ])
+              ? { path: parsed.pathname }
+              : {}),
+            purpose,
+            depth: redirects,
+            requestCount: requests + 1,
+          })
+        : undefined;
     requireQa(++requests <= 400 && redirects <= 3, "REDIRECT_LIMIT");
     // Request-scoped automation setting: https://vercel.com/docs/vercel-toolbar/managing-toolbar
     const headers = new Headers({
@@ -373,6 +398,12 @@ export function makeTransport(manifest, keys, fetcher = fetch) {
     };
     records.push(evidence(result));
     if ([301, 302, 303, 307, 308].includes(raw.status)) {
+      if (context.attempt) {
+        if (context.chain.length === 4) context.chain.shift();
+        context.chain.push(
+          Object.freeze({ ...context.attempt, status: raw.status }),
+        );
+      }
       requireQa(raw.headers.has("location"), "BAD_REDIRECT");
       let next;
       try {
@@ -387,9 +418,39 @@ export function makeTransport(manifest, keys, fetcher = fetch) {
         purpose === "bootstrap" ? "cookie-only" : purpose,
       );
       requireQa(new URL(next).origin === parsed.origin, "REDIRECT_ORIGIN");
-      if (purpose !== "bootstrap") return get(next, purpose, redirects + 1);
+      if (purpose !== "bootstrap")
+        return request(next, purpose, redirects + 1, context);
     }
     return result;
+  }
+  async function get(url, purpose = "tool", redirects = 0) {
+    const context = { chain: [], attempt: undefined };
+    try {
+      return await request(url, purpose, redirects, context);
+    } catch (error) {
+      if (
+        error instanceof QaError &&
+        context.attempt &&
+        [
+          "REDIRECT_LIMIT",
+          "BAD_REDIRECT",
+          "REDIRECT_ORIGIN",
+          "BAD_URL",
+          "ORIGIN_NOT_ALLOWED",
+          "PATH_NOT_ALLOWED",
+        ].includes(error.message) &&
+        (context.chain.length > 0 || error.message === "REDIRECT_LIMIT")
+      ) {
+        redirectDetails.set(
+          error,
+          Object.freeze({
+            chain: Object.freeze([...context.chain]),
+            attempt: context.attempt,
+          }),
+        );
+      }
+      throw error;
+    }
   }
   function acceptHostCookie(response) {
     const lines = response.headers.getSetCookie();

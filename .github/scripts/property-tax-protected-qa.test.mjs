@@ -865,3 +865,248 @@ describe("bounded preflight", () => {
     ).toThrow("STATIC_CSV_DIFFERS");
   });
 });
+
+describe("sanitized redirect diagnostics", () => {
+  async function loopFailure({
+    surface = "child",
+    purpose = "tool",
+    path = CONFIG.toolPath + "report/",
+    credentials = keys,
+    cookie = "",
+    priorRequest = false,
+  } = {}) {
+    const m = manifest();
+    const loopPath = purpose === "cookie-only" ? "/us" : CONFIG.toolPath;
+    const fetcher = vi.fn(async () =>
+      priorRequest && fetcher.mock.calls.length === 1
+        ? html()
+        : new Response(null, { status: 307, headers: { location: loopPath } }),
+    );
+    const transport = makeTransport(m, credentials, fetcher);
+    if (cookie)
+      transport.acceptHostCookie(
+        new Response(null, {
+          headers: {
+            "set-cookie": `_vercel_jwt=${cookie}; Path=/; Secure; HttpOnly`,
+          },
+        }),
+      );
+    if (priorRequest) await transport.get(m.child.origin + CONFIG.toolPath);
+    try {
+      await transport.get(m[surface].origin + path, purpose);
+    } catch (error) {
+      return { error, fetcher };
+    }
+    throw new Error("Expected redirect guard to block");
+  }
+
+  test("given a real loop after an earlier request then report four actual responses and terminal guard context", async () => {
+    const { error, fetcher } = await loopFailure({ priorRequest: true });
+    expect(failureEvidence(error)).toEqual({
+      status: "BLOCKED",
+      code: "REDIRECT_LIMIT",
+      redirect: {
+        chain: Array.from({ length: 4 }, (_, depth) => ({
+          surface: "child",
+          path: depth === 0 ? CONFIG.toolPath + "report/" : CONFIG.toolPath,
+          purpose: "tool",
+          status: 307,
+          depth,
+          requestCount: depth + 2,
+        })),
+        attempt: {
+          surface: "child",
+          path: CONFIG.toolPath,
+          purpose: "tool",
+          depth: 4,
+          requestCount: 6,
+        },
+      },
+    });
+    expect(fetcher).toHaveBeenCalledTimes(5);
+  });
+
+  test("given the total request budget then report a terminal attempt without an invented response", async () => {
+    const m = manifest();
+    const fetcher = vi.fn(async () => html());
+    const transport = makeTransport(m, keys, fetcher);
+    for (let count = 0; count < 400; count++)
+      await transport.get(m.child.origin + CONFIG.toolPath);
+    let failure;
+    try {
+      await transport.get(m.child.origin + CONFIG.toolPath);
+    } catch (error) {
+      failure = failureEvidence(error);
+    }
+    expect(failure.redirect).toEqual({
+      chain: [],
+      attempt: {
+        surface: "child",
+        path: CONFIG.toolPath,
+        purpose: "tool",
+        depth: 0,
+        requestCount: 401,
+      },
+    });
+    expect(fetcher).toHaveBeenCalledTimes(400);
+  });
+
+  test.each(["tool", "cookie-only"])(
+    "given a host %s loop then identify the auth case without retaining its cookie",
+    async (purpose) => {
+      const cookie = "FAKE_COOKIE_SECRET";
+      const { error } = await loopFailure({
+        surface: "host",
+        purpose,
+        path: purpose === "cookie-only" ? "/us" : CONFIG.toolPath,
+        cookie,
+      });
+      const failure = failureEvidence(error);
+      expect(failure.redirect.chain).toHaveLength(4);
+      expect(failure.redirect.attempt).toMatchObject({
+        surface: "host",
+        purpose,
+        depth: 4,
+      });
+      expect(JSON.stringify(failure)).not.toContain(cookie);
+      expect(JSON.stringify(failure)).not.toContain("_vercel_jwt");
+    },
+  );
+
+  test.each([
+    ["foreign target", "https://attacker.invalid/", "ORIGIN_NOT_ALLOWED"],
+    ["query target", CONFIG.toolPath + "?private=PRIVATE_QUERY", "BAD_URL"],
+  ])(
+    "given a %s then retain only the trusted source frame before rejection",
+    async (_name, location, code) => {
+      const m = manifest();
+      const fetcher = vi.fn(
+        async () => new Response(null, { status: 302, headers: { location } }),
+      );
+      let failure;
+      try {
+        await makeTransport(m, keys, fetcher).get(
+          m.child.origin + CONFIG.toolPath,
+        );
+      } catch (error) {
+        failure = failureEvidence(error);
+      }
+      expect(failure.code).toBe(code);
+      expect(failure.redirect.chain).toEqual([
+        {
+          surface: "child",
+          path: CONFIG.toolPath,
+          purpose: "tool",
+          status: 302,
+          depth: 0,
+          requestCount: 1,
+        },
+      ]);
+      expect(JSON.stringify(failure)).not.toContain("PRIVATE_QUERY");
+      expect(JSON.stringify(failure)).not.toContain("attacker.invalid");
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  test("given a bootstrap redirect guard failure then identify bootstrap without following its target", async () => {
+    const m = manifest();
+    const fetcher = vi.fn(
+      async () =>
+        new Response(null, {
+          status: 307,
+          headers: { location: "https://attacker.invalid/" },
+        }),
+    );
+    let failure;
+    try {
+      await makeTransport(m, keys, fetcher).get(
+        m.host.origin + "/us",
+        "bootstrap",
+      );
+    } catch (error) {
+      failure = failureEvidence(error);
+    }
+    expect(failure.redirect.chain).toEqual([
+      {
+        surface: "host",
+        path: "/us",
+        purpose: "bootstrap",
+        status: 307,
+        depth: 0,
+        requestCount: 1,
+      },
+    ]);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  test.each([
+    ["raw", (value) => value],
+    ["URL", (value) => encodeURIComponent(value)],
+    ["base64", (value) => Buffer.from(value).toString("base64")],
+    ["base64url", (value) => Buffer.from(value).toString("base64url")],
+    ["hex", (value) => Buffer.from(value).toString("hex")],
+  ])(
+    "given a %s credential pathname then omit it from diagnostic evidence",
+    async (_name, encode) => {
+      const secret = "FAKE_HOST+/=SECRET";
+      const encoded = encode(secret);
+      const { error } = await loopFailure({
+        path: CONFIG.toolPath + encoded,
+        credentials: { hostKey: secret, childKey: "OTHER_FAKE_KEY" },
+      });
+      const failure = failureEvidence(error);
+      if (failure.redirect)
+        expect(failure.redirect.chain[0]).not.toHaveProperty("path");
+      expect(JSON.stringify(failure)).not.toContain(secret);
+      expect(JSON.stringify(failure)).not.toContain(encoded);
+    },
+  );
+
+  test("given an encoded host-cookie pathname then omit it without changing request guards", async () => {
+    const cookie = "PRIVATE_COOKIE_VALUE";
+    const encoded = Buffer.from(cookie).toString("base64url");
+    const { error } = await loopFailure({
+      surface: "host",
+      cookie,
+      path: CONFIG.toolPath + encoded,
+    });
+    const failure = failureEvidence(error);
+    expect(failure.redirect.chain[0]).not.toHaveProperty("path");
+    expect(JSON.stringify(failure)).not.toContain(encoded);
+    expect(JSON.stringify(failure)).not.toContain(cookie);
+  });
+
+  test("given generated raw or encoded secret paths then bounded diagnostics never contain those paths", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.stringMatching(/^[A-Za-z][A-Za-z0-9]{15,31}$/),
+        fc.constantFrom("raw", "base64url", "hex"),
+        async (secret, encoding) => {
+          const encoded =
+            encoding === "raw"
+              ? secret
+              : Buffer.from(secret).toString(encoding);
+          const { error } = await loopFailure({
+            credentials: { hostKey: secret, childKey: "OTHER_FAKE_KEY" },
+            path: CONFIG.toolPath + encoded,
+          });
+          const failure = failureEvidence(error);
+          expect(failure.redirect.chain).toHaveLength(4);
+          expect(failure.redirect.chain[0]).not.toHaveProperty("path");
+          expect(JSON.stringify(failure)).not.toContain(secret);
+          expect(JSON.stringify(failure)).not.toContain(encoded);
+        },
+      ),
+      { numRuns: 100, seed: 20261120 },
+    );
+  });
+
+  test("given a forged redirect on an arbitrary error then expose only the constant failure code", () => {
+    const error = new Error(keys.hostKey);
+    error.redirect = { chain: [{ path: keys.childKey }] };
+    expect(failureEvidence(error)).toEqual({
+      status: "BLOCKED",
+      code: "QA_FAILED",
+    });
+  });
+});
