@@ -24,6 +24,14 @@
     "tags": ["us", "tax"]
   },
   {
+    "title": "Thirty Years of Temporary Assistance for Needy Families: What Changed, What Didn't, and What It Means for Today's Work Requirement Debates",
+    "outlet": "CLASP",
+    "date": "2026-08-31",
+    "url": "https://www.clasp.org/wp-content/uploads/2026/08/working-paper-TANF30_August-2026.pdf",
+    "image": "clasp-tanf-30-years.jpg",
+    "tags": ["us", "policy"]
+  },
+  {
     "title": "The MyFriendBen Benefits Screener: Findings from Implementation in Colorado and North Carolina",
     "outlet": "Urban Institute",
     "date": "2026-08-25",
@@ -69,6 +77,14 @@
     "date": "2026-05-25",
     "url": "https://www.nber.org/system/files/working_papers/w35218/w35218.pdf",
     "image": "nber-california-billionaires.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Child Tax Credit expansion options for working families",
+    "outlet": "Niskanen Center",
+    "date": "2025-06-25",
+    "url": "https://www.niskanencenter.org/child-tax-credit-expansion-options-for-working-families/",
+    "image": "niskanen-ctc-expansion-options.jpg",
     "tags": ["us", "tax"]
   },
   {
