@@ -1,16 +1,18 @@
-On November 10, 2026, the U.S. Department of Agriculture (USDA) published a proposed rule, "Supplemental Nutrition Assistance Program: Reforming Categorical Eligibility" (91 FR 72454). The rule would end broad-based categorical eligibility (BBCE), the policy through which 46 state agencies extend the Supplemental Nutrition Assistance Program (SNAP) to households that qualify for a non-cash benefit funded by Temporary Assistance for Needy Families (TANF). Without BBCE, most SNAP households would again face the federal gross income limit of 130% of the federal poverty guidelines (FPG), the 100% net income limit, and the federal asset limit. USDA accepts comments through December 10, 2026.
+On November 10, 2026, the U.S. Department of Agriculture (USDA) published a proposed rule, "Supplemental Nutrition Assistance Program: Reforming Categorical Eligibility" (91 FR 72454). The proposal would end broad-based categorical eligibility (BBCE) for the Supplemental Nutrition Assistance Program (SNAP). Under BBCE, 46 state agencies confer SNAP eligibility through non-cash benefits funded by Temporary Assistance for Needy Families (TANF). Without BBCE, most SNAP households would again face the federal gross income limit of 130% of the federal poverty guidelines (FPG), the 100% net income limit, and the federal asset limit. USDA accepts comments through December 10, 2026.
 
-PolicyEngine estimates that in 2029, the first year USDA expects the rule to apply to the full caseload, it would:
+PolicyEngine estimates that in 2029, the first year of full implementation in USDA's analysis, the proposal would:
 
 - Reduce SNAP benefits by $16 billion to $29 billion
 - End SNAP for 3.5 million to 8.6 million SNAP households in an average month
 - Raise the Supplemental Poverty Measure (SPM) poverty rate by 0.3 to 0.6 percentage points and the child SPM poverty rate by 0.7 to 1.4 percentage points
 
-The range reflects how many current SNAP households have income or assets above the federal limits. The lower figures reweight PolicyEngine's SNAP caseload to match the shares above those limits in USDA's quality control data: 5.4% above an income limit and 11.5% above only the asset limit. The upper figures use the caseload as calibrated in our data, where the shares are 21% and 19%. USDA's Regulatory Impact Analysis (RIA) estimates a $14.3 billion reduction in federal and state SNAP benefits and 3.2 million households losing SNAP in fiscal year 2029, 9% below the lower end of our range. The [comparison section](#comparison-with-usdas-estimates) breaks down the difference.
+The range compares two assumptions about SNAP caseload composition. At the lower end, we reweight PolicyEngine's SNAP caseload to match USDA's estimated shares above the federal limits: 5.4% above an income limit and 11.5% above only the asset limit. At the upper end, we use the model's calibrated caseload, where the shares are 21% and 19%.
+
+USDA's Regulatory Impact Analysis (RIA) estimates a $14.3 billion reduction in federal and state SNAP benefits and 3.2 million households losing SNAP in fiscal year 2029. Its estimated benefit reduction falls 9% below our $15.7 billion reweighted estimate.
 
 ## The proposed rule
 
-Section 5(a) of the Food and Nutrition Act makes households in which every member receives TANF-funded benefits categorically eligible for SNAP. Categorical eligibility deems a household to meet SNAP's income and asset limits; benefits still follow the regular SNAP formula. Current regulations at 7 CFR 273.2(j)(2) let three groups of TANF benefits confer categorical eligibility:
+Section 5(a) of the Food and Nutrition Act makes households in which every member receives TANF-funded benefits categorically eligible for SNAP. SNAP treats categorically eligible households as meeting its income and asset limits and calculates their benefits using the regular formula. Current regulations at 7 CFR 273.2(j)(2) provide eligibility routes through TANF benefits, including those financed with state maintenance-of-effort (MOE) funds, and Supplemental Security Income (SSI).
 
 | Provision | Current rule | Proposed rule |
 |---|---|---|
@@ -21,26 +23,30 @@ Section 5(a) of the Food and Nutrition Act makes households in which every membe
 | 273.2(j)(2)(i)(D)-(E) | All members receive SSI, or all receive TANF and/or SSI | Kept, renumbered (B)-(C); "authorized to receive" removed |
 | 273.2(j)(2)(ix) | Ineligible non-citizens, ineligible students, members ineligible under the 7 CFR 273.7 work rules, and certain others are not counted as household members | Unchanged |
 
-States use the non-cash routes for BBCE: a household qualifies by receiving a brochure, a hotline number, or a referral funded with TANF money. According to the preamble, 46 states used BBCE as of December 2025; 41 of them set no asset limit, and 37 set gross income limits above SNAP's 130% limit, up to 200% of FPG.
+States use the non-cash routes for BBCE: a household qualifies by receiving a brochure, a hotline number, or a referral funded with TANF money. USDA reports that 46 state agencies used BBCE as of December 2025. Of these, 41 set no asset limit and 37 set gross income limits above SNAP's 130% limit, up to 200% of FPG.
 
-Under 45 CFR 260.31(a), TANF "assistance" covers cash, payments, vouchers and other benefits meant to meet ongoing basic needs, and some supportive services such as child care and transportation for families that are not employed. The preamble states that "for all practical purposes" TANF assistance recipients receive cash. Some news coverage has summarized the rule as requiring every member to receive TANF cash. The rule text says TANF "assistance", a slightly broader category, but the two readings produce the same model results because PolicyEngine does not model TANF-funded supportive services separately from cash TANF.
+Under 45 CFR 260.31(a), TANF "assistance" covers cash, payments, vouchers and other benefits for ongoing basic needs. It also includes some child care and transportation services for parents who are not employed. USDA states in the preamble that "for all practical purposes" TANF assistance recipients receive cash. PolicyEngine models cash TANF and does not separately model these supportive services.
 
-The rule keeps the "all members" requirement. A household qualifies only if every member receives TANF assistance or SSI. Members excluded under 273.2(j)(2)(ix), such as ineligible non-citizens and ineligible students, do not count against the test. A household that includes another adult who receives neither benefit, such as a grandparent outside the TANF case, would need to pass the regular SNAP income and asset tests.
+The proposal retains categorical eligibility for households in which every member receives TANF assistance or SSI. SNAP excludes members listed under 273.2(j)(2)(ix), such as ineligible non-citizens and ineligible students, from this test. A household that includes another adult who receives neither benefit, such as a grandparent outside the TANF case, would need to pass the regular SNAP income and asset tests.
 
 USDA's RIA assumes the rule takes effect on October 1, 2027, the start of fiscal year 2028. States would apply it at each household's next certification or recertification, so the rule would reach the full caseload in fiscal year 2029.
 
 ## How we model the rule
 
-PolicyEngine models BBCE through a TANF non-cash eligibility test that applies each state's gross income limit, net income test and asset limit. When a household passes that test, it qualifies for SNAP regardless of the federal limits. We modeled two versions of the rule:
+PolicyEngine models BBCE through a TANF non-cash eligibility test that applies each state's gross income limit, net income test and asset limit. A household that passes this test meets SNAP's financial eligibility rules even if it exceeds the federal limits.
 
-- **Removing BBCE**: we drop the non-cash TANF test from SNAP's categorical eligibility list. Households then qualify categorically only if every member receives SSI, or the household receives TANF cash.
-- **Cash TANF for every member**: we also require every member who counts toward the SNAP household to receive TANF cash or SSI. PolicyEngine computes TANF for the whole SPM unit, so we treat a member as a TANF recipient when the unit receives TANF and the member belongs to a tax unit with a child under 18.
+PolicyEngine treats each SPM unit, the resource-sharing unit used to measure poverty, as a SNAP household. We model two versions of the proposal:
 
-The two versions differ by $89 million in SNAP benefits, 0.3% of the total effect. With BBCE in place, applying the all-members test alone changes SNAP by $1 million. We report the first version below.
+- **Remove BBCE**: we remove the non-cash TANF test from SNAP's categorical eligibility rules. A household then qualifies categorically if every member receives SSI or the household receives TANF cash.
+- **Require cash TANF or SSI for every member**: we also require every member who counts toward the SNAP household to receive TANF cash or SSI. PolicyEngine calculates TANF for the whole SPM unit. We treat a member as a TANF recipient when the unit receives TANF and the member belongs to a tax unit with a child under 18.
 
-Households that lose categorical eligibility face the federal income and asset tests. The gross income limit is 130% of FPG, with an exception for households with an elderly or disabled member; the net income limit is 100% of FPG. Our 2029 estimates hold asset limits at their fiscal year 2027 values, $3,000, or $4,750 for households with an elderly or disabled member, as modeled in PolicyEngine US 2.137.9. USDA adjusts these limits for inflation each year; the estimates omit adjustments after fiscal year 2027. PolicyEngine counts bank accounts, stocks and bonds as SNAP assets.
+The two versions differ by $89 million in SNAP benefits, 0.3% of the total effect. With BBCE in place, applying the all-members test alone changes SNAP by $1 million. The headline estimates remove BBCE and retain the model's existing cash TANF eligibility test.
 
-We model calendar year 2029 to match the RIA's first full-effect year. The estimates are static: they assume no change in behavior, such as households spending down savings to stay under the asset limit.
+Households that lose categorical eligibility face the federal income and asset tests. The gross income limit is 130% of FPG, with an exception for households with an elderly or disabled member; the net income limit is 100% of FPG. PolicyEngine counts bank accounts, stocks and bonds as SNAP assets.
+
+Our 2029 estimates hold asset limits at their fiscal year 2027 values: $3,000, or $4,750 for households with an elderly or disabled member, as modeled in PolicyEngine US 2.137.9. USDA adjusts these limits for inflation each year. The estimates omit adjustments after fiscal year 2027.
+
+We model calendar year 2029 to compare with USDA's fiscal 2029 estimates. The estimates are static: they assume no change in behavior, such as households spending down savings to stay under the asset limit.
 
 ## Household impacts
 
@@ -52,7 +58,7 @@ Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,5
 {
   "type": "line",
   "title": "Figure 1: SNAP for a single parent of two in Philadelphia by earnings, 2029",
-  "subtitle": "Annual SNAP benefit for a single parent with children aged 5 and 3, $1,500 monthly rent and no savings",
+  "subtitle": "Annual SNAP benefit for a single parent with children aged 5 and 3, $1,500 monthly rent including utilities, and no savings",
   "xKey": "earnings",
   "xLabel": "Annual earnings",
   "yLabel": "Annual SNAP benefit",
@@ -825,7 +831,7 @@ Under current rules, the family's SNAP benefit phases out gradually and reaches 
 | $40,000 | $2,474 | $0 | $48,710 | $46,237 |
 | $45,000 | $674 | $0 | $54,482 | $53,808 |
 
-At $40,000 of earnings, the family's net income falls by $2,474, all of it SNAP; the 5-year-old's school meals do not change, because Pennsylvania covers the reduced-price copay. Between $37,000 and $38,500 of earnings, the proposed rule lowers the family's net income by $2,713 for $1,500 in added earnings.
+At $40,000 of annual earnings, the proposal reduces the family's net income by $2,474 through lower SNAP benefits. Pennsylvania covers the reduced-price copayment, so the 5-year-old keeps the same school meal benefit. Under the proposed rule, the family's net income falls by $2,713 when annual earnings increase by $1,500, from $37,000 to $38,500.
 
 ### Example 2: savings above $3,000
 
@@ -1389,9 +1395,11 @@ With a bank balance up to $3,000, the family keeps its $6,074 annual SNAP benefi
 
 ## National impacts
 
-The figures in this section come from PolicyEngine's SNAP caseload as calibrated, the upper end of the range. The [comparison section](#comparison-with-usdas-estimates) gives the lower-end figures.
+Our calibrated caseload produces a $29.5 billion SNAP reduction, the upper end of the headline range.
 
 ### Budget and participation
+
+PolicyEngine estimates changes to SNAP, school meals and the Special Supplemental Nutrition Program for Women, Infants, and Children (WIC).
 
 | Measure, 2029 | Value |
 |---|---|
@@ -1404,7 +1412,7 @@ The figures in this section come from PolicyEngine's SNAP caseload as calibrated
 
 In an average month of 2029, PolicyEngine projects 21.3 million SNAP units under current rules. The proposed rule ends SNAP for 8.6 million of them (40.2%): 4.5 million fail the gross or net income test, and 4.0 million pass both income tests but fail the asset test. Over the year, 8.6 million units lose all of their SNAP, an average of $3,352 each, and another 0.28 million lose SNAP for part of the year.
 
-PolicyEngine treats the SPM unit as the SNAP household. SPM units in the model's SNAP caseload average 2.8 people, against 1.9 people per household in USDA's fiscal 2029 baseline, so the 23.0 million people in losing units overstate the number of SNAP participants affected.
+Modeled SNAP units average 2.8 people, compared with 1.9 people per household in USDA's fiscal 2029 baseline. Counting all 23.0 million people in SPM units that lose SNAP would overstate the number of SNAP participants affected.
 
 ### Poverty
 
@@ -1415,17 +1423,19 @@ PolicyEngine treats the SPM unit as the SNAP household. SPM units in the model's
 | Adults 18-64 | 13.18% | 13.57% | +0.40 pp (+3.0%) | 0.82 million |
 | Seniors 65+ | 10.65% | 10.73% | +0.09 pp (+0.8%) | 0.05 million |
 
-Deep poverty, below half the SPM threshold, rises from 3.04% to 3.46% of people (+13.8%) and from 2.20% to 2.98% of children (+35.5%).
+The share of people in deep poverty, below half the SPM threshold, rises from 3.04% to 3.46% (+13.8%). Among children, it rises from 2.20% to 2.98% (+35.5%).
 
-With the caseload reweighted to USDA's quality control shares, SPM poverty rises by 0.29 percentage points (1.0 million people) and child SPM poverty by 0.75 percentage points (0.6 million children). The reweighting also raises the baseline poverty rate from 13.9% to 14.6%, because it shifts weight toward lower-income SNAP households, so these lower-end poverty figures are approximate.
+With the caseload reweighted to USDA's estimated income and asset shares, the proposal raises SPM poverty by 0.29 percentage points (1.0 million people) and child SPM poverty by 0.75 percentage points (0.6 million children). These poverty changes are approximate. The weight adjustments give lower-income SNAP households more weight and raise the baseline poverty rate from 13.9% to 14.6%.
 
 ### Distributional impact
+
+We rank people by their household's net income under current rules and divide the population into ten groups of equal size, or income deciles.
 
 ```chart
 {
   "type": "bar",
   "title": "Figure 3: Average change in household net income by income decile, 2029",
-  "subtitle": "Proposed rule compared with current law, PolicyEngine caseload as calibrated",
+  "subtitle": "Proposed rule compared with current law, PolicyEngine's calibrated caseload",
   "xKey": "decile",
   "yLabel": "Average change per household",
   "series": [
@@ -1492,18 +1502,18 @@ The bottom decile loses $854 per household on average, 3.0% of its net income; 2
 
 ### States
 
-The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 43 states, including DC, and models no BBCE in eight: Arkansas, Kansas, Mississippi, Missouri, South Dakota, Tennessee, Utah and Wyoming.
+Under the modeled reform, SNAP benefits change only in jurisdictions that use BBCE. PolicyEngine models BBCE in 43 jurisdictions, including the District of Columbia, and no BBCE in eight states: Arkansas, Kansas, Mississippi, Missouri, South Dakota, Tennessee, Utah and Wyoming.
 
-| States | SNAP, current rules | Change in SNAP | Share of SNAP units losing SNAP |
+| Jurisdictions | SNAP, current rules | Change in SNAP | Share of SNAP units losing SNAP |
 |---|---|---|---|
-| BBCE states (43) | $93.3 billion | -$29.5 billion (-31.6%) | 42.6% |
+| BBCE jurisdictions (43) | $93.3 billion | -$29.5 billion (-31.6%) | 42.6% |
 | Non-BBCE states (8) | $6.0 billion | $0 | 0% |
 
 ```chart
 {
   "type": "stateMap",
   "title": "Figure 4: Share of SNAP households losing SNAP by state, 2029",
-  "subtitle": "SNAP units losing SNAP in an average month under the proposed rule, PolicyEngine caseload as calibrated",
+  "subtitle": "SNAP units losing SNAP in an average month under the proposed rule, PolicyEngine's calibrated caseload",
   "stateKey": "state",
   "valueKey": "share",
   "data": [
@@ -1745,15 +1755,17 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
 }
 ```
 
-California (-$5.0 billion), Florida (-$2.7 billion), Illinois (-$2.0 billion), New York (-$2.0 billion) and Pennsylvania (-$1.8 billion) account for 45% of the national reduction. The effect is smaller in states whose BBCE programs already apply limits closer to the federal ones. Texas sets a 165% gross income limit and a $5,000 asset limit, so its SNAP falls by 13.5%. Indiana and Idaho set 130% gross income limits and $5,000 asset limits, and their SNAP falls by 10.0% and 5.5%.
+California (-$5.0 billion), Florida (-$2.7 billion), Illinois (-$2.0 billion), New York (-$2.0 billion) and Pennsylvania (-$1.8 billion) account for 45% of the national reduction. The effect is smaller in states whose BBCE programs already apply limits closer to the federal ones. Texas sets a 165% gross income limit and a $5,000 asset limit; SNAP benefits in Texas fall by 13.5%. Indiana and Idaho set 130% gross income limits and $5,000 asset limits. SNAP benefits fall by 10.0% in Indiana and 5.5% in Idaho.
 
 The RIA counts Arkansas among the BBCE states, with a $5,500 resource limit; PolicyEngine does not model Arkansas's BBCE program and shows no change there. The RIA shows no change in Alaska, which adopted BBCE in July 2025, after the data years USDA used.
 
 ## Comparison with USDA's estimates
 
-PolicyEngine's caseload is close to USDA's in size but differs in composition. Averaged over fiscal 2029, 21% of the model's SNAP units have incomes above the federal gross or net limit, against 5.4% of households in USDA's analysis of SNAP quality control (QC) data. Another 19% of the model's units pass the income tests but hold assets above the federal limit, against USDA's 11.5%. Benefit amounts are close: units that fail an income test receive $91 a month in the model and $110 in USDA's data, and the caseload as a whole receives $387 per unit per month in the model and $401 in USDA's baseline.
+PolicyEngine and USDA project caseloads of similar size, with different income and asset profiles. Averaged over fiscal 2029, 21% of the model's SNAP units have incomes above the federal gross or net limit, compared with 5.4% of households in USDA's SNAP quality control data. Another 19% of the model's units pass the income tests but hold assets above the federal limit, compared with USDA's 11.5%.
 
-The table below moves from PolicyEngine's calendar 2029 estimate to USDA's fiscal 2029 estimate one difference at a time.
+Units that fail an income test receive $91 a month in the model and $110 in USDA's data. Across the full caseload, monthly benefits average $387 per unit in the model and $401 in USDA's baseline.
+
+Adjusting the analysis period, baseline caseload, benefit totals and income and asset shares reduces PolicyEngine's estimated SNAP reduction from $29.5 billion to USDA's $14.3 billion.
 
 | Step | SNAP cut | Households losing SNAP (average month) |
 |---|---|---|
@@ -1766,31 +1778,31 @@ The table below moves from PolicyEngine's calendar 2029 estimate to USDA's fisca
 | Set the share above only the asset limit to USDA's 11.5% | $14.3 billion | 3.2 million |
 | USDA RIA, fiscal 2029 | $14.3 billion | 3.2 million |
 
-The share of SNAP households above the federal limits accounts for $13.0 billion of the $15.2 billion difference and 4.4 million of the 5.4 million household difference. The result depends on the order of the steps, but the composition steps dominate in any order. Three features of the data raise those shares:
+Differences in the shares of households above the federal limits account for $13.0 billion of the $15.2 billion benefit difference and 4.4 million of the 5.4 million household difference. Each contribution depends on the order of the adjustments. Three features of the data affect those shares:
 
-- **Take-up.** The Microcosm dataset assigns SNAP to every household that reported SNAP in the Current Population Survey. It then selects other eligible households at random until each state's caseload matches USDA's count, without regard to benefit size. Households eligible only through BBCE, which tend to qualify for smaller benefits, are therefore as likely to enroll as other eligible households. These selected households make up 63% of the modeled caseload; 45% of them lose SNAP under the rule, against 33% of households that reported SNAP.
+- **Take-up.** The Microcosm dataset assigns SNAP to every household that reported SNAP in the Current Population Survey. It then selects other eligible households at random until each state's caseload matches USDA's count, without regard to benefit size. Within each state, the model gives eligible non-reporting households the same selection probability. This includes BBCE-only households, which tend to qualify for smaller benefits. These selected households make up 63% of the modeled caseload; 45% of them lose SNAP under the rule, against 33% of households that reported SNAP.
 - **Assets.** Microcosm imputes bank, stock and bond holdings. Among modeled SNAP units, 27% hold more than $3,000 in these assets. USDA's resource estimate relies on December 2019 Survey of Income and Program Participation data.
 - **Annual income.** The model spreads each household's annual income evenly across the year. SNAP households apply and recertify based on current monthly income.
 
-Alternative estimates bracket the result:
+### Estimates under alternative caseload assumptions
 
-| Estimate | SNAP cut | Households losing SNAP |
+| Estimate | SNAP cut | Households losing SNAP (average month) |
 |---|---|---|
-| PolicyEngine caseload as calibrated, calendar 2029 | $29.5 billion | 8.6 million |
+| PolicyEngine's calibrated caseload, calendar 2029 | $29.5 billion | 8.6 million |
 | Loss rates of households that reported SNAP, applied to USDA's baseline | $23.0 billion | 6.3 million |
-| PolicyEngine caseload reweighted to USDA's QC income and asset shares | $15.7 billion | 3.5 million |
+| PolicyEngine caseload reweighted to USDA's estimated income and asset shares | $15.7 billion | 3.5 million |
 | Same, scaled to USDA's caseload size | $14.1 billion | 3.2 million |
 | USDA RIA, fiscal 2029 | $14.3 billion | 3.2 million |
 
-State patterns also differ. Across the 43 BBCE states, the correlation between PolicyEngine's and USDA's state shares of households losing SNAP is 0.11. The state chart and decile chart above use the caseload as calibrated; with the reweighted caseload, losses still concentrate in the bottom three deciles and occur only in BBCE states, but at roughly half the level.
+Across the 43 jurisdictions where PolicyEngine models BBCE, the correlation between PolicyEngine's and USDA's shares of households losing SNAP is 0.11. The state and decile charts use the calibrated caseload. Reweighting to USDA's estimated income and asset shares reduces the losses to roughly half their calibrated levels. Losses still concentrate in the bottom three deciles and occur only in BBCE jurisdictions.
 
-USDA's own sensitivity analysis ranges from an $11.0 billion reduction, if a quarter of households above the asset limit spend down their savings, to $17.7 billion, if survey data understate assets.
+USDA estimates an $11.0 billion reduction if a quarter of households above the asset limit spend down their savings, and a $17.7 billion reduction if survey data understate assets.
 
 ## What the estimates exclude
 
-- **"Authorized to receive."** The rule would stop counting households that are approved for TANF or SSI but not yet paid. Neither USDA nor PolicyEngine quantifies this change.
-- **TANF supportive services.** PolicyEngine does not model TANF-funded child care or transportation for families that are not employed, which count as TANF assistance.
-- **TANF reporting.** The dataset does not flag reported TANF receipt; PolicyEngine computes TANF cash for 0.78 million SPM units in 2029. Because TANF households rarely exceed federal limits, this affects the estimates little.
+- **"Authorized to receive."** The proposal would require receipt of TANF or SSI benefits to confer categorical eligibility; approval alone would no longer qualify. Neither USDA nor PolicyEngine quantifies this change.
+- **TANF supportive services.** PolicyEngine does not model TANF-funded child care or transportation for parents who are not employed, which count as TANF assistance.
+- **TANF reporting.** The dataset does not flag reported TANF receipt; PolicyEngine computes TANF cash for 0.78 million SPM units in 2029.
 - **Vehicles.** PolicyEngine's SNAP asset test counts bank accounts, stocks and bonds, and leaves out vehicles, which some states count.
 - **Behavior.** The estimates assume no spend-down of savings, no change in earnings, and no change in application rates among households that remain eligible.
 - **Administrative costs.** USDA estimates $1.2 billion in added federal and state administrative costs over fiscal years 2027-2031, which the model does not capture.
@@ -1798,7 +1810,11 @@ USDA's own sensitivity analysis ranges from an $11.0 billion reduction, if a qua
 
 ## Methodology
 
-We used PolicyEngine US 2.137.9 with policyengine-core 3.36.1, run through the policyengine 6.19.0 package on the Microcosm dataset `populace_us_2024` (build populace-us-2024-spm-20260915), projected to 2029. The policyengine 6.19.0 bundle certifies this dataset for PolicyEngine US 2.2.1; these results apply the newer model rules to the same data and SPM thresholds. All results are static and compare the proposed rule with current law in 2029. The lower end of the range keeps each household's modeled SNAP outcome and multiplies the survey weights of SNAP households by 0.25 if they fail an income test, 0.60 if they fail only the asset test, and 1.40 if they meet all federal limits, which preserves the caseload's size and matches USDA's quality control shares. The lower-end SNAP figures cover fiscal 2029 months and exclude Alaska, to match USDA's coverage; the lower-end poverty figures apply the same weights to calendar 2029.
+We use PolicyEngine US 2.137.9 with policyengine-core 3.36.1 through the policyengine 6.19.0 package and project the Microcosm dataset `populace_us_2024` (build `populace-us-2024-spm-20260915`) to 2029. The policyengine 6.19.0 bundle certifies this dataset for PolicyEngine US 2.2.1. It does not certify the model and data combination used here. Our estimates apply the newer model rules to the same data and SPM thresholds. We compare the proposal with current law in 2029 and assume no behavioral responses.
+
+For the reweighted estimates, we keep each household's modeled SNAP outcome and adjust the survey weights of SNAP households. We multiply weights by 0.25 for households that fail an income test, 0.60 for those that fail only the asset test, and 1.40 for those that meet all federal limits. These adjustments preserve the caseload's size and match USDA's estimated income and asset shares.
+
+The reweighted SNAP estimates cover fiscal 2029 and exclude Alaska to match USDA's coverage. The reweighted poverty estimates apply the same weights to calendar 2029.
 
 ## References
 
