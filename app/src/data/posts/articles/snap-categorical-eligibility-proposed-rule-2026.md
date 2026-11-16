@@ -830,6 +830,8 @@ Under current rules, the family's SNAP benefit phases out gradually and reaches 
 
 At $40,000 of annual earnings, the proposal reduces the family's net income by $2,474 through lower SNAP benefits. Pennsylvania covers the reduced-price lunch copayment at participating schools, so the 5-year-old keeps the same school meal benefit. Under the proposed rule, the family's net income falls by $2,713 when annual earnings increase by $1,500, from $37,000 to $38,500.
 
+Between $40,000 and $45,000 of earnings, the family's net income rises by more than $5,000 under both sets of rules. Pennsylvania's Medicaid covers adults with income up to 138% of FPG, about $40,700 for this family in 2029. Above that income, the parent qualifies for the premium tax credit, which PolicyEngine counts in net income: $4,773 at $45,000 of earnings. Net income excludes the value of Medicaid coverage and the parent's marketplace premium.
+
 ### Example 2: savings above $3,000
 
 The same family with $30,000 of earnings stays below 130% of FPG. Under the proposed rule, its eligibility then depends on its savings.
