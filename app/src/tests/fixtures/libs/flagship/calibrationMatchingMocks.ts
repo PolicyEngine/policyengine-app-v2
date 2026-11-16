@@ -1,6 +1,6 @@
 import type { CalibrationMatches, CalibrationTargetRow } from '@/libs/flagship/calibrationMatching';
 
-export const POPULACE_RELEASE_ID =
+export const MICROCOSM_RELEASE_ID =
   'populace-us-2024-buildp-sparse-rmloss100-cae8640-20260728T011454Z';
 
 const soiRow = (
@@ -76,7 +76,7 @@ export const mockCtcLimitingMatch = {
 };
 
 export const mockCalibrationMatches: CalibrationMatches = {
-  releaseId: POPULACE_RELEASE_ID,
+  releaseId: MICROCOSM_RELEASE_ID,
   geography: 'US',
   modelVersion: '1.808.0',
   reachedCount: 12,

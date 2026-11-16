@@ -10,11 +10,11 @@ import {
   type GeographyCalibrationFit,
 } from '@/libs/flagship/calibrationMatching';
 import {
+  MICROCOSM_RELEASE_ID,
   mockCalibrationMatches,
   mockCtcLimitingMatch,
   mockDcFitRows,
   mockDcIncomeTaxRow,
-  POPULACE_RELEASE_ID,
 } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import {
   mockReportValidationSnapshot,
@@ -50,7 +50,7 @@ vi.mock('@/libs/flagship/calibrationMatching', async (importOriginal) => ({
 
 /** DC's overall fit over its five fixture targets, the three worst listed. */
 const dcFit = (): GeographyCalibrationFit =>
-  summarizeGeographyFit('DC', POPULACE_RELEASE_ID, mockDcFitRows, 3);
+  summarizeGeographyFit('DC', MICROCOSM_RELEASE_ID, mockDcFitRows, 3);
 
 beforeEach(() => {
   mockCalibrationFitForGeography.mockReset();
@@ -344,7 +344,7 @@ describe('CalibrationMatchSection', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
 
     expect(screen.getByText('Data release')).toBeInTheDocument();
-    expect(screen.getByText(`${POPULACE_RELEASE_ID} · policyengine-us 1.808.0`)).not.toBeVisible();
+    expect(screen.getByText(`${MICROCOSM_RELEASE_ID} · policyengine-us 1.808.0`)).not.toBeVisible();
   });
 });
 

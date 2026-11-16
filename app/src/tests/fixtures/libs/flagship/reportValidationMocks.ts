@@ -1,5 +1,5 @@
 import type { ReportValidationSnapshot } from '@/libs/flagship/reportValidation';
-import { mockCalibrationMatches, POPULACE_RELEASE_ID } from './calibrationMatchingMocks';
+import { MICROCOSM_RELEASE_ID, mockCalibrationMatches } from './calibrationMatchingMocks';
 
 export const MATCHED_AT = '2026-09-07T00:30:00.000Z';
 export const NEWER_RELEASE_ID = 'populace-us-2024-buildp-sparse-rmloss100-f1e2d3c-20260914T010000Z';
@@ -10,7 +10,7 @@ export const mockReportValidationSnapshot: ReportValidationSnapshot = {
   matchedAt: MATCHED_AT,
   mapModelVersion: mockCalibrationMatches.modelVersion,
   calibration: {
-    releaseId: POPULACE_RELEASE_ID,
+    releaseId: MICROCOSM_RELEASE_ID,
     geography: 'US',
     reachedCount: mockCalibrationMatches.reachedCount,
     matches: mockCalibrationMatches.matches.map((match) => ({

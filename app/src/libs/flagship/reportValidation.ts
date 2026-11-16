@@ -1,7 +1,7 @@
 /**
  * The validation snapshot pinned to a report: what the calibration and
  * scorecard checks were matched against when the report was first
- * viewed. Later populace releases and model versions make that stored
+ * viewed. Later Microcosm releases and model versions make that stored
  * comparison historical, and the report can say so instead of implying
  * the check still holds — the same drift idea the tracker uses for bill
  * validations, applied to every report.
