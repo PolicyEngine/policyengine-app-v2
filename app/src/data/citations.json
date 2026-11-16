@@ -1,5 +1,141 @@
 [
   {
+    "title": "The 2026 Budget Statement: Fiscal and Distributional Effects – UKMOD Projections",
+    "outlet": "Centre for Microsimulation and Policy Analysis, University of Essex",
+    "date": "2026-11-12",
+    "url": "https://www.iser.essex.ac.uk/research/publications/working-papers/cempa/cempa13-26",
+    "image": "iser-cempa-budget-2026.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "The U.S. Retirement System: Fast Facts",
+    "outlet": "Economic Innovation Group",
+    "date": "2026-09-18",
+    "url": "https://eig.org/retirement-fast-facts/",
+    "image": "eig-retirement-fast-facts.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "State Tax Liability and Post-Tax Income Estimates by State using the Current Population Survey Annual Social and Economic Supplement Tax Model",
+    "outlet": "U.S. Census Bureau",
+    "date": "2026-09-15",
+    "url": "https://www2.census.gov/library/working-papers/2026/demo/sehsd-wp2026-19.pdf",
+    "image": "census-state-tax-liability-2026.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Thirty Years of Temporary Assistance for Needy Families: What Changed, What Didn't, and What It Means for Today's Work Requirement Debates",
+    "outlet": "CLASP",
+    "date": "2026-08-31",
+    "url": "https://www.clasp.org/wp-content/uploads/2026/08/working-paper-TANF30_August-2026.pdf",
+    "image": "clasp-tanf-30-years.jpg",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "The MyFriendBen Benefits Screener: Findings from Implementation in Colorado and North Carolina",
+    "outlet": "Urban Institute",
+    "date": "2026-08-25",
+    "url": "https://www.urban.org/sites/default/files/2026-08/The_MyFriendBen_Benefits_Screener.pdf",
+    "image": "urban-myfriendben-screener.jpg",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "New Approaches to Social Security Benefit Taxation",
+    "outlet": "Committee for a Responsible Federal Budget",
+    "date": "2026-07-30",
+    "url": "https://www.crfb.org/papers/new-approaches-social-security-benefit-taxation",
+    "image": "crfb-benefit-taxation.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Summary of Methodological Updates: Distribution of Personal Income by State, July 2026 Release",
+    "outlet": "U.S. Bureau of Economic Analysis",
+    "date": "2026-07-16",
+    "url": "https://www.bea.gov/sites/default/files/2026-07/Summary%20of%20Methodological%20Updates%20to%20Distribution%20of%20Personal%20Income%20by%20State-July26.pdf",
+    "image": "bea-dpi-state-methodology-2026.jpg",
+    "tags": ["us", "technical"]
+  },
+  {
+    "title": "Bridging the Information Gap: How Organizations Can Assess and Use Benefits Screeners",
+    "outlet": "Aspen Institute",
+    "date": "2026-07-01",
+    "url": "https://www.aspeninstitute.org/wp-content/uploads/2026/07/bridging-the-gap-LF-6.23.26R.pdf",
+    "image": "aspen-benefits-screeners.jpg",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Defining top wealth and income thresholds for U.S. tax policy design and analysis",
+    "outlet": "Washington Center for Equitable Growth",
+    "date": "2026-05-27",
+    "url": "https://equitablegrowth.org/research-paper/defining-top-wealth-and-income-thresholds-for-u-s-tax-policy-design-and-analysis/",
+    "image": "equitable-growth-top-thresholds.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "California Billionaires: Wealth, Taxes, and Wealth Tax Revenue Estimates",
+    "outlet": "National Bureau of Economic Research",
+    "date": "2026-05-25",
+    "url": "https://www.nber.org/system/files/working_papers/w35218/w35218.pdf",
+    "image": "nber-california-billionaires.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Child Tax Credit expansion options for working families",
+    "outlet": "Niskanen Center",
+    "date": "2025-06-25",
+    "url": "https://www.niskanencenter.org/child-tax-credit-expansion-options-for-working-families/",
+    "image": "niskanen-ctc-expansion-options.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Rules as Code for a More Transparent and Efficient Global Economy",
+    "outlet": "Think7 (T7)",
+    "date": "2025-04-02",
+    "url": "https://www.think7.org/documents/3386/T7_TF2_Rapson_et_al.pdf",
+    "image": "t7-rules-as-code.jpg",
+    "tags": ["global", "technical"]
+  },
+  {
+    "title": "Survey of overseas trends in the use of digital technology in the legislative drafting process (in Japanese)",
+    "outlet": "Digital Agency of Japan",
+    "date": "2025-03-31",
+    "url": "https://www.digital.go.jp/assets/contents/node/basic_page/field_ref_resources/7f49ac76-91f1-44ba-91bd-2114973fcc61/2fc433c3/20250530-policies_legal-practice_outline_01.pdf",
+    "image": "japan-digital-agency-legislative-drafting.jpg",
+    "tags": ["global", "technical"]
+  },
+  {
+    "title": "Rachel Reeves' 4 tax hikes set to cost British families over £1,000 per year",
+    "outlet": "Daily Express",
+    "date": "2025-03-29",
+    "url": "https://www.express.co.uk/finance/personalfinance/2034211/rachel-reevesl-tax-hikes-cost-british-families",
+    "image": "express-reeves-tax-hikes.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "HispanIA 2040: How artificial intelligence will improve our future",
+    "outlet": "Government of Spain, National Office of Foresight and Strategy",
+    "date": "2025-03-10",
+    "url": "https://futuros.gob.es/sites/default/files/2025-03/HispanIA-2040-Report-EN.pdf",
+    "image": "hispania-2040.jpg",
+    "tags": ["global", "technical"]
+  },
+  {
+    "title": "Tax Microsimulation at The Budget Lab",
+    "outlet": "The Budget Lab at Yale",
+    "date": "2024-04-12",
+    "url": "https://budgetlab.yale.edu/research/tax-microsimulation-budget-lab",
+    "image": "yale-budget-lab-tax-microsimulation.jpg",
+    "tags": ["us", "technical"]
+  },
+  {
+    "title": "Cost-of-living crisis: How does the Government's response compare to our proposal?",
+    "outlet": "Social Market Foundation",
+    "date": "2022-02-15",
+    "url": "https://www.smf.co.uk/commentary_podcasts/cost-of-living-crisis-response/",
+    "image": "smf-cost-of-living-response.jpg",
+    "tags": ["uk", "policy"]
+  },
+  {
     "title": "Universities UK's £6bn National Insurance proposal",
     "outlet": "Tax Policy Associates",
     "date": "2026-09-10",
