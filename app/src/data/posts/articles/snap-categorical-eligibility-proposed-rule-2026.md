@@ -2,11 +2,11 @@ On November 10, 2026, the U.S. Department of Agriculture (USDA) published a prop
 
 PolicyEngine estimates that in 2029, the first year USDA expects the rule to apply to the full caseload, it would:
 
-- Reduce SNAP benefits by $15 billion to $30 billion
-- End SNAP for 3.4 million to 8.1 million SNAP households in an average month
-- Raise the Supplemental Poverty Measure (SPM) poverty rate by 0.3 to 0.7 percentage points and the child SPM poverty rate by 0.8 to 1.6 percentage points
+- Reduce SNAP benefits by $16 billion to $29 billion
+- End SNAP for 3.5 million to 8.6 million SNAP households in an average month
+- Raise the Supplemental Poverty Measure (SPM) poverty rate by 0.3 to 0.6 percentage points and the child SPM poverty rate by 0.7 to 1.4 percentage points
 
-The range reflects how many current SNAP households have income or assets above the federal limits. The lower figures reweight PolicyEngine's SNAP caseload to match the shares above those limits in USDA's quality control data: 5.4% above an income limit and 11.5% above only the asset limit. The upper figures use the caseload as calibrated in our data, where each share is about 20%. USDA's Regulatory Impact Analysis (RIA) estimates a $14.3 billion reduction in federal and state SNAP benefits and 3.2 million households losing SNAP in fiscal year 2029, 7% below the lower end of our range. The [comparison section](#comparison-with-usdas-estimates) breaks down the difference.
+The range reflects how many current SNAP households have income or assets above the federal limits. The lower figures reweight PolicyEngine's SNAP caseload to match the shares above those limits in USDA's quality control data: 5.4% above an income limit and 11.5% above only the asset limit. The upper figures use the caseload as calibrated in our data, where the shares are 21% and 19%. USDA's Regulatory Impact Analysis (RIA) estimates a $14.3 billion reduction in federal and state SNAP benefits and 3.2 million households losing SNAP in fiscal year 2029, 9% below the lower end of our range. The [comparison section](#comparison-with-usdas-estimates) breaks down the difference.
 
 ## The proposed rule
 
@@ -38,7 +38,7 @@ PolicyEngine models BBCE through a TANF non-cash eligibility test that applies e
 
 The two versions differ by $89 million in SNAP benefits, 0.3% of the total effect. With BBCE in place, applying the all-members test alone changes SNAP by $1 million. We report the first version below.
 
-Households that lose categorical eligibility face the federal income and asset tests. The gross income limit is 130% of FPG, with an exception for households with an elderly or disabled member; the net income limit is 100% of FPG. Our 2029 estimates hold asset limits at $3,000, or $4,500 for households with an elderly or disabled member, as modeled in PolicyEngine US 2.2.1. USDA updates these limits annually; its FY2027 limits are $3,000 and $4,750. The estimates omit the FY2027 increase and later annual adjustments to the asset limits. PolicyEngine counts bank accounts, stocks and bonds as SNAP assets.
+Households that lose categorical eligibility face the federal income and asset tests. The gross income limit is 130% of FPG, with an exception for households with an elderly or disabled member; the net income limit is 100% of FPG. Our 2029 estimates hold asset limits at their fiscal year 2027 values, $3,000, or $4,750 for households with an elderly or disabled member, as modeled in PolicyEngine US 2.137.9. USDA adjusts these limits for inflation each year; the estimates omit adjustments after fiscal year 2027. PolicyEngine counts bank accounts, stocks and bonds as SNAP assets.
 
 We model calendar year 2029 to match the RIA's first full-effect year. The estimates are static: they assume no change in behavior, such as households spending down savings to stay under the asset limit.
 
@@ -46,7 +46,7 @@ We model calendar year 2029 to match the RIA's first full-effect year. The estim
 
 ### Example 1: earnings above 130% of FPG
 
-Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,500 a month in rent with no savings. Pennsylvania's BBCE program sets a gross income limit of 200% of FPG and no asset limit.
+Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,500 a month in rent with utilities included and no savings. Pennsylvania's BBCE program sets a gross income limit of 200% of FPG and no asset limit.
 
 ```chart
 {
@@ -60,588 +60,580 @@ Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,5
     {
       "key": "current",
       "name": "Current rules",
-      "color": "quinary"
+      "color": "quinary",
+      "step": true
     },
     {
       "key": "proposed",
       "name": "Proposed rule",
-      "color": "primary"
+      "color": "primary",
+      "step": true
     }
   ],
   "data": [
     {
       "earnings": 0,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 1000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 1500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 2000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 2500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 3000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 3500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 4000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 4500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 5000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 5500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 6000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 6500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 7000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 7500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 8000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 8500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 9000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 9500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 10000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 10500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 11000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 11500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 12000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 12500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 13000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 13500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 14000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 14500,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 15000,
-      "current": 10064,
-      "proposed": 10064
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 15500,
-      "current": 10001,
-      "proposed": 10001
+      "current": 10241,
+      "proposed": 10241
     },
     {
       "earnings": 16000,
-      "current": 9881,
-      "proposed": 9881
+      "current": 10142,
+      "proposed": 10142
     },
     {
       "earnings": 16500,
-      "current": 9761,
-      "proposed": 9761
+      "current": 10022,
+      "proposed": 10022
     },
     {
       "earnings": 17000,
-      "current": 9641,
-      "proposed": 9641
+      "current": 9902,
+      "proposed": 9902
     },
     {
       "earnings": 17500,
-      "current": 9521,
-      "proposed": 9521
+      "current": 9782,
+      "proposed": 9782
     },
     {
       "earnings": 18000,
-      "current": 9401,
-      "proposed": 9401
+      "current": 9662,
+      "proposed": 9662
     },
     {
       "earnings": 18500,
-      "current": 9281,
-      "proposed": 9281
+      "current": 9542,
+      "proposed": 9542
     },
     {
       "earnings": 19000,
-      "current": 9161,
-      "proposed": 9161
+      "current": 9422,
+      "proposed": 9422
     },
     {
       "earnings": 19500,
-      "current": 9041,
-      "proposed": 9041
+      "current": 9302,
+      "proposed": 9302
     },
     {
       "earnings": 20000,
-      "current": 8921,
-      "proposed": 8921
+      "current": 9182,
+      "proposed": 9182
     },
     {
       "earnings": 20500,
-      "current": 8801,
-      "proposed": 8801
+      "current": 9062,
+      "proposed": 9062
     },
     {
       "earnings": 21000,
-      "current": 8681,
-      "proposed": 8681
+      "current": 8942,
+      "proposed": 8942
     },
     {
       "earnings": 21500,
-      "current": 8561,
-      "proposed": 8561
+      "current": 8822,
+      "proposed": 8822
     },
     {
       "earnings": 22000,
-      "current": 8441,
-      "proposed": 8441
+      "current": 8702,
+      "proposed": 8702
     },
     {
       "earnings": 22500,
-      "current": 8321,
-      "proposed": 8321
+      "current": 8582,
+      "proposed": 8582
     },
     {
       "earnings": 23000,
-      "current": 8201,
-      "proposed": 8201
+      "current": 8462,
+      "proposed": 8462
     },
     {
       "earnings": 23500,
-      "current": 8081,
-      "proposed": 8081
+      "current": 8342,
+      "proposed": 8342
     },
     {
       "earnings": 24000,
-      "current": 7961,
-      "proposed": 7961
+      "current": 8216,
+      "proposed": 8216
     },
     {
       "earnings": 24500,
-      "current": 7841,
-      "proposed": 7841
+      "current": 8054,
+      "proposed": 8054
     },
     {
       "earnings": 25000,
-      "current": 7721,
-      "proposed": 7721
+      "current": 7874,
+      "proposed": 7874
     },
     {
       "earnings": 25500,
-      "current": 7601,
-      "proposed": 7601
+      "current": 7694,
+      "proposed": 7694
     },
     {
       "earnings": 26000,
-      "current": 7481,
-      "proposed": 7481
+      "current": 7514,
+      "proposed": 7514
     },
     {
       "earnings": 26500,
-      "current": 7361,
-      "proposed": 7361
+      "current": 7334,
+      "proposed": 7334
     },
     {
       "earnings": 27000,
-      "current": 7241,
-      "proposed": 7241
+      "current": 7154,
+      "proposed": 7154
     },
     {
       "earnings": 27500,
-      "current": 7121,
-      "proposed": 7121
+      "current": 6974,
+      "proposed": 6974
     },
     {
       "earnings": 28000,
-      "current": 7001,
-      "proposed": 7001
+      "current": 6794,
+      "proposed": 6794
     },
     {
       "earnings": 28500,
-      "current": 6881,
-      "proposed": 6881
+      "current": 6614,
+      "proposed": 6614
     },
     {
       "earnings": 29000,
-      "current": 6761,
-      "proposed": 6761
+      "current": 6434,
+      "proposed": 6434
     },
     {
       "earnings": 29500,
-      "current": 6641,
-      "proposed": 6641
+      "current": 6254,
+      "proposed": 6254
     },
     {
       "earnings": 30000,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "earnings": 30500,
-      "current": 6401,
-      "proposed": 6401
+      "current": 5894,
+      "proposed": 5894
     },
     {
       "earnings": 31000,
-      "current": 6281,
-      "proposed": 6281
+      "current": 5714,
+      "proposed": 5714
     },
     {
       "earnings": 31500,
-      "current": 6161,
-      "proposed": 6161
+      "current": 5534,
+      "proposed": 5534
     },
     {
       "earnings": 32000,
-      "current": 6041,
-      "proposed": 6041
+      "current": 5354,
+      "proposed": 5354
     },
     {
       "earnings": 32500,
-      "current": 5921,
-      "proposed": 5921
+      "current": 5174,
+      "proposed": 5174
     },
     {
       "earnings": 33000,
-      "current": 5801,
-      "proposed": 5801
+      "current": 4994,
+      "proposed": 4994
     },
     {
       "earnings": 33500,
-      "current": 5681,
-      "proposed": 5681
+      "current": 4814,
+      "proposed": 4814
     },
     {
       "earnings": 34000,
-      "current": 5561,
-      "proposed": 5561
+      "current": 4634,
+      "proposed": 4634
     },
     {
       "earnings": 34500,
-      "current": 5441,
-      "proposed": 5441
+      "current": 4454,
+      "proposed": 4454
     },
     {
       "earnings": 35000,
-      "current": 5321,
-      "proposed": 5321
+      "current": 4274,
+      "proposed": 4274
     },
     {
       "earnings": 35500,
-      "current": 5201,
-      "proposed": 5201
+      "current": 4094,
+      "proposed": 4094
     },
     {
       "earnings": 36000,
-      "current": 5081,
-      "proposed": 5081
+      "current": 3914,
+      "proposed": 3914
     },
     {
       "earnings": 36500,
-      "current": 4961,
-      "proposed": 4961
+      "current": 3734,
+      "proposed": 3734
     },
     {
       "earnings": 37000,
-      "current": 4841,
-      "proposed": 4841
+      "current": 3554,
+      "proposed": 3554
     },
     {
-      "earnings": 37164.0,
-      "current": 4805,
-      "proposed": 4805
+      "earnings": 37488.0,
+      "current": 3374,
+      "proposed": 3374
     },
     {
-      "earnings": 37164.01171875,
-      "current": 4805,
-      "proposed": 1259
+      "earnings": 37488.01,
+      "current": 3374,
+      "proposed": 894
     },
     {
-      "earnings": 37500,
-      "current": 4721,
-      "proposed": 1238
+      "earnings": 38376.0,
+      "current": 3059,
+      "proposed": 813
     },
     {
-      "earnings": 38000,
-      "current": 4601,
-      "proposed": 1208
-    },
-    {
-      "earnings": 38004.0,
-      "current": 4601,
-      "proposed": 1208
-    },
-    {
-      "earnings": 38004.01171875,
-      "current": 4601,
+      "earnings": 38376.01,
+      "current": 3059,
       "proposed": 0
     },
     {
       "earnings": 38500,
-      "current": 4481,
+      "current": 3014,
       "proposed": 0
     },
     {
       "earnings": 39000,
-      "current": 4361,
+      "current": 2834,
       "proposed": 0
     },
     {
       "earnings": 39500,
-      "current": 4241,
+      "current": 2654,
       "proposed": 0
     },
     {
       "earnings": 40000,
-      "current": 4121,
+      "current": 2474,
       "proposed": 0
     },
     {
       "earnings": 40500,
-      "current": 4001,
+      "current": 2294,
       "proposed": 0
     },
     {
       "earnings": 41000,
-      "current": 3881,
+      "current": 2114,
       "proposed": 0
     },
     {
       "earnings": 41500,
-      "current": 3761,
+      "current": 1934,
       "proposed": 0
     },
     {
       "earnings": 42000,
-      "current": 3641,
+      "current": 1754,
       "proposed": 0
     },
     {
       "earnings": 42500,
-      "current": 3521,
-      "proposed": 0
-    },
-    {
-      "earnings": 43000,
-      "current": 3401,
-      "proposed": 0
-    },
-    {
-      "earnings": 43500,
-      "current": 3281,
-      "proposed": 0
-    },
-    {
-      "earnings": 44000,
-      "current": 3161,
-      "proposed": 0
-    },
-    {
-      "earnings": 44500,
-      "current": 3041,
-      "proposed": 0
-    },
-    {
-      "earnings": 45000,
-      "current": 2921,
-      "proposed": 0
-    },
-    {
-      "earnings": 45500,
-      "current": 2801,
-      "proposed": 0
-    },
-    {
-      "earnings": 46000,
-      "current": 2681,
-      "proposed": 0
-    },
-    {
-      "earnings": 46500,
-      "current": 2561,
-      "proposed": 0
-    },
-    {
-      "earnings": 47000,
-      "current": 2441,
-      "proposed": 0
-    },
-    {
-      "earnings": 47500,
-      "current": 2321,
-      "proposed": 0
-    },
-    {
-      "earnings": 48000,
-      "current": 2201,
-      "proposed": 0
-    },
-    {
-      "earnings": 48500,
-      "current": 2081,
-      "proposed": 0
-    },
-    {
-      "earnings": 49000,
-      "current": 1961,
-      "proposed": 0
-    },
-    {
-      "earnings": 49500,
-      "current": 1841,
-      "proposed": 0
-    },
-    {
-      "earnings": 50000,
-      "current": 1718,
-      "proposed": 0
-    },
-    {
-      "earnings": 50500,
       "current": 1574,
       "proposed": 0
     },
     {
-      "earnings": 51000,
+      "earnings": 43000,
       "current": 1394,
       "proposed": 0
     },
     {
-      "earnings": 51500,
+      "earnings": 43500,
       "current": 1214,
       "proposed": 0
     },
     {
-      "earnings": 52000,
+      "earnings": 44000,
       "current": 1034,
       "proposed": 0
     },
     {
-      "earnings": 52500,
+      "earnings": 44500,
       "current": 854,
       "proposed": 0
     },
     {
-      "earnings": 53000,
+      "earnings": 45000,
       "current": 674,
       "proposed": 0
     },
     {
-      "earnings": 53500,
+      "earnings": 45500,
       "current": 494,
       "proposed": 0
     },
     {
-      "earnings": 54000,
+      "earnings": 46000,
       "current": 314,
       "proposed": 0
     },
     {
-      "earnings": 54500,
+      "earnings": 46500,
       "current": 134,
       "proposed": 0
     },
     {
+      "earnings": 47000,
+      "current": 39,
+      "proposed": 0
+    },
+    {
+      "earnings": 47500,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 48000,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 48500,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 49000,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 49500,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 50000,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 50500,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 51000,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 51500,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 52000,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 52500,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 53000,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 53500,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 54000,
+      "current": 0,
+      "proposed": 0
+    },
+    {
+      "earnings": 54500,
+      "current": 0,
+      "proposed": 0
+    },
+    {
       "earnings": 55000,
-      "current": 35,
+      "current": 0,
       "proposed": 0
     },
     {
@@ -797,15 +789,15 @@ Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,5
   ],
   "markers": [
     {
-      "x": 37164,
+      "x": 37488,
       "label": "Federal gross income limit (Jan–Sep)"
     },
     {
-      "x": 38004,
+      "x": 38376,
       "label": "Federal gross income limit (Oct–Dec)"
     },
     {
-      "x": 57170,
+      "x": 57670,
       "label": "200% of FPG (Pennsylvania BBCE limit, Jan–Sep)"
     }
   ],
@@ -819,21 +811,21 @@ Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,5
     "decimals": 0,
     "separator": true
   },
-  "source": "PolicyEngine US 2.2.1"
+  "source": "PolicyEngine US 2.137.9"
 }
 ```
 
-Under current rules, the family's SNAP benefit phases out gradually and reaches zero at about $55,000 of earnings, before the 200% limit. Under the proposed rule, the federal gross income test ends the benefit above the monthly limit. For this family, the model uses poverty guidelines of $28,585 from January through September 2029 and $29,225 from October. SNAP rounds the monthly gross income limit up to a whole dollar, giving limits of $3,097 and $3,167. With earnings spread evenly across the year, the family therefore loses nine months of SNAP once annual earnings exceed $37,164, and the remaining three months above $38,004.
+Under current rules, the family's SNAP benefit phases out gradually and reaches zero at about $47,500 of earnings, before the 200% limit. Under the proposed rule, the federal gross income test ends the benefit above the monthly limit. For this family, the model uses poverty guidelines of $28,835 from January through September 2029 and $29,516 from October. SNAP rounds the monthly gross income limit up to a whole dollar, giving limits of $3,124 and $3,198. With earnings spread evenly across the year, the family therefore loses nine months of SNAP once annual earnings exceed $37,488, and the remaining three months above $38,376.
 
 | Annual earnings | SNAP, current rules | SNAP, proposed rule | Net income, current rules | Net income, proposed rule |
 |---|---|---|---|---|
-| $30,000 | $6,521 | $6,521 | $46,563 | $46,563 |
-| $37,000 | $4,841 | $4,841 | $49,386 | $49,386 |
-| $38,500 | $4,481 | $0 | $49,867 | $45,249 |
-| $40,000 | $4,121 | $0 | $50,348 | $46,090 |
-| $50,000 | $1,718 | $0 | $53,435 | $51,580 |
+| $30,000 | $6,074 | $6,074 | $46,124 | $46,124 |
+| $37,000 | $3,554 | $3,554 | $48,109 | $48,109 |
+| $38,500 | $3,014 | $0 | $48,410 | $45,396 |
+| $40,000 | $2,474 | $0 | $48,710 | $46,237 |
+| $45,000 | $674 | $0 | $54,482 | $53,808 |
 
-At $40,000 of earnings, the family's net income falls by $4,258: $4,121 in SNAP and $138 in school meal value, because the 5-year-old moves from free to reduced-price meals once the household no longer receives SNAP. Between $37,000 and $38,500 of earnings, the proposed rule lowers the family's net income by $4,138 for $1,500 in added earnings.
+At $40,000 of earnings, the family's net income falls by $2,474, all of it SNAP; the 5-year-old's school meals do not change, because Pennsylvania covers the reduced-price copay. Between $37,000 and $38,500 of earnings, the proposed rule lowers the family's net income by $2,713 for $1,500 in added earnings.
 
 ### Example 2: savings above $3,000
 
@@ -864,512 +856,512 @@ The same family with $30,000 of earnings stays below 130% of FPG. Under the prop
   "data": [
     {
       "savings": 0,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 100,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 200,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 300,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 400,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 500,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 600,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 700,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 800,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 900,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1000,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1100,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1200,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1300,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1400,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1500,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1600,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1700,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1800,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 1900,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2000,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2100,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2200,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2300,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2400,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2500,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2600,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2700,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2800,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 2900,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
       "savings": 3000,
-      "current": 6521,
-      "proposed": 6521
+      "current": 6074,
+      "proposed": 6074
     },
     {
-      "savings": 3000.010009765625,
-      "current": 6521,
+      "savings": 3000.01,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 3100,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 3200,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 3300,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 3400,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 3500,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 3600,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 3700,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 3800,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 3900,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4000,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4100,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4200,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4300,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4400,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4500,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4600,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4700,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4800,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 4900,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5000,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5100,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5200,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5300,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5400,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5500,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5600,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5700,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5800,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 5900,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6000,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6100,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6200,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6300,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6400,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6500,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6600,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6700,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6800,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 6900,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7000,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7100,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7200,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7300,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7400,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7500,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7600,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7700,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7800,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 7900,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8000,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8100,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8200,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8300,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8400,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8500,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8600,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8700,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8800,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 8900,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9000,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9100,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9200,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9300,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9400,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9500,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9600,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9700,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9800,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 9900,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     },
     {
       "savings": 10000,
-      "current": 6521,
+      "current": 6074,
       "proposed": 0
     }
   ],
@@ -1389,11 +1381,11 @@ The same family with $30,000 of earnings stays below 130% of FPG. Under the prop
     "decimals": 0,
     "separator": true
   },
-  "source": "PolicyEngine US 2.2.1"
+  "source": "PolicyEngine US 2.137.9"
 }
 ```
 
-With a bank balance up to $3,000, the family keeps its $6,521 annual SNAP benefit. Above $3,000, the federal asset test ends SNAP, and the family's net income falls by $6,521.
+With a bank balance up to $3,000, the family keeps its $6,074 annual SNAP benefit. Above $3,000, the federal asset test ends SNAP, and the family's net income falls by $6,074.
 
 ## National impacts
 
@@ -1403,29 +1395,29 @@ The figures in this section come from PolicyEngine's SNAP caseload as calibrated
 
 | Measure, 2029 | Value |
 |---|---|
-| SNAP benefits, current rules | $99.0 billion |
-| SNAP benefits, proposed rule | $69.0 billion |
-| Change in SNAP benefits | -$29.9 billion (-30.2%) |
-| Change in school meal benefits | -$0.48 billion |
+| SNAP benefits, current rules | $99.3 billion |
+| SNAP benefits, proposed rule | $69.8 billion |
+| Change in SNAP benefits | -$29.5 billion (-29.7%) |
+| Change in school meal benefits | -$0.39 billion |
 | Change in WIC benefits | -$0.03 billion |
-| Change in household benefits | -$30.4 billion |
+| Change in household benefits | -$29.9 billion |
 
-In an average month of 2029, PolicyEngine projects 20.4 million SNAP units under current rules. The proposed rule ends SNAP for 8.1 million of them (39.7%): 4.1 million fail the gross or net income test, and 4.0 million pass both income tests but fail the asset test. Over the year, 8.0 million units lose all of their SNAP, an average of $3,662 each, and another 0.37 million lose SNAP for part of the year.
+In an average month of 2029, PolicyEngine projects 21.3 million SNAP units under current rules. The proposed rule ends SNAP for 8.6 million of them (40.2%): 4.5 million fail the gross or net income test, and 4.0 million pass both income tests but fail the asset test. Over the year, 8.6 million units lose all of their SNAP, an average of $3,352 each, and another 0.28 million lose SNAP for part of the year.
 
-PolicyEngine treats the SPM unit as the SNAP household. SPM units in the model's SNAP caseload average 2.8 people, against 1.9 people per household in USDA's fiscal 2029 baseline, so the 21.9 million people in losing units overstate the number of SNAP participants affected.
+PolicyEngine treats the SPM unit as the SNAP household. SPM units in the model's SNAP caseload average 2.8 people, against 1.9 people per household in USDA's fiscal 2029 baseline, so the 23.0 million people in losing units overstate the number of SNAP participants affected.
 
 ### Poverty
 
 | Group | SPM poverty, current rules | SPM poverty, proposed rule | Change | People entering poverty |
 |---|---|---|---|---|
-| All people | 13.61% | 14.29% | +0.68 pp (+5.0%) | 2.39 million |
-| Children under 18 | 18.22% | 19.85% | +1.63 pp (+9.0%) | 1.29 million |
-| Adults 18-64 | 12.90% | 13.37% | +0.46 pp (+3.6%) | 0.97 million |
-| Seniors 65+ | 10.18% | 10.40% | +0.21 pp (+2.1%) | 0.13 million |
+| All people | 13.88% | 14.45% | +0.58 pp (+4.2%) | 2.02 million |
+| Children under 18 | 18.29% | 19.74% | +1.45 pp (+7.9%) | 1.14 million |
+| Adults 18-64 | 13.18% | 13.57% | +0.40 pp (+3.0%) | 0.82 million |
+| Seniors 65+ | 10.65% | 10.73% | +0.09 pp (+0.8%) | 0.05 million |
 
-Deep poverty, below half the SPM threshold, rises from 3.11% to 3.60% of people (+15.8%) and from 2.50% to 3.28% of children (+31.3%).
+Deep poverty, below half the SPM threshold, rises from 3.04% to 3.46% of people (+13.8%) and from 2.20% to 2.98% of children (+35.5%).
 
-With the caseload reweighted to USDA's quality control shares, SPM poverty rises by 0.34 percentage points (1.2 million people) and child SPM poverty by 0.81 percentage points (0.6 million children). The reweighting also raises the baseline poverty rate from 13.6% to 14.3%, because it shifts weight toward lower-income SNAP households, so these lower-end poverty figures are approximate.
+With the caseload reweighted to USDA's quality control shares, SPM poverty rises by 0.29 percentage points (1.0 million people) and child SPM poverty by 0.75 percentage points (0.6 million children). The reweighting also raises the baseline poverty rate from 13.9% to 14.6%, because it shifts weight toward lower-income SNAP households, so these lower-end poverty figures are approximate.
 
 ### Distributional impact
 
@@ -1446,43 +1438,43 @@ With the caseload reweighted to USDA's quality control shares, SPM poverty rises
   "data": [
     {
       "decile": "1",
-      "change": -882
+      "change": -854
     },
     {
       "decile": "2",
-      "change": -515
+      "change": -509
     },
     {
       "decile": "3",
-      "change": -335
+      "change": -331
     },
     {
       "decile": "4",
-      "change": -152
+      "change": -145
     },
     {
       "decile": "5",
-      "change": -62
+      "change": -76
     },
     {
       "decile": "6",
-      "change": -23
+      "change": -32
     },
     {
       "decile": "7",
-      "change": -14
+      "change": -19
     },
     {
       "decile": "8",
-      "change": -10
+      "change": -8
     },
     {
       "decile": "9",
-      "change": -13
+      "change": -5
     },
     {
       "decile": "10",
-      "change": -28
+      "change": -27
     }
   ],
   "format": {
@@ -1492,11 +1484,11 @@ With the caseload reweighted to USDA's quality control shares, SPM poverty rises
     "signed": true
   },
   "legend": false,
-  "source": "PolicyEngine US 2.2.1, Microcosm populace_us_2024"
+  "source": "PolicyEngine US 2.137.9, Microcosm populace_us_2024"
 }
 ```
 
-The bottom decile loses $882 per household on average, 3.1% of its net income; 27% of people in that decile live in households whose net income falls. Losses shrink to $62 per household in the fifth decile. The top three deciles lose $10 to $28 per household on average. About half of the losing households in those deciles contain more than one SPM unit, such as an adult relative or roommate whose own SPM unit receives SNAP within a higher-income household.
+The bottom decile loses $854 per household on average, 3.0% of its net income; 27% of people in that decile live in households whose net income falls. Losses shrink to $76 per household in the fifth decile. The top three deciles lose $5 to $27 per household on average. About half of the losing households in those deciles contain more than one SPM unit, such as an adult relative or roommate whose own SPM unit receives SNAP within a higher-income household.
 
 ### States
 
@@ -1504,8 +1496,8 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
 
 | States | SNAP, current rules | Change in SNAP | Share of SNAP units losing SNAP |
 |---|---|---|---|
-| BBCE states (43) | $93.2 billion | -$29.9 billion (-32.1%) | 42.0% |
-| Non-BBCE states (8) | $5.8 billion | $0 | 0% |
+| BBCE states (43) | $93.3 billion | -$29.5 billion (-31.6%) | 42.6% |
+| Non-BBCE states (8) | $6.0 billion | $0 | 0% |
 
 ```chart
 {
@@ -1517,11 +1509,11 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
   "data": [
     {
       "state": "AK",
-      "share": 41.8
+      "share": 45.8
     },
     {
       "state": "AL",
-      "share": 23.7
+      "share": 26.7
     },
     {
       "state": "AR",
@@ -1529,51 +1521,51 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
     },
     {
       "state": "AZ",
-      "share": 47.8
+      "share": 46.4
     },
     {
       "state": "CA",
-      "share": 42.0
+      "share": 50.8
     },
     {
       "state": "CO",
-      "share": 47.3
+      "share": 51.8
     },
     {
       "state": "CT",
-      "share": 48.9
+      "share": 43.0
     },
     {
       "state": "DC",
-      "share": 51.7
+      "share": 55.8
     },
     {
       "state": "DE",
-      "share": 37.4
+      "share": 37.7
     },
     {
       "state": "FL",
-      "share": 49.7
+      "share": 46.5
     },
     {
       "state": "GA",
-      "share": 33.0
+      "share": 34.0
     },
     {
       "state": "HI",
-      "share": 47.0
+      "share": 42.5
     },
     {
       "state": "IA",
-      "share": 61.0
+      "share": 53.0
     },
     {
       "state": "ID",
-      "share": 5.3
+      "share": 5.7
     },
     {
       "state": "IL",
-      "share": 52.0
+      "share": 48.1
     },
     {
       "state": "IN",
@@ -1585,15 +1577,15 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
     },
     {
       "state": "KY",
-      "share": 47.7
+      "share": 38.8
     },
     {
       "state": "LA",
-      "share": 35.3
+      "share": 35.2
     },
     {
       "state": "MA",
-      "share": 45.3
+      "share": 45.5
     },
     {
       "state": "MD",
@@ -1601,15 +1593,15 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
     },
     {
       "state": "ME",
-      "share": 55.0
+      "share": 57.6
     },
     {
       "state": "MI",
-      "share": 56.3
+      "share": 59.3
     },
     {
       "state": "MN",
-      "share": 21.7
+      "share": 21.3
     },
     {
       "state": "MO",
@@ -1621,11 +1613,11 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
     },
     {
       "state": "MT",
-      "share": 52.8
+      "share": 55.5
     },
     {
       "state": "NC",
-      "share": 44.3
+      "share": 41.4
     },
     {
       "state": "ND",
@@ -1633,51 +1625,51 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
     },
     {
       "state": "NE",
-      "share": 43.9
+      "share": 35.6
     },
     {
       "state": "NH",
-      "share": 47.3
+      "share": 44.9
     },
     {
       "state": "NJ",
-      "share": 25.5
+      "share": 25.1
     },
     {
       "state": "NM",
-      "share": 50.4
+      "share": 51.5
     },
     {
       "state": "NV",
-      "share": 29.2
-    },
-    {
-      "state": "NY",
-      "share": 42.6
-    },
-    {
-      "state": "OH",
       "share": 28.2
     },
     {
+      "state": "NY",
+      "share": 41.7
+    },
+    {
+      "state": "OH",
+      "share": 30.2
+    },
+    {
       "state": "OK",
-      "share": 35.7
+      "share": 34.6
     },
     {
       "state": "OR",
-      "share": 57.0
+      "share": 55.2
     },
     {
       "state": "PA",
-      "share": 45.3
+      "share": 44.6
     },
     {
       "state": "RI",
-      "share": 36.3
+      "share": 19.3
     },
     {
       "state": "SC",
-      "share": 27.3
+      "share": 19.9
     },
     {
       "state": "SD",
@@ -1689,7 +1681,7 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
     },
     {
       "state": "TX",
-      "share": 26.5
+      "share": 25.9
     },
     {
       "state": "UT",
@@ -1697,23 +1689,23 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
     },
     {
       "state": "VA",
-      "share": 63.3
+      "share": 61.7
     },
     {
       "state": "VT",
-      "share": 58.5
+      "share": 61.8
     },
     {
       "state": "WA",
-      "share": 54.1
+      "share": 53.2
     },
     {
       "state": "WI",
-      "share": 46.7
+      "share": 50.6
     },
     {
       "state": "WV",
-      "share": 44.3
+      "share": 40.0
     },
     {
       "state": "WY",
@@ -1743,40 +1735,40 @@ The rule changes SNAP only in states that use BBCE. PolicyEngine models BBCE in 
   ],
   "summary": {
     "label": "United States",
-    "value": 39.7
+    "value": 40.2
   },
   "format": {
     "decimals": 1,
     "suffix": "%"
   },
-  "source": "PolicyEngine US 2.2.1, Microcosm populace_us_2024"
+  "source": "PolicyEngine US 2.137.9, Microcosm populace_us_2024"
 }
 ```
 
-California (-$5.2 billion), Florida (-$2.9 billion), New York (-$2.3 billion), Illinois (-$2.0 billion) and Pennsylvania (-$1.8 billion) account for 47% of the national reduction. The effect is smaller in states whose BBCE programs already apply limits closer to the federal ones. Texas sets a 165% gross income limit and a $5,000 asset limit, so its SNAP falls by 12.9%. Indiana and Idaho set 130% gross income limits and $5,000 asset limits, and their SNAP falls by 10.1% and 4.9%.
+California (-$5.0 billion), Florida (-$2.7 billion), Illinois (-$2.0 billion), New York (-$2.0 billion) and Pennsylvania (-$1.8 billion) account for 45% of the national reduction. The effect is smaller in states whose BBCE programs already apply limits closer to the federal ones. Texas sets a 165% gross income limit and a $5,000 asset limit, so its SNAP falls by 13.5%. Indiana and Idaho set 130% gross income limits and $5,000 asset limits, and their SNAP falls by 10.0% and 5.5%.
 
-The RIA lists Arkansas as a BBCE state since April 2024, with a $5,500 asset limit; PolicyEngine does not model Arkansas's BBCE program and shows no change there. The RIA shows no change in Alaska, which adopted BBCE in July 2025, after the data years USDA used.
+The RIA counts Arkansas among the BBCE states, with a $5,500 resource limit; PolicyEngine does not model Arkansas's BBCE program and shows no change there. The RIA shows no change in Alaska, which adopted BBCE in July 2025, after the data years USDA used.
 
 ## Comparison with USDA's estimates
 
-PolicyEngine's caseload is close to USDA's in size but differs in composition. Averaged over fiscal 2029, 20% of the model's SNAP units have incomes above the federal gross or net limit, against 5.4% of households in USDA's analysis of SNAP quality control (QC) data. Another 20% of the model's units pass the income tests but hold assets above the federal limit, against USDA's 11.5%. Benefit amounts line up: units that fail an income test receive $111 a month in the model and $110 in USDA's data, and the caseload as a whole receives $402 per unit per month in the model and $401 in USDA's baseline.
+PolicyEngine's caseload is close to USDA's in size but differs in composition. Averaged over fiscal 2029, 21% of the model's SNAP units have incomes above the federal gross or net limit, against 5.4% of households in USDA's analysis of SNAP quality control (QC) data. Another 19% of the model's units pass the income tests but hold assets above the federal limit, against USDA's 11.5%. Benefit amounts are close: units that fail an income test receive $91 a month in the model and $110 in USDA's data, and the caseload as a whole receives $387 per unit per month in the model and $401 in USDA's baseline.
 
 The table below moves from PolicyEngine's calendar 2029 estimate to USDA's fiscal 2029 estimate one difference at a time.
 
 | Step | SNAP cut | Households losing SNAP (average month) |
 |---|---|---|
-| PolicyEngine, calendar 2029 | $29.9 billion | 8.1 million |
-| Fiscal 2029 (October 2028 to September 2029) | $29.7 billion | 8.1 million |
-| Exclude Alaska, which adopted BBCE after USDA's data years | $29.7 billion | 8.1 million |
-| Apply PolicyEngine's loss rates to USDA's baseline caseload and benefits | $27.7 billion | 7.6 million |
-| Use the composition of households that reported SNAP in the Current Population Survey | $22.9 billion | 6.2 million |
-| Set the share above an income limit to USDA's 5.4% | $20.0 billion | 4.2 million |
+| PolicyEngine, calendar 2029 | $29.5 billion | 8.6 million |
+| Fiscal 2029 (October 2028 to September 2029) | $29.3 billion | 8.6 million |
+| Exclude Alaska, which adopted BBCE after USDA's data years | $29.3 billion | 8.5 million |
+| Apply PolicyEngine's loss rates to USDA's baseline caseload and benefits | $27.3 billion | 7.7 million |
+| Use the composition of households that reported SNAP in the Current Population Survey | $23.0 billion | 6.3 million |
+| Set the share above an income limit to USDA's 5.4% | $20.3 billion | 4.1 million |
 | Set the share above only the asset limit to USDA's 11.5% | $14.3 billion | 3.2 million |
 | USDA RIA, fiscal 2029 | $14.3 billion | 3.2 million |
 
-The share of SNAP households above the federal limits accounts for $13.4 billion of the $15.7 billion difference and 4.3 million of the 4.9 million household difference. The result depends on the order of the steps, but the composition steps dominate in any order. Three features of the data raise those shares:
+The share of SNAP households above the federal limits accounts for $13.0 billion of the $15.2 billion difference and 4.4 million of the 5.4 million household difference. The result depends on the order of the steps, but the composition steps dominate in any order. Three features of the data raise those shares:
 
-- **Take-up.** The Microcosm dataset assigns SNAP to every household that reported SNAP in the Current Population Survey. It then selects other eligible households at random until each state's caseload matches USDA's count, without regard to benefit size. Households eligible only through BBCE, which tend to qualify for smaller benefits, are therefore as likely to enroll as other eligible households. These selected households make up 62% of the modeled caseload; 44% of them lose SNAP under the rule, against 32% of households that reported SNAP.
+- **Take-up.** The Microcosm dataset assigns SNAP to every household that reported SNAP in the Current Population Survey. It then selects other eligible households at random until each state's caseload matches USDA's count, without regard to benefit size. Households eligible only through BBCE, which tend to qualify for smaller benefits, are therefore as likely to enroll as other eligible households. These selected households make up 63% of the modeled caseload; 45% of them lose SNAP under the rule, against 33% of households that reported SNAP.
 - **Assets.** Microcosm imputes bank, stock and bond holdings. Among modeled SNAP units, 27% hold more than $3,000 in these assets. USDA's resource estimate relies on December 2019 Survey of Income and Program Participation data.
 - **Annual income.** The model spreads each household's annual income evenly across the year. SNAP households apply and recertify based on current monthly income.
 
@@ -1784,13 +1776,13 @@ Alternative estimates bracket the result:
 
 | Estimate | SNAP cut | Households losing SNAP |
 |---|---|---|
-| PolicyEngine caseload as calibrated, calendar 2029 | $29.9 billion | 8.1 million |
-| Loss rates of households that reported SNAP, applied to USDA's baseline | $22.9 billion | 6.2 million |
-| PolicyEngine caseload reweighted to USDA's QC income and asset shares | $15.3 billion | 3.4 million |
-| Same, scaled to USDA's caseload size | $14.3 billion | 3.2 million |
+| PolicyEngine caseload as calibrated, calendar 2029 | $29.5 billion | 8.6 million |
+| Loss rates of households that reported SNAP, applied to USDA's baseline | $23.0 billion | 6.3 million |
+| PolicyEngine caseload reweighted to USDA's QC income and asset shares | $15.7 billion | 3.5 million |
+| Same, scaled to USDA's caseload size | $14.1 billion | 3.2 million |
 | USDA RIA, fiscal 2029 | $14.3 billion | 3.2 million |
 
-State patterns also differ. Across the 43 BBCE states, the correlation between PolicyEngine's and USDA's state shares of households losing SNAP is 0.13. The state chart and decile chart above use the caseload as calibrated; with the reweighted caseload, losses still concentrate in the bottom three deciles and occur only in BBCE states, but at roughly half the level.
+State patterns also differ. Across the 43 BBCE states, the correlation between PolicyEngine's and USDA's state shares of households losing SNAP is 0.11. The state chart and decile chart above use the caseload as calibrated; with the reweighted caseload, losses still concentrate in the bottom three deciles and occur only in BBCE states, but at roughly half the level.
 
 USDA's own sensitivity analysis ranges from an $11.0 billion reduction, if a quarter of households above the asset limit spend down their savings, to $17.7 billion, if survey data understate assets.
 
@@ -1798,7 +1790,7 @@ USDA's own sensitivity analysis ranges from an $11.0 billion reduction, if a qua
 
 - **"Authorized to receive."** The rule would stop counting households that are approved for TANF or SSI but not yet paid. Neither USDA nor PolicyEngine quantifies this change.
 - **TANF supportive services.** PolicyEngine does not model TANF-funded child care or transportation for families that are not employed, which count as TANF assistance.
-- **TANF reporting.** The dataset does not flag reported TANF receipt; PolicyEngine computes TANF cash for 0.77 million SPM units in 2029. Because TANF households rarely exceed federal limits, this affects the estimates little.
+- **TANF reporting.** The dataset does not flag reported TANF receipt; PolicyEngine computes TANF cash for 0.78 million SPM units in 2029. Because TANF households rarely exceed federal limits, this affects the estimates little.
 - **Vehicles.** PolicyEngine's SNAP asset test counts bank accounts, stocks and bonds, and leaves out vehicles, which some states count.
 - **Behavior.** The estimates assume no spend-down of savings, no change in earnings, and no change in application rates among households that remain eligible.
 - **Administrative costs.** USDA estimates $1.2 billion in added federal and state administrative costs over fiscal years 2027-2031, which the model does not capture.
@@ -1806,7 +1798,7 @@ USDA's own sensitivity analysis ranges from an $11.0 billion reduction, if a qua
 
 ## Methodology
 
-We used PolicyEngine US 2.2.1 through the policyengine 6.17.2 package and the certified Microcosm dataset `populace_us_2024` (build populace-us-2024-spm-20260915), projected to 2029. Household chart breakpoints use policyengine 6.19.0 with the same US model. All results are static and compare the proposed rule with current law in 2029. The lower end of the range keeps each household's modeled SNAP outcome and multiplies the survey weights of SNAP households by 0.27 if they fail an income test, 0.57 if they fail only the asset test, and 1.39 if they meet all federal limits, which preserves the caseload's size and matches USDA's quality control shares. The lower-end SNAP figures cover fiscal 2029 months and exclude Alaska, to match USDA's coverage; the lower-end poverty figures apply the same weights to calendar 2029.
+We used PolicyEngine US 2.137.9 with policyengine-core 3.36.1, run through the policyengine 6.19.0 package on the Microcosm dataset `populace_us_2024` (build populace-us-2024-spm-20260915), projected to 2029. The policyengine 6.19.0 bundle certifies this dataset for PolicyEngine US 2.2.1; these results apply the newer model rules to the same data and SPM thresholds. All results are static and compare the proposed rule with current law in 2029. The lower end of the range keeps each household's modeled SNAP outcome and multiplies the survey weights of SNAP households by 0.25 if they fail an income test, 0.60 if they fail only the asset test, and 1.40 if they meet all federal limits, which preserves the caseload's size and matches USDA's quality control shares. The lower-end SNAP figures cover fiscal 2029 months and exclude Alaska, to match USDA's coverage; the lower-end poverty figures apply the same weights to calendar 2029.
 
 ## References
 
