@@ -50,8 +50,6 @@ export const US_MODEL_CATALOG_RESULT: Schemas['MetadataModelCatalogResult'] = {
     { key: 'household', plural: 'households', is_person: false },
   ],
   basic_inputs: ['age', 'employment_income'],
-  // A version without certified SPM settings: both are null.
-  spm: { available: false, settings_schema: null, defaults: null },
   regions: [
     region('us', 'United States', 'national'),
     region('state/ca', 'California', 'state', CALIFORNIA),
@@ -89,6 +87,8 @@ export const US_MODEL_CATALOG_RESULT: Schemas['MetadataModelCatalogResult'] = {
     ],
     datasets: [{ name: 'populace_us_2024', label: 'Microcosm', default: true }],
   },
+  // A bundle without certified SPM support offers no SPM settings.
+  spm: { available: false, settings_schema: null, defaults: null },
 };
 
 export function modelCatalogEnvelope(

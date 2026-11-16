@@ -3,7 +3,7 @@ import type { V2UserClient } from '@/api/v2UserClient';
 import type { V2ItemResult } from '@/types/v2User';
 
 /**
- * The Public API's admin routes for users' types (`/v2/admin/users*`).
+ * The Public API's admin routes for users' types and accounts (`/v2/admin/users*`).
  * Only admins may call them (others get 403); they take the session's
  * bearer token and no country.
  */
@@ -23,7 +23,8 @@ export interface AdminUserSearch {
   limit: number;
 }
 
-function adminUserPath(userId: string): string {
+/** The admin routes' path for one user, `admin/users/{user_id}`, the ID encoded. */
+export function adminUserPath(userId: string): string {
   return `admin/users/${encodeURIComponent(userId)}`;
 }
 
@@ -65,6 +66,15 @@ export async function changeAdminUserType(
     } satisfies components['schemas']['UserTypePatchRequest'],
   });
   return result.item;
+}
+
+/**
+ * Deletes a signed-in user's account as `DELETE /v2/me` deletes one's own:
+ * the user, their saved items and the Auth0 users they sign in with. The
+ * API answers 204; its refusals are V2ApiErrors carrying its message.
+ */
+export async function deleteAdminUser(client: V2UserClient, userId: string): Promise<void> {
+  await client.request<void>('DELETE', adminUserPath(userId));
 }
 
 /** The user's recorded type changes, newest first. */

@@ -1,6 +1,7 @@
 import { vi, type Mock } from 'vitest';
 import type { ApiStoreContext } from '@/api/v2Associations';
 import { createV2UserClient } from '@/api/v2UserClient';
+import { ROUTE_ERROR_HEADER } from '@/libs/publicApiRoute/sameOriginRoute';
 import { publicApiPathOf, requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import { UNKNOWN_USER_TYPE } from '@/tests/fixtures/types/v2UserMocks';
 import type {
@@ -168,6 +169,23 @@ export function errorResponse(status: number, message: string): Response {
   return new Response(JSON.stringify({ status: 'error', message }), {
     status,
     headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+/** Messages the calculator's same-origin route writes itself. */
+export const ROUTE_MESSAGES = {
+  PUBLIC_API_UNREACHABLE: 'The Public API could not be reached.',
+} as const;
+
+/**
+ * An error the calculator's same-origin route writes itself, such as its
+ * 502 when the Public API can't be reached: the Public API's shape, marked
+ * with the route's header.
+ */
+export function routeErrorResponse(status: number, message: string): Response {
+  return new Response(JSON.stringify({ status: 'error', message, result: null }), {
+    status,
+    headers: { 'Content-Type': 'application/json', [ROUTE_ERROR_HEADER]: 'true' },
   });
 }
 

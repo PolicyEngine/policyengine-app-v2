@@ -394,7 +394,7 @@
             }
           },
           "502": {
-            "description": "Account data was deleted but the Auth0 user could not be removed; retrying is safe.",
+            "description": "Account data was deleted, but an Auth0 user of the account's sign-in identities could not be deleted; every one was tried. A retry with the same token is safe, but it deletes only the Auth0 user of the token's own identity: an Auth0 user of another identity that failed stays, and must be deleted in Auth0.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1410,6 +1410,126 @@
             }
           }
         }
+      },
+      "delete": {
+        "summary": "Delete a signed-in user's account and all of their saved records",
+        "description": "Admins only. Deletes the user exactly as DELETE /v2/me deletes the caller's own account: obtains Auth0 Management credentials first when they are configured, then deletes the user's legacy user mappings, the user (identities and saved records cascade), and the Auth0 users of the user's sign-in identities. An unauthenticated user's ID is not found (404). Admins may delete their own account here too: as with DELETE /v2/me, the only admin's deletion is refused (409); otherwise the account is deleted and the admin's next request has no user, so the admin routes answer 403. Each deletion is recorded with the admin's and the deleted user's IDs.",
+        "operationId": "delete_user_v2_admin_users__user_id__delete",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No signed-in user has this ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The user is the only admin, which happens only when admins delete their own account; make another user an admin first. Nothing was deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The account's data was deleted, but some Auth0 users of its sign-in identities from this Public API's Auth0 tenant could not be deleted; every one was tried. The message says how many of them remain. It names no email, subject or token. A retry answers 404, since the user is gone: find the remaining Auth0 users in Auth0 by the email the admin user routes showed for the user before the deletion, and delete them there.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Auth0 Management credentials could not be obtained, or persistence is unavailable; nothing was deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v2/admin/users/{user_id}/user-type-changes": {
@@ -1444,6 +1564,125 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserTypeChangeListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A valid bearer access token is required. The response carries WWW-Authenticate: Bearer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only admins may use these routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No signed-in user has this ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The user's type is no longer the expected one, or the change would leave no admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 256 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/admin/users/{user_id}/saved-items": {
+      "get": {
+        "summary": "Read a signed-in user's saved policies, households, simulations and reports",
+        "description": "Admins only; read-only. Returns what the user's own GET /v2/me/export returns, in every country: the user, with the email admins see for it, and every saved policy, household, simulation and report. An unauthenticated user's ID is not found (404). Each read is recorded with the admin's and the user's IDs.",
+        "operationId": "get_user_saved_items_v2_admin_users__user_id__saved_items_get",
+        "security": [
+          {
+            "UserAccessToken": []
+          },
+          {
+            "UnauthenticatedUser": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserSavedItemsResponse"
                 }
               }
             }
@@ -1956,7 +2195,7 @@
     "/v2/user-reports": {
       "post": {
         "summary": "Save a report for the current user",
-        "description": "Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Names a detailed-save report (report_id), which must be stored in the country (404 otherwise), or a v1 report output (legacy_report_id), checked in the v1 database; naming both is refused with 400, since v1 report numbers are not connected to detailed-save reports. An optional user_policy_id must name the same user's saved policy in the same country.",
+        "description": "Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Names a detailed-save report (report_id), which must be stored in the country (404 otherwise), or a v1 report output (legacy_report_id), checked in the v1 database; naming both is refused with 400, since v1 report numbers are not connected to detailed-save reports. A request naming a detailed-save report must give that report's budget window as budget_window_years, or null for a report without a window of two or more years; otherwise it is refused with 400. An optional user_policy_id must name the same user's saved policy in the same country.",
         "operationId": "create_user_report_v2_user_reports_post",
         "security": [
           {
@@ -2005,7 +2244,7 @@
             }
           },
           "400": {
-            "description": "The supplied references or countries contradict each other.",
+            "description": "The supplied references or countries contradict each other. Or budget_window_years disagrees with the budget window of the detailed-save report the saved report names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2476,7 +2715,7 @@
             }
           },
           "400": {
-            "description": "The supplied references or countries contradict each other.",
+            "description": "The supplied references or countries contradict each other. Or budget_window_years disagrees with the budget window of the detailed-save report the saved report names.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6026,8 +6265,8 @@
     },
     "/v2/reports": {
       "post": {
-        "summary": "Create an economy report",
-        "description": "Checks that the country has economy reports and stores each named policy, and that the running catalog version has every parameter those policies set, then has the simulation service create the report, its two simulations and their runs on its default worker's PolicyEngine.py version, and start the run. Answers the report as stored, with its pending run; read it again to follow the run. A created report that cannot be read back answers 502 with its report_id, and one whose run the simulation service failed before answering 503 answers 503 with its report_id.",
+        "summary": "Create an economy report, a household report or a budget window",
+        "description": "Checks that the country has economy reports and stores each named policy, and that the running catalog version has every parameter those policies set, then has the simulation service create the report, its two simulations and their runs on its default worker's PolicyEngine.py version, and start the run. A household report (kind household) is checked the same way, except that the country must have household calculations instead (a household-only country does), and the household it names must be stored in the country, with a default year; its simulations each calculate that household in its default year. A budget window (kind budget_window) is checked as an economy report is; the simulation service creates a budget-window run with a report run for each year, and starts its years. Answers the report as stored, with its pending run; read it again to follow the run. A created report that cannot be read back answers 502 with its report_id, and one whose run the simulation service failed before answering 503 answers 503 with its report_id.",
         "operationId": "create_report_v2_reports_post",
         "parameters": [
           {
@@ -6051,7 +6290,26 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReportCreateRequest"
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/EconomyReportCreateRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/HouseholdReportCreateRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/BudgetWindowReportCreateRequest"
+                  }
+                ],
+                "discriminator": {
+                  "propertyName": "kind",
+                  "mapping": {
+                    "economy": "#/components/schemas/EconomyReportCreateRequest",
+                    "household": "#/components/schemas/HouseholdReportCreateRequest",
+                    "budget_window": "#/components/schemas/BudgetWindowReportCreateRequest"
+                  }
+                },
+                "title": "Body"
               }
             }
           }
@@ -6078,7 +6336,7 @@
             }
           },
           "404": {
-            "description": "A policy the report names is not stored in the country.",
+            "description": "A policy the report names, or a household report's household, is not stored in the country.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6098,7 +6356,7 @@
             }
           },
           "422": {
-            "description": "The request does not match the schema; the country has no economy reports (such as a household-only country); a policy the report names sets parameters the running catalog version does not have (code missing_parameters, which names them; the baseline's policy is checked first); or the simulation service cannot run the report: its 422, or its 400 for a region, dataset or dynamic it does not have. The message says which; for the simulation service's refusal, it gives the service's code, when it gave one, and its reason, but not its status.",
+            "description": "The request does not match the schema (such as a budget window of fewer than 1 or more than 75 years, or one ending after 2200); the country has no economy reports (such as a household-only country), for an economy report or budget window, or no household calculations, for a household report; a household report's household has no default year; a policy the report names sets parameters the running catalog version does not have (code missing_parameters, which names them; the baseline's policy is checked first); or the simulation service cannot run the report: its 422, or its 400 for a region, dataset or dynamic it does not have. The message says which; for the simulation service's refusal, it gives the service's code, when it gave one, and its reason, but not its status.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6164,8 +6422,8 @@
         }
       },
       "get": {
-        "summary": "List chosen economy reports",
-        "description": "Lists the country's economy reports among the report_id values (at most 25), in the order named and once each, with their newest runs but without results, read in one query. Unknown reports, other countries' and reports of other kinds are left out.",
+        "summary": "List chosen reports",
+        "description": "Lists the country's reports among the report_id values (at most 25), in the order named and once each, with their newest runs, and each budget window's years, but without results, read in two queries. Unknown reports and other countries' are left out.",
         "operationId": "list_reports_v2_reports_get",
         "parameters": [
           {
@@ -6248,8 +6506,8 @@
     },
     "/v2/reports/{report_id}": {
       "get": {
-        "summary": "Read an economy report",
-        "description": "Returns the report, its newest run whatever its status and versions, the versions the Public API runs now, and, once the newest run has succeeded, its result in today's economy result format. A report with no run, such as one migrated from v1, answers its definition with no result; reading starts no run.",
+        "summary": "Read a report",
+        "description": "Returns the report, its newest run whatever its status and versions, the versions the Public API runs now, and, once the newest run has succeeded, its result. An economy report's run is one report run and its result today's economy result. A household report's result is each simulation's calculated household, as /v2/household-calculations answers one, and a failed run gives each side's error. A budget window's run is a budget-window run with a report run per year, and its result today's budget-window format: each year's budget figures and their totals. A report with no run, such as one migrated from v1, answers its definition with no result; reading starts no run.",
         "operationId": "get_report_v2_reports__report_id__get",
         "parameters": [
           {
@@ -6300,7 +6558,7 @@
             }
           },
           "422": {
-            "description": "The request does not match the schema, or the report is a household report or a budget window, which this route does not read yet.",
+            "description": "The request does not match the schema.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6310,7 +6568,233 @@
             }
           },
           "500": {
-            "description": "The newest run succeeded but its stored result cannot be read, or the operation could not be completed.",
+            "description": "The newest run succeeded but its stored result cannot be read (for a household report, a simulation run's calculated household; for a budget window, a year has no succeeded run or no budget figures), or the operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The v2 database or the simulation service is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/reports/{report_id}/runs": {
+      "post": {
+        "summary": "Run a report again",
+        "description": "Checks the report as a new report of its kind is checked (the country has economy reports, or household calculations for a household report, and each policy its simulations name is stored and sets only parameters the running catalog version has), then has the simulation service create the report's new run on its default worker's PolicyEngine.py version, and start it. Every earlier run is kept. Without force, each side reuses a run of its own simulation that succeeded on those versions; with force, both simulations are calculated again. A household report's sides are always calculated again, so force changes nothing for it. A budget window's new run is a budget-window run with a report run for each year, and with force each year calculates its simulations again. Answers the report as stored, whose newest run is then the new one, since no other run starts while it is pending or running: a report with a run pending or running answers 409 naming that run. Read the report again to follow the run.",
+        "operationId": "rerun_report_v2_reports__report_id__runs_post",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportRerunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No report has this ID in this country. Or a policy a simulation of the report names is no longer stored in the country.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The simulation service will not run the report again now, and started nothing: the report has a run pending or running (run_in_progress), which run_id names, or it is one the service does not run again, or of a kind it does not run again yet (rerun_not_supported).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportRerunConflictResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds 16 KiB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema; the country has no economy reports, or no household calculations for a household report; a policy of the report's simulations sets parameters the running catalog version does not have (code missing_parameters, which names them); or the simulation service cannot run the report as stored: its 422, or its 400 for a region, dataset or dynamic the report names that the current catalog version does not have, with its code and reason.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2MissingParametersErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 422 Rerun Report V2 Reports  Report Id  Runs Post"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The simulation service may have started a new run, but its answer does not say so: its answer was lost, a proxy answered in its place, it failed (500), or it answered in a shape or status the Public API does not expect. The message asks the caller to read the report to see whether it has a new run before running it again; while that run is pending or running, running it again answers 409. Or it started the run, but the report cannot be read back: the answer gives its report_id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/V2ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RerunReportUnreadableResponse"
+                    }
+                  ],
+                  "title": "Response 502 Rerun Report V2 Reports  Report Id  Runs Post"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The simulation service started nothing that runs: it cannot be reached or is not configured; it answered a readable 503, and the message gives its status and code, and names the new run it failed when Modal refused the run's call; it answered a 400 about its own state rather than a row the report names (such as a catalog version missing while a release deploys), and the message gives its code and reason; it answered 400, 409 or 422 in a shape the Public API cannot read; or it answered 401, 403, 404, 405, 413 or 429, which it sends before writing anything. Or the v2 database, or the catalog the policies are checked against, cannot be read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List a report's runs",
+        "description": "Lists every run of the report, newest first, whatever its status and versions, each with the country package and PolicyEngine.py versions it ran on, beside the versions the Public API runs now. A run on other versions than those is out of date. An economy or household report's runs are its report runs (kind economy or household); a budget window's are its budget-window runs, each with its years (kind budget_window). Reading starts no run.",
+        "operationId": "list_report_runs_v2_reports__report_id__runs_get",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "country_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "us",
+                "uk"
+              ],
+              "type": "string",
+              "description": "Supported PolicyEngine country ID",
+              "title": "Country Id"
+            },
+            "description": "Supported PolicyEngine country ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportRunListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No report has this ID in this country.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request does not match the schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The operation could not be completed.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10734,6 +11218,30 @@
         "title": "AdminUserResult",
         "description": "One signed-in user."
       },
+      "AdminUserSavedItemsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "$ref": "#/components/schemas/MeExportResult"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "AdminUserSavedItemsResponse",
+        "description": "The response for a signed-in user's saved items, in every country.\n\n``result`` is what the user's own ``GET /v2/me/export`` returns: the user,\nwith the email admins see for it, and every policy, household, simulation\nand report it saved."
+      },
       "AgePoverty": {
         "properties": {
           "child": {
@@ -10779,6 +11287,838 @@
         ],
         "title": "BaselineReformValue",
         "description": "A measure's value under the baseline and under the reform."
+      },
+      "BudgetWindowAnnualImpact": {
+        "properties": {
+          "spm_provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SPMComparisonProvenance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "year": {
+            "type": "string",
+            "title": "Year"
+          },
+          "taxRevenueImpact": {
+            "type": "number",
+            "title": "Taxrevenueimpact"
+          },
+          "federalTaxRevenueImpact": {
+            "type": "number",
+            "title": "Federaltaxrevenueimpact"
+          },
+          "stateTaxRevenueImpact": {
+            "type": "number",
+            "title": "Statetaxrevenueimpact"
+          },
+          "benefitSpendingImpact": {
+            "type": "number",
+            "title": "Benefitspendingimpact"
+          },
+          "budgetaryImpact": {
+            "type": "number",
+            "title": "Budgetaryimpact"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "spm_provenance",
+          "year",
+          "taxRevenueImpact",
+          "federalTaxRevenueImpact",
+          "stateTaxRevenueImpact",
+          "benefitSpendingImpact",
+          "budgetaryImpact"
+        ],
+        "title": "BudgetWindowAnnualImpact",
+        "description": "One year's budget figures; ``year`` is the year as text, such as \"2026\".\n\nImpacts are reform minus baseline totals in the country's currency.\n``state_tax_revenue_impact`` is US state income tax (0 for the UK), and\n``federal_tax_revenue_impact`` the rest of ``tax_revenue_impact``.\n``budgetary_impact`` is ``tax_revenue_impact`` minus\n``benefit_spending_impact``. ``spm_provenance`` is the SPM receipts of\nthat year's report run, or null without any."
+      },
+      "BudgetWindowReportCreateRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "budget_window",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "year": {
+            "type": "integer",
+            "maximum": 2200,
+            "minimum": 1900,
+            "title": "Year",
+            "description": "The window's first year"
+          },
+          "region_code": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^\\S+$",
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1,
+                "pattern": "^\\S+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/PolicyChoice"
+          },
+          "reform": {
+            "$ref": "#/components/schemas/PolicyChoice"
+          },
+          "spm": {
+            "$ref": "#/components/schemas/SPMSelection",
+            "title": "Spm"
+          },
+          "budget_window_size": {
+            "type": "integer",
+            "maximum": 75,
+            "minimum": 1,
+            "title": "Budget Window Size",
+            "description": "How many consecutive years the window has, from its year"
+          },
+          "country_id": {
+            "type": "string",
+            "enum": [
+              "us",
+              "uk"
+            ],
+            "title": "Country Id",
+            "description": "Supported PolicyEngine country ID"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "year",
+          "region_code",
+          "baseline",
+          "reform",
+          "budget_window_size",
+          "country_id"
+        ],
+        "title": "BudgetWindowReportCreateRequest",
+        "description": "A budget window to create; ``country_id`` must match the query's.\n\nIt compares ``baseline`` and ``reform`` in each of ``budget_window_size``\nyears (1 to 75) from ``year``, ending in 2200 or earlier. Each\nsimulation's empty object is current law, and no field names a\nPolicyEngine.py version."
+      },
+      "BudgetWindowReportItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "budget_window",
+            "title": "Kind"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "budget_window_size": {
+            "type": "integer",
+            "title": "Budget Window Size"
+          },
+          "region_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
+          "baseline_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reform_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "options": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Options"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_run",
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BudgetWindowRunItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BudgetWindowResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "country_id",
+          "kind",
+          "label",
+          "description",
+          "year",
+          "budget_window_size",
+          "region_code",
+          "dataset_name",
+          "baseline_simulation",
+          "reform_simulation",
+          "options",
+          "created_at",
+          "status",
+          "run",
+          "current_versions",
+          "result"
+        ],
+        "title": "BudgetWindowReportItem",
+        "description": "A budget window with its newest run's result.\n\n``result`` is the budget-window result, in the format the app reads\ntoday: each year's budget figures, in year order, and their totals. It is\nthere once the newest run has succeeded, and null otherwise."
+      },
+      "BudgetWindowReportSummaryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "budget_window",
+            "title": "Kind"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "budget_window_size": {
+            "type": "integer",
+            "title": "Budget Window Size"
+          },
+          "region_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
+          "baseline_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reform_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "options": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Options"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_run",
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BudgetWindowRunItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "country_id",
+          "kind",
+          "label",
+          "description",
+          "year",
+          "budget_window_size",
+          "region_code",
+          "dataset_name",
+          "baseline_simulation",
+          "reform_simulation",
+          "options",
+          "created_at",
+          "status",
+          "run",
+          "current_versions"
+        ],
+        "title": "BudgetWindowReportSummaryItem",
+        "description": "A budget window: a baseline and a reform policy compared in each year.\n\nThe window is ``budget_window_size`` years from ``year``, in the region\nand dataset named. ``baseline_simulation`` and ``reform_simulation`` are\nthe first year's; each year's run names that year's own simulation runs.\n``status`` is the newest run's, or ``not_run`` for a\nreport with no run. ``run`` is the newest budget-window run, whatever its\nstatus and versions, with its years; ``current_versions`` are the\nversions the Public API runs now, so a newest run on other versions is\nout of date. ``options`` are the options the report was created with.\n``label`` is null for a shared report, which records no one caller's label."
+      },
+      "BudgetWindowResult": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "budgetWindow",
+            "title": "Kind",
+            "default": "budgetWindow"
+          },
+          "startYear": {
+            "type": "string",
+            "title": "Startyear"
+          },
+          "endYear": {
+            "type": "string",
+            "title": "Endyear"
+          },
+          "windowSize": {
+            "type": "integer",
+            "title": "Windowsize"
+          },
+          "annualImpacts": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetWindowAnnualImpact"
+            },
+            "type": "array",
+            "title": "Annualimpacts"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/BudgetWindowTotals"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "startYear",
+          "endYear",
+          "windowSize",
+          "annualImpacts",
+          "totals"
+        ],
+        "title": "BudgetWindowResult",
+        "description": "Today's budget-window format: each year's figures, in year order, and totals.\n\n``start_year`` and ``end_year`` are the window's first and last years, as\ntext, and ``window_size`` its number of years."
+      },
+      "BudgetWindowRunItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "trigger": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "initial",
+                  "manual",
+                  "system"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trigger"
+          },
+          "recalculate": {
+            "type": "boolean",
+            "title": "Recalculate"
+          },
+          "country_package_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Package Version"
+          },
+          "policyengine_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policyengine Version"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "years": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetWindowYearItem"
+            },
+            "type": "array",
+            "title": "Years"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "trigger",
+          "recalculate",
+          "country_package_version",
+          "policyengine_version",
+          "error_message",
+          "created_at",
+          "started_at",
+          "completed_at",
+          "years"
+        ],
+        "title": "BudgetWindowRunItem",
+        "description": "One calculation of a budget window: a report run per year, in year order.\n\n``status`` is ``pending`` until a year starts running, ``running`` while\nits years run, ``failed`` once a year has failed, with ``error_message``\nsaying which, and ``succeeded`` once every year has. ``trigger`` is\n``initial`` for the run the report's creation started (null for a shared\nrun, which records no one request's trigger), and ``recalculate`` says\nwhether its years calculate their simulations again rather than reusing\nsuccessful runs.\n``country_package_version`` and ``policyengine_version`` are the versions\nits years run on, null for a run with no year."
+      },
+      "BudgetWindowRunListResult": {
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Report Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "budget_window",
+            "title": "Kind"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetWindowRunItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "report_id",
+          "kind",
+          "items",
+          "current_versions"
+        ],
+        "title": "BudgetWindowRunListResult",
+        "description": "A budget window's runs in ``items``, newest first, each with its years.\n\nEach budget-window run names the country package and PolicyEngine.py\nversions its years ran on; ``current_versions`` are those the Public API\nruns now, so a run on other versions is out of date."
+      },
+      "BudgetWindowTotals": {
+        "properties": {
+          "year": {
+            "type": "string",
+            "const": "Total",
+            "title": "Year",
+            "default": "Total"
+          },
+          "taxRevenueImpact": {
+            "type": "number",
+            "title": "Taxrevenueimpact"
+          },
+          "federalTaxRevenueImpact": {
+            "type": "number",
+            "title": "Federaltaxrevenueimpact"
+          },
+          "stateTaxRevenueImpact": {
+            "type": "number",
+            "title": "Statetaxrevenueimpact"
+          },
+          "benefitSpendingImpact": {
+            "type": "number",
+            "title": "Benefitspendingimpact"
+          },
+          "budgetaryImpact": {
+            "type": "number",
+            "title": "Budgetaryimpact"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "taxRevenueImpact",
+          "federalTaxRevenueImpact",
+          "stateTaxRevenueImpact",
+          "benefitSpendingImpact",
+          "budgetaryImpact"
+        ],
+        "title": "BudgetWindowTotals",
+        "description": "The sums of every year's budget figures, summed as exact decimals."
+      },
+      "BudgetWindowYearItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "trigger": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "initial",
+                  "manual",
+                  "system"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trigger"
+          },
+          "country_package_version": {
+            "type": "string",
+            "title": "Country Package Version"
+          },
+          "policyengine_version": {
+            "type": "string",
+            "title": "Policyengine Version"
+          },
+          "baseline_simulation_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Simulation Run Id"
+          },
+          "reform_simulation_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reform Simulation Run Id"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "trigger",
+          "country_package_version",
+          "policyengine_version",
+          "baseline_simulation_run_id",
+          "reform_simulation_run_id",
+          "error_message",
+          "created_at",
+          "started_at",
+          "completed_at",
+          "year"
+        ],
+        "title": "BudgetWindowYearItem",
+        "description": "One year of a budget-window run: the report run calculating that year.\n\nIts fields are a report run's, as ``ReportRunItem`` describes them; its\nsimulation runs are that year's own. A year still waiting to start is\n``pending``, and one the window failed before it started is ``failed``,\nits ``error_message`` saying so."
       },
       "BudgetaryImpact": {
         "properties": {
@@ -11206,6 +12546,98 @@
         ],
         "title": "DeploymentResponse",
         "description": "The policyengine.py version this revision serves, and since when.\n\n``policyengine_version_live_since`` is when this .py version first went\nlive: redeploys that keep the version keep the date. It is null on a\nrevision deployed before the deploy recorded it, outside Cloud Run, or\nwhen the version the deploy dated is not the installed one."
+      },
+      "EconomyReportCreateRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "economy",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "year": {
+            "type": "integer",
+            "maximum": 2200,
+            "minimum": 1900,
+            "title": "Year",
+            "description": "The year"
+          },
+          "region_code": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^\\S+$",
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1,
+                "pattern": "^\\S+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/PolicyChoice"
+          },
+          "reform": {
+            "$ref": "#/components/schemas/PolicyChoice"
+          },
+          "spm": {
+            "$ref": "#/components/schemas/SPMSelection",
+            "title": "Spm"
+          },
+          "include_cliffs": {
+            "type": "boolean",
+            "title": "Include Cliffs",
+            "default": false
+          },
+          "country_id": {
+            "type": "string",
+            "enum": [
+              "us",
+              "uk"
+            ],
+            "title": "Country Id",
+            "description": "Supported PolicyEngine country ID"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "year",
+          "region_code",
+          "baseline",
+          "reform",
+          "country_id"
+        ],
+        "title": "EconomyReportCreateRequest",
+        "description": "An economy report to create; ``country_id`` must match the query's.\n\nEach simulation's empty object is current law. No field names a\nPolicyEngine.py version: the simulation service runs its default\nworker's."
       },
       "EconomyResult": {
         "properties": {
@@ -12243,6 +13675,482 @@
         "title": "HouseholdPersonRecord",
         "description": "One person in a household.\n\n``memberships`` maps each of the country's entity collections to the ``id``\nof the group the person belongs to, and must name every collection."
       },
+      "HouseholdPolicyChoice": {
+        "properties": {
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "description": "Exact resource UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "HouseholdPolicyChoice",
+        "description": "A household simulation's stored policy; none means current law."
+      },
+      "HouseholdReportCreateRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "household",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "household_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Household Id",
+            "description": "Exact resource UUID"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/HouseholdPolicyChoice"
+          },
+          "reform": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseholdPolicyChoice"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "country_id": {
+            "type": "string",
+            "enum": [
+              "us",
+              "uk"
+            ],
+            "title": "Country Id",
+            "description": "Supported PolicyEngine country ID"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "household_id",
+          "baseline",
+          "country_id"
+        ],
+        "title": "HouseholdReportCreateRequest",
+        "description": "A household report to create; ``country_id`` must match the query's.\n\nIt calculates the stored household ``household_id`` in its default year\nunder ``baseline`` and ``reform``; each empty object is current law, and a\nnull or omitted ``reform`` makes a report of the baseline alone. No field\nnames a year or a PolicyEngine.py version."
+      },
+      "HouseholdReportFailureItem": {
+        "properties": {
+          "baseline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseholdReportSideFailureItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reform": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseholdReportSideFailureItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseline",
+          "reform"
+        ],
+        "title": "HouseholdReportFailureItem",
+        "description": "Why each side of a failed run failed, as the household function said.\n\nA side is null when it succeeded, or failed without the household\nfunction's error, as a run Modal refused does; the run's\n``error_message`` still says why it failed. ``reform`` is also null for\na report of the baseline alone."
+      },
+      "HouseholdReportItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "baseline_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reform_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "options": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Options"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          },
+          "kind": {
+            "type": "string",
+            "const": "household",
+            "title": "Kind"
+          },
+          "household_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Household Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_run",
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportRunItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseholdReportResultItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseholdReportFailureItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "country_id",
+          "label",
+          "description",
+          "year",
+          "baseline_simulation",
+          "reform_simulation",
+          "options",
+          "created_at",
+          "current_versions",
+          "kind",
+          "household_id",
+          "status",
+          "run",
+          "result",
+          "failure"
+        ],
+        "title": "HouseholdReportItem",
+        "description": "A household report with its newest run's outcome.\n\n``result`` holds the calculated households once the newest run has\nsucceeded, and ``failure`` each side's error once it has failed; each is\nnull otherwise."
+      },
+      "HouseholdReportResultItem": {
+        "properties": {
+          "baseline": {
+            "$ref": "#/components/schemas/HouseholdCalculationOutputItem"
+          },
+          "reform": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseholdCalculationOutputItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseline",
+          "reform"
+        ],
+        "title": "HouseholdReportResultItem",
+        "description": "Each simulation's calculated household.\n\nEach is the stored household with every value its calculation filled in,\nas ``/v2/household-calculations`` answers one. ``reform`` is null for a\nreport of the baseline alone."
+      },
+      "HouseholdReportSideFailureItem": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "input_errors": {
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Input Errors"
+          },
+          "spm_error": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spm Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "input_errors",
+          "spm_error"
+        ],
+        "title": "HouseholdReportSideFailureItem",
+        "description": "The household function's error for one side's calculation.\n\n``code`` is its error code, such as ``invalid_inputs``, with\n``input_errors`` naming each input the country model does not recognize\nand ``spm_error`` an SPM error."
+      },
+      "HouseholdReportSummaryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "country_id": {
+            "type": "string",
+            "title": "Country Id"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "baseline_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reform_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportSimulationItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "options": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Options"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          },
+          "kind": {
+            "type": "string",
+            "const": "household",
+            "title": "Kind"
+          },
+          "household_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Household Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_run",
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportRunItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "country_id",
+          "label",
+          "description",
+          "year",
+          "baseline_simulation",
+          "reform_simulation",
+          "options",
+          "created_at",
+          "current_versions",
+          "kind",
+          "household_id",
+          "status",
+          "run"
+        ],
+        "title": "HouseholdReportSummaryItem",
+        "description": "A household report: one stored household under a baseline and a reform.\n\nBoth simulations calculate the household ``household_id`` in its default\nyear, ``year``; ``reform_simulation`` is null for a report of the\nbaseline alone. ``status`` is the newest run's, or ``not_run`` for a\nreport with no run. ``run`` is the newest run, whatever its status and\nversions, naming each simulation's run."
+      },
       "InequalityChange": {
         "properties": {
           "gini": {
@@ -12807,7 +14715,7 @@
           "reports"
         ],
         "title": "MeExportResult",
-        "description": "The current user and every policy, household, simulation and report it saved.\n\nThe export covers every country, not only the requested one."
+        "description": "A user and every policy, household, simulation and report it saved.\n\nThe export covers every country, not only the requested one.\n``GET /v2/me/export`` returns the current user's, and\n``GET /v2/admin/users/{user_id}/saved-items`` a signed-in user's, to admins."
       },
       "MeItem": {
         "properties": {
@@ -16098,98 +18006,6 @@
         "title": "ReportCalibrationWorstItem",
         "description": "The calibration target that one match fits worst, with its relative error."
       },
-      "ReportCreateRequest": {
-        "properties": {
-          "kind": {
-            "type": "string",
-            "const": "economy",
-            "title": "Kind"
-          },
-          "label": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Label"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 10000
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "year": {
-            "type": "integer",
-            "maximum": 2200,
-            "minimum": 1900,
-            "title": "Year",
-            "description": "The year"
-          },
-          "region_code": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "pattern": "^\\S+$",
-            "title": "Region Code"
-          },
-          "dataset_name": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255,
-                "minLength": 1,
-                "pattern": "^\\S+$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Dataset Name"
-          },
-          "baseline": {
-            "$ref": "#/components/schemas/PolicyChoice"
-          },
-          "reform": {
-            "$ref": "#/components/schemas/PolicyChoice"
-          },
-          "include_cliffs": {
-            "type": "boolean",
-            "title": "Include Cliffs",
-            "default": false
-          },
-          "spm": {
-            "$ref": "#/components/schemas/SPMSelection",
-            "title": "Spm"
-          },
-          "country_id": {
-            "type": "string",
-            "enum": [
-              "us",
-              "uk"
-            ],
-            "title": "Country Id",
-            "description": "Supported PolicyEngine country ID"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "kind",
-          "label",
-          "year",
-          "region_code",
-          "baseline",
-          "reform",
-          "country_id"
-        ],
-        "title": "ReportCreateRequest",
-        "description": "An economy report to create; ``country_id`` must match the query's.\n\nEach simulation's empty object is current law. No field names a\nPolicyEngine.py version: the simulation service runs its default\nworker's."
-      },
       "ReportDetailResponse": {
         "properties": {
           "status": {
@@ -16217,7 +18033,26 @@
       "ReportDetailResult": {
         "properties": {
           "item": {
-            "$ref": "#/components/schemas/ReportItem"
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportItem"
+              },
+              {
+                "$ref": "#/components/schemas/HouseholdReportItem"
+              },
+              {
+                "$ref": "#/components/schemas/BudgetWindowReportItem"
+              }
+            ],
+            "title": "Item",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "budget_window": "#/components/schemas/BudgetWindowReportItem",
+                "economy": "#/components/schemas/ReportItem",
+                "household": "#/components/schemas/HouseholdReportItem"
+              }
+            }
           }
         },
         "additionalProperties": false,
@@ -16226,7 +18061,7 @@
           "item"
         ],
         "title": "ReportDetailResult",
-        "description": "Result holding one report in ``item``."
+        "description": "Result holding one report in ``item``; its ``kind`` says which model it is."
       },
       "ReportItem": {
         "properties": {
@@ -16239,13 +18074,15 @@
             "type": "string",
             "title": "Country Id"
           },
-          "kind": {
-            "type": "string",
-            "const": "economy",
-            "title": "Kind"
-          },
           "label": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Label"
           },
           "description": {
@@ -16269,28 +18106,6 @@
               }
             ],
             "title": "Year"
-          },
-          "region_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Region Code"
-          },
-          "dataset_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Dataset Name"
           },
           "baseline_simulation": {
             "anyOf": [
@@ -16324,6 +18139,36 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          },
+          "kind": {
+            "type": "string",
+            "const": "economy",
+            "title": "Kind"
+          },
+          "region_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -16345,9 +18190,6 @@
               }
             ]
           },
-          "current_versions": {
-            "$ref": "#/components/schemas/PackageVersionsItem"
-          },
           "result": {
             "anyOf": [
               {
@@ -16364,19 +18206,19 @@
         "required": [
           "id",
           "country_id",
-          "kind",
           "label",
           "description",
           "year",
-          "region_code",
-          "dataset_name",
           "baseline_simulation",
           "reform_simulation",
           "options",
           "created_at",
+          "current_versions",
+          "kind",
+          "region_code",
+          "dataset_name",
           "status",
           "run",
-          "current_versions",
           "result"
         ],
         "title": "ReportItem",
@@ -16410,7 +18252,25 @@
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/ReportSummaryItem"
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ReportSummaryItem"
+                },
+                {
+                  "$ref": "#/components/schemas/HouseholdReportSummaryItem"
+                },
+                {
+                  "$ref": "#/components/schemas/BudgetWindowReportSummaryItem"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "budget_window": "#/components/schemas/BudgetWindowReportSummaryItem",
+                  "economy": "#/components/schemas/ReportSummaryItem",
+                  "household": "#/components/schemas/HouseholdReportSummaryItem"
+                }
+              }
             },
             "type": "array",
             "title": "Items"
@@ -16716,6 +18576,54 @@
         "title": "ReportProvisionItem",
         "description": "One parameter the report's reform changes, with its baseline and reform values.\n\n``intervals`` gives the reform's dated values when they vary over time. The\n``growth`` keys, present only when set, say how a value set from one year on\nmoves in later years and how grown values round."
       },
+      "ReportRerunConflictResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error",
+            "title": "Status",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Message"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "run_id"
+        ],
+        "title": "ReportRerunConflictResponse",
+        "description": "The 409 answer when the simulation service will not run the report again now.\n\nThe message gives the service's code and reason: ``run_in_progress``,\nwhen the report has a run pending or running, which ``run_id`` names, or\n``rerun_not_supported`` for a report it does not run again, such as one\nwhose simulation, region or dataset is gone, or a kind it does not run\nagain yet. ``run_id`` is null when the service named no run."
+      },
+      "ReportRerunRequest": {
+        "properties": {
+          "force": {
+            "type": "boolean",
+            "title": "Force",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ReportRerunRequest",
+        "description": "Run a stored report again on the simulation service's current versions.\n\nWithout ``force`` (``{}``), each side reuses a run of its own simulation\nthat succeeded on those versions; with it, both simulations are\ncalculated again. A household report's sides are always calculated\nagain. The new run is kept beside every earlier one."
+      },
       "ReportRunItem": {
         "properties": {
           "id": {
@@ -16734,11 +18642,18 @@
             "title": "Status"
           },
           "trigger": {
-            "type": "string",
-            "enum": [
-              "initial",
-              "manual",
-              "system"
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "initial",
+                  "manual",
+                  "system"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ],
             "title": "Trigger"
           },
@@ -16824,7 +18739,84 @@
           "completed_at"
         ],
         "title": "ReportRunItem",
-        "description": "One calculation of a report, on one country package and .py version.\n\n``status`` is ``pending``, ``running``, ``succeeded`` or ``failed``, and\n``error_message`` says why a failed run failed. ``trigger`` is\n``initial`` for the run the report's creation started."
+        "description": "One calculation of a report, on one country package and .py version.\n\n``status`` is ``pending``, ``running``, ``succeeded`` or ``failed``, and\n``error_message`` says why a failed run failed. ``trigger`` is\n``initial`` for the run the report's creation started, and null for a run\nthe simulation service shares between requests, which records no one\nrequest's trigger."
+      },
+      "ReportRunListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "null",
+            "title": "Message"
+          },
+          "result": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportRunListResult"
+              },
+              {
+                "$ref": "#/components/schemas/BudgetWindowRunListResult"
+              }
+            ],
+            "title": "Result",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "budget_window": "#/components/schemas/BudgetWindowRunListResult",
+                "economy": "#/components/schemas/ReportRunListResult",
+                "household": "#/components/schemas/ReportRunListResult"
+              }
+            }
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "ReportRunListResponse",
+        "description": "Success response holding a report's runs; ``result.kind`` says which list."
+      },
+      "ReportRunListResult": {
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Report Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "economy",
+              "household"
+            ],
+            "title": "Kind"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReportRunItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "report_id",
+          "kind",
+          "items",
+          "current_versions"
+        ],
+        "title": "ReportRunListResult",
+        "description": "An economy or household report's runs in ``items``, newest first.\n\nThey are listed whatever their status, and ``kind`` is the report's.\n\nEach run names the country package and PolicyEngine.py versions it ran\non; ``current_versions`` are those the Public API runs now, so a run on\nother versions is out of date."
       },
       "ReportScorecard": {
         "properties": {
@@ -16916,13 +18908,15 @@
             "type": "string",
             "title": "Country Id"
           },
-          "kind": {
-            "type": "string",
-            "const": "economy",
-            "title": "Kind"
-          },
           "label": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Label"
           },
           "description": {
@@ -16946,28 +18940,6 @@
               }
             ],
             "title": "Year"
-          },
-          "region_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Region Code"
-          },
-          "dataset_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Dataset Name"
           },
           "baseline_simulation": {
             "anyOf": [
@@ -17001,6 +18973,36 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "current_versions": {
+            "$ref": "#/components/schemas/PackageVersionsItem"
+          },
+          "kind": {
+            "type": "string",
+            "const": "economy",
+            "title": "Kind"
+          },
+          "region_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Code"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -17021,9 +19023,6 @@
                 "type": "null"
               }
             ]
-          },
-          "current_versions": {
-            "$ref": "#/components/schemas/PackageVersionsItem"
           }
         },
         "additionalProperties": false,
@@ -17031,22 +19030,22 @@
         "required": [
           "id",
           "country_id",
-          "kind",
           "label",
           "description",
           "year",
-          "region_code",
-          "dataset_name",
           "baseline_simulation",
           "reform_simulation",
           "options",
           "created_at",
+          "current_versions",
+          "kind",
+          "region_code",
+          "dataset_name",
           "status",
-          "run",
-          "current_versions"
+          "run"
         ],
         "title": "ReportSummaryItem",
-        "description": "An economy report comparing a baseline and a reform simulation.\n\n``status`` is the newest run's, or ``not_run`` for a report with no run.\n``run`` is the newest run, whatever its status and versions;\n``current_versions`` are the versions the Public API runs now, so a\nnewest run on other versions is out of date. ``options`` are the options\nthe report was created with."
+        "description": "An economy report comparing a baseline and a reform simulation.\n\nBoth simulations use the region and dataset named. ``status`` is the\nnewest run's, or ``not_run`` for a report with no run. ``run`` is the\nnewest run, whatever its status and versions."
       },
       "ReportValidation": {
         "properties": {
@@ -17128,6 +19127,34 @@
         ],
         "title": "ReportValidationItem",
         "description": "The validation snapshot saved with a report.\n\nIt records when the report was matched and with which map model version,\nand optionally the calibration results and scorecard."
+      },
+      "RerunReportUnreadableResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error",
+            "title": "Status",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Message"
+          },
+          "report_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Report Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "report_id"
+        ],
+        "title": "RerunReportUnreadableResponse",
+        "description": "The 502 answer when the report cannot be read back after its new run started.\n\nThe simulation service started the run, so the caller reads the report\nwith ``GET /v2/reports/{report_id}`` rather than running it again."
       },
       "SPMComparisonProvenance": {
         "properties": {

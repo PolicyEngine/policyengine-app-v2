@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   changeAdminUserType,
+  deleteAdminUser,
   fetchAdminUser,
   fetchUserTypeChanges,
   searchAdminUsers,
@@ -15,6 +16,7 @@ import {
   createTestApiContext,
   fetchCall,
   itemResponse,
+  noContentResponse,
   okResponse,
   TEST_ACCESS_TOKEN,
 } from '@/tests/fixtures/api/v2UserMocks';
@@ -88,6 +90,25 @@ describe('v2AdminUsers', () => {
       `/v2/admin/users/${ADMIN_USER_IDS.GRACE}`,
       { user_type: 'author', expected_user_type: 'standard' },
     ]);
+  });
+
+  test("given a user ID then the user's account is deleted with a DELETE of the user", async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(noContentResponse());
+
+    // When
+    await deleteAdminUser(context.client, ADMIN_USER_IDS.GRACE);
+
+    // Then
+    const request = fetchCall(fetchMock);
+    expect([request.method, request.path, request.query, request.body]).toEqual([
+      'DELETE',
+      `/v2/admin/users/${ADMIN_USER_IDS.GRACE}`,
+      {},
+      undefined,
+    ]);
+    expect(request.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
   });
 
   test("given a user ID then the user's type changes are read, newest first as sent", async () => {

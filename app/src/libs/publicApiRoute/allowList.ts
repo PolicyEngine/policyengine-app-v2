@@ -141,12 +141,17 @@ export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
   operation('admin invitation resend', ['POST'], `/v2/admin/invitations/${UUID}/resend`),
   operation('invitation acceptance', ['POST'], '/v2/me/invitations/accept'),
 
-  // Admins' reads and type changes of signed-in users (api/v2AdminUsers.ts).
-  // Each carries the signed-in admin's own token, which the route forwards;
-  // the Public API refuses callers below admin.
+  // Admins' reads, type changes and account deletions of signed-in users
+  // (api/v2AdminUsers.ts). Each carries the signed-in admin's own token,
+  // which the route forwards; the Public API refuses callers below admin.
   operation('admin users', ['GET'], '/v2/admin/users'),
-  operation('admin user', ['GET', 'PATCH'], `/v2/admin/users/${UUID}`),
+  operation('admin user', ['GET', 'PATCH', 'DELETE'], `/v2/admin/users/${UUID}`),
   operation('admin user type changes', ['GET'], `/v2/admin/users/${UUID}/user-type-changes`),
+
+  // Admins' read-only view of a signed-in user's saved items, in every
+  // country (api/v2AdminUserSavedItems.ts). Only GET: nothing an admin
+  // sends here can change them.
+  operation('admin user saved items', ['GET'], `/v2/admin/users/${UUID}/saved-items`),
 
   // Shared reports, read by anyone with the link (api/sharedReport.ts).
   operation('shared report', ['GET'], `/v2/shared-reports/${UUID}`),

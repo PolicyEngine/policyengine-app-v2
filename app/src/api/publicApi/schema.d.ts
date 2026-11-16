@@ -146,7 +146,11 @@ export interface paths {
     get: operations['get_user_v2_admin_users__user_id__get'];
     put?: never;
     post?: never;
-    delete?: never;
+    /**
+     * Delete a signed-in user's account and all of their saved records
+     * @description Admins only. Deletes the user exactly as DELETE /v2/me deletes the caller's own account: obtains Auth0 Management credentials first when they are configured, then deletes the user's legacy user mappings, the user (identities and saved records cascade), and the Auth0 users of the user's sign-in identities. An unauthenticated user's ID is not found (404). Admins may delete their own account here too: as with DELETE /v2/me, the only admin's deletion is refused (409); otherwise the account is deleted and the admin's next request has no user, so the admin routes answer 403. Each deletion is recorded with the admin's and the deleted user's IDs.
+     */
+    delete: operations['delete_user_v2_admin_users__user_id__delete'];
     options?: never;
     head?: never;
     /**
@@ -168,6 +172,26 @@ export interface paths {
      * @description Admins only. changed_by_email is the admin's email, read from Auth0 for this request and never stored; when Auth0 has none, or can't answer, it is the stored one.
      */
     get: operations['list_user_type_changes_v2_admin_users__user_id__user_type_changes_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/admin/users/{user_id}/saved-items': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read a signed-in user's saved policies, households, simulations and reports
+     * @description Admins only; read-only. Returns what the user's own GET /v2/me/export returns, in every country: the user, with the email admins see for it, and every saved policy, household, simulation and report. An unauthenticated user's ID is not found (404). Each read is recorded with the admin's and the user's IDs.
+     */
+    get: operations['get_user_saved_items_v2_admin_users__user_id__saved_items_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -252,7 +276,7 @@ export interface paths {
     put?: never;
     /**
      * Save a report for the current user
-     * @description Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Names a detailed-save report (report_id), which must be stored in the country (404 otherwise), or a v1 report output (legacy_report_id), checked in the v1 database; naming both is refused with 400, since v1 report numbers are not connected to detailed-save reports. An optional user_policy_id must name the same user's saved policy in the same country.
+     * @description Requires a bearer access token or the PolicyEngine-Unauthenticated-User header; the owner is taken from that credential. Names a detailed-save report (report_id), which must be stored in the country (404 otherwise), or a v1 report output (legacy_report_id), checked in the v1 database; naming both is refused with 400, since v1 report numbers are not connected to detailed-save reports. A request naming a detailed-save report must give that report's budget window as budget_window_years, or null for a report without a window of two or more years; otherwise it is refused with 400. An optional user_policy_id must name the same user's saved policy in the same country.
      */
     post: operations['create_user_report_v2_user_reports_post'];
     delete?: never;
@@ -538,14 +562,14 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * List chosen economy reports
-     * @description Lists the country's economy reports among the report_id values (at most 25), in the order named and once each, with their newest runs but without results, read in one query. Unknown reports, other countries' and reports of other kinds are left out.
+     * List chosen reports
+     * @description Lists the country's reports among the report_id values (at most 25), in the order named and once each, with their newest runs, and each budget window's years, but without results, read in two queries. Unknown reports and other countries' are left out.
      */
     get: operations['list_reports_v2_reports_get'];
     put?: never;
     /**
-     * Create an economy report
-     * @description Checks that the country has economy reports and stores each named policy, and that the running catalog version has every parameter those policies set, then has the simulation service create the report, its two simulations and their runs on its default worker's PolicyEngine.py version, and start the run. Answers the report as stored, with its pending run; read it again to follow the run. A created report that cannot be read back answers 502 with its report_id, and one whose run the simulation service failed before answering 503 answers 503 with its report_id.
+     * Create an economy report, a household report or a budget window
+     * @description Checks that the country has economy reports and stores each named policy, and that the running catalog version has every parameter those policies set, then has the simulation service create the report, its two simulations and their runs on its default worker's PolicyEngine.py version, and start the run. A household report (kind household) is checked the same way, except that the country must have household calculations instead (a household-only country does), and the household it names must be stored in the country, with a default year; its simulations each calculate that household in its default year. A budget window (kind budget_window) is checked as an economy report is; the simulation service creates a budget-window run with a report run for each year, and starts its years. Answers the report as stored, with its pending run; read it again to follow the run. A created report that cannot be read back answers 502 with its report_id, and one whose run the simulation service failed before answering 503 answers 503 with its report_id.
      */
     post: operations['create_report_v2_reports_post'];
     delete?: never;
@@ -562,12 +586,36 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Read an economy report
-     * @description Returns the report, its newest run whatever its status and versions, the versions the Public API runs now, and, once the newest run has succeeded, its result in today's economy result format. A report with no run, such as one migrated from v1, answers its definition with no result; reading starts no run.
+     * Read a report
+     * @description Returns the report, its newest run whatever its status and versions, the versions the Public API runs now, and, once the newest run has succeeded, its result. An economy report's run is one report run and its result today's economy result. A household report's result is each simulation's calculated household, as /v2/household-calculations answers one, and a failed run gives each side's error. A budget window's run is a budget-window run with a report run per year, and its result today's budget-window format: each year's budget figures and their totals. A report with no run, such as one migrated from v1, answers its definition with no result; reading starts no run.
      */
     get: operations['get_report_v2_reports__report_id__get'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v2/reports/{report_id}/runs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List a report's runs
+     * @description Lists every run of the report, newest first, whatever its status and versions, each with the country package and PolicyEngine.py versions it ran on, beside the versions the Public API runs now. A run on other versions than those is out of date. An economy or household report's runs are its report runs (kind economy or household); a budget window's are its budget-window runs, each with its years (kind budget_window). Reading starts no run.
+     */
+    get: operations['list_report_runs_v2_reports__report_id__runs_get'];
+    put?: never;
+    /**
+     * Run a report again
+     * @description Checks the report as a new report of its kind is checked (the country has economy reports, or household calculations for a household report, and each policy its simulations name is stored and sets only parameters the running catalog version has), then has the simulation service create the report's new run on its default worker's PolicyEngine.py version, and start it. Every earlier run is kept. Without force, each side reuses a run of its own simulation that succeeded on those versions; with force, both simulations are calculated again. A household report's sides are always calculated again, so force changes nothing for it. A budget window's new run is a budget-window run with a report run for each year, and with force each year calculates its simulations again. Answers the report as stored, whose newest run is then the new one, since no other run starts while it is pending or running: a report with a run pending or running answers 409 naming that run. Read the report again to follow the run.
+     */
+    post: operations['rerun_report_v2_reports__report_id__runs_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1222,6 +1270,25 @@ export interface components {
       item: components['schemas']['AdminUserItem'];
     };
     /**
+     * AdminUserSavedItemsResponse
+     * @description The response for a signed-in user's saved items, in every country.
+     *
+     *     ``result`` is what the user's own ``GET /v2/me/export`` returns: the user,
+     *     with the email admins see for it, and every policy, household, simulation
+     *     and report it saved.
+     */
+    AdminUserSavedItemsResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      result: components['schemas']['MeExportResult'];
+    };
+    /**
      * AgePoverty
      * @description Poverty rates for children, adults, seniors and everyone.
      */
@@ -1240,6 +1307,350 @@ export interface components {
       baseline: number;
       /** Reform */
       reform: number;
+    };
+    /**
+     * BudgetWindowAnnualImpact
+     * @description One year's budget figures; ``year`` is the year as text, such as "2026".
+     *
+     *     Impacts are reform minus baseline totals in the country's currency.
+     *     ``state_tax_revenue_impact`` is US state income tax (0 for the UK), and
+     *     ``federal_tax_revenue_impact`` the rest of ``tax_revenue_impact``.
+     *     ``budgetary_impact`` is ``tax_revenue_impact`` minus
+     *     ``benefit_spending_impact``. ``spm_provenance`` is the SPM receipts of
+     *     that year's report run, or null without any.
+     */
+    BudgetWindowAnnualImpact: {
+      spm_provenance: components['schemas']['SPMComparisonProvenance'] | null;
+      /** Year */
+      year: string;
+      /** Taxrevenueimpact */
+      taxRevenueImpact: number;
+      /** Federaltaxrevenueimpact */
+      federalTaxRevenueImpact: number;
+      /** Statetaxrevenueimpact */
+      stateTaxRevenueImpact: number;
+      /** Benefitspendingimpact */
+      benefitSpendingImpact: number;
+      /** Budgetaryimpact */
+      budgetaryImpact: number;
+    };
+    /**
+     * BudgetWindowReportCreateRequest
+     * @description A budget window to create; ``country_id`` must match the query's.
+     *
+     *     It compares ``baseline`` and ``reform`` in each of ``budget_window_size``
+     *     years (1 to 75) from ``year``, ending in 2200 or earlier. Each
+     *     simulation's empty object is current law, and no field names a
+     *     PolicyEngine.py version.
+     */
+    BudgetWindowReportCreateRequest: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'budget_window';
+      /** Label */
+      label: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Year
+       * @description The window's first year
+       */
+      year: number;
+      /** Region Code */
+      region_code: string;
+      /** Dataset Name */
+      dataset_name?: string | null;
+      baseline: components['schemas']['PolicyChoice'];
+      reform: components['schemas']['PolicyChoice'];
+      /** Spm */
+      spm?: components['schemas']['SPMSelection'];
+      /**
+       * Budget Window Size
+       * @description How many consecutive years the window has, from its year
+       */
+      budget_window_size: number;
+      /**
+       * Country Id
+       * @description Supported PolicyEngine country ID
+       * @enum {string}
+       */
+      country_id: 'us' | 'uk';
+    };
+    /**
+     * BudgetWindowReportItem
+     * @description A budget window with its newest run's result.
+     *
+     *     ``result`` is the budget-window result, in the format the app reads
+     *     today: each year's budget figures, in year order, and their totals. It is
+     *     there once the newest run has succeeded, and null otherwise.
+     */
+    BudgetWindowReportItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Country Id */
+      country_id: string;
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'budget_window';
+      /** Label */
+      label: string | null;
+      /** Description */
+      description: string | null;
+      /** Year */
+      year: number | null;
+      /** Budget Window Size */
+      budget_window_size: number;
+      /** Region Code */
+      region_code: string | null;
+      /** Dataset Name */
+      dataset_name: string | null;
+      baseline_simulation: components['schemas']['ReportSimulationItem'] | null;
+      reform_simulation: components['schemas']['ReportSimulationItem'] | null;
+      /** Options */
+      options: {
+        [key: string]: components['schemas']['JsonValue'];
+      };
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'not_run' | 'pending' | 'running' | 'succeeded' | 'failed';
+      run: components['schemas']['BudgetWindowRunItem'] | null;
+      current_versions: components['schemas']['PackageVersionsItem'];
+      result: components['schemas']['BudgetWindowResult'] | null;
+    };
+    /**
+     * BudgetWindowReportSummaryItem
+     * @description A budget window: a baseline and a reform policy compared in each year.
+     *
+     *     The window is ``budget_window_size`` years from ``year``, in the region
+     *     and dataset named. ``baseline_simulation`` and ``reform_simulation`` are
+     *     the first year's; each year's run names that year's own simulation runs.
+     *     ``status`` is the newest run's, or ``not_run`` for a
+     *     report with no run. ``run`` is the newest budget-window run, whatever its
+     *     status and versions, with its years; ``current_versions`` are the
+     *     versions the Public API runs now, so a newest run on other versions is
+     *     out of date. ``options`` are the options the report was created with.
+     *     ``label`` is null for a shared report, which records no one caller's label.
+     */
+    BudgetWindowReportSummaryItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Country Id */
+      country_id: string;
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'budget_window';
+      /** Label */
+      label: string | null;
+      /** Description */
+      description: string | null;
+      /** Year */
+      year: number | null;
+      /** Budget Window Size */
+      budget_window_size: number;
+      /** Region Code */
+      region_code: string | null;
+      /** Dataset Name */
+      dataset_name: string | null;
+      baseline_simulation: components['schemas']['ReportSimulationItem'] | null;
+      reform_simulation: components['schemas']['ReportSimulationItem'] | null;
+      /** Options */
+      options: {
+        [key: string]: components['schemas']['JsonValue'];
+      };
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'not_run' | 'pending' | 'running' | 'succeeded' | 'failed';
+      run: components['schemas']['BudgetWindowRunItem'] | null;
+      current_versions: components['schemas']['PackageVersionsItem'];
+    };
+    /**
+     * BudgetWindowResult
+     * @description Today's budget-window format: each year's figures, in year order, and totals.
+     *
+     *     ``start_year`` and ``end_year`` are the window's first and last years, as
+     *     text, and ``window_size`` its number of years.
+     */
+    BudgetWindowResult: {
+      /**
+       * Kind
+       * @default budgetWindow
+       * @constant
+       */
+      kind: 'budgetWindow';
+      /** Startyear */
+      startYear: string;
+      /** Endyear */
+      endYear: string;
+      /** Windowsize */
+      windowSize: number;
+      /** Annualimpacts */
+      annualImpacts: components['schemas']['BudgetWindowAnnualImpact'][];
+      totals: components['schemas']['BudgetWindowTotals'];
+    };
+    /**
+     * BudgetWindowRunItem
+     * @description One calculation of a budget window: a report run per year, in year order.
+     *
+     *     ``status`` is ``pending`` until a year starts running, ``running`` while
+     *     its years run, ``failed`` once a year has failed, with ``error_message``
+     *     saying which, and ``succeeded`` once every year has. ``trigger`` is
+     *     ``initial`` for the run the report's creation started (null for a shared
+     *     run, which records no one request's trigger), and ``recalculate`` says
+     *     whether its years calculate their simulations again rather than reusing
+     *     successful runs.
+     *     ``country_package_version`` and ``policyengine_version`` are the versions
+     *     its years run on, null for a run with no year.
+     */
+    BudgetWindowRunItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'pending' | 'running' | 'succeeded' | 'failed';
+      /** Trigger */
+      trigger: ('initial' | 'manual' | 'system') | null;
+      /** Recalculate */
+      recalculate: boolean;
+      /** Country Package Version */
+      country_package_version: string | null;
+      /** Policyengine Version */
+      policyengine_version: string | null;
+      /** Error Message */
+      error_message: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Started At */
+      started_at: string | null;
+      /** Completed At */
+      completed_at: string | null;
+      /** Years */
+      years: components['schemas']['BudgetWindowYearItem'][];
+    };
+    /**
+     * BudgetWindowRunListResult
+     * @description A budget window's runs in ``items``, newest first, each with its years.
+     *
+     *     Each budget-window run names the country package and PolicyEngine.py
+     *     versions its years ran on; ``current_versions`` are those the Public API
+     *     runs now, so a run on other versions is out of date.
+     */
+    BudgetWindowRunListResult: {
+      /**
+       * Report Id
+       * Format: uuid
+       */
+      report_id: string;
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'budget_window';
+      /** Items */
+      items: components['schemas']['BudgetWindowRunItem'][];
+      current_versions: components['schemas']['PackageVersionsItem'];
+    };
+    /**
+     * BudgetWindowTotals
+     * @description The sums of every year's budget figures, summed as exact decimals.
+     */
+    BudgetWindowTotals: {
+      /**
+       * Year
+       * @default Total
+       * @constant
+       */
+      year: 'Total';
+      /** Taxrevenueimpact */
+      taxRevenueImpact: number;
+      /** Federaltaxrevenueimpact */
+      federalTaxRevenueImpact: number;
+      /** Statetaxrevenueimpact */
+      stateTaxRevenueImpact: number;
+      /** Benefitspendingimpact */
+      benefitSpendingImpact: number;
+      /** Budgetaryimpact */
+      budgetaryImpact: number;
+    };
+    /**
+     * BudgetWindowYearItem
+     * @description One year of a budget-window run: the report run calculating that year.
+     *
+     *     Its fields are a report run's, as ``ReportRunItem`` describes them; its
+     *     simulation runs are that year's own. A year still waiting to start is
+     *     ``pending``, and one the window failed before it started is ``failed``,
+     *     its ``error_message`` saying so.
+     */
+    BudgetWindowYearItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'pending' | 'running' | 'succeeded' | 'failed';
+      /** Trigger */
+      trigger: ('initial' | 'manual' | 'system') | null;
+      /** Country Package Version */
+      country_package_version: string;
+      /** Policyengine Version */
+      policyengine_version: string;
+      /**
+       * Baseline Simulation Run Id
+       * Format: uuid
+       */
+      baseline_simulation_run_id: string;
+      /** Reform Simulation Run Id */
+      reform_simulation_run_id: string | null;
+      /** Error Message */
+      error_message: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Started At */
+      started_at: string | null;
+      /** Completed At */
+      completed_at: string | null;
+      /** Year */
+      year: number;
     };
     /**
      * BudgetaryImpact
@@ -1459,6 +1870,49 @@ export interface components {
       policyengine_version_live_since: string | null;
       /** Revision */
       revision: string | null;
+    };
+    /**
+     * EconomyReportCreateRequest
+     * @description An economy report to create; ``country_id`` must match the query's.
+     *
+     *     Each simulation's empty object is current law. No field names a
+     *     PolicyEngine.py version: the simulation service runs its default
+     *     worker's.
+     */
+    EconomyReportCreateRequest: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'economy';
+      /** Label */
+      label: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Year
+       * @description The year
+       */
+      year: number;
+      /** Region Code */
+      region_code: string;
+      /** Dataset Name */
+      dataset_name?: string | null;
+      baseline: components['schemas']['PolicyChoice'];
+      reform: components['schemas']['PolicyChoice'];
+      /** Spm */
+      spm?: components['schemas']['SPMSelection'];
+      /**
+       * Include Cliffs
+       * @default false
+       */
+      include_cliffs: boolean;
+      /**
+       * Country Id
+       * @description Supported PolicyEngine country ID
+       * @enum {string}
+       */
+      country_id: 'us' | 'uk';
     };
     /**
      * EconomyResult
@@ -1931,6 +2385,201 @@ export interface components {
       };
     };
     /**
+     * HouseholdPolicyChoice
+     * @description A household simulation's stored policy; none means current law.
+     */
+    HouseholdPolicyChoice: {
+      /** Policy Id */
+      policy_id?: string | null;
+    };
+    /**
+     * HouseholdReportCreateRequest
+     * @description A household report to create; ``country_id`` must match the query's.
+     *
+     *     It calculates the stored household ``household_id`` in its default year
+     *     under ``baseline`` and ``reform``; each empty object is current law, and a
+     *     null or omitted ``reform`` makes a report of the baseline alone. No field
+     *     names a year or a PolicyEngine.py version.
+     */
+    HouseholdReportCreateRequest: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'household';
+      /** Label */
+      label: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Household Id
+       * Format: uuid
+       * @description Exact resource UUID
+       */
+      household_id: string;
+      baseline: components['schemas']['HouseholdPolicyChoice'];
+      reform?: components['schemas']['HouseholdPolicyChoice'] | null;
+      /**
+       * Country Id
+       * @description Supported PolicyEngine country ID
+       * @enum {string}
+       */
+      country_id: 'us' | 'uk';
+    };
+    /**
+     * HouseholdReportFailureItem
+     * @description Why each side of a failed run failed, as the household function said.
+     *
+     *     A side is null when it succeeded, or failed without the household
+     *     function's error, as a run Modal refused does; the run's
+     *     ``error_message`` still says why it failed. ``reform`` is also null for
+     *     a report of the baseline alone.
+     */
+    HouseholdReportFailureItem: {
+      baseline: components['schemas']['HouseholdReportSideFailureItem'] | null;
+      reform: components['schemas']['HouseholdReportSideFailureItem'] | null;
+    };
+    /**
+     * HouseholdReportItem
+     * @description A household report with its newest run's outcome.
+     *
+     *     ``result`` holds the calculated households once the newest run has
+     *     succeeded, and ``failure`` each side's error once it has failed; each is
+     *     null otherwise.
+     */
+    HouseholdReportItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Country Id */
+      country_id: string;
+      /** Label */
+      label: string | null;
+      /** Description */
+      description: string | null;
+      /** Year */
+      year: number | null;
+      baseline_simulation: components['schemas']['ReportSimulationItem'] | null;
+      reform_simulation: components['schemas']['ReportSimulationItem'] | null;
+      /** Options */
+      options: {
+        [key: string]: components['schemas']['JsonValue'];
+      };
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      current_versions: components['schemas']['PackageVersionsItem'];
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'household';
+      /**
+       * Household Id
+       * Format: uuid
+       */
+      household_id: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'not_run' | 'pending' | 'running' | 'succeeded' | 'failed';
+      run: components['schemas']['ReportRunItem'] | null;
+      result: components['schemas']['HouseholdReportResultItem'] | null;
+      failure: components['schemas']['HouseholdReportFailureItem'] | null;
+    };
+    /**
+     * HouseholdReportResultItem
+     * @description Each simulation's calculated household.
+     *
+     *     Each is the stored household with every value its calculation filled in,
+     *     as ``/v2/household-calculations`` answers one. ``reform`` is null for a
+     *     report of the baseline alone.
+     */
+    HouseholdReportResultItem: {
+      baseline: components['schemas']['HouseholdCalculationOutputItem'];
+      reform: components['schemas']['HouseholdCalculationOutputItem'] | null;
+    };
+    /**
+     * HouseholdReportSideFailureItem
+     * @description The household function's error for one side's calculation.
+     *
+     *     ``code`` is its error code, such as ``invalid_inputs``, with
+     *     ``input_errors`` naming each input the country model does not recognize
+     *     and ``spm_error`` an SPM error.
+     */
+    HouseholdReportSideFailureItem: {
+      /** Code */
+      code: string;
+      /** Message */
+      message: string;
+      /** Input Errors */
+      input_errors: {
+        [key: string]: components['schemas']['JsonValue'];
+      }[];
+      /** Spm Error */
+      spm_error: {
+        [key: string]: components['schemas']['JsonValue'];
+      } | null;
+    };
+    /**
+     * HouseholdReportSummaryItem
+     * @description A household report: one stored household under a baseline and a reform.
+     *
+     *     Both simulations calculate the household ``household_id`` in its default
+     *     year, ``year``; ``reform_simulation`` is null for a report of the
+     *     baseline alone. ``status`` is the newest run's, or ``not_run`` for a
+     *     report with no run. ``run`` is the newest run, whatever its status and
+     *     versions, naming each simulation's run.
+     */
+    HouseholdReportSummaryItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Country Id */
+      country_id: string;
+      /** Label */
+      label: string | null;
+      /** Description */
+      description: string | null;
+      /** Year */
+      year: number | null;
+      baseline_simulation: components['schemas']['ReportSimulationItem'] | null;
+      reform_simulation: components['schemas']['ReportSimulationItem'] | null;
+      /** Options */
+      options: {
+        [key: string]: components['schemas']['JsonValue'];
+      };
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      current_versions: components['schemas']['PackageVersionsItem'];
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'household';
+      /**
+       * Household Id
+       * Format: uuid
+       */
+      household_id: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'not_run' | 'pending' | 'running' | 'succeeded' | 'failed';
+      run: components['schemas']['ReportRunItem'] | null;
+    };
+    /**
      * InequalityChange
      * @description The Gini coefficient and the top 10% and top 1% income shares.
      */
@@ -2183,9 +2832,11 @@ export interface components {
     };
     /**
      * MeExportResult
-     * @description The current user and every policy, household, simulation and report it saved.
+     * @description A user and every policy, household, simulation and report it saved.
      *
      *     The export covers every country, not only the requested one.
+     *     ``GET /v2/me/export`` returns the current user's, and
+     *     ``GET /v2/admin/users/{user_id}/saved-items`` a signed-in user's, to admins.
      */
     MeExportResult: {
       user: components['schemas']['MeItem'] | null;
@@ -3681,49 +4332,6 @@ export interface components {
       relative_error?: number | null;
     };
     /**
-     * ReportCreateRequest
-     * @description An economy report to create; ``country_id`` must match the query's.
-     *
-     *     Each simulation's empty object is current law. No field names a
-     *     PolicyEngine.py version: the simulation service runs its default
-     *     worker's.
-     */
-    ReportCreateRequest: {
-      /**
-       * Kind
-       * @constant
-       */
-      kind: 'economy';
-      /** Label */
-      label: string;
-      /** Description */
-      description?: string | null;
-      /**
-       * Year
-       * @description The year
-       */
-      year: number;
-      /** Region Code */
-      region_code: string;
-      /** Dataset Name */
-      dataset_name?: string | null;
-      baseline: components['schemas']['PolicyChoice'];
-      reform: components['schemas']['PolicyChoice'];
-      /**
-       * Include Cliffs
-       * @default false
-       */
-      include_cliffs: boolean;
-      /** Spm */
-      spm?: components['schemas']['SPMSelection'];
-      /**
-       * Country Id
-       * @description Supported PolicyEngine country ID
-       * @enum {string}
-       */
-      country_id: 'us' | 'uk';
-    };
-    /**
      * ReportDetailResponse
      * @description Success response holding one report.
      */
@@ -3740,10 +4348,14 @@ export interface components {
     };
     /**
      * ReportDetailResult
-     * @description Result holding one report in ``item``.
+     * @description Result holding one report in ``item``; its ``kind`` says which model it is.
      */
     ReportDetailResult: {
-      item: components['schemas']['ReportItem'];
+      /** Item */
+      item:
+        | components['schemas']['ReportItem']
+        | components['schemas']['HouseholdReportItem']
+        | components['schemas']['BudgetWindowReportItem'];
     };
     /**
      * ReportItem
@@ -3760,21 +4372,12 @@ export interface components {
       id: string;
       /** Country Id */
       country_id: string;
-      /**
-       * Kind
-       * @constant
-       */
-      kind: 'economy';
       /** Label */
-      label: string;
+      label: string | null;
       /** Description */
       description: string | null;
       /** Year */
       year: number | null;
-      /** Region Code */
-      region_code: string | null;
-      /** Dataset Name */
-      dataset_name: string | null;
       baseline_simulation: components['schemas']['ReportSimulationItem'] | null;
       reform_simulation: components['schemas']['ReportSimulationItem'] | null;
       /** Options */
@@ -3786,13 +4389,22 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      current_versions: components['schemas']['PackageVersionsItem'];
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'economy';
+      /** Region Code */
+      region_code: string | null;
+      /** Dataset Name */
+      dataset_name: string | null;
       /**
        * Status
        * @enum {string}
        */
       status: 'not_run' | 'pending' | 'running' | 'succeeded' | 'failed';
       run: components['schemas']['ReportRunItem'] | null;
-      current_versions: components['schemas']['PackageVersionsItem'];
       result: components['schemas']['EconomyResult'] | null;
     };
     /**
@@ -3816,7 +4428,11 @@ export interface components {
      */
     ReportListResult: {
       /** Items */
-      items: components['schemas']['ReportSummaryItem'][];
+      items: (
+        | components['schemas']['ReportSummaryItem']
+        | components['schemas']['HouseholdReportSummaryItem']
+        | components['schemas']['BudgetWindowReportSummaryItem']
+      )[];
     };
     /**
      * ReportProvision
@@ -3910,12 +4526,52 @@ export interface components {
       growth_round?: string | null;
     };
     /**
+     * ReportRerunConflictResponse
+     * @description The 409 answer when the simulation service will not run the report again now.
+     *
+     *     The message gives the service's code and reason: ``run_in_progress``,
+     *     when the report has a run pending or running, which ``run_id`` names, or
+     *     ``rerun_not_supported`` for a report it does not run again, such as one
+     *     whose simulation, region or dataset is gone, or a kind it does not run
+     *     again yet. ``run_id`` is null when the service named no run.
+     */
+    ReportRerunConflictResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /** Run Id */
+      run_id: string | null;
+    };
+    /**
+     * ReportRerunRequest
+     * @description Run a stored report again on the simulation service's current versions.
+     *
+     *     Without ``force`` (``{}``), each side reuses a run of its own simulation
+     *     that succeeded on those versions; with it, both simulations are
+     *     calculated again. A household report's sides are always calculated
+     *     again. The new run is kept beside every earlier one.
+     */
+    ReportRerunRequest: {
+      /**
+       * Force
+       * @default false
+       */
+      force: boolean;
+    };
+    /**
      * ReportRunItem
      * @description One calculation of a report, on one country package and .py version.
      *
      *     ``status`` is ``pending``, ``running``, ``succeeded`` or ``failed``, and
      *     ``error_message`` says why a failed run failed. ``trigger`` is
-     *     ``initial`` for the run the report's creation started.
+     *     ``initial`` for the run the report's creation started, and null for a run
+     *     the simulation service shares between requests, which records no one
+     *     request's trigger.
      */
     ReportRunItem: {
       /**
@@ -3928,11 +4584,8 @@ export interface components {
        * @enum {string}
        */
       status: 'pending' | 'running' | 'succeeded' | 'failed';
-      /**
-       * Trigger
-       * @enum {string}
-       */
-      trigger: 'initial' | 'manual' | 'system';
+      /** Trigger */
+      trigger: ('initial' | 'manual' | 'system') | null;
       /** Country Package Version */
       country_package_version: string;
       /** Policyengine Version */
@@ -3955,6 +4608,49 @@ export interface components {
       started_at: string | null;
       /** Completed At */
       completed_at: string | null;
+    };
+    /**
+     * ReportRunListResponse
+     * @description Success response holding a report's runs; ``result.kind`` says which list.
+     */
+    ReportRunListResponse: {
+      /**
+       * Status
+       * @default ok
+       * @constant
+       */
+      status: 'ok';
+      /** Message */
+      message?: null;
+      /** Result */
+      result:
+        | components['schemas']['ReportRunListResult']
+        | components['schemas']['BudgetWindowRunListResult'];
+    };
+    /**
+     * ReportRunListResult
+     * @description An economy or household report's runs in ``items``, newest first.
+     *
+     *     They are listed whatever their status, and ``kind`` is the report's.
+     *
+     *     Each run names the country package and PolicyEngine.py versions it ran
+     *     on; ``current_versions`` are those the Public API runs now, so a run on
+     *     other versions is out of date.
+     */
+    ReportRunListResult: {
+      /**
+       * Report Id
+       * Format: uuid
+       */
+      report_id: string;
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'economy' | 'household';
+      /** Items */
+      items: components['schemas']['ReportRunItem'][];
+      current_versions: components['schemas']['PackageVersionsItem'];
     };
     /**
      * ReportScorecard
@@ -3991,11 +4687,9 @@ export interface components {
      * ReportSummaryItem
      * @description An economy report comparing a baseline and a reform simulation.
      *
-     *     ``status`` is the newest run's, or ``not_run`` for a report with no run.
-     *     ``run`` is the newest run, whatever its status and versions;
-     *     ``current_versions`` are the versions the Public API runs now, so a
-     *     newest run on other versions is out of date. ``options`` are the options
-     *     the report was created with.
+     *     Both simulations use the region and dataset named. ``status`` is the
+     *     newest run's, or ``not_run`` for a report with no run. ``run`` is the
+     *     newest run, whatever its status and versions.
      */
     ReportSummaryItem: {
       /**
@@ -4005,21 +4699,12 @@ export interface components {
       id: string;
       /** Country Id */
       country_id: string;
-      /**
-       * Kind
-       * @constant
-       */
-      kind: 'economy';
       /** Label */
-      label: string;
+      label: string | null;
       /** Description */
       description: string | null;
       /** Year */
       year: number | null;
-      /** Region Code */
-      region_code: string | null;
-      /** Dataset Name */
-      dataset_name: string | null;
       baseline_simulation: components['schemas']['ReportSimulationItem'] | null;
       reform_simulation: components['schemas']['ReportSimulationItem'] | null;
       /** Options */
@@ -4031,13 +4716,22 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      current_versions: components['schemas']['PackageVersionsItem'];
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'economy';
+      /** Region Code */
+      region_code: string | null;
+      /** Dataset Name */
+      dataset_name: string | null;
       /**
        * Status
        * @enum {string}
        */
       status: 'not_run' | 'pending' | 'running' | 'succeeded' | 'failed';
       run: components['schemas']['ReportRunItem'] | null;
-      current_versions: components['schemas']['PackageVersionsItem'];
     };
     /**
      * ReportValidation
@@ -4068,6 +4762,28 @@ export interface components {
       map_model_version: string;
       calibration?: components['schemas']['ReportCalibrationItem'] | null;
       scorecard?: components['schemas']['ReportScorecardItem'] | null;
+    };
+    /**
+     * RerunReportUnreadableResponse
+     * @description The 502 answer when the report cannot be read back after its new run started.
+     *
+     *     The simulation service started the run, so the caller reads the report
+     *     with ``GET /v2/reports/{report_id}`` rather than running it again.
+     */
+    RerunReportUnreadableResponse: {
+      /**
+       * Status
+       * @default error
+       * @constant
+       */
+      status: 'error';
+      /** Message */
+      message: string;
+      /**
+       * Report Id
+       * Format: uuid
+       */
+      report_id: string;
     };
     /**
      * SPMComparisonProvenance
@@ -5405,7 +6121,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description Account data was deleted but the Auth0 user could not be removed; retrying is safe. */
+      /** @description Account data was deleted, but an Auth0 user of the account's sign-in identities could not be deleted; every one was tried. A retry with the same token is safe, but it deletes only the Auth0 user of the token's own identity: an Auth0 user of another identity that failed stays, and must be deleted in Auth0. */
       502: {
         headers: {
           [name: string]: unknown;
@@ -6163,6 +6879,107 @@ export interface operations {
       };
     };
   };
+  delete_user_v2_admin_users__user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No signed-in user has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The user is the only admin, which happens only when admins delete their own account; make another user an admin first. Nothing was deleted. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The account's data was deleted, but some Auth0 users of its sign-in identities from this Public API's Auth0 tenant could not be deleted; every one was tried. The message says how many of them remain. It names no email, subject or token. A retry answers 404, since the user is gone: find the remaining Auth0 users in Auth0 by the email the admin user routes showed for the user before the deletion, and delete them there. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Auth0 Management credentials could not be obtained, or persistence is unavailable; nothing was deleted. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
   change_user_type_v2_admin_users__user_id__patch: {
     parameters: {
       query?: never;
@@ -6279,6 +7096,100 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['UserTypeChangeListResponse'];
+        };
+      };
+      /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description Only admins may use these routes. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description No signed-in user has this ID. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The user's type is no longer the expected one, or the change would leave no admin. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request body exceeds 256 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema, or an email search's text holds < or >, or more than 200 Auth0 users match it. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description User authentication or persistence is unavailable, or, for an email search, users' emails can't be read from Auth0. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  get_user_saved_items_v2_admin_users__user_id__saved_items_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminUserSavedItemsResponse'];
         };
       };
       /** @description A valid bearer access token is required. The response carries WWW-Authenticate: Bearer. */
@@ -6814,7 +7725,7 @@ export interface operations {
           'application/json': components['schemas']['UserReportDetailResponse'];
         };
       };
-      /** @description The supplied references or countries contradict each other. */
+      /** @description The supplied references or countries contradict each other. Or budget_window_years disagrees with the budget window of the detailed-save report the saved report names. */
       400: {
         headers: {
           [name: string]: unknown;
@@ -7134,7 +8045,7 @@ export interface operations {
           'application/json': components['schemas']['UserReportDetailResponse'];
         };
       };
-      /** @description The supplied references or countries contradict each other. */
+      /** @description The supplied references or countries contradict each other. Or budget_window_years disagrees with the budget window of the detailed-save report the saved report names. */
       400: {
         headers: {
           [name: string]: unknown;
@@ -9641,7 +10552,10 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['ReportCreateRequest'];
+        'application/json':
+          | components['schemas']['EconomyReportCreateRequest']
+          | components['schemas']['HouseholdReportCreateRequest']
+          | components['schemas']['BudgetWindowReportCreateRequest'];
       };
     };
     responses: {
@@ -9663,7 +10577,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description A policy the report names is not stored in the country. */
+      /** @description A policy the report names, or a household report's household, is not stored in the country. */
       404: {
         headers: {
           [name: string]: unknown;
@@ -9681,7 +10595,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The request does not match the schema; the country has no economy reports (such as a household-only country); a policy the report names sets parameters the running catalog version does not have (code missing_parameters, which names them; the baseline's policy is checked first); or the simulation service cannot run the report: its 422, or its 400 for a region, dataset or dynamic it does not have. The message says which; for the simulation service's refusal, it gives the service's code, when it gave one, and its reason, but not its status. */
+      /** @description The request does not match the schema (such as a budget window of fewer than 1 or more than 75 years, or one ending after 2200); the country has no economy reports (such as a household-only country), for an economy report or budget window, or no household calculations, for a household report; a household report's household has no default year; a policy the report names sets parameters the running catalog version does not have (code missing_parameters, which names them; the baseline's policy is checked first); or the simulation service cannot run the report: its 422, or its 400 for a region, dataset or dynamic it does not have. The message says which; for the simulation service's refusal, it gives the service's code, when it gave one, and its reason, but not its status. */
       422: {
         headers: {
           [name: string]: unknown;
@@ -9757,7 +10671,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The request does not match the schema, or the report is a household report or a budget window, which this route does not read yet. */
+      /** @description The request does not match the schema. */
       422: {
         headers: {
           [name: string]: unknown;
@@ -9766,7 +10680,7 @@ export interface operations {
           'application/json': components['schemas']['V2ErrorResponse'];
         };
       };
-      /** @description The newest run succeeded but its stored result cannot be read, or the operation could not be completed. */
+      /** @description The newest run succeeded but its stored result cannot be read (for a household report, a simulation run's calculated household; for a budget window, a year has no succeeded run or no budget figures), or the operation could not be completed. */
       500: {
         headers: {
           [name: string]: unknown;
@@ -9776,6 +10690,163 @@ export interface operations {
         };
       };
       /** @description The v2 database or the simulation service is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  list_report_runs_v2_reports__report_id__runs_get: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
+      header?: never;
+      path: {
+        report_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ReportRunListResponse'];
+        };
+      };
+      /** @description No report has this ID in this country. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The v2 database or the simulation service is unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+    };
+  };
+  rerun_report_v2_reports__report_id__runs_post: {
+    parameters: {
+      query: {
+        /** @description Supported PolicyEngine country ID */
+        country_id: 'us' | 'uk';
+      };
+      header?: never;
+      path: {
+        report_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReportRerunRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ReportDetailResponse'];
+        };
+      };
+      /** @description No report has this ID in this country. Or a policy a simulation of the report names is no longer stored in the country. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The simulation service will not run the report again now, and started nothing: the report has a run pending or running (run_in_progress), which run_id names, or it is one the service does not run again, or of a kind it does not run again yet (rerun_not_supported). */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ReportRerunConflictResponse'];
+        };
+      };
+      /** @description The request body exceeds 16 KiB. */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The request does not match the schema; the country has no economy reports, or no household calculations for a household report; a policy of the report's simulations sets parameters the running catalog version does not have (code missing_parameters, which names them); or the simulation service cannot run the report as stored: its 422, or its 400 for a region, dataset or dynamic the report names that the current catalog version does not have, with its code and reason. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2MissingParametersErrorResponse']
+            | components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The operation could not be completed. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['V2ErrorResponse'];
+        };
+      };
+      /** @description The simulation service may have started a new run, but its answer does not say so: its answer was lost, a proxy answered in its place, it failed (500), or it answered in a shape or status the Public API does not expect. The message asks the caller to read the report to see whether it has a new run before running it again; while that run is pending or running, running it again answers 409. Or it started the run, but the report cannot be read back: the answer gives its report_id. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['V2ErrorResponse']
+            | components['schemas']['RerunReportUnreadableResponse'];
+        };
+      };
+      /** @description The simulation service started nothing that runs: it cannot be reached or is not configured; it answered a readable 503, and the message gives its status and code, and names the new run it failed when Modal refused the run's call; it answered a 400 about its own state rather than a row the report names (such as a catalog version missing while a release deploys), and the message gives its code and reason; it answered 400, 409 or 422 in a shape the Public API cannot read; or it answered 401, 403, 404, 405, 413 or 429, which it sends before writing anything. Or the v2 database, or the catalog the policies are checked against, cannot be read. */
       503: {
         headers: {
           [name: string]: unknown;
