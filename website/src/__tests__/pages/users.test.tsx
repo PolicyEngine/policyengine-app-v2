@@ -476,6 +476,15 @@ describe("links to the users page", () => {
     },
   );
 
+  test("given a citation then its card shows the outlet and title but no date", () => {
+    render(<CitationsClient countryId={US} />);
+
+    expect(screen.getAllByText("Example Institute").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Example US report").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/January 15, 2026/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/2026-01-15/)).not.toBeInTheDocument();
+  });
+
   test.each([US, UK])(
     "given %s then the sitemap lists its users page",
     (countryId) => {
