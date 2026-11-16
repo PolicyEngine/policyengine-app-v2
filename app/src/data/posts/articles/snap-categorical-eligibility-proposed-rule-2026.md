@@ -38,7 +38,7 @@ PolicyEngine models BBCE through a TANF non-cash eligibility test that applies e
 
 The two versions differ by $89 million in SNAP benefits, 0.3% of the total effect. With BBCE in place, applying the all-members test alone changes SNAP by $1 million. We report the first version below.
 
-Households that lose categorical eligibility face the federal tests: gross income at or below 130% of FPG unless the household has an elderly or disabled member, net income at or below 100% of FPG, and countable assets at or below $3,000 ($4,500 for households with an elderly or disabled member). PolicyEngine counts bank accounts, stocks and bonds as SNAP assets.
+Households that lose categorical eligibility face the federal income and asset tests. The gross income limit is 130% of FPG, with an exception for households with an elderly or disabled member; the net income limit is 100% of FPG. Our 2029 estimates hold asset limits at $3,000, or $4,500 for households with an elderly or disabled member, as modeled in PolicyEngine US 2.2.1. USDA updates these limits annually; its FY2027 limits are $3,000 and $4,750. The estimates omit the FY2027 increase and later annual adjustments to the asset limits. PolicyEngine counts bank accounts, stocks and bonds as SNAP assets.
 
 We model calendar year 2029 to match the RIA's first full-effect year. The estimates are static: they assume no change in behavior, such as households spending down savings to stay under the asset limit.
 
@@ -445,6 +445,16 @@ Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,5
       "proposed": 4841
     },
     {
+      "earnings": 37164.0,
+      "current": 4805,
+      "proposed": 4805
+    },
+    {
+      "earnings": 37164.01171875,
+      "current": 4805,
+      "proposed": 1259
+    },
+    {
       "earnings": 37500,
       "current": 4721,
       "proposed": 1238
@@ -453,6 +463,16 @@ Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,5
       "earnings": 38000,
       "current": 4601,
       "proposed": 1208
+    },
+    {
+      "earnings": 38004.0,
+      "current": 4601,
+      "proposed": 1208
+    },
+    {
+      "earnings": 38004.01171875,
+      "current": 4601,
+      "proposed": 0
     },
     {
       "earnings": 38500,
@@ -777,12 +797,16 @@ Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,5
   ],
   "markers": [
     {
-      "x": 37160,
-      "label": "130% of FPG (federal gross income limit)"
+      "x": 37164,
+      "label": "Federal gross income limit (Jan–Sep)"
+    },
+    {
+      "x": 38004,
+      "label": "Federal gross income limit (Oct–Dec)"
     },
     {
       "x": 57170,
-      "label": "200% of FPG (Pennsylvania BBCE limit)"
+      "label": "200% of FPG (Pennsylvania BBCE limit, Jan–Sep)"
     }
   ],
   "format": {
@@ -799,7 +823,7 @@ Consider a single parent with children aged 5 and 3 in Philadelphia, paying $1,5
 }
 ```
 
-Under current rules, the family's SNAP benefit phases out gradually and reaches zero at about $55,000 of earnings, before the 200% limit. Under the proposed rule, the federal gross income test ends the benefit once earnings exceed 130% of FPG. SNAP uses the poverty guideline in force each month: $28,585 for a family of three from January through September 2029, and $29,225 from October. The family therefore loses nine months of SNAP once its annual earnings pass $37,160, and the remaining three months above $37,993.
+Under current rules, the family's SNAP benefit phases out gradually and reaches zero at about $55,000 of earnings, before the 200% limit. Under the proposed rule, the federal gross income test ends the benefit above the monthly limit. For this family, the model uses poverty guidelines of $28,585 from January through September 2029 and $29,225 from October. SNAP rounds the monthly gross income limit up to a whole dollar, giving limits of $3,097 and $3,167. With earnings spread evenly across the year, the family therefore loses nine months of SNAP once annual earnings exceed $37,164, and the remaining three months above $38,004.
 
 | Annual earnings | SNAP, current rules | SNAP, proposed rule | Net income, current rules | Net income, proposed rule |
 |---|---|---|---|---|
@@ -827,12 +851,14 @@ The same family with $30,000 of earnings stays below 130% of FPG. Under the prop
     {
       "key": "current",
       "name": "Current rules",
-      "color": "quinary"
+      "color": "quinary",
+      "step": true
     },
     {
       "key": "proposed",
       "name": "Proposed rule",
-      "color": "primary"
+      "color": "primary",
+      "step": true
     }
   ],
   "data": [
@@ -990,6 +1016,11 @@ The same family with $30,000 of earnings stays below 130% of FPG. Under the prop
       "savings": 3000,
       "current": 6521,
       "proposed": 6521
+    },
+    {
+      "savings": 3000.010009765625,
+      "current": 6521,
+      "proposed": 0
     },
     {
       "savings": 3100,
@@ -1775,7 +1806,7 @@ USDA's own sensitivity analysis ranges from an $11.0 billion reduction, if a qua
 
 ## Methodology
 
-We used PolicyEngine US 2.2.1 through the policyengine 6.17.2 package and the certified Microcosm dataset `populace_us_2024` (build populace-us-2024-spm-20260915), projected to 2029. All results are static and compare the proposed rule with current law in 2029. The lower end of the range keeps each household's modeled SNAP outcome and multiplies the survey weights of SNAP households by 0.27 if they fail an income test, 0.57 if they fail only the asset test, and 1.39 if they meet all federal limits, which preserves the caseload's size and matches USDA's quality control shares. The lower-end SNAP figures cover fiscal 2029 months and exclude Alaska, to match USDA's coverage; the lower-end poverty figures apply the same weights to calendar 2029.
+We used PolicyEngine US 2.2.1 through the policyengine 6.17.2 package and the certified Microcosm dataset `populace_us_2024` (build populace-us-2024-spm-20260915), projected to 2029. Household chart breakpoints use policyengine 6.19.0 with the same US model. All results are static and compare the proposed rule with current law in 2029. The lower end of the range keeps each household's modeled SNAP outcome and multiplies the survey weights of SNAP households by 0.27 if they fail an income test, 0.57 if they fail only the asset test, and 1.39 if they meet all federal limits, which preserves the caseload's size and matches USDA's quality control shares. The lower-end SNAP figures cover fiscal 2029 months and exclude Alaska, to match USDA's coverage; the lower-end poverty figures apply the same weights to calendar 2029.
 
 ## References
 
@@ -1783,3 +1814,4 @@ We used PolicyEngine US 2.2.1 through the policyengine 6.17.2 package and the ce
 - U.S. Department of Agriculture. ["Reforming Categorical Eligibility RIA," docket FNA-2026-0661-0002 #page 4,20,27-28,31,69,76-83](https://downloads.regulations.gov/FNA-2026-0661-0002/content.pdf#page=4)
 - [7 CFR 273.2(j)(2), Categorically eligible PA and SSI households](https://www.ecfr.gov/current/title-7/section-273.2#p-273.2(j)(2))
 - [45 CFR 260.31, What does the term "assistance" mean?](https://www.ecfr.gov/current/title-45/section-260.31)
+- U.S. Department of Agriculture, Food and Nutrition Administration. [SNAP Eligibility, fiscal year 2027 (October 1, 2026 through September 30, 2027)](https://www.fna.usda.gov/snap/recipient/eligibility)
