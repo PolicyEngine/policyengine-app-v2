@@ -65,8 +65,9 @@ export function useRunFlagshipReport() {
        * The policies the caller's save of the reform (`reformId`) just
        * made, as the reform store answered them. The run reuses
        * `policyId`, the v1 policy, rather than creating it again; without
-       * one (a reform saved only as a v2 policy) it creates it. Nothing
-       * reads `v2PolicyId` yet: it is passed for the run on the v2 routes.
+       * one (a reform saved only as a v2 policy) it creates it. Only
+       * `policyId` is passed on: `v2PolicyId` is accepted for a run on the
+       * v2 routes, which does not exist yet.
        */
       reformPolicies?: Pick<Reform, 'policyId' | 'v2PolicyId'>;
       /** A state or congressional district ("state/ca"); the whole country when unset. */

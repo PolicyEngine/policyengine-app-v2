@@ -458,6 +458,46 @@ describe('DraftHeader', () => {
       });
     });
 
+    test("given the model's parameters loaded before the click then the run reuses the save's policy", async () => {
+      const user = userEvent.setup();
+      seedDeductionMetadata();
+      addDraftProvision('us', SEEDED_CHANGE);
+      mockCreate.mockResolvedValue({
+        id: 'rf-new',
+        policyId: SAVED_REFORM_POLICY_ID,
+        v2PolicyId: null,
+      });
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][5].reformPolicies).toMatchObject({
+        policyId: SAVED_REFORM_POLICY_ID,
+      });
+    });
+
+    // The save started without the model's parameters, so its policy keeps
+    // values equal to current law (and leaves values untyped when they
+    // arrive after its request), while the run describes the reform with
+    // them: the run makes its own policy rather than simulate that one.
+    test("given the model's parameters load during the save then the run does not reuse the save's policy", async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', SEEDED_CHANGE);
+      mockCreate.mockImplementation(async () => {
+        seedDeductionMetadata();
+        return { id: 'rf-new', policyId: SAVED_REFORM_POLICY_ID, v2PolicyId: null };
+      });
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(mockRun.mock.calls[0][3]).toBe('rf-new');
+      expect(mockRun.mock.calls[0][5].reformPolicies).toBeUndefined();
+    });
+
     test('then a reform saved only as a v2 policy hands the run its policies, with no v1 policy', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', CHANGED);

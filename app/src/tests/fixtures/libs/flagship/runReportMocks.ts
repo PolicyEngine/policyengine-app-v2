@@ -30,9 +30,9 @@ export const STORED_CALIFORNIA_REPORT: ReportMetadata = {
 };
 
 /**
- * The policies the reform store answers a save with: the v1 policy's ID
- * as text, and on the v2 routes the `/v2/policies` UUID. A run started
- * right after that save reuses the v1 policy.
+ * The policy IDs a reform store answers a save with: the v1 policy's ID
+ * as text, which a run started right after that save reuses, or, from a
+ * save on the v2 routes, a `/v2/policies` UUID instead.
  */
 export const SAVED_REFORM_POLICY_ID = '91';
 export const SAVED_REFORM_V2_POLICY_ID = '66666666-6666-4666-8666-666666666666';

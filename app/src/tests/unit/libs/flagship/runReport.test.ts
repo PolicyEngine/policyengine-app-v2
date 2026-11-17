@@ -495,6 +495,9 @@ describe('runFlagshipReport', () => {
     });
 
     test('given a reform saved in this browser and then run then one reform policy is requested', async () => {
+      // The save's policy has its own ID, so a run that made the policy
+      // again would simulate a different one.
+      mockCreatePolicy.mockResolvedValueOnce({ result: { policy_id: SAVED_REFORM_POLICY_ID } });
       const savedReform = await new LocalStorageReformStore().create({
         countryId: 'us',
         label: 'CTC expansion',
@@ -522,7 +525,7 @@ describe('runFlagshipReport', () => {
       expect(mockCreateSimulation).toHaveBeenNthCalledWith(
         2,
         'us',
-        expect.objectContaining({ policy_id: 77 })
+        expect.objectContaining({ policy_id: Number(SAVED_REFORM_POLICY_ID) })
       );
     });
   });

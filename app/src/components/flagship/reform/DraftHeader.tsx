@@ -284,6 +284,11 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
 interface DraftRunRequest {
   runDraft: DraftReform;
   runBaseline: RunReportBaseline | undefined;
+  /**
+   * The model's parameters when the button was pressed, which the save
+   * compares with current law (the store types values with the latest).
+   */
+  runParameters: RootState['metadata']['parameters'];
 }
 
 export function DraftRunBar({
@@ -382,7 +387,7 @@ export function DraftRunBar({
   // that was saved, whatever is edited while the save is in flight.
   const saveAndRunMutation = useMutation({
     mutationFn: ({ runDraft }: DraftRunRequest) => saveForRun(runDraft),
-    onSuccess: ({ reform: saved, reused }, { runDraft, runBaseline }) => {
+    onSuccess: ({ reform: saved, reused }, { runDraft, runBaseline, runParameters }) => {
       queryClient.invalidateQueries({ queryKey: ['reforms'] });
       if (!reused) {
         setDraftEditingReform(saved.id!);
@@ -404,8 +409,10 @@ export function DraftRunBar({
         {
           fromDraft: true,
           // The run reuses the v1 policy this save made, if it made one. A
-          // reused reform's policy may predate typed saves: the run makes its own.
-          reformPolicies: reused ? undefined : saved,
+          // reused reform's policy may predate typed saves, and parameters
+          // that loaded during the save describe the reform differently
+          // from it: in both cases the run makes its own.
+          reformPolicies: reused || runParameters !== parameters ? undefined : saved,
           region: runDraft.population?.region,
           windowYears: runWindowYears > 1 ? runWindowYears : undefined,
           baseline: runBaseline,
@@ -573,6 +580,7 @@ export function DraftRunBar({
               saveAndRunMutation.mutate({
                 runDraft: structuredClone(draft),
                 runBaseline: baseline.forRun,
+                runParameters: parameters,
               });
             }}
             disabled={
