@@ -1,9 +1,10 @@
 import { useId } from 'react';
 import type { UserTypeChangeItem } from '@/api/v2AdminUsers';
-import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
+import { Button, Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { isRefusedOrMissing, useUserTypeChanges } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import AdminCard from './AdminCard';
 import { formatAdminDateTime, USER_TYPE_LABELS } from './adminUserFormat';
 
 /**
@@ -79,11 +80,12 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
   }
 
   return (
-    <Stack gap="sm">
-      <Title order={3} id={headingId} style={{ margin: 0, fontSize: typography.fontSize.base }}>
-        Permissions changes
-      </Title>
+    <AdminCard
+      title="Permissions changes"
+      titleId={headingId}
+      description="Every change to this user's type, newest first."
+    >
       {content}
-    </Stack>
+    </AdminCard>
   );
 }

@@ -6,11 +6,11 @@ import SettingsSidebar from './SettingsSidebar';
 
 /**
  * The admin settings ("Admin" in the account menu): the shared settings
- * template with, for admins, a sidebar of the admin pages (for now only
- * Users). Everyone else, and anyone whose type is not known yet, sees the
+ * template with, for admins, a sidebar of the admin pages (Users and
+ * Invitations). Everyone else, and anyone whose type is not known yet, sees the
  * page alone. The layout hides only the sidebar: each admin page restricts
- * its own content to admins, with its own loading and not-found states, as
- * `AdminUsersPage` does.
+ * its own content to admins, with its own loading and not-found states, through
+ * `AdminPage`.
  */
 export default function AdminSettingsLayout({ children }: { children: ReactNode }) {
   return (
