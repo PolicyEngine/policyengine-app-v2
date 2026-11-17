@@ -193,7 +193,7 @@ const usUseCases: UseCase[] = [
       },
       {
         type: "output",
-        text: "Running microsimulation on the Populace dataset...",
+        text: "Running microsimulation on the Microcosm dataset...",
       },
       {
         type: "success",

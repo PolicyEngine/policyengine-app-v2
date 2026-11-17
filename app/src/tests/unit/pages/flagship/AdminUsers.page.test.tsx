@@ -433,6 +433,25 @@ describe('AdminUsersPage', () => {
     expect(await screen.findByRole('list', { name: 'Permissions changes' })).toBeInTheDocument();
   });
 
+  test("given a user's details then each block is a card titled with a level-2 heading, as on the account pages", async () => {
+    // When
+    await openUserDetails(GRACE.email!);
+    await screen.findByRole('heading', { level: 2, name: 'Delete account' });
+
+    // Then
+    const cardTitles = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent);
+    expect(cardTitles).toEqual([
+      'Find users',
+      GRACE.email,
+      'User type',
+      'Permissions changes',
+      'Saved items',
+      'Delete account',
+    ]);
+  });
+
   test("given a new type then the confirmation names the user's email and the old and new types", async () => {
     // Given
     const { user } = await openUserDetails(GRACE.email!);

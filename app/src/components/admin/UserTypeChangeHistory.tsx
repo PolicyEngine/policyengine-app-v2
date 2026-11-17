@@ -1,15 +1,24 @@
 import { useId } from 'react';
 import type { UserTypeChangeItem } from '@/api/v2AdminUsers';
-import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
+import { Button, Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { isRefusedOrMissing, useUserTypeChanges } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import AdminCard from './AdminCard';
 import { formatAdminDateTime, USER_TYPE_LABELS } from './adminUserFormat';
 
-/** Who made a change: an admin through the admin routes, or the type script. */
+/**
+ * Who made a change: an admin through the admin routes, the user by
+ * accepting an admin's invitation, or the type script.
+ */
 function changeAuthor(change: UserTypeChangeItem): string {
   if (change.source === 'script') {
     return 'Set by the type script';
+  }
+  if (change.source === 'invitation') {
+    return change.changed_by_email
+      ? `Accepted an invitation from ${change.changed_by_email}`
+      : "Accepted an admin's invitation";
   }
   // The admin's email is null when the admin has none, or once their account is deleted.
   return change.changed_by_email ? `Changed by ${change.changed_by_email}` : 'Changed by an admin';
@@ -71,11 +80,12 @@ export default function UserTypeChangeHistory({ userId }: { userId: string }) {
   }
 
   return (
-    <Stack gap="sm">
-      <Title order={3} id={headingId} style={{ margin: 0, fontSize: typography.fontSize.base }}>
-        Permissions changes
-      </Title>
+    <AdminCard
+      title="Permissions changes"
+      titleId={headingId}
+      description="Every change to this user's type, newest first."
+    >
       {content}
-    </Stack>
+    </AdminCard>
   );
 }

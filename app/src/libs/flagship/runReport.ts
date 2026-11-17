@@ -8,11 +8,13 @@ import { createPolicy } from '@/api/policy';
 import { createReport } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
+import { isLegacyId } from '@/api/v2Associations';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { baselineProvisions, customBaseline } from '@/libs/flagship/reportBaseline';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { ReportMetadata } from '@/types/metadata/reportMetadata';
+import type { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { coercePolicyParameterValue, resolvePolicyParameterValueSpec } from '@/utils/valueCoercion';
@@ -207,6 +209,14 @@ export interface RunFlagshipReportArgs {
   currentLawId: number;
   /** Saved reform this run came from, for the central report record. */
   reformId?: string | null;
+  /**
+   * The v1 policy the caller's save of that reform just made from these
+   * `provisions` (the reform store types values as a run does), so the
+   * run uses it rather than asking the Public API to create it again.
+   * Given anything else (none, or a v2 policy's UUID), the run creates the
+   * reform's policy itself.
+   */
+  reformPolicyId?: string | number | null;
   /** The year to simulate; the current year when unset. */
   year?: number;
   /**
@@ -235,6 +245,18 @@ export interface RunFlagshipReportArgs {
    * An account record keeps its ID, so its link opens the new results.
    */
   savedReportId?: string;
+  /**
+   * Called once the run has saved its report, just before it answers the
+   * link, with what it created: the report page can open on these rather
+   * than read them back.
+   */
+  onRecordsCreated?: (records: FlagshipRunRecords) => void;
+}
+
+/** What a run created, as the Public API and, with accounts, the account answered it. */
+export interface FlagshipRunRecords extends ReportRecords {
+  /** With accounts, the saved report's row as the account answered the run's write; else null. */
+  savedReport: FlagshipReportRecord | null;
 }
 
 /**
@@ -317,6 +339,25 @@ export type ReportRecordsRunner = <Result>(request: () => Promise<Result>) => Pr
 const sendAtOnce: ReportRecordsRunner = (request) => request();
 
 /**
+ * Sends a request now without waiting for its answer. The answer is
+ * dropped, and so is a failure, whether the request throws or rejects.
+ */
+function sendWithoutWaiting(request: () => Promise<unknown>): void {
+  // The executor runs at once, so the request goes out before this returns.
+  void new Promise((resolve) => resolve(request())).catch(() => undefined);
+}
+
+/**
+ * A report's records as the Public API answered their creation: each
+ * create answers with the record as stored, the same as reading it back.
+ */
+export interface ReportRecords {
+  report: ReportMetadata;
+  /** The baseline's simulation, then the reform's. */
+  simulations: SimulationMetadata[];
+}
+
+/**
  * Creates, or reuses, a report's two simulations (the baseline's and the
  * reform's, on the same population) and the base report that pairs them
  * for the year. The Public API reuses a simulation with the same
@@ -329,7 +370,7 @@ export async function createReportRecords(
   countryId: CountryId,
   { region, baselinePolicyId, reformPolicyId, year }: ReportRecordsRequest,
   run: ReportRecordsRunner = sendAtOnce
-): Promise<ReportMetadata> {
+): Promise<ReportRecords> {
   const populationId = region ?? countryId;
   const [baseline, reform] = await Promise.all([
     run(() =>
@@ -348,13 +389,14 @@ export async function createReportRecords(
     ),
   ]);
 
-  return run(() =>
+  const report = await run(() =>
     createReport(countryId, {
       simulation_1_id: Number(baseline.result.simulation_id),
       simulation_2_id: Number(reform.result.simulation_id),
       year: String(year),
     })
   );
+  return { report, simulations: [baseline.simulation, reform.simulation] };
 }
 
 /**
@@ -368,6 +410,7 @@ export async function runFlagshipReport({
   provisions,
   currentLawId,
   reformId,
+  reformPolicyId: savedReformPolicyId,
   year = Number(CURRENT_YEAR),
   region,
   windowYears,
@@ -375,6 +418,7 @@ export async function runFlagshipReport({
   accountReportStore,
   parameters,
   savedReportId,
+  onRecordsCreated,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -384,27 +428,55 @@ export async function runFlagshipReport({
   // Neither policy carries a name: names live on the user's records.
   const comparison = customBaseline(requestedBaseline, currentLawId);
   const [reformPolicyId, baselineId] = await Promise.all([
-    createReformPolicy(countryId, provisions, parameters),
+    isLegacyId(savedReformPolicyId)
+      ? Number(savedReformPolicyId)
+      : createReformPolicy(countryId, provisions, parameters),
     comparison?.policyId ??
       (comparison
         ? createReformPolicy(countryId, baselineProvisions(comparison), parameters)
         : currentLawId),
   ]);
 
+  // Start the report's own calculation as soon as its two policies exist,
+  // not when its page opens: the economy endpoint reads only the policies,
+  // not the simulations or the report created below. The first request
+  // queues the job, so a tab closed right after "Run" still gets its
+  // result, waiting for the link. The page asks with the same reform,
+  // baseline, region and year, so it checks on this job.
+  // A failure here never fails the run: the report page asks again.
+  const budgetWindow =
+    windowYears && windowYears > 1 ? { startYear: year, windowSize: windowYears } : undefined;
+  sendWithoutWaiting(() =>
+    fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(baselineId), {
+      region: region ?? countryId,
+      time_period: String(year),
+    })
+  );
+
+  // The window was asked for with the run: start it now too, rather than
+  // when the report page opens. The first request submits the batch; the
+  // report's section checks on the same one, and shows any error there.
+  if (budgetWindow) {
+    sendWithoutWaiting(() =>
+      fetchBudgetWindow(countryId, String(reformPolicyId), String(baselineId), {
+        region: region ?? countryId,
+        ...budgetWindow,
+      })
+    );
+  }
+
   // The v1 report comes first. Then exactly one record of it, new or (with
   // savedReportId) the saved report repointed at it: through the API with
   // accounts, whose ID is the report's link (anyone can open it), otherwise
   // this browser's flagship record, with the v1 report's ID as the link
   // (v3 never writes the legacy report keys).
-  const reportMetadata = await createReportRecords(countryId, {
+  const { report: reportMetadata, simulations } = await createReportRecords(countryId, {
     region,
     baselinePolicyId: baselineId,
     reformPolicyId,
     year,
   });
   const reportId = String(reportMetadata.id);
-  const budgetWindow =
-    windowYears && windowYears > 1 ? { startYear: year, windowSize: windowYears } : undefined;
   const meta: FlagshipReportMeta = {
     title,
     sourceNote,
@@ -436,11 +508,13 @@ export async function runFlagshipReport({
   // A saved report moved onto this run keeps its record and its links.
   const repointed = { apiReportId: reportId, provisions, year: String(year) };
   let link = reportId;
+  let savedReport: FlagshipReportRecord | null = null;
   if (accountReportStore) {
     // A failure fails the run, so a report that opens is one that was saved.
-    link = savedReportId
-      ? (await accountReportStore.update(savedReportId, repointed)).id
-      : (await accountReportStore.create(record)).id;
+    savedReport = savedReportId
+      ? await accountReportStore.update(savedReportId, repointed)
+      : await accountReportStore.create(record);
+    link = savedReport.id;
     rememberAccountReportMeta(link, meta);
   } else if (savedReportId) {
     // The saved report must move, or it would still point at the old run.
@@ -456,32 +530,7 @@ export async function runFlagshipReport({
     }
   }
 
-  // Start the report's own calculation now, not when its page opens: the
-  // first request queues the job, so a tab closed right after "Run" still
-  // gets its result, waiting for the link. The page asks with the same
-  // reform, baseline, region and year, so it checks on this job.
-  // A failure here never fails the run: the report page asks again.
-  void Promise.resolve()
-    .then(() =>
-      fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(baselineId), {
-        region: region ?? countryId,
-        time_period: String(year),
-      })
-    )
-    .catch(() => undefined);
-
-  // The window was asked for with the run: start it now, alongside the
-  // report, rather than when the report page opens. The first request
-  // submits the batch; the report's section checks on the same one.
-  if (budgetWindow) {
-    void fetchBudgetWindow(countryId, String(reformPolicyId), String(baselineId), {
-      region: region ?? countryId,
-      ...budgetWindow,
-    }).catch(() => {
-      // The report's section asks again, and shows any error there.
-    });
-  }
-
+  onRecordsCreated?.({ report: reportMetadata, simulations, savedReport });
   return link;
 }
 

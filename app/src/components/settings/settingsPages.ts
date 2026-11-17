@@ -1,4 +1,4 @@
-import { IconDatabase, IconSettings, IconUsers, type Icon } from '@tabler/icons-react';
+import { IconDatabase, IconMail, IconSettings, IconUsers, type Icon } from '@tabler/icons-react';
 
 /** The account page, the account settings' General page. */
 export function accountPath(countryId: string): string {
@@ -13,6 +13,11 @@ export function accountDataPath(countryId: string): string {
 /** The admin users page, where the account menu's "Admin" leads. */
 export function adminUsersPath(countryId: string): string {
   return `/${countryId}/admin/users`;
+}
+
+/** The admin invitations page, where admins invite people to become authors or admins. */
+export function adminInvitationsPath(countryId: string): string {
+  return `/${countryId}/admin/invitations`;
 }
 
 export interface SettingsPage {
@@ -30,6 +35,7 @@ export const ACCOUNT_SETTINGS_PAGES: readonly SettingsPage[] = [
 /** The admin settings pages, in the order the sidebar lists them. */
 export const ADMIN_SETTINGS_PAGES: readonly SettingsPage[] = [
   { label: 'Users', icon: IconUsers, path: adminUsersPath },
+  { label: 'Invitations', icon: IconMail, path: adminInvitationsPath },
 ];
 
 /**

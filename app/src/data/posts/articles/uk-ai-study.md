@@ -1,137 +1,157 @@
-If artificial intelligence displaces a share of UK employment, who bears the resulting loss: displaced workers, lower-income households, or the Exchequer — the government's finances? The UK has one of the most AI-exposed workforces among advanced economies, with employment concentrated in professional, financial, administrative and managerial occupations that score high on common AI-exposure measures ([Felten et al., 2021](https://onlinelibrary.wiley.com/doi/10.1002/smj.3286); [Eloundou et al., 2023](https://arxiv.org/abs/2303.10130); [DSIT, 2023](https://www.gov.uk/government/publications/the-impact-of-ai-on-uk-jobs-and-training)).
+If AI displaces part of the UK workforce, who bears the loss: displaced workers, lower-income households or the Exchequer? Much UK employment is in professional, financial, administrative and managerial jobs that score high on AI-exposure measures ([Felten et al., 2021](https://onlinelibrary.wiley.com/doi/10.1002/smj.3286); [Eloundou et al., 2023](https://arxiv.org/abs/2303.10130); [Department for Education, 2023](https://www.gov.uk/government/publications/the-impact-of-ai-on-uk-jobs-and-training)).
 
-The answer depends not only on the size of the shock but on how it is distributed, and evidence on who bears AI's labour-market effects remains unsettled. Three views compete. Exposure-based measures assign greater risk to higher-paid cognitive work ([Felten et al., 2021](https://onlinelibrary.wiley.com/doi/10.1002/smj.3286); [Eloundou et al., 2023](https://arxiv.org/abs/2303.10130)), suggesting AI breaks with earlier automation waves that hollowed out mid-skill routine jobs ([Autor, Levy and Murnane, 2003](https://academic.oup.com/qje/article/118/4/1279/1925105); [Goos and Manning, 2007](https://direct.mit.edu/rest/article/89/1/118/57634/Lousy-and-Lovely-Jobs-The-Rising-Polarization-of)). A second account, associated with [Autor (2024)](https://www.nber.org/papers/w32140), argues AI's distinctive effect is to compress the returns to expertise: by supplying knowledge on demand, it lets less experienced workers do tasks previously reserved for specialists, threatening senior wage premia rather than junior jobs. A third strand of early empirical evidence points the opposite way — UK firm-level job cuts concentrated almost entirely in junior roles ([Klein Teeselink, 2025](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5516798)), US junior employment falling about 9% within six quarters of firm AI adoption while senior employment is unaffected ([Hosseini and Lichtinger, 2026a](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5425555)), and a 16% relative employment decline among 22–25-year-olds in the most exposed US occupations ([Brynjolfsson, Chandar and Chen, 2025](https://digitaleconomy.stanford.edu/wp-content/uploads/2025/08/Canaries_BrynjolfssonChandarChen.pdf)). These are distinct hypotheses about incidence — who ultimately bears the loss — rather than refinements of a single estimate, and they imply different household losses, benefit responses and tax effects.
+The answer depends on how the shock is distributed as well as on its size, and evidence on who bears AI's labour-market effects remains unsettled. Three views compete:
 
-In this [PolicyEngine study](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7174479), we trace AI employment, wage and capital shocks through the full UK tax-benefit system with PolicyEngine UK and Family Resources Survey 2024–25 microdata. Rather than picking one incidence view, we simulate all of them as explicit scenarios — exposure-proportional, junior-concentrated, expertise-compression, uniform and a top-loaded stress test — and extend the analysis to the adjustment margin (job losses versus wage cuts), age and gender incidence, benefit caseloads, regional impacts, and policy responses. The central shock calibrations follow the conventions of a comparable [Irish exercise](https://www.esri.ie/system/files/publications/JR16_0.pdf) (Doorley et al., 2026), which allows a direct cross-country benchmark.
+- **Higher-paid cognitive work.** Exposure-based measures assign greater risk to higher-paid cognitive work ([Felten et al., 2021](https://onlinelibrary.wiley.com/doi/10.1002/smj.3286); [Eloundou et al., 2023](https://arxiv.org/abs/2303.10130)), unlike earlier automation waves that hollowed out mid-skill routine jobs ([Autor, Levy and Murnane, 2003](https://academic.oup.com/qje/article/118/4/1279/1925105); [Goos and Manning, 2007](https://direct.mit.edu/rest/article/89/1/118/57634/Lousy-and-Lovely-Jobs-The-Rising-Polarization-of)).
+- **Senior wage premia.** [Autor (2024)](https://www.nber.org/papers/w32140) argues AI compresses the returns to expertise: it lets less experienced workers do tasks previously reserved for specialists, threatening senior wage premia rather than junior jobs.
+- **Junior jobs.** Early empirical evidence points the opposite way: larger estimated employment effects for junior than for all positions at more AI-exposed UK firms ([Klein Teeselink, 2025](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5516798)); US junior employment falling after firms adopt AI while senior employment is largely unchanged ([Hosseini Maasoum and Lichtinger, 2026a](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5425555)); and, as a descriptive pattern, employment of 22–25-year-olds in the most exposed US occupations 19% below the path of less exposed peers ([Brynjolfsson, Chandar and Chen, 2026](https://digitaleconomy.stanford.edu/publications/canaries-in-the-coal-mine)).
 
-These results are scenario analysis, not prediction: they trace what would follow if labour-market shocks of a given size and incidence materialised, under tax-benefit rules as legislated.
+These views imply different household losses, benefit responses and tax effects.
+
+In this [PolicyEngine study](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7174479), we trace AI employment, wage and capital shocks through the UK tax-benefit system with PolicyEngine UK ([Ahmadi et al., 2026](https://doi.org/10.21105/joss.11115)) and Microcosm, PolicyEngine's calibrated microdataset built from the Family Resources Survey 2024–25. We simulate five incidence scenarios — exposure-proportional, junior-concentrated, expertise-compression, uniform and a top-loaded stress test. The central shock calibrations follow a comparable [Irish exercise](https://www.esri.ie/system/files/publications/JR16_0.pdf) (Doorley et al., 2026).
+
+These results are scenario analysis, not prediction: they trace what would follow if labour-market shocks of a given size and incidence materialised, under the tax-benefit rules legislated or announced for 2027–28.
 
 ## Methodology
 
-The pipeline has three stages. First, every working adult in the Family Resources Survey 2024–25 is assigned an AI exposure score based on their occupation, using the AI Occupational Exposure index of [Felten et al. (2021)](https://onlinelibrary.wiley.com/doi/10.1002/smj.3286) adjusted for how much AI complements rather than substitutes for each occupation ([Pizzinelli et al., 2023](https://www.imf.org/en/publications/wp/issues/2023/10/04/labor-market-exposure-to-ai-cross-country-differences-and-distributional-implications-539656)). Second, the shock: a set share of employees lose their jobs for the simulated year, 2026 (drawn across occupations in proportion to exposure, or reallocated under the alternative incidence families), workers who remain receive wage gains proportional to AI complementarity, and interest and dividend income rises. Third, PolicyEngine UK recomputes every household's taxes and benefit entitlements in both the baseline and shocked worlds, so all results net out the full interaction of earnings, Universal Credit (UC), income tax and National Insurance contributions (NICs).
+The pipeline has three stages:
 
-Displacement is random within occupation groups, so headline results are, where noted, reported as means over 50 randomised draws (each run from a fixed random seed, so runs are reproducible and comparable); the ± values quoted throughout are standard deviations across those draws, measuring allocation noise (which workers within an occupation are hit) rather than population sampling uncertainty. Because all incidence families share the same seeds, differences between them can be compared draw by draw. Incomes follow the official Households Below Average Income (HBAI) disposable-income concept; poverty is measured against absolute thresholds both before housing costs (BHC) and after housing costs (AHC), so poverty changes are measured against fixed real thresholds. Three limitations matter most: displaced workers are out of work for the full simulated year (a six-month approximation cuts the fiscal cost by more than three-quarters), occupations are observed only at the 1-digit level, and the self-employed are excluded. The [full paper](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7174479) details the rest.
+- **Exposure.** Every employee in Microcosm is assigned an AI exposure score based on their occupation, using the index of [Felten et al. (2021)](https://onlinelibrary.wiley.com/doi/10.1002/smj.3286) adjusted for how much AI complements rather than substitutes for each occupation ([Pizzinelli et al., 2023](https://www.imf.org/en/publications/wp/issues/2023/10/04/labor-market-exposure-to-ai-cross-country-differences-and-distributional-implications-539656)).
+- **Shock.** A set share of employees lose their jobs for the 2027–28 tax year, workers who remain receive wage gains proportional to AI complementarity, and interest and dividend income rises by 39.8%.
+- **Tax-benefit response.** PolicyEngine UK recomputes every household's taxes and benefit entitlements in the baseline and shocked worlds, so results net out the interaction of earnings, Universal Credit (UC), income tax and National Insurance.
+
+Microcosm starts from the Family Resources Survey 2024–25, adds records from the HMRC Survey of Personal Incomes to represent top incomes, and calibrates household weights to administrative totals. It grosses to 29.0 million employees in 2027–28.
+
+We measure the Exchequer cost as the fall in PolicyEngine's government balance, which includes income tax, employee and employer National Insurance and benefit spending; a negative cost is a net gain. Displacement is random within occupation groups, so headline results are, where noted, means over 50 randomised draws. Incomes follow the official Households Below Average Income (HBAI) concept, and we measure poverty against absolute thresholds before housing costs (BHC) and after housing costs (AHC).
+
+Three limitations matter most: displaced workers are out of work for the full simulated year, occupations are observed only at the 1-digit level, and the labour-market shocks exclude the self-employed by design. The [full paper](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7174479) details the rest.
 
 ## Headline results
 
-The central scenario assumes 7% of employees lose their jobs for the full 2026 tax year, workers who remain receive a 2.6% average wage rise, and returns to capital increase — a calibration built from the task-exposure and productivity estimates of [Briggs and Kodnani (Goldman Sachs, 2023)](https://www.gspublishing.com/content/research/en/reports/2023/03/27/d64e052b-0f6e-45d7-967b-d7be35fabd16.pdf). The low and high scenarios bracket it with smaller and larger displacement rates from the wider literature. Under the central calibration, the simulated Exchequer cost is £18.2 billion for the 2026 tax year, absolute poverty measured after housing costs rises by 1.85 percentage points, and the Gini coefficient rises by 1.04 percentage points.
+The central scenario assumes 7% of employees lose their jobs for the full 2027–28 tax year, workers who remain receive a 2.6% average wage rise, and returns to capital increase. The low scenario has 1% displacement and no wage uplift; the high scenario has 13% displacement with the 2.6% uplift. The capital shock applies in all three. Under the central calibration, averaged over 50 draws:
+
+- the Exchequer cost is £7.3 billion for the 2027–28 tax year (standard deviation £1.9 billion);
+- absolute poverty after housing costs rises by 2.57 percentage points, and before housing costs by 2.40 points;
+- the Gini coefficient rises by 1.76 percentage points.
+
+The central cost is the net of large offsetting flows. Run on its own, the displacement channel costs £42.5 billion, while the survivor-wage channel raises net receipts by £17.5 billion and the capital-income channel by £17.9 billion, because the extra wages, interest and dividends are taxed (means over 20 paired draws). Lost employer National Insurance alone is £8.9 billion (50-draw mean), more than the net cost; excluding it, the central scenario is a net gain of £1.5 billion.
+
+The headline therefore depends on the assumed gains: the central cost reaches zero at a survivor-wage rise of about 3.7% (against 2.6%), a capital-income uplift of about 55% (against 39.8%) or out-of-work spells of about 9.5 months (against 12). These are linear interpolations; the wage figure is from a single draw.
 
 <iframe src="https://uk-ai-study.vercel.app/embed-budget.html" width="100%" height="152" frameborder="0"></iframe>
 
-Table 1 reports each scenario's Exchequer cost, poverty-rate change measured after housing costs (AHC, in percentage points, pp) and the change in the Gini coefficient (a standard measure of income inequality, where higher values mean more inequality). All figures are annual effects for the 2026 tax year.
+Table 1 reports, for a single allocation draw (so its central row differs from the 50-draw means above), each scenario's Exchequer cost, after-housing-costs poverty change and change in the Gini coefficient, a standard measure of income inequality. In that draw, the revenue from the capital-income uplift in the low scenario exceeds the cost of 1% displacement, so the Exchequer gains £11.2 billion.
 
 <iframe src="https://uk-ai-study.vercel.app/embed-scenarios.html" width="100%" height="441" frameborder="0"></iframe>
 
 ## The three market-income channels
 
-Each scenario combines three channels through which AI changes market incomes: a displacement shock (workers who lose their jobs, drawn in proportion to how exposed their occupation is to AI), a wage uplift for workers who remain (proportional to how much AI complements their work), and a capital-returns shock (part of the productivity gain flowing to owners of capital).
+Each scenario combines three channels — displacement, a wage uplift for workers who remain, and a capital-returns shock — with different distributional shapes.
 
-The channels have different distributional shapes. As Figure 1 shows, displacement allocated in proportion to exposure rises across the income distribution — from 0.5% of people in the lowest income decile (deciles are ten equal-sized groups of people, ranked by their household's income adjusted for household size) transitioning to unemployment to 4.9% in the highest — because the professional and administrative occupations that score highest on exposure sit in the upper half of the income distribution. This gradient reflects the exposure-proportional allocation assumption, not an empirical finding about who AI will in fact displace; we vary that assumption explicitly in the incidence section below.
+As Figure 1 shows, exposure-proportional displacement rises across the income distribution, from 0.78% of people in the lowest income decile transitioning to unemployment to 5.57% in the highest. (Deciles are ten equal-sized groups of people, ranked by their household's income adjusted for household size.) Most of that gradient reflects where employees sit in the income distribution, since uniform incidence produces a similar one. The allocation is an assumption, not an empirical finding about who AI will displace; the incidence section below varies it.
 
 <iframe src="https://uk-ai-study.vercel.app/chart-transition.html" width="100%" height="483" frameborder="0"></iframe>
 
-The wage channel, by contrast, is almost distributionally flat: gains run from 2.50% in the bottom decile to 2.72% at the top, a spread of just 0.2 percentage points. The capital channel applies the same percentage uplift to everyone's interest and dividend income, but as Figure 2 shows, the pound gains concentrate where capital income is held: the top decile holds 35.2% of all capital income in our data, the bottom decile 2.8%.
+The wage channel is close to distributionally flat: gains run from 2.56% in the bottom decile to 2.74% at the top. The capital channel applies the same percentage uplift to everyone's interest and dividend income, but as Figure 2 shows, the pound gains concentrate where capital income is held: the top decile holds 61.1% of all capital income in Microcosm, the bottom decile 2.5%.
 
 <iframe src="https://uk-ai-study.vercel.app/chart-capital.html" width="100%" height="483" frameborder="0"></iframe>
 
 ## How the tax-benefit system cushions the shock
 
-The tax-benefit system converts each market-income loss into a smaller disposable-income loss, through two distinct mechanisms that Figure 3 decomposes by decile. Across the middle deciles, benefit entitlements — Universal Credit in particular — rise automatically as displaced earners qualify for means-tested support (benefits whose amount depends on income and savings). At the top, the cushioning operates through the tax system instead: income tax and National Insurance liabilities fall as high-marginal-rate earnings disappear. In the top decile, a market-income loss of 6.7% of baseline disposable income becomes a disposable-income loss of 4.3% — roughly a third of the market shock absorbed. This mirrors the European evidence on earlier automation waves, where tax-benefit systems absorbed much of the shock before it reached household inequality ([Doorley et al., 2023](https://www.iza.org/publications/dp/16499/automation-and-income-inequality-in-europe)).
+The tax-benefit system converts each market-income loss into a smaller disposable-income loss; Figure 3 decomposes this by decile. Benefit entitlements — Universal Credit in particular — rise as displaced earners qualify for means-tested support, and income tax and National Insurance liabilities fall as earnings disappear. In decile 8, which loses most in the draw shown, higher benefits and lower taxes offset about 20% of the market-income loss.
+
+In the top decile the capital uplift offsets, on average, the earnings lost by displaced workers, so losses peak in the upper-middle deciles. Over 20 draws the largest mean loss, 2.91% of disposable income, falls in decile 8 under the HBAI ranking, though which of deciles 6–9 loses most depends on how households are ranked. We do not report a bottom-decile result, because it also depends on the ranking.
 
 <iframe src="https://uk-ai-study.vercel.app/chart-decomposition.html" width="100%" height="523" frameborder="0"></iframe>
-
-That household cushioning appears in the public finances as the Exchequer cost reported in the headline results: lost income tax and National Insurance on displaced higher earners, together with higher benefit spending.
 
 <iframe src="https://uk-ai-study.vercel.app/embed-caseloads.html" width="100%" height="181" frameborder="0"></iframe>
 
 ## Distributional impact
 
-Combining the three channels with the tax-benefit response gives the net effect on household incomes by decile in 2026, shown in Figure 4. The four scenarios are Low, Central and High, which vary the size of the displacement shock around the central 7% rate, plus Youth-tilted, which keeps the central shock size but raises displacement probabilities for younger workers within the same occupation quotas.
+Figure 4 shows the net effect on household incomes by decile in 2027–28, combining the three channels with the tax-benefit response. Low, Central and High vary the size of the shock around the central 7% rate. Youth-tilted keeps the central shock size but raises displacement probabilities for younger workers within the same occupation quotas.
 
 <iframe src="https://uk-ai-study.vercel.app/distributional-impact.html" width="100%" height="536" frameborder="0"></iframe>
 
-Under the central calibration, net losses in pounds are largest towards the top of the distribution, where displacement is concentrated; the incidence section below shows how this profile changes under other allocation assumptions.
-
 ## The shock-size grid
 
-How much do these conclusions depend on the exact shock size? Beyond the presets, we simulate 66 scenarios crossing 11 displacement rates (0–10%) with six wage uplifts (0–5%); Figure 5 maps the results. Within this grid, whether AI raises or lowers average living standards is sensitive to the balance between the two forces: at these calibrations, roughly one percentage point of wage growth offsets one percentage point of displacement in aggregate disposable-income terms. The empirical literature remains uncertain about that balance, with population-scale Danish evidence finding minimal earnings effects in the first years of diffusion ([Humlum and Vestergaard, 2025](https://www.nber.org/papers/w33777)) while other estimates imply much larger reallocation. One result holds in all 66 cells: measured inequality rises. No combination of parameters within the grid reduces the Gini coefficient, though this is a conditional result of the simulated displacement, survivor-wage and capital-income channels rather than a claim about every possible AI adjustment.
+Beyond the presets, we simulate 66 scenarios crossing 11 displacement rates (0–10%) with six wage uplifts (0–5%); Figure 5 maps the results. With no wage growth, average disposable income still rises at 3% displacement and falls from 4%; at the central 7% displacement it falls with up to 4% wage growth and rises with 5%. Danish population-scale evidence finds minimal earnings effects in the first years of diffusion ([Humlum and Vestergaard, 2025](https://www.nber.org/papers/w33777)).
+
+Measured inequality rises in all 66 cells, by between 0.70 and 2.36 percentage points. This result is conditional on the simulated displacement, survivor-wage and capital-income channels; it is not a claim about every possible AI adjustment.
 
 <iframe src="https://uk-ai-study.vercel.app/chart-grid.html" width="100%" height="584" frameborder="0"></iframe>
 
 ## Who bears the shock: the incidence axis
 
-The shock-size grid holds incidence fixed; the next axis varies who bears it. Table 2 reports the results for the 2026 tax year, with ± values showing the 50-draw allocation-noise standard deviations described in the methodology.
+The shock-size grid holds incidence fixed; Table 2 varies who bears the shock, with ± values showing the 50-draw standard deviations.
 
 <iframe src="https://uk-ai-study.vercel.app/embed-incidence.html" width="100%" height="726" frameborder="0"></iframe>
 
-Figure 6 shows where each allocation lands across the income distribution. The exposure-proportional, junior-concentrated and expertise-compression families all slope upward; uniform incidence is flatter by construction; and the stress test anchored to Klein Teeselink (2025) is the most top-tilted, running from 0.01% of the bottom decile transitioning to unemployment to 7.25% of the top.
+Figure 6 shows where each allocation lands across the income distribution. Under every allocation the share transitioning to unemployment is larger in the upper half of the distribution, because employees concentrate in the higher deciles. The stress test anchored to Klein Teeselink (2025) is the most top-tilted, running from 0.19% of the bottom decile transitioning to unemployment to 8.40% of the top.
 
 <iframe src="https://uk-ai-study.vercel.app/chart-incidence-families.html" width="100%" height="623" frameborder="0"></iframe>
 
-Figure 7 puts the fiscal and poverty consequences of each allocation in one chart, with error bars showing the Table 2 uncertainty. The families separate mainly on cost — the same shock carries a fiscal cost roughly £19 billion a year larger under the top-loaded stress test than under uniform incidence — while their poverty effects cluster more tightly, with expertise compression and the stress test sitting highest on both axes.
+Figure 7 puts the fiscal and poverty consequences of each allocation in one chart. The same central shock costs the Exchequer £1.9 billion under uniform incidence, £7.3 billion under exposure-proportional incidence and £27.7 billion under the top-loaded stress test. Mean before-housing-costs poverty rises by between 2.40 and 2.65 percentage points across the four stylised families.
 
 <iframe src="https://uk-ai-study.vercel.app/chart-cost-poverty.html" width="100%" height="483" frameborder="0"></iframe>
 
 ## The adjustment margin: job losses versus wage cuts
 
-Displacement is not the only way labour markets adjust. In US evidence from [Acemoglu and Restrepo (2022)](https://www.nber.org/papers/w28920), task displacement operated chiefly through relative wage declines rather than job loss. The wage-margin family moves the same aggregate earnings loss to wage cuts instead of displacement, using occupation-level gradients including the expertise measure of [Hosseini and Lichtinger (2026b)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6059674); Table 3 traces the transition between the two margins.
+Displacement is not the only way labour markets adjust. In the task-based framework of [Acemoglu and Restrepo (2022)](https://www.nber.org/papers/w28920), displacement can show up as relative wage declines rather than job loss. The wage-margin family moves the same aggregate earnings loss to wage cuts instead of displacement; Table 3 traces the transition between the two margins, showing one of the 20 draws.
 
-The comparison is stark. Delivering the same gross earnings loss through wage cuts costs the Exchequer more (£26.6 billion against £18.2 billion), because cuts shave earnings taxed at high marginal rates while displacement removes whole earnings taxed at lower average rates — but the poverty rise almost disappears (+0.10 against +1.81 percentage points) and the change in the Gini coefficient flips sign, from +1.04 to −0.44 percentage points. Whether AI's labour-market adjustment arrives as job losses or as pay compression matters as much for who bears it as how large the shock is.
+Averaged over 20 paired draws, the same gross earnings loss costs the Exchequer £19.1 billion through wage cuts, against £7.2 billion through displacement. Cuts remove earnings taxed at marginal rates, while displacement removes whole earnings, including the part covered by tax allowances and National Insurance thresholds, so it forgoes less tax per pound of lost earnings.
+
+Under wage cuts, the BHC poverty rise falls from 2.38 to 0.28 percentage points, and the Gini rise from 1.73 to 0.28 points. Without the wage and capital gains, job loss costs the Exchequer 42 pence per pound of earnings lost and wage cuts 55 pence, employer National Insurance included (both over the 20 draws).
 
 <iframe src="https://uk-ai-study.vercel.app/embed-wagemargin.html" width="100%" height="630" frameborder="0"></iframe>
 
 ## Age and gender
 
-Under exposure-proportional incidence, workers aged 16–24 account for only 5.3% of the displaced, because young people in the UK are concentrated in low-exposure service occupations; as Figure 8 shows, the burden falls on prime-age workers. Figure 8 compares the Central scenario with the Youth-tilted variant, which raises displacement probabilities for younger workers within the same occupation quotas. Even tilting displacement probabilities towards junior workers changes the age composition only slightly within fixed occupation quotas. The strongest early empirical evidence locates AI's employment effects among junior workers _within_ exposed occupations, operating chiefly through reduced hiring — a margin that stock-based simulation frameworks such as this one do not capture by construction, so the framework likely understates youth incidence.
+Under exposure-proportional incidence, workers aged 16–24 account for 8.0% of the displaced, because young people in the UK are concentrated in low-exposure service occupations; the largest displaced group is aged 25–34. Figure 8 compares the Central scenario with the Youth-tilted variant, in which the 16–24 share rises to 12.7%. The early empirical evidence emphasises junior workers _within_ exposed occupations, chiefly through reduced hiring — a margin that stock-based simulations such as this one do not capture.
 
 <iframe src="https://uk-ai-study.vercel.app/chart-age.html" width="100%" height="476" frameborder="0"></iframe>
 
-Exposure also carries a gender gradient: employed women in the Family Resources Survey have a mean exposure score of 0.33 against 0.18 for employed men, reflecting women's concentration in administrative, professional and associate-professional work. Women hold 51.8% of employment but account for 55.4% of the displaced in the central scenario — echoing the international evidence that female employment is substantially more exposed to generative AI ([ILO, 2025](https://www.ilo.org/sites/default/files/2025-05/WP140_web.pdf)) — though household-level income changes are similar by sex. Income pooling within couples may mute the individual asymmetry at the household level; we offer this as a hypothesis rather than a finding.
+Exposure also carries a gender gradient: employed women have a mean exposure score of 0.33 against 0.22 for employed men. Women hold 49.1% of employment but account for 53.4% of the displaced in the central scenario. In a single draw, household income falls by 1.53% for women and by 1.49% for men.
 
 ## Poverty impact
 
-Table 4 reports the poverty-rate changes under each scenario.
+Table 4 reports the poverty-rate changes under each scenario on a single draw; the 50-draw central means are 2.40 points BHC and 2.57 AHC.
 
 <iframe src="https://uk-ai-study.vercel.app/embed-poverty.html" width="100%" height="364" frameborder="0"></iframe>
 
-The central poverty response is large by the standard of recent UK downturns, and follows from the framework's stark assumptions: a full year of lost earnings against low Universal Credit replacement rates. It attenuates when those assumptions are relaxed — under a 50% earnings-retention hybrid (approximating a six-month spell), the fiscal cost falls by more than three-quarters and the poverty rise falls to near zero.
+The central poverty response assumes a full year of lost earnings. Under a 50% earnings-retention hybrid (approximating a six-month spell), the central scenario becomes a net gain to the Exchequer of £10.1 billion and the BHC poverty rise shrinks to 0.13 percentage points (20 draws; £7.2 billion cost at 12 months on the same draws). Only the displacement channel shrinks under this hybrid: the receipts from survivor wages and capital income do not depend on how long displacement lasts.
+
+The central scenario keeps each benefit unit's baseline Universal Credit take-up decision and pays no new-style Jobseeker's Allowance (JSA) to newly displaced workers. If every benefit unit with a displaced worker claims UC, the central cost is £9.9 billion, against £7.2 billion on the same 20 draws, and the BHC poverty rise is 2.18 points rather than 2.38. Adding 26 weeks of new-style JSA for eligible displaced workers gives £12.6 billion and 1.99 points.
 
 ## Inequality impact
 
-Across the displacement scenarios, inequality moves in one direction even where poverty effects attenuate. The exception is the wage-cut margin above, where measured inequality falls — the one adjustment path in the study that reduces the Gini coefficient.
+Measured inequality rises in every displacement scenario we examine. Under the wage-cut margin above, the Gini also rises, by 0.28 percentage points.
 
 <iframe src="https://uk-ai-study.vercel.app/embed-inequality.html" width="100%" height="210" frameborder="0"></iframe>
 
-## Regional impact
-
-The impact varies across regions with each area's occupational mix, as Table 5 shows.
-
-<iframe src="https://uk-ai-study.vercel.app/embed-regions.html" width="100%" height="602" frameborder="0"></iframe>
-
-Displacement per worker is highest in the regions with the most AI-exposed occupational mixes, while the poverty impact is largest where baseline incomes leave households closer to the poverty line. These regional estimates aggregate synthetic constituency-level projections based on imputed occupations and calibrated survey weights from a single displacement draw, and carry wider uncertainty than the national aggregates.
-
 ## Policy responses
 
-If the shock is structural rather than cyclical, the question facing the state is not whether the existing tax-benefit system cushions the shock — it does, absorbing roughly a third of the market-income loss in the decile facing the largest loss — but whether it cushions the shock well, and at what fiscal cost the residual poverty increase could be reduced. We simulate three stylised responses on top of the central shock, each in force for 2026 only:
+We simulate three stylised responses on top of the central shock, each in force for the 2027–28 tax year only:
 
-- **R1: Wage insurance** — in the spirit of trade-adjustment proposals, displaced workers receive 50% of their lost earnings, capped at £15,000 a year. It is modelled as a non-taxable transfer disregarded by means tests, representing the upper end of plausible implementations.
-- **R2: Universal Credit standard allowance +20%** — a demand-side boost within the existing architecture, implemented as a parameter reform inside PolicyEngine so all interactions with the taper (the rate at which UC is withdrawn as earnings rise), the benefit cap and linked (passported) entitlements are captured.
-- **R3: Benefit cap suspension plus a UC taper cut from 55% to 45%** — targeting the households for whom the benefit cap and taper bind most strongly.
+- **R1: Wage insurance** — displaced workers receive 50% of their lost earnings, capped at £15,000 a year. We model it as a non-taxable transfer disregarded by means tests, the highest-cost end of possible designs.
+- **R2: Universal Credit standard allowance +20%** — modelled inside PolicyEngine, capturing interactions with the taper (the rate at which UC is withdrawn as earnings rise) and the benefit cap.
+- **R3: Benefit cap suspension plus a UC taper cut from 55% to 45%**.
 
-Each estimate is the difference between the shocked-plus-reform and shocked worlds: what the reform adds, given that the shock has happened. Table 6 and Figure 9 compare the three.
+Each estimate is what the reform adds, given that the shock has happened. Table 5 and Figure 9 compare the three. Averaged over 50 draws, R1 costs £14.3 billion per percentage point of BHC poverty reduced, R2 £8.6 billion and R3 £6.7 billion. This ratio measures poverty reduction only; wage insurance also serves consumption smoothing for displaced workers.
 
 <iframe src="https://uk-ai-study.vercel.app/embed-policy.html" width="100%" height="638" frameborder="0"></iframe>
 
 <iframe src="https://uk-ai-study.vercel.app/chart-policy.html" width="100%" height="463" frameborder="0"></iframe>
 
-Targeted retraining is a further relevant lever outside this comparison: US evidence finds rising returns to publicly funded retraining for workers from the most AI-exposed occupations, largely through moves into less-exposed work ([Hyman et al., 2025](https://www.nber.org/papers/w34174)).
+The fiscal arithmetic also depends on where the displaced wage bill — the total earnings previously paid to displaced workers — goes. The [OBR (2026)](https://obr.uk/frs/fiscal-risks-and-sustainability-july-2026/) notes in its fiscal risks report that a shift from labour income to profits lowers receipts, because wages carry a higher average effective tax rate (46%) than profits (27%).
 
-Another channel matters for the fiscal arithmetic: where does the displaced wage bill — the total earnings previously paid to displaced workers — go? Task-based models imply automation shifts income from labour to capital ([Acemoglu and Restrepo, 2018](https://www.aeaweb.org/articles?id=10.1257/aer.20160696)), and the [OBR (2026)](https://obr.uk/efo/economic-and-fiscal-outlook-march-2026/) notes that such a shift depresses receipts because labour income carries a higher effective tax rate. In an accounting sensitivity shown in Figure 10, if the full displaced wage bill reappeared as corporate profits taxed at the 25% main rate, the labour-to-capital shift would be nearly self-financing for the Treasury on a cash-tax basis — because the effective income-tax-plus-NICs rate on displaced workers' earnings (25.6%) almost equals the corporation tax rate. Revenue neutrality would not mean distributional neutrality, however: in a simulated case where half the recouped profits are distributed to existing dividend holders, measured inequality rises further while poverty is essentially unchanged. This is static accounting layered on the microsimulation — the share of the wage bill that becomes taxable profit is a free parameter the framework cannot pin down, so we present a grid rather than a point estimate.
-
-<iframe src="https://uk-ai-study.vercel.app/chart-phi.html" width="100%" height="524" frameborder="0"></iframe>
+In an accounting sensitivity that replaces the assumed capital uplift, a share of the net fall in labour income reappears as company profit, which pays corporation tax at 25%; companies pay out half of post-tax profit, and a share of the payout reaches UK households. On one draw of the central scenario, the result runs from a net gain of £0.9 billion, when all of the net fall becomes profit owned by UK households, to a cost of £14.4 billion, when half of it does and UK households own half.
 
 ## Conclusion
 
-These results are scenario analysis, not prediction: they trace what would follow if labour-market shocks of a given size and incidence materialised, under tax-benefit rules as legislated. Three findings organise the analysis. First, measured inequality rises in every displacement calibration we examine — all 66 grid cells and all five incidence families — because zero earnings for selected workers, partial tax-benefit replacement, wage gains for workers who remain in employment and the capital uplift jointly widen post-shock income gaps. Second, who bears the shock materially changes its simulated cost: the same central shock costs the Exchequer roughly a third more under exposure-proportional incidence than under uniform incidence (£18.2 billion against £13.9 billion), and substantially more under an author-designed top-loaded stress test (£32.8 billion). Third, the adjustment margin matters as much as the shock itself — moving the same earnings loss from job losses to wage cuts nearly eliminates the poverty effect and flips the sign of the inequality change.
+Three findings organise the analysis:
 
-The tax-benefit system absorbs roughly a third of the market-income loss in the decile with the largest loss, but that cushioning appears as a net fiscal cost of £18.2 billion a year in the central case — pointing to three areas for further analysis: occupational reallocation, entry prospects for younger workers, and the resilience of a labour-income-heavy tax base. The full paper — including the shock-size grid, Monte Carlo uncertainty, duration and take-up sensitivities, benchmarking against the Irish results, and limitations — is available [on SSRN](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7174479), with all code and aggregate artefacts in the [uk-ai-study repository](https://github.com/PolicyEngine/uk-ai-study).
+- **Inequality rises.** Measured inequality rises in every calibration we examine — all 66 grid cells (including those with no displacement) and all five incidence families.
+- **Incidence changes the cost.** The same central shock costs the Exchequer £7.3 billion under exposure-proportional incidence, £1.9 billion under uniform incidence and £27.7 billion under an author-designed top-loaded stress test.
+- **The adjustment margin changes how the loss is shared.** Moving the same earnings loss from job losses to wage cuts raises the fiscal cost and lowers the poverty and Gini changes.
+
+The results point to three areas for further analysis: occupational reallocation, entry prospects for younger workers, and the resilience of a labour-income-heavy tax base. The full paper is available [on SSRN](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7174479), with all code and aggregate artefacts in the [uk-ai-study repository](https://github.com/PolicyEngine/uk-ai-study).

@@ -11,7 +11,11 @@ export function useCreateSimulation(simulationLabel?: string) {
   const createAssociation = useCreateSimulationAssociation();
 
   const mutation = useMutation({
-    mutationFn: (data: SimulationCreationPayload) => createSimulation(country, data),
+    // Only the ID: the calculator's query normalizer would write the stored
+    // simulation, by its ID, over every cached record with that ID.
+    mutationFn: async (data: SimulationCreationPayload) => ({
+      result: (await createSimulation(country, data)).result,
+    }),
     onSuccess: async (data) => {
       try {
         // Create association with current user (or anonymous for session storage)

@@ -14,7 +14,7 @@ import {
 
 // Calibration targets for a set of model variables in one geography, from
 // the calibration dashboard's per-target diagnostics for the current
-// populace release. The dashboard filters by its own label keys, not by
+// Microcosm release. The dashboard filters by its own label keys, not by
 // PolicyEngine variable names, so this route pulls the full target set
 // once (a dozen 500-row pages), caches it, and indexes it by
 // `policyengine_variables` — the join key the validation layer uses (or

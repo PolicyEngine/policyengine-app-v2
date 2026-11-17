@@ -1,6 +1,7 @@
 "use client";
 
 import AccountUpgradeNotice from "@/components/auth/AccountUpgradeNotice";
+import UserTypeChangeBanner from "@/components/auth/UserTypeChangeBanner";
 import { AuthProvider } from "@/libs/auth/AuthProvider";
 import WorkspaceNavigation from "./WorkspaceNavigation";
 
@@ -22,6 +23,7 @@ export default function WorkspaceLayout({
     <AuthProvider>
       <WorkspaceNavigation>{children}</WorkspaceNavigation>
       <AccountUpgradeNotice />
+      <UserTypeChangeBanner />
       <div id="fullscreen-portal" />
     </AuthProvider>
   );

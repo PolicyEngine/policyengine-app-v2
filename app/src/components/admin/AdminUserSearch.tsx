@@ -1,19 +1,6 @@
 import { useId, useState, type FormEvent } from 'react';
 import type { AdminUserItem, AdminUserPageResult } from '@/api/v2AdminUsers';
-import {
-  Button,
-  Input,
-  Label,
-  ShadcnTable,
-  Spinner,
-  Stack,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Text,
-} from '@/components/ui';
+import { Button, Input, Label, Spinner, Stack, TableBody, TableRow, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import {
   isRefusedOrMissing,
@@ -21,6 +8,8 @@ import {
   useStartAdminUserSearch,
 } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import AdminCard from './AdminCard';
+import { AdminTable, AdminTableCell, AdminTableHead, AdminTableHeader } from './AdminTable';
 import { adminUserName, formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
 
 /** The longest email part the API's `email` filter accepts. */
@@ -101,15 +90,15 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
   } else {
     results = (
       <Stack gap="md" align="start">
-        <ShadcnTable aria-label="Users">
-          <TableHeader>
+        <AdminTable aria-label="Users">
+          <AdminTableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Last seen</TableHead>
+              <AdminTableHead>Email</AdminTableHead>
+              <AdminTableHead>Name</AdminTableHead>
+              <AdminTableHead>Type</AdminTableHead>
+              <AdminTableHead>Last seen</AdminTableHead>
             </TableRow>
-          </TableHeader>
+          </AdminTableHeader>
           <TableBody>
             {users.map((user) => {
               const selected = user.id === selectedUserId;
@@ -118,7 +107,7 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
                   key={user.id}
                   style={selected ? { backgroundColor: colors.secondary[50] } : undefined}
                 >
-                  <TableCell>
+                  <AdminTableCell>
                     <Button
                       variant="link"
                       size="sm"
@@ -128,17 +117,17 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
                     >
                       {user.email ?? 'No email'}
                     </Button>
-                  </TableCell>
-                  <TableCell>{adminUserName(user) ?? '—'}</TableCell>
-                  <TableCell>{USER_TYPE_LABELS[user.user_type]}</TableCell>
-                  <TableCell>
+                  </AdminTableCell>
+                  <AdminTableCell>{adminUserName(user) ?? '—'}</AdminTableCell>
+                  <AdminTableCell>{USER_TYPE_LABELS[user.user_type]}</AdminTableCell>
+                  <AdminTableCell>
                     {user.last_seen_at ? formatAdminDate(user.last_seen_at, countryId) : 'Never'}
-                  </TableCell>
+                  </AdminTableCell>
                 </TableRow>
               );
             })}
           </TableBody>
-        </ShadcnTable>
+        </AdminTable>
         {search.hasNextPage && (
           <Button
             variant="outline"
@@ -159,26 +148,31 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
   }
 
   return (
-    <Stack gap="lg">
-      <form
-        role="search"
-        onSubmit={handleSubmit}
-        style={{ display: 'flex', gap: spacing.sm, alignItems: 'flex-end', flexWrap: 'wrap' }}
-      >
-        <Stack gap="xs" style={{ flex: '1 1 auto' }}>
-          <Label htmlFor={emailInputId}>Email</Label>
-          <Input
-            id={emailInputId}
-            type="search"
-            value={emailDraft}
-            maxLength={EMAIL_SEARCH_MAX_LENGTH}
-            onChange={(event) => setEmailDraft(event.target.value)}
-            placeholder="Email address"
-          />
-        </Stack>
-        <Button type="submit">Search</Button>
-      </form>
-      {results}
-    </Stack>
+    <AdminCard
+      title="Find users"
+      description="Signed-in users, newest first. Search by part of an email address."
+    >
+      <Stack gap="lg">
+        <form
+          role="search"
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', gap: spacing.sm, alignItems: 'flex-end', flexWrap: 'wrap' }}
+        >
+          <Stack gap="xs" style={{ flex: '1 1 auto' }}>
+            <Label htmlFor={emailInputId}>Email</Label>
+            <Input
+              id={emailInputId}
+              type="search"
+              value={emailDraft}
+              maxLength={EMAIL_SEARCH_MAX_LENGTH}
+              onChange={(event) => setEmailDraft(event.target.value)}
+              placeholder="Email address"
+            />
+          </Stack>
+          <Button type="submit">Search</Button>
+        </form>
+        {results}
+      </Stack>
+    </AdminCard>
   );
 }
