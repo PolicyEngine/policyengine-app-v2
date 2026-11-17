@@ -107,16 +107,6 @@ describe('ExplorePage', () => {
     expect(getDraftReform()?.population).toEqual({ scope: 'national', region: 'state/oh' });
   });
 
-  test('given a program then Build opens searching for it', async () => {
-    const user = userEvent.setup();
-    renderPage('/us/explore?region=congressional_district/OH-09');
-
-    await user.click(await screen.findByRole('button', { name: 'SNAP' }));
-
-    expect(screen.getByLabelText('Location')).toHaveTextContent('/us/build?q=SNAP');
-    expect(getDraftReform()?.population.region).toBe('congressional_district/OH-09');
-  });
-
   test('given the flag off then the page sends the user to Build', async () => {
     setExploreEnabled(false);
     renderPage();

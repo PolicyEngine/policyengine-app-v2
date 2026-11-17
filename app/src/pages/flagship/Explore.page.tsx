@@ -118,9 +118,9 @@ export default function ExplorePage() {
               nav.push(href);
             }
           }}
-          onModel={(region, program) => {
+          onModel={(region) => {
             draftForRegion(countryId, region);
-            nav.push(buildHref(countryId, program));
+            nav.push(buildHref(countryId));
           }}
         />
       ) : (
@@ -145,7 +145,7 @@ interface ExploreViewProps {
   region: string;
   /** A metric change replaces the history entry; a place change adds one, so Back goes back out. */
   onNavigate: (next: { metric: BaselineMetricKey; region: string }, replace?: boolean) => void;
-  onModel: (region: string, program?: string) => void;
+  onModel: (region: string) => void;
 }
 
 function ExploreView({
@@ -192,7 +192,6 @@ function ExploreView({
     level !== 'nation'
       ? `${stateName} districts, highest to lowest`
       : `${showDistricts ? 'Congressional districts' : 'States'}, highest to lowest`;
-  const { receipt } = file;
   const wide = useMediaQuery(WIDE_QUERY);
   // The free part of the map: on a wide screen the title strip floats
   // along the top and the card on the right; on a phone both sit outside
@@ -295,20 +294,6 @@ function ExploreView({
           scale={scale}
           inset={inset}
         />
-        <p
-          className="tw:max-lg:hidden"
-          style={{
-            position: 'absolute',
-            right: PANEL_WIDTH + 40,
-            bottom: spacing.lg,
-            margin: 0,
-            fontSize: typography.fontSize.xs,
-            color: colors.text.secondary,
-          }}
-        >
-          {receipt.model} (bundle {receipt.bundle}) · Microcosm US 2024 data
-          {receipt.computed_at ? ` · computed ${receipt.computed_at}` : ''}
-        </p>
       </div>
 
       <div className="tw:flex tw:items-end tw:gap-sm tw:px-lg tw:pt-sm tw:lg:absolute tw:lg:bottom-lg tw:lg:left-lg tw:lg:z-10 tw:lg:p-0">
@@ -342,7 +327,7 @@ function ExploreView({
           region={region}
           metric={metric}
           onMetricChange={setMetric}
-          onModel={(program) => onModel(region, program)}
+          onModel={() => onModel(region)}
         />
         <div
           style={{
@@ -362,12 +347,6 @@ function ExploreView({
             onSelect={select}
           />
         </div>
-        <p
-          className="tw:lg:hidden"
-          style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}
-        >
-          {receipt.model} (bundle {receipt.bundle}) · Microcosm US 2024 data
-        </p>
       </aside>
     </div>
   );

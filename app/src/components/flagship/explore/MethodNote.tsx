@@ -1,5 +1,6 @@
 import { IconInfoCircle } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@/designTokens';
+import type { BaselineReceipt } from '@/libs/flagship/explore/baselineData';
 import type { ExploreMetric } from '@/libs/flagship/explore/exploreMetrics';
 
 const termStyle = {
@@ -15,7 +16,14 @@ const textStyle = {
 };
 
 /** "How we measure this": what the number is, where it comes from, its limits, and where to read more. */
-export default function MethodNote({ metric }: { metric: ExploreMetric }) {
+export default function MethodNote({
+  metric,
+  receipt,
+}: {
+  metric: ExploreMetric;
+  /** What produced the figures; shown last, for those who need it. */
+  receipt?: BaselineReceipt;
+}) {
   return (
     <details
       style={{
@@ -62,6 +70,15 @@ export default function MethodNote({ metric }: { metric: ExploreMetric }) {
             ))}
           </ul>
         </dd>
+        {receipt && (
+          <>
+            <dt style={termStyle}>Version</dt>
+            <dd style={textStyle}>
+              {receipt.model}, bundle {receipt.bundle}
+              {receipt.computed_at ? `, computed ${receipt.computed_at}` : ''}
+            </dd>
+          </>
+        )}
       </dl>
     </details>
   );

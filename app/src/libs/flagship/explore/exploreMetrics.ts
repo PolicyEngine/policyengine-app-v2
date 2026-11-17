@@ -17,8 +17,6 @@ export interface ExploreMetric {
   onMap: boolean;
   /** Levels where few survey households stand behind each value, so the card adds a caution. */
   cautionAt: RegionLevel[];
-  /** Search terms for programs that move the metric; each opens Build's search. */
-  programs: string[];
   /** How we measure this. */
   definition: string;
   data: string;
@@ -63,7 +61,6 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
     format: percent,
     onMap: true,
     cautionAt: ['district'],
-    programs: ['Earned Income Tax Credit', 'SNAP', 'Child Tax Credit'],
     definition:
       'Share of people whose family resources, after taxes and benefits and less work and medical costs, are below the Supplemental Poverty Measure (SPM) threshold for their family and area.',
     data: SPM_DATA,
@@ -77,7 +74,6 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
     format: percent,
     onMap: true,
     cautionAt: ['district'],
-    programs: ['Child Tax Credit', 'SNAP', 'School meals'],
     definition: 'Share of people under 18 who live in a family below the SPM threshold.',
     data: SPM_DATA,
     limits: `${SPM_LIMITS} Children are a smaller group, so state and district values are less precise than the overall rate.`,
@@ -90,7 +86,6 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
     format: (value) => `$${Math.round(value / 100) / 10}k`,
     onMap: true,
     cautionAt: [],
-    programs: ['Income tax rates', 'Standard deduction', 'State income tax'],
     definition: 'Income of the middle household after federal and state taxes and after benefits.',
     data: DATA_SENTENCE,
     limits:
@@ -104,7 +99,6 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
     format: (value) => value.toFixed(2),
     onMap: true,
     cautionAt: ['district'],
-    programs: ['Top income tax rate', 'Earned Income Tax Credit', 'Child Tax Credit'],
     definition:
       'Gini index of household income after taxes and benefits: 0 means every household has the same income; 1 means one household has it all.',
     data: DATA_SENTENCE,
@@ -119,7 +113,6 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
     format: percent,
     onMap: false,
     cautionAt: ['state', 'district'],
-    programs: ['SSI', 'TANF', 'SNAP'],
     definition: 'Share of people whose family resources are below half of their SPM threshold.',
     data: SPM_DATA,
     limits: `Few survey households are this far below the threshold, and survey income is least accurate here. ${SPM_LIMITS}`,

@@ -19,8 +19,8 @@ interface PlaceCardProps {
   region: string;
   metric: ExploreMetric;
   onMetricChange: (key: BaselineMetricKey) => void;
-  /** Opens Build for this place; with a program, its search opens on it. */
-  onModel: (program?: string) => void;
+  /** Opens Build for this place. */
+  onModel: () => void;
 }
 
 const KIND = { nation: 'Nation', state: 'State', district: 'Congressional district' } as const;
@@ -152,29 +152,15 @@ export default function PlaceCard({
         })}
       </div>
 
-      <MethodNote metric={metric} />
-
-      <div
-        style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm, marginTop: spacing.lg }}
+      <Button
+        onClick={onModel}
+        className="tw:mt-lg tw:h-auto tw:min-h-10 tw:w-full tw:justify-between tw:whitespace-normal tw:py-2 tw:text-left"
       >
-        <Button
-          onClick={() => onModel()}
-          className="tw:h-auto tw:min-h-10 tw:justify-between tw:whitespace-normal tw:py-2 tw:text-left"
-        >
-          Model a policy change for {level === 'nation' ? 'the United States' : name}
-          <IconArrowRight aria-hidden />
-        </Button>
-        <p style={{ ...smallText, fontSize: typography.fontSize.xs }}>
-          Or start from a program that affects this measure:
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}>
-          {metric.programs.map((program) => (
-            <Button key={program} variant="outline" size="xs" onClick={() => onModel(program)}>
-              {program}
-            </Button>
-          ))}
-        </div>
-      </div>
+        Model a policy change for {level === 'nation' ? 'the United States' : name}
+        <IconArrowRight aria-hidden />
+      </Button>
+
+      <MethodNote metric={metric} receipt={file.receipt} />
     </section>
   );
 }
