@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 import { ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
@@ -7,6 +7,7 @@ import { useV3Policies } from '@/hooks/useV3Policies';
 import { isNotFoundError, retryUnlessNotFound } from '@/libs/flagship/loadError';
 import { combinedMissingParameters } from '@/libs/flagship/missingParameters';
 import { fetchV1Policy } from '@/libs/flagship/policyChecks';
+import type { ReportRecords } from '@/libs/flagship/runReport';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
@@ -59,6 +60,27 @@ export interface FlagshipReportData {
   missingParameters: string[];
   /** Asks again for whatever failed; settles when the answers are in. */
   retry: () => Promise<unknown>;
+}
+
+/**
+ * Puts a report and its simulations, as the Public API answered their
+ * creation, where useFlagshipReport reads them, in the shape its reads
+ * give. A create answers with the record as stored, the same as reading
+ * it back, so a report page opened on them reads neither back. Throws,
+ * putting none in place, when one cannot be read as the page reads it.
+ */
+export function cacheCreatedReport(
+  queryClient: QueryClient,
+  { report, simulations }: ReportRecords
+): void {
+  const reportRead = ReportAdapter.fromMetadata(report);
+  const simulationReads = simulations.map((simulation) =>
+    SimulationAdapter.fromMetadata(simulation)
+  );
+  queryClient.setQueryData(reportKeys.byId(String(report.id)), reportRead);
+  simulations.forEach((simulation, index) =>
+    queryClient.setQueryData(simulationKeys.byId(String(simulation.id)), simulationReads[index])
+  );
 }
 
 /**
