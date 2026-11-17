@@ -20,3 +20,16 @@ export function useAppLocation(): AppLocation {
 export function useAppPathname(): string {
   return useAppLocation().pathname;
 }
+
+/**
+ * The current pathname without requiring a LocationProvider: the
+ * provider's when one is mounted, otherwise the window's, and '' when
+ * rendering on the server without one.
+ */
+export function useCurrentPathname(): string {
+  const location = useContext(LocationContext);
+  if (location) {
+    return location.pathname;
+  }
+  return typeof window === 'undefined' ? '' : window.location.pathname;
+}

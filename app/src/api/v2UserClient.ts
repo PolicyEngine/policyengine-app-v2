@@ -1,4 +1,5 @@
 import { BASE_URL } from '@/constants';
+import { ROUTE_ERROR_HEADER } from '@/libs/publicApiRoute/sameOriginRoute';
 import type { V2Envelope, V2PageResult } from '@/types/v2User';
 
 /**
@@ -19,14 +20,33 @@ export const UNAUTHENTICATED_USER_HEADER = 'PolicyEngine-Unauthenticated-User';
 /** Largest page the list routes serve. */
 export const V2_MAX_PAGE_SIZE = 500;
 
-/** A failed signed-in request: HTTP status (0 for a network failure) and the API's message. */
+/**
+ * A failed signed-in request: HTTP status (0 for a network failure), the
+ * API's message, and the API's `code` when its error names one (such as
+ * `email_not_verified`), else null.
+ */
 export class V2ApiError extends Error {
   readonly status: number;
+  readonly code: string | null;
+  /**
+   * Whether the Public API itself answered with this error. The
+   * calculator's same-origin route writes some errors itself (such as a 502
+   * when it can't reach the Public API, marked with ROUTE_ERROR_HEADER), and
+   * a proxy may answer without the Public API's error envelope; neither
+   * says anything about what the Public API did.
+   */
+  readonly fromPublicApi: boolean;
 
-  constructor(status: number, message: string) {
+  constructor(
+    status: number,
+    message: string,
+    { code = null, fromPublicApi = false }: { code?: string | null; fromPublicApi?: boolean } = {}
+  ) {
     super(message);
     this.name = 'V2ApiError';
     this.status = status;
+    this.code = code;
+    this.fromPublicApi = fromPublicApi;
   }
 }
 
@@ -182,7 +202,11 @@ export function createV2UserClient({
 
     const envelope = await readEnvelope(response);
     if (!response.ok) {
-      throw new V2ApiError(response.status, failureMessage(response.status, envelope?.message));
+      throw new V2ApiError(response.status, failureMessage(response.status, envelope?.message), {
+        code: typeof envelope?.code === 'string' ? envelope.code : null,
+        fromPublicApi:
+          envelope?.status === 'error' && response.headers.get(ROUTE_ERROR_HEADER) !== 'true',
+      });
     }
     if (!envelope || envelope.status !== 'ok') {
       throw new V2ApiError(

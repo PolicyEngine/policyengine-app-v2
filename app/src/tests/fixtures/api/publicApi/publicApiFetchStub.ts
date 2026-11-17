@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { modelCatalogEnvelope } from '@/tests/fixtures/api/publicApi/modelCatalogMocks';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 
 export type RouteHandler = (url: URL, request: Request) => Response | Promise<Response>;
 
@@ -25,9 +26,10 @@ export function stubPublicApiFetch(handlers: Record<string, RouteHandler> = {}) 
     const request =
       input instanceof Request ? input : new Request(absoluteUrl(String(input)), init);
     const url = new URL(request.url);
-    const handler = routes[url.pathname];
+    const publicApiPath = publicApiPathOf(url);
+    const handler = routes[publicApiPath];
     if (!handler) {
-      return jsonResponse({ status: 'error', message: `No stub for ${url.pathname}` }, 404);
+      return jsonResponse({ status: 'error', message: `No stub for ${publicApiPath}` }, 404);
     }
     return handler(url, request);
   });
@@ -44,5 +46,5 @@ function absoluteUrl(input: string): string {
 export function requestsTo(fetchStub: ReturnType<typeof stubPublicApiFetch>, path: string): URL[] {
   return fetchStub.mock.calls
     .map(([input]) => new URL(input instanceof Request ? input.url : absoluteUrl(String(input))))
-    .filter((url) => url.pathname === path);
+    .filter((url) => publicApiPathOf(url) === path);
 }

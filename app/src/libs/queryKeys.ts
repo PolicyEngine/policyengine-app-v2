@@ -82,6 +82,23 @@ export const v1PolicyKey = (countryId: string, policyId: string) =>
 /** How long a fetched v1 policy stays cached without a reader. */
 export const V1_POLICY_GC_TIME = 30 * 60 * 1000;
 
+/** A v2 policy (`GET /v2/policies/{id}`), per country. */
+export const v2PolicyKey = (countryId: string, policyId: string) =>
+  ['v2-policy', countryId, policyId] as const;
+
+/** How long a fetched v2 policy stays cached without a reader. */
+export const V2_POLICY_GC_TIME = 30 * 60 * 1000;
+
+/**
+ * A v1 household as `GET /{country}/household/{id}` returns it, per country.
+ * The admin page's saved household panel reads households through it.
+ */
+export const v1HouseholdKey = (countryId: string, householdId: string) =>
+  ['v1-household', countryId, householdId] as const;
+
+/** How long a fetched v1 household stays cached without a reader. */
+export const V1_HOUSEHOLD_GC_TIME = 30 * 60 * 1000;
+
 export const householdKeys = {
   all: ['households'] as const,
   byId: (householdId: string) => [...householdKeys.all, 'household_id', householdId] as const,
@@ -145,4 +162,23 @@ export const householdVariationKeys = {
       'person',
       personName,
     ] as const,
+};
+
+/**
+ * The Public API's admin user routes, per signed-in session (`subject`), so
+ * another account signing in on the same browser never reads them.
+ */
+export const adminUserKeys = {
+  all: (subject: string | null) => ['admin-users', subject] as const,
+  /** Every search's key starts with this. */
+  searches: (subject: string | null) => [...adminUserKeys.all(subject), 'search'] as const,
+  search: (subject: string | null, email: string) =>
+    [...adminUserKeys.searches(subject), email] as const,
+  user: (subject: string | null, userId: string) =>
+    [...adminUserKeys.all(subject), 'user', userId] as const,
+  typeChanges: (subject: string | null, userId: string) =>
+    [...adminUserKeys.all(subject), 'user-type-changes', userId] as const,
+  /** Not under `user`, so a change of the user's type never cancels or overwrites it. */
+  savedItems: (subject: string | null, userId: string) =>
+    [...adminUserKeys.all(subject), 'saved-items', userId] as const,
 };

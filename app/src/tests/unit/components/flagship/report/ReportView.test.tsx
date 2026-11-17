@@ -11,6 +11,7 @@ import {
   NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
   nationalResultFromBody,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import { COMPUTE_DISTRICTS_LABEL } from '@/tests/fixtures/components/flagship/report/stateDistrictComputePanelMocks';
 import {
   NATIONAL_OUTPUT_WITHOUT_AREAS,
@@ -681,7 +682,9 @@ describe('ReportView US districts from state runs', () => {
   };
 
   const economyRequestsFor = (year: string) =>
-    api.economyRequests().filter((url) => new URL(url).searchParams.get('time_period') === year);
+    api
+      .economyRequests()
+      .filter((url) => requestUrlOf(url).searchParams.get('time_period') === year);
 
   test('given a nationwide report then its districts tab offers Compute and maps none of the result’s districts', async () => {
     // When

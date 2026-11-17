@@ -16,6 +16,8 @@ import {
   buildParameterSearchEntries,
 } from "@/libs/parameterSearch";
 
+import { calculatorPublicApi } from "../../../calculatorPublicApi";
+
 // The US ask agent: Claude with deterministic parameter-search tools over
 // live policyengine-us metadata, streaming the same SSE event shapes as
 // the UK chat service (chunk / tool_start / tool_use / tool_result /
@@ -25,12 +27,17 @@ import {
 //
 // Requires ANTHROPIC_API_KEY; without it the route returns 503 and the
 // Ask page falls back to keyword matching.
+//
+// US metadata comes from the Public API that the deployment names
+// (POLICYENGINE_API_URL: production for production, the staging service
+// for previews and local work), through the shared forwarding package with
+// the calculator's own server credential.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const METADATA_URL =
-  process.env.US_METADATA_URL ?? "https://api.policyengine.org/us/metadata";
+// US metadata is large (about 10 MB compressed): allow time to read it.
+const METADATA_TIMEOUT_MILLISECONDS = 120_000;
 const MODEL = process.env.US_ASK_MODEL ?? "claude-opus-5";
 const MAX_TOOL_TURNS = 10;
 const CONTEXT_TTL_MS = 6 * 60 * 60 * 1000;
@@ -43,7 +50,17 @@ let cachedContext: {
 function getUsAskContext(): Promise<UsAskContext> {
   if (!cachedContext || Date.now() - cachedContext.fetchedAt > CONTEXT_TTL_MS) {
     const promise = (async () => {
-      const response = await fetch(METADATA_URL);
+      // Sent as the server's own request, with no browser headers. Throws
+      // PublicApiUnavailableError when it cannot be sent: no Public API
+      // named for this deployment, a credential that is only partly
+      // configured, no token from Auth0, or the Public API unreachable or
+      // too slow. With no credential configured at all, it is sent without
+      // one. A non-2xx answer, or a body that cannot be read or parsed,
+      // throws below.
+      const response = await calculatorPublicApi.fetchFromServer(
+        { method: "GET", path: "/us/metadata" },
+        { timeoutMilliseconds: METADATA_TIMEOUT_MILLISECONDS },
+      );
       if (!response.ok) {
         throw new Error(`US metadata fetch failed: ${response.status}`);
       }
@@ -106,7 +123,11 @@ export async function POST(request: Request): Promise<Response> {
   let context: UsAskContext;
   try {
     context = await getUsAskContext();
-  } catch {
+  } catch (error) {
+    console.error(
+      "Could not read US parameter metadata:",
+      error instanceof Error ? error.message : error,
+    );
     return json({ error: "US parameter metadata unavailable" }, 502);
   }
 

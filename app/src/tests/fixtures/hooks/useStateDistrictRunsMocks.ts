@@ -5,6 +5,7 @@ import type {
 } from '@/api/societyWideCalculation';
 import { BASE_URL } from '@/constants';
 import type { Region } from '@/models/region';
+import { requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   DELETE_NOT_A_FAILURE_BODY,
   DELETE_NOTHING_STORED_BODY,
@@ -527,7 +528,7 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
       if (holdDeletes) {
         await new Promise<void>((release) => heldDeletes.push(release));
       }
-      const region = new URL(url).searchParams.get('region')!;
+      const region = requestUrlOf(url).searchParams.get('region')!;
       const call = deleteCalls.get(region) ?? 0;
       deleteCalls.set(region, call + 1);
       const response = options.deleteFailure?.(region, call) ?? stateFailureDeleted();
@@ -540,7 +541,7 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
       if (holdEconomy) {
         await new Promise<void>((release) => heldEconomy.push(release));
       }
-      const region = new URL(url).searchParams.get('region')!;
+      const region = requestUrlOf(url).searchParams.get('region')!;
       const call = economyCalls.get(region) ?? 0;
       economyCalls.set(region, call + 1);
       const response = options.economy?.(region, call) ?? STATE_COMPUTING;
@@ -578,7 +579,7 @@ export function fakeStateDistrictApi(options: FakeStateApiOptions = {}): FakeSta
 
   const isEconomyRequest = (request: RecordedRequest) => request.url.includes('/economy/');
   const isFor = (region: string) => (request: RecordedRequest) =>
-    isEconomyRequest(request) && new URL(request.url).searchParams.get('region') === region;
+    isEconomyRequest(request) && requestUrlOf(request.url).searchParams.get('region') === region;
 
   return {
     fetch,

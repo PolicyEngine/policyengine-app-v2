@@ -12,7 +12,7 @@ import {
   safeReturnTo,
   type Auth0Config,
 } from './authConfig';
-import { AuthContext, type AuthContextValue } from './AuthContext';
+import { AuthContext, type AuthContextValue, type SignInOptions } from './AuthContext';
 import { clearSignedInSessionData, endSignedInSession, settleDraftOwner } from './sessionData';
 
 /**
@@ -184,7 +184,7 @@ function Auth0SessionBridge({
   }, [getAccessTokenSilently, config.audience, logout]);
 
   const signIn = useCallback(
-    async (returnTo?: string) => {
+    async (returnTo?: string, options?: SignInOptions) => {
       const here =
         typeof window !== 'undefined'
           ? `${window.location.pathname}${window.location.search}`
@@ -195,6 +195,8 @@ function Auth0SessionBridge({
           audience: config.audience,
           redirect_uri: `${window.location.origin}${callbackPath(countryId)}`,
           scope: AUTH_SCOPE,
+          // Auth0's Universal Login opens on its sign-up screen.
+          ...(options?.signUp ? { screen_hint: 'signup' } : {}),
         },
       });
     },

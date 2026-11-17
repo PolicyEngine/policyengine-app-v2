@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import HeroSection from "@/components/static/HeroSection";
 import OptimisedImage from "@/components/ui/OptimisedImage";
@@ -13,7 +14,7 @@ interface Citation {
   title: string;
   /** Name of the outlet (e.g. "The New York Times") */
   outlet: string;
-  /** Publication date in YYYY-MM-DD format */
+  /** Publication date in YYYY-MM-DD format. Sets the order; cards do not show it. */
   date: string;
   /** URL to the original article */
   url: string;
@@ -32,15 +33,6 @@ const locationLabels: Record<string, string> = {
   ca: "Canada",
   global: "Global",
 };
-
-function formatDate(dateStr: string): string {
-  const date = new Date(`${dateStr}T00:00:00`);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 function CitationCard({
   citation,
@@ -126,7 +118,6 @@ function CitationCard({
               color: colors.gray[800],
               fontWeight: large ? 600 : 500,
               lineHeight: 1.4,
-              marginBottom: spacing.sm,
               display: "-webkit-box",
               WebkitLineClamp: large ? 4 : 3,
               WebkitBoxOrient: "vertical",
@@ -134,9 +125,6 @@ function CitationCard({
             }}
           >
             {citation.title}
-          </Text>
-          <Text size="xs" style={{ color: colors.gray[400] }}>
-            {formatDate(citation.date)}
           </Text>
         </div>
       </div>
@@ -307,7 +295,20 @@ export default function CitationsClient({ countryId }: { countryId: string }) {
     <div>
       <HeroSection
         title="Citations"
-        description="PolicyEngine research and tools cited in the press and by policymakers."
+        description={
+          <>
+            PolicyEngine research and tools cited in the press and by
+            policymakers. The{" "}
+            <Link
+              href={`/${countryId}/users`}
+              className="tw:text-text-link tw:underline tw:underline-offset-2 tw:hover:text-text-link-hover"
+            >
+              Who uses PolicyEngine
+            </Link>{" "}
+            page lists {countryId === "uk" ? "organisations" : "organizations"}{" "}
+            that have used PolicyEngine&apos;s models and API.
+          </>
+        }
       />
 
       <Container size="xl" className="tw:py-xl">

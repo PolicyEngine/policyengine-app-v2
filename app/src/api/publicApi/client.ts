@@ -42,13 +42,22 @@ export interface CreatePublicApiClientOptions {
   fetchImpl?: typeof fetch;
 }
 
+/**
+ * The route's address on this page's origin. openapi-fetch builds a Request
+ * before fetching, and Request needs an absolute URL wherever there is no
+ * document to resolve a path against, such as in tests.
+ */
+function sameOriginBaseUrl(): string {
+  return typeof location === 'undefined' ? BASE_URL : new URL(BASE_URL, location.href).href;
+}
+
 export function createPublicApiClient({
   credentials = { kind: 'none' },
   baseUrl,
   fetchImpl,
 }: CreatePublicApiClientOptions = {}): PublicApiClient {
   const client = createClient<paths>({
-    baseUrl: baseUrl ?? BASE_URL,
+    baseUrl: baseUrl ?? sameOriginBaseUrl(),
     // Resolved per request, so a stubbed global fetch is honoured.
     fetch: (request: Request) => (fetchImpl ?? globalThis.fetch)(request),
   });

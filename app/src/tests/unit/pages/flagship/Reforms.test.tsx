@@ -677,6 +677,23 @@ describe('ReformsPage', () => {
     expect(mockFindMine).toHaveBeenCalledWith('us');
   });
 
+  test('given a saved reform is opened then its title wraps a name without spaces, as the saved-reform view the admin page shares does', async () => {
+    // Given
+    seedDeductionMetadata();
+    const UNSPACED_NAME = 'CTC_to_3600_for_children_under_6_written_without_any_spaces';
+    mockFindMine.mockResolvedValue([{ ...CHAT_REFORM, label: UNSPACED_NAME }]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+
+    // When
+    await user.click(await screen.findByText(UNSPACED_NAME));
+
+    // Then
+    expect(screen.getByRole('heading', { level: 1, name: UNSPACED_NAME }).style.overflowWrap).toBe(
+      'anywhere'
+    );
+  });
+
   test('given a reform card is clicked then its detail reads it, with nothing to edit there', async () => {
     seedDeductionMetadata();
     mockFindMine.mockResolvedValue([CHAT_REFORM]);

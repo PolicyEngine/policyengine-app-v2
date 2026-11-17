@@ -18,6 +18,7 @@ import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import type { CountryId } from '@/libs/countries';
 import { store } from '@/store';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   ASSOCIATION_IDS,
   errorResponse,
@@ -50,7 +51,7 @@ const fetchMock = vi.fn();
 
 /** Answers the account's reform list and the reform's v1 policy. */
 function respond(url: string): Response {
-  if (new URL(url).pathname === `/us/policy/${REFORM_POLICY_ID}`) {
+  if (publicApiPathOf(url) === `/us/policy/${REFORM_POLICY_ID}`) {
     return okResponse({
       policy_json: { 'gov.irs.credits.ctc.amount.base[0]': { '2026-01-01.2100-12-31': 3600 } },
     });
@@ -213,7 +214,7 @@ describe('useReportRecord by link', () => {
   test("given a signed-in session and its saved report's link then it reads the account's row", async () => {
     // Given
     fetchMock.mockImplementation(async (url: string) =>
-      new URL(url).pathname === `/v2/user-reports/${ASSOCIATION_IDS.REPORT}`
+      publicApiPathOf(url) === `/v2/user-reports/${ASSOCIATION_IDS.REPORT}`
         ? itemResponse(reportItem({ user_policy_id: ASSOCIATION_IDS.REFORM }))
         : errorResponse(404, 'not found')
     );
@@ -265,7 +266,7 @@ describe('useSharedReport', () => {
     });
     expect(result.current.data?.baselineReform).toEqual({ name: 'Plan B' });
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(new URL(url).pathname).toBe(`/v2/shared-reports/${ASSOCIATION_IDS.REPORT}`);
+    expect(publicApiPathOf(url)).toBe(`/v2/shared-reports/${ASSOCIATION_IDS.REPORT}`);
     expect(init.headers).toEqual({ Accept: 'application/json' });
   });
 

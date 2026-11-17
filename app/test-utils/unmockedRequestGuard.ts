@@ -3,8 +3,8 @@
  * global `fetch` (and, in jsdom suites, as `XMLHttpRequest`'s `send`) before
  * each test file, and checks after each test that no request reached it.
  *
- * Without it, a request that no test mocked would go to `BASE_URL`, which
- * defaults to the production Public API. A test that mocks `fetch` (with
+ * Without it, a request that no test mocked would go to whatever host it
+ * names, such as the Public API. A test that mocks `fetch` (with
  * `vi.stubGlobal`, `vi.spyOn` or an assignment) or the API module that sends
  * the request replaces the guard for that request, as before.
  */

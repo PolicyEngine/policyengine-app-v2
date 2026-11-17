@@ -23,3 +23,6 @@ export function withSwitchableAccountStorage(actual: typeof V2User): typeof V2Us
       actual.isAssociationCountry(countryId)) as typeof actual.isAssociationCountry,
   };
 }
+
+/** A user type this app does not know, as a newer API could send. */
+export const UNKNOWN_USER_TYPE = 'owner' as V2User.UserType;

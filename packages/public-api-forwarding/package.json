@@ -1,0 +1,25 @@
+{
+  "name": "@policyengine/public-api-forwarding",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Server-side forwarding to the PolicyEngine Public API, with PolicyEngine's server credential when one is configured.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"**/*.{ts,mjs}\"",
+    "format:check": "prettier --check \"**/*.{ts,mjs}\""
+  },
+  "dependencies": {
+    "@vercel/functions": "3.10.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.3"
+  }
+}

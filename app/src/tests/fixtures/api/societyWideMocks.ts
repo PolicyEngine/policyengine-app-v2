@@ -57,6 +57,7 @@ export const mockErrorResponse = (status: number) => ({
   ok: false,
   status,
   statusText: status === HTTP_STATUS.NOT_FOUND ? 'Not Found' : 'Error',
+  headers: new Headers(),
 });
 
 /** The Public API's message for a failed US state run, with the note it ends with. */
@@ -94,6 +95,7 @@ export const mockFailedCalculationResponse = (body: object = FAILED_CALCULATION_
   ok: false,
   status: HTTP_STATUS.BAD_GATEWAY,
   statusText: 'Bad Gateway',
+  headers: new Headers(),
   text: vi.fn().mockResolvedValue(JSON.stringify(body)),
 });
 
@@ -199,11 +201,16 @@ export const UNEXPECTED_DELETE_ANSWERS: Array<[string, number, string, unknown]>
   ['200 in place of 204', HTTP_STATUS.OK, JSON.stringify({ status: 'ok' }), { status: 'ok' }],
 ];
 
-/** An answer to a DELETE of a stored failure, for a status and a raw body. */
-export const mockDeleteResponse = (status: number, body = '') => ({
+/** An answer to a DELETE of a stored failure, for a status, a raw body and its headers. */
+export const mockDeleteResponse = (
+  status: number,
+  body = '',
+  headers: Record<string, string> = {}
+) => ({
   ok: status >= 200 && status < 300,
   status,
   statusText: String(status),
+  headers: new Headers(headers),
   text: vi.fn().mockResolvedValue(body),
 });
 
