@@ -3,6 +3,7 @@ import { hashKey, QueryClient, QueryClientProvider, QueryObserver } from '@tanst
 import { act, render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ReformNotFoundError } from '@/api/reformStore';
+import { V2ApiError } from '@/api/v2UserClient';
 import { DraftRunBar } from '@/components/flagship/reform/DraftHeader';
 import { savedReformListKey } from '@/hooks/useSavedReformList';
 import {
@@ -286,6 +287,29 @@ describe('DraftRunBar and the cached list of saved reforms', () => {
     expect(mockCreate).toHaveBeenCalledTimes(1);
     expect(listReads()).toBe(0);
     expect(queryClient.getQueryData(LIST_KEY)).toEqual([NEW_REFORM, LATER_REFORM]);
+  });
+
+  test('given making the edit policy answers 404 and the save fails then the reform, still saved, stays in the list', async () => {
+    // Given: the Public API does not know the loaded catalog version, so
+    // making the policy answers 404 for the update and for the new reform
+    const user = userEvent.setup();
+    loadReformIntoDraft(EARLIER_REFORM, () => EITC_DETAILS);
+    updateDraftProvisionValue(EITC_MAX_PATH, 950);
+    const catalogVersionNotFound = new V2ApiError(404, 'Metadata catalog version not found', {
+      fromPublicApi: true,
+    });
+    mockUpdate.mockRejectedValue(catalogVersionNotFound);
+    mockCreate.mockRejectedValue(catalogVersionNotFound);
+    const { queryClient } = await renderWithLoadedList();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+    expect(await screen.findByText('Could not save the reform. Try again.')).toBeInTheDocument();
+    await listSettled(queryClient);
+
+    // Then
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(queryClient.getQueryData(LIST_KEY)).toEqual(SAVED_REFORMS);
   });
 
   test('given the session changes while a save is in flight then the reform goes into the list of the session that saved it', async () => {

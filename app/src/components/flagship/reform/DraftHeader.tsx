@@ -343,8 +343,14 @@ export function DraftRunBar({
         if (!isMissingFromStore(error)) {
           throw error;
         }
-        void savedReformList.removeMissing(draftToSave.countryId, draftToSave.editingReformId);
       }
+      const created = await reformStore.create(payload);
+      // The new reform takes the place of the missing one in the cached
+      // list only once it is saved: a 404 can also come from making the
+      // policy (a catalog version the API does not know), and then the
+      // reform is still saved and the new one fails too.
+      void savedReformList.removeMissing(draftToSave.countryId, draftToSave.editingReformId);
+      return created;
     }
     return reformStore.create(payload);
   };
