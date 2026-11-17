@@ -24,7 +24,7 @@ export const CONFIG = Object.freeze({
       name: "property-tax-relief",
     },
   },
-  childSha: "62b668978ccdb79cf4dd8ac88816e7de54e96209",
+  childSha: "a2354c2d31ff8bcfb6a1f9a19edb8a54af2ca378",
   childAlias: "property-tax-relief.vercel.app",
   toolPath: "/us/rent-and-property-taxes/",
   assetPath: "/_zones/property-tax-relief/",
@@ -557,8 +557,9 @@ export function validateInventory(actual, source) {
 }
 
 export function validateStaticCsv(actual, sourceInventory) {
-  // Static12-field CSV and browser17-field CSV have intentionally different schemas.
-  const text = actual.toString("utf8");
+  // The pinned report shares one 22-column static/browser export. Byte equality
+  // against its source CSV remains mandatory at the browser call site.
+  const text = actual.toString("utf8").replace(/^\uFEFF/, "");
   const rows = [];
   let row = [],
     cell = "",
@@ -585,44 +586,111 @@ export function validateStaticCsv(actual, sourceInventory) {
     row.push(cell);
     rows.push(row);
   }
+  let states;
+  try {
+    states = JSON.parse(sourceInventory);
+  } catch {
+    throw new QaError("BAD_CSV_SOURCE");
+  }
+  requireQa(
+    Array.isArray(states) &&
+      states.length === 51 &&
+      states.every(
+        (state) =>
+          typeof state.code === "string" &&
+          state.code.length > 0 &&
+          state.taxYear === 2025 &&
+          Array.isArray(state.programs) &&
+          Array.isArray(state.sources) &&
+          Array.isArray(state.researchNotes),
+      ) &&
+      new Set(states.map((state) => state.code)).size === 51,
+    "BAD_CSV_SOURCE",
+  );
+  const programs = states.flatMap((state) => state.programs);
+  requireQa(
+    programs.length === 119 &&
+      programs.every(
+        (program) =>
+          typeof program.id === "string" &&
+          program.id.length > 0 &&
+          Array.isArray(program.eligibilityNotes) &&
+          Array.isArray(program.interactions),
+      ) &&
+      new Set(programs.map((program) => program.id)).size === 119,
+    "BAD_CSV_SOURCE",
+  );
   const expected = [
     [
       "state",
       "code",
-      "reference_year",
+      "tax_year",
+      "program_id",
       "program",
       "category",
       "scope",
       "tenures",
       "refundable",
+      "payment_mechanism",
+      "age_rule",
+      "income_definition",
       "income_limits",
       "maximum_benefit",
+      "formula",
+      "application",
+      "eligibility_notes",
+      "interactions",
       "program_year",
-      "sources",
+      "source_urls",
+      "research_status",
+      "state_research_notes",
     ],
   ];
-  for (const state of JSON.parse(sourceInventory)) {
+  const refundabilityCell = (program) => {
+    const mechanism = program.paymentMechanism ?? "not-established";
+    const value =
+      mechanism === "income-tax-credit" || mechanism === "not-established"
+        ? program.refundable
+        : null;
+    return value === null ? "" : String(value);
+  };
+  for (const state of states) {
     for (const p of state.programs.length ? state.programs : [null]) {
       expected.push(
         p
           ? [
               state.name,
               state.code,
-              "2025",
+              state.taxYear,
+              p.id,
               p.name,
               p.category,
               p.scope,
               p.tenures.join(" | "),
-              p.refundable === null ? "" : p.refundable ? "True" : "False",
+              refundabilityCell(p),
+              p.paymentMechanism ?? "not-established",
+              p.ageRule,
+              p.incomeDefinition,
               p.incomeLimits,
               p.maximumBenefit,
+              p.formulaSummary,
+              p.application,
+              p.eligibilityNotes.join(" | "),
+              p.interactions.join(" | "),
               p.programYear,
-              p.sources.map((s) => s.url).join(" | "),
+              [
+                ...new Set(
+                  [...p.sources, ...state.sources].map((source) => source.url),
+                ),
+              ].join(" | "),
+              state.inventoryStatus,
+              state.researchNotes.join(" | "),
             ]
           : [
               state.name,
               state.code,
-              "2025",
+              state.taxYear,
+              "",
               "No program recorded",
               "",
               "",
@@ -631,13 +699,29 @@ export function validateStaticCsv(actual, sourceInventory) {
               "",
               "",
               "",
-              state.sources.map((s) => s.url).join(" | "),
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              [...new Set(state.sources.map((source) => source.url))].join(
+                " | ",
+              ),
+              state.inventoryStatus,
+              state.researchNotes.join(" | "),
             ],
       );
     }
   }
+  const safeCell = (value) => {
+    const text = String(value ?? "");
+    return /^(?:\s*[=+@-]|[\t\r\n])/.test(text) ? `'${text}` : text;
+  };
   requireQa(
-    JSON.stringify(rows) === JSON.stringify(expected),
+    JSON.stringify(rows) ===
+      JSON.stringify(expected.map((row) => row.map(safeCell))),
     "STATIC_CSV_DIFFERS",
   );
   return true;

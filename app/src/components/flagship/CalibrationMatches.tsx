@@ -47,7 +47,7 @@ import {
 /**
  * The data-side validation surface for a report: which of the variables
  * this reform moves are calibration targets of the microdata, and how
- * well the current populace release fits them — the model's baseline
+ * well the current Microcosm release fits them — the model's baseline
  * totals against the official ones. Nearest variables first; the
  * interacted quantity within the mechanism is the one that bounds the
  * data-side bias of the estimate.

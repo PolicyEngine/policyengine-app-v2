@@ -28,8 +28,11 @@ vi.mock("playwright", () => {
 });
 
 const HOST_SHA = "a".repeat(40);
-const REVIEWED_CHILD_SHA = "62b668978ccdb79cf4dd8ac88816e7de54e96209";
-const PREVIOUS_CHILD_SHA = "1910e9e5086cd634c49a8a87a285703189ab1e56";
+const REVIEWED_CHILD_SHA = "a2354c2d31ff8bcfb6a1f9a19edb8a54af2ca378";
+const PREVIOUS_CHILD_SHAS = [
+  "1910e9e5086cd634c49a8a87a285703189ab1e56",
+  "62b668978ccdb79cf4dd8ac88816e7de54e96209",
+];
 const deployment = (role) => ({
   id: `dpl_${role}12345678901234567890`,
   projectId: CONFIG.projects[role].id,
@@ -412,97 +415,104 @@ describe("protected QA provenance", () => {
     expect(CONFIG.childSha).toBe(REVIEWED_CHILD_SHA);
     expect(childCheckout?.[1]).toBe(REVIEWED_CHILD_SHA);
   });
-  test("given the previous child Git deployment then reject it under the reviewed report pin", () => {
-    expect(() =>
-      validateDeployment(
-        {
-          ...deployment("child"),
-          gitSource: { type: "github", sha: PREVIOUS_CHILD_SHA },
-        },
-        "child",
-        CONFIG.childSha,
-      ),
-    ).toThrow("SOURCE_NOT_BOUND");
-  });
-  test("given a manual build receipt then require source archive and complete byte manifest", () => {
-    const m = manifest();
-    const files = Object.fromEntries(
-      [
-        CONFIG.toolPath,
-        CONFIG.toolPath + "report/",
-        CONFIG.toolPath + "methods/",
-        CONFIG.toolPath + "data/inventory.json",
-        CONFIG.toolPath + "data/inventory.csv",
-        CONFIG.assetPath + "_next/static/chunk.js",
-      ].map((p) => [p, "c".repeat(64)]),
-    );
-    const receipt = {
-      version: 1,
-      deploymentId: m.child.id,
-      sourceCommit: CONFIG.childSha,
-      sourceArchiveSha256: "d".repeat(64),
-      files,
-    };
-    expect(validateBuildReceipt(receipt, m.child.id, "d".repeat(64))).toBe(
-      receipt,
-    );
-    expect(() =>
-      validateBuildReceipt(
-        { ...receipt, sourceCommit: PREVIOUS_CHILD_SHA },
-        m.child.id,
-        "d".repeat(64),
-      ),
-    ).toThrow("BUILD_RECEIPT_SOURCE_DIFFERS");
-    expect(() =>
-      validateBuildReceipt(receipt, m.child.id, "e".repeat(64)),
-    ).toThrow();
-    expect(() =>
-      validateBuildReceipt(
-        { ...receipt, files: { ...files, "/admin": "c".repeat(64) } },
-        m.child.id,
-        "d".repeat(64),
-      ),
-    ).toThrow();
-    const manual = {
-      ...deployment("child"),
-      gitSource: null,
-      meta: {
+  test.each(PREVIOUS_CHILD_SHAS)(
+    "given previous child Git deployment %s then reject it under the reviewed report pin",
+    (previousChildSha) => {
+      expect(() =>
+        validateDeployment(
+          {
+            ...deployment("child"),
+            gitSource: { type: "github", sha: previousChildSha },
+          },
+          "child",
+          CONFIG.childSha,
+        ),
+      ).toThrow("SOURCE_NOT_BOUND");
+    },
+  );
+  test.each(PREVIOUS_CHILD_SHAS)(
+    "given a manual build receipt then require source archive and complete byte manifest against previous source %s",
+    (previousChildSha) => {
+      const m = manifest();
+      const files = Object.fromEntries(
+        [
+          CONFIG.toolPath,
+          CONFIG.toolPath + "report/",
+          CONFIG.toolPath + "methods/",
+          CONFIG.toolPath + "data/inventory.json",
+          CONFIG.toolPath + "data/inventory.csv",
+          CONFIG.assetPath + "_next/static/chunk.js",
+        ].map((p) => [p, "c".repeat(64)]),
+      );
+      const receipt = {
+        version: 1,
+        deploymentId: m.child.id,
         sourceCommit: CONFIG.childSha,
         sourceArchiveSha256: "d".repeat(64),
-      },
-    };
-    expect(() => validateDeployment(manual, "child", CONFIG.childSha)).toThrow(
-      "SOURCE_NOT_BOUND",
-    );
-    expect(
-      validateDeployment(manual, "child", CONFIG.childSha, receipt).sourceKind,
-    ).toBe("reviewed-manual-build");
-    expect(() =>
-      validateDeployment(
-        {
-          ...manual,
-          meta: { ...manual.meta, sourceCommit: PREVIOUS_CHILD_SHA },
-        },
-        "child",
-        CONFIG.childSha,
-        { ...receipt, sourceCommit: PREVIOUS_CHILD_SHA },
-      ),
-    ).toThrow("SOURCE_NOT_BOUND");
-    expect(() =>
-      validateDeployment(
-        {
-          ...manual,
-          meta: {
-            sourceCommit: CONFIG.childSha,
-            sourceArchiveSha256: "e".repeat(64),
-          },
-        },
-        "child",
-        CONFIG.childSha,
+        files,
+      };
+      expect(validateBuildReceipt(receipt, m.child.id, "d".repeat(64))).toBe(
         receipt,
-      ),
-    ).toThrow("SOURCE_NOT_BOUND");
-  });
+      );
+      expect(() =>
+        validateBuildReceipt(
+          { ...receipt, sourceCommit: previousChildSha },
+          m.child.id,
+          "d".repeat(64),
+        ),
+      ).toThrow("BUILD_RECEIPT_SOURCE_DIFFERS");
+      expect(() =>
+        validateBuildReceipt(receipt, m.child.id, "e".repeat(64)),
+      ).toThrow();
+      expect(() =>
+        validateBuildReceipt(
+          { ...receipt, files: { ...files, "/admin": "c".repeat(64) } },
+          m.child.id,
+          "d".repeat(64),
+        ),
+      ).toThrow();
+      const manual = {
+        ...deployment("child"),
+        gitSource: null,
+        meta: {
+          sourceCommit: CONFIG.childSha,
+          sourceArchiveSha256: "d".repeat(64),
+        },
+      };
+      expect(() =>
+        validateDeployment(manual, "child", CONFIG.childSha),
+      ).toThrow("SOURCE_NOT_BOUND");
+      expect(
+        validateDeployment(manual, "child", CONFIG.childSha, receipt)
+          .sourceKind,
+      ).toBe("reviewed-manual-build");
+      expect(() =>
+        validateDeployment(
+          {
+            ...manual,
+            meta: { ...manual.meta, sourceCommit: previousChildSha },
+          },
+          "child",
+          CONFIG.childSha,
+          { ...receipt, sourceCommit: previousChildSha },
+        ),
+      ).toThrow("SOURCE_NOT_BOUND");
+      expect(() =>
+        validateDeployment(
+          {
+            ...manual,
+            meta: {
+              sourceCommit: CONFIG.childSha,
+              sourceArchiveSha256: "e".repeat(64),
+            },
+          },
+          "child",
+          CONFIG.childSha,
+          receipt,
+        ),
+      ).toThrow("SOURCE_NOT_BOUND");
+    },
+  );
   test("given a wrong project, source, readiness or production host then reject", () => {
     for (const change of [
       { projectId: CONFIG.projects.child.id },
@@ -878,28 +888,109 @@ describe("bounded preflight", () => {
     ).toThrow();
   });
 
-  test("given the static CSV then compare its own schema including quoted fields to inventory", () => {
-    const states = [
-      {
-        name: "Example state",
-        code: "EX",
-        programs: [
-          {
-            name: 'Tax, "program"',
-            category: "deduction",
-            scope: "statewide",
-            tenures: ["renter"],
-            refundable: null,
-            incomeLimits: "First line\nsecond line",
-            maximumBenefit: "$50",
-            programYear: "2025",
-            sources: [{ url: "https://example.gov" }],
-          },
+  function csvFixture() {
+    const codes =
+      "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(
+        " ",
+      );
+    const states = codes.map((code, index) => ({
+      name: `State ${code}`,
+      code,
+      taxYear: 2025,
+      inventoryStatus: "partial",
+      researchNotes: ["A source note"],
+      sources: [{ url: "https://state.example.gov" }],
+      programs: Array.from({ length: index === 0 ? 69 : 1 }, (_, n) => ({
+        id: `${code}-${n}`,
+        name: n === 0 ? 'Tax, "program"' : `Program ${n}`,
+        category: "property-tax-credit",
+        scope: "statewide",
+        tenures: ["renter"],
+        refundable: n === 0 ? null : n === 1,
+        paymentMechanism: "income-tax-credit",
+        ageRule: "Any age",
+        incomeDefinition: "Household income",
+        incomeLimits: "First line\nsecond line",
+        maximumBenefit: "$50",
+        formulaSummary: "Source rule",
+        application: "Claim form",
+        eligibilityNotes: [
+          "First qualification, condition",
+          'Second "qualification"\nline',
         ],
-      },
+        interactions: ["First coordination rule", "Second coordination rule"],
+        programYear: "2025",
+        sources: [
+          { url: "https://program.example.gov" },
+          { url: "https://state.example.gov" },
+        ],
+      })),
+    }));
+    const headings = [
+      "state",
+      "code",
+      "tax_year",
+      "program_id",
+      "program",
+      "category",
+      "scope",
+      "tenures",
+      "refundable",
+      "payment_mechanism",
+      "age_rule",
+      "income_definition",
+      "income_limits",
+      "maximum_benefit",
+      "formula",
+      "application",
+      "eligibility_notes",
+      "interactions",
+      "program_year",
+      "source_urls",
+      "research_status",
+      "state_research_notes",
     ];
-    const csv =
-      'state,code,reference_year,program,category,scope,tenures,refundable,income_limits,maximum_benefit,program_year,sources\nExample state,EX,2025,"Tax, ""program""",deduction,statewide,renter,,"First line\nsecond line",$50,2025,https://example.gov\n';
+    const rows = states.flatMap((state) =>
+      state.programs.map((p) => [
+        state.name,
+        state.code,
+        "2025",
+        p.id,
+        p.name,
+        "property-tax-credit",
+        "statewide",
+        "renter",
+        p.refundable === null ? "" : p.refundable ? "true" : "false",
+        "income-tax-credit",
+        "Any age",
+        "Household income",
+        "First line\nsecond line",
+        "$50",
+        "Source rule",
+        "Claim form",
+        'First qualification, condition | Second "qualification"\nline',
+        "First coordination rule | Second coordination rule",
+        "2025",
+        "https://program.example.gov | https://state.example.gov",
+        "partial",
+        "A source note",
+      ]),
+    );
+    const encode = (values) =>
+      "\uFEFF" +
+      values
+        .map((row) =>
+          row
+            .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+            .join(","),
+        )
+        .join("\r\n");
+    return { states, headings, rows, encode };
+  }
+
+  test("given the static CSV then compare shared22 schema, source URLs and quoted fields to inventory", () => {
+    const { states, headings, rows, encode } = csvFixture();
+    const csv = encode([headings, ...rows]);
     expect(validateStaticCsv(Buffer.from(csv), JSON.stringify(states))).toBe(
       true,
     );
@@ -910,6 +1001,186 @@ describe("bounded preflight", () => {
       ),
     ).toThrow("STATIC_CSV_DIFFERS");
   });
+
+  test.each([
+    "header",
+    "missing column",
+    "missing row",
+    "duplicate row",
+    "source URL",
+    "boolean",
+    "program ID",
+    "research notes",
+    "eligibility notes",
+    "interactions",
+    "metadata swapped",
+    "legacy20",
+    "unclosed quote",
+    "legacy12",
+  ])("given a shared22 CSV with %s corruption then reject it", (mutation) => {
+    const { states, headings, rows, encode } = csvFixture();
+    let csv;
+    if (mutation === "header") headings[3] = "wrong_program_id";
+    if (mutation === "missing column") headings.pop();
+    if (mutation === "missing row") rows.pop();
+    if (mutation === "duplicate row") rows[1] = rows[0];
+    if (mutation === "source URL") rows[0][19] = "https://wrong.example.gov";
+    if (mutation === "boolean") rows[1][8] = "True";
+    if (mutation === "program ID") rows[0][3] = "unknown-ID";
+    if (mutation === "research notes") rows[0][21] = "Changed note";
+    if (mutation === "eligibility notes") rows[0][16] = "Changed qualification";
+    if (mutation === "interactions") rows[0][17] = "Changed coordination";
+    if (mutation === "metadata swapped")
+      [rows[0][16], rows[0][17]] = [rows[0][17], rows[0][16]];
+    if (mutation === "legacy20") {
+      headings.splice(16, 2);
+      rows.forEach((row) => row.splice(16, 2));
+    }
+    if (mutation === "legacy12") {
+      headings.splice(12);
+      rows.forEach((row) => row.splice(12));
+    }
+    csv = encode([headings, ...rows]);
+    if (mutation === "unclosed quote") csv = csv.slice(0, -1);
+    expect(() =>
+      validateStaticCsv(Buffer.from(csv), JSON.stringify(states)),
+    ).toThrow();
+  });
+
+  test.each([
+    "missing jurisdiction",
+    "duplicate jurisdiction",
+    "missing ID",
+    "duplicate ID",
+    "extra program",
+    "missing eligibility notes",
+    "missing interactions",
+  ])("given shared22 source with %s then reject it", (mutation) => {
+    const { states, headings, rows, encode } = csvFixture();
+    if (mutation === "missing jurisdiction") states.pop();
+    if (mutation === "duplicate jurisdiction") states[1].code = states[0].code;
+    if (mutation === "missing ID") delete states[0].programs[0].id;
+    if (mutation === "missing eligibility notes")
+      delete states[0].programs[0].eligibilityNotes;
+    if (mutation === "missing interactions")
+      delete states[0].programs[0].interactions;
+    if (mutation === "duplicate ID")
+      states[0].programs[1].id = states[0].programs[0].id;
+    if (mutation === "extra program")
+      states[0].programs.push({
+        ...states[0].programs[0],
+        id: "extra-program",
+      });
+    expect(() =>
+      validateStaticCsv(
+        Buffer.from(encode([headings, ...rows])),
+        JSON.stringify(states),
+      ),
+    ).toThrow("BAD_CSV_SOURCE");
+  });
+
+  test("given shared22 source text that begins a spreadsheet formula then require the safe prefix", () => {
+    const { states, headings, rows, encode } = csvFixture();
+    states[0].programs[0].name = "=1+1";
+    rows[0][4] = "'=1+1";
+    expect(
+      validateStaticCsv(
+        Buffer.from(encode([headings, ...rows])),
+        JSON.stringify(states),
+      ),
+    ).toBe(true);
+    rows[0][4] = "=1+1";
+    expect(() =>
+      validateStaticCsv(
+        Buffer.from(encode([headings, ...rows])),
+        JSON.stringify(states),
+      ),
+    ).toThrow("STATIC_CSV_DIFFERS");
+  });
+  const nonIncomeMechanisms = [
+    "property-tax-bill-reduction",
+    "taxable-property-value-exemption",
+    "cash-rebate",
+    "income-tax-deduction",
+    "tax-deferral",
+    "assessment-or-tax-limit",
+    "varies-by-locality",
+  ];
+  const refundabilityCases = [
+    ...nonIncomeMechanisms.flatMap((mechanism) =>
+      [true, false, null].map((raw) => [mechanism, raw, ""]),
+    ),
+    ...["income-tax-credit", "not-established", undefined, null].flatMap(
+      (mechanism) => [
+        [mechanism, true, "true"],
+        [mechanism, false, "false"],
+        [mechanism, null, ""],
+      ],
+    ),
+  ];
+  test.each(refundabilityCases)(
+    "given shared22 refundability for mechanism %s and raw flag %s then require displayed metadata %s",
+    (mechanism, raw, expected) => {
+      const { states, headings, rows, encode } = csvFixture();
+      const program = states[0].programs[0];
+      if (mechanism === undefined) delete program.paymentMechanism;
+      else program.paymentMechanism = mechanism;
+      program.refundable = raw;
+      rows[0][8] = expected;
+      rows[0][9] = mechanism ?? "not-established";
+      expect(
+        validateStaticCsv(
+          Buffer.from(encode([headings, ...rows])),
+          JSON.stringify(states),
+        ),
+      ).toBe(true);
+      rows[0][8] = expected === "" ? (raw === false ? "false" : "true") : "";
+      expect(() =>
+        validateStaticCsv(
+          Buffer.from(encode([headings, ...rows])),
+          JSON.stringify(states),
+        ),
+      ).toThrow("STATIC_CSV_DIFFERS");
+    },
+  );
+  test("given empty eligibility and interaction arrays then emit blank metadata cells", () => {
+    const { states, headings, rows, encode } = csvFixture();
+    states[0].programs[0].eligibilityNotes = [];
+    states[0].programs[0].interactions = [];
+    rows[0][16] = "";
+    rows[0][17] = "";
+    expect(
+      validateStaticCsv(
+        Buffer.from(encode([headings, ...rows])),
+        JSON.stringify(states),
+      ),
+    ).toBe(true);
+  });
+
+  test.each([
+    ["eligibilityNotes", 16],
+    ["interactions", 17],
+  ])(
+    "given %s containing formula-like and quoted multiline text then preserve joined safe metadata",
+    (field, column) => {
+      const { states, headings, rows, encode } = csvFixture();
+      states[0].programs[0][field] = ["=SUM(1,2)", 'Second, "note"\nline'];
+      rows[0][column] = '\'=SUM(1,2) | Second, "note"\nline';
+      expect(
+        validateStaticCsv(
+          Buffer.from(encode([headings, ...rows])),
+          JSON.stringify(states),
+        ),
+      ).toBe(true);
+      rows[0][column] = rows[0][column].slice(1);
+      expect(() =>
+        validateStaticCsv(
+          Buffer.from(encode([headings, ...rows])),
+          JSON.stringify(states),
+        ),
+      ).toThrow("STATIC_CSV_DIFFERS");
+    },
+  );
 });
 
 describe("sanitized redirect diagnostics", () => {

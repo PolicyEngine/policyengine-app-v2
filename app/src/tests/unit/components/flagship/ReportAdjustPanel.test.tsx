@@ -34,6 +34,11 @@ import {
   UK_REPORT_START_YEAR,
 } from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
 import {
+  MATCHING_REFORM_POLICY_ID,
+  SAVED_REFORM_POLICY_ID,
+  SAVED_REFORM_V2_POLICY_ID,
+} from '@/tests/fixtures/libs/flagship/runReportMocks';
+import {
   US_FIRST_SUPPORTED_YEAR,
   US_LAST_SUPPORTED_YEAR,
 } from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
@@ -145,7 +150,10 @@ describe('ReportAdjustPanel', () => {
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
     const [, , , , year, options] = mockRun.mock.calls[0];
     expect(year).toBe(2027);
-    expect(options).toEqual({ region: 'state/va' });
+    expect(options).toEqual({
+      region: 'state/va',
+      reformPolicies: expect.objectContaining({ id: 'rf-new' }),
+    });
   });
 
   test('given the report population arrives after the panel then the panel follows it', async () => {
@@ -229,7 +237,12 @@ describe('ReportAdjustPanel', () => {
       await user.click(screen.getByRole('button', { name: /recompute/i }));
 
       await waitFor(() => expect(mockRun).toHaveBeenCalled());
-      expect(mockRun.mock.calls[0][5]).toEqual({ region: undefined, baseline: PLAN_B });
+      expect(mockRun.mock.calls[0][5]).toEqual({
+        region: undefined,
+        baseline: PLAN_B,
+        // The reform the recompute saved, whose policy the run reuses.
+        reformPolicies: expect.objectContaining({ id: 'rf-new' }),
+      });
     });
 
     test('then Edit in Build keeps the comparison in the draft', async () => {
@@ -305,7 +318,10 @@ describe('ReportAdjustPanel', () => {
     await user.click(screen.getByRole('button', { name: /recompute/i }));
 
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
-    expect(mockRun.mock.calls[0][5]).toEqual({ region: 'state/ca' });
+    expect(mockRun.mock.calls[0][5]).toEqual({
+      region: 'state/ca',
+      reformPolicies: expect.objectContaining({ id: 'rf-new' }),
+    });
     store.dispatch(clearMetadata());
   });
 
@@ -352,7 +368,10 @@ describe('ReportAdjustPanel', () => {
     await user.click(screen.getByRole('button', { name: /recompute/i }));
 
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
-    expect(mockRun.mock.calls[0][5]).toEqual({ region: undefined });
+    expect(mockRun.mock.calls[0][5]).toEqual({
+      region: undefined,
+      reformPolicies: expect.objectContaining({ id: 'rf-new' }),
+    });
   });
 
   test('given no matching reform then recompute saves a new one and runs linked to it', async () => {
@@ -377,6 +396,29 @@ describe('ReportAdjustPanel', () => {
       expect.objectContaining({ path: PROVISIONS[0].path, value: 3600 }),
       expect.objectContaining({ path: PROVISIONS[1].path, value: 350 }),
     ]);
+  });
+
+  test('given no matching reform then the run reuses the policy the save created', async () => {
+    mockCreate.mockResolvedValue({
+      id: 'rf-new',
+      label: 'CTC expansion (adjusted)',
+      policyId: SAVED_REFORM_POLICY_ID,
+      v2PolicyId: SAVED_REFORM_V2_POLICY_ID,
+    });
+    const user = userEvent.setup();
+    await renderPanel();
+
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockRun.mock.calls[0][3]).toBe('rf-new');
+    expect(mockRun.mock.calls[0][5].reformPolicies).toMatchObject({
+      policyId: SAVED_REFORM_POLICY_ID,
+      v2PolicyId: SAVED_REFORM_V2_POLICY_ID,
+    });
   });
 
   test('given recompute then only this browser’s saved reforms are searched for a match', async () => {
@@ -421,6 +463,41 @@ describe('ReportAdjustPanel', () => {
     const [runTitle, , , reformId] = mockRun.mock.calls[0];
     expect(runTitle).toBe('My CTC reform');
     expect(reformId).toBe('rf-existing');
+  });
+
+  // A reform saved before saves typed their values can hold a v1 policy
+  // with values as text, which simulations cannot read. The run types the
+  // values itself, so a reused reform's policy is not handed over.
+  test('given the adjusted set matches a saved reform then the run is given no policy to reuse', async () => {
+    mockFindMine.mockResolvedValue([
+      {
+        id: 'rf-existing',
+        label: 'My CTC reform',
+        policyId: MATCHING_REFORM_POLICY_ID,
+        parameters: [
+          {
+            name: PROVISIONS[0].path,
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3600 }],
+          },
+          {
+            name: PROVISIONS[1].path,
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 350 }],
+          },
+        ],
+      },
+    ]);
+    const user = userEvent.setup();
+    await renderPanel();
+
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockRun.mock.calls[0][3]).toBe('rf-existing');
+    expect(mockRun.mock.calls[0][5].reformPolicies).toBeUndefined();
   });
 
   test('given a saved reform whose changes could not load then it is skipped, not matched or fatal', async () => {

@@ -6,6 +6,8 @@ on:
       - "website/src/data/appZoneRoutes.ts"
       - ".github/scripts/audit-app-zone-shell.mjs"
       - ".github/scripts/audit-app-zone-shell.test.mjs"
+      - ".github/scripts/property-tax-protected-qa.mjs"
+      - ".github/scripts/property-tax-protected-qa.test.mjs"
       - ".github/workflows/app-zone-shell-audit.yml"
   workflow_dispatch:
     inputs:
@@ -60,6 +62,9 @@ jobs:
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
 
+      - name: Test credential boundaries without credentials
+        run: node node_modules/vitest/vitest.mjs run .github/scripts/property-tax-protected-qa.test.mjs --environment node --maxWorkers 4
+
       - name: Install Chromium
         run: node node_modules/playwright/cli.js install --with-deps chromium
 
@@ -110,7 +115,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: PolicyEngine/property-tax-relief
-          ref: 62b668978ccdb79cf4dd8ac88816e7de54e96209
+          ref: a2354c2d31ff8bcfb6a1f9a19edb8a54af2ca378
           path: qa-child
           persist-credentials: false
       - uses: actions/setup-node@v4

@@ -32,6 +32,7 @@ import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport
 import { windowSizeChoices, windowSizeWithin } from '@/libs/flagship/supportedYears';
 import { getLastSupportedYear } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
+import type { Reform } from '@/types/ingredients/Reform';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { regionKindOf, trackReportAdjusted } from '@/utils/analytics';
@@ -320,6 +321,9 @@ function AdjustPanel({
       const label = renamed ? name.trim() : onlyYears ? title : `${title} (adjusted)`;
       let reformId: string;
       let runTitle: string;
+      // The policies the save below makes, for the run to reuse. A reused
+      // reform's policy may predate typed saves, so the run makes its own.
+      let reformPolicies: Pick<Reform, 'policyId' | 'v2PolicyId'> | undefined;
       if (match) {
         reformId = match.id!;
         runTitle = renamed ? label : match.label || label;
@@ -334,9 +338,11 @@ function AdjustPanel({
         queryClient.invalidateQueries({ queryKey: ['reforms'] });
         reformId = created.id!;
         runTitle = created.label || label;
+        reformPolicies = created;
       }
 
       await runReport.run(runTitle, sourceNote, adjusted, reformId, runYear, {
+        reformPolicies,
         region: population,
         baseline,
         // The years chosen here; the report's own unless changed.
