@@ -84,7 +84,8 @@ describe('calculationQueries', () => {
       queryClient.setQueryData(queryOptions.queryKey, cachedStatus);
 
       // When
-      await queryClient.fetchQuery(queryOptions);
+      // A poll refetches whatever the strategy's staleTime, as staleTime 0 makes fetchQuery do.
+      await queryClient.fetchQuery({ ...queryOptions, staleTime: 0 });
 
       // Then
       expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata, cachedStatus);
@@ -149,7 +150,8 @@ describe('calculationQueries', () => {
       queryClient.setQueryData(queryOptions.queryKey, cachedStatus);
 
       // When
-      await queryClient.fetchQuery(queryOptions);
+      // A poll refetches whatever the strategy's staleTime, as staleTime 0 makes fetchQuery do.
+      await queryClient.fetchQuery({ ...queryOptions, staleTime: 0 });
 
       // Then
       expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata, cachedStatus);

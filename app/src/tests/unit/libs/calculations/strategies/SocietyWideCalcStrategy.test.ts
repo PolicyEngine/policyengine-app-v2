@@ -1,3 +1,4 @@
+import type { Query } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   UK_REGION_SOCIETY_WIDE_DURATION_MS,
@@ -252,9 +253,9 @@ describe('SocietyWideCalcStrategy', () => {
 
     /** Whether the report's query polls again after this status. */
     const pollsAgain = (status: CalcStatus) =>
-      (strategy.getRefetchConfig().refetchInterval as (query: any) => number | false)({
+      (strategy.getRefetchConfig().refetchInterval as (query: Query) => number | false)({
         state: { data: status },
-      }) !== false;
+      } as Query) !== false;
 
     it.each(FAILED_REQUEST_ERRORS)(
       'given %s after a computing response then keeps the computing status and polls again',
