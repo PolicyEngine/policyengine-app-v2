@@ -20,3 +20,6 @@ export const BUDGET_WINDOW_COMPUTING: BudgetWindowResponse = {
   result: null,
   progress: 0,
 };
+
+/** A check that failed, as `fetchBudgetWindow` throws on a gateway's 502. */
+export const BUDGET_WINDOW_CHECK_FAILURE = new Error('Budget window request failed (502)');
