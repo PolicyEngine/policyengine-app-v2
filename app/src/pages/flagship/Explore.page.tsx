@@ -40,7 +40,8 @@ const linkButton = {
 } as const;
 
 /** Wide enough for the card to float beside the map. */
-const WIDE_QUERY = '(min-width: 1024px)';
+// The theme's `lg` breakpoint (75rem), so script and the `tw:lg:` classes agree.
+const WIDE_QUERY = '(min-width: 75rem)';
 const PANEL_WIDTH = 360;
 
 const mapButton = {
