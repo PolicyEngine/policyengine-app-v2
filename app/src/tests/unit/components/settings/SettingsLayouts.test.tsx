@@ -70,7 +70,7 @@ beforeEach(() => {
 
 describe('AdminSettingsLayout', () => {
   test.each<CountryId>(['us', 'uk'])(
-    'given an admin in %s then the Admin sidebar links to the users page, marked as the current page',
+    'given an admin in %s then the Admin sidebar links to the users and invitations pages, with users marked as the current page',
     async (countryId) => {
       // Given
       answerMe(fetchMock, { meResponse: () => itemResponse(meItemOfType('admin')) });
@@ -83,7 +83,10 @@ describe('AdminSettingsLayout', () => {
       const usersLink = within(sidebar).getByRole('link', { name: 'Users' });
       expect(usersLink).toHaveAttribute('href', `/${countryId}/admin/users`);
       expect(usersLink).toHaveAttribute('aria-current', 'page');
-      expect(within(sidebar).getAllByRole('link')).toHaveLength(1);
+      const invitationsLink = within(sidebar).getByRole('link', { name: 'Invitations' });
+      expect(invitationsLink).toHaveAttribute('href', `/${countryId}/admin/invitations`);
+      expect(invitationsLink).not.toHaveAttribute('aria-current');
+      expect(within(sidebar).getAllByRole('link')).toHaveLength(2);
       expect(screen.getByText(PAGE_CONTENT)).toBeInTheDocument();
     }
   );

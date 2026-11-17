@@ -7,16 +7,11 @@ import {
   Label,
   RadioGroup,
   RadioGroupItem,
-  ShadcnTable,
   Spinner,
   Stack,
   TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
   Text,
-  Title,
 } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import {
@@ -27,6 +22,8 @@ import {
 } from '@/hooks/useAdminInvitations';
 import { isRefusedOrMissing } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import AdminCard from './AdminCard';
+import { AdminTable, AdminTableCell, AdminTableHead, AdminTableHeader } from './AdminTable';
 import { formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
 
 /** The types an invitation can give, from fewest permissions to most. */
@@ -257,24 +254,24 @@ function PendingInvitations({ onOutcome }: { onOutcome: ReportOutcome }) {
     return <Text style={{ margin: 0, color: colors.text.secondary }}>No pending invitations.</Text>;
   }
   return (
-    <ShadcnTable aria-label="Pending invitations">
-      <TableHeader>
+    <AdminTable aria-label="Pending invitations">
+      <AdminTableHeader>
         <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Last sent</TableHead>
-          <TableHead>Expires</TableHead>
-          <TableHead>
+          <AdminTableHead>Email</AdminTableHead>
+          <AdminTableHead>Type</AdminTableHead>
+          <AdminTableHead>Last sent</AdminTableHead>
+          <AdminTableHead>Expires</AdminTableHead>
+          <AdminTableHead>
             <span className="tw:sr-only">Actions</span>
-          </TableHead>
+          </AdminTableHead>
         </TableRow>
-      </TableHeader>
+      </AdminTableHeader>
       <TableBody>
         {pending.data.map((invitation) => {
           const busy = busyInvitationIds.has(invitation.id);
           return (
             <TableRow key={invitation.id}>
-              <TableCell>
+              <AdminTableCell>
                 <Stack gap="xs">
                   <span>{invitation.email}</span>
                   {invitation.last_send_error && (
@@ -289,15 +286,15 @@ function PendingInvitations({ onOutcome }: { onOutcome: ReportOutcome }) {
                     </Text>
                   )}
                 </Stack>
-              </TableCell>
-              <TableCell>{USER_TYPE_LABELS[invitation.user_type]}</TableCell>
-              <TableCell>
+              </AdminTableCell>
+              <AdminTableCell>{USER_TYPE_LABELS[invitation.user_type]}</AdminTableCell>
+              <AdminTableCell>
                 {invitation.last_sent_at
                   ? formatAdminDate(invitation.last_sent_at, countryId)
                   : 'Not sent'}
-              </TableCell>
-              <TableCell>{formatAdminDate(invitation.expires_at, countryId)}</TableCell>
-              <TableCell>
+              </AdminTableCell>
+              <AdminTableCell>{formatAdminDate(invitation.expires_at, countryId)}</AdminTableCell>
+              <AdminTableCell>
                 <div style={{ display: 'flex', gap: spacing.sm }}>
                   <Button
                     variant="outline"
@@ -316,17 +313,17 @@ function PendingInvitations({ onOutcome }: { onOutcome: ReportOutcome }) {
                     Revoke
                   </Button>
                 </div>
-              </TableCell>
+              </AdminTableCell>
             </TableRow>
           );
         })}
       </TableBody>
-    </ShadcnTable>
+    </AdminTable>
   );
 }
 
 /**
- * The admin page's invitations: an admin invites an email address to
+ * The admin invitations page's cards: an admin invites an email address to
  * become an author or admin, and resends or revokes open invitations.
  * The invitee accepts on the accept page, through the email's link.
  */
@@ -340,19 +337,13 @@ export default function AdminInvitations() {
   }, []);
 
   return (
-    <Stack gap="xl">
-      <Stack gap="md">
-        <Stack gap="xs">
-          <Title order={2} style={{ margin: 0 }}>
-            Invite by email
-          </Title>
-          <Text style={{ margin: 0, color: colors.text.secondary }}>
-            The invitee gets an email with a link. Once they sign in or create an account with that
-            address, they get the type you choose. An invitation never lowers anyone&apos;s type.
-          </Text>
-        </Stack>
+    <>
+      <AdminCard
+        title="Invite by email"
+        description="The invitee gets an email with a link. Once they sign in or create an account with that address, they get the type you choose. An invitation never lowers anyone's type."
+      >
         <InviteByEmailForm onOutcome={reportOutcome} />
-      </Stack>
+      </AdminCard>
       {outcomes.length > 0 && (
         <Stack gap="xs">
           {outcomes.map((outcome) => (
@@ -370,12 +361,12 @@ export default function AdminInvitations() {
           ))}
         </Stack>
       )}
-      <Stack gap="md">
-        <Title order={2} style={{ margin: 0 }}>
-          Pending invitations
-        </Title>
+      <AdminCard
+        title="Pending invitations"
+        description="Invitations not yet accepted or revoked, with when their emails were last sent and when their links expire."
+      >
         <PendingInvitations onOutcome={reportOutcome} />
-      </Stack>
-    </Stack>
+      </AdminCard>
+    </>
   );
 }
