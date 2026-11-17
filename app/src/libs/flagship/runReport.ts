@@ -326,6 +326,15 @@ export type ReportRecordsRunner = <Result>(request: () => Promise<Result>) => Pr
 const sendAtOnce: ReportRecordsRunner = (request) => request();
 
 /**
+ * Sends a request now without waiting for its answer. The answer is
+ * dropped, and so is a failure, whether the request throws or rejects.
+ */
+function sendWithoutWaiting(request: () => Promise<unknown>): void {
+  // The executor runs at once, so the request goes out before this returns.
+  void new Promise((resolve) => resolve(request())).catch(() => undefined);
+}
+
+/**
  * Creates, or reuses, a report's two simulations (the baseline's and the
  * reform's, on the same population) and the base report that pairs them
  * for the year. The Public API reuses a simulation with the same
@@ -403,6 +412,34 @@ export async function runFlagshipReport({
         : currentLawId),
   ]);
 
+  // Start the report's own calculation as soon as its two policies exist,
+  // not when its page opens: the economy endpoint reads only the policies,
+  // not the simulations or the report created below. The first request
+  // queues the job, so a tab closed right after "Run" still gets its
+  // result, waiting for the link. The page asks with the same reform,
+  // baseline, region and year, so it checks on this job.
+  // A failure here never fails the run: the report page asks again.
+  const budgetWindow =
+    windowYears && windowYears > 1 ? { startYear: year, windowSize: windowYears } : undefined;
+  sendWithoutWaiting(() =>
+    fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(baselineId), {
+      region: region ?? countryId,
+      time_period: String(year),
+    })
+  );
+
+  // The window was asked for with the run: start it now too, rather than
+  // when the report page opens. The first request submits the batch; the
+  // report's section checks on the same one, and shows any error there.
+  if (budgetWindow) {
+    sendWithoutWaiting(() =>
+      fetchBudgetWindow(countryId, String(reformPolicyId), String(baselineId), {
+        region: region ?? countryId,
+        ...budgetWindow,
+      })
+    );
+  }
+
   // The v1 report comes first. Then exactly one record of it, new or (with
   // savedReportId) the saved report repointed at it: through the API with
   // accounts, whose ID is the report's link (anyone can open it), otherwise
@@ -415,8 +452,6 @@ export async function runFlagshipReport({
     year,
   });
   const reportId = String(reportMetadata.id);
-  const budgetWindow =
-    windowYears && windowYears > 1 ? { startYear: year, windowSize: windowYears } : undefined;
   const meta: FlagshipReportMeta = {
     title,
     sourceNote,
@@ -466,32 +501,6 @@ export async function runFlagshipReport({
     } catch {
       // The report still opens by its v1 report ID.
     }
-  }
-
-  // Start the report's own calculation now, not when its page opens: the
-  // first request queues the job, so a tab closed right after "Run" still
-  // gets its result, waiting for the link. The page asks with the same
-  // reform, baseline, region and year, so it checks on this job.
-  // A failure here never fails the run: the report page asks again.
-  void Promise.resolve()
-    .then(() =>
-      fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(baselineId), {
-        region: region ?? countryId,
-        time_period: String(year),
-      })
-    )
-    .catch(() => undefined);
-
-  // The window was asked for with the run: start it now, alongside the
-  // report, rather than when the report page opens. The first request
-  // submits the batch; the report's section checks on the same one.
-  if (budgetWindow) {
-    void fetchBudgetWindow(countryId, String(reformPolicyId), String(baselineId), {
-      region: region ?? countryId,
-      ...budgetWindow,
-    }).catch(() => {
-      // The report's section asks again, and shows any error there.
-    });
   }
 
   return link;
