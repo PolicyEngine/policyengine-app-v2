@@ -213,4 +213,6 @@ export const mockSocietyWideQueryOptions = (calcId: string, queryFn: any) => ({
   queryKey: mockCalculationQueryKey(calcId),
   queryFn,
   refetchInterval: TEST_POLL_INTERVAL_MS,
+  // As calculationQueries sets it for every calculation query.
+  refetchIntervalInBackground: true,
 });

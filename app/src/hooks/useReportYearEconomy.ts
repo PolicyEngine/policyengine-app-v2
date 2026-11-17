@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
-import type { CalcStatus, RunStage } from '@/types/calculation';
+import { calculationQueries } from '@/libs/queries/calculationQueries';
+import type { RunStage } from '@/types/calculation';
 
-const strategy = new SocietyWideCalcStrategy();
+/** How often a year still computing is checked on. */
+const POLL_MS = 2000;
 
 export interface ReportYearEconomy {
   output: SocietyWideReportOutput | null;
@@ -49,34 +50,29 @@ export function useReportYearEconomy({
   );
   const ready = enabled && !!reformPolicyId && !!baselinePolicyId;
   const economy = useQuery({
-    queryKey: [
-      'flagship-report-year',
-      countryId,
-      reformPolicyId,
-      baselinePolicyId,
-      population,
-      year,
-    ],
-    queryFn: () =>
-      strategy.execute(
-        {
-          countryId: countryId as 'us',
-          calcType: 'societyWide',
-          policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
-          populationId: population,
-          region: population,
-          year,
-          calcId: metadata.calcId,
-          estimateByRegion: true,
-        },
-        metadata
-      ),
+    ...calculationQueries.forEconomyRun({
+      queryKey: [
+        'flagship-report-year',
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        population,
+        year,
+      ],
+      params: {
+        countryId: countryId as 'us',
+        calcType: 'societyWide',
+        policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
+        populationId: population,
+        region: population,
+        year,
+        calcId: metadata.calcId,
+        estimateByRegion: true,
+      },
+      metadata,
+      pollIntervalMs: POLL_MS,
+    }),
     enabled: ready,
-    refetchInterval: (query) =>
-      (query.state.data as CalcStatus | undefined)?.status === 'pending' ? 2000 : false,
-    // Keep checking while the tab is hidden.
-    refetchIntervalInBackground: true,
-    staleTime: Infinity,
   });
 
   const status: ReportYearEconomy['status'] = !ready
@@ -120,39 +116,34 @@ export function useReportYearEconomies({
   const ready = !!reformPolicyId && !!baselinePolicyId;
   const results = useQueries({
     queries: years.map((year) => ({
-      queryKey: [
-        'flagship-report-year',
-        countryId,
-        reformPolicyId,
-        baselinePolicyId,
-        population,
-        year,
-      ],
-      queryFn: () =>
-        strategy.execute(
-          {
-            countryId: countryId as 'us',
-            calcType: 'societyWide' as const,
-            policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
-            populationId: population,
-            region: population,
-            year,
-            calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
-            estimateByRegion: true,
-          },
-          {
-            calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
-            calcType: 'societyWide' as const,
-            targetType: 'report' as const,
-            startedAt: Date.now(),
-          }
-        ),
+      ...calculationQueries.forEconomyRun({
+        queryKey: [
+          'flagship-report-year',
+          countryId,
+          reformPolicyId,
+          baselinePolicyId,
+          population,
+          year,
+        ],
+        params: {
+          countryId: countryId as 'us',
+          calcType: 'societyWide' as const,
+          policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
+          populationId: population,
+          region: population,
+          year,
+          calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
+          estimateByRegion: true,
+        },
+        metadata: {
+          calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
+          calcType: 'societyWide' as const,
+          targetType: 'report' as const,
+          startedAt: Date.now(),
+        },
+        pollIntervalMs: POLL_MS,
+      }),
       enabled: ready,
-      refetchInterval: (query: { state: { data?: CalcStatus } }) =>
-        query.state.data?.status === 'pending' ? 2000 : false,
-      // Keep checking while the tab is hidden.
-      refetchIntervalInBackground: true,
-      staleTime: Infinity,
     })),
   });
   return Object.fromEntries(

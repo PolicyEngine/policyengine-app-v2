@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
 import { billRegion, useBillEconomy } from '@/hooks/useBillEconomy';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
+import { NETWORK_ERROR_MESSAGE } from '@/tests/fixtures/libs/calculations/strategyFixtures';
 import {
   hideBrowserTab,
   restoreBrowserTabTracking,
@@ -18,7 +19,10 @@ const { mockCreatePolicy, mockFetchSocietyWide } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/api/policy', () => ({ createPolicy: mockCreatePolicy }));
-vi.mock('@/api/societyWideCalculation', () => ({
+// The rest of the module is real: the strategy reads its error types to tell
+// a failed request from a failed calculation.
+vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchSocietyWideCalculation: mockFetchSocietyWide,
 }));
 vi.mock('@/hooks/useCurrentCountry', () => ({ useCurrentCountry: () => 'us' }));
@@ -29,6 +33,12 @@ const BILL = {
   state: 'UT',
   provisions: [{ path: 'gov.states.ut.tax.income.rate', value: 0.0445 }],
 };
+
+/** How often a bill's run still computing is checked on. */
+const BILL_POLL_INTERVAL_MS = 2000;
+
+/** A bill's run still computing, third in the queue. */
+const BILL_RUN_COMPUTING = { status: 'computing', queue_position: 3, result: null };
 
 function wrapper({ children }: { children: React.ReactNode }) {
   const store = configureStore({
@@ -120,9 +130,11 @@ describe('useBillEconomy', () => {
     renderHook(() => useBillEconomy(BILL), { wrapper });
 
     await waitFor(() => expect(execute).toHaveBeenCalled());
+    // A run's first request has no last status to give the strategy.
     expect(execute).toHaveBeenCalledWith(
       expect.objectContaining({ region: 'state/ut', estimateByRegion: true }),
-      expect.anything()
+      expect.anything(),
+      undefined
     );
     execute.mockRestore();
   });
@@ -197,10 +209,34 @@ describe('useBillEconomy', () => {
     expect(result.current.output).toBeNull();
   });
 
-  describe('while the tab is hidden', () => {
-    /** How often a bill's run still computing is checked on. */
-    const BILL_POLL_INTERVAL_MS = 2000;
+  describe('after a failed poll', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
 
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    test('given a poll fails while the run computes then it stays pending and is checked again', async () => {
+      // Given
+      mockFetchSocietyWide
+        .mockResolvedValueOnce(BILL_RUN_COMPUTING)
+        .mockRejectedValueOnce(new Error(NETWORK_ERROR_MESSAGE))
+        .mockResolvedValue(BILL_RUN_COMPUTING);
+      const { result } = renderHook(() => useBillEconomy(BILL), { wrapper });
+      await waitFor(() => expect(mockFetchSocietyWide).toHaveBeenCalledTimes(1));
+
+      // When
+      await act(() => vi.advanceTimersByTimeAsync(BILL_POLL_INTERVAL_MS * 2));
+
+      // Then
+      expect(mockFetchSocietyWide).toHaveBeenCalledTimes(3);
+      expect(result.current.status).toBe('pending');
+    });
+  });
+
+  describe('while the tab is hidden', () => {
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
       hideBrowserTab();
