@@ -63,8 +63,8 @@ export interface ReformStore {
   delete: (reformId: string) => Promise<void>;
 }
 
-/** Most recently updated first. */
-function byRecentUpdate(reforms: Reform[]): Reform[] {
+/** Most recently updated first, the order `findMine` lists them in. */
+export function byRecentUpdate(reforms: Reform[]): Reform[] {
   return [...reforms].sort((first, second) =>
     (second.updatedAt ?? second.createdAt ?? '').localeCompare(
       first.updatedAt ?? first.createdAt ?? ''

@@ -44,6 +44,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
 import { useSavedReformTransfer } from '@/hooks/useMissingParameterTransfers';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
+import { savedReformListKey } from '@/hooks/useSavedReformList';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { useEnsureV3Parameters, useLoadV3Parameters } from '@/hooks/useV3Parameters';
 import {
@@ -320,7 +321,7 @@ export default function ReformsPage() {
     isPending,
     isError,
   } = useQuery({
-    queryKey: ['reforms', scope, countryId],
+    queryKey: savedReformListKey(scope, countryId),
     queryFn: () => reformStore.findMine(countryId),
   });
 

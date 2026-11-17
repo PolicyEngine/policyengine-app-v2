@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
+import { savedReformListKey } from '@/hooks/useSavedReformList';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import {
   provisionPeriods,
@@ -28,6 +29,11 @@ import {
   UK_PERSONAL_ALLOWANCE_PROVISION,
   UK_WINDOW_CHOICES_TO_2032,
 } from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
+import {
+  BROWSER_SCOPE,
+  NEW_REFORM,
+  SAVED_REFORMS,
+} from '@/tests/fixtures/hooks/useSavedReformListMocks';
 import {
   UK_FIRST_SUPPORTED_YEAR,
   UK_LAST_SUPPORTED_YEAR,
@@ -113,7 +119,7 @@ async function renderPanel({
   );
   // Collapsed by default — expand via the edge tab before interacting.
   await userEvent.setup().click(screen.getByRole('button', { name: /open adjust parameters/i }));
-  return result;
+  return { ...result, queryClient };
 }
 
 describe('ReportAdjustPanel', () => {
@@ -377,6 +383,26 @@ describe('ReportAdjustPanel', () => {
       expect.objectContaining({ path: PROVISIONS[0].path, value: 3600 }),
       expect.objectContaining({ path: PROVISIONS[1].path, value: 350 }),
     ]);
+  });
+
+  test('given recompute saves a new reform then it joins the cached list of saved reforms, which is not marked to be read again', async () => {
+    // Given: the list as the draft page or Your reforms left it
+    mockCreate.mockResolvedValue(NEW_REFORM);
+    const user = userEvent.setup();
+    const { queryClient } = await renderPanel();
+    const listKey = savedReformListKey(BROWSER_SCOPE, 'us');
+    queryClient.setQueryData(listKey, SAVED_REFORMS);
+
+    // When
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+
+    // Then
+    expect(queryClient.getQueryData(listKey)).toEqual([NEW_REFORM, ...SAVED_REFORMS]);
+    expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(false);
   });
 
   test('given recompute then only this browser’s saved reforms are searched for a match', async () => {

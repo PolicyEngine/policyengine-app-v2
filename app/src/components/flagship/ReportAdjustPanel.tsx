@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { IconChartBar, IconPencil, IconX } from '@tabler/icons-react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import {
   Button,
@@ -19,6 +18,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
+import { useSavedReformListCache } from '@/hooks/useSavedReformList';
 import {
   loadProvisionsIntoDraft,
   provisionAdjusts,
@@ -116,7 +116,7 @@ function AdjustPanel({
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const store = useReformStore();
-  const queryClient = useQueryClient();
+  const savedReformList = useSavedReformListCache();
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [reconcileError, setReconcileError] = useState<string | null>(null);
   const [isReconciling, setIsReconciling] = useState(false);
@@ -331,7 +331,7 @@ function AdjustPanel({
           baseline: 'current-law',
           provenance: { source: 'manual', ref: 'report-adjust' },
         });
-        queryClient.invalidateQueries({ queryKey: ['reforms'] });
+        void savedReformList.writeSaved(created);
         reformId = created.id!;
         runTitle = created.label || label;
       }

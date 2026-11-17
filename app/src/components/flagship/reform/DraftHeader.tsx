@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { IconCalendarEvent, IconChartBar, IconChevronDown, IconPencil } from '@tabler/icons-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { ReformNotFoundError } from '@/api/reformStore';
 import { BrowserOnlyIdError } from '@/api/v2Associations';
@@ -23,6 +23,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
+import { useSavedReformListCache } from '@/hooks/useSavedReformList';
 import {
   clearDraftReform,
   DraftReform,
@@ -299,9 +300,9 @@ export function DraftRunBar({
   currentLawUnavailable?: boolean;
 }) {
   const nav = useAppNavigate();
-  const queryClient = useQueryClient();
   const runReport = useRunFlagshipReport();
   const reformStore = useReformStore();
+  const savedReformList = useSavedReformListCache();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const catalogMissingNames = useSelector(
     (state: RootState) => state.metadata.v2MissingParameterNames
@@ -342,6 +343,7 @@ export function DraftRunBar({
         if (!isMissingFromStore(error)) {
           throw error;
         }
+        void savedReformList.removeMissing(draftToSave.countryId, draftToSave.editingReformId);
       }
     }
     return reformStore.create(payload);
@@ -367,10 +369,15 @@ export function DraftRunBar({
     return { reform: await saveReform(runDraft), reused: false };
   };
 
+  // Each save puts the reform into the cached list of saved reforms, for
+  // the session whose store saved it, rather than reading the list again.
   const saveMutation = useMutation({
-    mutationFn: () => saveReform(draft),
+    mutationFn: async () => {
+      const saved = await saveReform(draft);
+      void savedReformList.writeSaved(saved);
+      return saved;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reforms'] });
       clearDraftReform();
       nav.push(`/${draft.countryId}/reforms?filter=yours`);
     },
@@ -381,9 +388,13 @@ export function DraftRunBar({
   // run is the draft as it stood when "Save and run" was pressed, the one
   // that was saved, whatever is edited while the save is in flight.
   const saveAndRunMutation = useMutation({
-    mutationFn: ({ runDraft }: DraftRunRequest) => saveForRun(runDraft),
+    mutationFn: async ({ runDraft }: DraftRunRequest) => {
+      const result = await saveForRun(runDraft);
+      // A reused reform too, as the store has it now.
+      void savedReformList.writeSaved(result.reform);
+      return result;
+    },
     onSuccess: ({ reform: saved, reused }, { runDraft, runBaseline }) => {
-      queryClient.invalidateQueries({ queryKey: ['reforms'] });
       if (!reused) {
         setDraftEditingReform(saved.id!);
       }

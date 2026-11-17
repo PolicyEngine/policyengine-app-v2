@@ -16,6 +16,7 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
+import { savedReformListKey } from '@/hooks/useSavedReformList';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { provisionAdjusts, provisionIntervals, type DraftReform } from '@/libs/draftReform';
 import { reformMissingParameters } from '@/libs/flagship/missingParameters';
@@ -44,7 +45,7 @@ export function useDraftBaseline(draft: DraftReform) {
   const reformStore = useReformStore();
   const { scope } = useV3SavedWork();
   const { data: saved, isPending } = useQuery({
-    queryKey: ['reforms', scope, draft.countryId],
+    queryKey: savedReformListKey(scope, draft.countryId),
     queryFn: () => reformStore.findMine(draft.countryId),
   });
   // A reform that sets nothing runs as current law, so it is not offered.
