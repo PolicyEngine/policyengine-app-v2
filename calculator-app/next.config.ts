@@ -48,9 +48,6 @@ const nextConfig: NextConfig = {
         "import.meta.env.VITE_FLAGSHIP_SHELL_UK": JSON.stringify(
           process.env.NEXT_PUBLIC_FLAGSHIP_SHELL_UK || "",
         ),
-        "import.meta.env.VITE_EXPLORE": JSON.stringify(
-          process.env.NEXT_PUBLIC_EXPLORE || "",
-        ),
         // Sign-in. Shared code reads the VITE_* names; either spelling may
         // be set on the deployment. The browser reaches the Public API
         // through the calculator's own route, so no Public API address is
