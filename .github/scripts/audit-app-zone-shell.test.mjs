@@ -444,6 +444,13 @@ describe("new pull-request route redirect fallback", () => {
       assert.equal(result.ok, false);
       assert.equal(result.usedFallback, false);
       assert.equal(result.pending, undefined);
+      assert.match(result.reason, /ERR_TOO_MANY_REDIRECTS/);
+      assert.match(
+        result.reason,
+        fixtureOptions.destinationHasShell === false
+          ? /destination check failed: PolicyEngine brand missing from top shell/
+          : /destination check failed: HTTP 404/,
+      );
       assert.equal(fixture.visited.length, 2);
       assert.equal(fixture.isClosed(), true);
     }

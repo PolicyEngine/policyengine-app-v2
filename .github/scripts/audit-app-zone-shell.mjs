@@ -651,6 +651,11 @@ export async function auditRoute(
       result = fallbackResult;
       testedUrl = destinationUrl;
       usedFallback = true;
+    } else if (redirectFailureFallback) {
+      result = {
+        ...result,
+        reason: `${result.reason}; destination check failed: ${fallbackResult.reason.slice(0, 500)}`,
+      };
     }
   }
 
