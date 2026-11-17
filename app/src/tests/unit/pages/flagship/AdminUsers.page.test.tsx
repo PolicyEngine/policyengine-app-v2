@@ -433,21 +433,22 @@ describe('AdminUsersPage', () => {
     expect(await screen.findByRole('list', { name: 'Permissions changes' })).toBeInTheDocument();
   });
 
-  test("given a user's details then every section has a level-3 heading, as Permissions changes and Saved items do", async () => {
+  test("given a user's details then each block is a card titled with a level-2 heading, as on the account pages", async () => {
     // When
     await openUserDetails(GRACE.email!);
-    await screen.findByRole('heading', { level: 3, name: 'Account deletion' });
+    await screen.findByRole('heading', { level: 2, name: 'Delete account' });
 
     // Then
-    const levelThreeHeadings = screen
-      .getAllByRole('heading', { level: 3 })
+    const cardTitles = screen
+      .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.textContent);
-    expect(levelThreeHeadings).toEqual([
+    expect(cardTitles).toEqual([
+      'Find users',
       GRACE.email,
       'User type',
       'Permissions changes',
       'Saved items',
-      'Account deletion',
+      'Delete account',
     ]);
   });
 

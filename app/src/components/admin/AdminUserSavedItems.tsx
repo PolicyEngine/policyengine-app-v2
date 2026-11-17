@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { UserSavedItems } from '@/api/v2AdminUserSavedItems';
 import { Button, Spinner, Stack, TableBody, TableRow, Text, Title } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
@@ -9,6 +9,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CountryId } from '@/libs/countries';
 import { isFlagshipShellEnabled } from '@/libs/featureFlags';
 import { getCountryLabel } from '@/utils/geographyUtils';
+import AdminCard from './AdminCard';
 import AdminSavedItemDialog from './AdminSavedItemDialog';
 import { AdminTable, AdminTableCell, AdminTableHead, AdminTableHeader } from './AdminTable';
 import { formatAdminDate } from './adminUserFormat';
@@ -151,7 +152,7 @@ function SavedItemKindTable({
 }) {
   return (
     <Stack gap="xs">
-      <Title order={4} style={{ margin: 0, fontSize: typography.fontSize.sm }}>
+      <Title order={3} style={{ margin: 0, fontSize: typography.fontSize.sm }}>
         {`${kind.heading} (${kind.rows.length})`}
       </Title>
       {kind.rows.length === 0 ? (
@@ -277,8 +278,7 @@ function SavedItemsContent({ userId, focusHeading }: { userId: string; focusHead
  */
 export default function AdminUserSavedItems({ userId }: { userId: string }) {
   const [shown, setShown] = useState(false);
-  const headingId = useId();
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // "Show saved items" had focus and is gone; the heading takes it.
@@ -288,31 +288,18 @@ export default function AdminUserSavedItems({ userId }: { userId: string }) {
   }, [shown]);
 
   return (
-    <section aria-labelledby={headingId}>
-      <Stack gap="sm">
-        <Title
-          order={3}
-          id={headingId}
-          ref={headingRef}
-          tabIndex={-1}
-          style={{ margin: 0, fontSize: typography.fontSize.base }}
-        >
-          Saved items
-        </Title>
-        {shown ? (
-          <SavedItemsContent userId={userId} focusHeading={() => headingRef.current?.focus()} />
-        ) : (
-          <Stack gap="sm" align="start">
-            <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
-              The policies, households and reports this user saved, in every country. Each read is
-              recorded with your ID and the user&apos;s.
-            </Text>
-            <Button variant="outline" size="sm" onClick={() => setShown(true)}>
-              Show saved items
-            </Button>
-          </Stack>
-        )}
-      </Stack>
-    </section>
+    <AdminCard
+      title="Saved items"
+      titleRef={headingRef}
+      description="The policies, households and reports this user saved, in every country. Each read is recorded with your ID and the user's."
+    >
+      {shown ? (
+        <SavedItemsContent userId={userId} focusHeading={() => headingRef.current?.focus()} />
+      ) : (
+        <Button variant="outline" onClick={() => setShown(true)}>
+          Show saved items
+        </Button>
+      )}
+    </AdminCard>
   );
 }

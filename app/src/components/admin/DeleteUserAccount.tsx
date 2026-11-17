@@ -3,10 +3,10 @@ import { IconTrash } from '@tabler/icons-react';
 import type { AdminUserItem } from '@/api/v2AdminUsers';
 import { AppLink } from '@/components/AppLink';
 import { accountPath } from '@/components/settings/settingsPages';
-import { Button, Stack, Text, Title } from '@/components/ui';
-import { colors, typography } from '@/designTokens';
+import { Button } from '@/components/ui';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { isDeletedWithAuth0UsersLeft, useDeleteAdminUser } from '@/hooks/useDeleteAdminUser';
+import AdminCard from './AdminCard';
 import { adminUserLabel, adminUserName } from './adminUserFormat';
 import DeleteUserAccountDialog from './DeleteUserAccountDialog';
 
@@ -51,22 +51,17 @@ export default function DeleteUserAccount({
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
-  // A heading like the details' other sections, "Permissions changes" and "Saved items".
-  const heading = (
-    <Title order={3} style={{ margin: 0, fontSize: typography.fontSize.base }}>
-      Account deletion
-    </Title>
-  );
-
   if (isOwnAccount) {
     return (
-      <Stack gap="sm" align="start">
-        {heading}
-        <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
-          This is your own account. To delete it, use your{' '}
-          <AppLink to={accountPath(countryId)}>account page</AppLink>.
-        </Text>
-      </Stack>
+      <AdminCard
+        title="Delete account"
+        description={
+          <>
+            This is your own account. To delete it, use your{' '}
+            <AppLink to={accountPath(countryId)}>account page</AppLink>.
+          </>
+        }
+      />
     );
   }
 
@@ -92,13 +87,13 @@ export default function DeleteUserAccount({
     });
   };
 
+  // Laid out like the account page's "Delete my account" card.
   return (
-    <Stack gap="sm" align="start">
-      {heading}
-      <Text size="sm" style={{ margin: 0, color: colors.text.secondary }}>
-        Deletes this user&apos;s account, their saved items and their sign-in account.
-      </Text>
-      <Button ref={deleteButtonRef} variant="destructive" size="sm" onClick={openConfirmation}>
+    <AdminCard
+      title="Delete account"
+      description="Permanently deletes this user's account, their saved items and their sign-in account."
+    >
+      <Button ref={deleteButtonRef} variant="destructive" onClick={openConfirmation}>
         <IconTrash size={16} />
         Delete account
       </Button>
@@ -118,6 +113,6 @@ export default function DeleteUserAccount({
           }
         }}
       />
-    </Stack>
+    </AdminCard>
   );
 }

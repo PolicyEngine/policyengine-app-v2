@@ -1,9 +1,11 @@
 import { act, cleanup, render, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import AdminInvitationsPage from '@/pages/flagship/AdminInvitations.page';
 import AdminUsersPage from '@/pages/flagship/AdminUsers.page';
 import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import {
   ADMIN_API_MESSAGES,
+  answerAdminApi,
   holdRequests,
   sentRequests,
 } from '@/tests/fixtures/api/v2AdminUserMocks';
@@ -13,7 +15,7 @@ import {
   GRACE_INVITATION,
   type FakeInvitationApiOptions,
 } from '@/tests/fixtures/api/v2InvitationMocks';
-import { errorResponse } from '@/tests/fixtures/api/v2UserMocks';
+import { errorResponse, meItemOfType } from '@/tests/fixtures/api/v2UserMocks';
 import {
   createTestQueryClient,
   forgetWindowFocus,
@@ -26,23 +28,24 @@ const fetchMock = vi.fn();
 
 const NEW_INVITEE_EMAIL = 'katherine@example.org';
 
-function renderAdminPage() {
+function renderAdminPage(page: 'users' | 'invitations' = 'invitations') {
   return render(
     <UserSessionProviders
       queryClient={createTestQueryClient()}
       session={{ auth: signedInAuthValue(), countryId: 'us' }}
     >
-      <AdminUsersPage />
+      {page === 'users' ? <AdminUsersPage /> : <AdminInvitationsPage />}
     </UserSessionProviders>
   );
 }
 
-/** Renders the admin page as an admin and opens its invitations tab. */
+/** Renders the admin invitations page as an admin. */
 async function openInvitations(options: FakeInvitationApiOptions = {}) {
   const user = userEvent.setup();
   const apiState = answerInvitationApi(fetchMock, options);
   renderAdminPage();
-  await user.click(await screen.findByRole('tab', { name: 'Invitations' }));
+  // Shown once /v2/me says the user is an admin.
+  await screen.findByRole('heading', { name: 'Invite by email' });
   return { user, apiState };
 }
 
@@ -87,7 +90,7 @@ describe('AdminInvitations', () => {
     answerInvitationApi(fetchMock);
 
     // When
-    renderAdminPage();
+    renderAdminPage('users');
     await screen.findByRole('table', { name: 'Users' });
     await letPendingWorkRun();
 
@@ -95,32 +98,20 @@ describe('AdminInvitations', () => {
     expect(invitationRequests()).toEqual([]);
   });
 
-  test('given a user search then going to the invitations and back keeps the search and its users', async () => {
+  test('given a standard user then the invitations page is not found and nothing is requested', async () => {
     // Given
-    const user = userEvent.setup();
-    answerInvitationApi(fetchMock);
-    renderAdminPage();
-    await user.type(await screen.findByRole('searchbox', { name: 'Email' }), 'grace');
-    await user.click(screen.getByRole('button', { name: 'Search' }));
-    await waitFor(() =>
-      expect(within(screen.getByRole('table', { name: 'Users' })).getAllByRole('row')).toHaveLength(
-        2
-      )
-    );
+    answerAdminApi(fetchMock, { signedInUser: meItemOfType('standard') });
 
     // When
-    await user.click(screen.getByRole('tab', { name: 'Invitations' }));
-    await invitationsTable();
-    await user.click(screen.getByRole('tab', { name: 'Find users' }));
+    renderAdminPage();
 
     // Then
-    expect(screen.getByRole('searchbox', { name: 'Email' })).toHaveValue('grace');
-    expect(within(screen.getByRole('table', { name: 'Users' })).getAllByRole('row')).toHaveLength(
-      2
-    );
+    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Invitations' })).not.toBeInTheDocument();
+    expect(invitationRequests()).toEqual([]);
   });
 
-  test('given open invitations then the tab lists each with its type, last send and expiry', async () => {
+  test('given open invitations then the page lists each with its type, last send and expiry', async () => {
     // When
     await openInvitations();
 
@@ -158,7 +149,7 @@ describe('AdminInvitations', () => {
     ).toBeInTheDocument();
   });
 
-  test('given no pending invitations then the tab says so', async () => {
+  test('given no pending invitations then the page says so', async () => {
     // When
     await openInvitations({ invitations: [] });
 
@@ -334,7 +325,6 @@ describe('AdminInvitations', () => {
       return answerAsBefore(url, init);
     });
     renderAdminPage();
-    await user.click(await screen.findByRole('tab', { name: 'Invitations' }));
 
     // When
     expect(await screen.findByRole('alert')).toHaveTextContent(

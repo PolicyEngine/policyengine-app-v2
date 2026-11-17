@@ -231,7 +231,7 @@ describe('AdminUserSavedItems', () => {
 
     // Then
     const headings = within(savedItemsSection())
-      .getAllByRole('heading', { level: 4 })
+      .getAllByRole('heading', { level: 3 })
       .map((heading) => heading.textContent);
     expect(headings).toEqual(['Policies (2)', 'Households (1)', 'Reports (1)']);
   });

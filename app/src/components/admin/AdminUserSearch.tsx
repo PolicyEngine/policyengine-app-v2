@@ -8,6 +8,7 @@ import {
   useStartAdminUserSearch,
 } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import AdminCard from './AdminCard';
 import { AdminTable, AdminTableCell, AdminTableHead, AdminTableHeader } from './AdminTable';
 import { adminUserName, formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
 
@@ -147,26 +148,31 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
   }
 
   return (
-    <Stack gap="lg">
-      <form
-        role="search"
-        onSubmit={handleSubmit}
-        style={{ display: 'flex', gap: spacing.sm, alignItems: 'flex-end', flexWrap: 'wrap' }}
-      >
-        <Stack gap="xs" style={{ flex: '1 1 auto' }}>
-          <Label htmlFor={emailInputId}>Email</Label>
-          <Input
-            id={emailInputId}
-            type="search"
-            value={emailDraft}
-            maxLength={EMAIL_SEARCH_MAX_LENGTH}
-            onChange={(event) => setEmailDraft(event.target.value)}
-            placeholder="Email address"
-          />
-        </Stack>
-        <Button type="submit">Search</Button>
-      </form>
-      {results}
-    </Stack>
+    <AdminCard
+      title="Find users"
+      description="Signed-in users, newest first. Search by part of an email address."
+    >
+      <Stack gap="lg">
+        <form
+          role="search"
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', gap: spacing.sm, alignItems: 'flex-end', flexWrap: 'wrap' }}
+        >
+          <Stack gap="xs" style={{ flex: '1 1 auto' }}>
+            <Label htmlFor={emailInputId}>Email</Label>
+            <Input
+              id={emailInputId}
+              type="search"
+              value={emailDraft}
+              maxLength={EMAIL_SEARCH_MAX_LENGTH}
+              onChange={(event) => setEmailDraft(event.target.value)}
+              placeholder="Email address"
+            />
+          </Stack>
+          <Button type="submit">Search</Button>
+        </form>
+        {results}
+      </Stack>
+    </AdminCard>
   );
 }

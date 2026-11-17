@@ -12,7 +12,6 @@ import {
   TableBody,
   TableRow,
   Text,
-  Title,
 } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import {
@@ -23,6 +22,7 @@ import {
 } from '@/hooks/useAdminInvitations';
 import { isRefusedOrMissing } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import AdminCard from './AdminCard';
 import { AdminTable, AdminTableCell, AdminTableHead, AdminTableHeader } from './AdminTable';
 import { formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
 
@@ -323,7 +323,7 @@ function PendingInvitations({ onOutcome }: { onOutcome: ReportOutcome }) {
 }
 
 /**
- * The admin page's invitations: an admin invites an email address to
+ * The admin invitations page's cards: an admin invites an email address to
  * become an author or admin, and resends or revokes open invitations.
  * The invitee accepts on the accept page, through the email's link.
  */
@@ -337,19 +337,13 @@ export default function AdminInvitations() {
   }, []);
 
   return (
-    <Stack gap="xl">
-      <Stack gap="md">
-        <Stack gap="xs">
-          <Title order={2} style={{ margin: 0 }}>
-            Invite by email
-          </Title>
-          <Text style={{ margin: 0, color: colors.text.secondary }}>
-            The invitee gets an email with a link. Once they sign in or create an account with that
-            address, they get the type you choose. An invitation never lowers anyone&apos;s type.
-          </Text>
-        </Stack>
+    <>
+      <AdminCard
+        title="Invite by email"
+        description="The invitee gets an email with a link. Once they sign in or create an account with that address, they get the type you choose. An invitation never lowers anyone's type."
+      >
         <InviteByEmailForm onOutcome={reportOutcome} />
-      </Stack>
+      </AdminCard>
       {outcomes.length > 0 && (
         <Stack gap="xs">
           {outcomes.map((outcome) => (
@@ -367,12 +361,12 @@ export default function AdminInvitations() {
           ))}
         </Stack>
       )}
-      <Stack gap="md">
-        <Title order={2} style={{ margin: 0 }}>
-          Pending invitations
-        </Title>
+      <AdminCard
+        title="Pending invitations"
+        description="Invitations not yet accepted or revoked, with when their emails were last sent and when their links expire."
+      >
         <PendingInvitations onOutcome={reportOutcome} />
-      </Stack>
-    </Stack>
+      </AdminCard>
+    </>
   );
 }

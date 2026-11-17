@@ -1,22 +1,8 @@
 import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import type { SignedInUserType } from '@/api/v2AdminUsers';
 import { isV2ApiError } from '@/api/v2UserClient';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Label,
-  RadioGroup,
-  RadioGroupItem,
-  Spinner,
-  Stack,
-  Text,
-  Title,
-} from '@/components/ui';
-import { colors, spacing, typography } from '@/designTokens';
+import { Button, Label, RadioGroup, RadioGroupItem, Spinner, Stack, Text } from '@/components/ui';
+import { colors, spacing } from '@/designTokens';
 import {
   isRefusedOrMissing,
   useAdminUser,
@@ -27,6 +13,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useAdminUserDeletionUnderWay } from '@/hooks/useDeleteAdminUser';
 import { useMe } from '@/hooks/useMe';
 import { getCountryLabel } from '@/utils/geographyUtils';
+import AdminCard from './AdminCard';
 import {
   adminUserLabel,
   adminUserName,
@@ -48,8 +35,9 @@ function DetailList({ details }: { details: ReadonlyArray<[label: string, value:
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'max-content 1fr',
-        columnGap: spacing.lg,
+        // The account page's details: labels at least 160px wide, md apart.
+        gridTemplateColumns: 'minmax(160px, max-content) 1fr',
+        columnGap: spacing.md,
         rowGap: spacing.sm,
       }}
     >
@@ -117,7 +105,7 @@ function focusWasLost(): boolean {
  * focus when a closing dialog left it nowhere.
  */
 function DetailsMessage({ heading, children }: { heading: string; children: ReactNode }) {
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // After the dialog's own focus handling, which runs on a zero timeout.
     const timer = setTimeout(() => {
@@ -128,12 +116,11 @@ function DetailsMessage({ heading, children }: { heading: string; children: Reac
     return () => clearTimeout(timer);
   }, []);
   return (
-    <Stack gap="sm" align="start">
-      <Title order={3} ref={headingRef} tabIndex={-1} style={{ margin: 0 }}>
-        {heading}
-      </Title>
-      {children}
-    </Stack>
+    <AdminCard title={heading} titleRef={headingRef}>
+      <Stack gap="sm" align="start">
+        {children}
+      </Stack>
+    </AdminCard>
   );
 }
 
@@ -311,79 +298,73 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle ref={headingRef} role="heading" aria-level={3} tabIndex={-1}>
-          {adminUserLabel(user)}
-        </CardTitle>
-        <CardDescription>{adminUserName(user) ?? 'No name'}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Stack gap="xl">
-          <DetailList
-            details={[
-              ['Type', USER_TYPE_LABELS[user.user_type]],
-              [
-                'Primary country',
-                user.primary_country ? getCountryLabel(user.primary_country) : 'None',
-              ],
-              ['Member since', formatAdminDate(user.created_at, countryId)],
-              [
-                'Last seen',
-                user.last_seen_at ? formatAdminDate(user.last_seen_at, countryId) : 'Never',
-              ],
-              ['PolicyEngine user ID', user.id],
-            ]}
-          />
+    <>
+      <AdminCard
+        title={adminUserLabel(user)}
+        titleRef={headingRef}
+        description={adminUserName(user) ?? 'No name'}
+      >
+        <DetailList
+          details={[
+            ['Type', USER_TYPE_LABELS[user.user_type]],
+            [
+              'Primary country',
+              user.primary_country ? getCountryLabel(user.primary_country) : 'None',
+            ],
+            ['Member since', formatAdminDate(user.created_at, countryId)],
+            [
+              'Last seen',
+              user.last_seen_at ? formatAdminDate(user.last_seen_at, countryId) : 'Never',
+            ],
+            ['PolicyEngine user ID', user.id],
+          ]}
+        />
+      </AdminCard>
 
-          <Stack gap="sm" align="start">
-            <Title
-              order={3}
-              id={typeGroupLabelId}
-              style={{ margin: 0, fontSize: typography.fontSize.base }}
-            >
-              User type
-            </Title>
-            <RadioGroup
-              aria-labelledby={typeGroupLabelId}
-              value={selectedType}
-              onValueChange={(value) => setChosenType(value as SignedInUserType)}
-              style={{ display: 'flex', gap: spacing.lg }}
-            >
-              {SIGNED_IN_USER_TYPES.map((userType) => (
-                <div
-                  key={userType}
-                  style={{ display: 'flex', gap: spacing.sm, alignItems: 'center' }}
-                >
-                  <RadioGroupItem value={userType} id={typeOptionId(userType)} />
-                  <Label htmlFor={typeOptionId(userType)}>{USER_TYPE_LABELS[userType]}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-            <Button
-              ref={changeTypeButtonRef}
-              variant="outline"
-              size="sm"
-              onClick={openConfirmation}
-              disabled={selectedType === user.user_type}
-            >
-              Change type
-            </Button>
-          </Stack>
-
-          <UserTypeChangeHistory userId={userId} />
-
-          <AdminUserSavedItems userId={userId} />
-
-          {signedInUserId !== null && (
-            <DeleteUserAccount
-              user={user}
-              isOwnAccount={user.id === signedInUserId}
-              onDeleted={setDeletedAccount}
-            />
-          )}
+      <AdminCard
+        title="User type"
+        titleId={typeGroupLabelId}
+        description="Choose a type, then confirm the change. The user is emailed about it."
+      >
+        <Stack gap="md" align="start">
+          <RadioGroup
+            aria-labelledby={typeGroupLabelId}
+            value={selectedType}
+            onValueChange={(value) => setChosenType(value as SignedInUserType)}
+            style={{ display: 'flex', gap: spacing.lg }}
+          >
+            {SIGNED_IN_USER_TYPES.map((userType) => (
+              <div
+                key={userType}
+                style={{ display: 'flex', gap: spacing.sm, alignItems: 'center' }}
+              >
+                <RadioGroupItem value={userType} id={typeOptionId(userType)} />
+                <Label htmlFor={typeOptionId(userType)}>{USER_TYPE_LABELS[userType]}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+          <Button
+            ref={changeTypeButtonRef}
+            variant="outline"
+            onClick={openConfirmation}
+            disabled={selectedType === user.user_type}
+          >
+            Change type
+          </Button>
         </Stack>
-      </CardContent>
+      </AdminCard>
+
+      <UserTypeChangeHistory userId={userId} />
+
+      <AdminUserSavedItems userId={userId} />
+
+      {signedInUserId !== null && (
+        <DeleteUserAccount
+          user={user}
+          isOwnAccount={user.id === signedInUserId}
+          onDeleted={setDeletedAccount}
+        />
+      )}
 
       {confirmation && (
         <ChangeUserTypeDialog
@@ -416,6 +397,6 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           }}
         />
       )}
-    </Card>
+    </>
   );
 }
