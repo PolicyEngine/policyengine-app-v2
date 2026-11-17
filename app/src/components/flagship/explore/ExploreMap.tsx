@@ -33,8 +33,8 @@ interface ExploreMapProps {
   /** The chosen region: the map zooms to its state, or to a district too small to see there. */
   region: string;
   onSelect: (region: string) => void;
-  /** At the nation level, color the 436 districts instead of the states. */
-  showDistricts: boolean;
+  /** Color districts (a chosen state's, or all at the nation level) instead of states. */
+  districtMode: boolean;
   /** The page's scale for the metric and level, shared with the ranked list. */
   scale: ColorScale;
   /** Where the page's overlays sit; the map fits the country, and zooms, into the rest. */
@@ -115,7 +115,7 @@ function MapCanvas({
   metric,
   region,
   onSelect,
-  showDistricts,
+  districtMode,
   scale,
   inset,
   width,
@@ -124,7 +124,6 @@ function MapCanvas({
   const level = regionLevel(region);
   const focusState = stateCodeOf(region);
   const selectedDistrict = districtIdOf(region);
-  const districtMode = level !== 'nation' || showDistricts;
 
   const { top, right, bottom, left } = inset;
   const frame: MapFrame = useMemo(
@@ -149,8 +148,11 @@ function MapCanvas({
       return IDENTITY;
     }
     const stateView = transformFor(path, frame, stateShape);
+    // Only when the map shows districts: otherwise the state's color would fill the view.
     const districtShape =
-      selectedDistrict && districts.find((d) => d.properties.id === selectedDistrict);
+      districtMode &&
+      selectedDistrict &&
+      districts.find((d) => d.properties.id === selectedDistrict);
     if (districtShape) {
       const [w, h] = screenSize(path, districtShape, stateView);
       if (Math.max(w, h) < MIN_DISTRICT_PX) {
@@ -158,7 +160,7 @@ function MapCanvas({
       }
     }
     return stateView;
-  }, [focusState, selectedDistrict, states, districts, path, frame]);
+  }, [focusState, selectedDistrict, districtMode, states, districts, path, frame]);
 
   // The zoom is written to the shapes' group directly, frame by frame, so
   // a glide redraws no shape: React renders the 400-odd paths once.

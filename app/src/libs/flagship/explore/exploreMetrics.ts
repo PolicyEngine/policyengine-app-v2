@@ -27,6 +27,11 @@ export interface ExploreMetric {
   format: (value: number) => string;
   /** Levels where few survey households stand behind each value, so the card adds a caution. */
   cautionAt: RegionLevel[];
+  /**
+   * False where a district's sample cannot support the figure, so the
+   * file has none for districts and the map stays at the state level.
+   */
+  districts?: false;
   /** How we measure this. */
   definition: string;
   data: string;
@@ -177,6 +182,7 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'gini',
+    districts: false,
     theme: 'inequality',
     label: 'Gini index',
     valueLabel: 'Gini index of household income after taxes and benefits',
@@ -191,6 +197,7 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'top_10_share',
+    districts: false,
     theme: 'inequality',
     label: 'Top 10% share',
     valueLabel: 'of income after taxes and benefits goes to the top 10% of households',
@@ -205,6 +212,7 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'top_1_share',
+    districts: false,
     theme: 'inequality',
     label: 'Top 1% share',
     valueLabel: 'of income after taxes and benefits goes to the top 1% of households',
@@ -219,6 +227,7 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'state_income_tax_rate',
+    districts: false,
     theme: 'taxes',
     label: 'State income tax rate',
     valueLabel: 'of household income before taxes goes to state income tax',
@@ -261,6 +270,10 @@ export function themeMetrics(theme: ExploreTheme): ExploreMetric[] {
 
 /** The card's summary row: one headline measure per theme. */
 export const HEADLINE_METRICS: ExploreMetric[] = THEMES.map(({ key }) => themeMetrics(key)[0]);
+
+/** Why a district shows no value for a measure the map keeps at the state level. */
+export const NOT_FOR_DISTRICTS_NOTE =
+  'Not estimated for congressional districts: in a district, a few very high-income survey households would decide this figure. The map shows states.';
 
 /** The note that a value rests on a thin sample, or null. */
 export function cautionFor(metric: ExploreMetric, level: RegionLevel): string | null {

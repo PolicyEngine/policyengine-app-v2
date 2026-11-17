@@ -53,6 +53,12 @@ PROGRAMS = {
 # Figures that need many households; districts leave them out.
 NATION_AND_STATE_ONLY = {"deciles", "state_tax_by_quintile", "poverty_by_group"}
 
+# Figures a district's few thousand sample households cannot support: a
+# handful of very high incomes decides them (Gini above 1 where incomes
+# are negative, top 1% shares over 60%, average state tax rates above the
+# top rate). The page shows them for the nation and states only.
+NOT_FOR_DISTRICTS = ("gini", "top_10_share", "top_1_share", "state_income_tax_rate")
+
 # Fewer sample households than this and a region's figures are left out.
 MIN_SAMPLE_HOUSEHOLDS = 100
 
@@ -234,10 +240,97 @@ def round_floats(value, digits: int = 4):
     return value
 
 
+ENTITIES = ("household", "person", "tax_unit", "spm_unit", "family", "marital_unit")
+CACHE = Path.home() / ".cache" / "policyengine-explore"
+
+
+def split_states(local: Path, build: str) -> dict[int, Path]:
+    """One small dataset per state, cut from the local-area file once and cached.
+
+    Each holds the state's households, their people, and the tax units,
+    SPM units, families and marital units those people belong to, in the
+    same entity-table layout as the source file.
+    """
+    out_dir = CACHE / build
+    done = out_dir / "COMPLETE"
+    if done.exists():
+        return {int(p.stem.split("_")[1]): p for p in sorted(out_dir.glob("state_*.h5"))}
+    out_dir.mkdir(parents=True, exist_ok=True)
+    started = time.time()
+    with pd.HDFStore(local, "r") as store:
+        tables = {name: store.select(f"/{name}") for name in ENTITIES}
+        time_period = store.select("/_time_period")
+    print(f"read the local-area file in {time.time() - started:.0f}s", flush=True)
+    people = tables["person"]
+    paths = {}
+    for fips, households in tables["household"].groupby("state_fips"):
+        members = people[people["person_household_id"].isin(households["household_id"])]
+        parts = {"household": households, "person": members}
+        for entity in ENTITIES[2:]:
+            table = tables[entity]
+            parts[entity] = table[table[f"{entity}_id"].isin(members[f"person_{entity}_id"])]
+        path = out_dir / f"state_{int(fips):02d}.h5"
+        with pd.HDFStore(path, "w") as out:
+            for name, table in parts.items():
+                out.put(name, table.reset_index(drop=True), format="table")
+            out.put("_time_period", time_period, format="table")
+        paths[int(fips)] = path
+    done.write_text("ok")
+    print(f"split into {len(paths)} state files in {time.time() - started:.0f}s", flush=True)
+    return paths
+
+
+def run_nation(dataset: Path, year: int) -> dict[str, dict]:
+    frames = load_frames(dataset, year)
+    return {"us": {"label": "United States", **figures(frames, with_breakdowns=True)}}
+
+
+def run_state(
+    dataset: Path, year: int, state: tuple[str, str], districts: list[tuple[int, str]]
+) -> dict[str, dict]:
+    """One state's figures and those of each of its congressional districts."""
+    code, name = state
+    frames = load_frames(dataset, year)
+    regions = {
+        code: {
+            "label": name,
+            "sample_households": len(frames["household"]),
+            **figures(frames, with_breakdowns=True),
+        }
+    }
+    for geoid, district in districts:
+        part = subset(frames, "district_geoid", geoid)
+        sample = len(part["household"])
+        if sample < MIN_SAMPLE_HOUSEHOLDS:
+            print(f"{district}: {sample} households, left out", flush=True)
+            continue
+        result = figures(part, with_breakdowns=False)
+        for key in NOT_FOR_DISTRICTS:
+            result["metrics"].pop(key, None)
+        regions[district] = {
+            "label": district.split("/", 1)[1],
+            "sample_households": sample,
+            **result,
+        }
+    return regions
+
+
+def _limit_threads() -> None:
+    import os
+
+    for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+        os.environ[name] = "1"
+
+
 def main() -> None:
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+    import multiprocessing
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--year", type=int, default=2026)
     parser.add_argument("--nation-only", action="store_true")
+    parser.add_argument("--states", help="Comma-separated state codes to run (for a test).")
+    parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--out", type=Path, help="Write here instead of the app's data folder.")
     args = parser.parse_args()
 
@@ -246,35 +339,45 @@ def main() -> None:
     paths = fetch(["populace_us_2024"] if args.nation_only else None)
     pins = json.loads((HERE / "datasets.json").read_text())
     benchmarks = json.loads(BENCHMARKS.read_text()) if BENCHMARKS.exists() else {}
+
+    # The model's regions: states by FIPS code, and each state's districts.
     registry = build_us_region_registry()
-    regions: dict[str, dict] = {}
+    states: dict[int, tuple[str, str]] = {}
+    districts: dict[int, list[tuple[int, str]]] = {}
+    for region in registry.regions:
+        strategy = region.scoping_strategy
+        if region.region_type == "state":
+            states[int(strategy.variable_value)] = (region.code, region.state_name)
+        elif region.region_type == "congressional_district":
+            geoid = int(strategy.variable_value)
+            districts.setdefault(geoid // 100, []).append((geoid, region.code))
+    if args.states:
+        wanted = {code.strip().lower() for code in args.states.split(",")}
+        states = {f: s for f, s in states.items() if s[0].split("/")[1] in wanted}
 
     started = time.time()
-    national = load_frames(paths["populace_us_2024"], args.year)
-    regions["us"] = {"label": "United States", **figures(national, with_breakdowns=True)}
-    print(f"nation done in {time.time() - started:.0f}s", flush=True)
-
+    jobs = [("nation", run_nation, (paths["populace_us_2024"], args.year))]
     if not args.nation_only:
-        started = time.time()
-        local = load_frames(paths["populace_us_2024_acs_local"], args.year)
-        print(f"local-area run done in {time.time() - started:.0f}s", flush=True)
-        for region in registry.regions:
-            if region.region_type not in ("state", "congressional_district"):
-                continue
-            strategy = region.scoping_strategy
-            column = "state_fips" if strategy.variable_name == "state_fips" else "district_geoid"
-            part = subset(local, column, int(strategy.variable_value))
-            sample = len(part["household"])
-            if sample < MIN_SAMPLE_HOUSEHOLDS:
-                print(f"{region.code}: {sample} households, left out", flush=True)
-                continue
-            is_state = region.region_type == "state"
-            label = region.state_name if is_state else region.code.split("/", 1)[1]
-            regions[region.code] = {
-                "label": label,
-                "sample_households": sample,
-                **figures(part, with_breakdowns=is_state),
-            }
+        build = pins["populace_us_2024_acs_local"]["path"].split("/")[-2]
+        state_files = split_states(paths["populace_us_2024_acs_local"], build)
+        # Largest files first, so the big states do not finish last.
+        order = sorted(states, key=lambda f: -state_files[f].stat().st_size)
+        jobs += [
+            (states[f][0], run_state, (state_files[f], args.year, states[f], districts.get(f, [])))
+            for f in order
+        ]
+
+    regions: dict[str, dict] = {}
+    context = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(args.workers, mp_context=context, initializer=_limit_threads) as pool:
+        futures = {pool.submit(fn, *fn_args): (name, time.time()) for name, fn, fn_args in jobs}
+        for done, future in enumerate(as_completed(futures), start=1):
+            name, _ = futures[future]
+            regions.update(future.result())
+            print(
+                f"[{done}/{len(jobs)}] {name} done, {time.time() - started:.0f}s since start",
+                flush=True,
+            )
 
     for code, region in regions.items():
         if code in benchmarks:

@@ -161,7 +161,9 @@ function ExploreView({
   const level = regionLevel(region);
   const stateCode = stateCodeOf(region);
   const [showDistricts, setShowDistricts] = useState(false);
-  const districtMode = level !== 'nation' || showDistricts;
+  // Some measures have no district figures; for them the map keeps states.
+  const districtsAvailable = metric.districts !== false;
+  const districtMode = districtsAvailable && (level !== 'nation' || showDistricts);
   const scale = useMemo(
     () => levelScale(file, metric.key, districtMode ? 'district' : 'state'),
     [file, metric.key, districtMode]
@@ -185,13 +187,13 @@ function ExploreView({
   const stateName = stateCode ? file.regions[stateRegion(stateCode)]?.label : null;
   const placeName = file.regions[region]?.label ?? region;
   const rankRegions =
-    level !== 'nation'
+    level !== 'nation' && districtsAvailable
       ? regionsAt(file, 'district', stateCode)
-      : regionsAt(file, showDistricts ? 'district' : 'state');
+      : regionsAt(file, districtMode ? 'district' : 'state');
   const rankTitle =
-    level !== 'nation'
+    level !== 'nation' && districtsAvailable
       ? `${stateName} districts, highest to lowest`
-      : `${showDistricts ? 'Congressional districts' : 'States'}, highest to lowest`;
+      : `${districtMode ? 'Congressional districts' : 'States'}, highest to lowest`;
   const wide = useMediaQuery(WIDE_QUERY);
   // The free part of the map: on a wide screen the panel sits on the
   // right; on a phone the panel's parts sit above and below the map.
@@ -283,7 +285,7 @@ function ExploreView({
           metric={metric}
           region={region}
           onSelect={select}
-          showDistricts={showDistricts}
+          districtMode={districtMode}
           scale={scale}
           inset={inset}
         />
@@ -300,14 +302,16 @@ function ExploreView({
             ← United States
           </button>
         ) : (
-          <button
-            type="button"
-            style={mapButton}
-            aria-pressed={showDistricts}
-            onClick={() => setShowDistricts((on) => !on)}
-          >
-            {showDistricts ? 'Show states' : 'Show districts'}
-          </button>
+          districtsAvailable && (
+            <button
+              type="button"
+              style={mapButton}
+              aria-pressed={showDistricts}
+              onClick={() => setShowDistricts((on) => !on)}
+            >
+              {showDistricts ? 'Show states' : 'Show districts'}
+            </button>
+          )
         )}
       </div>
 

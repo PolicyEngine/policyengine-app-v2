@@ -10,6 +10,7 @@ import {
 import {
   cautionFor,
   HEADLINE_METRICS,
+  NOT_FOR_DISTRICTS_NOTE,
   THEMES,
   type ExploreMetric,
 } from '@/libs/flagship/explore/exploreMetrics';
@@ -46,7 +47,8 @@ export default function PlaceCard({
   const value = place?.metrics[metric.key];
   const nationValue = nation?.metrics[metric.key];
   const benchmark = place?.benchmarks?.[metric.key];
-  const caution = cautionFor(metric, level);
+  const notForDistricts = level === 'district' && metric.districts === false;
+  const caution = notForDistricts ? NOT_FOR_DISTRICTS_NOTE : cautionFor(metric, level);
   const name = place?.label ?? region;
 
   return (
@@ -59,7 +61,7 @@ export default function PlaceCard({
           lineHeight: 1,
         }}
       >
-        {value === undefined ? 'No data' : metric.format(value)}
+        {value === undefined ? '—' : metric.format(value)}
       </div>
       <p style={{ ...smallText, color: colors.gray[700], marginTop: spacing.xs }}>
         {metric.valueLabel}

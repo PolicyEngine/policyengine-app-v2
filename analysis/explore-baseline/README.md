@@ -14,7 +14,7 @@ analysis/explore-baseline/.venv/bin/python analysis/explore-baseline/precompute.
 
 `fetch_data.py` downloads the two datasets at the revisions pinned in `datasets.json` and checks their sha256. It needs read access to `policyengine/populace-us` on Hugging Face. The local-area file is about 10 GB.
 
-A full run takes about an hour on a 128 GB laptop and peaks at roughly 40 GB of memory. `--nation-only --out <path>` runs the national file alone in about 4 minutes, for a quick check.
+The first run splits the local-area file into one file per state (about 1 minute, cached under `~/.cache/policyengine-explore/`). Then the nation and each state, with its districts, run in parallel: with `--workers 8` the whole run took 7.3 minutes on a 128 GB laptop and peaked at 12 GB of memory per process. `--states vt,wy --out <path>` runs a few states and the nation, for a quick check.
 
 ## Pins
 
