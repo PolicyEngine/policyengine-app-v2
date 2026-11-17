@@ -614,10 +614,11 @@ export async function auditRoute(
   staticRoot = DEFAULT_STATIC_ASSET_ROOT,
   redirectFallbackOptions = {},
 ) {
-  const page = await browser.newPage({
+  const pageOptions = {
     viewport: { width: 1440, height: 1000 },
     userAgent: "policyengine-app-zone-shell-audit/1.0",
-  });
+  };
+  let page = await browser.newPage(pageOptions);
   const enforceShell = !isShellBrandExempt(route.source);
   const sourceUrl = resolveUrl(baseUrl, route.source);
   let result = await inspectShell(page, sourceUrl, timeout, enforceShell);
@@ -638,12 +639,21 @@ export async function auditRoute(
       ? "new pull-request source hit ERR_TOO_MANY_REDIRECTS"
       : "source returned 404";
     const destinationUrl = resolveUrl(baseUrl, route.destination);
-    const fallbackResult = await inspectShell(
-      page,
-      destinationUrl,
-      timeout,
-      enforceShell,
-    );
+    if (redirectFailureFallback) {
+      await page.close();
+      page = await browser.newPage(pageOptions);
+    }
+    let fallbackResult;
+    try {
+      fallbackResult = await inspectShell(
+        page,
+        destinationUrl,
+        timeout,
+        enforceShell,
+      );
+    } finally {
+      if (redirectFailureFallback) await page.close();
+    }
     if (
       fallbackResult.ok ||
       (!redirectFailureFallback && fallbackResult.status !== 404)
@@ -674,7 +684,7 @@ export async function auditRoute(
     };
   }
 
-  await page.close();
+  if (!redirectFailureFallback) await page.close();
   return {
     ...route,
     ...result,

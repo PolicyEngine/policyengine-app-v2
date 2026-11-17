@@ -369,42 +369,61 @@ describe("new pull-request route redirect fallback", () => {
     destinationHasShell = true,
   } = {}) {
     const visited = [];
-    let closed = false;
-    const page = {
-      async goto(url) {
-        visited.push(url);
-        if (visited.length === 1 && firstStatus === null) {
-          throw new Error(`page.goto: net::${errorCode}`);
-        }
-        return {
-          status: () =>
-            visited.length === 1 ? firstStatus : destinationStatus,
-        };
-      },
-      async waitForLoadState() {},
-      async waitForTimeout() {},
-      locator: () => ({
-        innerText: async () =>
-          "Calculator content that is long enough to require the full visible PolicyEngine shell check.",
-      }),
-      async evaluate() {
-        return destinationHasShell
-          ? [
-              visibleTopElement({
-                ariaLabel: "PolicyEngine header",
-                textContent: "Research Model API Donate",
-              }),
-            ]
-          : [];
-      },
-      async close() {
-        closed = true;
-      },
-    };
+    const pages = [];
+    const events = [];
+    async function newPage(pageOptions) {
+      const info = { closed: false, options: pageOptions };
+      pages.push(info);
+      const index = pages.length - 1;
+      events.push(`create:${index}`);
+      let poisoned = false;
+      const page = {
+        async goto(url) {
+          visited.push(url);
+          if (poisoned) {
+            throw new Error(
+              'page.goto: Navigation interrupted by another navigation to "chrome-error://chromewebdata/"',
+            );
+          }
+          if (visited.length === 1 && firstStatus === null) {
+            poisoned = true;
+            throw new Error(`page.goto: net::${errorCode}`);
+          }
+          return {
+            status: () =>
+              visited.length === 1 ? firstStatus : destinationStatus,
+          };
+        },
+        async waitForLoadState() {},
+        async waitForTimeout() {},
+        locator: () => ({
+          innerText: async () =>
+            "Calculator content that is long enough to require the full visible PolicyEngine shell check.",
+        }),
+        async evaluate() {
+          return destinationHasShell
+            ? [
+                visibleTopElement({
+                  ariaLabel: "PolicyEngine header",
+                  textContent: "Research Model API Donate",
+                }),
+              ]
+            : [];
+        },
+        async close() {
+          info.closed = true;
+          events.push(`close:${index}`);
+        },
+      };
+      info.page = page;
+      return page;
+    }
     return {
-      browser: { newPage: async () => page },
+      browser: { newPage },
       visited,
-      isClosed: () => closed,
+      pages,
+      events,
+      isClosed: () => pages.every((page) => page.closed),
     };
   }
 
@@ -423,6 +442,19 @@ describe("new pull-request route redirect fallback", () => {
     assert.equal(result.usedFallback, true);
     assert.equal(result.testedUrl, route.destination);
     assert.equal(fixture.visited.length, 2);
+    assert.equal(fixture.pages.length, 2);
+    assert.notEqual(fixture.pages[0].page, fixture.pages[1].page);
+    assert.deepEqual(fixture.pages[0].options, fixture.pages[1].options);
+    assert.deepEqual(fixture.pages[1].options, {
+      viewport: { width: 1440, height: 1000 },
+      userAgent: "policyengine-app-zone-shell-audit/1.0",
+    });
+    assert.deepEqual(fixture.events, [
+      "create:0",
+      "close:0",
+      "create:1",
+      "close:1",
+    ]);
     assert.equal(fixture.isClosed(), true);
   });
 
@@ -494,6 +526,8 @@ describe("new pull-request route redirect fallback", () => {
     assert.equal(result.ok, true);
     assert.equal(result.usedFallback, true);
     assert.equal(fixture.visited.length, 2);
+    assert.equal(fixture.pages.length, 1);
+    assert.equal(fixture.isClosed(), true);
   });
 });
 
