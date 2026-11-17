@@ -3,6 +3,8 @@ import { colors, spacing, typography } from "@/designTokens";
 // The Budget dashboard, served on this site through its app zone route
 // (src/data/appZoneRoutes.ts).
 const DASHBOARD_URL = "/uk/budgets/autumn-2026";
+// The Milburn review dashboard, served the same way.
+const MILBURN_REVIEW_URL = "/uk/milburn-review";
 // The recording of our Budget-day webinar on 28 October.
 const RECORDING_URL = "https://www.youtube.com/watch?v=ZutKULXLhU0";
 
@@ -83,6 +85,32 @@ export default function AutumnBudgetEventBanner({
           }}
         >
           Watch the recording &rarr;
+        </a>
+      </span>
+      {/* A quieter line of its own under the Budget's, at every width. */}
+      <span
+        style={{
+          flexBasis: "100%",
+          fontSize: typography.fontSize.sm,
+          lineHeight: typography.lineHeight["20"],
+        }}
+      >
+        <strong style={{ fontWeight: typography.fontWeight.semibold }}>
+          Milburn review:
+        </strong>{" "}
+        <a
+          href={MILBURN_REVIEW_URL}
+          aria-label="See our analysis of the Milburn review of young people and work"
+          style={{
+            // Taller than its line, so it is easy to tap on a phone.
+            display: "inline-block",
+            padding: `${spacing.xs} 0`,
+            color: colors.primary[700],
+            textDecoration: "underline",
+            textUnderlineOffset: 3,
+          }}
+        >
+          see our analysis &rarr;
         </a>
       </span>
     </div>
