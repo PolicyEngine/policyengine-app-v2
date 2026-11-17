@@ -44,7 +44,9 @@ When major legislation moves through Congress, we build custom tools to help the
 
 ### Benefit access
 
-Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.amplifi.org/benefit-navigator), [Starlight](https://www.get-starlight.com), and [Mirza](https://heymirza.com) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for. As of November 2026, MyFriendBen reports that it has served more than 175,000 households and secured more than $92 million in benefits and tax credits for families. Amplifi reports more than 23,000 clients of its Benefit Navigator and more than $230 million in new benefits and tax credits identified.
+Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.amplifi.org/benefit-navigator), [Starlight](https://www.get-starlight.com), and [Mirza](https://heymirza.com) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for.
+
+On November 17, 2026, their websites reported these service-wide totals: MyFriendBen had served more than 175,000 households and secured more than $92 million in benefits and tax credits, and Amplifi's Benefit Navigator had more than 23,000 clients and had identified more than $230 million in new benefits and tax credits.
 
 ![Benefit screening tools powered by PolicyEngine](/assets/posts/us-giving-tuesday-2025/benefit-tools-collage.webp)
 
@@ -71,4 +73,4 @@ On November 17, 2026, we made these changes to this post:
 - We corrected the NBER line: PolicyEngine's model computes GiveCalc's taxes, and we validate that model against NBER's TAXSIM.
 - We added that gifts to PolicyEngine go through our fiscal sponsor, the PSL Foundation.
 - We removed a sentence that pointed to our Open Collective page for how we spend donations.
-- We repaired three broken links.
+- We updated three links.
