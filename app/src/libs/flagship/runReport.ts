@@ -8,6 +8,7 @@ import { createPolicy } from '@/api/policy';
 import { createReport } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
+import { isLegacyId } from '@/api/v2Associations';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { baselineProvisions, customBaseline } from '@/libs/flagship/reportBaseline';
@@ -207,6 +208,14 @@ export interface RunFlagshipReportArgs {
   currentLawId: number;
   /** Saved reform this run came from, for the central report record. */
   reformId?: string | null;
+  /**
+   * The v1 policy the caller's save of that reform just made from these
+   * `provisions` (the reform store types values as a run does), so the
+   * run uses it rather than asking the Public API to create it again.
+   * Given anything else (none, or a v2 policy's UUID), the run creates the
+   * reform's policy itself.
+   */
+  reformPolicyId?: string | number | null;
   /** The year to simulate; the current year when unset. */
   year?: number;
   /**
@@ -368,6 +377,7 @@ export async function runFlagshipReport({
   provisions,
   currentLawId,
   reformId,
+  reformPolicyId: savedReformPolicyId,
   year = Number(CURRENT_YEAR),
   region,
   windowYears,
@@ -384,7 +394,9 @@ export async function runFlagshipReport({
   // Neither policy carries a name: names live on the user's records.
   const comparison = customBaseline(requestedBaseline, currentLawId);
   const [reformPolicyId, baselineId] = await Promise.all([
-    createReformPolicy(countryId, provisions, parameters),
+    isLegacyId(savedReformPolicyId)
+      ? Number(savedReformPolicyId)
+      : createReformPolicy(countryId, provisions, parameters),
     comparison?.policyId ??
       (comparison
         ? createReformPolicy(countryId, baselineProvisions(comparison), parameters)

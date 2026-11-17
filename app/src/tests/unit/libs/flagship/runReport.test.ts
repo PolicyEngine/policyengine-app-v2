@@ -4,6 +4,7 @@ import {
   type FlagshipReportRecord,
   type FlagshipReportStore,
 } from '@/api/flagshipReportStore';
+import { LocalStorageReformStore } from '@/api/reformStore';
 import {
   createReportRecords,
   forgetAccountReportMeta,
@@ -18,6 +19,8 @@ import {
   CALIFORNIA_RECORDS_REQUEST,
   CALIFORNIA_REFORM_SIMULATION_ID,
   CALIFORNIA_REGION,
+  SAVED_REFORM_POLICY_ID,
+  SAVED_REFORM_V2_POLICY_ID,
   STATE_RECORDS_BASELINE_POLICY_ID,
   STATE_RECORDS_REFORM_POLICY_ID,
   STATE_RECORDS_YEAR,
@@ -399,6 +402,131 @@ describe('runFlagshipReport', () => {
         policyId: '88',
         label: 'Plan B',
       });
+    });
+  });
+
+  describe('given the saved reform the run comes from already has its v1 policy', () => {
+    beforeEach(() => {
+      mockFetchSocietyWide.mockResolvedValue({ status: 'computing', result: null });
+    });
+
+    test('then the run creates no reform policy and runs that one', async () => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        reformPolicyId: SAVED_REFORM_POLICY_ID,
+      });
+
+      expect(mockCreatePolicy).not.toHaveBeenCalled();
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(2, 'us', {
+        population_id: 'us',
+        population_type: 'geography',
+        policy_id: Number(SAVED_REFORM_POLICY_ID),
+      });
+      expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', SAVED_REFORM_POLICY_ID, '2', {
+        region: 'us',
+        time_period: '2026',
+      });
+    });
+
+    test('then a baseline from a saved reform’s parameters is the only policy created', async () => {
+      const planBData = {
+        'gov.irs.credits.ctc.amount.base[0].amount': { '2026-01-01.2100-12-31': 3000 },
+      };
+      mockCreatePolicy.mockResolvedValue({ result: { policy_id: '88' } });
+
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        reformPolicyId: SAVED_REFORM_POLICY_ID,
+        baseline: {
+          reformId: 'rf-plan-b',
+          label: 'Plan B',
+          parameters: [
+            {
+              name: 'gov.irs.credits.ctc.amount.base[0].amount',
+              values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3000 }],
+            },
+          ],
+        },
+      });
+
+      expect(mockCreatePolicy).toHaveBeenCalledTimes(1);
+      expect(mockCreatePolicy).toHaveBeenCalledWith('us', { data: planBData });
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+        1,
+        'us',
+        expect.objectContaining({ policy_id: 88 })
+      );
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+        2,
+        'us',
+        expect.objectContaining({ policy_id: Number(SAVED_REFORM_POLICY_ID) })
+      );
+    });
+
+    test.each([
+      ['no policy', undefined],
+      ['a null policy', null],
+      ['an empty policy ID', ''],
+      ['a v2 policy UUID', SAVED_REFORM_V2_POLICY_ID],
+    ])('given %s then the run creates the reform policy as before', async (_case, policyId) => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        reformPolicyId: policyId,
+      });
+
+      expect(mockCreatePolicy).toHaveBeenCalledTimes(1);
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+        2,
+        'us',
+        expect.objectContaining({ policy_id: 77 })
+      );
+    });
+
+    test('given a reform saved in this browser and then run then one reform policy is requested', async () => {
+      // The save's policy has its own ID, so a run that made the policy
+      // again would simulate a different one.
+      mockCreatePolicy.mockResolvedValueOnce({ result: { policy_id: SAVED_REFORM_POLICY_ID } });
+      const savedReform = await new LocalStorageReformStore().create({
+        countryId: 'us',
+        label: 'CTC expansion',
+        parameters: [
+          {
+            name: PROVISION.path,
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: PROVISION.value }],
+          },
+        ],
+        baseline: 'current-law',
+        provenance: { source: 'manual' },
+      });
+
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        reformId: savedReform.id,
+        reformPolicyId: savedReform.policyId,
+      });
+
+      expect(mockCreatePolicy).toHaveBeenCalledTimes(1);
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+        2,
+        'us',
+        expect.objectContaining({ policy_id: Number(SAVED_REFORM_POLICY_ID) })
+      );
     });
   });
 
