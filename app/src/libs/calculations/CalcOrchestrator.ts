@@ -176,6 +176,8 @@ export class CalcOrchestrator {
       refetchInterval: (typeof refetchInterval === 'function'
         ? refetchInterval
         : refetchInterval) as any, // Type assertion needed for QueryObserver
+      // Keep polling while the tab is hidden, so the run is followed to its end.
+      refetchIntervalInBackground: true,
     });
 
     // Subscribe to updates

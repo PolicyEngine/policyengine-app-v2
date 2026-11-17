@@ -1,5 +1,6 @@
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { winnerShareMetric } from '@/components/flagship/ReportContents';
+import { ErrorState } from '@/components/flagship/states';
 import { Button, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBudgetWindow } from '@/hooks/useBudgetWindow';
@@ -102,7 +103,11 @@ export default function AllYearsView({
   const budget = window.data?.status === 'ok' ? window.data.result : null;
   const budgetFor = (year: string) =>
     budget?.annualImpacts.find((impact) => String(impact.year) === year)?.budgetaryImpact;
-  const budgetPending = !budget && !window.isError && window.data?.status !== 'error';
+  // As the Budget window card has it: a window being requested again is
+  // calculating, and one that failed shows its error with a retry.
+  const budgetFailed =
+    !budget && !window.isFetching && (window.isError || window.data?.status === 'error');
+  const budgetPending = !budget && !budgetFailed;
   const notRun = years.filter((year) => statusByYear[year] === 'not-run');
   const span = reportYearSpanLabel(years[0], years[years.length - 1], countryId);
 
@@ -148,21 +153,27 @@ export default function AllYearsView({
           >
             Budgetary impact, {span}
           </Text>
-          <Text
-            style={{
-              margin: 0,
-              fontSize: typography.fontSize['2xl'],
-              fontWeight: typography.fontWeight.semibold,
-              fontVariantNumeric: 'tabular-nums',
-              color: colors.text.primary,
-            }}
-          >
-            {budget
-              ? money(budget.totals.budgetaryImpact, countryId)
-              : budgetPending
-                ? 'Calculating…'
-                : '—'}
-          </Text>
+          {budgetFailed ? (
+            <ErrorState
+              compact
+              title="The budget window could not be calculated"
+              // The latest request's failure, else the window's own error.
+              description={window.error?.message || window.data?.error}
+              onRetry={() => window.refetch()}
+            />
+          ) : (
+            <Text
+              style={{
+                margin: 0,
+                fontSize: typography.fontSize['2xl'],
+                fontWeight: typography.fontWeight.semibold,
+                fontVariantNumeric: 'tabular-nums',
+                color: colors.text.primary,
+              }}
+            >
+              {budget ? money(budget.totals.budgetaryImpact, countryId) : 'Calculating…'}
+            </Text>
+          )}
         </div>
         {notRun.length > 0 && (
           <Button size="sm" variant="outline" onClick={onCalculateAll}>

@@ -203,11 +203,14 @@ export const mockHouseholdQueryOptions = (calcId: string, queryFn: any) => ({
   refetchInterval: false as const,
 });
 
+/** How often the mock society-wide query options poll. */
+export const TEST_POLL_INTERVAL_MS = 2000;
+
 /**
  * Mock query options with polling enabled (society-wide)
  */
 export const mockSocietyWideQueryOptions = (calcId: string, queryFn: any) => ({
   queryKey: mockCalculationQueryKey(calcId),
   queryFn,
-  refetchInterval: 2000,
+  refetchInterval: TEST_POLL_INTERVAL_MS,
 });
