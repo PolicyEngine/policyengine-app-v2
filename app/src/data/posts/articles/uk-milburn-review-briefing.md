@@ -21,7 +21,7 @@ Under the review's proposals, new claims would move to the new system once each 
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
 | Youth Allowance             | A means-tested allowance for UC claimants under 25 at today's under-25 standard allowance, £339 a month (paragraph 744), higher for young people living independently (paragraph 748) | From 2029-30; we model April 2029                   |
 | Work allowance              | Youth Allowance recipients in work could earn an amount, which the review doesn't give, before their award starts to fall (paragraph 749)                                            | From 2029-30; we model April 2029                   |
-| UC health element           | The review would abolish the health element and the Work Capability Assessment for under-25s, with no new work-capability test at the start of a claim (paragraph 745)                                      | From 2029-30; we model April 2029                   |
+| UC health element           | The review would abolish the health element and the Work Capability Assessment "for most people aged under 25", with no new work-capability test at the start of a claim (paragraph 745)                                      | From 2029-30; we model April 2029                   |
 | PIP                         | For people aged 18 to 24, three new forms of support would replace PIP (paragraphs 750 to 757)                                                                                         | From 2029-30; we model April 2029                   |
 | Employer National Insurance | For employees aged 21 to 24 in retail and hospitality, the employer threshold would rise from £5,000 to £10,000 over five years, "when fiscal conditions allow" (paragraphs 269 to 271) | No date given; we illustrate the £10,000 end state |
 
@@ -281,6 +281,7 @@ These results:
 - leave out the Additional Cost Allowance, the Severe and Complex Needs Insurance and the Health and Disability Fund, which raises both the saving and the fall in incomes;
 - end the entitlements that follow PIP, as today's rules do, which the review doesn't address; this adds £0.56 billion to the saving, and as much to the fall in incomes;
 - keep Carer's Allowance and the UC carer element for carers whose entitlement depends on the young person's PIP daily living award, so they capture no further loss for carers if the new rules end that entitlement;
+- remove the health element for every claimant under 25, where the review refers to "most people aged under 25" (paragraph 745), which raises both the saving and the fall in incomes;
 - keep the assessment status, and so today's work allowance, of claimants who would lose the health element;
 - use the UC housing costs element as the marker for living independently, as the review's annex does;
 - set the work allowance at a level the review doesn't give;
