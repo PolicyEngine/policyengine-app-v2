@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { POPULACE_US_DEFAULT_DATASET_URI } from '@/constants';
+import { MICROCOSM_US_DEFAULT_DATASET_URI } from '@/constants';
 import { TEST_COUNTRIES } from '@/tests/fixtures/constants';
 import {
   BASELINE_AND_REFORM_POLICY,
@@ -486,7 +486,7 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('Microsimulation(reform=reform');
       });
 
-      test('given default US state region then uses Populace region scoping', () => {
+      test('given default US state region then uses Microcosm region scoping', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -507,7 +507,7 @@ describe('reproducibilityCode', () => {
         expect(code).not.toContain('states/CA.h5');
       });
 
-      test('given default congressional district region then uses Populace region scoping', () => {
+      test('given default congressional district region then uses Microcosm region scoping', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -548,7 +548,7 @@ describe('reproducibilityCode', () => {
         expect(code).not.toContain('reform = Reform.from_dict(');
       });
 
-      test('given resolved Populace default dataset for state region then still uses region scoping', () => {
+      test('given resolved Microcosm default dataset for state region then still uses region scoping', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -647,7 +647,7 @@ describe('reproducibilityCode', () => {
 
         // Then - a bare US national dataset name resolves to the certified
         // populace-us URI, never the deprecated policyengine-us-data repo.
-        expect(code).toContain(`dataset="${POPULACE_US_DEFAULT_DATASET_URI}"`);
+        expect(code).toContain(`dataset="${MICROCOSM_US_DEFAULT_DATASET_URI}"`);
         expect(code).not.toContain('policyengine-us-data');
       });
 

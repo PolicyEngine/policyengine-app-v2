@@ -18,9 +18,9 @@ export const CURRENT_YEAR = '2026';
 // so a copied snippet reproduces the exact certified dataset the app ran against.
 // Ported from policyengine-app v1 (POPULACE_US_DEFAULT_DATASET_URI, PR #2846).
 // NOTE: subnational (state/CD) and place fallbacks still reference `policyengine-us-data`
-// pending Populace place/geo scoping — tracked in policyengine-app-v2#1079 — and are
+// pending Microcosm place/geo scoping — tracked in policyengine-app-v2#1079 — and are
 // intentionally NOT switched to this national URI here.
-export const POPULACE_US_DEFAULT_DATASET_URI =
+export const MICROCOSM_US_DEFAULT_DATASET_URI =
   'hf://policyengine/populace-us/populace_us_2024.h5@populace-us-2024-sparse-l0-refit-57k-71a0887-national-only-20260701';
 
 // App URLs for the split website/calculator architecture
