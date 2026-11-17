@@ -495,6 +495,7 @@ async function inspectShell(page, url, timeout, enforceShell = true) {
     return {
       ok: false,
       status: null,
+      navigationErrorCode: redirectNavigationErrorCode(error.message),
       reason: `navigation failed: ${error.message}`,
     };
   }
@@ -553,36 +554,118 @@ async function inspectShell(page, url, timeout, enforceShell = true) {
   return { ok: true, status, reason: "PolicyEngine shell present" };
 }
 
-async function auditRoute(
+export function redirectNavigationErrorCode(message) {
+  return /\bnet::ERR_TOO_MANY_REDIRECTS\b/.test(message)
+    ? "ERR_TOO_MANY_REDIRECTS"
+    : null;
+}
+
+export function shouldFallbackAfterRedirectFailure(
+  result,
+  route,
+  {
+    allowDestinationFallback = false,
+    isPullRequest = false,
+    newExplicitSources = new Set(),
+    baseUrl = DEFAULT_BASE_URL,
+  } = {},
+) {
+  if (
+    result.ok ||
+    result.status !== null ||
+    result.navigationErrorCode !== "ERR_TOO_MANY_REDIRECTS" ||
+    !allowDestinationFallback ||
+    !isPullRequest ||
+    !newExplicitSources.has(route.source)
+  ) {
+    return false;
+  }
+  try {
+    const destination = new URL(route.destination);
+    const source = new URL(baseUrl);
+    return (
+      destination.protocol === "https:" &&
+      destination.origin !== source.origin &&
+      destination.hostname.replace(/^www\./, "") !==
+        source.hostname.replace(/^www\./, "") &&
+      !destination.username &&
+      !destination.password
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function newExplicitRouteSources(currentRoutes, previousRoutes) {
+  const previousSources = new Set(previousRoutes.map((route) => route.source));
+  return new Set(
+    currentRoutes
+      .filter((route) => !previousSources.has(route.source))
+      .map((route) => route.source),
+  );
+}
+
+export async function auditRoute(
   browser,
   route,
   baseUrl,
   timeout,
   allowDestinationFallback,
   staticRoot = DEFAULT_STATIC_ASSET_ROOT,
+  redirectFallbackOptions = {},
 ) {
-  const page = await browser.newPage({
+  const pageOptions = {
     viewport: { width: 1440, height: 1000 },
     userAgent: "policyengine-app-zone-shell-audit/1.0",
-  });
+  };
+  let page = await browser.newPage(pageOptions);
   const enforceShell = !isShellBrandExempt(route.source);
   const sourceUrl = resolveUrl(baseUrl, route.source);
   let result = await inspectShell(page, sourceUrl, timeout, enforceShell);
   let testedUrl = sourceUrl;
   let usedFallback = false;
+  let fallbackReason = null;
 
-  if (!result.ok && result.status === 404 && allowDestinationFallback) {
+  const redirectFailureFallback = shouldFallbackAfterRedirectFailure(
+    result,
+    route,
+    { ...redirectFallbackOptions, allowDestinationFallback, baseUrl },
+  );
+  if (
+    (!result.ok && result.status === 404 && allowDestinationFallback) ||
+    redirectFailureFallback
+  ) {
+    fallbackReason = redirectFailureFallback
+      ? "new pull-request source hit ERR_TOO_MANY_REDIRECTS"
+      : "source returned 404";
     const destinationUrl = resolveUrl(baseUrl, route.destination);
-    const fallbackResult = await inspectShell(
-      page,
-      destinationUrl,
-      timeout,
-      enforceShell,
-    );
-    if (fallbackResult.ok || fallbackResult.status !== 404) {
+    if (redirectFailureFallback) {
+      await page.close();
+      page = await browser.newPage(pageOptions);
+    }
+    let fallbackResult;
+    try {
+      fallbackResult = await inspectShell(
+        page,
+        destinationUrl,
+        timeout,
+        enforceShell,
+      );
+    } finally {
+      if (redirectFailureFallback) await page.close();
+    }
+    if (
+      fallbackResult.ok ||
+      (!redirectFailureFallback && fallbackResult.status !== 404)
+    ) {
       result = fallbackResult;
       testedUrl = destinationUrl;
       usedFallback = true;
+    } else if (redirectFailureFallback) {
+      result = {
+        ...result,
+        reason: `${result.reason}; destination check failed: ${fallbackResult.reason.slice(0, 500)}`,
+      };
     }
   }
 
@@ -601,8 +684,15 @@ async function auditRoute(
     };
   }
 
-  await page.close();
-  return { ...route, ...result, testedUrl, sourceUrl, usedFallback };
+  if (!redirectFailureFallback) await page.close();
+  return {
+    ...route,
+    ...result,
+    testedUrl,
+    sourceUrl,
+    usedFallback,
+    fallbackReason,
+  };
 }
 
 async function runWithConcurrency(items, concurrency, worker) {
@@ -647,6 +737,19 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
 
   const routeSource = readFileSync(routesFile, "utf8");
   const baseRoutes = extractRoutes(routeSource);
+  const isPullRequest = env.GITHUB_EVENT_NAME === "pull_request";
+  let newExplicitSources = new Set();
+  if (isPullRequest && allowDestinationFallback) {
+    const baseRoutesFile = env.APP_ZONE_BASE_ROUTES_FILE;
+    if (!baseRoutesFile) {
+      throw new Error("APP_ZONE_BASE_ROUTES_FILE is required on pull requests");
+    }
+    const previousRoutes = extractRoutes(readFileSync(baseRoutesFile, "utf8"));
+    if (previousRoutes.length === 0) {
+      throw new Error("Pull request base routes must not be empty");
+    }
+    newExplicitSources = newExplicitRouteSources(baseRoutes, previousRoutes);
+  }
 
   if (baseRoutes.length === 0) {
     console.log(`No app-zone routes found in ${routesFile}`);
@@ -684,6 +787,8 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
         baseUrl,
         timeout,
         allowDestinationFallback,
+        DEFAULT_STATIC_ASSET_ROOT,
+        { isPullRequest, newExplicitSources },
       );
       const mark = result.ok
         ? result.exempt
@@ -696,7 +801,7 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
       console.log(`    ${result.reason}`);
       if (result.usedFallback) {
         console.log(
-          "    tested destination directly because source returned 404",
+          `    tested destination directly because ${result.fallbackReason}`,
         );
       }
       if (result.discoveredFromSitemap) {
