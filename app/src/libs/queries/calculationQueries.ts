@@ -1,6 +1,16 @@
+import type { QueryFunctionContext } from '@tanstack/react-query';
 import { CalcStrategyFactory } from '@/libs/calculations/strategies/CalcStrategyFactory';
 import { calculationKeys } from '@/libs/queryKeys';
-import type { CalcMetadata, CalcParams } from '@/types/calculation';
+import type { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
+
+/**
+ * The query's status from its last poll, which the strategy reads to
+ * outlast a failed poll. None when the query function is called without
+ * React Query's context, as for CalcOrchestrator's first request.
+ */
+function cachedStatus(context?: QueryFunctionContext): CalcStatus | undefined {
+  return context?.client.getQueryData<CalcStatus>(context.queryKey);
+}
 
 /**
  * Query factory for calculations
@@ -15,8 +25,8 @@ export const calculationQueries = {
 
     return {
       queryKey: calculationKeys.byReportId(reportId),
-      queryFn: async () => {
-        return strategy.execute(params, metadata);
+      queryFn: async (context?: QueryFunctionContext) => {
+        return strategy.execute(params, metadata, cachedStatus(context));
       },
       ...strategy.getRefetchConfig(),
       meta: { calcMetadata: metadata },
@@ -31,8 +41,8 @@ export const calculationQueries = {
 
     return {
       queryKey: calculationKeys.bySimulationId(simulationId),
-      queryFn: async () => {
-        return strategy.execute(params, metadata);
+      queryFn: async (context?: QueryFunctionContext) => {
+        return strategy.execute(params, metadata, cachedStatus(context));
       },
       ...strategy.getRefetchConfig(),
       meta: { calcMetadata: metadata },

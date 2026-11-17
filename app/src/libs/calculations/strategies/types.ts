@@ -48,9 +48,15 @@ export interface CalcExecutionStrategy {
    * Execute a calculation with the given parameters
    * @param params - Calculation parameters
    * @param metadata - Calculation metadata (includes reportId for household sim-level calcs)
+   * @param previous - The calculation's status from its last poll, as the
+   *   query cache holds it; none for its first request
    * @returns Promise resolving to calculation status
    */
-  execute: (params: CalcParams, metadata: CalcMetadata) => Promise<CalcStatus>;
+  execute: (
+    params: CalcParams,
+    metadata: CalcMetadata,
+    previous?: CalcStatus
+  ) => Promise<CalcStatus>;
 
   /**
    * Get the refetch configuration for this strategy
