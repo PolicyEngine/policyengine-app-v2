@@ -23,3 +23,10 @@ export const BUDGET_WINDOW_COMPUTING: BudgetWindowResponse = {
 
 /** A check that failed, as `fetchBudgetWindow` throws on a gateway's 502. */
 export const BUDGET_WINDOW_CHECK_FAILURE = new Error('Budget window request failed (502)');
+
+/** A window the server itself answered with an error. */
+export const BUDGET_WINDOW_SERVER_ERROR: BudgetWindowResponse = {
+  status: 'error',
+  result: null,
+  error: 'Simulation failed for 2027',
+};

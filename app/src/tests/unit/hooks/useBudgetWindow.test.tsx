@@ -13,6 +13,7 @@ import {
   BUDGET_WINDOW_PARAMS,
   BUDGET_WINDOW_POLL_INTERVAL_MS,
   BUDGET_WINDOW_REFORM_POLICY_ID,
+  BUDGET_WINDOW_SERVER_ERROR,
 } from '@/tests/fixtures/hooks/useBudgetWindowMocks';
 import {
   hideBrowserTab,
@@ -26,14 +27,13 @@ vi.mock('@/api/budgetWindow', async (importOriginal) => ({
 
 const mockFetchBudgetWindow = vi.mocked(fetchBudgetWindow);
 
-function wrapper({ children }: { children: ReactNode }) {
-  // React Query's own defaults, as the app's client has them (3 retries), so
-  // the hook's own retry setting is what the tests see.
-  const queryClient = new QueryClient();
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-}
-
-function renderWindow() {
+/**
+ * Renders the hook on its own query cache, or on one passed in to show the
+ * window again after an earlier view of it closed. The cache has React
+ * Query's own defaults, as the app's client has them (3 retries), so the
+ * hook's own retry setting is what the tests see.
+ */
+function renderWindow(queryClient = new QueryClient()) {
   return renderHook(
     () =>
       useBudgetWindow(
@@ -43,7 +43,11 @@ function renderWindow() {
         BUDGET_WINDOW_PARAMS,
         { enabled: true }
       ),
-    { wrapper }
+    {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      ),
+    }
   );
 }
 
@@ -114,26 +118,93 @@ describe('useBudgetWindow', () => {
     expect(result.current.data?.status).toBe('computing');
   });
 
-  test('given one more failed check after MAX_FAILED_POLLS then the window reports the error', async () => {
-    // Given
+  /** Renders a window whose checks fail from the second on, and lets MAX_FAILED_POLLS of them fail. */
+  async function renderWindowAtFailureLimit(queryClient = new QueryClient()) {
     mockFetchBudgetWindow
       .mockResolvedValueOnce(BUDGET_WINDOW_COMPUTING)
       .mockRejectedValue(BUDGET_WINDOW_CHECK_FAILURE);
-    const { result } = renderWindow();
-    await waitFor(() => expect(result.current.data?.status).toBe('computing'));
+    const view = renderWindow(queryClient);
+    await waitFor(() => expect(view.result.current.data?.status).toBe('computing'));
     await checkAgain(MAX_FAILED_POLLS);
-    await waitFor(() => expect(result.current.data?.failedPolls).toBe(MAX_FAILED_POLLS));
-    // Read here, so the hook re-renders when it changes: useQuery
-    // re-renders only for the result properties already read.
-    expect(result.current.isError).toBe(false);
+    await waitFor(() => expect(view.result.current.data?.failedPolls).toBe(MAX_FAILED_POLLS));
+    return view;
+  }
+
+  test('given one more failed check after MAX_FAILED_POLLS then the window reports the error', async () => {
+    // Given
+    const { result } = await renderWindowAtFailureLimit();
 
     // When
     await checkAgain(1);
 
     // Then
     expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(2 + MAX_FAILED_POLLS);
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.error).toBe(BUDGET_WINDOW_CHECK_FAILURE);
+    await waitFor(() => expect(result.current.data?.status).toBe('error'));
+    expect(result.current.data?.error).toBe(BUDGET_WINDOW_CHECK_FAILURE.message);
+    expect(result.current.data?.result).toBeNull();
+  });
+
+  test('given the window failed after MAX_FAILED_POLLS failed checks then it is not checked again', async () => {
+    // Given
+    const { result } = await renderWindowAtFailureLimit();
+    await checkAgain(1);
+    await waitFor(() => expect(result.current.data?.status).toBe('error'));
+
+    // When
+    await checkAgain(3);
+
+    // Then
+    expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(2 + MAX_FAILED_POLLS);
+  });
+
+  test('given the window failed after its failed checks then a retry that succeeds checks on again', async () => {
+    // Given
+    const { result } = await renderWindowAtFailureLimit();
+    await checkAgain(1);
+    await waitFor(() => expect(result.current.data?.status).toBe('error'));
+    mockFetchBudgetWindow.mockResolvedValue(BUDGET_WINDOW_COMPUTING);
+
+    // When
+    await act(() => result.current.refetch());
+
+    // Then
+    await waitFor(() => expect(result.current.data?.status).toBe('computing'));
+    await checkAgain(1);
+    expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(4 + MAX_FAILED_POLLS);
+  });
+
+  test('given the window failed after its failed checks then showing it again checks on it again', async () => {
+    // Given: the failure is still in the cache after its view closed.
+    const queryClient = new QueryClient();
+    const firstView = await renderWindowAtFailureLimit(queryClient);
+    await checkAgain(1);
+    await waitFor(() => expect(firstView.result.current.data?.status).toBe('error'));
+    firstView.unmount();
+    mockFetchBudgetWindow.mockResolvedValue(BUDGET_WINDOW_COMPUTING);
+
+    // When
+    const { result } = renderWindow(queryClient);
+
+    // Then
+    await waitFor(() => expect(result.current.data?.status).toBe('computing'));
+    expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(3 + MAX_FAILED_POLLS);
+  });
+
+  test('given the server answered the window with an error then showing it again keeps that answer', async () => {
+    // Given
+    mockFetchBudgetWindow.mockResolvedValue(BUDGET_WINDOW_SERVER_ERROR);
+    const queryClient = new QueryClient();
+    const firstView = renderWindow(queryClient);
+    await waitFor(() => expect(firstView.result.current.data?.status).toBe('error'));
+    firstView.unmount();
+
+    // When
+    const { result } = renderWindow(queryClient);
+    await checkAgain(1);
+
+    // Then
+    expect(result.current.data?.error).toBe(BUDGET_WINDOW_SERVER_ERROR.error);
+    expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(1);
   });
 
   test('given a check succeeds between failed checks then the failures are counted again from zero', async () => {
