@@ -31,6 +31,12 @@ import {
   UK_LAST_SUPPORTED_YEAR,
 } from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
 import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import {
+  MATCHING_REFORM_POLICY_ID,
+  SAVED_REFORM_POLICY_ID,
+  SAVED_REFORM_V2_POLICY_ID,
+  UPDATED_REFORM_POLICY_ID,
+} from '@/tests/fixtures/libs/flagship/runReportMocks';
 import { US_LAST_SUPPORTED_YEAR } from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
@@ -432,6 +438,94 @@ describe('DraftHeader', () => {
       expect(mockRun.mock.calls[1][3]).toBe('rf-new');
     });
 
+    test('then the run reuses the v1 policy the save created', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      mockCreate.mockResolvedValue({
+        id: 'rf-new',
+        policyId: SAVED_REFORM_POLICY_ID,
+        v2PolicyId: null,
+      });
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][3]).toBe('rf-new');
+      expect(mockRun.mock.calls[0][5].reformPolicies).toMatchObject({
+        policyId: SAVED_REFORM_POLICY_ID,
+        v2PolicyId: null,
+      });
+    });
+
+    test('then a reform saved only as a v2 policy hands the run its policies, with no v1 policy', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      mockCreate.mockResolvedValue({
+        id: 'rf-new',
+        policyId: null,
+        v2PolicyId: SAVED_REFORM_V2_POLICY_ID,
+      });
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][5].reformPolicies).toMatchObject({
+        policyId: null,
+        v2PolicyId: SAVED_REFORM_V2_POLICY_ID,
+      });
+    });
+
+    // A reform saved before saves typed their values can hold a v1 policy
+    // with values as text, which simulations cannot read. The run types
+    // the values itself, so a reused reform's policy is not handed over.
+    test('then a reused saved reform gives the run no policy to reuse', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      mockFindMine.mockResolvedValue([
+        {
+          id: 'rf-saved',
+          countryId: 'us',
+          label: 'Mine',
+          policyId: MATCHING_REFORM_POLICY_ID,
+          parameters: SAVED_PARAMETERS,
+          provenance: {},
+        },
+      ]);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockCreate).not.toHaveBeenCalled();
+      expect(mockRun.mock.calls[0][3]).toBe('rf-saved');
+      expect(mockRun.mock.calls[0][5].reformPolicies).toBeUndefined();
+    });
+
+    test('then a second run reuses the policy the update moved the reform to', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      mockCreate.mockResolvedValue({ id: 'rf-new', policyId: SAVED_REFORM_POLICY_ID });
+      mockUpdate.mockImplementation(async (reformId: string, changes: Partial<Reform>) => ({
+        id: reformId,
+        ...changes,
+        policyId: UPDATED_REFORM_POLICY_ID,
+      }));
+      renderHeader();
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+
+      act(() => updateDraftProvisionValue(CHANGED.path, 1000));
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(2));
+      expect(mockRun.mock.calls[1][3]).toBe('rf-new');
+      expect(mockRun.mock.calls[1][5].reformPolicies).toMatchObject({
+        policyId: UPDATED_REFORM_POLICY_ID,
+      });
+    });
+
     test('then the saved reform holds only what the report models', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', CHANGED);
@@ -682,7 +776,12 @@ describe('DraftHeader', () => {
     expect(getDraftReform()?.population).toEqual({ scope: 'national', region: 'state/ca' });
     expect(screen.getByRole('button', { name: 'Population: California' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
-    expect(mockRun.mock.calls[0][5]).toEqual({ fromDraft: true, region: 'state/ca' });
+    expect(mockRun.mock.calls[0][5]).toEqual({
+      fromDraft: true,
+      region: 'state/ca',
+      // The reform the run saved, whose policy it reuses.
+      reformPolicies: expect.objectContaining({ id: 'rf-new' }),
+    });
   });
 
   test('given a search then congressional districts join the list', async () => {

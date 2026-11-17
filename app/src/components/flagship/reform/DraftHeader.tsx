@@ -403,6 +403,9 @@ export function DraftRunBar({
         runYear,
         {
           fromDraft: true,
+          // The run reuses the v1 policy this save made, if it made one. A
+          // reused reform's policy may predate typed saves: the run makes its own.
+          reformPolicies: reused ? undefined : saved,
           region: runDraft.population?.region,
           windowYears: runWindowYears > 1 ? runWindowYears : undefined,
           baseline: runBaseline,

@@ -15,6 +15,7 @@ import {
 import { windowSizeWithin } from '@/libs/flagship/supportedYears';
 import { getLastSupportedYear } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
+import type { Reform } from '@/types/ingredients/Reform';
 
 /**
  * Runs the flagship report pipeline for a set of provisions and
@@ -51,6 +52,7 @@ export function useRunFlagshipReport() {
     year?: number,
     {
       fromDraft = false,
+      reformPolicies,
       region,
       windowYears,
       baseline,
@@ -59,6 +61,14 @@ export function useRunFlagshipReport() {
     }: {
       /** A run from the draft hands the draft over: its report clears it. */
       fromDraft?: boolean;
+      /**
+       * The policies the caller's save of the reform (`reformId`) just
+       * made, as the reform store answered them. The run reuses
+       * `policyId`, the v1 policy, rather than creating it again; without
+       * one (a reform saved only as a v2 policy) it creates it. Nothing
+       * reads `v2PolicyId` yet: it is passed for the run on the v2 routes.
+       */
+      reformPolicies?: Pick<Reform, 'policyId' | 'v2PolicyId'>;
       /** A state or congressional district ("state/ca"); the whole country when unset. */
       region?: string;
       /** Years of budget to score alongside the report, e.g. 10. */
@@ -93,6 +103,7 @@ export function useRunFlagshipReport() {
         currentLawId: Number(currentLawId),
         parameters,
         reformId,
+        reformPolicyId: reformPolicies?.policyId,
         year,
         region,
         windowYears: runWindowYears,
