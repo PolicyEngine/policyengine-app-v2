@@ -6,7 +6,7 @@ const PSL_EIN = "86-3092437";
 const US_DEDUCTION_LINE =
   "US taxpayers can deduct donations to the extent the law allows.";
 const US_CHARITY_LINE =
-  "The PSL Foundation, a US charity, receives donations in US dollars, and US taxpayers can deduct them to the extent US law allows.";
+  "The PSL Foundation is a US charity, and US taxpayers can deduct donations to the extent US law allows.";
 const GIFT_AID_LINE = "Donations do not qualify for UK Gift Aid.";
 
 async function renderDonate(countryId: string) {
@@ -55,14 +55,14 @@ describe("donate page giving details", () => {
   test("given US then the tax line covers US deductions only", async () => {
     const { container } = await renderDonate("us");
     expect(screen.getByText(US_DEDUCTION_LINE)).toBeInTheDocument();
-    expect(container.textContent).not.toContain("US dollars");
+    expect(container.textContent).not.toContain("is a US charity");
     expect(container.textContent).not.toContain("Gift Aid");
   });
 
   test("given UK then the tax line says gifts miss Gift Aid", async () => {
     const { container } = await renderDonate("uk");
     expect(
-      screen.getByText(/receives donations in US dollars/),
+      screen.getByText(/is a US charity/),
     ).toHaveTextContent(`${US_CHARITY_LINE} ${GIFT_AID_LINE}`);
     expect(container.textContent).not.toContain(US_DEDUCTION_LINE);
   });
@@ -72,7 +72,7 @@ describe("donate page giving details", () => {
     async (countryId) => {
       const { container } = await renderDonate(countryId);
       expect(
-        screen.getByText(/receives donations in US dollars/),
+        screen.getByText(/is a US charity/),
       ).toHaveTextContent(new RegExp(`^${escapeRegExp(US_CHARITY_LINE)}$`));
       expect(container.textContent).not.toContain("Gift Aid");
       expect(container.textContent).not.toContain(US_DEDUCTION_LINE);

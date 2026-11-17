@@ -41,8 +41,8 @@ function TaxNote({ countryId }: { countryId: string }) {
 
   return (
     <p>
-      The PSL Foundation, a US charity, receives donations in US dollars, and US
-      taxpayers can deduct them to the extent US law allows.
+      The PSL Foundation is a US charity, and US taxpayers can deduct donations
+      to the extent US law allows.
       {countryId === "uk" && " Donations do not qualify for UK Gift Aid."}
     </p>
   );
