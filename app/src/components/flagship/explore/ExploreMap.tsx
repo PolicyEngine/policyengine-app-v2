@@ -160,16 +160,22 @@ function MapCanvas({
     return stateView;
   }, [focusState, selectedDistrict, states, districts, path, frame]);
 
-  const [view, setView] = useState<MapTransform>(target);
-  const viewRef = useRef(view);
-  viewRef.current = view;
+  // The zoom is written to the shapes' group directly, frame by frame, so
+  // a glide redraws no shape: React renders the 400-odd paths once.
+  const groupRef = useRef<SVGGElement>(null);
+  const viewRef = useRef<MapTransform>(target);
   const frameRef = useRef(frame);
+  const apply = (next: MapTransform) => {
+    viewRef.current = next;
+    groupRef.current?.setAttribute('transform', `translate(${next.x} ${next.y}) scale(${next.k})`);
+  };
   useEffect(() => {
     const from = viewRef.current;
-    // A resize refits the map at once; a new place glides there.
-    if (frameRef.current !== frame || prefersReducedMotion()) {
+    // A resize refits the map at once, as does a hidden page, which runs
+    // no animation frames; otherwise a new place glides there.
+    if (frameRef.current !== frame || prefersReducedMotion() || document.hidden) {
       frameRef.current = frame;
-      setView(target);
+      apply(target);
       return undefined;
     }
     const start = performance.now();
@@ -177,21 +183,43 @@ function MapCanvas({
     const step = (now: number) => {
       const t = Math.min(1, (now - start) / ZOOM_MS);
       const eased = t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
-      setView(interpolateTransform(frame, from, target, eased));
+      apply(interpolateTransform(frame, from, target, eased));
       if (t < 1) {
         raf = requestAnimationFrame(step);
       }
     };
     raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+    // A browser that holds back animation frames (a hidden pane, a busy
+    // device) still lands on the place, without the glide.
+    const landing = setTimeout(() => {
+      cancelAnimationFrame(raf);
+      apply(target);
+    }, ZOOM_MS + 150);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(landing);
+    };
   }, [target, frame]);
 
-  const [tip, setTip] = useState<{ x: number; y: number; text: string } | null>(null);
+  // The tooltip, too, is moved and filled directly: a hover never
+  // re-renders the map.
   const boxRef = useRef<HTMLDivElement>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
   const showTip = (event: MouseEvent, text: string) => {
     const box = boxRef.current?.getBoundingClientRect();
-    if (box) {
-      setTip({ x: event.clientX - box.left, y: event.clientY - box.top, text });
+    const tip = tipRef.current;
+    if (!box || !tip) {
+      return;
+    }
+    if (tip.textContent !== text) {
+      tip.textContent = text;
+    }
+    tip.style.transform = `translate(${Math.min(event.clientX - box.left + 12, width - 180)}px, ${event.clientY - box.top + 12}px)`;
+    tip.style.visibility = 'visible';
+  };
+  const hideTip = () => {
+    if (tipRef.current) {
+      tipRef.current.style.visibility = 'hidden';
     }
   };
 
@@ -211,7 +239,7 @@ function MapCanvas({
     : [];
 
   return (
-    <div ref={boxRef} style={{ position: 'absolute', inset: 0 }} onMouseLeave={() => setTip(null)}>
+    <div ref={boxRef} style={{ position: 'absolute', inset: 0 }} onMouseLeave={hideTip}>
       <ComposableMap
         projection={projection as never}
         width={width}
@@ -226,7 +254,10 @@ function MapCanvas({
           }
         }}
       >
-        <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
+        <g
+          ref={groupRef}
+          transform={`translate(${viewRef.current.x} ${viewRef.current.y}) scale(${viewRef.current.k})`}
+        >
           <Geographies geography={states as unknown as Record<string, unknown>[]}>
             {({ geographies }) =>
               geographies.map((geo) => {
@@ -317,25 +348,24 @@ function MapCanvas({
         </g>
       </ComposableMap>
 
-      {tip && (
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            left: Math.min(tip.x + 12, width - 180),
-            top: tip.y + 12,
-            pointerEvents: 'none',
-            background: colors.gray[900],
-            color: colors.white,
-            padding: `${spacing.xs} ${spacing.sm}`,
-            borderRadius: spacing.radius.element,
-            fontSize: typography.fontSize.xs,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {tip.text}
-        </div>
-      )}
+      <div
+        ref={tipRef}
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          visibility: 'hidden',
+          pointerEvents: 'none',
+          willChange: 'transform',
+          background: colors.gray[900],
+          color: colors.white,
+          padding: `${spacing.xs} ${spacing.sm}`,
+          borderRadius: spacing.radius.element,
+          fontSize: typography.fontSize.xs,
+          whiteSpace: 'nowrap',
+        }}
+      />
     </div>
   );
 }
