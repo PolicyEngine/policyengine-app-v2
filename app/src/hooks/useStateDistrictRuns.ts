@@ -374,7 +374,7 @@ async function lookUpStateRecords(
   signal: AbortSignal
 ): Promise<StateDistrictRecords> {
   const limit = requestLimitFor(queryClient);
-  const metadata = await createReportRecords(
+  const { report: metadata } = await createReportRecords(
     'us',
     { region, baselinePolicyId, reformPolicyId, year },
     (request) => limit.run(request, signal)

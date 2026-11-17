@@ -157,3 +157,38 @@ export function setupDefaultMocks() {
     mutateAsync: mockCreateSimulationAssociationMutateAsync,
   });
 }
+
+// ============= QUERY NORMALIZER =============
+
+/** A simulation the cache already holds, as the app reads it: a string ID and parsed output. */
+export const CACHED_SIMULATION = {
+  id: SIMULATION_IDS.NEW,
+  countryId: TEST_COUNTRIES.US,
+  apiVersion: '1.0.0',
+  policyId: '2',
+  populationId: 'us',
+  populationType: 'geography' as const,
+  label: null,
+  isCreated: true,
+  output: { poverty: { baseline: 0.12 } },
+  status: 'complete' as const,
+};
+
+/**
+ * createSimulation's answer for that same simulation, which the Public API
+ * already holds: its ID, and the simulation as stored (a numeric ID and
+ * output as JSON text).
+ */
+export const mockCreateSimulationAnswerForCachedSimulation = {
+  result: { simulation_id: SIMULATION_IDS.NEW },
+  simulation: {
+    id: Number(SIMULATION_IDS.NEW),
+    country_id: TEST_COUNTRIES.US,
+    api_version: '1.0.0',
+    population_id: 'us',
+    population_type: 'geography' as const,
+    policy_id: '2',
+    output: JSON.stringify({ poverty: { baseline: 0.12 } }),
+    status: 'complete' as const,
+  },
+};

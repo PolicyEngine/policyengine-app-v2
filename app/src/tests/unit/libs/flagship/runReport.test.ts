@@ -26,6 +26,10 @@ import {
   CALIFORNIA_RECORDS_REQUEST,
   CALIFORNIA_REFORM_SIMULATION_ID,
   CALIFORNIA_REGION,
+  RUN_BASELINE_SIMULATION,
+  RUN_REFORM_SIMULATION,
+  RUN_REPORT,
+  RUN_SAVED_REPORT,
   SAVED_REFORM_POLICY_ID,
   SAVED_REFORM_V2_POLICY_ID,
   STATE_RECORDS_BASELINE_POLICY_ID,
@@ -1081,6 +1085,105 @@ describe('runFlagshipReport', () => {
   });
 });
 
+describe('runFlagshipReport hands on the records it created', () => {
+  const RUN = {
+    countryId: 'us' as const,
+    title: 'CTC expansion',
+    sourceNote: '',
+    provisions: [PROVISION],
+    currentLawId: 2,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    forgetAccountReportMeta();
+    // Responses queued by earlier runs are not this one's.
+    mockCreateSimulation.mockReset();
+    mockCreatePolicy.mockResolvedValue({ result: { policy_id: '77' } });
+    // The Public API answers each create with the record as stored.
+    mockCreateSimulation
+      .mockResolvedValueOnce({
+        result: { simulation_id: '101' },
+        simulation: RUN_BASELINE_SIMULATION,
+      })
+      .mockResolvedValueOnce({
+        result: { simulation_id: '102' },
+        simulation: RUN_REFORM_SIMULATION,
+      });
+    mockCreateReport.mockResolvedValue(RUN_REPORT);
+  });
+
+  test('given a run then it hands on its report and simulations as the Public API answered their creation', async () => {
+    // Given
+    const onRecordsCreated = vi.fn();
+
+    // When
+    await runFlagshipReport({ ...RUN, onRecordsCreated });
+
+    // Then
+    expect(onRecordsCreated).toHaveBeenCalledWith({
+      report: RUN_REPORT,
+      simulations: [RUN_BASELINE_SIMULATION, RUN_REFORM_SIMULATION],
+      savedReport: null,
+    });
+  });
+
+  test('given a signed-in run then it hands on the saved report as the account answered its write', async () => {
+    // Given
+    const onRecordsCreated = vi.fn();
+    const accountStore = {
+      create: vi.fn().mockResolvedValue(RUN_SAVED_REPORT),
+    } as unknown as FlagshipReportStore;
+
+    // When
+    await runFlagshipReport({ ...RUN, accountReportStore: accountStore, onRecordsCreated });
+
+    // Then
+    expect(onRecordsCreated).toHaveBeenCalledWith(
+      expect.objectContaining({ savedReport: RUN_SAVED_REPORT })
+    );
+  });
+
+  test('given a saved report run again then it hands on the row as the account answered its repointing', async () => {
+    // Given
+    const onRecordsCreated = vi.fn();
+    const accountStore = {
+      create: vi.fn(),
+      update: vi.fn().mockResolvedValue(RUN_SAVED_REPORT),
+    } as unknown as FlagshipReportStore;
+
+    // When
+    await runFlagshipReport({
+      ...RUN,
+      accountReportStore: accountStore,
+      savedReportId: RUN_SAVED_REPORT.id,
+      onRecordsCreated,
+    });
+
+    // Then
+    expect(onRecordsCreated).toHaveBeenCalledWith(
+      expect.objectContaining({ savedReport: RUN_SAVED_REPORT })
+    );
+  });
+
+  test('given the account write fails then nothing is handed on', async () => {
+    // Given
+    const onRecordsCreated = vi.fn();
+    const accountStore = {
+      create: vi.fn().mockRejectedValue(new Error('Saved work is temporarily unavailable.')),
+    } as unknown as FlagshipReportStore;
+
+    // When
+    await runFlagshipReport({ ...RUN, accountReportStore: accountStore, onRecordsCreated }).catch(
+      () => undefined
+    );
+
+    // Then
+    expect(onRecordsCreated).not.toHaveBeenCalled();
+  });
+});
+
 describe('createReportRecords', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1116,10 +1219,30 @@ describe('createReportRecords', () => {
 
   test('given a stored report then it comes back with its status and output', async () => {
     // When
-    const report = await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST);
+    const { report } = await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST);
 
     // Then
     expect(report).toEqual(STORED_CALIFORNIA_REPORT);
+  });
+
+  test('given the simulations then they come back, the baseline first, as the Public API answered their creation', async () => {
+    // Given
+    mockCreateSimulation.mockReset();
+    mockCreateSimulation
+      .mockResolvedValueOnce({
+        result: { simulation_id: '101' },
+        simulation: RUN_BASELINE_SIMULATION,
+      })
+      .mockResolvedValueOnce({
+        result: { simulation_id: '102' },
+        simulation: RUN_REFORM_SIMULATION,
+      });
+
+    // When
+    const { simulations } = await createReportRecords('us', CALIFORNIA_RECORDS_REQUEST);
+
+    // Then
+    expect(simulations).toEqual([RUN_BASELINE_SIMULATION, RUN_REFORM_SIMULATION]);
   });
 
   test('given a runner then each request goes through it', async () => {
