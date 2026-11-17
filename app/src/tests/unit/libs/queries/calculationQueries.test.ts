@@ -57,7 +57,7 @@ describe('calculationQueries', () => {
       expect(queryOptions.refetchInterval).toBe(false);
     });
 
-    it('given queryFn executed then calls strategy execute', async () => {
+    it('given queryFn executed without a context then calls strategy execute with no cached status', async () => {
       // Given
       const metadata = mockSocietyWideMetadata();
       const params = mockSocietyWideParams();
@@ -68,7 +68,7 @@ describe('calculationQueries', () => {
       const result = await queryOptions.queryFn();
 
       // Then
-      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata);
+      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata, undefined);
       expect(result).toEqual({
         status: 'complete',
         result: { data: 'test' },
@@ -113,7 +113,7 @@ describe('calculationQueries', () => {
       expect(queryOptions.meta).toEqual({ calcMetadata: metadata });
     });
 
-    it('given queryFn executed then calls strategy execute', async () => {
+    it('given queryFn executed without a context then calls strategy execute with no cached status', async () => {
       // Given
       const metadata = mockHouseholdMetadata(TEST_CALC_IDS.SIM_456);
       const params = mockHouseholdParams(TEST_CALC_IDS.SIM_456);
@@ -128,7 +128,7 @@ describe('calculationQueries', () => {
       const result = await queryOptions.queryFn();
 
       // Then
-      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata);
+      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata, undefined);
       expect(result).toEqual({
         status: 'complete',
         result: { data: 'test' },
