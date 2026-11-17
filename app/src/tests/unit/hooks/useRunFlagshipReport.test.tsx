@@ -35,6 +35,10 @@ import {
   UK_LAST_SUPPORTED_YEAR,
   UK_REPORT_START_YEAR,
 } from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
+import {
+  SAVED_REFORM_POLICY_ID,
+  SAVED_REFORM_V2_POLICY_ID,
+} from '@/tests/fixtures/libs/flagship/runReportMocks';
 
 const mockRunFlagshipReport = vi.fn();
 const mockFindMine = vi.fn();
@@ -140,6 +144,38 @@ describe('useRunFlagshipReport', () => {
 
       // Then
       expect(push).toHaveBeenCalledWith(`/us/report/${reportRowId}`);
+    });
+  });
+
+  describe('the saved reform’s policies', () => {
+    test('given the saved reform’s policies then the run is handed its v1 policy', async () => {
+      // Given
+      const { result } = renderRunWithAuth(makeAuthValue({ status: 'disabled' }));
+
+      // When
+      await act(() =>
+        result.current.run(RUN_TITLE, 'Hand-built draft', RUN_PROVISIONS, RUN_REFORM_ID, 2026, {
+          reformPolicies: {
+            policyId: SAVED_REFORM_POLICY_ID,
+            v2PolicyId: SAVED_REFORM_V2_POLICY_ID,
+          },
+        })
+      );
+
+      // Then
+      expect(runArguments().reformId).toBe(RUN_REFORM_ID);
+      expect(runArguments().reformPolicyId).toBe(SAVED_REFORM_POLICY_ID);
+    });
+
+    test('given no saved reform’s policies then the run is given none to reuse', async () => {
+      // Given
+      const { result } = renderRunWithAuth(makeAuthValue({ status: 'disabled' }));
+
+      // When
+      await act(() => result.current.run(RUN_TITLE, 'Hand-built draft', RUN_PROVISIONS));
+
+      // Then
+      expect(runArguments().reformPolicyId).toBeUndefined();
     });
   });
 
