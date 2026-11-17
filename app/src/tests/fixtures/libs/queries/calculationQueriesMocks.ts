@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { CalcMetadata, CalcParams } from '@/types/calculation';
+import type { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 
 export const TEST_CALC_IDS = {
   REPORT_123: 'report-123',
@@ -71,4 +71,12 @@ export const mockHouseholdParams = (calcId: string = TEST_CALC_IDS.SIM_456): Cal
   populationId: TEST_POPULATION_IDS.HOUSEHOLD_123,
   year: '2024',
   calcId,
+});
+
+/** A calculation's status as the query cache holds it from its last poll: computing. */
+export const mockCachedComputingStatus = (metadata: CalcMetadata): CalcStatus => ({
+  status: 'pending',
+  progress: 40,
+  message: 'Running society-wide calculation...',
+  metadata,
 });
