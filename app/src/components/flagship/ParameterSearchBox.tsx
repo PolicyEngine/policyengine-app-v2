@@ -82,6 +82,8 @@ interface ParameterSearchBoxProps {
   /** Extra controls at the end of the filter row, e.g. a Browse toggle. */
   filterActions?: React.ReactNode;
   autoFocus?: boolean;
+  /** Text the box opens with, e.g. a program chosen on Explore. */
+  initialQuery?: string;
 }
 
 /**
@@ -346,8 +348,9 @@ export default function ParameterSearchBox({
   hideResults = false,
   filterActions,
   autoFocus = false,
+  initialQuery = '',
 }: ParameterSearchBoxProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const inputRef = useRef<HTMLInputElement>(null);
   const [highlighted, setHighlighted] = useState(0);
   // Option ids, so the input can name the highlighted row while focus stays in it.

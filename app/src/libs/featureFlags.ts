@@ -112,3 +112,53 @@ export function setFlagshipShellEnabled(enabled: boolean, countryId?: string): v
     // localStorage unavailable — nothing to persist
   }
 }
+
+const EXPLORE_STORAGE_KEY = 'pe-explore';
+
+/**
+ * The v3 Explore page (current-law figures on a map, before a reform),
+ * US only. Off unless the build sets NEXT_PUBLIC_EXPLORE=true (or
+ * VITE_EXPLORE=true), or, where the override is allowed (dev, or a
+ * deployment with NEXT_PUBLIC_FLAGSHIP_OVERRIDE=allow), localStorage
+ * `pe-explore` is "on". With it on, the country root lands on Explore and
+ * the top bar lists it first; Build keeps its place.
+ */
+export function isExploreEnabled(countryId?: string): boolean {
+  if (countryId !== undefined && countryId !== 'us') {
+    return false;
+  }
+  if (!isFlagshipShellEnabled('us')) {
+    return false;
+  }
+  const viteValue =
+    typeof import.meta !== 'undefined'
+      ? (import.meta.env?.VITE_EXPLORE as string | undefined)
+      : undefined;
+  if (viteValue === 'true') {
+    return true;
+  }
+  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_EXPLORE === 'true') {
+    return true;
+  }
+  if (!isOverrideAllowed()) {
+    return false;
+  }
+  try {
+    return localStorage.getItem(EXPLORE_STORAGE_KEY) === 'on';
+  } catch {
+    return false;
+  }
+}
+
+/** Turns the Explore override on or off in this browser. */
+export function setExploreEnabled(enabled: boolean): void {
+  try {
+    if (enabled) {
+      localStorage.setItem(EXPLORE_STORAGE_KEY, 'on');
+    } else {
+      localStorage.removeItem(EXPLORE_STORAGE_KEY);
+    }
+  } catch {
+    // localStorage unavailable — nothing to persist
+  }
+}

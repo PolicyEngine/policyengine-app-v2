@@ -6,6 +6,7 @@ import DraftTable from '@/components/flagship/reform/DraftTable';
 import ParametersStatus from '@/components/flagship/reform/ParametersStatus';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Title } from '@/components/ui';
+import { useAppLocation } from '@/contexts/LocationContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useEnsureV3Parameters, useLoadV3Parameters } from '@/hooks/useV3Parameters';
@@ -63,6 +64,10 @@ export default function BuildPage() {
         : null;
   const loadParameters = useLoadV3Parameters();
   const [pickError, setPickError] = useState<string | null>(null);
+  // A search term from a link (Explore's program buttons: `?q=SNAP`),
+  // read once, so the box opens on it.
+  const { search } = useAppLocation();
+  const [initialQuery] = useState(() => new URLSearchParams(search).get('q') ?? undefined);
 
   // A picked parameter joins the draft at current law, so on the v2
   // routes its values (and its group's) load first; on v1 they are in.
@@ -110,7 +115,10 @@ export default function BuildPage() {
             ) : (
               // The next parameter is added at the foot of the reform, where
               // the last one ends: a reform takes as many as it needs.
-              <DraftTable draft={current} addRow={<AddParameterBar onPick={pick} inTable />} />
+              <DraftTable
+                draft={current}
+                addRow={<AddParameterBar onPick={pick} inTable initialQuery={initialQuery} />}
+              />
             )}
             <DraftRunBar
               draft={current}
@@ -126,7 +134,7 @@ export default function BuildPage() {
             <Title order={1} style={{ letterSpacing: '-0.02em', textAlign: 'center' }}>
               Build a reform
             </Title>
-            <AddParameterBar onPick={pick} autoFocus />
+            <AddParameterBar onPick={pick} autoFocus initialQuery={initialQuery} />
           </>
         )}
         {pickError && (

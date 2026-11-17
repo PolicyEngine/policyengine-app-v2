@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   IconAdjustments,
   IconDotsVertical,
   IconFilePencil,
   IconGavel,
+  IconMap,
   IconMenu2,
 } from '@tabler/icons-react';
 import {
@@ -19,6 +20,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDraftReform } from '@/libs/draftReform';
+import { isExploreEnabled } from '@/libs/featureFlags';
 import AuthMenu from '../auth/AuthMenu';
 import CountrySelector from '../homeHeader/CountrySelector';
 import FlagshipBrand from './FlagshipBrand';
@@ -27,6 +29,9 @@ const NAV_ITEMS = [
   { slug: 'build', label: 'Build', icon: IconAdjustments },
   { slug: 'reforms', label: 'Reforms', icon: IconGavel },
 ];
+
+/** Current law on a map, first when its flag is on (US only). */
+const EXPLORE_ITEM = { slug: 'explore', label: 'Explore', icon: IconMap };
 
 /** Height of the bar. */
 export const FLAGSHIP_TOP_BAR_HEIGHT = 56;
@@ -45,10 +50,21 @@ export default function FlagshipTopBar() {
   const countryId = useCurrentCountry();
   const location = useAppLocation();
 
+  // The flag can live in localStorage, so it is read after mount: the
+  // server's markup and the first client render agree.
+  const [exploreOn, setExploreOn] = useState(false);
+  useEffect(() => {
+    setExploreOn(isExploreEnabled(countryId));
+  }, [countryId]);
+  const navItems = useMemo(
+    () => (exploreOn ? [EXPLORE_ITEM, ...NAV_ITEMS] : NAV_ITEMS),
+    [exploreOn]
+  );
+
   // Warm the section routes so the first click on each is instant.
   useEffect(() => {
-    NAV_ITEMS.forEach(({ slug }) => nav.prefetch?.(`/${countryId}/${slug}`));
-  }, [nav, countryId]);
+    navItems.forEach(({ slug }) => nav.prefetch?.(`/${countryId}/${slug}`));
+  }, [nav, countryId, navItems]);
 
   // Highlight the clicked item immediately — router navigation can take
   // a beat (route compile in dev, RSC fetch in prod) and the bar should
@@ -94,7 +110,7 @@ export default function FlagshipTopBar() {
 
       {/* On a phone the sections are in the menu at the end of the bar. */}
       <nav aria-label="Primary" className="tw:hidden tw:items-center tw:gap-1 tw:sm:flex">
-        {NAV_ITEMS.map(({ slug, label, icon: Icon }) => {
+        {navItems.map(({ slug, label, icon: Icon }) => {
           const active = isActive(slug);
           return (
             <button
@@ -212,7 +228,7 @@ export default function FlagshipTopBar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="tw:min-w-[200px]">
-            {NAV_ITEMS.map(({ slug, label, icon: Icon }) => {
+            {navItems.map(({ slug, label, icon: Icon }) => {
               const active = isActive(slug);
               return (
                 <DropdownMenuItem

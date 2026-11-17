@@ -40,6 +40,8 @@ interface AddParameterBarProps {
    * flow under it — scrolled into view — rather than over the page.
    */
   inTable?: boolean;
+  /** Text the search opens with; the bar opens active, its results showing. */
+  initialQuery?: string;
 }
 
 /**
@@ -52,6 +54,7 @@ export default function AddParameterBar({
   onPick,
   autoFocus = false,
   inTable = false,
+  initialQuery,
 }: AddParameterBarProps) {
   const countryId = useCurrentCountry();
   // From the whole metadata on the v1 routes, the search file on v2;
@@ -76,7 +79,7 @@ export default function AddParameterBar({
 
   const containerRef = useRef<HTMLDivElement>(null);
   // Results show while the bar is in use; a click elsewhere puts them away.
-  const [active, setActive] = useState(autoFocus);
+  const [active, setActive] = useState(autoFocus || !!initialQuery);
   const [browseOpen, setBrowseOpen] = useState(false);
   const [browsePath, setBrowsePath] = useState<string | null>(null);
 
@@ -170,7 +173,8 @@ export default function AddParameterBar({
           return label ? properNodeLabel(path, label) : null;
         }}
         backgroundSearch
-        autoFocus={autoFocus}
+        autoFocus={autoFocus || !!initialQuery}
+        initialQuery={initialQuery}
         placeholder={placeholder}
         resultsInFlow={inTable}
         hideResults={!active || browseOpen}

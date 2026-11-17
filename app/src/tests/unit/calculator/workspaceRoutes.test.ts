@@ -6,7 +6,7 @@ import {
 } from '../../../../../calculator-app/src/app/[countryId]/(workspace)/workspaceRoutes';
 
 describe('workspace navigation boundary', () => {
-  test.each(['build', 'reforms'])(
+  test.each(['build', 'reforms', 'explore'])(
     'given the %s workspace screen then it can switch locally with query parameters',
     (screen) => {
       expect(isWorkspaceTransition('/us/build', `/us/${screen}?filter=yours`)).toBe(true);
