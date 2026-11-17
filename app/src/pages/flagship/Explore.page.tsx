@@ -194,80 +194,93 @@ function ExploreView({
       : `${showDistricts ? 'Congressional districts' : 'States'}, highest to lowest`;
   const { receipt } = file;
   const wide = useMediaQuery(WIDE_QUERY);
-  // The free part of the map: on a wide screen the title floats top left
-  // and the card on the right; on a phone both sit outside the map.
+  // The free part of the map: on a wide screen the title strip floats
+  // along the top and the card on the right; on a phone both sit outside
+  // the map.
   const inset = wide
-    ? { top: 168, right: PANEL_WIDTH + 40, bottom: 72, left: 24 }
+    ? { top: 96, right: PANEL_WIDTH + 40, bottom: 72, left: 24 }
     : { top: 12, right: 12, bottom: 12, left: 12 };
 
   return (
     <div className="tw:flex tw:flex-col tw:lg:block tw:lg:relative tw:lg:h-full">
       <header
-        className="tw:p-lg tw:lg:absolute tw:lg:top-lg tw:lg:left-lg tw:lg:z-10 tw:lg:rounded-lg tw:lg:bg-white/90 tw:lg:shadow-sm tw:lg:backdrop-blur"
-        style={{ maxWidth: wide ? `calc(100% - ${PANEL_WIDTH + 80}px)` : undefined }}
+        className="tw:flex tw:flex-col tw:gap-md tw:p-lg tw:lg:absolute tw:lg:top-lg tw:lg:left-lg tw:lg:z-10 tw:lg:flex-row tw:lg:items-center tw:lg:justify-between tw:lg:gap-lg tw:lg:rounded-lg tw:lg:bg-white/90 tw:lg:px-lg tw:lg:py-sm tw:lg:shadow-sm tw:lg:backdrop-blur"
+        style={{ right: wide ? PANEL_WIDTH + 40 : undefined }}
       >
-        <nav
-          aria-label="Place"
-          style={{
-            display: 'flex',
-            gap: spacing.xs,
-            minHeight: 20,
-            fontSize: typography.fontSize.sm,
-            color: colors.text.secondary,
-          }}
-        >
-          {level === 'nation' ? (
-            <span>Current law, {file.year}</span>
-          ) : (
-            <>
-              <button type="button" style={linkButton} onClick={() => select(NATION_REGION)}>
-                United States
-              </button>
-              <span aria-hidden>›</span>
-              {level === 'district' && stateCode ? (
-                <>
-                  <button
-                    type="button"
-                    style={linkButton}
-                    onClick={() => select(stateRegion(stateCode))}
-                  >
-                    {stateName}
-                  </button>
-                  <span aria-hidden>›</span>
-                  <span aria-current="page">{placeName}</span>
-                </>
-              ) : (
-                <span aria-current="page">{stateName}</span>
-              )}
-            </>
-          )}
-        </nav>
-        <Title
-          order={1}
-          style={{
-            letterSpacing: '-0.02em',
-            margin: `${spacing.xs} 0 ${spacing.md}`,
-            fontSize: typography.fontSize['2xl'],
-          }}
-        >
-          {level === 'nation'
-            ? 'Where things stand across the United States'
-            : `Where things stand in ${placeName}`}
-        </Title>
-        <MetricPills metrics={MAP_METRICS} value={metric.key} onChange={setMetric} />
-        {file.placeholder && (
-          <p
-            role="note"
+        <div style={{ minWidth: 0 }}>
+          <nav
+            aria-label="Place"
             style={{
-              margin: `${spacing.sm} 0 0`,
-              color: colors.text.warning,
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
               fontSize: typography.fontSize.xs,
+              color: colors.text.secondary,
             }}
           >
-            Preview: the model figures are placeholders, not model output. The Census figures are
-            real.
-          </p>
-        )}
+            {level === 'nation' ? (
+              <span>Current law, {file.year}</span>
+            ) : (
+              <>
+                <button type="button" style={linkButton} onClick={() => select(NATION_REGION)}>
+                  United States
+                </button>
+                <span aria-hidden>›</span>
+                {level === 'district' && stateCode ? (
+                  <>
+                    <button
+                      type="button"
+                      style={linkButton}
+                      onClick={() => select(stateRegion(stateCode))}
+                    >
+                      {stateName}
+                    </button>
+                    <span aria-hidden>›</span>
+                    <span aria-current="page">{placeName}</span>
+                  </>
+                ) : (
+                  <span aria-current="page">{stateName}</span>
+                )}
+              </>
+            )}
+            {file.placeholder && (
+              <span
+                role="note"
+                title="The model figures are placeholders, not model output. The Census figures are real."
+                style={{
+                  marginLeft: spacing.xs,
+                  padding: '0 6px',
+                  borderRadius: 999,
+                  border: `1px solid ${colors.warning}`,
+                  color: colors.text.warning,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Placeholder figures
+                <span className="tw:sr-only">
+                  : the model figures are placeholders, not model output. The Census figures are
+                  real.
+                </span>
+              </span>
+            )}
+          </nav>
+          <Title
+            order={1}
+            style={{
+              letterSpacing: '-0.01em',
+              margin: '2px 0 0',
+              fontSize: typography.fontSize.xl,
+              whiteSpace: wide ? 'nowrap' : undefined,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {level === 'nation'
+              ? 'Where things stand across the United States'
+              : `Where things stand in ${placeName}`}
+          </Title>
+        </div>
+        <MetricPills metrics={MAP_METRICS} value={metric.key} onChange={setMetric} />
       </header>
 
       <div className="tw:relative tw:aspect-[8/5] tw:lg:absolute tw:lg:inset-0 tw:lg:aspect-auto">
