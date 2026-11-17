@@ -32,7 +32,29 @@ const differenceItems: BulletItem[] = [
   },
 ];
 
-export default function DonatePage() {
+function TaxNote({ countryId }: { countryId: string }) {
+  if (countryId === "us") {
+    return (
+      <p>US taxpayers can deduct donations to the extent the law allows.</p>
+    );
+  }
+
+  return (
+    <p>
+      The PSL Foundation, a US charity, receives donations in US dollars, and US
+      taxpayers can deduct them to the extent US law allows.
+      {countryId === "uk" && " Donations do not qualify for UK Gift Aid."}
+    </p>
+  );
+}
+
+export default async function DonatePage({
+  params,
+}: {
+  params: Promise<{ countryId: string }>;
+}) {
+  const { countryId } = await params;
+
   return (
     <>
       <HeroSection
@@ -53,14 +75,28 @@ export default function DonatePage() {
         content={
           <RichTextBlock variant="inverted">
             <p>
-              Donate securely through our fiscal sponsor, the PSL Foundation. We
-              accept credit cards, bank transfers, and checks.
+              The PSL Foundation, a 501(c)(3) public charity (EIN 86-3092437),
+              fiscally sponsors PolicyEngine and receives donations on our
+              behalf. We accept credit cards, bank transfers, checks, and grants
+              from donor-advised funds.
             </p>
             <p>
-              Send checks to PolicyEngine, c/o PSL Foundation, 2108 Greene St.,
-              PO Box 50932, Columbia, SC 29250, USA.
+              Make checks payable to PSL Foundation, write
+              &quot;PolicyEngine&quot; on the memo line, and mail them to
+              PolicyEngine, c/o PSL Foundation, 2108 Greene St., PO Box 50932,
+              Columbia, SC 29250, USA.
             </p>
-            <p>Donations are tax-deductible in the US.</p>
+            <p>
+              To give from a donor-advised fund, recommend a grant to PSL
+              Foundation (EIN 86-3092437) with &quot;PolicyEngine&quot; as its
+              purpose or designation.
+            </p>
+            <p>
+              For bank transfer instructions, email{" "}
+              <a href="mailto:hello@policyengine.org">hello@policyengine.org</a>
+              .
+            </p>
+            <TaxNote countryId={countryId} />
           </RichTextBlock>
         }
         cta={{
