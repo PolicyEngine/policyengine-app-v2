@@ -34,9 +34,14 @@ const GENERATED_HEADER = `/**
 /** The path the API serves its v2 OpenAPI document at. */
 const OPENAPI_DOCUMENT_ROUTE = '/v2/openapi.json';
 
-/** The generated, formatted types for an OpenAPI document. */
+/**
+ * The generated, formatted types for an OpenAPI document. The document is
+ * left unchanged: openapi-typescript rewrites a union's discriminator
+ * properties (each `const` becomes an `enum`) in the object it is given,
+ * so it is given a copy.
+ */
 export async function generatePublicApiTypes(openapiDocument: OpenAPI3): Promise<string> {
-  const syntaxTree = await openapiTS(openapiDocument);
+  const syntaxTree = await openapiTS(structuredClone(openapiDocument));
   const source = `${GENERATED_HEADER}\n${astToString(syntaxTree)}`;
   const prettierConfig = (await prettier.resolveConfig(GENERATED_SCHEMA_PATH)) ?? {};
   return prettier.format(source, { ...prettierConfig, filepath: GENERATED_SCHEMA_PATH });

@@ -1,8 +1,19 @@
 import { useState } from 'react';
+import AdminInvitations from '@/components/admin/AdminInvitations';
 import AdminUserDetails from '@/components/admin/AdminUserDetails';
 import AdminUserSearch from '@/components/admin/AdminUserSearch';
 import MinimumUserType from '@/components/auth/MinimumUserType';
-import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
+import {
+  Button,
+  Spinner,
+  Stack,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Text,
+  Title,
+} from '@/components/ui';
 import { colors } from '@/designTokens';
 import { useMe } from '@/hooks/useMe';
 import { useUserType } from '@/hooks/useUserType';
@@ -52,6 +63,7 @@ function UserTypeNotKnown() {
 
 function AdminUsers() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [openTab, setOpenTab] = useState('users');
   return (
     <PageShell>
       <Stack gap="xs">
@@ -60,8 +72,23 @@ function AdminUsers() {
         </Title>
         <Text style={{ margin: 0, color: colors.text.secondary }}>View all user accounts</Text>
       </Stack>
-      <AdminUserSearch selectedUserId={selectedUserId} onSelectUser={setSelectedUserId} />
-      {selectedUserId && <AdminUserDetails key={selectedUserId} userId={selectedUserId} />}
+      <Tabs value={openTab} onValueChange={setOpenTab}>
+        <TabsList>
+          <TabsTrigger value="users">Find users</TabsTrigger>
+          <TabsTrigger value="invitations">Invitations</TabsTrigger>
+        </TabsList>
+        {/* Kept rendered while hidden, so a search survives a visit to the invitations. */}
+        <TabsContent value="users" forceMount hidden={openTab !== 'users'}>
+          <Stack gap="xl">
+            <AdminUserSearch selectedUserId={selectedUserId} onSelectUser={setSelectedUserId} />
+            {selectedUserId && <AdminUserDetails key={selectedUserId} userId={selectedUserId} />}
+          </Stack>
+        </TabsContent>
+        {/* Rendered only while open, so the invitations are read when their tab opens. */}
+        <TabsContent value="invitations">
+          <AdminInvitations />
+        </TabsContent>
+      </Tabs>
     </PageShell>
   );
 }
