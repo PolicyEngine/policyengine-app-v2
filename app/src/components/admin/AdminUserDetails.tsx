@@ -16,7 +16,7 @@ import {
   Text,
   Title,
 } from '@/components/ui';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import {
   isRefusedOrMissing,
   useAdminUser,
@@ -337,9 +337,13 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
           />
 
           <Stack gap="sm" align="start">
-            <Text id={typeGroupLabelId} size="sm" style={{ margin: 0 }}>
+            <Title
+              order={3}
+              id={typeGroupLabelId}
+              style={{ margin: 0, fontSize: typography.fontSize.base }}
+            >
               User type
-            </Text>
+            </Title>
             <RadioGroup
               aria-labelledby={typeGroupLabelId}
               value={selectedType}
@@ -359,6 +363,7 @@ export default function AdminUserDetails({ userId }: { userId: string }) {
             <Button
               ref={changeTypeButtonRef}
               variant="outline"
+              size="sm"
               onClick={openConfirmation}
               disabled={selectedType === user.user_type}
             >

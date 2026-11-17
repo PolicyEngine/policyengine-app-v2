@@ -14,9 +14,15 @@ import {
   Text,
   Title,
 } from '@/components/ui';
-import { colors } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import { useMe } from '@/hooks/useMe';
 import { useUserType } from '@/hooks/useUserType';
+
+const tabTriggerStyle = {
+  flex: '0 0 auto',
+  padding: `${spacing.sm} ${spacing.md}`,
+  fontSize: typography.fontSize.sm,
+} as const;
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return <Stack gap="xl">{children}</Stack>;
@@ -72,10 +78,26 @@ function AdminUsers() {
         </Title>
         <Text style={{ margin: 0, color: colors.text.secondary }}>View all user accounts</Text>
       </Stack>
-      <Tabs value={openTab} onValueChange={setOpenTab}>
-        <TabsList>
-          <TabsTrigger value="users">Find users</TabsTrigger>
-          <TabsTrigger value="invitations">Invitations</TabsTrigger>
+      <Tabs value={openTab} onValueChange={setOpenTab} style={{ gap: spacing.xl }}>
+        {/* Styled like the report page's section tabs. */}
+        <TabsList
+          aria-label="Admin sections"
+          variant="line"
+          style={{
+            flexWrap: 'wrap',
+            height: 'auto',
+            width: '100%',
+            justifyContent: 'flex-start',
+            borderBottom: `1px solid ${colors.border.light}`,
+            paddingBottom: spacing.sm,
+          }}
+        >
+          <TabsTrigger value="users" style={tabTriggerStyle}>
+            Find users
+          </TabsTrigger>
+          <TabsTrigger value="invitations" style={tabTriggerStyle}>
+            Invitations
+          </TabsTrigger>
         </TabsList>
         {/* Kept rendered while hidden, so a search survives a visit to the invitations. */}
         <TabsContent value="users" forceMount hidden={openTab !== 'users'}>

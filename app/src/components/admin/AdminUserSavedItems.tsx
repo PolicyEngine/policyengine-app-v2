@@ -1,18 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { UserSavedItems } from '@/api/v2AdminUserSavedItems';
-import {
-  Button,
-  ShadcnTable,
-  Spinner,
-  Stack,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Text,
-  Title,
-} from '@/components/ui';
+import { Button, Spinner, Stack, TableBody, TableRow, Text, Title } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
 import type { AdminSavedHousehold } from '@/hooks/useAdminSavedHousehold';
 import type { AdminSavedPolicy } from '@/hooks/useAdminSavedPolicy';
@@ -22,6 +10,7 @@ import type { CountryId } from '@/libs/countries';
 import { isFlagshipShellEnabled } from '@/libs/featureFlags';
 import { getCountryLabel } from '@/utils/geographyUtils';
 import AdminSavedItemDialog from './AdminSavedItemDialog';
+import { AdminTable, AdminTableCell, AdminTableHead, AdminTableHeader } from './AdminTable';
 import { formatAdminDate } from './adminUserFormat';
 import NewTabLink from './NewTabLink';
 import SavedHouseholdDetails from './SavedHouseholdDetails';
@@ -170,33 +159,33 @@ function SavedItemKindTable({
           {kind.emptyMessage}
         </Text>
       ) : (
-        <ShadcnTable aria-label={kind.tableLabel}>
-          <TableHeader>
+        <AdminTable aria-label={kind.tableLabel}>
+          <AdminTableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Country</TableHead>
-              <TableHead>Saved</TableHead>
-              {kind.showsLastRun && <TableHead>Last run</TableHead>}
+              <AdminTableHead>Name</AdminTableHead>
+              <AdminTableHead>Country</AdminTableHead>
+              <AdminTableHead>Saved</AdminTableHead>
+              {kind.showsLastRun && <AdminTableHead>Last run</AdminTableHead>}
             </TableRow>
-          </TableHeader>
+          </AdminTableHeader>
           <TableBody>
             {kind.rows.map((row) => (
               <TableRow key={row.id}>
                 {/* A name without spaces wraps too, rather than widening the column. */}
-                <TableCell style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
+                <AdminTableCell style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
                   <SavedItemName row={row} onOpen={onOpen} />
-                </TableCell>
-                <TableCell>{getCountryLabel(row.countryId)}</TableCell>
-                <TableCell>{formatAdminDate(row.createdAt, countryId)}</TableCell>
+                </AdminTableCell>
+                <AdminTableCell>{getCountryLabel(row.countryId)}</AdminTableCell>
+                <AdminTableCell>{formatAdminDate(row.createdAt, countryId)}</AdminTableCell>
                 {kind.showsLastRun && (
-                  <TableCell>
+                  <AdminTableCell>
                     {row.lastRunAt ? formatAdminDate(row.lastRunAt, countryId) : 'Never'}
-                  </TableCell>
+                  </AdminTableCell>
                 )}
               </TableRow>
             ))}
           </TableBody>
-        </ShadcnTable>
+        </AdminTable>
       )}
     </Stack>
   );

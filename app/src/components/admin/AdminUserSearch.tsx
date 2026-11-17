@@ -1,19 +1,6 @@
 import { useId, useState, type FormEvent } from 'react';
 import type { AdminUserItem, AdminUserPageResult } from '@/api/v2AdminUsers';
-import {
-  Button,
-  Input,
-  Label,
-  ShadcnTable,
-  Spinner,
-  Stack,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Text,
-} from '@/components/ui';
+import { Button, Input, Label, Spinner, Stack, TableBody, TableRow, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import {
   isRefusedOrMissing,
@@ -21,6 +8,7 @@ import {
   useStartAdminUserSearch,
 } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { AdminTable, AdminTableCell, AdminTableHead, AdminTableHeader } from './AdminTable';
 import { adminUserName, formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
 
 /** The longest email part the API's `email` filter accepts. */
@@ -101,15 +89,15 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
   } else {
     results = (
       <Stack gap="md" align="start">
-        <ShadcnTable aria-label="Users">
-          <TableHeader>
+        <AdminTable aria-label="Users">
+          <AdminTableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Last seen</TableHead>
+              <AdminTableHead>Email</AdminTableHead>
+              <AdminTableHead>Name</AdminTableHead>
+              <AdminTableHead>Type</AdminTableHead>
+              <AdminTableHead>Last seen</AdminTableHead>
             </TableRow>
-          </TableHeader>
+          </AdminTableHeader>
           <TableBody>
             {users.map((user) => {
               const selected = user.id === selectedUserId;
@@ -118,7 +106,7 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
                   key={user.id}
                   style={selected ? { backgroundColor: colors.secondary[50] } : undefined}
                 >
-                  <TableCell>
+                  <AdminTableCell>
                     <Button
                       variant="link"
                       size="sm"
@@ -128,17 +116,17 @@ export default function AdminUserSearch({ selectedUserId, onSelectUser }: AdminU
                     >
                       {user.email ?? 'No email'}
                     </Button>
-                  </TableCell>
-                  <TableCell>{adminUserName(user) ?? '—'}</TableCell>
-                  <TableCell>{USER_TYPE_LABELS[user.user_type]}</TableCell>
-                  <TableCell>
+                  </AdminTableCell>
+                  <AdminTableCell>{adminUserName(user) ?? '—'}</AdminTableCell>
+                  <AdminTableCell>{USER_TYPE_LABELS[user.user_type]}</AdminTableCell>
+                  <AdminTableCell>
                     {user.last_seen_at ? formatAdminDate(user.last_seen_at, countryId) : 'Never'}
-                  </TableCell>
+                  </AdminTableCell>
                 </TableRow>
               );
             })}
           </TableBody>
-        </ShadcnTable>
+        </AdminTable>
         {search.hasNextPage && (
           <Button
             variant="outline"

@@ -7,13 +7,9 @@ import {
   Label,
   RadioGroup,
   RadioGroupItem,
-  ShadcnTable,
   Spinner,
   Stack,
   TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
   Text,
   Title,
@@ -27,6 +23,7 @@ import {
 } from '@/hooks/useAdminInvitations';
 import { isRefusedOrMissing } from '@/hooks/useAdminUsers';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { AdminTable, AdminTableCell, AdminTableHead, AdminTableHeader } from './AdminTable';
 import { formatAdminDate, USER_TYPE_LABELS } from './adminUserFormat';
 
 /** The types an invitation can give, from fewest permissions to most. */
@@ -257,24 +254,24 @@ function PendingInvitations({ onOutcome }: { onOutcome: ReportOutcome }) {
     return <Text style={{ margin: 0, color: colors.text.secondary }}>No pending invitations.</Text>;
   }
   return (
-    <ShadcnTable aria-label="Pending invitations">
-      <TableHeader>
+    <AdminTable aria-label="Pending invitations">
+      <AdminTableHeader>
         <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Last sent</TableHead>
-          <TableHead>Expires</TableHead>
-          <TableHead>
+          <AdminTableHead>Email</AdminTableHead>
+          <AdminTableHead>Type</AdminTableHead>
+          <AdminTableHead>Last sent</AdminTableHead>
+          <AdminTableHead>Expires</AdminTableHead>
+          <AdminTableHead>
             <span className="tw:sr-only">Actions</span>
-          </TableHead>
+          </AdminTableHead>
         </TableRow>
-      </TableHeader>
+      </AdminTableHeader>
       <TableBody>
         {pending.data.map((invitation) => {
           const busy = busyInvitationIds.has(invitation.id);
           return (
             <TableRow key={invitation.id}>
-              <TableCell>
+              <AdminTableCell>
                 <Stack gap="xs">
                   <span>{invitation.email}</span>
                   {invitation.last_send_error && (
@@ -289,15 +286,15 @@ function PendingInvitations({ onOutcome }: { onOutcome: ReportOutcome }) {
                     </Text>
                   )}
                 </Stack>
-              </TableCell>
-              <TableCell>{USER_TYPE_LABELS[invitation.user_type]}</TableCell>
-              <TableCell>
+              </AdminTableCell>
+              <AdminTableCell>{USER_TYPE_LABELS[invitation.user_type]}</AdminTableCell>
+              <AdminTableCell>
                 {invitation.last_sent_at
                   ? formatAdminDate(invitation.last_sent_at, countryId)
                   : 'Not sent'}
-              </TableCell>
-              <TableCell>{formatAdminDate(invitation.expires_at, countryId)}</TableCell>
-              <TableCell>
+              </AdminTableCell>
+              <AdminTableCell>{formatAdminDate(invitation.expires_at, countryId)}</AdminTableCell>
+              <AdminTableCell>
                 <div style={{ display: 'flex', gap: spacing.sm }}>
                   <Button
                     variant="outline"
@@ -316,12 +313,12 @@ function PendingInvitations({ onOutcome }: { onOutcome: ReportOutcome }) {
                     Revoke
                   </Button>
                 </div>
-              </TableCell>
+              </AdminTableCell>
             </TableRow>
           );
         })}
       </TableBody>
-    </ShadcnTable>
+    </AdminTable>
   );
 }
 
