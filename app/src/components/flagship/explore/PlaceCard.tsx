@@ -25,12 +25,11 @@ interface PlaceCardProps {
   onModel: () => void;
 }
 
-const KIND = { nation: 'Nation', state: 'State', district: 'Congressional district' } as const;
-
 const smallText = { fontSize: typography.fontSize.sm, color: colors.text.secondary, margin: 0 };
 
 /**
- * The chosen place: the measure's value, the country's beside it, the
+ * The chosen place's figures, inside the Explore panel (which names the
+ * place): the measure's value, the country's beside it, the
  * official figure where one exists, the other measures, how we measure
  * it, and the way into Build for this place.
  */
@@ -51,26 +50,7 @@ export default function PlaceCard({
   const name = place?.label ?? region;
 
   return (
-    <section
-      aria-label={`${name}: current law`}
-      aria-live="polite"
-      style={{
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.container,
-        padding: spacing.xl,
-        background: colors.white,
-      }}
-    >
-      <p style={{ ...smallText, fontSize: typography.fontSize.xs }}>{KIND[level]}</p>
-      <h2
-        style={{
-          margin: `2px 0 ${spacing.md}`,
-          fontSize: typography.fontSize.lg,
-          fontWeight: typography.fontWeight.semibold,
-        }}
-      >
-        {name}
-      </h2>
+    <section aria-label={`${name}: current law`} aria-live="polite">
       <div
         style={{
           fontSize: 40,

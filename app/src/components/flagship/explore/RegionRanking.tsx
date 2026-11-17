@@ -39,7 +39,7 @@ export default function RegionRanking({
   const max = Math.max(...rows.map((row) => row.value), 0) || 1;
 
   return (
-    <section aria-label={title} style={{ marginTop: spacing['2xl'] }}>
+    <section aria-label={title} style={{ marginTop: spacing.lg }}>
       <h2
         style={{
           fontSize: typography.fontSize.base,

@@ -193,94 +193,87 @@ function ExploreView({
       ? `${stateName} districts, highest to lowest`
       : `${showDistricts ? 'Congressional districts' : 'States'}, highest to lowest`;
   const wide = useMediaQuery(WIDE_QUERY);
-  // The free part of the map: on a wide screen the title strip floats
-  // along the top and the card on the right; on a phone both sit outside
-  // the map.
+  // The free part of the map: on a wide screen the panel sits on the
+  // right; on a phone the panel's parts sit above and below the map.
   const inset = wide
-    ? { top: 96, right: PANEL_WIDTH + 40, bottom: 72, left: 24 }
+    ? { top: 24, right: PANEL_WIDTH + 40, bottom: 72, left: 24 }
     : { top: 12, right: 12, bottom: 12, left: 12 };
+
+  // The place and what the map shows: the panel's head on a wide
+  // screen, and above the map on a phone.
+  const header = (
+    <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+      <nav
+        aria-label="Place"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: spacing.xs,
+          fontSize: typography.fontSize.xs,
+          color: colors.text.secondary,
+        }}
+      >
+        {level === 'nation' ? (
+          <span>Current law, {file.year}</span>
+        ) : (
+          <>
+            <button type="button" style={linkButton} onClick={() => select(NATION_REGION)}>
+              United States
+            </button>
+            <span aria-hidden>›</span>
+            {level === 'district' && stateCode ? (
+              <>
+                <button
+                  type="button"
+                  style={linkButton}
+                  onClick={() => select(stateRegion(stateCode))}
+                >
+                  {stateName}
+                </button>
+                <span aria-hidden>›</span>
+                <span aria-current="page">{placeName}</span>
+              </>
+            ) : (
+              <span aria-current="page">{stateName}</span>
+            )}
+          </>
+        )}
+        {file.placeholder && (
+          <span
+            role="note"
+            title="The model figures are placeholders, not model output. The Census figures are real."
+            style={{
+              marginLeft: 'auto',
+              padding: '0 6px',
+              borderRadius: 999,
+              border: `1px solid ${colors.warning}`,
+              color: colors.text.warning,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Placeholder figures
+            <span className="tw:sr-only">
+              : the model figures are placeholders, not model output. The Census figures are real.
+            </span>
+          </span>
+        )}
+      </nav>
+      <Title
+        order={1}
+        style={{ letterSpacing: '-0.01em', margin: 0, fontSize: typography.fontSize['2xl'] }}
+      >
+        {level === 'nation' ? 'United States' : placeName}
+      </Title>
+      <MeasurePicker metric={metric} onChange={setMetric} />
+    </header>
+  );
+
+  const divider = { height: 1, background: colors.border.light, margin: `${spacing.lg} 0` };
 
   return (
     <div className="tw:flex tw:flex-col tw:lg:block tw:lg:relative tw:lg:h-full">
-      <header
-        className="tw:flex tw:flex-col tw:gap-md tw:p-lg tw:lg:absolute tw:lg:top-lg tw:lg:left-lg tw:lg:z-10 tw:lg:flex-row tw:lg:items-center tw:lg:justify-between tw:lg:gap-lg tw:lg:rounded-lg tw:lg:bg-white/90 tw:lg:px-lg tw:lg:py-sm tw:lg:shadow-sm tw:lg:backdrop-blur"
-        style={{ right: wide ? PANEL_WIDTH + 40 : undefined }}
-      >
-        <div style={{ minWidth: 0 }}>
-          <nav
-            aria-label="Place"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.xs,
-              fontSize: typography.fontSize.xs,
-              color: colors.text.secondary,
-            }}
-          >
-            {level === 'nation' ? (
-              <span>Current law, {file.year}</span>
-            ) : (
-              <>
-                <button type="button" style={linkButton} onClick={() => select(NATION_REGION)}>
-                  United States
-                </button>
-                <span aria-hidden>›</span>
-                {level === 'district' && stateCode ? (
-                  <>
-                    <button
-                      type="button"
-                      style={linkButton}
-                      onClick={() => select(stateRegion(stateCode))}
-                    >
-                      {stateName}
-                    </button>
-                    <span aria-hidden>›</span>
-                    <span aria-current="page">{placeName}</span>
-                  </>
-                ) : (
-                  <span aria-current="page">{stateName}</span>
-                )}
-              </>
-            )}
-            {file.placeholder && (
-              <span
-                role="note"
-                title="The model figures are placeholders, not model output. The Census figures are real."
-                style={{
-                  marginLeft: spacing.xs,
-                  padding: '0 6px',
-                  borderRadius: 999,
-                  border: `1px solid ${colors.warning}`,
-                  color: colors.text.warning,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Placeholder figures
-                <span className="tw:sr-only">
-                  : the model figures are placeholders, not model output. The Census figures are
-                  real.
-                </span>
-              </span>
-            )}
-          </nav>
-          <Title
-            order={1}
-            style={{
-              letterSpacing: '-0.01em',
-              margin: '2px 0 0',
-              fontSize: typography.fontSize.xl,
-              whiteSpace: wide ? 'nowrap' : undefined,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {level === 'nation'
-              ? 'Where things stand across the United States'
-              : `Where things stand in ${placeName}`}
-          </Title>
-        </div>
-        <MeasurePicker metric={metric} onChange={setMetric} />
-      </header>
+      {!wide && <div className="tw:p-lg">{header}</div>}
 
       <div className="tw:relative tw:aspect-[8/5] tw:lg:absolute tw:lg:inset-0 tw:lg:aspect-auto">
         <ExploreMap
@@ -317,26 +310,33 @@ function ExploreView({
           </button>
         )}
       </div>
-      <aside
-        aria-label="Chosen place"
-        className="tw:flex tw:flex-col tw:gap-md tw:p-lg tw:lg:absolute tw:lg:top-lg tw:lg:right-lg tw:lg:bottom-lg tw:lg:z-10 tw:lg:overflow-y-auto tw:lg:p-0"
-        style={{ width: wide ? PANEL_WIDTH : undefined }}
-      >
-        <PlaceCard
-          file={file}
-          region={region}
-          metric={metric}
-          onMetricChange={setMetric}
-          onModel={() => onModel(region)}
-        />
-        <div
+
+      <div className="tw:p-lg tw:lg:absolute tw:lg:top-lg tw:lg:right-lg tw:lg:bottom-lg tw:lg:z-10 tw:lg:p-0">
+        <aside
+          aria-label="Chosen place"
+          className="tw:lg:h-full tw:lg:overflow-y-auto tw:lg:shadow-sm"
           style={{
+            width: wide ? PANEL_WIDTH : undefined,
             border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.container,
-            padding: `0 ${spacing.xl} ${spacing.lg}`,
             background: colors.white,
+            padding: spacing.xl,
           }}
         >
+          {wide && (
+            <>
+              {header}
+              <div style={divider} />
+            </>
+          )}
+          <PlaceCard
+            file={file}
+            region={region}
+            metric={metric}
+            onMetricChange={setMetric}
+            onModel={() => onModel(region)}
+          />
+          <div style={{ ...divider, marginBottom: 0 }} />
           <RegionRanking
             file={file}
             regions={rankRegions}
@@ -346,8 +346,8 @@ function ExploreView({
             selected={region}
             onSelect={select}
           />
-        </div>
-      </aside>
+        </aside>
+      </div>
     </div>
   );
 }

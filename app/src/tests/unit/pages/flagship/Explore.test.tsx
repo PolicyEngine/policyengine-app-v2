@@ -60,7 +60,7 @@ describe('ExplorePage', () => {
     renderPage();
 
     expect(
-      await screen.findByRole('heading', { name: 'Where things stand across the United States' })
+      await screen.findByRole('heading', { name: 'United States', level: 1 })
     ).toBeInTheDocument();
     expect(screen.getByText('12.9%')).toBeInTheDocument();
     expect(screen.getByText(/Census Bureau, 2024: 12.9%/)).toBeInTheDocument();
@@ -73,7 +73,7 @@ describe('ExplorePage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Map: Ohio' }));
 
-    expect(screen.getByRole('heading', { name: 'Where things stand in Ohio' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ohio', level: 1 })).toBeInTheDocument();
     expect(screen.getByLabelText('Location')).toHaveTextContent('/us/explore?region=state/oh');
     expect(screen.getByText('United States: 12.9%')).toBeInTheDocument();
   });
@@ -124,6 +124,6 @@ describe('ExplorePage', () => {
     renderPage();
 
     expect(await screen.findByLabelText('Location')).toHaveTextContent('/us/build');
-    expect(screen.queryByRole('heading', { name: /Where things stand/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
   });
 });
