@@ -36,6 +36,10 @@ export function useBudgetWindow(
     queryFn: () => fetchBudgetWindow(countryId, reformPolicyId!, baselinePolicyId!, params),
     enabled: enabled && !!reformPolicyId && !!baselinePolicyId,
     refetchInterval: (query) => (query.state.data?.status === 'computing' ? POLL_MS : false),
+    // Keep checking while the tab is hidden. A failed check that is retried
+    // still waits for the tab to be shown: React Query pauses retries while
+    // the page is unfocused.
+    refetchIntervalInBackground: true,
     // A finished window doesn't change; the API caches it for 30 days.
     staleTime: Infinity,
     retry: 2,

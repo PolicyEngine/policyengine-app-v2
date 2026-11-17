@@ -79,6 +79,10 @@ import {
   type FakeStateApi,
   type FakeStateApiOptions,
 } from '@/tests/fixtures/hooks/useStateDistrictRunsMocks';
+import {
+  hideBrowserTab,
+  restoreBrowserTabTracking,
+} from '@/tests/fixtures/libs/queries/browserTabMocks';
 
 vi.mock('@/hooks/useRegions', () => ({
   useRegions: vi.fn(),
@@ -336,6 +340,7 @@ describe('useStateDistrictRuns compute', () => {
   });
 
   afterEach(() => {
+    restoreBrowserTabTracking();
     vi.useRealTimers();
     vi.unstubAllGlobals();
   });
@@ -519,6 +524,20 @@ describe('useStateDistrictRuns compute', () => {
     expect(api.economyRequestsFor(CALIFORNIA)).toHaveLength(1);
     await act(() => vi.advanceTimersByTimeAsync(200));
     await waitFor(() => expect(api.economyRequestsFor(CALIFORNIA)).toHaveLength(2));
+  });
+
+  test('given the tab hidden while a state computes then it is still polled every five seconds', async () => {
+    // Given
+    serveApi({ economy: () => STATE_COMPUTING });
+    await computeAll();
+    await waitFor(() => expect(api.economyRequestsFor(CALIFORNIA)).toHaveLength(1));
+    hideBrowserTab();
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(STATE_POLL_INTERVAL_MS * 2));
+
+    // Then
+    expect(api.economyRequestsFor(CALIFORNIA)).toHaveLength(3);
   });
 
   test('given states computing then the bar averages each state, with finished states counting in full', async () => {

@@ -136,6 +136,8 @@ export function useUKLocalAreaBreakdown(
     enabled: canStart && (started || runExists),
     refetchInterval: (current) =>
       current.state.data?.status === 'computing' ? POLL_INTERVAL_MS : false,
+    // Keep polling while the tab is hidden.
+    refetchIntervalInBackground: true,
     staleTime: Infinity,
     gcTime: Infinity,
   });

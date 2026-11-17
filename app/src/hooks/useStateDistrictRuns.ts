@@ -801,6 +801,8 @@ export function useStateDistrictRuns(request: StateDistrictRunsRequest): StateDi
         retry: false,
         refetchInterval: (query: { state: { data?: StateRun } }) =>
           query.state.data?.status === 'computing' ? STATE_DISTRICT_POLL_INTERVAL_MS : false,
+        // Keep polling while the tab is hidden.
+        refetchIntervalInBackground: true,
         staleTime: Infinity,
         gcTime: Infinity,
       };
