@@ -7,15 +7,12 @@ interface MapLegendProps {
   max: string;
 }
 
-/** The color steps, lowest to highest, in the map's corner. */
+/** The color steps, lowest to highest; the page places it by the map. */
 export default function MapLegend({ label, min, max }: MapLegendProps) {
   return (
     <div
       aria-hidden
       style={{
-        position: 'absolute',
-        left: spacing.md,
-        bottom: spacing.md,
         background: 'rgba(255, 255, 255, 0.92)',
         padding: `${spacing.xs} ${spacing.sm}`,
         borderRadius: spacing.radius.element,

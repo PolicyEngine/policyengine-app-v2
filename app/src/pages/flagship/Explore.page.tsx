@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ExploreMap from '@/components/flagship/explore/ExploreMap';
+import MapLegend from '@/components/flagship/explore/MapLegend';
 import MetricPills from '@/components/flagship/explore/MetricPills';
 import PlaceCard from '@/components/flagship/explore/PlaceCard';
 import RegionRanking from '@/components/flagship/explore/RegionRanking';
 import { ErrorState, SkeletonLine, SkeletonRegion } from '@/components/flagship/states';
-import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Title } from '@/components/ui';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useExploreData } from '@/hooks/useExploreData';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useV3SearchFileInBackground } from '@/hooks/useV3SearchCatalog';
+import { useV3VariablesInBackground } from '@/hooks/useV3Variables';
 import { isExploreEnabled } from '@/libs/featureFlags';
 import {
   EXPLORE_YEAR,
@@ -35,6 +38,10 @@ const linkButton = {
   fontSize: typography.fontSize.sm,
   cursor: 'pointer',
 } as const;
+
+/** Wide enough for the card to float beside the map. */
+const WIDE_QUERY = '(min-width: 1024px)';
+const PANEL_WIDTH = 360;
 
 const mapButton = {
   border: `1px solid ${colors.border.light}`,
@@ -74,6 +81,9 @@ export default function ExplorePage() {
   }, [countryId, nav]);
 
   const { baseline, states, districts } = useExploreData(countryId, EXPLORE_YEAR);
+  // Build's search file and variables load meanwhile, so Build opens ready.
+  useV3SearchFileInBackground();
+  useV3VariablesInBackground();
 
   if (!allowed) {
     return null;
@@ -81,51 +91,49 @@ export default function ExplorePage() {
 
   const error = baseline.error ?? states.error ?? districts.error;
   return (
-    <WorkspaceLayout wide>
-      <div
-        style={{ width: '100%', maxWidth: 1240, margin: '0 auto', paddingBottom: spacing['4xl'] }}
-      >
-        {error ? (
+    <div className="tw:lg:h-full">
+      {error ? (
+        <div style={{ padding: spacing['2xl'] }}>
           <ErrorState
             title="Could not load current law"
             description={error instanceof Error ? error.message : undefined}
             onRetry={() => Promise.all([baseline.refetch(), states.refetch(), districts.refetch()])}
           />
-        ) : baseline.data && states.data && districts.data ? (
-          <ExploreView
-            file={baseline.data}
-            stateShapes={states.data}
-            districtShapes={districts.data}
-            metricKey={view.metric.key}
-            region={baseline.data.regions[view.region] ? view.region : NATION_REGION}
-            onNavigate={(next, replace) => {
-              const href = exploreHref(countryId, {
-                metric: exploreMetric(next.metric),
-                region: next.region,
-              });
-              if (replace) {
-                nav.replace(href);
-              } else {
-                nav.push(href);
-              }
-            }}
-            onModel={(region, program) => {
-              draftForRegion(countryId, region);
-              nav.push(buildHref(countryId, program));
-            }}
-          />
-        ) : (
-          <SkeletonRegion
-            label="Loading current law"
-            style={{ display: 'grid', gap: spacing.lg, paddingTop: spacing.xl }}
-          >
-            <SkeletonLine width="40%" height={28} />
-            <SkeletonLine width="70%" />
-            <SkeletonLine height={420} />
-          </SkeletonRegion>
-        )}
-      </div>
-    </WorkspaceLayout>
+        </div>
+      ) : baseline.data && states.data && districts.data ? (
+        <ExploreView
+          file={baseline.data}
+          stateShapes={states.data}
+          districtShapes={districts.data}
+          metricKey={view.metric.key}
+          region={baseline.data.regions[view.region] ? view.region : NATION_REGION}
+          onNavigate={(next, replace) => {
+            const href = exploreHref(countryId, {
+              metric: exploreMetric(next.metric),
+              region: next.region,
+            });
+            if (replace) {
+              nav.replace(href);
+            } else {
+              nav.push(href);
+            }
+          }}
+          onModel={(region, program) => {
+            draftForRegion(countryId, region);
+            nav.push(buildHref(countryId, program));
+          }}
+        />
+      ) : (
+        <SkeletonRegion
+          label="Loading current law"
+          style={{ display: 'grid', gap: spacing.lg, padding: spacing['2xl'] }}
+        >
+          <SkeletonLine width="40%" height={28} />
+          <SkeletonLine width="70%" />
+          <SkeletonLine height={420} />
+        </SkeletonRegion>
+      )}
+    </div>
   );
 }
 
@@ -185,12 +193,19 @@ function ExploreView({
       ? `${stateName} districts, highest to lowest`
       : `${showDistricts ? 'Congressional districts' : 'States'}, highest to lowest`;
   const { receipt } = file;
+  const wide = useMediaQuery(WIDE_QUERY);
+  // The free part of the map: on a wide screen the title floats top left
+  // and the card on the right; on a phone both sit outside the map.
+  const inset = wide
+    ? { top: 168, right: PANEL_WIDTH + 40, bottom: 72, left: 24 }
+    : { top: 12, right: 12, bottom: 12, left: 12 };
 
   return (
-    <div
-      style={{ display: 'flex', flexDirection: 'column', gap: spacing.lg, paddingTop: spacing.lg }}
-    >
-      <header>
+    <div className="tw:flex tw:flex-col tw:lg:block tw:lg:relative tw:lg:h-full">
+      <header
+        className="tw:p-lg tw:lg:absolute tw:lg:top-lg tw:lg:left-lg tw:lg:z-10 tw:lg:rounded-lg tw:lg:bg-white/90 tw:lg:shadow-sm tw:lg:backdrop-blur"
+        style={{ maxWidth: wide ? `calc(100% - ${PANEL_WIDTH + 80}px)` : undefined }}
+      >
         <nav
           aria-label="Place"
           style={{
@@ -201,7 +216,9 @@ function ExploreView({
             color: colors.text.secondary,
           }}
         >
-          {level !== 'nation' && (
+          {level === 'nation' ? (
+            <span>Current law, {file.year}</span>
+          ) : (
             <>
               <button type="button" style={linkButton} onClick={() => select(NATION_REGION)}>
                 United States
@@ -225,106 +242,103 @@ function ExploreView({
             </>
           )}
         </nav>
-        <Title order={1} style={{ letterSpacing: '-0.02em', margin: `${spacing.xs} 0` }}>
+        <Title
+          order={1}
+          style={{
+            letterSpacing: '-0.02em',
+            margin: `${spacing.xs} 0 ${spacing.md}`,
+            fontSize: typography.fontSize['2xl'],
+          }}
+        >
           {level === 'nation'
-            ? 'Current law across the United States'
-            : `Current law in ${placeName}`}
+            ? 'Where things stand across the United States'
+            : `Where things stand in ${placeName}`}
         </Title>
-        <p style={{ margin: 0, color: colors.text.secondary }}>
-          Before you change a policy, see where things stand. Pick a place, then model a change
-          there.
-        </p>
+        <MetricPills metrics={MAP_METRICS} value={metric.key} onChange={setMetric} />
         {file.placeholder && (
           <p
             role="note"
             style={{
-              margin: `${spacing.md} 0 0`,
-              padding: `${spacing.sm} ${spacing.md}`,
-              borderRadius: spacing.radius.element,
-              background: colors.background.tertiary,
+              margin: `${spacing.sm} 0 0`,
               color: colors.text.warning,
-              fontSize: typography.fontSize.sm,
+              fontSize: typography.fontSize.xs,
             }}
           >
-            Preview: the model figures on this page are placeholders, not model output. The Census
-            figures are real.
+            Preview: the model figures are placeholders, not model output. The Census figures are
+            real.
           </p>
         )}
       </header>
 
-      <MetricPills metrics={MAP_METRICS} value={metric.key} onChange={setMetric} />
+      <div className="tw:relative tw:aspect-[8/5] tw:lg:absolute tw:lg:inset-0 tw:lg:aspect-auto">
+        <ExploreMap
+          file={file}
+          states={stateShapes}
+          districts={districtShapes}
+          metric={metric}
+          region={region}
+          onSelect={select}
+          showDistricts={showDistricts}
+          scale={scale}
+          inset={inset}
+        />
+        <p
+          className="tw:max-lg:hidden"
+          style={{
+            position: 'absolute',
+            right: PANEL_WIDTH + 40,
+            bottom: spacing.lg,
+            margin: 0,
+            fontSize: typography.fontSize.xs,
+            color: colors.text.secondary,
+          }}
+        >
+          {receipt.model} (bundle {receipt.bundle}) · Microcosm US 2024 data
+          {receipt.computed_at ? ` · computed ${receipt.computed_at}` : ''}
+        </p>
+      </div>
 
-      <div className="tw:grid tw:items-start tw:gap-6 tw:lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div style={{ minWidth: 0 }}>
-          <div style={{ position: 'relative' }}>
-            <ExploreMap
-              file={file}
-              states={stateShapes}
-              districts={districtShapes}
-              metric={metric}
-              region={region}
-              onSelect={select}
-              showDistricts={showDistricts}
-              scale={scale}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                top: spacing.md,
-                left: spacing.md,
-                display: 'flex',
-                gap: spacing.xs,
-              }}
-            >
-              {level !== 'nation' ? (
-                <button type="button" style={mapButton} onClick={() => select(NATION_REGION)}>
-                  ← United States
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  style={mapButton}
-                  aria-pressed={showDistricts}
-                  onClick={() => setShowDistricts((on) => !on)}
-                >
-                  {showDistricts ? 'Show states' : 'Show districts'}
-                </button>
-              )}
-            </div>
-          </div>
-          <p
-            style={{
-              margin: `${spacing.sm} 0 0`,
-              fontSize: typography.fontSize.xs,
-              color: colors.text.secondary,
-            }}
+      <div className="tw:flex tw:items-end tw:gap-sm tw:px-lg tw:pt-sm tw:lg:absolute tw:lg:bottom-lg tw:lg:left-lg tw:lg:z-10 tw:lg:p-0">
+        <MapLegend
+          label={`${metric.label} · ${districtMode ? 'districts' : 'states'}`}
+          min={metric.format(scale.min)}
+          max={metric.format(scale.max)}
+        />
+        {level !== 'nation' ? (
+          <button type="button" style={mapButton} onClick={() => select(NATION_REGION)}>
+            ← United States
+          </button>
+        ) : (
+          <button
+            type="button"
+            style={mapButton}
+            aria-pressed={showDistricts}
+            onClick={() => setShowDistricts((on) => !on)}
           >
-            Current law, {file.year} · {receipt.model} (bundle {receipt.bundle}) · Microcosm US 2024
-            data
-            {receipt.computed_at ? ` · computed ${receipt.computed_at}` : ''}
-          </p>
-          <div className="tw:max-lg:hidden">
-            <RegionRanking
-              file={file}
-              regions={rankRegions}
-              metric={metric}
-              scale={scale}
-              title={rankTitle}
-              selected={region}
-              onSelect={select}
-            />
-          </div>
-        </div>
-        <div className="tw:lg:sticky tw:lg:top-4">
-          <PlaceCard
-            file={file}
-            region={region}
-            metric={metric}
-            onMetricChange={setMetric}
-            onModel={(program) => onModel(region, program)}
-          />
-        </div>
-        <div className="tw:lg:hidden">
+            {showDistricts ? 'Show states' : 'Show districts'}
+          </button>
+        )}
+      </div>
+      <aside
+        aria-label="Chosen place"
+        className="tw:flex tw:flex-col tw:gap-md tw:p-lg tw:lg:absolute tw:lg:top-lg tw:lg:right-lg tw:lg:bottom-lg tw:lg:z-10 tw:lg:overflow-y-auto tw:lg:p-0"
+        style={{ width: wide ? PANEL_WIDTH : undefined }}
+      >
+        <PlaceCard
+          file={file}
+          region={region}
+          metric={metric}
+          onMetricChange={setMetric}
+          onModel={(program) => onModel(region, program)}
+        />
+        <div
+          style={{
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: spacing.radius.container,
+            padding: `0 ${spacing.xl} ${spacing.lg}`,
+            background: colors.white,
+          }}
+        >
           <RegionRanking
             file={file}
             regions={rankRegions}
@@ -335,7 +349,13 @@ function ExploreView({
             onSelect={select}
           />
         </div>
-      </div>
+        <p
+          className="tw:lg:hidden"
+          style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+        >
+          {receipt.model} (bundle {receipt.bundle}) · Microcosm US 2024 data
+        </p>
+      </aside>
     </div>
   );
 }

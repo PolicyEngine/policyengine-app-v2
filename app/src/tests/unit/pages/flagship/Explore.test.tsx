@@ -30,10 +30,6 @@ vi.mock('@/components/flagship/explore/ExploreMap', () => ({
   ),
 }));
 
-vi.mock('@/components/flagship/WorkspaceLayout', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 function Where() {
   const { pathname, search } = useAppLocation();
   return <output aria-label="Location">{`${pathname}${search}`}</output>;
@@ -64,7 +60,7 @@ describe('ExplorePage', () => {
     renderPage();
 
     expect(
-      await screen.findByRole('heading', { name: 'Current law across the United States' })
+      await screen.findByRole('heading', { name: 'Where things stand across the United States' })
     ).toBeInTheDocument();
     expect(screen.getByText('12.9%')).toBeInTheDocument();
     expect(screen.getByText(/Census Bureau, 2024: 12.9%/)).toBeInTheDocument();
@@ -77,7 +73,7 @@ describe('ExplorePage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Map: Ohio' }));
 
-    expect(screen.getByRole('heading', { name: 'Current law in Ohio' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Where things stand in Ohio' })).toBeInTheDocument();
     expect(screen.getByLabelText('Location')).toHaveTextContent('/us/explore?region=state/oh');
     expect(screen.getByText('United States: 12.9%')).toBeInTheDocument();
   });
@@ -126,6 +122,6 @@ describe('ExplorePage', () => {
     renderPage();
 
     expect(await screen.findByLabelText('Location')).toHaveTextContent('/us/build');
-    expect(screen.queryByRole('heading', { name: /Current law/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Where things stand/ })).not.toBeInTheDocument();
   });
 });

@@ -42,3 +42,13 @@ describe('exploreUrl', () => {
     expect(buildHref('us')).toBe('/us/build');
   });
 });
+
+describe('isFullBleedPagePath', () => {
+  test('given Explore then the page draws to the edges, and other pages do not', async () => {
+    const { isFullBleedPagePath } = await import('@/libs/flagship/shellRoutes');
+
+    expect(isFullBleedPagePath('/us/explore')).toBe(true);
+    expect(isFullBleedPagePath('/us/explore?region=state/oh')).toBe(true);
+    expect(isFullBleedPagePath('/us/build')).toBe(false);
+  });
+});

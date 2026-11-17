@@ -1,61 +1,113 @@
-import { geoAlbersUsa, geoPath, type GeoPermissibleObjects } from 'd3-geo';
+import {
+  geoAlbersUsa,
+  geoPath,
+  type GeoPath,
+  type GeoPermissibleObjects,
+  type GeoProjection,
+} from 'd3-geo';
+import type { FeatureCollection } from 'geojson';
 
-/** The map's drawing size; the SVG scales to its box. */
-export const MAP_WIDTH = 975;
-export const MAP_HEIGHT = 610;
-export const MAP_SCALE = 1300;
-
-/** The view react-simple-maps' ZoomableGroup takes: a [lon, lat] center and a zoom. */
-export interface MapView {
-  center: [number, number];
-  zoom: number;
+/** Space that overlays (title, card, legend) cover, in pixels from each edge. */
+export interface MapInset {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
 }
 
-const projection = geoAlbersUsa()
-  .scale(MAP_SCALE)
-  .translate([MAP_WIDTH / 2, MAP_HEIGHT / 2]);
-const path = geoPath(projection);
+/** The map's box and the part of it that no overlay covers. */
+export interface MapFrame {
+  width: number;
+  height: number;
+  inset: MapInset;
+}
 
-/** The whole country. */
-export const NATION_VIEW: MapView = {
-  center: projection.invert?.([MAP_WIDTH / 2, MAP_HEIGHT / 2]) ?? [-96.6, 38.7],
-  zoom: 1,
-};
+/** A zoom: shapes drawn at `k` times their size, then moved by (x, y). */
+export interface MapTransform {
+  x: number;
+  y: number;
+  k: number;
+}
 
-/** Share of the map a focused shape fills, so its neighbors stay in sight. */
-const FILL = 0.85;
-const MAX_ZOOM = 12;
+export const IDENTITY: MapTransform = { x: 0, y: 0, k: 1 };
+
+/** Largest zoom: enough for the smallest urban districts. */
+const MAX_ZOOM = 60;
+
+function freeArea({ width, height, inset }: MapFrame) {
+  const left = inset.left;
+  const top = inset.top;
+  const w = Math.max(1, width - inset.left - inset.right);
+  const h = Math.max(1, height - inset.top - inset.bottom);
+  return { left, top, w, h, cx: left + w / 2, cy: top + h / 2 };
+}
 
 /**
- * The view that fits a shape. Bounds are taken on the projected map, not
- * in degrees, so Alaska and Hawaii, which the projection moves next to
- * the other states, center where they are drawn.
+ * The projection that fits the whole country into the free area, so at
+ * the nation level nothing hides under the card or the title. Alaska and
+ * Hawaii sit in their usual insets.
  */
-export function viewFor(shape: GeoPermissibleObjects): MapView {
+export function fitProjection(frame: MapFrame, states: FeatureCollection): GeoProjection {
+  const area = freeArea(frame);
+  return geoAlbersUsa().fitExtent(
+    [
+      [area.left, area.top],
+      [area.left + area.w, area.top + area.h],
+    ],
+    states
+  );
+}
+
+export function pathFor(projection: GeoProjection): GeoPath {
+  return geoPath(projection);
+}
+
+/** The zoom that fits a shape into `fill` of the free area, centered in it. */
+export function transformFor(
+  path: GeoPath,
+  frame: MapFrame,
+  shape: GeoPermissibleObjects,
+  fill = 0.85
+): MapTransform {
   const [[x0, y0], [x1, y1]] = path.bounds(shape);
   if (![x0, y0, x1, y1].every(Number.isFinite)) {
-    return NATION_VIEW;
+    return IDENTITY;
   }
-  const zoom = Math.min(
+  const area = freeArea(frame);
+  const k = Math.min(
     MAX_ZOOM,
-    FILL / Math.max((x1 - x0) / MAP_WIDTH, (y1 - y0) / MAP_HEIGHT, 1e-6)
+    Math.max(1, fill * Math.min(area.w / Math.max(x1 - x0, 1e-6), area.h / Math.max(y1 - y0, 1e-6)))
   );
-  const center = projection.invert?.([(x0 + x1) / 2, (y0 + y1) / 2]);
-  return center ? { center, zoom: Math.max(1, zoom) } : NATION_VIEW;
+  return { k, x: area.cx - k * ((x0 + x1) / 2), y: area.cy - k * ((y0 + y1) / 2) };
+}
+
+/** A shape's size on screen under a zoom, in pixels: [width, height]. */
+export function screenSize(
+  path: GeoPath,
+  shape: GeoPermissibleObjects,
+  transform: MapTransform
+): [number, number] {
+  const [[x0, y0], [x1, y1]] = path.bounds(shape);
+  return [(x1 - x0) * transform.k, (y1 - y0) * transform.k];
 }
 
 /**
- * A view part way from one view to another (t from 0 to 1), in the
- * projected plane, so the move is a straight glide on screen.
+ * A zoom part way between two (t from 0 to 1). The point at the free
+ * area's center moves in a straight line and the view's width changes at
+ * an even rate, so a zoom in or out feels steady rather than lurching.
  */
-export function interpolateView(from: MapView, to: MapView, t: number): MapView {
-  const a = projection(from.center);
-  const b = projection(to.center);
-  const zoom = from.zoom * (to.zoom / from.zoom) ** t;
-  if (!a || !b) {
-    return t < 1 ? from : to;
-  }
-  const point: [number, number] = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-  const center = projection.invert?.(point);
-  return { center: center ?? to.center, zoom };
+export function interpolateTransform(
+  frame: MapFrame,
+  from: MapTransform,
+  to: MapTransform,
+  t: number
+): MapTransform {
+  const area = freeArea(frame);
+  const centerOf = (m: MapTransform) => [(area.cx - m.x) / m.k, (area.cy - m.y) / m.k];
+  const [ax, ay] = centerOf(from);
+  const [bx, by] = centerOf(to);
+  const k = from.k * (to.k / from.k) ** t;
+  const cx = ax + (bx - ax) * t;
+  const cy = ay + (by - ay) * t;
+  return { k, x: area.cx - k * cx, y: area.cy - k * cy };
 }

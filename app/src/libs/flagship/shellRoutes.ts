@@ -11,3 +11,10 @@ const FLAGSHIP_PAGE_PATH = /^\/[^/]+\/(?:explore|build|reforms|ask|report\/[^/]+
 export function isFlagshipPagePath(pathname: string): boolean {
   return FLAGSHIP_PAGE_PATH.test(pathname);
 }
+
+const FULL_BLEED_PAGE_PATH = /^\/[^/]+\/explore(?:[/?#]|$)/;
+
+/** Whether a v3 page draws to the content area's edges, as Explore's map does. */
+export function isFullBleedPagePath(pathname: string): boolean {
+  return FULL_BLEED_PAGE_PATH.test(pathname);
+}
