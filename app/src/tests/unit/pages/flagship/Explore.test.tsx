@@ -84,17 +84,18 @@ describe('ExplorePage', () => {
     expect(await screen.findByText(/fewer survey households/)).toBeInTheDocument();
   });
 
-  test('given another measure then the pills and the link follow it', async () => {
+  test('given another measure from the menu then the button and the link follow it', async () => {
     const user = userEvent.setup();
     renderPage('/us/explore?region=state/oh');
 
-    await user.click(await screen.findByRole('radio', { name: 'Child poverty' }));
+    await user.click(await screen.findByRole('button', { name: /Change the measure/ }));
+    await user.click(await screen.findByRole('menuitemradio', { name: 'Children' }));
 
-    expect(screen.getByRole('radio', { name: 'Child poverty' })).toBeChecked();
+    expect(screen.getByRole('button', { name: /Poverty, Children/ })).toBeInTheDocument();
     expect(screen.getByLabelText('Location')).toHaveTextContent(
       '/us/explore?metric=child_poverty&region=state/oh'
     );
-    expect(screen.getByText('11.5%')).toBeInTheDocument();
+    expect(screen.getByText('of children are in poverty (SPM)')).toBeInTheDocument();
   });
 
   test('given model a change then Build opens with the place in the draft', async () => {
@@ -105,6 +106,17 @@ describe('ExplorePage', () => {
 
     expect(screen.getByLabelText('Location')).toHaveTextContent('/us/build');
     expect(getDraftReform()?.population).toEqual({ scope: 'national', region: 'state/oh' });
+  });
+
+  test('given a program from the menu then it maps, and the card shows the reach of each program', async () => {
+    const user = userEvent.setup();
+    renderPage('/us/explore?region=state/oh');
+
+    await user.click(await screen.findByRole('button', { name: /Change the measure/ }));
+    await user.click(await screen.findByRole('menuitemradio', { name: 'SNAP' }));
+
+    expect(screen.getByLabelText('Location')).toHaveTextContent('metric=receipt_snap');
+    expect(screen.getByRole('region', { name: 'Reach of each program' })).toBeInTheDocument();
   });
 
   test('given the flag off then the page sends the user to Build', async () => {

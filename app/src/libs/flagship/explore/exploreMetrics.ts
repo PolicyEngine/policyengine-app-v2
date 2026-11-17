@@ -6,15 +6,25 @@ export interface MethodLink {
   href: string;
 }
 
+/** The pills: each holds a few measures, one shown on the map at a time. */
+export type ExploreTheme = 'poverty' | 'income' | 'inequality' | 'taxes' | 'benefits';
+
+export const THEMES: { key: ExploreTheme; label: string }[] = [
+  { key: 'poverty', label: 'Poverty' },
+  { key: 'income', label: 'Income' },
+  { key: 'inequality', label: 'Inequality' },
+  { key: 'taxes', label: 'Taxes' },
+  { key: 'benefits', label: 'Benefits and credits' },
+];
+
 export interface ExploreMetric {
   key: BaselineMetricKey;
-  /** The pill and legend label: "Poverty". */
+  theme: ExploreTheme;
+  /** The selector, legend and card label: "Child poverty". */
   label: string;
-  /** What the big number is, after it: "of people are in poverty (SPM)". */
+  /** What the big number is, after it: "of children are in poverty (SPM)". */
   valueLabel: string;
   format: (value: number) => string;
-  /** Whether the map offers it as a layer; the others show in the place card only. */
-  onMap: boolean;
   /** Levels where few survey households stand behind each value, so the card adds a caution. */
   cautionAt: RegionLevel[];
   /** How we measure this. */
@@ -47,57 +57,130 @@ const DATA_SENTENCE =
   'Microcosm US 2024 data: the Census CPS ASEC, with incomes imputed from IRS records, reweighted to administrative totals for the nation, each state and each congressional district, and projected to the year shown.';
 
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
+const thousands = (value: number) => `$${Math.round(value / 100) / 10}k`;
+const dollars = (value: number) => `$${Math.round(value).toLocaleString('en-US')}`;
 
 const SPM_DATA = `${DATA_SENTENCE} SPM thresholds follow the Census Bureau, adjusted for local rents.`;
 const SPM_LIMITS =
   'This is the Supplemental Poverty Measure, not the official poverty rate, which counts pre-tax cash income only; PolicyEngine does not compute the official rate. Surveys under-report benefits, so PolicyEngine computes benefits from the rules, and its rates can differ from Census figures. Poverty is not a calibration target.';
+const SPM_DEFINITION =
+  'whose family resources, after taxes and benefits and less work and medical costs, are below the Supplemental Poverty Measure (SPM) threshold for their family and area.';
+const RECEIPT_LIMITS =
+  'PolicyEngine computes eligibility from the rules and imputes who takes a benefit up, calibrated to administrative totals for the nation and states. Who receives a benefit in a given district is an estimate.';
 
-/** The page's metrics, in pill order. */
+/**
+ * A benefit's reach: share of people who get it themselves (`person`),
+ * or who live in a family (SPM unit) or tax unit that gets it.
+ */
+function receipt(
+  key: BaselineMetricKey,
+  label: string,
+  unit: 'person' | 'family' | 'tax unit'
+): ExploreMetric {
+  const who =
+    unit === 'person'
+      ? `receive ${label}`
+      : unit === 'family'
+        ? `live in a family that receives ${label}`
+        : `live in a tax unit that claims ${label}`;
+  return {
+    key,
+    theme: 'benefits',
+    label,
+    valueLabel: `of people ${who}`,
+    format: percent,
+    cautionAt: ['district'],
+    definition: `Share of people who ${who} in the year, as PolicyEngine computes it from the program's rules.`,
+    data: DATA_SENTENCE,
+    limits: RECEIPT_LIMITS,
+    links: [DATA_PIPELINE, CALIBRATION_TARGETS],
+  };
+}
+
+/** Every measure, grouped by theme; the first of each theme is its default. */
 export const EXPLORE_METRICS: ExploreMetric[] = [
   {
     key: 'poverty',
-    label: 'Poverty',
+    theme: 'poverty',
+    label: 'All people',
     valueLabel: 'of people are in poverty (SPM)',
     format: percent,
-    onMap: true,
     cautionAt: ['district'],
-    definition:
-      'Share of people whose family resources, after taxes and benefits and less work and medical costs, are below the Supplemental Poverty Measure (SPM) threshold for their family and area.',
+    definition: `Share of people ${SPM_DEFINITION}`,
     data: SPM_DATA,
     limits: SPM_LIMITS,
     links: [SPM_POST, SPM_LEVELS_POST, DATA_PIPELINE],
   },
   {
     key: 'child_poverty',
-    label: 'Child poverty',
+    theme: 'poverty',
+    label: 'Children',
     valueLabel: 'of children are in poverty (SPM)',
     format: percent,
-    onMap: true,
     cautionAt: ['district'],
-    definition: 'Share of people under 18 who live in a family below the SPM threshold.',
+    definition: `Share of people under 18 ${SPM_DEFINITION}`,
     data: SPM_DATA,
     limits: `${SPM_LIMITS} Children are a smaller group, so state and district values are less precise than the overall rate.`,
     links: [SPM_POST, SPM_LEVELS_POST, DATA_PIPELINE],
   },
   {
+    key: 'senior_poverty',
+    theme: 'poverty',
+    label: 'Seniors',
+    valueLabel: 'of people aged 65 and over are in poverty (SPM)',
+    format: percent,
+    cautionAt: ['district'],
+    definition: `Share of people aged 65 and over ${SPM_DEFINITION}`,
+    data: SPM_DATA,
+    limits: `${SPM_LIMITS} Out-of-pocket medical costs weigh heavily for seniors and are imputed.`,
+    links: [SPM_POST, SPM_LEVELS_POST],
+  },
+  {
+    key: 'deep_poverty',
+    theme: 'poverty',
+    label: 'Deep poverty',
+    valueLabel: 'of people have resources below half the SPM threshold',
+    format: percent,
+    cautionAt: ['state', 'district'],
+    definition: 'Share of people whose family resources are below half of their SPM threshold.',
+    data: SPM_DATA,
+    limits: `Few survey households are this far below the threshold, and survey income is least accurate here. ${SPM_LIMITS}`,
+    links: [SPM_POST, SPM_LEVELS_POST],
+  },
+  {
     key: 'median_household_net_income',
-    label: 'Median household income',
+    theme: 'income',
+    label: 'After taxes and benefits',
     valueLabel: 'median household income after taxes and benefits',
-    format: (value) => `$${Math.round(value / 100) / 10}k`,
-    onMap: true,
+    format: thousands,
     cautionAt: [],
-    definition: 'Income of the middle household after federal and state taxes and after benefits.',
+    definition:
+      'Income of the middle household after federal and state taxes and after benefits, including the value of health benefits the model counts.',
     data: DATA_SENTENCE,
     limits:
       'Income after taxes and benefits, so it differs from the Census money-income median, which is before taxes. District incomes are calibrated to IRS adjusted gross income, a related but different concept.',
     links: [DATA_PIPELINE, CALIBRATION_TARGETS],
   },
   {
+    key: 'median_household_market_income',
+    theme: 'income',
+    label: 'Before taxes and benefits',
+    valueLabel: 'median household income before taxes and benefits',
+    format: thousands,
+    cautionAt: [],
+    definition:
+      'Income of the middle household from work, investments, pensions and other private sources, before taxes and benefits.',
+    data: DATA_SENTENCE,
+    limits:
+      'Market income is close to, but not the same as, the Census money-income median, which also counts some cash benefits.',
+    links: [DATA_PIPELINE, CALIBRATION_TARGETS],
+  },
+  {
     key: 'gini',
-    label: 'Inequality',
+    theme: 'inequality',
+    label: 'Gini index',
     valueLabel: 'Gini index of household income after taxes and benefits',
     format: (value) => value.toFixed(2),
-    onMap: true,
     cautionAt: ['district'],
     definition:
       'Gini index of household income after taxes and benefits: 0 means every household has the same income; 1 means one household has it all.',
@@ -107,26 +190,77 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
     links: [DATA_PIPELINE],
   },
   {
-    key: 'deep_poverty',
-    label: 'Deep poverty',
-    valueLabel: 'of people have resources below half the SPM threshold',
+    key: 'top_10_share',
+    theme: 'inequality',
+    label: 'Top 10% share',
+    valueLabel: 'of income after taxes and benefits goes to the top 10% of households',
     format: percent,
-    onMap: false,
-    cautionAt: ['state', 'district'],
-    definition: 'Share of people whose family resources are below half of their SPM threshold.',
-    data: SPM_DATA,
-    limits: `Few survey households are this far below the threshold, and survey income is least accurate here. ${SPM_LIMITS}`,
-    links: [SPM_POST, SPM_LEVELS_POST],
+    cautionAt: ['district'],
+    definition:
+      'Share of all household income after taxes and benefits that the highest-income 10% of households receive.',
+    data: DATA_SENTENCE,
+    limits:
+      'Top incomes come largely from IRS-imputed records; small areas have few such households.',
+    links: [DATA_PIPELINE],
   },
+  {
+    key: 'top_1_share',
+    theme: 'inequality',
+    label: 'Top 1% share',
+    valueLabel: 'of income after taxes and benefits goes to the top 1% of households',
+    format: percent,
+    cautionAt: ['state', 'district'],
+    definition:
+      'Share of all household income after taxes and benefits that the highest-income 1% of households receive.',
+    data: DATA_SENTENCE,
+    limits:
+      'Rests on very few households outside the nation as a whole, and on IRS-imputed top incomes.',
+    links: [DATA_PIPELINE],
+  },
+  {
+    key: 'state_income_tax_rate',
+    theme: 'taxes',
+    label: 'State income tax rate',
+    valueLabel: 'of household income before taxes goes to state income tax',
+    format: percent,
+    cautionAt: [],
+    definition:
+      'State income tax, after state credits, as a share of household income before taxes and benefits. States with no income tax show zero; refundable credits can make a group’s rate negative.',
+    data: `${DATA_SENTENCE} State income tax rules come from PolicyEngine's encoding of each state's law.`,
+    limits:
+      'Covers state income tax only, not sales, property or local income taxes, which matter most in states without an income tax.',
+    links: [DATA_PIPELINE, CALIBRATION_TARGETS],
+  },
+  receipt('receipt_snap', 'SNAP', 'family'),
+  receipt('receipt_medicaid', 'Medicaid', 'person'),
+  receipt('receipt_eitc', 'the EITC', 'tax unit'),
+  receipt('receipt_ctc', 'the Child Tax Credit', 'tax unit'),
+  receipt('receipt_aca_ptc', 'ACA premium tax credits', 'tax unit'),
+  receipt('receipt_ssi', 'SSI', 'person'),
+  receipt('receipt_school_meals', 'free school meals', 'family'),
+  receipt('receipt_wic', 'WIC', 'person'),
+  receipt('receipt_tanf', 'TANF', 'family'),
+  receipt('receipt_social_security', 'Social Security', 'person'),
 ];
 
-export const MAP_METRICS = EXPLORE_METRICS.filter((metric) => metric.onMap);
+/** Figures the card shows in its breakdowns but the map does not color by. */
+export const CARD_ONLY_FORMATS: Partial<Record<BaselineMetricKey, (value: number) => string>> = {
+  eitc_per_recipient: dollars,
+  ctc_per_recipient: dollars,
+};
 
 export const DEFAULT_METRIC = EXPLORE_METRICS[0];
 
 export function exploreMetric(key: string | null | undefined): ExploreMetric {
   return EXPLORE_METRICS.find((metric) => metric.key === key) ?? DEFAULT_METRIC;
 }
+
+export function themeMetrics(theme: ExploreTheme): ExploreMetric[] {
+  return EXPLORE_METRICS.filter((metric) => metric.theme === theme);
+}
+
+/** The card's summary row: one headline measure per theme. */
+export const HEADLINE_METRICS: ExploreMetric[] = THEMES.map(({ key }) => themeMetrics(key)[0]);
 
 /** The note that a value rests on a thin sample, or null. */
 export function cautionFor(metric: ExploreMetric, level: RegionLevel): string | null {

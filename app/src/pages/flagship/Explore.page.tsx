@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ExploreMap from '@/components/flagship/explore/ExploreMap';
 import MapLegend from '@/components/flagship/explore/MapLegend';
-import MetricPills from '@/components/flagship/explore/MetricPills';
+import MeasurePicker, { themeLabel } from '@/components/flagship/explore/MeasurePicker';
 import PlaceCard from '@/components/flagship/explore/PlaceCard';
 import RegionRanking from '@/components/flagship/explore/RegionRanking';
 import { ErrorState, SkeletonLine, SkeletonRegion } from '@/components/flagship/states';
@@ -27,7 +27,7 @@ import {
 } from '@/libs/flagship/explore/baselineData';
 import { draftForRegion } from '@/libs/flagship/explore/buildHandoff';
 import { levelScale } from '@/libs/flagship/explore/colorScale';
-import { exploreMetric, MAP_METRICS } from '@/libs/flagship/explore/exploreMetrics';
+import { exploreMetric } from '@/libs/flagship/explore/exploreMetrics';
 import { buildHref, exploreHref, readExploreView } from '@/libs/flagship/explore/exploreUrl';
 
 const linkButton = {
@@ -279,7 +279,7 @@ function ExploreView({
               : `Where things stand in ${placeName}`}
           </Title>
         </div>
-        <MetricPills metrics={MAP_METRICS} value={metric.key} onChange={setMetric} />
+        <MeasurePicker metric={metric} onChange={setMetric} />
       </header>
 
       <div className="tw:relative tw:aspect-[8/5] tw:lg:absolute tw:lg:inset-0 tw:lg:aspect-auto">
@@ -298,7 +298,7 @@ function ExploreView({
 
       <div className="tw:flex tw:items-end tw:gap-sm tw:px-lg tw:pt-sm tw:lg:absolute tw:lg:bottom-lg tw:lg:left-lg tw:lg:z-10 tw:lg:p-0">
         <MapLegend
-          label={`${metric.label} · ${districtMode ? 'districts' : 'states'}`}
+          label={`${themeLabel(metric)} · ${metric.label} · ${districtMode ? 'districts' : 'states'}`}
           min={metric.format(scale.min)}
           max={metric.format(scale.max)}
         />

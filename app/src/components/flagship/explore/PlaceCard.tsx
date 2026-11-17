@@ -9,10 +9,12 @@ import {
 } from '@/libs/flagship/explore/baselineData';
 import {
   cautionFor,
-  EXPLORE_METRICS,
+  HEADLINE_METRICS,
+  THEMES,
   type ExploreMetric,
 } from '@/libs/flagship/explore/exploreMetrics';
 import MethodNote from './MethodNote';
+import ThemeBreakdown from './ThemeBreakdown';
 
 interface PlaceCardProps {
   file: BaselineFile;
@@ -124,7 +126,7 @@ export default function PlaceCard({
           borderTop: `1px solid ${colors.border.light}`,
         }}
       >
-        {EXPLORE_METRICS.filter((other) => other.key !== metric.key).map((other) => {
+        {HEADLINE_METRICS.filter((other) => other.theme !== metric.theme).map((other) => {
           const otherValue = place?.metrics[other.key];
           return (
             <button
@@ -145,12 +147,15 @@ export default function PlaceCard({
                 {otherValue === undefined ? '—' : other.format(otherValue)}
               </span>
               <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-                {other.label}
+                {THEMES.find((theme) => theme.key === other.theme)?.label}
+                {other.theme === 'benefits' ? ` (${other.label})` : ''}
               </span>
             </button>
           );
         })}
       </div>
+
+      {place && <ThemeBreakdown place={place} metric={metric} onMetricChange={onMetricChange} />}
 
       <Button
         onClick={onModel}

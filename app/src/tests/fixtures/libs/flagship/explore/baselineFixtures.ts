@@ -41,7 +41,11 @@ export const BASELINE_FIXTURE: BaselineFile = {
         deep_poverty: 0.038,
         median_household_net_income: 67800,
         gini: 0.45,
+        receipt_snap: 0.15,
+        receipt_medicaid: 0.22,
+        eitc_per_recipient: 2900,
       },
+      poverty_by_group: { children: 0.115, working_age: 0.1, seniors: 0.09 },
       benchmarks: {
         poverty: {
           value: 0.102,

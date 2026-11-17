@@ -6,13 +6,42 @@
  * page starts no simulation. See `app/public/data/baseline/README.md`.
  */
 
-/** The metrics the file holds. Rates are fractions (0.129 is 12.9%). */
+/** The scalar figures the file holds. Rates and shares are fractions (0.129 is 12.9%). */
 export type BaselineMetricKey =
   | 'poverty'
   | 'child_poverty'
+  | 'senior_poverty'
   | 'deep_poverty'
   | 'median_household_net_income'
-  | 'gini';
+  | 'median_household_market_income'
+  | 'gini'
+  | 'top_10_share'
+  | 'top_1_share'
+  | 'state_income_tax_rate'
+  | 'receipt_snap'
+  | 'receipt_medicaid'
+  | 'receipt_ssi'
+  | 'receipt_tanf'
+  | 'receipt_wic'
+  | 'receipt_school_meals'
+  | 'receipt_aca_ptc'
+  | 'receipt_eitc'
+  | 'receipt_ctc'
+  | 'receipt_state_credits'
+  | 'receipt_social_security'
+  | 'eitc_per_recipient'
+  | 'ctc_per_recipient'
+  | 'state_credits_per_recipient';
+
+/** Average dollars per household in one income decile (nation and states). */
+export interface BaselineDecile {
+  market_income: number;
+  federal_income_tax: number;
+  payroll_tax: number;
+  state_income_tax: number;
+  benefits: number;
+  net_income: number;
+}
 
 /** An official figure to read beside the model's, such as Census's SPM rate. */
 export interface BaselineBenchmark {
@@ -26,8 +55,19 @@ export interface BaselineBenchmark {
 export interface BaselineRegion {
   /** "United States", "Ohio", "OH-09". */
   label: string;
+  /** Scalar figures; the file may also hold totals (`total_snap`, in dollars) the page does not read yet. */
   metrics: Partial<Record<BaselineMetricKey, number>>;
   benchmarks?: Partial<Record<BaselineMetricKey, BaselineBenchmark>>;
+  /** Survey households behind a state's or district's figures. */
+  sample_households?: number;
+  /** Nation and states only: households by income decile within the region, poorest first. */
+  deciles?: BaselineDecile[];
+  /** Nation and states only: state income tax as a share of market income, by income quintile. */
+  state_tax_by_quintile?: number[];
+  /** Nation and states only: SPM poverty rates by group. */
+  poverty_by_group?: Partial<
+    Record<'children' | 'working_age' | 'seniors' | 'men' | 'women', number>
+  >;
 }
 
 /** What produced the numbers, so the page can say so. */
