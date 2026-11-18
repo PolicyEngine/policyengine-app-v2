@@ -25,14 +25,18 @@ describe("AutumnBudgetEventBanner", () => {
     ).toHaveAttribute("href", "/uk/budgets/autumn-2026");
   });
 
-  test("sets the Milburn review line in smaller text than the Budget's", () => {
+  test("gives the Milburn review its own row, in its own colour, before the Budget's", () => {
     render(<AutumnBudgetEventBanner countryId="uk" />);
 
-    const link = screen.getByRole("link", { name: MILBURN_LINK_NAME });
-    const line = link.parentElement!;
-    const banner = line.parentElement!;
-    expect(parseFloat(line.style.fontSize)).toBeLessThan(
-      parseFloat(banner.style.fontSize),
+    const milburn = screen.getByTestId("milburn-banner");
+    const budget = screen.getByTestId("budget-banner");
+    expect(
+      milburn.compareDocumentPosition(budget) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(milburn.style.background).not.toBe(budget.style.background);
+    expect(milburn).toContainElement(
+      screen.getByRole("link", { name: MILBURN_LINK_NAME }),
     );
   });
 
