@@ -6,6 +6,20 @@
  * page starts no simulation. See `app/public/data/baseline/README.md`.
  */
 
+/** Recipients of each program, counted in the unit it pays (people, SPM units or tax units). */
+export type RecipientKey =
+  | 'recipients_snap'
+  | 'recipients_medicaid'
+  | 'recipients_ssi'
+  | 'recipients_tanf'
+  | 'recipients_wic'
+  | 'recipients_school_meals'
+  | 'recipients_aca_ptc'
+  | 'recipients_eitc'
+  | 'recipients_ctc'
+  | 'recipients_state_credits'
+  | 'recipients_social_security';
+
 /** The scalar figures the file holds. Rates and shares are fractions (0.129 is 12.9%). */
 export type BaselineMetricKey =
   | 'poverty'
@@ -31,7 +45,8 @@ export type BaselineMetricKey =
   | 'receipt_social_security'
   | 'eitc_per_recipient'
   | 'ctc_per_recipient'
-  | 'state_credits_per_recipient';
+  | 'state_credits_per_recipient'
+  | RecipientKey;
 
 /** Average dollars per household in one income decile (nation and states). */
 export interface BaselineDecile {
@@ -52,12 +67,24 @@ export interface BaselineBenchmark {
   url: string;
 }
 
+/** An agency's count of a program's recipients, in the agency's own unit and period. */
+export interface BaselineAdminCount {
+  value: number;
+  /** "persons", "returns", "families", "children". */
+  unit: string;
+  period: string;
+  source: string;
+  url: string;
+}
+
 export interface BaselineRegion {
   /** "United States", "Ohio", "OH-09". */
   label: string;
   /** Scalar figures; the file may also hold totals (`total_snap`, in dollars) the page does not read yet. */
   metrics: Partial<Record<BaselineMetricKey, number>>;
   benchmarks?: Partial<Record<BaselineMetricKey, BaselineBenchmark>>;
+  /** Nation and states: agency counts of recipients, keyed by the receipt measure. */
+  admin_counts?: Partial<Record<BaselineMetricKey, BaselineAdminCount>>;
   /** Survey households behind a state's or district's figures. */
   sample_households?: number;
   /** Nation and states only: households by income decile within the region, poorest first. */

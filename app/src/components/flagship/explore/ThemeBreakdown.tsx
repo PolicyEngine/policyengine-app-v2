@@ -4,6 +4,7 @@ import type { BaselineMetricKey, BaselineRegion } from '@/libs/flagship/explore/
 import {
   CARD_ONLY_FORMATS,
   themeMetrics,
+  unitPlural,
   type ExploreMetric,
 } from '@/libs/flagship/explore/exploreMetrics';
 
@@ -286,11 +287,14 @@ export default function ThemeBreakdown({ place, metric, onMetricChange }: ThemeB
     const ctc = place.metrics.ctc_per_recipient;
     const format = CARD_ONLY_FORMATS.eitc_per_recipient;
     return (
-      <Section title="Reach of each program" note="Share of people; click one to map it.">
+      <Section
+        title="Reach of each program"
+        note="Share of the unit each program pays: people, households or tax units. Click one to map it."
+      >
         {programs.map(({ m, value }) => (
           <BarRow
             key={m.key}
-            label={m.label.replace(/^the /, '')}
+            label={`${m.label.replace(/^the /, '')}${m.recipients ? ` (${unitPlural(m.recipients.unit)})` : ''}`}
             value={percent(value)}
             share={value / max}
             current={m.key === metric.key}

@@ -34,20 +34,42 @@ from fetch_data import fetch
 HERE = Path(__file__).parent
 OUT_DIR = HERE.parents[1] / "app" / "public" / "data" / "baseline" / "us"
 BENCHMARKS = HERE / "census_spm_benchmarks.json"
+ADMIN_COUNTS = HERE / "admin_by_state.csv"
 
-# Programs whose receipt (share of people in a receiving unit) and totals the page shows.
+# Programs whose recipients and totals the page shows, with the model
+# variable and the unit that receives it: a person, an SPM unit (the
+# family or household that shares food and housing), or a tax unit.
+# Recipients are counted in that unit, so the counts compare with the
+# agencies' counts of participants, households or returns.
 PROGRAMS = {
-    "snap": "snap",
-    "medicaid": "medicaid",
-    "ssi": "ssi",
-    "tanf": "tanf",
-    "wic": "wic",
-    "school_meals": "free_school_meals",
-    "aca_ptc": "aca_ptc",
-    "eitc": "eitc",
-    "ctc": "ctc",
-    "state_credits": "state_refundable_credits",
-    "social_security": "social_security",
+    "snap": ("snap", "spm_unit"),
+    "tanf": ("tanf", "spm_unit"),
+    "school_meals": ("free_school_meals", "spm_unit"),
+    "medicaid": ("medicaid", "person"),
+    "ssi": ("ssi", "person"),
+    "wic": ("wic", "person"),
+    "social_security": ("social_security", "person"),
+    "aca_ptc": ("aca_ptc", "tax_unit"),
+    "eitc": ("eitc", "tax_unit"),
+    # `ctc` is the credit a tax unit could claim before the tax limit;
+    # `ctc_value` is the credit it receives.
+    "ctc": ("ctc_value", "tax_unit"),
+    "state_credits": ("state_refundable_credits", "tax_unit"),
+}
+
+# The agency count shown beside each program's model count: the CSV
+# measure, and the period to take when the file has several.
+ADMIN_MEASURES = {
+    "snap": ("snap_avg_monthly_persons", "FY2025"),
+    "tanf": ("tanf_avg_monthly_families", None),
+    "school_meals": ("nslp_total_avg_daily_participation", None),
+    "medicaid": ("medicaid_enrollment_excl_chip", None),
+    "ssi": ("ssi_recipients", None),
+    "wic": ("wic_avg_monthly_participation", "FY2025"),
+    "social_security": ("oasdi_beneficiaries", None),
+    "aca_ptc": ("aca_oep_plan_selections_with_aptc", None),
+    "eitc": ("eitc_returns", None),
+    "ctc": ("ctc_odc_nonrefundable_returns", None),
 }
 
 # Figures that need many households; districts leave them out.
@@ -57,7 +79,12 @@ NATION_AND_STATE_ONLY = {"deciles", "state_tax_by_quintile", "poverty_by_group"}
 # handful of very high incomes decides them (Gini above 1 where incomes
 # are negative, top 1% shares over 60%, average state tax rates above the
 # top rate). The page shows them for the nation and states only.
-NOT_FOR_DISTRICTS = ("gini", "top_10_share", "top_1_share", "state_income_tax_rate")
+NOT_FOR_DISTRICTS = ("gini", "top_10_share", "top_1_share", "state_income_tax_rate") + tuple(
+    # District benefit figures do not yet match survey estimates (microcosm#1673).
+    f"{prefix}_{key}"
+    for key in PROGRAMS
+    for prefix in ("receipt", "recipients", "total")
+) + ("eitc_per_recipient", "ctc_per_recipient", "state_credits_per_recipient")
 
 # Fewer sample households than this and a region's figures are left out.
 MIN_SAMPLE_HOUSEHOLDS = 100
@@ -93,16 +120,55 @@ def top_share(values: np.ndarray, weights: np.ndarray, top: float) -> float:
     return float(np.sum((v * w)[cw > 1 - top]) / total) if total else float("nan")
 
 
-def rate(flags: np.ndarray, weights: np.ndarray) -> float:
-    total = weights.sum()
-    return float(np.sum(weights * flags) / total) if total else float("nan")
+def rate(flags, weights) -> float:
+    """Weighted share of true flags. A missing flag (a person outside the
+    SPM measurement) counts in neither the numerator nor the denominator,
+    as in policyengine.py's `outputs/poverty.py`."""
+    flags = pd.to_numeric(pd.Series(np.asarray(flags)), errors="coerce").to_numpy(dtype=float)
+    weights = np.asarray(weights, dtype=float)
+    measured = ~np.isnan(flags)
+    total = weights[measured].sum()
+    return float(np.sum(weights[measured] * flags[measured]) / total) if total else float("nan")
 
 
-def load_frames(dataset: Path, year: int) -> dict[str, pd.DataFrame]:
-    """One model run: the person, household and tax-unit columns the figures need."""
-    from policyengine_us import Microsimulation
+def managed_simulation(dataset: Path, legacy_local: bool):
+    """A Microsimulation built as policyengine.py builds it for a report.
 
-    sim = Microsimulation(dataset=str(dataset))
+    `managed_microsimulation` applies the bundle's SPM settings and maps
+    stored inputs that policyengine-us has renamed (WIC take-up,
+    policyengine.py#531). The local-area build is a registered legacy SPM
+    source: Census's ACS rule leaves group-quarters residents outside the
+    poverty measurement, and policyengine.py derives that scope when it
+    loads the file. A per-state file has its own hash, so this applies the
+    registered derivation itself.
+    """
+    from policyengine.tax_benefit_models.us.legacy_spm import (
+        derive_from_stored_tables,
+        prepare_microsimulation,
+        set_declarations,
+    )
+    from policyengine.tax_benefit_models.us.legacy_spm.registry import (
+        MICROCOSM_US_2024_ACS_LOCAL_MICROCOSM_1263,
+    )
+    from policyengine.tax_benefit_models.us.model import managed_microsimulation
+
+    sim = managed_microsimulation(dataset=str(dataset), allow_unmanaged=True)
+    # The national file stores WIC take-up under its old name, which this
+    # maps; the local-area build already stores the live name.
+    renames = sim.policyengine_bundle.get("legacy_input_renames", {})
+    print(f"{dataset.name}: legacy input renames {renames or 'none'}", flush=True)
+    if legacy_local:
+        declarations, years = derive_from_stored_tables(
+            MICROCOSM_US_2024_ACS_LOCAL_MICROCOSM_1263, sim.dataset, data_dir=dataset.parent
+        )
+        prepare_microsimulation(sim)
+        set_declarations(sim, declarations, years)
+    return sim
+
+
+def load_frames(dataset: Path, year: int, legacy_local: bool = False) -> dict[str, pd.DataFrame]:
+    """One model run: the person, household, SPM-unit and tax-unit columns the figures need."""
+    sim = managed_simulation(dataset, legacy_local)
 
     def calc(variable: str, map_to: str) -> np.ndarray:
         series = sim.calculate(variable, year, map_to=map_to)
@@ -118,8 +184,9 @@ def load_frames(dataset: Path, year: int) -> dict[str, pd.DataFrame]:
             "deep": calc("spm_unit_is_in_deep_spm_poverty", "person"),
         }
     )
-    for key, variable in PROGRAMS.items():
-        person[f"gets_{key}"] = calc(variable, "person") > 0
+    for key, (variable, unit) in PROGRAMS.items():
+        if unit == "person":
+            person[f"gets_{key}"] = calc(variable, "person") > 0
 
     household = pd.DataFrame(
         {
@@ -135,23 +202,33 @@ def load_frames(dataset: Path, year: int) -> dict[str, pd.DataFrame]:
             "payroll_tax": calc("employee_payroll_tax", "household"),
         }
     )
-    for key, variable in PROGRAMS.items():
+    for key, (variable, _) in PROGRAMS.items():
         household[f"total_{key}"] = calc(variable, "household")
+
+    spm_unit = pd.DataFrame(
+        {
+            "weight": calc("spm_unit_weight", "spm_unit"),
+            "household_id": calc("household_id", "spm_unit"),
+        }
+    )
 
     tax_unit = pd.DataFrame(
         {
             "weight": calc("tax_unit_weight", "tax_unit"),
             "household_id": calc("household_id", "tax_unit"),
-            "eitc": calc("eitc", "tax_unit"),
-            "ctc": calc("ctc", "tax_unit"),
-            "state_credits": calc("state_refundable_credits", "tax_unit"),
         }
     )
+    for key, (variable, unit) in PROGRAMS.items():
+        if unit == "spm_unit":
+            spm_unit[f"gets_{key}"] = calc(variable, "spm_unit") > 0
+        elif unit == "tax_unit":
+            tax_unit[key] = calc(variable, "tax_unit")
 
     geography = household[["household_id", "state_fips", "district_geoid"]]
     person = person.merge(geography, on="household_id", how="left")
     tax_unit = tax_unit.merge(geography, on="household_id", how="left")
-    return {"person": person, "household": household, "tax_unit": tax_unit}
+    spm_unit = spm_unit.merge(geography, on="household_id", how="left")
+    return {"person": person, "household": household, "tax_unit": tax_unit, "spm_unit": spm_unit}
 
 
 def _optional(sim, variable: str, year: int) -> np.ndarray:
@@ -162,8 +239,9 @@ def _optional(sim, variable: str, year: int) -> np.ndarray:
 
 
 def figures(frames: dict[str, pd.DataFrame], with_breakdowns: bool) -> dict:
-    p, h, t = frames["person"], frames["household"], frames["tax_unit"]
+    p, h, t, s = frames["person"], frames["household"], frames["tax_unit"], frames["spm_unit"]
     pw, hw, tw = p["weight"].to_numpy(), h["weight"].to_numpy(), t["weight"].to_numpy()
+    sw = s["weight"].to_numpy()
     child = p["age"].to_numpy() < 18
     senior = p["age"].to_numpy() >= 65
     net = h["net_income"].to_numpy()
@@ -184,9 +262,19 @@ def figures(frames: dict[str, pd.DataFrame], with_breakdowns: bool) -> dict:
         ),
         "households": float(hw.sum()),
         "people": float(pw.sum()),
+        "spm_units": float(sw.sum()),
+        "tax_units": float(tw.sum()),
     }
-    for key in PROGRAMS:
-        metrics[f"receipt_{key}"] = rate(p[f"gets_{key}"], pw)
+    # Recipients in the program's own unit, and their share of all such units.
+    for key, (_, unit) in PROGRAMS.items():
+        if unit == "person":
+            gets, weights = p[f"gets_{key}"].to_numpy(), pw
+        elif unit == "spm_unit":
+            gets, weights = s[f"gets_{key}"].to_numpy(), sw
+        else:
+            gets, weights = t[key].to_numpy() > 0, tw
+        metrics[f"recipients_{key}"] = float(np.sum(weights * gets))
+        metrics[f"receipt_{key}"] = rate(gets, weights)
         metrics[f"total_{key}"] = float(np.sum(h[f"total_{key}"] * hw))
     for key in ("eitc", "ctc", "state_credits"):
         gets = t[key].to_numpy() > 0
@@ -281,7 +369,7 @@ def split_states(local: Path, build: str) -> dict[int, Path]:
 
 
 def run_nation(dataset: Path, year: int) -> dict[str, dict]:
-    frames = load_frames(dataset, year)
+    frames = load_frames(dataset, year, legacy_local=False)
     return {"us": {"label": "United States", **figures(frames, with_breakdowns=True)}}
 
 
@@ -290,7 +378,7 @@ def run_state(
 ) -> dict[str, dict]:
     """One state's figures and those of each of its congressional districts."""
     code, name = state
-    frames = load_frames(dataset, year)
+    frames = load_frames(dataset, year, legacy_local=True)
     regions = {
         code: {
             "label": name,
@@ -313,6 +401,35 @@ def run_state(
             **result,
         }
     return regions
+
+
+def admin_counts() -> dict[str, dict]:
+    """Agency counts by region code ("us", "state/ca"), keyed by receipt measure."""
+    if not ADMIN_COUNTS.exists():
+        return {}
+    table = pd.read_csv(ADMIN_COUNTS)
+    out: dict[str, dict] = {}
+    for key, (measure, period) in ADMIN_MEASURES.items():
+        rows = table[table["measure"] == measure]
+        if not (rows["geography"] == "US").any():
+            # Some state tables have no US row; the national summary has it, in thousands.
+            national = table[table["measure"] == f"{measure}_national"].copy()
+            thousands = national["unit"].str.startswith("thousand ")
+            national.loc[thousands, "value"] *= 1000
+            national.loc[thousands, "unit"] = national.loc[thousands, "unit"].str.removeprefix("thousand ")
+            rows = pd.concat([rows, national])
+        if period:
+            rows = rows[rows["period"].str.startswith(period)]
+        for _, row in rows.iterrows():
+            code = "us" if row["geography"] == "US" else f"state/{row['geography'].lower()}"
+            out.setdefault(code, {})[f"receipt_{key}"] = {
+                "value": float(row["value"]),
+                "unit": row["unit"],
+                "period": row["period"],
+                "source": row["source"],
+                "url": row["url"],
+            }
+    return out
 
 
 def _limit_threads() -> None:
@@ -379,9 +496,12 @@ def main() -> None:
                 flush=True,
             )
 
+    admin = admin_counts()
     for code, region in regions.items():
         if code in benchmarks:
             region["benchmarks"] = benchmarks[code]
+        if code in admin:
+            region["admin_counts"] = admin[code]
 
     out = {
         "schema_version": 1,

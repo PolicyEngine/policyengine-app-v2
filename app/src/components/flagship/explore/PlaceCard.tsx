@@ -9,9 +9,11 @@ import {
 } from '@/libs/flagship/explore/baselineData';
 import {
   cautionFor,
+  formatCount,
   HEADLINE_METRICS,
   NOT_FOR_DISTRICTS_NOTE,
   THEMES,
+  unitPlural,
   type ExploreMetric,
 } from '@/libs/flagship/explore/exploreMetrics';
 import MethodNote from './MethodNote';
@@ -24,6 +26,11 @@ interface PlaceCardProps {
   onMetricChange: (key: BaselineMetricKey) => void;
   /** Opens Build for this place. */
   onModel: () => void;
+}
+
+/** The agency's unit, in the words the card uses. */
+function agencyUnit(unit: string): string {
+  return unit === 'persons' ? 'people' : unit;
 }
 
 const smallText = { fontSize: typography.fontSize.sm, color: colors.text.secondary, margin: 0 };
@@ -47,8 +54,12 @@ export default function PlaceCard({
   const value = place?.metrics[metric.key];
   const nationValue = nation?.metrics[metric.key];
   const benchmark = place?.benchmarks?.[metric.key];
+  const recipients = metric.recipients && place?.metrics[metric.recipients.key];
+  const adminCount = place?.admin_counts?.[metric.key];
   const notForDistricts = level === 'district' && metric.districts === false;
-  const caution = notForDistricts ? NOT_FOR_DISTRICTS_NOTE : cautionFor(metric, level);
+  const caution = notForDistricts
+    ? (metric.notForDistrictsNote ?? NOT_FOR_DISTRICTS_NOTE)
+    : cautionFor(metric, level);
   const name = place?.label ?? region;
 
   return (
@@ -74,6 +85,25 @@ export default function PlaceCard({
           Census Bureau, {benchmark.period}: {metric.format(benchmark.value)} ·{' '}
           <a
             href={benchmark.url}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: colors.text.link }}
+          >
+            source
+          </a>
+        </p>
+      )}
+      {metric.recipients && recipients !== undefined && (
+        <p style={{ ...smallText, marginTop: 2 }}>
+          PolicyEngine: {formatCount(recipients)} {unitPlural(metric.recipients.unit)}
+        </p>
+      )}
+      {adminCount && (
+        <p style={{ ...smallText, marginTop: 2 }}>
+          Agency count: {formatCount(adminCount.value)} {agencyUnit(adminCount.unit)} (
+          {adminCount.source.split(' (')[0]}, {adminCount.period.split(' (')[0]}) ·{' '}
+          <a
+            href={adminCount.url}
             target="_blank"
             rel="noreferrer"
             style={{ color: colors.text.link }}

@@ -1,4 +1,4 @@
-import type { BaselineMetricKey, RegionLevel } from './baselineData';
+import type { BaselineMetricKey, RecipientKey, RegionLevel } from './baselineData';
 
 /** A link to a page that explains the metric's method. */
 export interface MethodLink {
@@ -27,11 +27,15 @@ export interface ExploreMetric {
   format: (value: number) => string;
   /** Levels where few survey households stand behind each value, so the card adds a caution. */
   cautionAt: RegionLevel[];
+  /** Benefit measures: the unit that receives it, and its recipients figure. */
+  recipients?: { key: RecipientKey; unit: RecipientUnit };
   /**
    * False where a district's sample cannot support the figure, so the
    * file has none for districts and the map stays at the state level.
    */
   districts?: false;
+  /** Why the measure has no district values, where it differs from the general note. */
+  notForDistrictsNote?: string;
   /** How we measure this. */
   definition: string;
   data: string;
@@ -71,31 +75,56 @@ const SPM_LIMITS =
 const SPM_DEFINITION =
   'whose family resources, after taxes and benefits and less work and medical costs, are below the Supplemental Poverty Measure (SPM) threshold for their family and area.';
 const RECEIPT_LIMITS =
-  'PolicyEngine computes eligibility from the rules and imputes who takes a benefit up, calibrated to administrative totals for the nation and states. Who receives a benefit in a given district is an estimate.';
+  'PolicyEngine computes eligibility from the rules and imputes who takes a benefit up, calibrated to administrative totals for the nation and states. The agency count beside it can count a different unit or period, as its label says. Who receives a benefit in a given district is an estimate.';
+
+/** 18,400,000 → "18.4M"; 950,000 → "950k". */
+export function formatCount(value: number): string {
+  if (value >= 1e6) {
+    return `${(value / 1e6).toFixed(value >= 1e7 ? 1 : 2)}M`;
+  }
+  return value >= 1e3 ? `${Math.round(value / 1e3)}k` : `${Math.round(value)}`;
+}
+
+/** The unit a program pays: a person, a household or family (an SPM unit), or a tax unit. */
+export type RecipientUnit = 'person' | 'household' | 'family' | 'tax unit';
+
+/** "people", "households", "families", "tax units". */
+export function unitPlural(unit: RecipientUnit): string {
+  return { person: 'people', household: 'households', family: 'families', 'tax unit': 'tax units' }[
+    unit
+  ];
+}
+
+const BENEFITS_NOT_FOR_DISTRICTS_NOTE =
+  'Not shown for congressional districts yet: district figures do not yet match survey estimates (microcosm#1673). The map shows states.';
+
+const SPM_UNIT_NOTE =
+  'A household or family here is an SPM unit: the people who live together and share food and housing costs.';
 
 /**
- * A benefit's reach: share of people who get it themselves (`person`),
- * or who live in a family (SPM unit) or tax unit that gets it.
+ * A benefit's reach, counted in the unit the program pays: the share of
+ * people, households (SPM units), families (SPM units) or tax units that
+ * receive it.
  */
 function receipt(
   key: BaselineMetricKey,
+  recipientsKey: RecipientKey,
   label: string,
-  unit: 'person' | 'family' | 'tax unit'
+  unit: RecipientUnit
 ): ExploreMetric {
-  const who =
-    unit === 'person'
-      ? `receive ${label}`
-      : unit === 'family'
-        ? `live in a family that receives ${label}`
-        : `live in a tax unit that claims ${label}`;
+  const verb = unit === 'tax unit' ? 'claim' : 'receive';
+  const units = unitPlural(unit);
   return {
     key,
     theme: 'benefits',
     label,
-    valueLabel: `of people ${who}`,
+    valueLabel: `of ${units} ${verb} ${label}`,
     format: percent,
     cautionAt: ['district'],
-    definition: `Share of people who ${who} in the year, as PolicyEngine computes it from the program's rules.`,
+    recipients: { key: recipientsKey, unit },
+    districts: false,
+    notForDistrictsNote: BENEFITS_NOT_FOR_DISTRICTS_NOTE,
+    definition: `Share of ${units} that ${verb} ${label} in the year, as PolicyEngine computes it from the program's rules.${unit === 'household' || unit === 'family' ? ` ${SPM_UNIT_NOTE}` : ''}`,
     data: DATA_SENTENCE,
     limits: RECEIPT_LIMITS,
     links: [DATA_PIPELINE, CALIBRATION_TARGETS],
@@ -240,16 +269,16 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
       'Covers state income tax only, not sales, property or local income taxes, which matter most in states without an income tax.',
     links: [DATA_PIPELINE, CALIBRATION_TARGETS],
   },
-  receipt('receipt_snap', 'SNAP', 'family'),
-  receipt('receipt_medicaid', 'Medicaid', 'person'),
-  receipt('receipt_eitc', 'the EITC', 'tax unit'),
-  receipt('receipt_ctc', 'the Child Tax Credit', 'tax unit'),
-  receipt('receipt_aca_ptc', 'ACA premium tax credits', 'tax unit'),
-  receipt('receipt_ssi', 'SSI', 'person'),
-  receipt('receipt_school_meals', 'free school meals', 'family'),
-  receipt('receipt_wic', 'WIC', 'person'),
-  receipt('receipt_tanf', 'TANF', 'family'),
-  receipt('receipt_social_security', 'Social Security', 'person'),
+  receipt('receipt_snap', 'recipients_snap', 'SNAP', 'household'),
+  receipt('receipt_medicaid', 'recipients_medicaid', 'Medicaid', 'person'),
+  receipt('receipt_eitc', 'recipients_eitc', 'the EITC', 'tax unit'),
+  receipt('receipt_ctc', 'recipients_ctc', 'the Child Tax Credit', 'tax unit'),
+  receipt('receipt_aca_ptc', 'recipients_aca_ptc', 'ACA premium tax credits', 'tax unit'),
+  receipt('receipt_ssi', 'recipients_ssi', 'SSI', 'person'),
+  receipt('receipt_school_meals', 'recipients_school_meals', 'free school meals', 'family'),
+  receipt('receipt_wic', 'recipients_wic', 'WIC', 'person'),
+  receipt('receipt_tanf', 'recipients_tanf', 'TANF', 'family'),
+  receipt('receipt_social_security', 'recipients_social_security', 'Social Security', 'person'),
 ];
 
 /** Figures the card shows in its breakdowns but the map does not color by. */
