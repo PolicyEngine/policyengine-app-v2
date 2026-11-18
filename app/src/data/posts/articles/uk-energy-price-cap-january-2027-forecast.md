@@ -1,6 +1,6 @@
 Ofgem, the energy regulator for Great Britain, will announce the energy price cap for 1 January to 31 March 2027 on 25 November 2026, according to its [notice of the October cap](https://www.ofgem.gov.uk/publications/changes-energy-price-cap-between-1-october-and-31-december-2026). On 18 November, the consultancy Cornwall Insight published its ["final forecast"](https://www.cornwall-insight.com/press-releases/energy-bills-set-for-steep-rise-in-january/) for that period: £2,166 a year for a household with typical consumption paying by Direct Debit, £443 (26%) above the [current cap](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges) of £1,723.
 
-Using PolicyEngine UK, we estimate what that forecast would mean for household energy bills across the income distribution in Great Britain. Every figure below depends on the forecast; we will update the post with Ofgem's rates after 25 November.
+Using PolicyEngine UK, we estimate what that forecast would mean for household energy bills across the income distribution in Great Britain. Every figure below depends on the forecast, and Ofgem's rates may differ from it.
 
 Key results, if the cap rises as Cornwall Insight forecasts (annual rates, Great Britain):
 
@@ -134,7 +134,7 @@ Changes are calculated from unrounded bills. Net income is household net income 
 
 In our data, 4.4 million households in Great Britain have no gas spending. Their bills would rise by an average of £213 a year, against £452 for the 23.9 million households that use both fuels.
 
-We estimate that at October rates, 2.2 million households spend more than 10% of their net income before housing costs on energy, counting the 0.1 million with zero income (the Households Below Average Income statistics reset negative incomes to zero). At the forecast January rates, held for a full year, 3.6 million would. This is not an official fuel poverty measure.
+We estimate that at October rates, 2.2 million households spend more than 10% of their net income before housing costs on energy, counting the 0.1 million with zero income (the Households Below Average Income statistics reset negative incomes to zero). At the forecast January rates, held for a full year, 3.6 million would. This is not an official fuel poverty measure. It also differs from the fuel-stress measure in the Autumn Budget, which compares energy spending with income after housing costs; our [analysis of the Budget's energy bill measures](https://policyengine.org/uk/research/budget-2026-energy-bills) uses that measure.
 
 The bills in these figures leave out the support that households receive outside the cap, such as the £100 Household Energy Payment in England, the Warm Home Discount and the Winter Fuel Payment. Net income counts those payments as income, as the Households Below Average Income statistics do.
 
