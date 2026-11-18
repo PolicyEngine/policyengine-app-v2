@@ -96,7 +96,7 @@ export default function AutumnBudgetEventBanner({
         }}
       >
         <strong style={{ fontWeight: typography.fontWeight.semibold }}>
-          Milburn review:
+          Milburn review of young people and work:
         </strong>{" "}
         <a
           href={MILBURN_REVIEW_URL}
