@@ -1,8 +1,7 @@
 #!/usr/bin/env node
-// Raises the package's version according to the fragments in changelog.d, in
-// package.json and in bun.lock, and prints the new version. CI installs with
-// --frozen-lockfile, which fails if bun.lock's copy of the version is stale.
-// Run from the repository root.
+// Raises the package's version according to the fragments in changelog.d and
+// prints the new version. It changes package.json and bun.lock's copy of the
+// version, which Bun does not update by itself. Run from the repository root.
 
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import {

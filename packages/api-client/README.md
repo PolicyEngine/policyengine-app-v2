@@ -127,13 +127,13 @@ Merging a change to `main` with a changelog fragment releases a new version. Nob
 
 A PR needs a fragment if it changes what npm ships or how it is built: anything in `src`, `README.md`, `LICENSE`, `tsconfig.json`, `tsconfig.build.json`, or `package.json` (a change limited to `devDependencies` or `scripts` doesn't count). The "API client changelog fragment" check on every PR says whether one is needed. Add a file named `changelog.d/<name>.<type>.md` containing a sentence for the changelog:
 
-| Type       | Use it for                                   | Version raise                        |
-| ---------- | -------------------------------------------- | ------------------------------------ |
-| `breaking` | a change existing callers must adapt to      | major (minor while the version is 0.x) |
-| `added`    | new functionality                            | minor                                |
-| `removed`  | functionality taken away                     | minor                                |
-| `changed`  | a change to existing behaviour               | patch                                |
-| `fixed`    | a bug fix, or a correction to the README     | patch                                |
+| Type       | Use it for                               | Version raise                          |
+| ---------- | ---------------------------------------- | -------------------------------------- |
+| `breaking` | a change existing callers must adapt to  | major (minor while the version is 0.x) |
+| `added`    | new functionality                        | minor                                  |
+| `removed`  | functionality taken away                 | minor                                  |
+| `changed`  | a change to existing behaviour           | patch                                  |
+| `fixed`    | a bug fix, or a correction to the README | patch                                  |
 
 If a release holds several fragments, the largest raise applies once. While the version is 0.x, `^0.1.1` accepts only 0.1.x, so consumers must raise their own range to receive a minor version.
 
