@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useStore } from 'react-redux';
 import {
   findReportRecordByLink,
@@ -164,6 +164,31 @@ export interface SharedReport {
   baselineReform: { name: string | null } | null;
 }
 
+const sharedReportKey = (countryId: string, link: string) =>
+  [...savedReportQueryKeys.shared, countryId, link] as const;
+
+/**
+ * Puts the account's saved report, as the account answered the run's
+ * write of it, where useSharedReport reads it, in the shape that read
+ * gives: the row without the links to its owner's saved reforms. A report
+ * compared with a saved reform is left for the page to read, since the
+ * shared read names that reform as stored and the row does not carry it.
+ */
+export function cacheSharedReport(
+  queryClient: QueryClient,
+  countryId: string,
+  record: FlagshipReportRecord
+): void {
+  if (!isAccountId(record.id) || record.baselineReformId) {
+    return;
+  }
+  const shared: SharedReport = {
+    record: { ...record, reformId: null, baselineReformId: null },
+    baselineReform: null,
+  };
+  queryClient.setQueryData(sharedReportKey(countryId, record.id), shared);
+}
+
 /**
  * The saved report a link names (an account row's ID), read with no
  * credential, so whoever opens the link sees the report as its owner ran
@@ -173,7 +198,7 @@ export interface SharedReport {
 export function useSharedReport(link: string | undefined) {
   const countryId = useCurrentCountry();
   return useQuery({
-    queryKey: [...savedReportQueryKeys.shared, countryId, link ?? ''],
+    queryKey: sharedReportKey(countryId, link ?? ''),
     queryFn: async (): Promise<SharedReport | null> => {
       const item = await fetchSharedReport(countryId, link!);
       return item

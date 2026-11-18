@@ -1,21 +1,48 @@
 import { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { CURRENT_YEAR } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { savedReportQueryKeys, useFlagshipReportStore } from '@/hooks/useFlagshipStores';
+import { cacheCreatedReport } from '@/hooks/useFlagshipReport';
+import {
+  cacheSharedReport,
+  savedReportQueryKeys,
+  useFlagshipReportStore,
+} from '@/hooks/useFlagshipStores';
 import { markDraftRun } from '@/libs/draftReform';
 import {
   flagshipReportQueryKeys,
   runFlagshipReport,
   RunReportBaseline,
   RunReportProvision,
+  type FlagshipRunRecords,
 } from '@/libs/flagship/runReport';
 import { windowSizeWithin } from '@/libs/flagship/supportedYears';
 import { getLastSupportedYear } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
+
+/**
+ * Puts what a run created where its report page reads it, so the page
+ * opens on the run's own answers rather than reading the saved report,
+ * the report and its simulations back one after another. Whatever cannot
+ * be put in place, the page reads as before: this never fails a run.
+ */
+function cacheRunRecords(
+  queryClient: QueryClient,
+  countryId: string,
+  records: FlagshipRunRecords
+): void {
+  try {
+    cacheCreatedReport(queryClient, records);
+    if (records.savedReport) {
+      cacheSharedReport(queryClient, countryId, records.savedReport);
+    }
+  } catch {
+    // The page reads them itself.
+  }
+}
 
 /**
  * Runs the flagship report pipeline for a set of provisions and
@@ -96,6 +123,7 @@ export function useRunFlagshipReport() {
     const runWindowYears =
       windowYears && windowSizeWithin(windowYears, year ?? Number(CURRENT_YEAR), lastSupportedYear);
     try {
+      const created: { records?: FlagshipRunRecords } = {};
       const userReportId = await runFlagshipReport({
         countryId,
         title,
@@ -113,6 +141,9 @@ export function useRunFlagshipReport() {
         // or this browser's unauthenticated user); otherwise this browser's.
         accountReportStore: reportStore.isAccount ? reportStore.store : null,
         savedReportId,
+        onRecordsCreated: (records) => {
+          created.records = records;
+        },
       });
       if (fromDraft) {
         markDraftRun(userReportId);
@@ -129,6 +160,11 @@ export function useRunFlagshipReport() {
         void queryClient.resetQueries({ queryKey: savedReportQueryKeys.shared });
         void queryClient.resetQueries({ queryKey: savedReportQueryKeys.record });
         setIsRunning(false);
+      }
+      // After the resets above, which would drop the saved report put in
+      // place here: its page then shows this run at once.
+      if (created.records) {
+        cacheRunRecords(queryClient, countryId, created.records);
       }
       // Opened again, the page the run started from would add a second
       // history entry for itself.
