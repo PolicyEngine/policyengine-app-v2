@@ -1,5 +1,5 @@
 import { cloneElement, type ReactElement } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 
 import {
@@ -341,5 +341,104 @@ describe("MarkdownFormatter chart blocks", () => {
     expect(container.querySelector("figure")).not.toBeNull();
     expect(screen.queryByText("chart")).toBeNull();
     expect(container.textContent).not.toContain('"xKey"');
+  });
+});
+
+describe("BlogChart select", () => {
+  const SELECT_SPEC = {
+    type: "bar",
+    title: "Change by decile",
+    xKey: "decile",
+    series: [
+      { key: "y2029", name: "2029-30", color: "primary" },
+      {
+        key: "cash",
+        name: "£ a year",
+        color: "tertiary",
+        format: { decimals: 0, prefix: "£" },
+        yLabel: "Change (£ a year)",
+      },
+    ],
+    data: [
+      { decile: "1", y2029: -0.34, cash: -85 },
+      { decile: "2", y2029: -0.17, cash: -72 },
+    ],
+    yLabel: "Change (%)",
+    format: { decimals: 1, suffix: "%" },
+    select: { label: "Year", default: "y2029" },
+  };
+  const labels = (container: HTMLElement) =>
+    [...container.querySelectorAll("svg text")].map((t) => t.textContent);
+
+  test("draws only the default series, with a labelled drop-down", () => {
+    const { container } = render(
+      <BlogChart data={JSON.stringify(SELECT_SPEC)} />,
+    );
+    const control = screen.getByLabelText("Year") as HTMLSelectElement;
+    expect(control.tagName).toBe("SELECT");
+    expect(control.value).toBe("y2029");
+    expect([...control.options].map((o) => o.textContent)).toEqual([
+      "2029-30",
+      "£ a year",
+    ]);
+    expect(container.querySelectorAll(".recharts-bar-rectangle")).toHaveLength(
+      2,
+    );
+    expect(labels(container)).toContain("−0.3");
+    expect(labels(container)).toContain("Change (%)");
+    expect(container.querySelector(".recharts-legend-item-text")).toBeNull();
+  });
+
+  test("switching shows the chosen series in its own format and axis label", () => {
+    const { container } = render(
+      <BlogChart data={JSON.stringify(SELECT_SPEC)} />,
+    );
+    fireEvent.change(screen.getByLabelText("Year"), {
+      target: { value: "cash" },
+    });
+    expect(labels(container)).toContain("−£85");
+    expect(labels(container)).toContain("Change (£ a year)");
+    expect(labels(container)).not.toContain("Change (%)");
+    expect(labels(container)).not.toContain("−0.3");
+  });
+
+  test("defaults to the first series without a default", () => {
+    render(
+      <BlogChart
+        data={JSON.stringify({ ...SELECT_SPEC, select: { label: "Year" } })}
+      />,
+    );
+    expect((screen.getByLabelText("Year") as HTMLSelectElement).value).toBe(
+      "y2029",
+    );
+  });
+
+  test("rejects a select without a label or with an unknown default", () => {
+    for (const select of [
+      { default: "y2029" },
+      { label: "", default: "y2029" },
+      { label: "Year", default: "y2040" },
+      "Year",
+    ]) {
+      expect(
+        parseBlogChartSpec(JSON.stringify({ ...SELECT_SPEC, select })),
+      ).toBeNull();
+    }
+    expect(
+      parseBlogChartSpec(
+        JSON.stringify({
+          ...SELECT_SPEC,
+          series: [{ key: "y2029", name: "2029-30", format: { decimals: -1 } }],
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  test("a spec without select draws every series, with no control", () => {
+    const { container } = render(<BlogChart data={JSON.stringify(SPEC)} />);
+    expect(container.querySelector("select")).toBeNull();
+    expect(container.querySelectorAll(".recharts-bar-rectangle")).toHaveLength(
+      4,
+    );
   });
 });
