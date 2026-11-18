@@ -147,7 +147,7 @@ const effect = (change: number, deduction: boolean) =>
 
 const GAIN = "var(--primary)";
 // A darker mix of the error token, for text contrast on white
-const LOSS = "color-mix(in srgb, var(--color-error) 75%, black)";
+const LOSS = "color-mix(in srgb, var(--tw-color-error) 75%, black)";
 
 function toneColor(change: number, deduction: boolean): string | undefined {
   const e = effect(change, deduction);
