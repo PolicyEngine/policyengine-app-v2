@@ -61,9 +61,9 @@ describe("donate page giving details", () => {
 
   test("given UK then the tax line says gifts miss Gift Aid", async () => {
     const { container } = await renderDonate("uk");
-    expect(
-      screen.getByText(/is a US charity/),
-    ).toHaveTextContent(`${US_CHARITY_LINE} ${GIFT_AID_LINE}`);
+    expect(screen.getByText(/is a US charity/)).toHaveTextContent(
+      `${US_CHARITY_LINE} ${GIFT_AID_LINE}`,
+    );
     expect(container.textContent).not.toContain(US_DEDUCTION_LINE);
   });
 
@@ -71,9 +71,9 @@ describe("donate page giving details", () => {
     "given %s then the tax line names a US charity without Gift Aid",
     async (countryId) => {
       const { container } = await renderDonate(countryId);
-      expect(
-        screen.getByText(/is a US charity/),
-      ).toHaveTextContent(new RegExp(`^${escapeRegExp(US_CHARITY_LINE)}$`));
+      expect(screen.getByText(/is a US charity/)).toHaveTextContent(
+        new RegExp(`^${escapeRegExp(US_CHARITY_LINE)}$`),
+      );
       expect(container.textContent).not.toContain("Gift Aid");
       expect(container.textContent).not.toContain(US_DEDUCTION_LINE);
     },
