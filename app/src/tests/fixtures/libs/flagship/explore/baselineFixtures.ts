@@ -36,6 +36,7 @@ export const BASELINE_FIXTURE: BaselineFile = {
     'state/oh': {
       label: 'Ohio',
       metrics: {
+        people: 11_800_000,
         poverty: 0.106,
         child_poverty: 0.115,
         deep_poverty: 0.038,
@@ -58,6 +59,7 @@ export const BASELINE_FIXTURE: BaselineFile = {
     'state/ca': {
       label: 'California',
       metrics: {
+        people: 39_000_000,
         poverty: 0.154,
         child_poverty: 0.16,
         deep_poverty: 0.058,

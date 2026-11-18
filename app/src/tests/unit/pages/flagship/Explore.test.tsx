@@ -9,24 +9,15 @@ import { BASELINE_FIXTURE } from '@/tests/fixtures/libs/flagship/explore/baselin
 const ready = <T,>(data: T) => ({ data, error: null, refetch: vi.fn() });
 
 vi.mock('@/hooks/useExploreData', () => ({
-  useExploreData: () => ({
-    baseline: ready(BASELINE_FIXTURE),
-    states: ready([]),
-    districts: ready([]),
-  }),
+  useExploreData: () => ({ baseline: ready(BASELINE_FIXTURE), states: ready([]) }),
 }));
 
-// The map draws SVG shapes; its stand-in offers the same choices as buttons.
-vi.mock('@/components/flagship/explore/ExploreMap', () => ({
-  default: ({ onSelect }: { onSelect: (region: string) => void }) => (
-    <div>
-      <button type="button" onClick={() => onSelect('state/oh')}>
-        Map: Ohio
-      </button>
-      <button type="button" onClick={() => onSelect('congressional_district/OH-09')}>
-        Map: OH-09
-      </button>
-    </div>
+// The model draws with WebGL; its stand-in offers the same choice as a button.
+vi.mock('@/components/flagship/explore/ReliefModel', () => ({
+  default: ({ onSelect, flat }: { onSelect: (code: string | null) => void; flat: boolean }) => (
+    <button type="button" onClick={() => onSelect('OH')}>
+      {flat ? 'Model: flat' : 'Model: Ohio'}
+    </button>
   ),
 }));
 
@@ -56,35 +47,48 @@ describe('ExplorePage', () => {
     clearDraftReform();
   });
 
-  test('given the nation then the card shows the US rate, the Census rate and the preview note', async () => {
+  test('given the nation then the statement shows the states combined, beside the Census rate', async () => {
     renderPage();
 
     expect(
       await screen.findByRole('heading', { name: 'United States', level: 1 })
     ).toBeInTheDocument();
-    expect(screen.getByText('12.9%')).toBeInTheDocument();
-    expect(screen.getByText(/Census Bureau, 2024: 12.9%/)).toBeInTheDocument();
+    // Ohio 10.6% of 11.8M people and California 15.4% of 39M.
+    expect(screen.getByText('14.3%')).toBeInTheDocument();
+    expect(screen.getByText(/All states combined/)).toBeInTheDocument();
+    expect(screen.getByText(/The Census Bureau measures 12.9%/)).toBeInTheDocument();
     expect(screen.getByText(/placeholders, not model output/)).toBeInTheDocument();
   });
 
-  test('given a state picked on the map then the link and the heading name it', async () => {
+  test('given a state picked on the model then the link, the heading and the rank name it', async () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Map: Ohio' }));
+    await user.click(await screen.findByRole('button', { name: 'Model: Ohio' }));
 
     expect(screen.getByRole('heading', { name: 'Ohio', level: 1 })).toBeInTheDocument();
     expect(screen.getByLabelText('Location')).toHaveTextContent('/us/explore?region=state/oh');
-    expect(screen.getByText('United States: 12.9%')).toBeInTheDocument();
+    expect(screen.getByText('10.6%', { selector: 'strong' })).toBeInTheDocument();
+    expect(screen.getByText(/2nd highest of 2 states/)).toBeInTheDocument();
   });
 
-  test('given a district then the card says its values have a wide margin', async () => {
+  test('given a state picked in the row of states then the page goes to it', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: 'California: 15.4%' }));
+
+    expect(screen.getByLabelText('Location')).toHaveTextContent('/us/explore?region=state/ca');
+  });
+
+  test('given a district link then the page shows its state and says districts are not shown', async () => {
     renderPage('/us/explore?region=congressional_district/OH-09');
 
-    expect(await screen.findByText(/fewer survey households/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Ohio', level: 1 })).toBeInTheDocument();
+    expect(screen.getByText(/Congressional districts are not shown yet/)).toBeInTheDocument();
   });
 
-  test('given another measure from the menu then the button and the link follow it', async () => {
+  test('given another measure from the menu then the statement and the link follow it', async () => {
     const user = userEvent.setup();
     renderPage('/us/explore?region=state/oh');
 
@@ -95,20 +99,55 @@ describe('ExplorePage', () => {
     expect(screen.getByLabelText('Location')).toHaveTextContent(
       '/us/explore?metric=child_poverty&region=state/oh'
     );
-    expect(screen.getByText('of children are in poverty (SPM)')).toBeInTheDocument();
+    expect(screen.getByText(/of children are in poverty/)).toBeInTheDocument();
   });
 
-  test('given model a change then Build opens with the place in the draft', async () => {
+  test('given the measure menu then it names the measures not shown yet, with the reason', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: /Change the measure/ }));
+
+    expect(await screen.findByText('Not shown yet')).toBeInTheDocument();
+    expect(screen.getByText('Poverty: Seniors')).toBeInTheDocument();
+    expect(screen.queryByRole('menuitemradio', { name: 'Seniors' })).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { name: /SSI.*US only/ })).toBeInTheDocument();
+  });
+
+  test('given a measure with no state values then the model lies flat and the page says why', async () => {
+    renderPage('/us/explore?metric=receipt_ssi&region=state/oh');
+
+    expect(
+      await screen.findByRole('heading', { name: 'United States', level: 1 })
+    ).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Model: flat' })).toBeInTheDocument();
+    expect(screen.getByText('No state values for this measure yet')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'States, highest to lowest' })).toBeNull();
+  });
+
+  test('given build a reform then Build opens with the place in the draft', async () => {
     const user = userEvent.setup();
     renderPage('/us/explore?region=state/oh');
 
-    await user.click(await screen.findByRole('button', { name: /Model a policy change for Ohio/ }));
+    await user.click(await screen.findByRole('button', { name: 'Build a reform for Ohio' }));
 
     expect(screen.getByLabelText('Location')).toHaveTextContent('/us/build');
     expect(getDraftReform()?.population).toEqual({ scope: 'national', region: 'state/oh' });
   });
 
-  test('given a program from the menu then it maps, and the card shows the reach of each program', async () => {
+  test('given a rule that changes the measure then Build opens at that rule, for the place', async () => {
+    const user = userEvent.setup();
+    renderPage('/us/explore?region=state/oh');
+
+    await user.click(await screen.findByRole('button', { name: /Raise the SNAP maximum benefit/ }));
+
+    expect(screen.getByLabelText('Location')).toHaveTextContent(
+      '/us/build?q=snap%20maximum%20allotment'
+    );
+    expect(getDraftReform()?.population).toEqual({ scope: 'national', region: 'state/oh' });
+  });
+
+  test('given a program from the menu then the card shows the reach of each program', async () => {
     const user = userEvent.setup();
     renderPage('/us/explore?region=state/oh');
 

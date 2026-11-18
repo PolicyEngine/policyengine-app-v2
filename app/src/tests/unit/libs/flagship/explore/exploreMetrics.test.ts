@@ -3,6 +3,7 @@ import {
   EXPLORE_METRICS,
   exploreMetric,
   formatCount,
+  isShownAt,
   unitPlural,
 } from '@/libs/flagship/explore/exploreMetrics';
 
@@ -52,5 +53,34 @@ describe('benefit measures', () => {
     const benefits = EXPLORE_METRICS.filter((metric) => metric.theme === 'benefits');
 
     expect(benefits.every((metric) => metric.recipients?.key.startsWith('recipients_'))).toBe(true);
+  });
+});
+
+describe('isShownAt', () => {
+  test('given senior poverty then no level shows it, and it says why', () => {
+    const seniors = exploreMetric('senior_poverty');
+
+    expect(isShownAt(seniors, 'nation')).toBe(false);
+    expect(isShownAt(seniors, 'state')).toBe(false);
+    expect(seniors.hiddenReason).toMatch(/Under review/);
+  });
+
+  test('given a program whose state counts are far from the agency then only the nation shows it', () => {
+    for (const key of ['receipt_tanf', 'receipt_wic', 'receipt_ssi', 'receipt_aca_ptc']) {
+      const metric = exploreMetric(key);
+
+      expect(isShownAt(metric, 'nation')).toBe(true);
+      expect(isShownAt(metric, 'state')).toBe(false);
+      expect(metric.hiddenReason).toBeTruthy();
+    }
+  });
+
+  test('given the top 1% share then only the nation shows it', () => {
+    expect(isShownAt(exploreMetric('top_1_share'), 'state')).toBe(false);
+  });
+
+  test('given poverty then both levels show it', () => {
+    expect(isShownAt(exploreMetric('poverty'), 'nation')).toBe(true);
+    expect(isShownAt(exploreMetric('poverty'), 'state')).toBe(true);
   });
 });

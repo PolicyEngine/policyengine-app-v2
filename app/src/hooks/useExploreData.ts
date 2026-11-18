@@ -4,12 +4,11 @@ import { feature } from 'topojson-client';
 import type { Topology } from 'topojson-specification';
 import { fetchBaselineFile } from '@/libs/flagship/explore/baselineData';
 
-/** The map shapes: states merged from districts, built by `scripts/build-us-map-topology.mjs`. */
+/** The state shapes, merged from districts by `scripts/build-us-map-topology.mjs`. */
 export const US_STATES_TOPOLOGY_URL = '/data/geojson/us_states.topo.json';
-export const US_DISTRICTS_TOPOLOGY_URL = '/data/geojson/us_districts.topo.json';
 
-/** A map shape: a state ("OH") or a district ("OH-09", in state "OH"). */
-export type MapShape = Feature<Geometry, { id: string; state?: string }>;
+/** A state's shape; `id` is its two-letter code ("OH"). */
+export type MapShape = Feature<Geometry, { id: string }>;
 
 async function fetchShapes(url: string, object: string): Promise<MapShape[]> {
   const response = await fetch(url);
@@ -25,8 +24,8 @@ async function fetchShapes(url: string, object: string): Promise<MapShape[]> {
 }
 
 /**
- * Everything the Explore page draws: the current-law figures and the two
- * map files. All three are static files, cached for the session; none
+ * Everything the Explore page draws: the current-law figures and the
+ * state shapes. Both are static files, cached for the session; neither
  * starts a simulation.
  */
 export function useExploreData(countryId: string, year: number) {
@@ -40,10 +39,5 @@ export function useExploreData(countryId: string, year: number) {
     queryFn: () => fetchShapes(US_STATES_TOPOLOGY_URL, 'states'),
     staleTime: Infinity,
   });
-  const districts = useQuery({
-    queryKey: ['explore-shapes', US_DISTRICTS_TOPOLOGY_URL],
-    queryFn: () => fetchShapes(US_DISTRICTS_TOPOLOGY_URL, 'districts'),
-    staleTime: Infinity,
-  });
-  return { baseline, states, districts };
+  return { baseline, states };
 }

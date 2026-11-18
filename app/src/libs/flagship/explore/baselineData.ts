@@ -46,6 +46,10 @@ export type BaselineMetricKey =
   | 'eitc_per_recipient'
   | 'ctc_per_recipient'
   | 'state_credits_per_recipient'
+  | 'people'
+  | 'households'
+  | 'spm_units'
+  | 'tax_units'
   | RecipientKey;
 
 /** Average dollars per household in one income decile (nation and states). */
@@ -210,4 +214,31 @@ export function regionName(file: BaselineFile, region: string): string {
     return 'the United States';
   }
   return file.regions[region]?.label ?? region;
+}
+
+/** The count each state's value is weighted by when states are combined. */
+export type CombineWeight = 'people' | 'spm_units' | 'tax_units';
+
+/**
+ * One measure across every state, weighted by the states' own counts.
+ * The states come from a different dataset than the nation, so a state
+ * is compared with this figure, not with the national file's.
+ */
+export function statesCombined(
+  file: BaselineFile,
+  metric: BaselineMetricKey,
+  weight: CombineWeight
+): number | undefined {
+  let sum = 0;
+  let total = 0;
+  for (const name of regionsAt(file, 'state')) {
+    const { metrics } = file.regions[name];
+    const value = metrics[metric];
+    const count = metrics[weight];
+    if (value !== undefined && count !== undefined) {
+      sum += value * count;
+      total += count;
+    }
+  }
+  return total > 0 ? sum / total : undefined;
 }

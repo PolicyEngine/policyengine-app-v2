@@ -1,4 +1,7 @@
-import type { BaselineMetricKey, RecipientKey, RegionLevel } from './baselineData';
+import type { BaselineMetricKey, CombineWeight, RecipientKey } from './baselineData';
+
+/** The levels the page shows: the nation and the states. */
+export type ShownLevel = 'nation' | 'state';
 
 /** A link to a page that explains the metric's method. */
 export interface MethodLink {
@@ -25,17 +28,19 @@ export interface ExploreMetric {
   /** What the big number is, after it: "of children are in poverty (SPM)". */
   valueLabel: string;
   format: (value: number) => string;
-  /** Levels where few survey households stand behind each value, so the card adds a caution. */
-  cautionAt: RegionLevel[];
   /** Benefit measures: the unit that receives it, and its recipients figure. */
   recipients?: { key: RecipientKey; unit: RecipientUnit };
+  /** What a reader should know before they quote the value, in one sentence. */
+  caveat?: string;
+  /** Levels where the page shows no value yet, with the reason. Districts show none at all. */
+  hiddenAt?: ShownLevel[];
+  hiddenReason?: string;
   /**
-   * False where a district's sample cannot support the figure, so the
-   * file has none for districts and the map stays at the state level.
+   * The count that weights each state when the states are combined into
+   * the figure a state is compared with. Without it, the page uses the
+   * national file's value.
    */
-  districts?: false;
-  /** Why the measure has no district values, where it differs from the general note. */
-  notForDistrictsNote?: string;
+  combine?: CombineWeight;
   /** How we measure this. */
   definition: string;
   data: string;
@@ -99,8 +104,7 @@ export function unitPlural(unit: RecipientUnit): string {
   }[unit];
 }
 
-const BENEFITS_NOT_FOR_DISTRICTS_NOTE =
-  'Not shown for congressional districts yet: district figures do not yet match survey estimates (microcosm#1673). The map shows states.';
+const STATES_FAR_FROM_AGENCY = 'State counts are too far from the agency counts to show yet.';
 
 const SPM_UNIT_NOTE =
   'A household or family here is an SPM unit: the people who live together and share food and housing costs.';
@@ -115,9 +119,15 @@ function receipt(
   recipientsKey: RecipientKey,
   label: string,
   unit: RecipientUnit,
-  /** More on who counts, added to the definition. */
-  who?: string
+  options: {
+    /** More on who counts, added to the definition. */
+    who?: string;
+    caveat?: string;
+    /** True where state counts are too far from the agencies' to show. */
+    nationOnly?: boolean;
+  } = {}
 ): ExploreMetric {
+  const { who, caveat, nationOnly } = options;
   const verb = unit === 'tax unit' ? 'claim' : 'receive';
   const units = unitPlural(unit);
   return {
@@ -126,10 +136,15 @@ function receipt(
     label,
     valueLabel: `of ${units} ${verb} ${label}`,
     format: percent,
-    cautionAt: ['district'],
     recipients: { key: recipientsKey, unit },
-    districts: false,
-    notForDistrictsNote: BENEFITS_NOT_FOR_DISTRICTS_NOTE,
+    combine:
+      unit === 'tax unit'
+        ? 'tax_units'
+        : unit === 'household' || unit === 'family'
+          ? 'spm_units'
+          : 'people',
+    ...(caveat ? { caveat } : {}),
+    ...(nationOnly ? { hiddenAt: ['state' as const], hiddenReason: STATES_FAR_FROM_AGENCY } : {}),
     definition: `Share of ${units} that ${verb} ${label} in the year, as PolicyEngine computes it from the program's rules.${unit === 'household' || unit === 'family' ? ` ${SPM_UNIT_NOTE}` : ''}${who ? ` ${who}` : ''}`,
     data: DATA_SENTENCE,
     limits: RECEIPT_LIMITS,
@@ -141,11 +156,13 @@ function receipt(
 export const EXPLORE_METRICS: ExploreMetric[] = [
   {
     key: 'poverty',
+    combine: 'people',
+    caveat:
+      "The Supplemental Poverty Measure. State rates differ from the Census Bureau's by about 2 points.",
     theme: 'poverty',
     label: 'All people',
     valueLabel: 'of people are in poverty (SPM)',
     format: percent,
-    cautionAt: ['district'],
     definition: `Share of people ${SPM_DEFINITION}`,
     data: SPM_DATA,
     limits: SPM_LIMITS,
@@ -153,11 +170,12 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'child_poverty',
+    combine: 'people',
+    caveat: "Higher than the Census Bureau's rate for children.",
     theme: 'poverty',
     label: 'Children',
     valueLabel: 'of children are in poverty (SPM)',
     format: percent,
-    cautionAt: ['district'],
     definition: `Share of people under 18 ${SPM_DEFINITION}`,
     data: SPM_DATA,
     limits: `${SPM_LIMITS} Children are a smaller group, so state and district values are less precise than the overall rate.`,
@@ -165,11 +183,14 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'senior_poverty',
+    combine: 'people',
+    hiddenAt: ['nation', 'state'],
+    hiddenReason:
+      'Under review: the model does not yet match the Census Bureau for people aged 65 and over.',
     theme: 'poverty',
     label: 'Seniors',
     valueLabel: 'of people aged 65 and over are in poverty (SPM)',
     format: percent,
-    cautionAt: ['district'],
     definition: `Share of people aged 65 and over ${SPM_DEFINITION}`,
     data: SPM_DATA,
     limits: `${SPM_LIMITS} Out-of-pocket medical costs weigh heavily for seniors and are imputed.`,
@@ -177,11 +198,12 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'deep_poverty',
+    combine: 'people',
+    caveat: 'Few survey households are this far below the poverty line.',
     theme: 'poverty',
     label: 'Deep poverty',
     valueLabel: 'of people have resources below half the SPM threshold',
     format: percent,
-    cautionAt: ['state', 'district'],
     definition: 'Share of people whose family resources are below half of their SPM threshold.',
     data: SPM_DATA,
     limits: `Few survey households are this far below the threshold, and survey income is least accurate here. ${SPM_LIMITS}`,
@@ -193,7 +215,6 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
     label: 'After taxes and benefits',
     valueLabel: 'median household income after taxes and benefits',
     format: thousands,
-    cautionAt: [],
     definition:
       'Income of the middle household after federal and state taxes and after benefits, including the value of health benefits the model counts.',
     data: DATA_SENTENCE,
@@ -207,7 +228,6 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
     label: 'Before taxes and benefits',
     valueLabel: 'median household income before taxes and benefits',
     format: thousands,
-    cautionAt: [],
     definition:
       'Income of the middle household from work, investments, pensions and other private sources, before taxes and benefits.',
     data: DATA_SENTENCE,
@@ -217,12 +237,11 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'gini',
-    districts: false,
+    caveat: 'Measured across households, with no adjustment for household size.',
     theme: 'inequality',
     label: 'Gini index',
     valueLabel: 'Gini index of household income after taxes and benefits',
     format: (value) => value.toFixed(2),
-    cautionAt: ['district'],
     definition:
       'Gini index of household income after taxes and benefits: 0 means every household has the same income; 1 means one household has it all.',
     data: DATA_SENTENCE,
@@ -232,12 +251,11 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'top_10_share',
-    districts: false,
+    caveat: 'Top incomes come largely from IRS records that the data imputes.',
     theme: 'inequality',
     label: 'Top 10% share',
     valueLabel: 'of income after taxes and benefits goes to the top 10% of households',
     format: percent,
-    cautionAt: ['district'],
     definition:
       'Share of all household income after taxes and benefits that the highest-income 10% of households receive.',
     data: DATA_SENTENCE,
@@ -247,12 +265,13 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'top_1_share',
-    districts: false,
+    caveat: 'Top incomes come largely from IRS records that the data imputes.',
+    hiddenAt: ['state'],
+    hiddenReason: 'Shown for the nation only: in one state, a few very high incomes decide it.',
     theme: 'inequality',
     label: 'Top 1% share',
     valueLabel: 'of income after taxes and benefits goes to the top 1% of households',
     format: percent,
-    cautionAt: ['state', 'district'],
     definition:
       'Share of all household income after taxes and benefits that the highest-income 1% of households receive.',
     data: DATA_SENTENCE,
@@ -262,12 +281,11 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   },
   {
     key: 'state_income_tax_rate',
-    districts: false,
+    caveat: 'Includes Maryland county income tax and New York City income tax.',
     theme: 'taxes',
     label: 'State income tax rate',
     valueLabel: 'of household income before taxes goes to state income tax',
     format: percent,
-    cautionAt: [],
     definition:
       'State income tax, after state credits, as a share of household income before taxes and benefits. States with no income tax show zero; refundable credits can make a group’s rate negative.',
     data: `${DATA_SENTENCE} State income tax rules come from PolicyEngine's encoding of each state's law.`,
@@ -278,24 +296,26 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   receipt('receipt_snap', 'recipients_snap', 'SNAP', 'household'),
   receipt('receipt_medicaid', 'recipients_medicaid', 'Medicaid', 'person'),
   receipt('receipt_eitc', 'recipients_eitc', 'the EITC', 'tax unit'),
-  receipt('receipt_ctc', 'recipients_ctc', 'the Child Tax Credit', 'tax unit'),
-  receipt(
-    'receipt_aca_ptc',
-    'recipients_aca_ptc',
-    'ACA premium tax credits',
-    'person',
-    'It counts eligible people in a tax unit that takes up the credit and gets more than $0. CMS counts plan selections with advance credits at open enrollment.'
-  ),
-  receipt('receipt_ssi', 'recipients_ssi', 'SSI', 'person'),
+  receipt('receipt_ctc', 'recipients_ctc', 'the Child Tax Credit', 'tax unit', {
+    caveat: 'Higher than the IRS count of returns, which leaves out some claims.',
+  }),
+  receipt('receipt_aca_ptc', 'recipients_aca_ptc', 'ACA premium tax credits', 'person', {
+    who: 'It counts eligible people in a tax unit that takes up the credit and gets more than $0. CMS counts plan selections with advance credits at open enrollment.',
+    caveat: 'About half of the CMS count of enrollees with credits.',
+    nationOnly: true,
+  }),
+  receipt('receipt_ssi', 'recipients_ssi', 'SSI', 'person', { nationOnly: true }),
   receipt(
     'receipt_school_meals',
     'recipients_school_meals',
     'free or reduced-price school meals',
     'school-age child',
-    'It counts children aged 5 to 17 in a family that qualifies. USDA counts lunches served on an average school day, so its count is lower.'
+    {
+      who: 'It counts children aged 5 to 17 in a family that qualifies. USDA counts lunches served on an average school day, so its count is lower.',
+    }
   ),
-  receipt('receipt_wic', 'recipients_wic', 'WIC', 'person'),
-  receipt('receipt_tanf', 'recipients_tanf', 'TANF', 'family'),
+  receipt('receipt_wic', 'recipients_wic', 'WIC', 'person', { nationOnly: true }),
+  receipt('receipt_tanf', 'recipients_tanf', 'TANF', 'family', { nationOnly: true }),
   receipt('receipt_social_security', 'recipients_social_security', 'Social Security', 'person'),
 ];
 
@@ -318,16 +338,11 @@ export function themeMetrics(theme: ExploreTheme): ExploreMetric[] {
 /** The card's summary row: one headline measure per theme. */
 export const HEADLINE_METRICS: ExploreMetric[] = THEMES.map(({ key }) => themeMetrics(key)[0]);
 
-/** Why a district shows no value for a measure the map keeps at the state level. */
-export const NOT_FOR_DISTRICTS_NOTE =
-  'Not estimated for congressional districts: in a district, a few very high-income survey households would decide this figure. The map shows states.';
+/** Why the page stops at states. */
+export const DISTRICTS_HIDDEN_NOTE =
+  'Congressional districts are not shown yet. District figures do not yet match survey estimates (microcosm#1673).';
 
-/** The note that a value rests on a thin sample, or null. */
-export function cautionFor(metric: ExploreMetric, level: RegionLevel): string | null {
-  if (!metric.cautionAt.includes(level)) {
-    return null;
-  }
-  return level === 'district'
-    ? 'District values rest on fewer survey households than state values, so read them as estimates with a wide margin.'
-    : 'State values rest on few survey households for this measure, so read them as estimates with a wide margin.';
+/** Whether the page shows a value for the measure at a level. */
+export function isShownAt(metric: ExploreMetric, level: ShownLevel): boolean {
+  return !metric.hiddenAt?.includes(level);
 }

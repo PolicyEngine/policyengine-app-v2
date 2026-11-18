@@ -3,13 +3,17 @@ import { colors, spacing, typography } from '@/designTokens';
 import type { BaselineMetricKey, BaselineRegion } from '@/libs/flagship/explore/baselineData';
 import {
   CARD_ONLY_FORMATS,
+  isShownAt,
   themeMetrics,
   unitPlural,
   type ExploreMetric,
+  type ShownLevel,
 } from '@/libs/flagship/explore/exploreMetrics';
 
 interface ThemeBreakdownProps {
   place: BaselineRegion;
+  /** The place's level: a measure hidden there stays out of the breakdowns. */
+  level: ShownLevel;
   metric: ExploreMetric;
   onMetricChange: (key: BaselineMetricKey) => void;
 }
@@ -206,13 +210,17 @@ function DecileTaxesAndBenefits({ place }: { place: BaselineRegion }) {
  * figures hold: districts have no deciles or groups, so some themes show
  * nothing there.
  */
-export default function ThemeBreakdown({ place, metric, onMetricChange }: ThemeBreakdownProps) {
+export default function ThemeBreakdown({
+  place,
+  level,
+  metric,
+  onMetricChange,
+}: ThemeBreakdownProps) {
   if (metric.theme === 'poverty' && place.poverty_by_group) {
     const groups = place.poverty_by_group;
     const rows: [string, number | undefined][] = [
       ['Children', groups.children],
       ['Working age', groups.working_age],
-      ['Seniors', groups.seniors],
       ['Women', groups.women],
       ['Men', groups.men],
     ];
@@ -276,6 +284,7 @@ export default function ThemeBreakdown({ place, metric, onMetricChange }: ThemeB
 
   if (metric.theme === 'benefits') {
     const programs = themeMetrics('benefits')
+      .filter((m) => isShownAt(m, level))
       .map((m) => ({ m, value: place.metrics[m.key] }))
       .filter((row): row is { m: ExploreMetric; value: number } => row.value !== undefined)
       .sort((a, b) => b.value - a.value);

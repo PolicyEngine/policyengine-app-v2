@@ -9,6 +9,7 @@ import {
   regionName,
   regionsAt,
   stateCodeOf,
+  statesCombined,
   type BaselineFile,
 } from '@/libs/flagship/explore/baselineData';
 import { BASELINE_FIXTURE } from '@/tests/fixtures/libs/flagship/explore/baselineFixtures';
@@ -17,6 +18,15 @@ const PUBLIC = resolve(__dirname, '../../../../../../public');
 const readJson = (path: string) => JSON.parse(readFileSync(resolve(PUBLIC, path), 'utf8'));
 
 describe('baselineData', () => {
+  test('given the states then their combined rate weights each by its people', () => {
+    // Ohio 10.6% of 11.8M people and California 15.4% of 39M.
+    expect(statesCombined(BASELINE_FIXTURE, 'poverty', 'people')).toBeCloseTo(0.1429, 3);
+  });
+
+  test('given a weight no state has then there is no combined figure', () => {
+    expect(statesCombined(BASELINE_FIXTURE, 'poverty', 'tax_units')).toBeUndefined();
+  });
+
   test('given region names then each reads as its level', () => {
     expect(regionLevel('us')).toBe('nation');
     expect(regionLevel('state/oh')).toBe('state');
