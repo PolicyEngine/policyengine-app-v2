@@ -13,6 +13,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Runs on every PR and decides inside the check whether a fragment is needed,
+  # so that it always reports a result and can be a required check.
+  api-client-changelog-fragment:
+    name: API client changelog fragment
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # Two commits: GitHub's merge commit for the PR and its first parent, the
+      # base branch.
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Check for a changelog fragment
+        run: packages/api-client/.github/check_pr_fragment.sh
+
   lint:
     name: Lint and format
     runs-on: ubuntu-latest
