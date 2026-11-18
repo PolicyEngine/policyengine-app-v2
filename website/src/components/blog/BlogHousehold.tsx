@@ -130,6 +130,11 @@ export function pounds(value: number): string {
   return `£${Math.round(Math.abs(value)).toLocaleString("en-GB")}`;
 }
 
+/** An amount in a value column: "£4,554", or "−£4,554" for a deduction row. */
+export function amount(value: number): string {
+  return `${value < 0 && !isZero(value) ? MINUS : ""}${pounds(value)}`;
+}
+
 /** "+£1,158", "−£6,961", or "—" for no change. */
 export function signedPounds(value: number): string {
   if (isZero(value)) return "—";
@@ -150,57 +155,61 @@ function toneColor(change: number, deduction: boolean): string | undefined {
   return e > 0 ? GAIN : LOSS;
 }
 
+/** A group label read as plural ("Benefits", "Taxes") or not ("Market income"). */
+const isPlural = (label: string) => /s$/i.test(label);
+const rowChange = (row: HouseholdRow) => row.values[1] - row.values[0];
+
 /**
- * One line on what changes: each group that moves, with the row inside it
- * that moves most, and the groups that don't.
+ * One line on what changes: each group that moves, with the part inside it
+ * that moves most (or both parts, when two move by similar amounts), the
+ * groups that don't, and net income.
  */
 export function householdSummary(result: HouseholdResult): string {
   const netChange = result.net[1] - result.net[0];
   const moved: string[] = [];
   const still: string[] = [];
   for (const group of result.rows) {
-    const change = group.values[1] - group.values[0];
-    const name = group.label;
-    if (isZero(change)) {
-      still.push(name.toLowerCase());
+    const total = rowChange(group);
+    const plural = isPlural(group.label);
+    if (isZero(total)) {
+      still.push(group.label.toLowerCase());
       continue;
     }
-    const verb = change > 0 ? "rise" : "fall";
-    const parts = (group.children ?? []).filter(
-      (c) => !isZero(c.values[1] - c.values[0]),
-    );
+    const verb =
+      total > 0 ? (plural ? "rise" : "rises") : plural ? "fall" : "falls";
+    const parts = (group.children ?? [])
+      .filter((c) => !isZero(rowChange(c)))
+      .sort((a, b) => Math.abs(rowChange(b)) - Math.abs(rowChange(a)));
     let detail = "";
-    if (parts.length > 0) {
-      const top = parts.reduce((a, b) =>
-        Math.abs(b.values[1] - b.values[0]) >
-        Math.abs(a.values[1] - a.values[0])
-          ? b
-          : a,
-      );
-      const share = Math.abs(top.values[1] - top.values[0]) / Math.abs(change);
-      if (parts.length === 1) detail = `, all of it ${top.label}`;
-      else if (share >= 0.5) detail = `, mostly ${top.label}`;
+    // A singular group ("Market income") is named by its one part already
+    if (parts.length === 1) {
+      if (plural) detail = `, all of it ${parts[0].label}`;
+    } else if (parts.length > 1) {
+      const share = Math.abs(rowChange(parts[0])) / Math.abs(total);
+      if (share >= 2 / 3) detail = `, mostly ${parts[0].label}`;
+      else if (parts.length === 2) {
+        detail = `: ${parts[0].label} ${pounds(rowChange(parts[0]))} and ${parts[1].label} ${pounds(rowChange(parts[1]))}`;
+      }
     }
     moved.push(
-      `${name.toLowerCase()} ${verb} by ${pounds(change)} a year${detail}`,
+      `${group.label.toLowerCase()} ${verb} by ${pounds(total)} a year${detail}`,
     );
   }
-  if (moved.length === 0) {
-    return "Net income doesn't change.";
-  }
-  const sentence = [moved.join("; ")];
+  const net = isZero(netChange)
+    ? "Net income doesn't change."
+    : `Net income ${netChange > 0 ? "rises" : "falls"} by ${pounds(netChange)} a year.`;
+  if (moved.length === 0) return net;
+  const clauses = [moved.join("; ")];
   if (still.length > 0) {
     const list =
       still.length === 1
         ? still[0]
         : `${still.slice(0, -1).join(", ")} and ${still[still.length - 1]}`;
-    sentence.push(`${list} ${still.length === 1 ? "is" : "are"} unchanged`);
+    const are = still.length > 1 || isPlural(still[0]);
+    clauses.push(`${list} ${are ? "are" : "is"} unchanged`);
   }
-  const text = sentence.join("; ");
-  const net = isZero(netChange)
-    ? " Net income doesn't change."
-    : ` Net income ${netChange > 0 ? "rises" : "falls"} by ${pounds(netChange)} a year.`;
-  return `${text.charAt(0).toUpperCase()}${text.slice(1)}.${net}`;
+  const text = clauses.join("; ");
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}. ${net}`;
 }
 
 const cell = {
@@ -286,8 +295,8 @@ function Rows({
                   </span>
                 )}
               </th>
-              <td style={cell}>{pounds(row.values[0])}</td>
-              <td style={cell}>{pounds(row.values[1])}</td>
+              <td style={cell}>{amount(row.values[0])}</td>
+              <td style={cell}>{amount(row.values[1])}</td>
               <td style={{ ...cell, color: toneColor(change, rowDeduction) }}>
                 {signedPounds(change)}
               </td>
@@ -362,7 +371,9 @@ export function HouseholdBody({ spec }: { spec: BlogHouseholdSpec }) {
           color: "var(--foreground)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div
+          style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}
+        >
           <label htmlFor={`${baseId}-example`} style={label}>
             Household
           </label>
@@ -379,7 +390,9 @@ export function HouseholdBody({ spec }: { spec: BlogHouseholdSpec }) {
             ))}
           </select>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div
+          style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}
+        >
           <label htmlFor={`${baseId}-change`} style={label}>
             Change
           </label>
@@ -409,7 +422,12 @@ export function HouseholdBody({ spec }: { spec: BlogHouseholdSpec }) {
       >
         {householdSummary(result)}
       </p>
-      <div style={{ overflowX: "auto" }}>
+      <div
+        role="region"
+        aria-label={`${example.label}: ${change.label}`}
+        tabIndex={0}
+        style={{ overflowX: "auto" }}
+      >
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <caption
             style={{

@@ -120,9 +120,9 @@ describe("parseHouseholdSpec", () => {
 });
 
 describe("householdSummary and signedPounds", () => {
-  test("names the group that moves and what moves it most", () => {
+  test("names both parts when neither moves two-thirds of the group", () => {
     expect(householdSummary(SPEC.examples[0].results.removals as never)).toBe(
-      "Benefits fall by £6,961 a year, mostly Personal Independence Payment. Net income falls by £6,961 a year.",
+      "Benefits fall by £6,961 a year: Personal Independence Payment £4,354 and Universal Credit £2,607. Net income falls by £6,961 a year.",
     );
   });
   test("lists the unchanged groups", () => {
@@ -131,6 +131,33 @@ describe("householdSummary and signedPounds", () => {
       "Benefits fall by £10,944 a year; market income and taxes are unchanged. Net income falls by £10,944 a year.",
     );
   });
+  test("agrees verbs with singular and plural groups", () => {
+    const text = householdSummary(SPEC.examples[1].results.nics as never);
+    expect(text).toBe(
+      "Market income rises by £652 a year; benefits fall by £258 a year; taxes rise by £183 a year, mostly Income Tax. Net income rises by £211 a year.",
+    );
+    const oneStill = {
+      net: [100, 50],
+      rows: [
+        { label: "Benefits", values: [100, 50] },
+        { label: "Taxes", values: [10, 10] },
+      ],
+    };
+    expect(householdSummary(oneStill as never)).toBe(
+      "Benefits fall by £50 a year; taxes are unchanged. Net income falls by £50 a year.",
+    );
+    const incomeStill = {
+      net: [100, 50],
+      rows: [
+        { label: "Market income", values: [10, 10] },
+        { label: "Benefits", values: [100, 50] },
+      ],
+    };
+    expect(householdSummary(incomeStill as never)).toContain(
+      "market income is unchanged",
+    );
+  });
+
   test("no change is a dash", () => {
     expect(signedPounds(0.4)).toBe("—");
     expect(signedPounds(-6960.84)).toBe("−£6,961");
