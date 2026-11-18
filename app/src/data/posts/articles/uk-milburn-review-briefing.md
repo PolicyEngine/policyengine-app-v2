@@ -87,7 +87,7 @@ The package would save £105 million less than the UC health element and PIP add
 
 ### Household net income by income decile
 
-The package would lower net income in every decile. The largest falls in pounds would be in the seventh decile (£367) and the third (£333), and among the smallest in the first two (£85 and £72). Run on its own, ending PIP accounts for most of the fall in those two deciles. The dashboard's results don't count the households that lose in each decile, so they don't show whether these two deciles hold more young recipients or larger losses per household. Because PIP is not means-tested, a young person in a higher-income household can receive it and would lose it; ending the health element also lowers net income in the top three deciles. Every household whose net income would fall has a member aged 16 to 24. The pattern is almost the same in each year.
+The package would lower net income in every decile. The largest falls in pounds would be in the seventh decile (£367) and the third (£333), and among the smallest in the first two (£85 and £72). Run on its own, ending PIP accounts for most of the fall in those two deciles: £302 in the seventh and £258 in the third, against £70 and £75 from ending the health element on its own. The dashboard's results don't count the households that lose in each decile, so they don't show whether these two deciles hold more young recipients or larger losses per household. Because PIP is not means-tested, a young person in a higher-income household can receive it and would lose it; ending the health element also lowers net income in the top three deciles, by £13 to £32. Every household whose net income would fall has a member aged 16 to 24. The pattern is almost the same in each year.
 
 ```chart
 {
