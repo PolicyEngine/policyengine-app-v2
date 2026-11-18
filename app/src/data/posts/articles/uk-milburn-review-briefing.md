@@ -520,19 +520,19 @@ The review publishes its costings for 2036-37, in 2026-27 prices; our model runs
 
 **Table 9: The review's estimates for 2036-37 (£ million, 2026-27 prices)**
 
-|                                    |   2036-37 |
-| ---------------------------------- | --------: |
-| **Spending**                       |           |
-| Education                          |     2,100 |
-| Opportunity and Support Guarantees |     1,900 |
-| Youth hiring incentives            |     1,100 |
-| Health                             |       700 |
+|                                    |    2036-37 |
+| ---------------------------------- | ---------: |
+| **Spending**                       |            |
+| Education                          |      2,100 |
+| Opportunity and Support Guarantees |      1,900 |
+| Youth hiring incentives            |      1,100 |
+| Health                             |        700 |
 | Local system reform                | negligible |
-| Total spending                     |     5,800 |
-| **Savings**                        |           |
-| Welfare savings                    |     3,600 |
-| Fiscal offsets                     |     2,400 |
-| **Net saving**                     |       200 |
+| Total spending                     |      5,800 |
+| **Savings**                        |            |
+| Welfare savings                    |      3,600 |
+| Fiscal offsets                     |      2,400 |
+| **Net saving**                     |        200 |
 
 Source: the review's [data tables](https://assets.publishing.service.gov.uk/media/6af74c9b9be17c68c69ca838/from-a-welfare-state-to-a-working-state-accompanying-data-tables.ods), table 2, and [analytical annex](https://www.gov.uk/government/publications/from-a-welfare-state-to-a-working-state-a-new-settlement-for-the-next-generation/from-a-welfare-state-to-a-working-state-analytical-annex), section 1, rounded to the nearest £100 million. The review's table shows the net saving as a total net cost of −£200 million.
 
