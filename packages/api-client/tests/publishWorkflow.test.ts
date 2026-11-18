@@ -14,19 +14,23 @@ interface Step {
   readonly env?: Record<string, string>;
 }
 
+interface Concurrency {
+  readonly group?: string;
+  readonly "cancel-in-progress"?: boolean;
+}
+
 interface Job {
+  readonly if?: string;
+  readonly needs?: string | readonly string[];
   readonly permissions?: Permissions;
   readonly environment?: string | { readonly name?: string };
+  readonly concurrency?: Concurrency;
   readonly steps?: readonly Step[];
 }
 
 interface Workflow {
   readonly on: Record<string, Record<string, unknown> | null>;
   readonly permissions?: Permissions;
-  readonly concurrency?: {
-    readonly group?: string;
-    readonly "cancel-in-progress"?: boolean;
-  };
   readonly jobs: Record<string, Job>;
 }
 
@@ -49,6 +53,7 @@ function readWorkflow(fileName: string): Workflow {
  * The workflow that publishes this package to npm, parsed as YAML, so that
  * quoting, flow mappings, anchors and comments cannot hide what it says.
  */
+const RELEASE_COMMIT_MESSAGE = "Update @policyengine/api-client";
 const WORKFLOW = readWorkflow("publish-api-client.yaml");
 const PR_WORKFLOW = readWorkflow("pr.yaml");
 
@@ -122,11 +127,37 @@ describe("the publish workflow", () => {
     expect(WORKFLOW.on.push).toEqual({ branches: ["main"] });
   });
 
-  test("given two runs on one branch then the second waits for the first", () => {
+  test("given the release commit then versioning skips it and the publishing jobs run on it", () => {
     // Then
-    expect(WORKFLOW.concurrency?.group).toContain("github.ref");
-    expect(WORKFLOW.concurrency?.["cancel-in-progress"]).toBe(false);
+    expect(WORKFLOW.jobs.versioning?.if).toContain(
+      `github.event.head_commit.message != '${RELEASE_COMMIT_MESSAGE}'`,
+    );
+    for (const jobName of ["build", "publish"]) {
+      expect(WORKFLOW.jobs[jobName]?.if, jobName).toContain(
+        `github.event.head_commit.message == '${RELEASE_COMMIT_MESSAGE}'`,
+      );
+    }
   });
+
+  test("given a manual start then the publishing jobs can retry a release", () => {
+    // Then
+    for (const jobName of ["build", "publish"]) {
+      expect(WORKFLOW.jobs[jobName]?.if, jobName).toContain(
+        "github.event_name == 'workflow_dispatch'",
+      );
+    }
+  });
+
+  test.each(["versioning", "publish"])(
+    "given two runs reach the %s job then the second waits for the first",
+    (jobName) => {
+      // Then
+      expect(WORKFLOW.jobs[jobName]?.concurrency?.group).toBeTruthy();
+      expect(WORKFLOW.jobs[jobName]?.concurrency?.["cancel-in-progress"]).toBe(
+        false,
+      );
+    },
+  );
 
   test("given the publish job holds the OIDC permission then it checks out and installs nothing", () => {
     // Given
@@ -141,43 +172,54 @@ describe("the publish workflow", () => {
     }
   });
 
-  test("given the GitHub App's private key then only the release commit job uses it", () => {
+  test("given the GitHub App's private key then only the versioning job uses it", () => {
     // Then
-    expect(jobsUsingAppKey()).toEqual(["release-commit"]);
+    expect(jobsUsingAppKey()).toEqual(["versioning"]);
   });
 
-  test("given the release commit job then it installs no dependencies and keeps no credentials in the checkout", () => {
+  test("given the versioning job then it installs no dependencies and its checkout keeps no credentials", () => {
     // Given
-    const releaseSteps = WORKFLOW.jobs["release-commit"]?.steps ?? [];
-    const checkoutStep = releaseSteps.find((step) =>
+    const versioningSteps = WORKFLOW.jobs.versioning?.steps ?? [];
+    const checkoutStep = versioningSteps.find((step) =>
       step.uses?.startsWith("actions/checkout"),
     );
 
     // Then
     expect(checkoutStep?.with?.["persist-credentials"]).toBe(false);
-    for (const step of releaseSteps) {
+    for (const step of versioningSteps) {
       expect(step.uses ?? "").not.toContain("setup-bun");
       expect(step.run ?? "").not.toMatch(/\bbun(x| )|npm (ci|install)/);
     }
   });
 
-  test("given the release commit job then its App token is made last, for contents only, just before the push", () => {
+  test("given the versioning job then its App token is made after the changelog is built and limited to contents", () => {
     // Given
-    const releaseSteps = WORKFLOW.jobs["release-commit"]?.steps ?? [];
-    const tokenStepIndex = releaseSteps.findIndex((step) =>
+    const versioningSteps = WORKFLOW.jobs.versioning?.steps ?? [];
+    const tokenStepIndex = versioningSteps.findIndex((step) =>
       step.uses?.startsWith("actions/create-github-app-token"),
     );
-    const stepsBeforeToken = releaseSteps.slice(0, tokenStepIndex);
-    const stepsAfterToken = releaseSteps.slice(tokenStepIndex + 1);
+    const stepsBeforeToken = versioningSteps.slice(0, tokenStepIndex);
 
     // Then
     expect(tokenStepIndex).toBeGreaterThan(0);
-    expect(releaseSteps[tokenStepIndex]?.with?.["permission-contents"]).toBe(
+    expect(versioningSteps[tokenStepIndex]?.with?.["permission-contents"]).toBe(
       "write",
     );
-    expect(stepsBeforeToken.map(stepText).join("\n")).toContain("towncrier");
-    expect(stepsAfterToken).toHaveLength(1);
-    expect(stepsAfterToken[0]?.run).toContain("git push");
+    expect(stepsBeforeToken.map(stepText).join("\n")).toContain(
+      "towncrier build",
+    );
+  });
+
+  test("given the release commit then it holds only the package's folder and carries the agreed message", () => {
+    // Given
+    const commitStep = WORKFLOW.jobs.versioning?.steps?.find((step) =>
+      step.uses?.startsWith("EndBug/add-and-commit"),
+    );
+
+    // Then
+    expect(commitStep?.with?.add).toBe("packages/api-client");
+    expect(commitStep?.with?.message).toBe(RELEASE_COMMIT_MESSAGE);
+    expect(commitStep?.with?.fetch).toBe(false);
   });
 
   test("given the workflow's own token then no job asks for more than reading contents", () => {
@@ -199,7 +241,7 @@ describe("the changelog fragment check in the PR workflow", () => {
     expect(PR_WORKFLOW.on.pull_request).not.toHaveProperty("paths-ignore");
   });
 
-  test("given the check job then it can only read and compares the merge commit with its first parent", () => {
+  test("given the check job then it always runs, can only read and sees the merge commit's parent", () => {
     // Given
     const checkJob = PR_WORKFLOW.jobs["api-client-changelog-fragment"];
     const checkSteps = checkJob?.steps ?? [];
@@ -208,11 +250,13 @@ describe("the changelog fragment check in the PR workflow", () => {
     );
 
     // Then
+    expect(checkJob?.if).toBeUndefined();
+    expect(checkJob?.needs).toBeUndefined();
     expect(checkJob?.permissions).toEqual({ contents: "read" });
     expect(checkoutStep?.with?.["fetch-depth"]).toBe(2);
     expect(checkoutStep?.with?.["persist-credentials"]).toBe(false);
     expect(checkSteps.map(stepText).join("\n")).toContain(
-      "check-changelog-fragment.mjs HEAD^1 HEAD",
+      "packages/api-client/.github/check_pr_fragment.sh",
     );
   });
 });

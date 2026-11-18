@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   # Runs on every PR and decides inside the check whether a fragment is needed,
-  # so that it always reports a result and can be made a required check.
+  # so that it always reports a result and can be a required check.
   api-client-changelog-fragment:
     name: API client changelog fragment
     runs-on: ubuntu-latest
@@ -30,13 +30,8 @@ jobs:
           fetch-depth: 2
           persist-credentials: false
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
       - name: Check for a changelog fragment
-        run: node packages/api-client/scripts/check-changelog-fragment.mjs HEAD^1 HEAD
+        run: packages/api-client/.github/check_pr_fragment.sh
 
   lint:
     name: Lint and format

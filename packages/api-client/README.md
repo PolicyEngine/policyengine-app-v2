@@ -123,25 +123,25 @@ The dashboard API answers browser requests from www.policyengine.org itself, fro
 
 ## Releases
 
-Merging a change to `main` with a changelog fragment releases a new version. Nobody needs to start anything, and nobody edits `version` by hand.
+This package is versioned and released on its own, the same way as PolicyEngine's other packages. It has its own `changelog.d`, `towncrier.toml`, `CHANGELOG.md` and version, separate from the rest of this repository. Merging a change to `main` with a changelog fragment releases a new version. Nobody needs to start anything, and nobody edits `version` by hand.
 
-A PR needs a fragment if it changes what npm ships or how it is built: anything in `src`, `README.md`, `LICENSE`, `tsconfig.json`, `tsconfig.build.json`, or `package.json` (a change limited to `devDependencies` or `scripts` doesn't count). The "API client changelog fragment" check on every PR says whether one is needed. Add a file named `changelog.d/<name>.<type>.md` containing a sentence for the changelog:
+Every PR that changes anything in this folder needs a fragment, including changes to tests and tooling. PRs that change nothing here don't. The "API client changelog fragment" check enforces this. Add a file named `changelog.d/<name>.<type>.md` containing a sentence for the changelog:
 
-| Type       | Use it for                               | Version raise                          |
-| ---------- | ---------------------------------------- | -------------------------------------- |
-| `breaking` | a change existing callers must adapt to  | major (minor while the version is 0.x) |
-| `added`    | new functionality                        | minor                                  |
-| `removed`  | functionality taken away                 | minor                                  |
-| `changed`  | a change to existing behaviour           | patch                                  |
-| `fixed`    | a bug fix, or a correction to the README | patch                                  |
+| Type       | Use it for                               | Version raise |
+| ---------- | ---------------------------------------- | ------------- |
+| `breaking` | a change existing callers must adapt to  | major         |
+| `added`    | new functionality                        | minor         |
+| `removed`  | functionality taken away                 | minor         |
+| `changed`  | a change to existing behaviour           | patch         |
+| `fixed`    | a bug fix                                | patch         |
 
-If a release holds several fragments, the largest raise applies once. While the version is 0.x, `^0.1.1` accepts only 0.1.x, so consumers must raise their own range to receive a minor version.
+If a release holds several fragments, the largest raise applies once. The first `breaking` fragment takes the package from 0.x to 1.0.0.
 
-The "Publish @policyengine/api-client" workflow (`.github/workflows/publish-api-client.yaml`) runs on each push to `main`. When it finds fragments, it raises `version` in `package.json` and `bun.lock`, moves the fragments into `CHANGELOG.md` and pushes that commit to `main`. The push starts the workflow again, and that run tests, builds and publishes the version npm doesn't have yet. It uses npm trusted publishing, so no npm token is stored, and the versions it publishes carry provenance. It publishes directly with `npm publish`, not `npm stage publish`, so a version is public as soon as the run finishes, with no approval step on npm.
+The "Publish @policyengine/api-client" workflow (`.github/workflows/publish-api-client.yaml`) runs on each push to `main`. When it finds fragments, it raises `version` in `package.json`, moves the fragments into `CHANGELOG.md` and pushes that commit to `main` as "Update @policyengine/api-client". The push starts the workflow again, and that run tests, builds and publishes the new version. It uses npm trusted publishing, so no npm token is stored, and the versions it publishes carry provenance. It publishes directly with `npm publish`, not `npm stage publish`, so a version is public as soon as the run finishes, with no approval step on npm.
 
 To push to `main`, the workflow uses a token for the organisation's `policyengine` GitHub App, from the organisation secrets `APP_ID` and `APP_PRIVATE_KEY`. The App must stay on the bypass list of the `protect-master` ruleset.
 
-If a release fails, fix the cause if it needs fixing, then run the workflow on `main` (Actions → "Publish @policyengine/api-client" → Run workflow). It picks up whatever is unfinished: fragments not yet released, or a raised version not yet on npm.
+If a release fails, fix the cause if it needs fixing, then run the workflow on `main` (Actions → "Publish @policyengine/api-client" → Run workflow). It releases any fragments still waiting and publishes the version in `package.json` if npm doesn't have it.
 
 0.1.0 was published by hand by an owner of the `@policyengine` npm scope, from a tarball packed on `main`, because npm lets a package trust a workflow only once the package exists. npm also lists a `0.0.0-stage` version, a placeholder its registry created during that publish. `latest` points to 0.1.0, so installs don't get the placeholder.
 

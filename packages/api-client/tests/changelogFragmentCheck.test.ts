@@ -4,20 +4,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
-const CHECK_SCRIPT = join(
-  __dirname,
-  "..",
-  "scripts",
-  "check-changelog-fragment.mjs",
-);
+const CHECK_SCRIPT = join(__dirname, "..", ".github", "check_pr_fragment.sh");
 const PACKAGE_PATH = "packages/api-client";
-const BASE_MANIFEST = {
-  name: "@policyengine/api-client",
-  version: "0.1.1",
-  files: ["dist", "README.md"],
-  scripts: { test: "vitest run" },
-  devDependencies: { vitest: "^3.2.3" },
-};
 
 let repository: string;
 
@@ -34,21 +22,18 @@ function writeRepositoryFile(relativePath: string, contents: string): void {
   writeFileSync(absolutePath, contents);
 }
 
-function writeManifest(manifest: Record<string, unknown>): void {
-  writeRepositoryFile(
-    `${PACKAGE_PATH}/package.json`,
-    `${JSON.stringify(manifest, null, 2)}\n`,
-  );
-}
-
-/** Commits what the test wrote, then runs the check from main to that commit. */
-function runCheckOnChanges() {
-  git("add", "--all");
-  git("commit", "--allow-empty", "--quiet", "--message", "The PR's change");
-  return spawnSync(process.execPath, [CHECK_SCRIPT, "HEAD^1", "HEAD"], {
+function runCheck() {
+  return spawnSync("bash", [CHECK_SCRIPT], {
     cwd: repository,
     encoding: "utf8",
   });
+}
+
+/** Commits what the test wrote, then checks that commit against its parent. */
+function runCheckOnChanges() {
+  git("add", "--all");
+  git("commit", "--allow-empty", "--quiet", "--message", "The PR's change");
+  return runCheck();
 }
 
 beforeEach(() => {
@@ -56,10 +41,10 @@ beforeEach(() => {
   git("init", "--quiet", "--initial-branch=main");
   git("config", "user.name", "Fragment Check Test");
   git("config", "user.email", "fragment-check@example.com");
-  writeManifest(BASE_MANIFEST);
+  writeRepositoryFile(`${PACKAGE_PATH}/package.json`, "{}\n");
   writeRepositoryFile(`${PACKAGE_PATH}/src/client.ts`, "export {};\n");
-  writeRepositoryFile(`${PACKAGE_PATH}/README.md`, "# Client\n");
   writeRepositoryFile(`${PACKAGE_PATH}/changelog.d/.gitkeep`, "");
+  writeRepositoryFile("app/src/page.tsx", "export {};\n");
   git("add", "--all");
   git("commit", "--quiet", "--message", "Main before the PR");
 });
@@ -70,25 +55,32 @@ afterEach(() => {
 
 describe("the changelog fragment check", () => {
   test.each([
-    `${PACKAGE_PATH}/src/client.ts`,
-    `${PACKAGE_PATH}/src/new-file.ts`,
-    `${PACKAGE_PATH}/README.md`,
-    `${PACKAGE_PATH}/LICENSE`,
-    `${PACKAGE_PATH}/tsconfig.json`,
-    `${PACKAGE_PATH}/tsconfig.build.json`,
-  ])("given a change to %s and no fragment then it fails", (changedPath) => {
-    // Given
-    writeRepositoryFile(changedPath, "// changed\n");
+    "src/client.ts",
+    "tests/client.test.ts",
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "tsconfig.json",
+    "vitest.config.ts",
+    "prettier.config.mjs",
+    "CHANGELOG.md",
+    ".github/bump_version.py",
+  ])(
+    "given a change to %s in the package and no fragment then it fails",
+    (changedFile) => {
+      // Given
+      writeRepositoryFile(`${PACKAGE_PATH}/${changedFile}`, "// changed\n");
 
-    // When
-    const result = runCheckOnChanges();
+      // When
+      const result = runCheckOnChanges();
 
-    // Then
-    expect(result.status).toBe(1);
-    expect(result.stdout).toContain("changelog.d");
-  });
+      // Then
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain("changelog.d");
+    },
+  );
 
-  test("given a deleted source file and no fragment then it fails", () => {
+  test("given a deleted package file and no fragment then it fails", () => {
     // Given
     git("rm", "--quiet", `${PACKAGE_PATH}/src/client.ts`);
 
@@ -100,10 +92,10 @@ describe("the changelog fragment check", () => {
   });
 
   test.each(["breaking", "added", "removed", "changed", "fixed"])(
-    "given a source change and a %s fragment then it passes",
+    "given a package change and a %s fragment then it passes",
     (fragmentType) => {
       // Given
-      writeRepositoryFile(`${PACKAGE_PATH}/src/client.ts`, "// changed\n");
+      writeRepositoryFile(`${PACKAGE_PATH}/tests/client.test.ts`, "// new\n");
       writeRepositoryFile(
         `${PACKAGE_PATH}/changelog.d/some-change.${fragmentType}.md`,
         "A change.\n",
@@ -117,17 +109,9 @@ describe("the changelog fragment check", () => {
     },
   );
 
-  test.each([
-    `${PACKAGE_PATH}/tests/client.test.ts`,
-    `${PACKAGE_PATH}/vitest.config.ts`,
-    `${PACKAGE_PATH}/prettier.config.mjs`,
-    `${PACKAGE_PATH}/.prettierignore`,
-    `${PACKAGE_PATH}/scripts/some-script.mjs`,
-    `${PACKAGE_PATH}/CHANGELOG.md`,
-    "app/src/page.tsx",
-  ])("given a change only to %s then it passes", (changedPath) => {
+  test("given a change only outside the package then it passes", () => {
     // Given
-    writeRepositoryFile(changedPath, "// changed\n");
+    writeRepositoryFile("app/src/page.tsx", "// changed\n");
 
     // When
     const result = runCheckOnChanges();
@@ -144,33 +128,7 @@ describe("the changelog fragment check", () => {
     expect(result.status, result.stdout).toBe(0);
   });
 
-  test("given package.json changes only devDependencies and scripts then it passes", () => {
-    // Given
-    writeManifest({
-      ...BASE_MANIFEST,
-      scripts: { test: "vitest run --coverage" },
-      devDependencies: { vitest: "^3.3.0" },
-    });
-
-    // When
-    const result = runCheckOnChanges();
-
-    // Then
-    expect(result.status, result.stdout).toBe(0);
-  });
-
-  test("given package.json changes a shipped field and no fragment then it fails", () => {
-    // Given
-    writeManifest({ ...BASE_MANIFEST, files: ["dist"] });
-
-    // When
-    const result = runCheckOnChanges();
-
-    // Then
-    expect(result.status).toBe(1);
-  });
-
-  test("given a fragment with an unknown type then it fails and names the file, even without a package change", () => {
+  test("given a fragment with an unknown type then it fails and names the file", () => {
     // Given
     writeRepositoryFile(
       `${PACKAGE_PATH}/changelog.d/some-change.improved.md`,
@@ -201,7 +159,7 @@ describe("the changelog fragment check", () => {
     expect(result.stdout).toContain("some-change.fixed.md");
   });
 
-  test("given a fragment in a subdirectory then it does not count", () => {
+  test("given a fragment in a subdirectory then it fails and names the file", () => {
     // Given
     writeRepositoryFile(`${PACKAGE_PATH}/src/client.ts`, "// changed\n");
     writeRepositoryFile(
@@ -228,11 +186,7 @@ describe("the changelog fragment check", () => {
     );
 
     // When
-    const result = spawnSync(
-      process.execPath,
-      [CHECK_SCRIPT, "HEAD^1", "HEAD"],
-      { cwd: repository, encoding: "utf8" },
-    );
+    const result = runCheck();
 
     // Then
     expect(result.status).toBe(1);
