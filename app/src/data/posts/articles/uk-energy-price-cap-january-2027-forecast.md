@@ -1,6 +1,6 @@
 On 18 November, the consultancy Cornwall Insight published its ["final forecast"](https://www.cornwall-insight.com/press-releases/energy-bills-set-for-steep-rise-in-january/) for the energy price cap from 1 January to 31 March 2027: £2,166 a year for a household with typical consumption paying by Direct Debit, £443 (26%) above the [current cap](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges) of £1,723.
 
-Using PolicyEngine UK, we estimate what that forecast would mean for household energy bills across the income distribution in Great Britain. Every figure below depends on the forecast, and Ofgem's rates may differ from it.
+Using [PolicyEngine UK](https://github.com/PolicyEngine/uk-energy-price-cap-2027), we estimate what that forecast would mean for household energy bills across the income distribution in Great Britain. Every figure below depends on the forecast, and Ofgem's rates may differ from it.
 
 Key results, if the cap rises as Cornwall Insight forecasts (annual rates unless stated, Great Britain):
 
