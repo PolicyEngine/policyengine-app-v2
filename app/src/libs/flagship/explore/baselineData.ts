@@ -69,6 +69,8 @@ export interface BaselineBenchmark {
 
 /** An agency's count of a program's recipients, in the agency's own unit and period. */
 export interface BaselineAdminCount {
+  /** "at least", where the agency's count leaves some recipients out. */
+  qualifier?: string;
   value: number;
   /** "persons", "returns", "families", "children". */
   unit: string;

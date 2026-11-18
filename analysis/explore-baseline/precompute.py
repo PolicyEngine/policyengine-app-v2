@@ -37,19 +37,23 @@ BENCHMARKS = HERE / "census_spm_benchmarks.json"
 ADMIN_COUNTS = HERE / "admin_by_state.csv"
 
 # Programs whose recipients and totals the page shows, with the model
-# variable and the unit that receives it: a person, an SPM unit (the
-# family or household that shares food and housing), or a tax unit.
-# Recipients are counted in that unit, so the counts compare with the
-# agencies' counts of participants, households or returns.
+# variable and the unit counted: a person, an SPM unit (the family or
+# household that shares food and housing), or a tax unit. Recipients are
+# counted in that unit, so the counts compare with the agencies' counts
+# of participants, households or returns. Two units are narrower:
+# "child" counts children aged 5 to 17 in a family that gets free or
+# reduced-price school meals (the agency counts lunches a day), and
+# "marketplace_person" counts people with marketplace coverage in a tax
+# unit that gets the credit (the agency counts enrollees with APTC).
 PROGRAMS = {
     "snap": ("snap", "spm_unit"),
     "tanf": ("tanf", "spm_unit"),
-    "school_meals": ("free_school_meals", "spm_unit"),
+    "school_meals": ("free_school_meals", "child"),
     "medicaid": ("medicaid", "person"),
     "ssi": ("ssi", "person"),
     "wic": ("wic", "person"),
     "social_security": ("social_security", "person"),
-    "aca_ptc": ("aca_ptc", "tax_unit"),
+    "aca_ptc": ("aca_ptc", "marketplace_person"),
     "eitc": ("eitc", "tax_unit"),
     # `ctc` is the credit a tax unit could claim before the tax limit;
     # `ctc_value` is the credit it receives.
@@ -57,12 +61,13 @@ PROGRAMS = {
     "state_credits": ("state_refundable_credits", "tax_unit"),
 }
 
-# The agency count shown beside each program's model count: the CSV
-# measure, and the period to take when the file has several.
+# The agency count shown beside each program's model count, in the same
+# unit: the CSV measure, and the period to take when the file has several.
 ADMIN_MEASURES = {
-    "snap": ("snap_avg_monthly_persons", "FY2025"),
+    "snap": ("snap_qc_households", None),
     "tanf": ("tanf_avg_monthly_families", None),
-    "school_meals": ("nslp_total_avg_daily_participation", None),
+    # Free and reduced-price lunches a day; national only.
+    "school_meals": ("nslp_free_reduced_avg_daily_participation", None),
     "medicaid": ("medicaid_enrollment_excl_chip", None),
     "ssi": ("ssi_recipients", None),
     "wic": ("wic_avg_monthly_participation", "FY2025"),
@@ -71,6 +76,11 @@ ADMIN_MEASURES = {
     "eitc": ("eitc_returns", None),
     "ctc": ("ctc_odc_nonrefundable_returns", None),
 }
+
+# Agency counts that miss some recipients, so the page says "at least":
+# IRS counts returns with the nonrefundable CTC or ODC, which leaves out
+# returns that claim only the refundable part.
+ADMIN_LOWER_BOUNDS = {"ctc"}
 
 # Figures that need many households; districts leave them out.
 NATION_AND_STATE_ONLY = {"deciles", "state_tax_by_quintile", "poverty_by_group"}
@@ -187,6 +197,13 @@ def load_frames(dataset: Path, year: int, legacy_local: bool = False) -> dict[st
     for key, (variable, unit) in PROGRAMS.items():
         if unit == "person":
             person[f"gets_{key}"] = calc(variable, "person") > 0
+    age = person["age"].to_numpy()
+    person["school_age"] = (age >= 5) & (age <= 17)
+    meals = (calc("free_school_meals", "person") > 0) | (calc("reduced_price_school_meals", "person") > 0)
+    person["gets_school_meals"] = meals & person["school_age"].to_numpy()
+    person["gets_aca_ptc"] = (calc("aca_ptc", "person") > 0) & calc(
+        "has_marketplace_health_coverage", "person"
+    ).astype(bool)
 
     household = pd.DataFrame(
         {
@@ -267,8 +284,11 @@ def figures(frames: dict[str, pd.DataFrame], with_breakdowns: bool) -> dict:
     }
     # Recipients in the program's own unit, and their share of all such units.
     for key, (_, unit) in PROGRAMS.items():
-        if unit == "person":
+        if unit in ("person", "marketplace_person"):
             gets, weights = p[f"gets_{key}"].to_numpy(), pw
+        elif unit == "child":
+            school_age = p["school_age"].to_numpy()
+            gets, weights = p[f"gets_{key}"].to_numpy()[school_age], pw[school_age]
         elif unit == "spm_unit":
             gets, weights = s[f"gets_{key}"].to_numpy(), sw
         else:
@@ -423,6 +443,7 @@ def admin_counts() -> dict[str, dict]:
         for _, row in rows.iterrows():
             code = "us" if row["geography"] == "US" else f"state/{row['geography'].lower()}"
             out.setdefault(code, {})[f"receipt_{key}"] = {
+                **({"qualifier": "at least"} if key in ADMIN_LOWER_BOUNDS else {}),
                 "value": float(row["value"]),
                 "unit": row["unit"],
                 "period": row["period"],

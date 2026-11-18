@@ -36,10 +36,12 @@ describe('benefit measures', () => {
     expect(eitc.valueLabel).toBe('of tax units claim the EITC');
   });
 
-  test('given free school meals then it counts families', () => {
+  test('given school meals then it counts school-age children', () => {
     const meals = exploreMetric('receipt_school_meals');
 
-    expect(meals.valueLabel).toBe('of families receive free school meals');
+    expect(meals.valueLabel).toBe(
+      'of school-age children receive free or reduced-price school meals'
+    );
   });
 
   test('given Medicaid then it counts people', () => {

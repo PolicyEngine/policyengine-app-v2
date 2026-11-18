@@ -86,13 +86,17 @@ export function formatCount(value: number): string {
 }
 
 /** The unit a program pays: a person, a household or family (an SPM unit), or a tax unit. */
-export type RecipientUnit = 'person' | 'household' | 'family' | 'tax unit';
+export type RecipientUnit = 'person' | 'school-age child' | 'household' | 'family' | 'tax unit';
 
 /** "people", "households", "families", "tax units". */
 export function unitPlural(unit: RecipientUnit): string {
-  return { person: 'people', household: 'households', family: 'families', 'tax unit': 'tax units' }[
-    unit
-  ];
+  return {
+    person: 'people',
+    'school-age child': 'school-age children',
+    household: 'households',
+    family: 'families',
+    'tax unit': 'tax units',
+  }[unit];
 }
 
 const BENEFITS_NOT_FOR_DISTRICTS_NOTE =
@@ -110,7 +114,9 @@ function receipt(
   key: BaselineMetricKey,
   recipientsKey: RecipientKey,
   label: string,
-  unit: RecipientUnit
+  unit: RecipientUnit,
+  /** More on who counts, added to the definition. */
+  who?: string
 ): ExploreMetric {
   const verb = unit === 'tax unit' ? 'claim' : 'receive';
   const units = unitPlural(unit);
@@ -124,7 +130,7 @@ function receipt(
     recipients: { key: recipientsKey, unit },
     districts: false,
     notForDistrictsNote: BENEFITS_NOT_FOR_DISTRICTS_NOTE,
-    definition: `Share of ${units} that ${verb} ${label} in the year, as PolicyEngine computes it from the program's rules.${unit === 'household' || unit === 'family' ? ` ${SPM_UNIT_NOTE}` : ''}`,
+    definition: `Share of ${units} that ${verb} ${label} in the year, as PolicyEngine computes it from the program's rules.${unit === 'household' || unit === 'family' ? ` ${SPM_UNIT_NOTE}` : ''}${who ? ` ${who}` : ''}`,
     data: DATA_SENTENCE,
     limits: RECEIPT_LIMITS,
     links: [DATA_PIPELINE, CALIBRATION_TARGETS],
@@ -273,9 +279,21 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
   receipt('receipt_medicaid', 'recipients_medicaid', 'Medicaid', 'person'),
   receipt('receipt_eitc', 'recipients_eitc', 'the EITC', 'tax unit'),
   receipt('receipt_ctc', 'recipients_ctc', 'the Child Tax Credit', 'tax unit'),
-  receipt('receipt_aca_ptc', 'recipients_aca_ptc', 'ACA premium tax credits', 'tax unit'),
+  receipt(
+    'receipt_aca_ptc',
+    'recipients_aca_ptc',
+    'ACA premium tax credits',
+    'person',
+    'It counts people with marketplace coverage in a tax unit that gets the credit, as CMS counts enrollees with advance credits.'
+  ),
   receipt('receipt_ssi', 'recipients_ssi', 'SSI', 'person'),
-  receipt('receipt_school_meals', 'recipients_school_meals', 'free school meals', 'family'),
+  receipt(
+    'receipt_school_meals',
+    'recipients_school_meals',
+    'free or reduced-price school meals',
+    'school-age child',
+    'It counts children aged 5 to 17 in a family that qualifies. USDA counts lunches served on an average school day, so its count is lower.'
+  ),
   receipt('receipt_wic', 'recipients_wic', 'WIC', 'person'),
   receipt('receipt_tanf', 'recipients_tanf', 'TANF', 'family'),
   receipt('receipt_social_security', 'recipients_social_security', 'Social Security', 'person'),
