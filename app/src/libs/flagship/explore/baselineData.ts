@@ -71,6 +71,8 @@ export interface BaselineBenchmark {
 export interface BaselineAdminCount {
   /** "at least", where the agency's count leaves some recipients out. */
   qualifier?: string;
+  /** What the count measures, where it differs from the model's count. */
+  note?: string;
   value: number;
   /** "persons", "returns", "families", "children". */
   unit: string;

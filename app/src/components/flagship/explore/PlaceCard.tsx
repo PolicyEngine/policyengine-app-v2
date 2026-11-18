@@ -102,7 +102,8 @@ export default function PlaceCard({
         <p style={{ ...smallText, marginTop: 2 }}>
           Agency count: {adminCount.qualifier ? `${adminCount.qualifier} ` : ''}
           {formatCount(adminCount.value)} {agencyUnit(adminCount.unit)} (
-          {adminCount.source.split(' (')[0]}, {adminCount.period.split(' (')[0]}) ·{' '}
+          {adminCount.source.split(' (')[0]}, {adminCount.period.split(' (')[0]})
+          {adminCount.note ? `; ${adminCount.note}` : ''} ·{' '}
           <a
             href={adminCount.url}
             target="_blank"

@@ -284,7 +284,7 @@ export const EXPLORE_METRICS: ExploreMetric[] = [
     'recipients_aca_ptc',
     'ACA premium tax credits',
     'person',
-    'It counts people with marketplace coverage in a tax unit that gets the credit, as CMS counts enrollees with advance credits.'
+    'It counts eligible people in a tax unit that takes up the credit and gets more than $0. CMS counts plan selections with advance credits at open enrollment.'
   ),
   receipt('receipt_ssi', 'recipients_ssi', 'SSI', 'person'),
   receipt(

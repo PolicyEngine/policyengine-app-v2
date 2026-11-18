@@ -43,8 +43,9 @@ ADMIN_COUNTS = HERE / "admin_by_state.csv"
 # of participants, households or returns. Two units are narrower:
 # "child" counts children aged 5 to 17 in a family that gets free or
 # reduced-price school meals (the agency counts lunches a day), and
-# "marketplace_person" counts people with marketplace coverage in a tax
-# unit that gets the credit (the agency counts enrollees with APTC).
+# "marketplace_person" counts people the model enrolls with the credit:
+# eligible people in a tax unit that takes it up and gets more than $0
+# (the agency counts plan selections with APTC).
 PROGRAMS = {
     "snap": ("snap", "spm_unit"),
     "tanf": ("tanf", "spm_unit"),
@@ -81,6 +82,12 @@ ADMIN_MEASURES = {
 # IRS counts returns with the nonrefundable CTC or ODC, which leaves out
 # returns that claim only the refundable part.
 ADMIN_LOWER_BOUNDS = {"ctc"}
+
+# What an agency count measures, where it is not the same as the model's.
+ADMIN_NOTES = {
+    "school_meals": "average daily lunches, not children approved",
+    "aca_ptc": "plan selections at open enrollment",
+}
 
 # Figures that need many households; districts leave them out.
 NATION_AND_STATE_ONLY = {"deciles", "state_tax_by_quintile", "poverty_by_group"}
@@ -201,8 +208,11 @@ def load_frames(dataset: Path, year: int, legacy_local: bool = False) -> dict[st
     person["school_age"] = (age >= 5) & (age <= 17)
     meals = (calc("free_school_meals", "person") > 0) | (calc("reduced_price_school_meals", "person") > 0)
     person["gets_school_meals"] = meals & person["school_age"].to_numpy()
+    # `person_receives_aca` follows the model's take-up. The survey's
+    # marketplace answer (`has_marketplace_health_coverage`) is
+    # under-reported and independent of take-up, so it is not used.
     person["gets_aca_ptc"] = (calc("aca_ptc", "person") > 0) & calc(
-        "has_marketplace_health_coverage", "person"
+        "person_receives_aca", "person"
     ).astype(bool)
 
     household = pd.DataFrame(
@@ -444,6 +454,7 @@ def admin_counts() -> dict[str, dict]:
             code = "us" if row["geography"] == "US" else f"state/{row['geography'].lower()}"
             out.setdefault(code, {})[f"receipt_{key}"] = {
                 **({"qualifier": "at least"} if key in ADMIN_LOWER_BOUNDS else {}),
+                **({"note": ADMIN_NOTES[key]} if key in ADMIN_NOTES else {}),
                 "value": float(row["value"]),
                 "unit": row["unit"],
                 "period": row["period"],
