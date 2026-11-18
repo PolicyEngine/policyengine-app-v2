@@ -1,6 +1,7 @@
 import { UNAUTHENTICATED_USER_HEADER, type V2UserClient } from '@/api/v2UserClient';
 import type {
   AssociationCountryId,
+  LatestUserTypeChange,
   MeExportResult,
   MeItem,
   MeUpgradeResult,
@@ -10,16 +11,23 @@ import type {
 /**
  * "Who am I": the PolicyEngine user behind the session. Signed in, the
  * first call provisions the account, with `primary_country` set from
- * `countryId`.
+ * `countryId`. The answer names the user's latest type change beside the
+ * user (`result.latest_type_change`); it is copied onto the returned user,
+ * so `/v2/me`'s one cache entry holds both.
  */
 export async function fetchMe(
   client: V2UserClient,
   countryId: AssociationCountryId
 ): Promise<MeItem> {
-  const result = await client.request<V2ItemResult<MeItem>>('GET', 'me', {
+  const result = await client.request<
+    V2ItemResult<MeItem> & { latest_type_change?: LatestUserTypeChange | null }
+  >('GET', 'me', {
     query: { country_id: countryId },
   });
-  return result.item;
+  // An API that does not send it yet leaves the user as it is.
+  return result.latest_type_change === undefined
+    ? result.item
+    : { ...result.item, latest_type_change: result.latest_type_change };
 }
 
 /** Everything saved to the account, across all countries. */
@@ -53,4 +61,22 @@ export async function upgradeAccount(
     query: { country_id: countryId },
     headers: { [UNAUTHENTICATED_USER_HEADER]: browserUserId },
   });
+}
+
+/**
+ * Dismisses the notice of a type change: `/v2/me`'s `latest_type_change`
+ * no longer names it.
+ */
+export async function dismissTypeChange(
+  client: V2UserClient,
+  countryId: AssociationCountryId,
+  typeChangeId: string
+): Promise<void> {
+  await client.request<void>(
+    'POST',
+    `me/type-changes/${encodeURIComponent(typeChangeId)}/dismiss`,
+    {
+      query: { country_id: countryId },
+    }
+  );
 }

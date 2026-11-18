@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ECONOMY_OPTIONS_DOCUMENT,
   GENERATION_TIMEOUT_MS,
+  KIND_UNION_DOCUMENT,
 } from '@/tests/fixtures/scripts/publicApiClientMocks';
 import {
   compareGeneratedTypes,
@@ -61,6 +62,21 @@ describe('public-api-client', () => {
       // Then
       expect(comparison.upToDate).toBe(false);
       expect(comparison.expected).toContain('policyengine_version');
+    },
+    GENERATION_TIMEOUT_MS
+  );
+
+  it(
+    'given a document with a union told apart by kind then generating its types leaves the document unchanged',
+    async () => {
+      // Given
+      const documentToGenerate = structuredClone(KIND_UNION_DOCUMENT);
+
+      // When
+      await generatePublicApiTypes(documentToGenerate);
+
+      // Then
+      expect(documentToGenerate).toEqual(KIND_UNION_DOCUMENT);
     },
     GENERATION_TIMEOUT_MS
   );

@@ -58,10 +58,18 @@ export async function fetchSimulationById(
   return withCanonicalPopulationId(json.result);
 }
 
+/**
+ * Creates a simulation, or finds the Public API's existing one for the
+ * same population and policy. Answers its ID, and the simulation as
+ * stored, which the Public API answers a create with: the same as
+ * fetchSimulationById then reads. A mutation should answer only `result`:
+ * the calculator's query normalizer would write `simulation`, by its ID,
+ * over every cached record with that ID.
+ */
 export async function createSimulation(
   countryId: (typeof countryIds)[number],
   data: SimulationCreationPayload
-): Promise<{ result: { simulation_id: string } }> {
+): Promise<{ result: { simulation_id: string }; simulation: SimulationMetadata }> {
   const url = `${BASE_URL}/${countryId}/simulation`;
 
   const response = await fetch(url, {
@@ -93,6 +101,7 @@ export async function createSimulation(
     result: {
       simulation_id: String(json.result.id),
     },
+    simulation: withCanonicalPopulationId(json.result),
   };
 }
 

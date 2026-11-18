@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   IconAdjustments,
   IconDotsVertical,
@@ -21,6 +21,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDraftReform } from '@/libs/draftReform';
 import { isExploreEnabled } from '@/libs/featureFlags';
+import { getToolsMenuEntries } from '@/utils/toolsMenu';
 import AuthMenu from '../auth/AuthMenu';
 import CountrySelector from '../homeHeader/CountrySelector';
 import FlagshipBrand from './FlagshipBrand';
@@ -32,6 +33,32 @@ const NAV_ITEMS = [
 
 /** Current law on a map, first when its flag is on (US only). */
 const EXPLORE_ITEM = { slug: 'explore', label: 'Explore', icon: IconMap };
+/** The website links as menu rows, with a separator between groups. */
+function MoreLinkItems({
+  groups,
+  className,
+}: {
+  groups: { label: string; href: string }[][];
+  className?: string;
+}) {
+  return (
+    <>
+      {groups.map((group, index) => (
+        // The groups are fixed for a country, so their order is their identity.
+        <Fragment key={index}>
+          {index > 0 && <DropdownMenuSeparator />}
+          {group.map((link) => (
+            <DropdownMenuItem key={link.href} asChild className={className}>
+              <a href={link.href} style={{ cursor: 'pointer' }}>
+                {link.label}
+              </a>
+            </DropdownMenuItem>
+          ))}
+        </Fragment>
+      ))}
+    </>
+  );
+}
 
 /** Height of the bar. */
 export const FLAGSHIP_TOP_BAR_HEIGHT = 56;
@@ -88,14 +115,26 @@ export default function FlagshipTopBar() {
       : 0;
   const parameterWord = draftCount === 1 ? 'parameter' : 'parameters';
 
-  const moreLinks = [
-    { label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` },
+  const researchLink = { label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` };
+  const otherLinks = [
     { label: 'Model documentation', href: `${WEBSITE_URL}/${countryId}/model` },
     { label: 'API', href: `${WEBSITE_URL}/${countryId}/api` },
     { label: 'About', href: `${WEBSITE_URL}/${countryId}/team` },
     { label: 'Donate', href: `${WEBSITE_URL}/${countryId}/donate` },
     { label: 'GitHub', href: 'https://github.com/PolicyEngine' },
   ];
+  // The headers' Tools menu, after Research as its own group; a country
+  // without tools keeps one plain list. The headers list the main app first,
+  // but this bar is the main app, so it starts at the first tool. Each tool
+  // is a separate app on the website's domain, so its links are absolute.
+  const toolLinks = getToolsMenuEntries(countryId).map((tool) => ({
+    label: tool.label,
+    href: `${WEBSITE_URL}/${countryId}/${tool.slug}`,
+  }));
+  const moreLinkGroups =
+    toolLinks.length > 0
+      ? [[researchLink], toolLinks, otherLinks]
+      : [[researchLink, ...otherLinks]];
 
   return (
     <header
@@ -167,13 +206,7 @@ export default function FlagshipTopBar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            {moreLinks.map((link) => (
-              <DropdownMenuItem key={link.href} asChild>
-                <a href={link.href} style={{ cursor: 'pointer' }}>
-                  {link.label}
-                </a>
-              </DropdownMenuItem>
-            ))}
+            <MoreLinkItems groups={moreLinkGroups} />
           </DropdownMenuContent>
         </DropdownMenu>
       </nav>
@@ -215,7 +248,7 @@ export default function FlagshipTopBar() {
             as large as the menu button beside it (40px). */}
         <CountrySelector triggerClassName="tw:size-[34px] tw:max-sm:size-10" />
 
-        {/* A phone's one menu: the sections, then the website links. */}
+        {/* A phone's one menu: the sections, then the website links as in More. */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -248,13 +281,7 @@ export default function FlagshipTopBar() {
               );
             })}
             <DropdownMenuSeparator />
-            {moreLinks.map((link) => (
-              <DropdownMenuItem key={link.href} asChild className="tw:min-h-10">
-                <a href={link.href} style={{ cursor: 'pointer' }}>
-                  {link.label}
-                </a>
-              </DropdownMenuItem>
-            ))}
+            <MoreLinkItems groups={moreLinkGroups} className="tw:min-h-10" />
           </DropdownMenuContent>
         </DropdownMenu>
 
