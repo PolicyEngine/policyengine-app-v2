@@ -72,7 +72,7 @@ export function SimulationCanvas({
   if (canvas.catalogError) {
     return (
       <div style={styles.canvasContainer} className="tw:p-xl">
-        <Alert variant="destructive" className="tw:max-w-2xl">
+        <Alert variant="destructive" className="tw:max-w-[42rem]">
           <IconAlertCircle size={20} />
           <AlertTitle>Saved ingredients unavailable</AlertTitle>
           <AlertDescription>

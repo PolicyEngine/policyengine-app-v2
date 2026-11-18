@@ -175,7 +175,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         open={showSameNameWarning}
         onOpenChange={(open) => !open && setShowSameNameWarning(false)}
       >
-        <DialogContent className="tw:sm:max-w-sm">
+        <DialogContent className="tw:sm:max-w-[24rem]">
           <DialogHeader>
             <DialogTitle>Same name</DialogTitle>
           </DialogHeader>

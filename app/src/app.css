@@ -139,7 +139,13 @@
   --font-size-3xl: 28px;
   --font-size-4xl: 32px;
 
-  /* Spacing */
+  /*
+   * Spacing. Tailwind reads a named size in w-*, min-w-*, max-w-*, basis-*
+   * and the inline-size utilities from these keys before its own container
+   * sizes, so max-w-sm is 8px here, not 24rem. Write such sizes out, as in
+   * max-w-[24rem]. website/src/__tests__/config/tailwind-size-classes.test.ts
+   * fails on a class that takes its size from these keys that way.
+   */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 12px;
