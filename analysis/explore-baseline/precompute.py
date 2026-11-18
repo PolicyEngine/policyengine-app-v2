@@ -54,7 +54,9 @@ PROGRAMS = {
     "ssi": ("ssi", "person"),
     "wic": ("wic", "person"),
     "social_security": ("social_security", "person"),
-    "aca_ptc": ("aca_ptc", "marketplace_person"),
+    # `aca_ptc` is the credit before take-up; `assigned_aca_ptc` applies it,
+    # as household_health_benefits does.
+    "aca_ptc": ("assigned_aca_ptc", "marketplace_person"),
     "eitc": ("eitc", "tax_unit"),
     # `ctc` is the credit a tax unit could claim before the tax limit;
     # `ctc_value` is the credit it receives.
@@ -211,7 +213,7 @@ def load_frames(dataset: Path, year: int, legacy_local: bool = False) -> dict[st
     # `person_receives_aca` follows the model's take-up. The survey's
     # marketplace answer (`has_marketplace_health_coverage`) is
     # under-reported and independent of take-up, so it is not used.
-    person["gets_aca_ptc"] = (calc("aca_ptc", "person") > 0) & calc(
+    person["gets_aca_ptc"] = (calc("assigned_aca_ptc", "person") > 0) & calc(
         "person_receives_aca", "person"
     ).astype(bool)
 
