@@ -135,12 +135,14 @@ export function useReportYearEconomies({
           calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
           estimateByRegion: true,
         },
-        metadata: {
+        // Built when each request is sent, so `startedAt`, which the strategy
+        // measures progress from, doesn't depend on when the page last rendered.
+        metadata: () => ({
           calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
           calcType: 'societyWide' as const,
           targetType: 'report' as const,
           startedAt: Date.now(),
-        },
+        }),
         pollIntervalMs: POLL_MS,
       }),
       enabled: ready,

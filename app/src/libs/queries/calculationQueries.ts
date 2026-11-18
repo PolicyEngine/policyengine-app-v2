@@ -22,12 +22,16 @@ function pollingQuery<TQueryKey extends QueryKey>(
   queryKey: TQueryKey,
   strategy: CalcExecutionStrategy,
   params: CalcParams,
-  metadata: CalcMetadata
+  metadata: CalcMetadata | (() => CalcMetadata)
 ) {
   return {
     queryKey,
     queryFn: async (context?: QueryFunctionContext) =>
-      strategy.execute(params, metadata, cachedStatus(context)),
+      strategy.execute(
+        params,
+        typeof metadata === 'function' ? metadata() : metadata,
+        cachedStatus(context)
+      ),
     refetchIntervalInBackground: true,
   };
 }
@@ -67,7 +71,8 @@ export const calculationQueries = {
    * Query options for a society-wide economy run that has no saved report
    * to write to, such as a report's other budget-window years or a tracked
    * bill, under the caller's own query key. It polls as a report's run
-   * does, every `pollIntervalMs` while the run is pending.
+   * does, every `pollIntervalMs` while the run is pending. `metadata` may
+   * be a function, called when each request is sent.
    */
   forEconomyRun: <TQueryKey extends QueryKey>({
     queryKey,
@@ -77,7 +82,7 @@ export const calculationQueries = {
   }: {
     queryKey: TQueryKey;
     params: CalcParams;
-    metadata: CalcMetadata;
+    metadata: CalcMetadata | (() => CalcMetadata);
     pollIntervalMs: number;
   }) => ({
     ...pollingQuery(queryKey, CalcStrategyFactory.getStrategy('societyWide'), params, metadata),

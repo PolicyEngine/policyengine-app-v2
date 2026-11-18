@@ -157,6 +157,31 @@ describe('calculationQueries', () => {
         cachedStatus
       );
     });
+
+    it('given metadata built for each request then every request gets its own', async () => {
+      // Given
+      const firstMetadata = mockSocietyWideMetadata(TEST_CALC_IDS.REPORT_123);
+      const secondMetadata = mockSocietyWideMetadata(TEST_CALC_IDS.REPORT_456);
+      const buildMetadata = vi
+        .fn()
+        .mockReturnValueOnce(firstMetadata)
+        .mockReturnValueOnce(secondMetadata);
+      const params = mockSocietyWideParams();
+      const queryOptions = calculationQueries.forEconomyRun({
+        queryKey: TEST_ECONOMY_RUN_QUERY_KEY,
+        metadata: buildMetadata,
+        params,
+        pollIntervalMs: TEST_ECONOMY_RUN_POLL_INTERVAL_MS,
+      });
+
+      // When
+      await queryOptions.queryFn();
+      await queryOptions.queryFn();
+
+      // Then
+      expect(mockStrategy.execute).toHaveBeenNthCalledWith(1, params, firstMetadata, undefined);
+      expect(mockStrategy.execute).toHaveBeenNthCalledWith(2, params, secondMetadata, undefined);
+    });
   });
 
   describe('forSimulation', () => {

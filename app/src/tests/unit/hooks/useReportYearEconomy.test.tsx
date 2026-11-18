@@ -112,6 +112,26 @@ describe('report year checks give the strategy the last status', () => {
     expect(execute.mock.calls[0][2]).toBeUndefined();
     expect(execute.mock.calls[1][2]).toEqual(COMPUTING_YEAR);
   });
+
+  // The strategy measures a year's progress from this start time.
+  test('given a requested year of the window is checked again then that check has its own start time', async () => {
+    // Given
+    const requestTimes: number[] = [];
+    execute.mockImplementation(async () => {
+      requestTimes.push(Date.now());
+      return COMPUTING_YEAR;
+    });
+    const { year, ...windowArgs } = args;
+    renderHook(() => useReportYearEconomies({ ...windowArgs, years: [year] }), { wrapper });
+    await waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(REPORT_YEAR_POLL_INTERVAL_MS));
+
+    // Then
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute.mock.calls[1][1].startedAt).toBe(requestTimes[1]);
+  });
 });
 
 describe('useReportYearEconomy', () => {
