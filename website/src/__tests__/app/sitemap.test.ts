@@ -58,9 +58,11 @@ describe("sitemap", () => {
     expect(shared("/us/bill-tracker/x")).toBe(false);
   });
 
-  test("lists the Autumn Budget dashboards", () => {
+  test("lists the Autumn Budget dashboards, the 2026 one at its own address", () => {
     expect(paths).toContain("/uk/autumn-budget-2025");
-    expect(paths).toContain("/uk/autumn-budget-2026");
+    expect(paths).toContain("/uk/budgets/autumn-2026");
+    // Its former address redirects there (next.config.ts)
+    expect(paths).not.toContain("/uk/autumn-budget-2026");
   });
 
   test("lists every page an app zone serves, and only those as interactives", () => {
