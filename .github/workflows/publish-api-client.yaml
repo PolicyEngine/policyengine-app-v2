@@ -1,10 +1,29 @@
-# Publishes @policyengine/api-client to npm.
+# Releases @policyengine/api-client to npm.
 #
-# Started by hand only (Actions → "Publish @policyengine/api-client" → Run
-# workflow), never by a push. It publishes the version in
-# packages/api-client/package.json, and does nothing if npm already has it.
-# It publishes directly with npm publish, not npm stage publish, so the
-# version is public when the run finishes.
+# Runs on every push to main, and can be started by hand on main (Actions →
+# "Publish @policyengine/api-client" → Run workflow) to retry a failed release.
+# Each run compares main's newest commit with npm and with
+# packages/api-client/changelog.d, so a retry needs no inputs:
+#
+# 1. If npm lacks the version in package.json, the run tests, builds and
+#    publishes it.
+# 2. If changelog fragments are waiting, the run raises the version according
+#    to their types, writes CHANGELOG.md and pushes that commit to main. That
+#    push starts the next run, which publishes the new version in step 1, so
+#    npm's provenance names the commit that holds exactly what was published.
+#
+# A run on a commit that is no longer main's newest does nothing: the push that
+# moved main started its own run, and that run sees the same fragments.
+#
+# The pull-request rule in the protect-master ruleset stops the workflow's own
+# token from pushing to main. The release commit is pushed with a token for the
+# organisation's `policyengine` GitHub App, which that ruleset lists as allowed
+# to bypass the rule. The token comes from the organisation secrets APP_ID and
+# APP_PRIVATE_KEY, is limited to writing this repository's contents, and is made
+# only after the steps that run other code have finished.
+#
+# It publishes directly with npm publish, not npm stage publish, so a version
+# is public when the run finishes.
 #
 # It uses npm trusted publishing: GitHub's OIDC token proves the workflow
 # runs in PolicyEngine/policyengine-app-v2, so no npm token is stored. The
@@ -23,16 +42,67 @@
 name: Publish @policyengine/api-client
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# One run at a time on each branch, so two runs never raise the same version.
+# Waiting runs are not cancelled by this workflow. GitHub keeps only the newest
+# one waiting, which is enough: it sees every fragment the older ones would.
+concurrency:
+  group: publish-api-client-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  plan:
+    name: Decide what this run releases
+    # Only main is released.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.decide.outputs.publish }}
+      raise-version: ${{ steps.decide.outputs.raise-version }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Compare main with npm and the changelog fragments
+        id: decide
+        run: |
+          set -euo pipefail
+          publish=false
+          raise_version=false
+          main_tip="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          if [ "${main_tip}" != "${GITHUB_SHA}" ]; then
+            echo "main has moved on to ${main_tip}; the run for that commit does the release."
+          else
+            version="$(node -p "require('./packages/api-client/package.json').version")"
+            npm_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              "https://registry.npmjs.org/@policyengine%2fapi-client/${version}")"
+            case "${npm_status}" in
+              200) echo "npm already has ${version}." ;;
+              404) echo "npm does not have ${version}."; publish=true ;;
+              *) echo "npm answered ${npm_status} for ${version}." >&2; exit 1 ;;
+            esac
+            fragment_count="$(find packages/api-client/changelog.d -type f ! -name .gitkeep | wc -l)"
+            echo "Changelog fragments waiting: ${fragment_count}."
+            if [ "${fragment_count}" -gt 0 ]; then
+              raise_version=true
+            fi
+          fi
+          echo "publish=${publish}" >> "$GITHUB_OUTPUT"
+          echo "raise-version=${raise_version}" >> "$GITHUB_OUTPUT"
+
   build:
     name: Test, build and pack
-    # Only main is published.
-    if: github.ref == 'refs/heads/main'
+    needs: plan
+    if: github.ref == 'refs/heads/main' && needs.plan.outputs.publish == 'true'
     runs-on: ubuntu-latest
     outputs:
       package-version: ${{ steps.pack.outputs.package-version }}
@@ -90,8 +160,8 @@ jobs:
   # (see the header).
   publish:
     name: Publish
-    needs: build
-    if: github.ref == 'refs/heads/main'
+    needs: [plan, build]
+    if: github.ref == 'refs/heads/main' && needs.plan.outputs.publish == 'true'
     runs-on: ubuntu-latest
     environment: npm-publish
     permissions:
@@ -122,3 +192,83 @@ jobs:
             exit 0
           fi
           npm publish "./${TARBALL}" --access public --provenance --ignore-scripts
+
+  # Runs after any publish in this run, so a version that is still missing from
+  # npm goes out before the next one is started. It installs no dependencies,
+  # and it makes the GitHub App token only after everything else has run.
+  release-commit:
+    name: Commit the next version to main
+    needs: [plan, build, publish]
+    if: >-
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      needs.plan.result == 'success' &&
+      needs.plan.outputs.raise-version == 'true' &&
+      contains(fromJSON('["success", "skipped"]'), needs.build.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.publish.result)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install towncrier
+        run: python -m pip install "towncrier==26.9.0"
+
+      - name: Raise the version
+        id: version
+        run: echo "version=$(node packages/api-client/scripts/raise-version.mjs)" >> "$GITHUB_OUTPUT"
+
+      - name: Write the changelog
+        working-directory: ./packages/api-client
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: towncrier build --yes --version "${VERSION}" --config towncrier.toml --dir .
+
+      - name: Commit the release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "policyengine[bot]"
+          git config user.email "239815650+policyengine[bot]@users.noreply.github.com"
+          git add bun.lock packages/api-client/package.json packages/api-client/CHANGELOG.md packages/api-client/changelog.d
+          git commit --message "Release @policyengine/api-client ${VERSION}"
+
+      - name: Get a token that can push past the pull-request rule
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Push the release commit to main
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -uo pipefail
+          repository_url="https://github.com/${GITHUB_REPOSITORY}.git"
+          if git push "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/main; then
+            exit 0
+          fi
+          main_tip="$(git ls-remote "${repository_url}" refs/heads/main | cut -f1)"
+          if [ -n "${main_tip}" ] && [ "${main_tip}" != "${GITHUB_SHA}" ]; then
+            echo "main moved on to ${main_tip} during this run; the run for that commit does the release."
+            exit 0
+          fi
+          echo "The push was refused although main has not moved." >&2
+          exit 1

@@ -123,9 +123,25 @@ The dashboard API answers browser requests from www.policyengine.org itself, fro
 
 ## Releases
 
-Versions after 0.1.0 are published by the "Publish @policyengine/api-client" workflow (`.github/workflows/publish-api-client.yaml`), started by hand on `main`. It publishes the version in `package.json` if npm doesn't have it yet. It uses npm trusted publishing, so no npm token is stored, and the versions it publishes carry provenance. It publishes directly with `npm publish`, not `npm stage publish`, so a version is public as soon as the run finishes, with no approval step on npm.
+Merging a change to `main` with a changelog fragment releases a new version. Nobody needs to start anything, and nobody edits `version` by hand.
 
-To release a version, raise `version` in a PR. After it merges, run the workflow on `main` (Actions → "Publish @policyengine/api-client" → Run workflow).
+A PR needs a fragment if it changes what npm ships or how it is built: anything in `src`, `README.md`, `LICENSE`, `tsconfig.json`, `tsconfig.build.json`, or `package.json` (a change limited to `devDependencies` or `scripts` doesn't count). The "API client changelog fragment" check on every PR says whether one is needed. Add a file named `changelog.d/<name>.<type>.md` containing a sentence for the changelog:
+
+| Type       | Use it for                                   | Version raise                        |
+| ---------- | -------------------------------------------- | ------------------------------------ |
+| `breaking` | a change existing callers must adapt to      | major (minor while the version is 0.x) |
+| `added`    | new functionality                            | minor                                |
+| `removed`  | functionality taken away                     | minor                                |
+| `changed`  | a change to existing behaviour               | patch                                |
+| `fixed`    | a bug fix, or a correction to the README     | patch                                |
+
+If a release holds several fragments, the largest raise applies once. While the version is 0.x, `^0.1.1` accepts only 0.1.x, so consumers must raise their own range to receive a minor version.
+
+The "Publish @policyengine/api-client" workflow (`.github/workflows/publish-api-client.yaml`) runs on each push to `main`. When it finds fragments, it raises `version` in `package.json` and `bun.lock`, moves the fragments into `CHANGELOG.md` and pushes that commit to `main`. The push starts the workflow again, and that run tests, builds and publishes the version npm doesn't have yet. It uses npm trusted publishing, so no npm token is stored, and the versions it publishes carry provenance. It publishes directly with `npm publish`, not `npm stage publish`, so a version is public as soon as the run finishes, with no approval step on npm.
+
+To push to `main`, the workflow uses a token for the organisation's `policyengine` GitHub App, from the organisation secrets `APP_ID` and `APP_PRIVATE_KEY`. The App must stay on the bypass list of the `protect-master` ruleset.
+
+If a release fails, fix the cause if it needs fixing, then run the workflow on `main` (Actions → "Publish @policyengine/api-client" → Run workflow). It picks up whatever is unfinished: fragments not yet released, or a raised version not yet on npm.
 
 0.1.0 was published by hand by an owner of the `@policyengine` npm scope, from a tarball packed on `main`, because npm lets a package trust a workflow only once the package exists. npm also lists a `0.0.0-stage` version, a placeholder its registry created during that publish. `latest` points to 0.1.0, so installs don't get the placeholder.
 
@@ -134,8 +150,7 @@ To release a version, raise `version` in a PR. After it merges, run the workflow
 This is done once, in this order, by a repository admin and an owner of the `@policyengine` npm scope:
 
 1. **Set up the environment.** In the repository's Settings → Environments, open `npm-publish`, or create it if it isn't listed. Under "Deployment branches and tags", choose "Selected branches and tags" and make the branch `main` its only entry. Do this first. A workflow run that names a missing environment creates it with no restrictions, so `npm-publish` may already exist without a branch rule.
-2. **Merge the next version.** Raise `version` in a PR and merge it, but don't run the workflow yet. npm expires a new trusted publisher that hasn't completed a publish within 2 days, and the workflow publishes nothing while npm already has the version in `package.json`.
-3. **Add the trusted publisher.** On npmjs.com, open the package's Settings → Trusted Publisher and choose GitHub Actions. The names are case-sensitive:
+2. **Add the trusted publisher.** On npmjs.com, open the package's Settings → Trusted Publisher and choose GitHub Actions. The names are case-sensitive:
    - organization or user: `PolicyEngine`;
    - repository: `policyengine-app-v2`;
    - workflow filename: `publish-api-client.yaml`;
@@ -143,8 +158,8 @@ This is done once, in this order, by a repository admin and an owner of the `@po
    - allowed actions: allow direct `npm publish` as well as `npm stage publish`, which npm always allows. npm refuses the workflow's `npm publish` without this.
 
    A package can have several trusted publishers, and npm accepts a token that matches any one of them. If others are listed, remove each one that doesn't name the environment `npm-publish`.
-4. **Run the workflow on `main` within 2 days.** Then check that npm shows the new version with a provenance record. If the 2 days pass first, npm marks the trusted publisher expired and it can't be edited: delete it, add it again as in step 3, and run the workflow.
-5. **Optionally, disallow tokens.** Under the package's Publishing access, choose "Require two-factor authentication and disallow tokens". This stops publishing with npm access tokens. The package's maintainers on npm can still publish by hand with two-factor authentication.
+3. **Release a version within 2 days.** npm expires a new trusted publisher that hasn't completed a publish within 2 days. Merge a PR with a changelog fragment, then check that npm shows the new version with a provenance record. If the 2 days pass first, npm marks the trusted publisher expired and it can't be edited: delete it, add it again as in step 2, and release again.
+4. **Optionally, disallow tokens.** Under the package's Publishing access, choose "Require two-factor authentication and disallow tokens". This stops publishing with npm access tokens. The package's maintainers on npm can still publish by hand with two-factor authentication.
 
 npm accepts the workflow's OIDC token only when its repository, workflow file and environment match the trusted publisher, and the repository also matches `repository.url` in `package.json`. The workflow's own `main`-only conditions are in the workflow file, which a copy on another branch could leave out. The environment's branch rule is what stops such a copy from getting a token that names `npm-publish`. GitHub's documentation doesn't say whether its "Allow administrators to bypass configured protection rules" setting lets admins skip that branch rule.
 
