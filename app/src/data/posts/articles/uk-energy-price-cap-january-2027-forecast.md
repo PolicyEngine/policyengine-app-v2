@@ -1,10 +1,10 @@
-Ofgem, the energy regulator for Great Britain, will announce the energy price cap for 1 January to 31 March 2027 on 25 November 2026, according to its [notice of the October cap](https://www.ofgem.gov.uk/publications/changes-energy-price-cap-between-1-october-and-31-december-2026). On 18 November, the consultancy Cornwall Insight published its [final forecast](https://www.cornwall-insight.com/press-releases/energy-bills-set-for-steep-rise-in-january/) for that period: £2,166 a year for a household with typical consumption paying by Direct Debit, £443 (26%) above the [current cap](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges) of £1,723.
+Ofgem, the energy regulator for Great Britain, will announce the energy price cap for 1 January to 31 March 2027 on 25 November 2026, according to its [notice of the October cap](https://www.ofgem.gov.uk/publications/changes-energy-price-cap-between-1-october-and-31-december-2026). On 18 November, the consultancy Cornwall Insight published what it calls its ["final forecast"](https://www.cornwall-insight.com/press-releases/energy-bills-set-for-steep-rise-in-january/) for that period: £2,166 a year for a household with typical consumption paying by Direct Debit, £443 (26%) above the [current cap](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges) of £1,723.
 
 Using PolicyEngine UK, we estimate what that forecast would mean for household energy bills across the income distribution in Great Britain. Every figure below depends on the forecast; we will update the post with Ofgem's rates after 25 November.
 
 Key results, if the cap rises as Cornwall Insight forecasts (annual rates, Great Britain):
 
-- A household with typical consumption would pay £443 a year more at January's rates (26%), or about £166 more over January to March itself
+- A household with typical consumption would pay £443 a year more at January's rates (26%), or about £166 more over January to March
 - The average household in Great Britain would spend £2,117 a year on electricity and gas at January's rates, up £415 from £1,702 at October's
 - Households in the bottom tenth of the income distribution would pay £367 a year more, and their energy spending would rise from 9.3% to 11.5% of their net income; in the top tenth, households would pay £522 more, from 1.6% to 2.0% of their income
 - The number of households spending more than 10% of their net income on energy would rise from 2.2 million to 3.6 million
@@ -25,13 +25,13 @@ Ofgem caps the unit rate and the daily standing charge that suppliers may charge
 | Typical gas bill (£ a year)                 |                              865 |                                             1,149 |     +32.7% |
 | **Typical dual-fuel bill (£ a year)**       |                        **1,723** |                                         **2,166** | **+25.7%** |
 
-Sources: Ofgem, [energy price cap unit rates and standing charges](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges); Cornwall Insight, [Energy bills set for steep rise in January](https://www.cornwall-insight.com/press-releases/energy-bills-set-for-steep-rise-in-january/), 18 November 2026. We compute the typical October bills by fuel from Ofgem's rates. Ofgem's October rates carry no VAT on electricity and 5% VAT on gas.
+Sources: Ofgem, [energy price cap unit rates and standing charges](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges); Cornwall Insight, ["Energy Bills Set for Steep Rise in January"](https://www.cornwall-insight.com/press-releases/energy-bills-set-for-steep-rise-in-january/), 18 November 2026. We compute the typical October bills by fuel from Ofgem's rates. Ofgem's October rates carry no VAT on electricity and 5% VAT on gas.
 
 Cornwall Insight attributes the rise to "high and volatile wholesale market prices, particularly for gas". On its forecast, the typical gas bill would rise by £283 and the typical electricity bill by £159, so gas would account for 64% of the rise.
 
-Ofgem expresses the cap as an annual rate. A household pays the January rates for three months only. UK households use on average 29.3% of a year's electricity and 42.5% of a year's gas in January to March.[^1] Applying those shares to the unit-rate part of the bill, and 90 days to the standing charges, the forecast would add about £166 to a typical household's bills over the quarter itself.
+Ofgem expresses the cap as an annual rate. A household pays the January rates for three months. UK households use on average 29.3% of a year's electricity and 42.5% of a year's gas in January to March.[^1] Applying those shares to the unit-rate part of the bill, and 90 days to the standing charges, the forecast would add about £166 to a typical household's bills over January to March.
 
-Cornwall Insight's forecast includes the zero rate of VAT on household electricity, which the [Autumn Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) extended to 1 July 2027. It leaves out the one-time £100 Household Energy Payment, which households in council tax bands A to D in England receive from January 2027 outside the cap, and the Government's plan to remove standing charges from household gas bills, whose start date the Government has not confirmed. Cornwall Insight says its current view of April 2027 "points to a small fall", and its [forecast page](https://www.cornwall-insight.com/predictions-and-insights-into-the-default-tariff-cap/) says it will publish its April forecasts on 25 November.
+Cornwall Insight's forecast includes the zero rate of VAT on household electricity, which the [Autumn Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) extended to 1 July 2027. It leaves out the one-time £100 Household Energy Payment, which the Autumn Budget pays to households in council tax bands A to D in England from January 2027, outside the cap, and the Government's plan to remove standing charges from household gas bills, whose start date the Government has not confirmed. Cornwall Insight says its current view of April 2027 "points to a small fall", and its [forecast page](https://www.cornwall-insight.com/predictions-and-insights-into-the-default-tariff-cap/) says it will publish its April forecasts on 25 November.
 
 ## Household examples
 
@@ -48,7 +48,7 @@ Table 2 applies the rates in Table 1 to four levels of consumption, without the 
 
 The rates in Table 1 are rounded to two decimal places, so the typical bill comes to £1,724 here against Ofgem's £1,723.
 
-On the forecast, bills would rise by more in percentage terms the more a household uses, because the standing charges would change little while the unit rates rise. Homes without gas would face a smaller rise, 18.5%, because the forecast raises electricity rates less than gas rates.
+On the forecast, bills would rise by more in percentage terms the more a household uses, because the standing charges would rise by 1.7% (electricity) and 4.6% (gas) and the unit rates by 23.6% and 36.8%. Homes without gas would face a smaller rise, 18.5%, because the forecast raises electricity rates less than gas rates.
 
 ## Bills across the income distribution
 
@@ -83,7 +83,7 @@ We apply the forecast to the electricity and gas spending of every household in 
 }
 ```
 
-Higher-income households spend more on energy, so their bills would rise by more in pounds: £367 a year in the bottom decile and £522 in the top. Measured against income, the rise would run the other way.
+Higher-income households spend more on energy, so their bills would rise by more in pounds: £367 a year in the bottom decile and £522 in the top. As a share of net income, spending would rise from 9.3% to 11.5% in the bottom decile and from 1.6% to 2.0% in the top.
 
 ```chart
 {
@@ -144,9 +144,9 @@ We use PolicyEngine UK 2.177.7 with Microcosm UK build fcfac709, the pair that t
 
 The method has five limits:
 
-- **Tariffs.** We apply the cap change to every household. The cap covers default tariffs only, so households on fixed tariffs would see no change in January, and we overstate their rise.
+- **Tariffs.** We apply the cap change to every household. The cap covers default tariffs; households on fixed tariffs would see no change in January, and we overstate their rise.
 - **Payment method.** We apply the Direct Debit change to every household. Ofgem sets a different cap for standard credit and prepayment, and our data do not separate Direct Debit from standard credit.
-- **Standing charges.** We scale each household's spending on a fuel by one factor, the change in the typical bill. Standing charges rise less than unit rates, so we overstate the rise for households that use little energy and understate it for those that use a lot. For a household using half the typical amount, the true rise is about 3 percentage points smaller for each fuel (Table 2).
+- **Standing charges.** We scale each household's spending on a fuel by one factor, the change in the typical bill. Standing charges rise less than unit rates, so we overstate the rise for households that use less than the typical amount and understate it for those that use more. For a household using half the typical amount, the true rise is about 3 percentage points smaller for each fuel (Table 2).
 - **Annual rates.** We hold the January rates for a full year, as Ofgem's typical bill does. The cap for April to June 2027 may differ.
 - **Fixed use.** We hold each household's energy use fixed as prices change.
 
@@ -156,4 +156,4 @@ We restate spending to October to December 2026 prices in the same way as our [e
 
 [^2]: Cornwall Insight publishes standing charges to the nearest penny a day. Its fuel totals imply 55.78p for electricity and 31.04p for gas, which we use for the change and in Table 2.
 
-[^3]: 2,500 kWh is Ofgem's typical value for a home on a single-rate electricity meter. Homes heated by electricity use more: in our data, households with no gas spending spend an average of £1,149 a year on electricity at October prices.
+[^3]: 2,500 kWh is Ofgem's typical value for a home on a single-rate electricity meter. In our data, households with no gas spending spend an average of £1,149 a year on electricity at October prices, against £858 at 2,500 kWh.
