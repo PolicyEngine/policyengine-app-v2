@@ -130,6 +130,15 @@ describe("apps.json", () => {
     expect(invalid.map((app) => `${app.countryId}/${app.slug}`)).toEqual([]);
   });
 
+  // A tool works for any household under current law; the Research listing
+  // holds work on one policy, bill, event or finding. Tools list under Tools.
+  test("no tool is also listed with research", () => {
+    const both = apps.filter(
+      (app) => app.toolsMenu !== undefined && app.displayWithResearch,
+    );
+    expect(both.map((app) => `${app.countryId}/${app.slug}`)).toEqual([]);
+  });
+
   test("apps listed with research have an image, a date and authors", () => {
     const researchApps = apps.filter((app) => app.displayWithResearch);
     expect(researchApps.length).toBeGreaterThan(0);

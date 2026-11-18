@@ -82,14 +82,13 @@ describe("research search over apps.json", () => {
     },
   );
 
-  test("finds CliffWatch for cliffwatch", () => {
+  // Tools (entries with toolsMenu) list under Tools, not Research, so research
+  // search leaves CliffWatch's own entry out.
+  test("leaves the CliffWatch tool out for cliffwatch", () => {
     const results = searchResearchItems(getResearchItems(), [], "cliffwatch");
 
     expect(
-      results.some(
-        (item) =>
-          item.isApp && item.slug === "cliffwatch" && item.countryId === "us",
-      ),
-    ).toBe(true);
+      results.some((item) => item.isApp && item.slug === "cliffwatch"),
+    ).toBe(false);
   });
 });
