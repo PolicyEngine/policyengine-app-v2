@@ -78,8 +78,7 @@ We apply the forecast to the electricity and gas spending of every household in 
   ],
   "yLabel": "Average annual bill (£)",
   "format": { "decimals": 0, "prefix": "£", "separator": true },
-  "valueLabels": false,
-  "source": "PolicyEngine UK microsimulation; Ofgem; Cornwall Insight, 18 November 2026"
+  "valueLabels": false
 }
 ```
 
@@ -109,8 +108,7 @@ Households in the top decile spend more on energy than those in the bottom, so t
   ],
   "yLabel": "Share of net income (%)",
   "format": { "decimals": 1, "suffix": "%" },
-  "valueLabels": false,
-  "source": "PolicyEngine UK microsimulation; Ofgem; Cornwall Insight, 18 November 2026"
+  "valueLabels": false
 }
 ```
 
