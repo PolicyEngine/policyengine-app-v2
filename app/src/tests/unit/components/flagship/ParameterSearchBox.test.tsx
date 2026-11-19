@@ -99,6 +99,17 @@ async function chooseScope(user: ReturnType<typeof userEvent.setup>, option: Reg
 }
 
 describe('ParameterSearchBox', () => {
+  test('given a starting query then the box opens on it with its results', async () => {
+    // Given / When
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} initialQuery="child tax" />);
+
+    // Then
+    expect(screen.getByRole('combobox', { name: /search parameters/i })).toHaveValue('child tax');
+    expect(
+      await screen.findByText('IRS → Credits → Child tax credit → Amount')
+    ).toBeInTheDocument();
+  });
+
   test('given a matching query then results show breadcrumb and path', async () => {
     // Given
     const user = userEvent.setup();
