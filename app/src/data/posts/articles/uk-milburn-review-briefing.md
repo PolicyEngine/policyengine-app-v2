@@ -108,209 +108,139 @@ The phased run saves 59.3% as much as the two removals fully in force in 2029-30
 
 The two removals would save £105 million less than the two runs on their own added together. Some young UC claimants in education rely on an exception to UC's education condition for people who receive PIP and have limited capability for work. Ending PIP on its own would end these awards in full, including £149 million of health element. Ending the health element on its own would also remove it from the same awards, so adding the two runs counts that saving in both. Other interactions offset part of this.
 
-### Household net income by income decile
+### Household net income by income quintile
 
-Under the two removals, net income would fall in every income decile. In pounds, net income would fall most in the seventh decile (£367) and the third (£333). Run on its own, ending PIP accounts for most of each: £302 in the seventh and £258 in the third, against £70 and £75 from ending the health element. Our results don't show whether these two deciles hold more young recipients or falls of more per household. The fall in the lowest decile, £85, ranks seventh of the ten in pounds and fourth as a share of net income, at 0.3%.
+Under the two removals, net income would fall in every income quintile. It would fall most in the second quintile, by £258 a year or 0.5% of net income in 2029-30, and next in the fourth, by £225 or 0.3%. Run on its own, ending PIP accounts for most of each: £197 in the second quintile and £188 in the fourth, against £61 and £46 from ending the health element. Our results don't show whether these two quintiles hold more young recipients or falls of more per household. The fall in the lowest quintile, £79 or 0.2%, ranks fourth of the five both in pounds and as a share of net income.
 
-PIP is not means-tested, so a young person in a higher-income household can receive it. Ending the health element would also lower net income in the top three deciles, by £13 to £32, because UC is assessed on the income of the claimant and any partner, not on their parents' income: a young claimant living with higher-income parents can receive UC with the health element.
+PIP is not means-tested, so a young person in a higher-income household can receive it. Ending the health element would also lower net income in the highest quintile, by £22 a year, because UC is assessed on the income of the claimant and any partner, not on their parents' income: a young claimant living with higher-income parents can receive UC with the health element.
 
 ```chart
 {
   "type": "bar",
-  "title": "Figure 1: Change in household net income by income decile, UC health element and PIP removals, static",
-  "xKey": "decile",
+  "title": "Figure 1: Change in household net income by income quintile, UC health element and PIP removals, static",
+  "subtitle": "Quintile 1 has the lowest incomes",
+  "xKey": "quintile",
   "series": [
     {
-      "key": "y2029",
-      "name": "2029-30",
-      "color": "primary"
+      "key": "pct2029",
+      "name": "2029-30: % of net income",
+      "color": "primary",
+      "format": {
+        "decimals": 1,
+        "suffix": "%"
+      },
+      "yLabel": "Change in net income (%)"
     },
     {
-      "key": "y2030",
-      "name": "2030-31",
-      "color": "tertiary"
+      "key": "pct2030",
+      "name": "2030-31: % of net income",
+      "color": "tertiary",
+      "format": {
+        "decimals": 1,
+        "suffix": "%"
+      },
+      "yLabel": "Change in net income (%)"
     },
     {
-      "key": "y2031",
-      "name": "2031-32",
-      "color": "quinary"
+      "key": "pct2031",
+      "name": "2031-32: % of net income",
+      "color": "quinary",
+      "format": {
+        "decimals": 1,
+        "suffix": "%"
+      },
+      "yLabel": "Change in net income (%)"
+    },
+    {
+      "key": "gbp2029",
+      "name": "2029-30: £ a year",
+      "color": "primary",
+      "format": {
+        "decimals": 0,
+        "prefix": "£",
+        "separator": true
+      },
+      "yLabel": "Change in net income (£ a year)"
+    },
+    {
+      "key": "gbp2030",
+      "name": "2030-31: £ a year",
+      "color": "tertiary",
+      "format": {
+        "decimals": 0,
+        "prefix": "£",
+        "separator": true
+      },
+      "yLabel": "Change in net income (£ a year)"
+    },
+    {
+      "key": "gbp2031",
+      "name": "2031-32: £ a year",
+      "color": "quinary",
+      "format": {
+        "decimals": 0,
+        "prefix": "£",
+        "separator": true
+      },
+      "yLabel": "Change in net income (£ a year)"
     }
   ],
   "data": [
     {
-      "decile": "1",
-      "y2029": -0.34,
-      "y2030": -0.34,
-      "y2031": -0.34
+      "quintile": "1",
+      "pct2029": -0.2,
+      "pct2030": -0.2,
+      "pct2031": -0.2,
+      "gbp2029": -79,
+      "gbp2030": -81,
+      "gbp2031": -83
     },
     {
-      "decile": "2",
-      "y2029": -0.17,
-      "y2030": -0.17,
-      "y2031": -0.18
+      "quintile": "2",
+      "pct2029": -0.5,
+      "pct2030": -0.5,
+      "pct2031": -0.6,
+      "gbp2029": -258,
+      "gbp2030": -258,
+      "gbp2031": -271
     },
     {
-      "decile": "3",
-      "y2029": -0.74,
-      "y2030": -0.7,
-      "y2031": -0.75
+      "quintile": "3",
+      "pct2029": -0.3,
+      "pct2030": -0.3,
+      "pct2031": -0.3,
+      "gbp2029": -169,
+      "gbp2030": -179,
+      "gbp2031": -173
     },
     {
-      "decile": "4",
-      "y2029": -0.37,
-      "y2030": -0.39,
-      "y2031": -0.38
+      "quintile": "4",
+      "pct2029": -0.3,
+      "pct2030": -0.3,
+      "pct2031": -0.3,
+      "gbp2029": -225,
+      "gbp2030": -231,
+      "gbp2031": -236
     },
     {
-      "decile": "5",
-      "y2029": -0.33,
-      "y2030": -0.35,
-      "y2031": -0.32
-    },
-    {
-      "decile": "6",
-      "y2029": -0.26,
-      "y2030": -0.26,
-      "y2031": -0.27
-    },
-    {
-      "decile": "7",
-      "y2029": -0.54,
-      "y2030": -0.53,
-      "y2031": -0.54
-    },
-    {
-      "decile": "8",
-      "y2029": -0.12,
-      "y2030": -0.12,
-      "y2031": -0.12
-    },
-    {
-      "decile": "9",
-      "y2029": -0.09,
-      "y2030": -0.09,
-      "y2031": -0.09
-    },
-    {
-      "decile": "10",
-      "y2029": -0.04,
-      "y2030": -0.04,
-      "y2031": -0.04
+      "quintile": "5",
+      "pct2029": -0.1,
+      "pct2030": -0.1,
+      "pct2031": -0.1,
+      "gbp2029": -71,
+      "gbp2030": -73,
+      "gbp2031": -74
     }
   ],
-  "yLabel": "Change in net income (%)",
-  "format": {
-    "decimals": 2,
-    "suffix": "%"
-  },
   "valueLabels": true,
-  "subtitle": "Percentage of net income; decile 1 has the lowest incomes",
   "select": {
-    "label": "Year",
-    "default": "y2029"
+    "label": "Year and measure",
+    "default": "pct2029"
   }
 }
 ```
 
-```chart
-{
-  "type": "bar",
-  "title": "Figure 2: Average change in household net income by income decile, UC health element and PIP removals, static",
-  "subtitle": "£ a year, cash terms; decile 1 has the lowest incomes",
-  "xKey": "decile",
-  "series": [
-    {
-      "key": "y2029",
-      "name": "2029-30",
-      "color": "primary"
-    },
-    {
-      "key": "y2030",
-      "name": "2030-31",
-      "color": "tertiary"
-    },
-    {
-      "key": "y2031",
-      "name": "2031-32",
-      "color": "quinary"
-    }
-  ],
-  "data": [
-    {
-      "decile": "1",
-      "y2029": -85,
-      "y2030": -87,
-      "y2031": -89
-    },
-    {
-      "decile": "2",
-      "y2029": -72,
-      "y2030": -74,
-      "y2031": -75
-    },
-    {
-      "decile": "3",
-      "y2029": -333,
-      "y2030": -319,
-      "y2031": -347
-    },
-    {
-      "decile": "4",
-      "y2029": -183,
-      "y2030": -196,
-      "y2031": -195
-    },
-    {
-      "decile": "5",
-      "y2029": -179,
-      "y2030": -195,
-      "y2031": -178
-    },
-    {
-      "decile": "6",
-      "y2029": -159,
-      "y2030": -162,
-      "y2031": -168
-    },
-    {
-      "decile": "7",
-      "y2029": -367,
-      "y2030": -371,
-      "y2031": -385
-    },
-    {
-      "decile": "8",
-      "y2029": -88,
-      "y2030": -91,
-      "y2031": -91
-    },
-    {
-      "decile": "9",
-      "y2029": -82,
-      "y2030": -84,
-      "y2031": -86
-    },
-    {
-      "decile": "10",
-      "y2029": -62,
-      "y2030": -63,
-      "y2031": -64
-    }
-  ],
-  "yLabel": "Change in net income (£ a year)",
-  "format": {
-    "decimals": 0,
-    "prefix": "£",
-    "separator": true
-  },
-  "select": {
-    "label": "Year",
-    "default": "y2029"
-  }
-}
-```
-
-PolicyEngine estimates (Figures 1 and 2). Across all households the average change would be −£159 a year in 2029-30, −£163 in 2030-31 and −£166 in 2031-32. We rank households into deciles by their income under current law, before housing costs, under the Households Below Average Income (HBAI) definition, which adjusts for household size, with each decile holding about a tenth of people. The averages cover every household in each decile, including those whose net income doesn't change. The review publishes no results by income decile.
+PolicyEngine estimates (Figure 1). Across all households the average change would be −£159 a year in 2029-30, −£163 in 2030-31 and −£166 in 2031-32. We rank households into quintiles by their income under current law, before housing costs, under the Households Below Average Income (HBAI) definition, which adjusts for household size, with each quintile holding about a fifth of people. The averages cover every household in each quintile, including those whose net income doesn't change. The dashboard shows these results by income decile. The review publishes no results by income decile.
 
 ### People by age
 
@@ -319,7 +249,7 @@ The two removals would lower household net income for 2.0% of people in each of 
 ```chart
 {
   "type": "bar",
-  "title": "Figure 3: The two removals by single year of age, 16 to 24, static, 2029-30",
+  "title": "Figure 2: The two removals by single year of age, 16 to 24, static, 2029-30",
   "xKey": "age",
   "series": [
     {
@@ -398,7 +328,7 @@ The two removals would lower household net income for 2.0% of people in each of 
 }
 ```
 
-PolicyEngine estimates. Each person takes their household's change in net income, averaged over everyone of that age, so it differs from Figure 2's average over households. Across ages 16 to 24, 7.8% of people would live in a household whose net income falls, and the average change would be −£1,005 a year. The share is lowest at 16 and 17 (2.8% and 4.9%), below the age at which the PIP change starts, and highest at 19 (11.8%), where the average fall is also largest (£1,728); our data overcount PIP recipients aged 16 to 19 in England (see the comparison with the review's estimates). People of other ages see a change only where they share a household with a young person whose PIP or health element ends. Run together at our assumed work allowance, the higher rate and the work allowance would raise household net income for 545,000 people aged 16 to 24 (7.3%) in 2029-30.
+PolicyEngine estimates. Each person takes their household's change in net income, averaged over everyone of that age, so it differs from Figure 1's average over households. Across ages 16 to 24, 7.8% of people would live in a household whose net income falls, and the average change would be −£1,005 a year. The share is lowest at 16 and 17 (2.8% and 4.9%), below the age at which the PIP change starts, and highest at 19 (11.8%), where the average fall is also largest (£1,728); our data overcount PIP recipients aged 16 to 19 in England (see the comparison with the review's estimates). People of other ages see a change only where they share a household with a young person whose PIP or health element ends. Run together at our assumed work allowance, the higher rate and the work allowance would raise household net income for 545,000 people aged 16 to 24 (7.3%) in 2029-30.
 
 [See the results by age on the dashboard](https://www.policyengine.org/uk/milburn-review?tab=dashboard&sub=age).
 
@@ -422,7 +352,7 @@ PolicyEngine estimates, from the [NEET table on the dashboard](https://www.polic
 ```chart
 {
   "type": "bar",
-  "title": "Figure 4: Change in poverty under the two removals, static, 2029-30",
+  "title": "Figure 3: Change in poverty under the two removals, static, 2029-30",
   "xKey": "measure",
   "orientation": "horizontal",
   "series": [
@@ -551,7 +481,7 @@ The estimates differ for these reasons:
 The dashboard's [household calculator](https://www.policyengine.org/uk/milburn-review?tab=household) stores eight examples for 2029-30, each comparing net income under current law with the two removals together and with each other change on its own. Net income is before housing costs. We model a young person living with their parents as their own household, without the parents' income or rent; the appendix gives the other assumptions.
 
 ```household
-{"type":"household","title":"Figure 5: Household net income under current law and under each modelled change, static, 2029-30","changes":[{"id":"removals","label":"Two removals"},{"id":"higher","label":"Higher rate"},{"id":"work","label":"Work allowance"},{"id":"nics","label":"Employer National Insurance"}],"examples":[{"id":"with_parents_health","label":"20, living with parents; UC health element (claim from April 2026); standard-rate PIP daily living; no earnings","results":{"removals":{"net":[11504.33,4543.49],"rows":[{"label":"Benefits","values":[11504.33,4543.49],"children":[{"label":"Universal Credit","values":[7150.61,4543.49],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[2607.12,0.0]}]},{"label":"Personal Independence Payment","values":[4353.72,0.0],"children":[{"label":"Daily living","values":[4353.72,0.0]}]}]}]},"higher":{"net":[11504.33,11504.33],"rows":[{"label":"Benefits","values":[11504.33,11504.33],"children":[{"label":"Universal Credit","values":[7150.61,7150.61],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[2607.12,2607.12]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"work":{"net":[11504.33,11504.33],"rows":[{"label":"Benefits","values":[11504.33,11504.33],"children":[{"label":"Universal Credit","values":[7150.61,7150.61],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[2607.12,2607.12]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"nics":{"net":[11504.33,11504.33],"rows":[{"label":"Benefits","values":[11504.33,11504.33],"children":[{"label":"Universal Credit","values":[7150.61,7150.61],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[2607.12,2607.12]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]}}},{"id":"renting_health","label":"22, renting alone; UC health element (claim before April 2026); enhanced-rate PIP daily living; no earnings","results":{"removals":{"net":[22398.18,9302.45],"rows":[{"label":"Benefits","values":[22578.19,9482.45],"children":[{"label":"Universal Credit","values":[16073.15,9482.45],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,0.0]},{"label":"Housing costs element","values":[6000.0,4938.96]}]},{"label":"Personal Independence Payment","values":[6505.04,0.0],"children":[{"label":"Daily living","values":[6505.04,0.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[22398.18,23556.53],"rows":[{"label":"Benefits","values":[22578.19,23736.54],"children":[{"label":"Universal Credit","values":[16073.15,17231.5],"children":[{"label":"Standard allowance","values":[4543.49,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[22398.18,22398.18],"rows":[{"label":"Benefits","values":[22578.19,22578.19],"children":[{"label":"Universal Credit","values":[16073.15,16073.15],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[22398.18,22398.18],"rows":[{"label":"Benefits","values":[22578.19,22578.19],"children":[{"label":"Universal Credit","values":[16073.15,16073.15],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"renting_health_25","label":"25, renting alone; as the 22-year-old","results":{"removals":{"net":[23556.53,23556.53],"rows":[{"label":"Benefits","values":[23736.54,23736.54],"children":[{"label":"Universal Credit","values":[17231.5,17231.5],"children":[{"label":"Standard allowance","values":[5701.84,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[23556.53,23556.53],"rows":[{"label":"Benefits","values":[23736.54,23736.54],"children":[{"label":"Universal Credit","values":[17231.5,17231.5],"children":[{"label":"Standard allowance","values":[5701.84,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[23556.53,23556.53],"rows":[{"label":"Benefits","values":[23736.54,23736.54],"children":[{"label":"Universal Credit","values":[17231.5,17231.5],"children":[{"label":"Standard allowance","values":[5701.84,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[23556.53,23556.53],"rows":[{"label":"Benefits","values":[23736.54,23736.54],"children":[{"label":"Universal Credit","values":[17231.5,17231.5],"children":[{"label":"Standard allowance","values":[5701.84,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"college_17","label":"17, at college, living with parents; standard-rate PIP daily living; no UC","results":{"removals":{"net":[4353.72,4353.72],"rows":[{"label":"Benefits","values":[4353.72,4353.72],"children":[{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"higher":{"net":[4353.72,4353.72],"rows":[{"label":"Benefits","values":[4353.72,4353.72],"children":[{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"work":{"net":[4353.72,4353.72],"rows":[{"label":"Benefits","values":[4353.72,4353.72],"children":[{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"nics":{"net":[4353.72,4353.72],"rows":[{"label":"Benefits","values":[4353.72,4353.72],"children":[{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]}}},{"id":"couple_partner_health","label":"23, renting with a partner aged 27 who has limited capability for work; no earnings","results":{"removals":{"net":[20299.9,20299.9],"rows":[{"label":"Benefits","values":[20479.9,20479.9],"children":[{"label":"Universal Credit","values":[20479.9,20479.9],"children":[{"label":"Standard allowance","values":[8950.25,8950.25]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[20299.9,20299.9],"rows":[{"label":"Benefits","values":[20479.9,20479.9],"children":[{"label":"Universal Credit","values":[20479.9,20479.9],"children":[{"label":"Standard allowance","values":[8950.25,8950.25]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[20299.9,20299.9],"rows":[{"label":"Benefits","values":[20479.9,20479.9],"children":[{"label":"Universal Credit","values":[20479.9,20479.9],"children":[{"label":"Standard allowance","values":[8950.25,8950.25]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[20299.9,20299.9],"rows":[{"label":"Benefits","values":[20479.9,20479.9],"children":[{"label":"Universal Credit","values":[20479.9,20479.9],"children":[{"label":"Standard allowance","values":[8950.25,8950.25]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"retail_part_time","label":"21, renting alone; 15 hours a week at the minimum wage in retail; UC","results":{"removals":{"net":[14156.03,14156.03],"rows":[{"label":"Market income","values":[10785.71,10785.71],"children":[{"label":"Employment income","values":[10785.71,10785.71],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-17.28,-17.28]}]}]},{"label":"Benefits","values":[3550.31,3550.31],"children":[{"label":"Universal Credit","values":[3550.31,3550.31],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Housing costs element","values":[4938.96,4938.96]},{"label":"Less: withdrawn against income","values":[-5932.14,-5932.14]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[14156.03,15314.38],"rows":[{"label":"Market income","values":[10785.71,10785.71],"children":[{"label":"Employment income","values":[10785.71,10785.71],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-17.28,-17.28]}]}]},{"label":"Benefits","values":[3550.31,4708.66],"children":[{"label":"Universal Credit","values":[3550.31,4708.66],"children":[{"label":"Standard allowance","values":[4543.49,5701.84]},{"label":"Housing costs element","values":[4938.96,4938.96]},{"label":"Less: withdrawn against income","values":[-5932.14,-5932.14]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[14156.03,17232.36],"rows":[{"label":"Market income","values":[10785.71,10785.71],"children":[{"label":"Employment income","values":[10785.71,10785.71],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-17.28,-17.28]}]}]},{"label":"Benefits","values":[3550.31,6626.64],"children":[{"label":"Universal Credit","values":[3550.31,6626.64],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Housing costs element","values":[4938.96,4938.96]},{"label":"Less: withdrawn against income","values":[-5932.14,-2855.81]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[14156.03,14449.5],"rows":[{"label":"Market income","values":[10785.71,11437.89],"children":[{"label":"Employment income","values":[10785.71,11437.89],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-17.28,-17.28]}]}]},{"label":"Benefits","values":[3550.31,3191.61],"children":[{"label":"Universal Credit","values":[3550.31,3191.61],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Housing costs element","values":[4938.96,4938.96]},{"label":"Less: withdrawn against income","values":[-5932.14,-6290.84]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"hospitality_health","label":"24, renting alone; 20 hours a week at the minimum wage in hospitality (food and drink service); UC health element; standard-rate PIP daily living","results":{"removals":{"net":[29566.45,18622.04],"rows":[{"label":"Market income","values":[14380.95,14380.95],"children":[{"label":"Employment income","values":[14380.95,14380.95],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-23.05,-23.05]}]}]},{"label":"Benefits","values":[15872.56,4928.15],"children":[{"label":"Universal Credit","values":[11518.84,4928.15],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,0.0]},{"label":"Housing costs element","values":[6000.0,4938.96]},{"label":"Less: withdrawn against income","values":[-4554.3,-4554.3]}]},{"label":"Personal Independence Payment","values":[4353.72,0.0],"children":[{"label":"Daily living","values":[4353.72,0.0]}]}]},{"label":"Taxes","values":[687.07,687.07],"children":[{"label":"Income Tax","values":[362.19,362.19]},{"label":"Employee National Insurance","values":[144.88,144.88]},{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[29566.45,30724.8],"rows":[{"label":"Market income","values":[14380.95,14380.95],"children":[{"label":"Employment income","values":[14380.95,14380.95],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-23.05,-23.05]}]}]},{"label":"Benefits","values":[15872.56,17030.92],"children":[{"label":"Universal Credit","values":[11518.84,12677.2],"children":[{"label":"Standard allowance","values":[4543.49,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]},{"label":"Less: withdrawn against income","values":[-4554.3,-4554.29]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]},{"label":"Taxes","values":[687.07,687.07],"children":[{"label":"Income Tax","values":[362.19,362.19]},{"label":"Employee National Insurance","values":[144.88,144.88]},{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[29566.45,29566.45],"rows":[{"label":"Market income","values":[14380.95,14380.95],"children":[{"label":"Employment income","values":[14380.95,14380.95],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-23.05,-23.05]}]}]},{"label":"Benefits","values":[15872.56,15872.56],"children":[{"label":"Universal Credit","values":[11518.84,11518.84],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]},{"label":"Less: withdrawn against income","values":[-4554.3,-4554.3]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]},{"label":"Taxes","values":[687.07,687.07],"children":[{"label":"Income Tax","values":[362.19,362.19]},{"label":"Employee National Insurance","values":[144.88,144.88]},{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[29566.45,29777.75],"rows":[{"label":"Market income","values":[14380.95,15033.13],"children":[{"label":"Employment income","values":[14380.95,15033.13],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-23.05,-23.05]}]}]},{"label":"Benefits","values":[15872.56,15614.3],"children":[{"label":"Universal Credit","values":[11518.84,11260.58],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]},{"label":"Less: withdrawn against income","values":[-4554.3,-4812.56]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]},{"label":"Taxes","values":[687.07,869.68],"children":[{"label":"Income Tax","values":[362.19,492.63]},{"label":"Employee National Insurance","values":[144.88,197.05]},{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"lone_parent","label":"19, lone parent of a child aged 1, renting; UC; no earnings","results":{"removals":{"net":[15880.29,15880.29],"rows":[{"label":"Benefits","values":[16060.29,16060.29],"children":[{"label":"Universal Credit","values":[14524.85,14524.85],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Child element","values":[3981.35,3981.35]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Child Benefit","values":[1535.44,1535.44]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[15880.29,17038.64],"rows":[{"label":"Benefits","values":[16060.29,17218.64],"children":[{"label":"Universal Credit","values":[14524.85,15683.2],"children":[{"label":"Standard allowance","values":[4543.49,5701.84]},{"label":"Child element","values":[3981.35,3981.35]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Child Benefit","values":[1535.44,1535.44]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[15880.29,15880.29],"rows":[{"label":"Benefits","values":[16060.29,16060.29],"children":[{"label":"Universal Credit","values":[14524.85,14524.85],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Child element","values":[3981.35,3981.35]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Child Benefit","values":[1535.44,1535.44]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[15880.29,15880.29],"rows":[{"label":"Benefits","values":[16060.29,16060.29],"children":[{"label":"Universal Credit","values":[14524.85,14524.85],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Child element","values":[3981.35,3981.35]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Child Benefit","values":[1535.44,1535.44]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}}],"subtitle":"£ a year. Choose a household and a change; net income is market income plus benefits, less taxes.","note":"PolicyEngine estimates, from the dashboard's household calculator. Each change is a separate run against current law. Taxes include the model's £180 TV licence. Figures may not sum because of rounding."}
+{"type":"household","title":"Figure 4: Household net income under current law and under each modelled change, static, 2029-30","changes":[{"id":"removals","label":"Two removals"},{"id":"higher","label":"Higher rate"},{"id":"work","label":"Work allowance"},{"id":"nics","label":"Employer National Insurance"}],"examples":[{"id":"with_parents_health","label":"20, living with parents; UC health element (claim from April 2026); standard-rate PIP daily living; no earnings","results":{"removals":{"net":[11504.33,4543.49],"rows":[{"label":"Benefits","values":[11504.33,4543.49],"children":[{"label":"Universal Credit","values":[7150.61,4543.49],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[2607.12,0.0]}]},{"label":"Personal Independence Payment","values":[4353.72,0.0],"children":[{"label":"Daily living","values":[4353.72,0.0]}]}]}]},"higher":{"net":[11504.33,11504.33],"rows":[{"label":"Benefits","values":[11504.33,11504.33],"children":[{"label":"Universal Credit","values":[7150.61,7150.61],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[2607.12,2607.12]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"work":{"net":[11504.33,11504.33],"rows":[{"label":"Benefits","values":[11504.33,11504.33],"children":[{"label":"Universal Credit","values":[7150.61,7150.61],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[2607.12,2607.12]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"nics":{"net":[11504.33,11504.33],"rows":[{"label":"Benefits","values":[11504.33,11504.33],"children":[{"label":"Universal Credit","values":[7150.61,7150.61],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[2607.12,2607.12]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]}}},{"id":"renting_health","label":"22, renting alone; UC health element (claim before April 2026); enhanced-rate PIP daily living; no earnings","results":{"removals":{"net":[22398.18,9302.45],"rows":[{"label":"Benefits","values":[22578.19,9482.45],"children":[{"label":"Universal Credit","values":[16073.15,9482.45],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,0.0]},{"label":"Housing costs element","values":[6000.0,4938.96]}]},{"label":"Personal Independence Payment","values":[6505.04,0.0],"children":[{"label":"Daily living","values":[6505.04,0.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[22398.18,23556.53],"rows":[{"label":"Benefits","values":[22578.19,23736.54],"children":[{"label":"Universal Credit","values":[16073.15,17231.5],"children":[{"label":"Standard allowance","values":[4543.49,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[22398.18,22398.18],"rows":[{"label":"Benefits","values":[22578.19,22578.19],"children":[{"label":"Universal Credit","values":[16073.15,16073.15],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[22398.18,22398.18],"rows":[{"label":"Benefits","values":[22578.19,22578.19],"children":[{"label":"Universal Credit","values":[16073.15,16073.15],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"renting_health_25","label":"25, renting alone; as the 22-year-old","results":{"removals":{"net":[23556.53,23556.53],"rows":[{"label":"Benefits","values":[23736.54,23736.54],"children":[{"label":"Universal Credit","values":[17231.5,17231.5],"children":[{"label":"Standard allowance","values":[5701.84,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[23556.53,23556.53],"rows":[{"label":"Benefits","values":[23736.54,23736.54],"children":[{"label":"Universal Credit","values":[17231.5,17231.5],"children":[{"label":"Standard allowance","values":[5701.84,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[23556.53,23556.53],"rows":[{"label":"Benefits","values":[23736.54,23736.54],"children":[{"label":"Universal Credit","values":[17231.5,17231.5],"children":[{"label":"Standard allowance","values":[5701.84,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[23556.53,23556.53],"rows":[{"label":"Benefits","values":[23736.54,23736.54],"children":[{"label":"Universal Credit","values":[17231.5,17231.5],"children":[{"label":"Standard allowance","values":[5701.84,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Personal Independence Payment","values":[6505.04,6505.04],"children":[{"label":"Daily living","values":[6505.04,6505.04]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"college_17","label":"17, at college, living with parents; standard-rate PIP daily living; no UC","results":{"removals":{"net":[4353.72,4353.72],"rows":[{"label":"Benefits","values":[4353.72,4353.72],"children":[{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"higher":{"net":[4353.72,4353.72],"rows":[{"label":"Benefits","values":[4353.72,4353.72],"children":[{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"work":{"net":[4353.72,4353.72],"rows":[{"label":"Benefits","values":[4353.72,4353.72],"children":[{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]},"nics":{"net":[4353.72,4353.72],"rows":[{"label":"Benefits","values":[4353.72,4353.72],"children":[{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]}]}}},{"id":"couple_partner_health","label":"23, renting with a partner aged 27 who has limited capability for work; no earnings","results":{"removals":{"net":[20299.9,20299.9],"rows":[{"label":"Benefits","values":[20479.9,20479.9],"children":[{"label":"Universal Credit","values":[20479.9,20479.9],"children":[{"label":"Standard allowance","values":[8950.25,8950.25]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[20299.9,20299.9],"rows":[{"label":"Benefits","values":[20479.9,20479.9],"children":[{"label":"Universal Credit","values":[20479.9,20479.9],"children":[{"label":"Standard allowance","values":[8950.25,8950.25]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[20299.9,20299.9],"rows":[{"label":"Benefits","values":[20479.9,20479.9],"children":[{"label":"Universal Credit","values":[20479.9,20479.9],"children":[{"label":"Standard allowance","values":[8950.25,8950.25]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[20299.9,20299.9],"rows":[{"label":"Benefits","values":[20479.9,20479.9],"children":[{"label":"Universal Credit","values":[20479.9,20479.9],"children":[{"label":"Standard allowance","values":[8950.25,8950.25]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"retail_part_time","label":"21, renting alone; 15 hours a week at the minimum wage in retail; UC","results":{"removals":{"net":[14156.03,14156.03],"rows":[{"label":"Market income","values":[10785.71,10785.71],"children":[{"label":"Employment income","values":[10785.71,10785.71],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-17.28,-17.28]}]}]},{"label":"Benefits","values":[3550.31,3550.31],"children":[{"label":"Universal Credit","values":[3550.31,3550.31],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Housing costs element","values":[4938.96,4938.96]},{"label":"Less: withdrawn against income","values":[-5932.14,-5932.14]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[14156.03,15314.38],"rows":[{"label":"Market income","values":[10785.71,10785.71],"children":[{"label":"Employment income","values":[10785.71,10785.71],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-17.28,-17.28]}]}]},{"label":"Benefits","values":[3550.31,4708.66],"children":[{"label":"Universal Credit","values":[3550.31,4708.66],"children":[{"label":"Standard allowance","values":[4543.49,5701.84]},{"label":"Housing costs element","values":[4938.96,4938.96]},{"label":"Less: withdrawn against income","values":[-5932.14,-5932.14]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[14156.03,17232.36],"rows":[{"label":"Market income","values":[10785.71,10785.71],"children":[{"label":"Employment income","values":[10785.71,10785.71],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-17.28,-17.28]}]}]},{"label":"Benefits","values":[3550.31,6626.64],"children":[{"label":"Universal Credit","values":[3550.31,6626.64],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Housing costs element","values":[4938.96,4938.96]},{"label":"Less: withdrawn against income","values":[-5932.14,-2855.81]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[14156.03,14449.5],"rows":[{"label":"Market income","values":[10785.71,11437.89],"children":[{"label":"Employment income","values":[10785.71,11437.89],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-17.28,-17.28]}]}]},{"label":"Benefits","values":[3550.31,3191.61],"children":[{"label":"Universal Credit","values":[3550.31,3191.61],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Housing costs element","values":[4938.96,4938.96]},{"label":"Less: withdrawn against income","values":[-5932.14,-6290.84]}]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"hospitality_health","label":"24, renting alone; 20 hours a week at the minimum wage in hospitality (food and drink service); UC health element; standard-rate PIP daily living","results":{"removals":{"net":[29566.45,18622.04],"rows":[{"label":"Market income","values":[14380.95,14380.95],"children":[{"label":"Employment income","values":[14380.95,14380.95],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-23.05,-23.05]}]}]},{"label":"Benefits","values":[15872.56,4928.15],"children":[{"label":"Universal Credit","values":[11518.84,4928.15],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,0.0]},{"label":"Housing costs element","values":[6000.0,4938.96]},{"label":"Less: withdrawn against income","values":[-4554.3,-4554.3]}]},{"label":"Personal Independence Payment","values":[4353.72,0.0],"children":[{"label":"Daily living","values":[4353.72,0.0]}]}]},{"label":"Taxes","values":[687.07,687.07],"children":[{"label":"Income Tax","values":[362.19,362.19]},{"label":"Employee National Insurance","values":[144.88,144.88]},{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[29566.45,30724.8],"rows":[{"label":"Market income","values":[14380.95,14380.95],"children":[{"label":"Employment income","values":[14380.95,14380.95],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-23.05,-23.05]}]}]},{"label":"Benefits","values":[15872.56,17030.92],"children":[{"label":"Universal Credit","values":[11518.84,12677.2],"children":[{"label":"Standard allowance","values":[4543.49,5701.84]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]},{"label":"Less: withdrawn against income","values":[-4554.3,-4554.29]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]},{"label":"Taxes","values":[687.07,687.07],"children":[{"label":"Income Tax","values":[362.19,362.19]},{"label":"Employee National Insurance","values":[144.88,144.88]},{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[29566.45,29566.45],"rows":[{"label":"Market income","values":[14380.95,14380.95],"children":[{"label":"Employment income","values":[14380.95,14380.95],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-23.05,-23.05]}]}]},{"label":"Benefits","values":[15872.56,15872.56],"children":[{"label":"Universal Credit","values":[11518.84,11518.84],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]},{"label":"Less: withdrawn against income","values":[-4554.3,-4554.3]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]},{"label":"Taxes","values":[687.07,687.07],"children":[{"label":"Income Tax","values":[362.19,362.19]},{"label":"Employee National Insurance","values":[144.88,144.88]},{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[29566.45,29777.75],"rows":[{"label":"Market income","values":[14380.95,15033.13],"children":[{"label":"Employment income","values":[14380.95,15033.13],"children":[{"label":"Pay cut for the salary sacrifice cap (current law)","values":[-23.05,-23.05]}]}]},{"label":"Benefits","values":[15872.56,15614.3],"children":[{"label":"Universal Credit","values":[11518.84,11260.58],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Health element (LCWRA)","values":[5529.65,5529.65]},{"label":"Housing costs element","values":[6000.0,6000.0]},{"label":"Less: withdrawn against income","values":[-4554.3,-4812.56]}]},{"label":"Personal Independence Payment","values":[4353.72,4353.72],"children":[{"label":"Daily living","values":[4353.72,4353.72]}]}]},{"label":"Taxes","values":[687.07,869.68],"children":[{"label":"Income Tax","values":[362.19,492.63]},{"label":"Employee National Insurance","values":[144.88,197.05]},{"label":"TV licence","values":[180.0,180.0]}]}]}}},{"id":"lone_parent","label":"19, lone parent of a child aged 1, renting; UC; no earnings","results":{"removals":{"net":[15880.29,15880.29],"rows":[{"label":"Benefits","values":[16060.29,16060.29],"children":[{"label":"Universal Credit","values":[14524.85,14524.85],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Child element","values":[3981.35,3981.35]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Child Benefit","values":[1535.44,1535.44]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"higher":{"net":[15880.29,17038.64],"rows":[{"label":"Benefits","values":[16060.29,17218.64],"children":[{"label":"Universal Credit","values":[14524.85,15683.2],"children":[{"label":"Standard allowance","values":[4543.49,5701.84]},{"label":"Child element","values":[3981.35,3981.35]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Child Benefit","values":[1535.44,1535.44]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"work":{"net":[15880.29,15880.29],"rows":[{"label":"Benefits","values":[16060.29,16060.29],"children":[{"label":"Universal Credit","values":[14524.85,14524.85],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Child element","values":[3981.35,3981.35]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Child Benefit","values":[1535.44,1535.44]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]},"nics":{"net":[15880.29,15880.29],"rows":[{"label":"Benefits","values":[16060.29,16060.29],"children":[{"label":"Universal Credit","values":[14524.85,14524.85],"children":[{"label":"Standard allowance","values":[4543.49,4543.49]},{"label":"Child element","values":[3981.35,3981.35]},{"label":"Housing costs element","values":[6000.0,6000.0]}]},{"label":"Child Benefit","values":[1535.44,1535.44]}]},{"label":"Taxes","values":[180.0,180.0],"children":[{"label":"TV licence","values":[180.0,180.0]}]}]}}}],"subtitle":"£ a year. Choose a household and a change; net income is market income plus benefits, less taxes.","note":"PolicyEngine estimates, from the dashboard's household calculator. Each change is a separate run against current law. Taxes include the model's £180 TV licence. Figures may not sum because of rounding."}
 ```
 
 The 25-year-old is above the review's age limit, and the 17-year-old below the PIP change's.
@@ -567,7 +497,7 @@ In a further, constructed example, a 19-year-old with the standard rate of the P
 
 Our estimates come from PolicyEngine's [Milburn review dashboard](https://www.policyengine.org/uk/milburn-review), which runs the [`policyengine` Python package (version 6.20.2)](https://pypi.org/project/policyengine/6.20.2/) with [PolicyEngine UK (version 2.177.7)](https://github.com/PolicyEngine/policyengine-uk/tree/2.177.7) on [Microcosm UK](https://www.policyengine.org/uk/model/data), our survey-based dataset. Prices and earnings follow the Office for Budget Responsibility's October 2026 forecast. Each estimate is static: people work, earn and claim as they would without the change.
 
-The results for each run, by decile, age and NEET status, and the household examples come from the dashboard's results tables. The split of the PIP saving, the Scottish figure and the overlap of the two removals come from further runs on the same model and data, and the 2025 figures from the same data build at its 2025 calibration. The carer example is a constructed household, run on the same model. Every figure from the review comes from its report, analytical annex or data tables, as cited.
+The results for each run, by age and NEET status, and the household examples come from the dashboard's results tables. The results by income quintile, the split of the PIP saving, the Scottish figure and the overlap of the two removals come from further runs on the same model and data, and the 2025 figures from the same data build at its 2025 calibration. The carer example is a constructed household, run on the same model. Every figure from the review comes from its report, analytical annex or data tables, as cited.
 
 ### Modelling choices
 
