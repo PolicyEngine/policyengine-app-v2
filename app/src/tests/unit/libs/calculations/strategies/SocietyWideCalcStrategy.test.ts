@@ -1,3 +1,4 @@
+import type { Query } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   UK_REGION_SOCIETY_WIDE_DURATION_MS,
@@ -6,14 +7,20 @@ import {
   US_STATE_SOCIETY_WIDE_DURATION_MS,
 } from '@/constants/calculationDurations';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
+import { MAX_FAILED_POLLS } from '@/libs/calculations/polledRun';
 import {
+  FAILED_CALCULATION_ERROR,
+  FAILED_REQUEST_ERRORS,
+  mockComputingSocietyWideStatus,
   mockSocietyWideCompleteResponse,
   mockSocietyWideComputingResponse,
   mockSocietyWideErrorResponse,
+  NETWORK_ERROR_MESSAGE,
+  REFUSED_REQUEST_ERRORS,
   STRATEGY_TEST_CONSTANTS,
 } from '@/tests/fixtures/libs/calculations/strategyFixtures';
 import { mockSocietyWideCalcParams } from '@/tests/fixtures/types/calculationFixtures';
-import type { CalcParams } from '@/types/calculation';
+import type { CalcParams, CalcStatus } from '@/types/calculation';
 
 // The country estimates that legacy (v2) progress bars use
 const THREE_MINUTES_MS = 3 * 60 * 1000;
@@ -27,11 +34,10 @@ const startedAgo = (elapsedMs: number) => ({
   startedAt: Date.now() - elapsedMs,
 });
 
-// Mock the societyWide API
-vi.mock('@/api/societyWideCalculation', () => ({
+// Mock the societyWide API's request; its error class and readers stay real
+vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchSocietyWideCalculation: vi.fn(),
-  SocietyWideCalculationParams: {},
-  SocietyWideCalculationResponse: {},
 }));
 
 describe('SocietyWideCalcStrategy', () => {
@@ -240,6 +246,114 @@ describe('SocietyWideCalcStrategy', () => {
         })
       );
     });
+  });
+
+  describe('failed polls', () => {
+    const metadata = startedAgo(STRATEGY_TEST_CONSTANTS.TEST_PROGRESS_TIME_MS);
+
+    /** Whether the report's query polls again after this status. */
+    const pollsAgain = (status: CalcStatus) =>
+      (strategy.getRefetchConfig().refetchInterval as (query: Query) => number | false)({
+        state: { data: status },
+      } as Query) !== false;
+
+    it.each(FAILED_REQUEST_ERRORS)(
+      'given %s after a computing response then keeps the computing status and polls again',
+      async (_kind, error) => {
+        // Given
+        const previous = mockComputingSocietyWideStatus();
+        mockFetchSocietyWideCalculation.mockRejectedValue(error);
+
+        // When
+        const status = await strategy.execute(mockSocietyWideCalcParams(), metadata, previous);
+
+        // Then
+        expect(status).toEqual({ ...previous, failedPolls: 1 });
+        expect(pollsAgain(status)).toBe(true);
+      }
+    );
+
+    it('given failed polls in a row then the one after MAX_FAILED_POLLS ends with an error', async () => {
+      // Given
+      mockFetchSocietyWideCalculation.mockRejectedValue(new TypeError(NETWORK_ERROR_MESSAGE));
+      let status: CalcStatus = mockComputingSocietyWideStatus();
+      const statuses: CalcStatus['status'][] = [];
+
+      // When
+      for (let poll = 0; poll <= MAX_FAILED_POLLS; poll++) {
+        status = await strategy.execute(mockSocietyWideCalcParams(), metadata, status);
+        statuses.push(status.status);
+      }
+
+      // Then
+      expect(statuses).toEqual(['pending', 'pending', 'pending', 'error']);
+      expect(status.error?.message).toBe(NETWORK_ERROR_MESSAGE);
+      expect(pollsAgain(status)).toBe(false);
+    });
+
+    it('given a computing response after failed polls then the count starts again', async () => {
+      // Given
+      const previous = mockComputingSocietyWideStatus({ failedPolls: MAX_FAILED_POLLS });
+      mockFetchSocietyWideCalculation
+        .mockResolvedValueOnce(mockSocietyWideComputingResponse())
+        .mockRejectedValueOnce(new TypeError(NETWORK_ERROR_MESSAGE));
+
+      // When
+      const computing = await strategy.execute(mockSocietyWideCalcParams(), metadata, previous);
+      const afterFailure = await strategy.execute(mockSocietyWideCalcParams(), metadata, computing);
+
+      // Then
+      expect(computing.failedPolls).toBeUndefined();
+      expect(afterFailure.status).toBe('pending');
+      expect(afterFailure.failedPolls).toBe(1);
+    });
+
+    it('given the first request fails then ends with an error at once', async () => {
+      // Given
+      mockFetchSocietyWideCalculation.mockRejectedValue(new TypeError(NETWORK_ERROR_MESSAGE));
+
+      // When
+      const status = await strategy.execute(mockSocietyWideCalcParams(), metadata);
+
+      // Then
+      expect(status.status).toBe('error');
+      expect(status.error?.message).toBe(NETWORK_ERROR_MESSAGE);
+    });
+
+    it('given the API reports the calculation failed then ends with an error at once', async () => {
+      // Given
+      mockFetchSocietyWideCalculation.mockRejectedValue(FAILED_CALCULATION_ERROR);
+
+      // When
+      const status = await strategy.execute(
+        mockSocietyWideCalcParams(),
+        metadata,
+        mockComputingSocietyWideStatus()
+      );
+
+      // Then
+      expect(status.status).toBe('error');
+      expect(status.error?.message).toBe(FAILED_CALCULATION_ERROR.message);
+    });
+
+    it.each(REFUSED_REQUEST_ERRORS)(
+      'given the API answers %s then ends with an error at once',
+      async (_kind, error) => {
+        // Given
+        mockFetchSocietyWideCalculation.mockRejectedValue(error);
+
+        // When
+        const status = await strategy.execute(
+          mockSocietyWideCalcParams(),
+          metadata,
+          mockComputingSocietyWideStatus()
+        );
+
+        // Then
+        expect(status.status).toBe('error');
+        expect(status.error?.message).toBe(error.message);
+      }
+    );
   });
 
   describe('duration estimate', () => {

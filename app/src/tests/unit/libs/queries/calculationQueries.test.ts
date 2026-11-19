@@ -1,9 +1,11 @@
+import { QueryClient } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CalcStrategyFactory } from '@/libs/calculations/strategies/CalcStrategyFactory';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
 import { calculationKeys } from '@/libs/queryKeys';
 import {
   createMockStrategy,
+  mockCachedComputingStatus,
   mockHouseholdMetadata,
   mockHouseholdParams,
   mockSocietyWideMetadata,
@@ -55,7 +57,7 @@ describe('calculationQueries', () => {
       expect(queryOptions.refetchInterval).toBe(false);
     });
 
-    it('given queryFn executed then calls strategy execute', async () => {
+    it('given queryFn executed without a context then calls strategy execute with no cached status', async () => {
       // Given
       const metadata = mockSocietyWideMetadata();
       const params = mockSocietyWideParams();
@@ -66,11 +68,27 @@ describe('calculationQueries', () => {
       const result = await queryOptions.queryFn();
 
       // Then
-      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata);
+      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata, undefined);
       expect(result).toEqual({
         status: 'complete',
         result: { data: 'test' },
       });
+    });
+    it('given a status in the cache then queryFn passes it to the strategy', async () => {
+      // Given
+      const queryClient = new QueryClient();
+      const metadata = mockSocietyWideMetadata();
+      const params = mockSocietyWideParams();
+      const queryOptions = calculationQueries.forReport(TEST_CALC_IDS.REPORT_123, metadata, params);
+      const cachedStatus = mockCachedComputingStatus(metadata);
+      queryClient.setQueryData(queryOptions.queryKey, cachedStatus);
+
+      // When
+      // A poll refetches whatever the strategy's staleTime, as staleTime 0 makes fetchQuery do.
+      await queryClient.fetchQuery({ ...queryOptions, staleTime: 0 });
+
+      // Then
+      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata, cachedStatus);
     });
   });
 
@@ -96,7 +114,7 @@ describe('calculationQueries', () => {
       expect(queryOptions.meta).toEqual({ calcMetadata: metadata });
     });
 
-    it('given queryFn executed then calls strategy execute', async () => {
+    it('given queryFn executed without a context then calls strategy execute with no cached status', async () => {
       // Given
       const metadata = mockHouseholdMetadata(TEST_CALC_IDS.SIM_456);
       const params = mockHouseholdParams(TEST_CALC_IDS.SIM_456);
@@ -111,11 +129,32 @@ describe('calculationQueries', () => {
       const result = await queryOptions.queryFn();
 
       // Then
-      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata);
+      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata, undefined);
       expect(result).toEqual({
         status: 'complete',
         result: { data: 'test' },
       });
+    });
+
+    it('given a status in the cache then queryFn passes it to the strategy', async () => {
+      // Given
+      const queryClient = new QueryClient();
+      const metadata = mockHouseholdMetadata(TEST_CALC_IDS.SIM_456);
+      const params = mockHouseholdParams(TEST_CALC_IDS.SIM_456);
+      const queryOptions = calculationQueries.forSimulation(
+        TEST_CALC_IDS.SIM_456,
+        metadata,
+        params
+      );
+      const cachedStatus = mockCachedComputingStatus(metadata);
+      queryClient.setQueryData(queryOptions.queryKey, cachedStatus);
+
+      // When
+      // A poll refetches whatever the strategy's staleTime, as staleTime 0 makes fetchQuery do.
+      await queryClient.fetchQuery({ ...queryOptions, staleTime: 0 });
+
+      // Then
+      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata, cachedStatus);
     });
   });
 });
