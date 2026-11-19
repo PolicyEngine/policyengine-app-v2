@@ -135,6 +135,8 @@ Both articles and interactive apps can appear on the Research page (`/us/researc
 4. Add `authors` array (author IDs from `authors.json`)
 5. Any app `type` can be displayed on the Research page as long as it has these fields
 
+**Tools stay off the Research page.** A tool works for any household under current law, and the Research page holds work on one policy, bill, event or finding. An entry with `toolsMenu` lists under Tools (the header menus and the homepage Tools grid), so leave `displayWithResearch` off it. `posts-and-apps-data.test.ts` fails if a tool sets both.
+
 **Note:** The app type (streamlit, iframe, etc.) determines how it's embedded, but any type can be displayed on the Research page if it has the required metadata fields.
 
 ## Quick Reference
