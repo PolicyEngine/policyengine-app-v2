@@ -33,6 +33,7 @@
 import { Fragment, useId, useState } from "react";
 
 import { isFiniteNumber, isRecord } from "./blogChartUtils";
+import { BlogOptionControl, optionControlForm } from "./BlogOptionControl";
 
 export interface HouseholdRow {
   label: string;
@@ -327,17 +328,6 @@ function allKeys(rows: HouseholdRow[], path = ""): string[] {
   });
 }
 
-const selectStyle = {
-  fontFamily: "var(--font-sans)",
-  fontSize: 14,
-  color: "var(--foreground)",
-  background: "var(--background)",
-  border: "1px solid var(--border-medium)",
-  borderRadius: 6,
-  padding: "4px 8px",
-  maxWidth: "100%",
-};
-
 export function HouseholdBody({ spec }: { spec: BlogHouseholdSpec }) {
   const baseId = useId();
   const [exampleId, setExampleId] = useState(spec.examples[0].id);
@@ -358,57 +348,26 @@ export function HouseholdBody({ spec }: { spec: BlogHouseholdSpec }) {
       return next;
     });
   const netChange = result.net[1] - result.net[0];
-  const label = { fontFamily: "var(--font-sans)", fontSize: 14 };
+  // From every change, not only this example's, so the control keeps its
+  // form as the reader switches household.
+  const changeForm = optionControlForm(spec.changes.map((c) => c.label));
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "8px 16px",
-          marginBottom: 12,
-          color: "var(--foreground)",
-        }}
-      >
-        <div
-          style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}
-        >
-          <label htmlFor={`${baseId}-example`} style={label}>
-            Household
-          </label>
-          <select
-            id={`${baseId}-example`}
-            value={example.id}
-            onChange={(e) => setExampleId(e.target.value)}
-            style={selectStyle}
-          >
-            {spec.examples.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div
-          style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}
-        >
-          <label htmlFor={`${baseId}-change`} style={label}>
-            Change
-          </label>
-          <select
-            id={`${baseId}-change`}
-            value={change.id}
-            onChange={(e) => setChangeId(e.target.value)}
-            style={selectStyle}
-          >
-            {covered.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="tw:mb-3 tw:grid tw:grid-cols-1 tw:gap-3 tw:sm:grid-cols-2">
+        <BlogOptionControl
+          label="Household"
+          options={spec.examples.map((e) => ({ value: e.id, label: e.label }))}
+          value={example.id}
+          onChange={setExampleId}
+        />
+        <BlogOptionControl
+          label="Change"
+          options={covered.map((c) => ({ value: c.id, label: c.label }))}
+          value={change.id}
+          onChange={setChangeId}
+          form={changeForm}
+        />
       </div>
       <p
         aria-live="polite"

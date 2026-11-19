@@ -204,6 +204,8 @@ describe("BlogHousehold", () => {
       target: { value: "hospitality" },
     });
     const change = screen.getByLabelText("Change") as HTMLSelectElement;
+    // The form follows every change, not this example's, so it stays put.
+    expect(change.tagName).toBe("SELECT");
     expect([...change.options].map((o) => o.value)).toEqual([
       "removals",
       "nics",

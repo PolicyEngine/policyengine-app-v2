@@ -1,5 +1,5 @@
-import { cloneElement, type ReactElement } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cloneElement, type ReactElement, useState } from "react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 
 import {
@@ -7,6 +7,10 @@ import {
   formatChartValue,
   parseBlogChartSpec,
 } from "@/components/blog/BlogChart";
+import {
+  BlogOptionControl,
+  optionControlForm,
+} from "@/components/blog/BlogOptionControl";
 import { MarkdownFormatter } from "@/components/blog/MarkdownFormatter";
 import { chartColor } from "@/components/blog/blogChartUtils";
 
@@ -370,17 +374,18 @@ describe("BlogChart select", () => {
   const labels = (container: HTMLElement) =>
     [...container.querySelectorAll("svg text")].map((t) => t.textContent);
 
-  test("draws only the default series, with a labelled drop-down", () => {
+  test("draws only the default series, with a labelled segmented group", () => {
     const { container } = render(
       <BlogChart data={JSON.stringify(SELECT_SPEC)} />,
     );
-    const control = screen.getByLabelText("Year") as HTMLSelectElement;
-    expect(control.tagName).toBe("SELECT");
-    expect(control.value).toBe("y2029");
-    expect([...control.options].map((o) => o.textContent)).toEqual([
-      "2029-30",
-      "£ a year",
+    const group = screen.getByRole("radiogroup", { name: "Year" });
+    const radios = within(group).getAllByRole("radio");
+    expect(radios.map((r) => r.textContent)).toEqual(["2029-30", "£ a year"]);
+    expect(radios.map((r) => r.getAttribute("aria-checked"))).toEqual([
+      "true",
+      "false",
     ]);
+    expect(container.querySelector("select")).toBeNull();
     expect(container.querySelectorAll(".recharts-bar-rectangle")).toHaveLength(
       2,
     );
@@ -393,9 +398,11 @@ describe("BlogChart select", () => {
     const { container } = render(
       <BlogChart data={JSON.stringify(SELECT_SPEC)} />,
     );
-    fireEvent.change(screen.getByLabelText("Year"), {
-      target: { value: "cash" },
-    });
+    fireEvent.click(screen.getByRole("radio", { name: "£ a year" }));
+    expect(screen.getByRole("radio", { name: "£ a year" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     expect(labels(container)).toContain("−£85");
     expect(labels(container)).toContain("Change (£ a year)");
     expect(labels(container)).not.toContain("Change (%)");
@@ -408,9 +415,36 @@ describe("BlogChart select", () => {
         data={JSON.stringify({ ...SELECT_SPEC, select: { label: "Year" } })}
       />,
     );
-    expect((screen.getByLabelText("Year") as HTMLSelectElement).value).toBe(
-      "y2029",
+    expect(screen.getByRole("radio", { name: "2029-30" })).toHaveAttribute(
+      "aria-checked",
+      "true",
     );
+  });
+
+  test("long series names get a labelled drop-down", () => {
+    const long = {
+      ...SELECT_SPEC,
+      select: { label: "Measure" },
+      series: [
+        {
+          key: "y2029",
+          name: "Share in households whose net income falls (%)",
+        },
+        {
+          key: "cash",
+          name: "Average change in household net income (£ a year)",
+          format: { decimals: 0, prefix: "£" },
+          yLabel: "Change (£ a year)",
+        },
+      ],
+    };
+    const { container } = render(<BlogChart data={JSON.stringify(long)} />);
+    const control = screen.getByLabelText("Measure") as HTMLSelectElement;
+    expect(control.tagName).toBe("SELECT");
+    expect(control.value).toBe("y2029");
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+    fireEvent.change(control, { target: { value: "cash" } });
+    expect(labels(container)).toContain("Change (£ a year)");
   });
 
   test("rejects a select without a label or with an unknown default", () => {
@@ -437,8 +471,96 @@ describe("BlogChart select", () => {
   test("a spec without select draws every series, with no control", () => {
     const { container } = render(<BlogChart data={JSON.stringify(SPEC)} />);
     expect(container.querySelector("select")).toBeNull();
+    expect(screen.queryByRole("radiogroup")).toBeNull();
     expect(container.querySelectorAll(".recharts-bar-rectangle")).toHaveLength(
       4,
     );
+  });
+});
+
+describe("BlogOptionControl", () => {
+  test("a few short options are a segmented group, longer lists a drop-down", () => {
+    // The labels of the Milburn briefing's controls.
+    expect(optionControlForm(["2029-30", "2030-31", "2031-32"])).toBe(
+      "segmented",
+    );
+    expect(
+      optionControlForm([
+        "Share in households whose net income falls (%)",
+        "Average change in household net income (£ a year)",
+      ]),
+    ).toBe("select");
+    expect(
+      optionControlForm([
+        "All people (percentage points)",
+        "All people (number)",
+        "Children (percentage points)",
+      ]),
+    ).toBe("select");
+    expect(
+      optionControlForm([
+        "Two removals",
+        "Higher rate",
+        "Work allowance",
+        "Employer National Insurance",
+      ]),
+    ).toBe("select");
+    expect(optionControlForm(["A"])).toBe("select");
+    expect(optionControlForm(["A", "B", "C", "D", "E"])).toBe("select");
+  });
+
+  function Harness() {
+    const [value, setValue] = useState("b");
+    return (
+      <BlogOptionControl
+        label="Year"
+        options={[
+          { value: "a", label: "2029-30" },
+          { value: "b", label: "2030-31" },
+          { value: "c", label: "2031-32" },
+        ]}
+        value={value}
+        onChange={setValue}
+      />
+    );
+  }
+
+  test("arrow keys, Home and End move the choice and the focus, wrapping", () => {
+    render(<Harness />);
+    const [a, b, c] = screen.getAllByRole("radio");
+    const checked = () =>
+      [a, b, c].map((r) => r.getAttribute("aria-checked") === "true");
+    // One tab stop: the chosen button.
+    expect([a, b, c].map((r) => r.tabIndex)).toEqual([-1, 0, -1]);
+
+    b.focus();
+    fireEvent.keyDown(b, { key: "ArrowRight" });
+    expect(checked()).toEqual([false, false, true]);
+    expect(document.activeElement).toBe(c);
+    expect([a, b, c].map((r) => r.tabIndex)).toEqual([-1, -1, 0]);
+
+    fireEvent.keyDown(c, { key: "ArrowDown" });
+    expect(checked()).toEqual([true, false, false]);
+    expect(document.activeElement).toBe(a);
+
+    fireEvent.keyDown(a, { key: "ArrowLeft" });
+    expect(checked()).toEqual([false, false, true]);
+    expect(document.activeElement).toBe(c);
+
+    fireEvent.keyDown(c, { key: "Home" });
+    expect(checked()).toEqual([true, false, false]);
+    expect(document.activeElement).toBe(a);
+
+    fireEvent.keyDown(a, { key: "End" });
+    expect(checked()).toEqual([false, false, true]);
+    expect(document.activeElement).toBe(c);
+
+    fireEvent.keyDown(c, { key: "ArrowUp" });
+    expect(checked()).toEqual([false, true, false]);
+    expect(document.activeElement).toBe(b);
+
+    // Other keys leave the choice alone.
+    fireEvent.keyDown(b, { key: "a" });
+    expect(checked()).toEqual([false, true, false]);
   });
 });

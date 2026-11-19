@@ -47,8 +47,9 @@
  * baseline.
  *
  * "select" (optional, e.g. { "label": "Year", "default": "y2029" }) shows one
- * series at a time, with a labelled drop-down of the series names above the
- * chart; "default" is the key shown first (the first series without it). A
+ * series at a time, with a labelled control of the series names above the
+ * chart (BlogOptionControl.tsx: a segmented button group for a few short
+ * names, else a drop-down); "default" is the key shown first (the first series without it). A
  * series may then carry its own "format" and "yLabel", which replace the
  * chart's while it is shown. Without "select" every series is drawn, as
  * before, and per-series formats are not used.
@@ -88,6 +89,7 @@ import {
   validSharedFields,
 } from "./blogChartUtils";
 import { type BlogLineSpec, LineBody, parseLineSpec } from "./BlogLineChart";
+import { BlogOptionControl } from "./BlogOptionControl";
 import {
   type BlogStateMapSpec,
   StateMapBody,
@@ -280,7 +282,7 @@ function ValueLabel({
 }
 
 /**
- * A bar chart with "select": a labelled drop-down of the series names, and
+ * A bar chart with "select": a labelled control of the series names, and
  * the chosen series drawn alone, in its own color, format and axis label.
  */
 function SelectableBarBody({
@@ -290,7 +292,6 @@ function SelectableBarBody({
   spec: BlogBarChartSpec;
   select: BlogChartSelect;
 }) {
-  const controlId = useId();
   const [chosen, setChosen] = useState(select.default ?? spec.series[0].key);
   const index = Math.max(
     0,
@@ -307,39 +308,13 @@ function SelectableBarBody({
   };
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 8,
-          fontFamily: "var(--font-sans)",
-          fontSize: 14,
-          color: "var(--foreground)",
-        }}
-      >
-        <label htmlFor={controlId}>{select.label}</label>
-        <select
-          id={controlId}
-          value={series.key}
-          onChange={(event) => setChosen(event.target.value)}
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: 14,
-            color: "var(--foreground)",
-            background: "var(--background)",
-            border: "1px solid var(--border-medium)",
-            borderRadius: 6,
-            padding: "4px 8px",
-          }}
-        >
-          {spec.series.map((s) => (
-            <option key={s.key} value={s.key}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <BlogOptionControl
+        label={select.label}
+        options={spec.series.map((s) => ({ value: s.key, label: s.name }))}
+        value={series.key}
+        onChange={setChosen}
+        className="tw:mb-3 tw:sm:max-w-[28rem]"
+      />
       <BarBody spec={shown} colorIndex={index} />
     </>
   );
