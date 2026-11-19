@@ -3,6 +3,8 @@ import { colors, spacing, typography } from "@/designTokens";
 // The Budget dashboard, served on this site through its app zone route
 // (src/data/appZoneRoutes.ts).
 const DASHBOARD_URL = "/uk/budgets/autumn-2026";
+// The Milburn review dashboard, served the same way.
+const MILBURN_REVIEW_URL = "/uk/milburn-review";
 // The recording of our Budget-day webinar on 28 October.
 const RECORDING_URL = "https://www.youtube.com/watch?v=ZutKULXLhU0";
 
@@ -22,69 +24,112 @@ export default function AutumnBudgetEventBanner({
 }) {
   if (countryId !== "uk") return null;
 
+  // One banner row: the event's name in bold, a line about it, and its links as pills.
+  const row = (background: string, border: string, text: string) =>
+    ({
+      display: "flex",
+      flexWrap: "wrap",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px 20px",
+      background,
+      borderBottom: `1px solid ${border}`,
+      color: text,
+      textAlign: "center",
+      padding: "16px",
+    }) as const;
+  const links = {
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: spacing.md,
+  } as const;
+
   return (
     <div
+      data-testid="event-banner"
       style={{
         // Stay pinned just below the sticky header while scrolling.
         position: "sticky",
         top: spacing.layout.header,
         zIndex: 999,
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "8px 20px",
-        background: colors.primary[50],
-        borderBottom: `1px solid ${colors.primary[100]}`,
-        color: colors.primary[900],
-        textAlign: "center",
-        padding: "16px",
         fontFamily: typography.fontFamily.primary,
         fontSize: 17,
         fontWeight: 500,
         lineHeight: 1.4,
       }}
     >
-      <span>
-        <strong style={{ fontWeight: 700 }}>Autumn Budget 2026:</strong> explore
-        our analysis, and watch our same-day first look
-      </span>
-      <span
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          gap: spacing.md,
-        }}
+      {/* The Milburn review, first and in its own colour */}
+      <div
+        data-testid="milburn-banner"
+        style={row(
+          colors.secondary[50],
+          colors.secondary[200],
+          colors.secondary[900],
+        )}
       >
-        {/* The aria-labels name the Budget for screen readers' link lists,
-            and start with the visible text so voice control still matches. */}
-        <a
-          href={DASHBOARD_URL}
-          aria-label="See the analysis of Autumn Budget 2026"
-          style={{
-            ...pill,
-            background: colors.primary[600],
-            color: colors.white,
-          }}
-        >
-          See the analysis &rarr;
-        </a>
-        <a
-          href={RECORDING_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Watch the recording of our Autumn Budget 2026 webinar (opens in a new tab)"
-          style={{
-            ...pill,
-            background: colors.white,
-            color: colors.primary[700],
-            border: `1px solid ${colors.primary[600]}`,
-          }}
-        >
-          Watch the recording &rarr;
-        </a>
-      </span>
+        <span>
+          <strong style={{ fontWeight: 700 }}>
+            Milburn review of young people and work:
+          </strong>{" "}
+          explore our analysis of its proposals
+        </span>
+        <span style={links}>
+          <a
+            href={MILBURN_REVIEW_URL}
+            aria-label="See the analysis of the Milburn review of young people and work"
+            style={{
+              ...pill,
+              background: colors.secondary[700],
+              color: colors.white,
+            }}
+          >
+            See the analysis &rarr;
+          </a>
+        </span>
+      </div>
+      <div
+        data-testid="budget-banner"
+        style={row(
+          colors.primary[50],
+          colors.primary[100],
+          colors.primary[900],
+        )}
+      >
+        <span>
+          <strong style={{ fontWeight: 700 }}>Autumn Budget 2026:</strong>{" "}
+          explore our analysis, and watch our same-day first look
+        </span>
+        <span style={links}>
+          {/* The aria-labels name the Budget for screen readers' link lists,
+              and start with the visible text so voice control still matches. */}
+          <a
+            href={DASHBOARD_URL}
+            aria-label="See the analysis of Autumn Budget 2026"
+            style={{
+              ...pill,
+              background: colors.primary[600],
+              color: colors.white,
+            }}
+          >
+            See the analysis &rarr;
+          </a>
+          <a
+            href={RECORDING_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Watch the recording of our Autumn Budget 2026 webinar (opens in a new tab)"
+            style={{
+              ...pill,
+              background: colors.white,
+              color: colors.primary[700],
+              border: `1px solid ${colors.primary[600]}`,
+            }}
+          >
+            Watch the recording &rarr;
+          </a>
+        </span>
+      </div>
     </div>
   );
 }

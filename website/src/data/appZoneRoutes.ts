@@ -254,6 +254,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://uk-autumn-budget-2026.vercel.app/uk/autumn-budget-2026",
   },
   {
+    source: "/uk/milburn-review",
+    destination: "https://uk-milburn-review.vercel.app/uk/milburn-review",
+  },
+  {
     source: "/uk/public-services-spending",
     destination:
       "https://uk-public-services-imputation.vercel.app/uk/public-services-spending",
