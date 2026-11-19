@@ -13,6 +13,11 @@ const cards = [
     desc: "What its benefit and employer National Insurance proposals would change, by age and household",
   },
   {
+    href: "/uk/research/uk-energy-price-cap-january-2027-forecast",
+    title: "The January 2027 energy price cap forecast",
+    desc: "What Cornwall Insight's forecast would mean for household energy bills",
+  },
+  {
     href: "/uk/budgets/autumn-2026",
     title: "Autumn Budget 2026",
     desc: "What the Budget's measures mean for the public finances and household incomes",
