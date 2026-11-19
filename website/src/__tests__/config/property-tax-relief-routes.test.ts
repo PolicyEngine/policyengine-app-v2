@@ -8,14 +8,14 @@ import { resolveRoute } from "../helpers/resolveRoute";
 const BASE = "/us/rent-and-property-taxes";
 const CHILD = "https://property-tax-relief.vercel.app";
 const ASSETS = "/_zones/property-tax-relief/_next/static";
-const PAGES = [BASE, `${BASE}/report`, `${BASE}/methods`];
+const PAGES = [BASE, `${BASE}/report`, `${BASE}/methods`, `${BASE}/calculator`];
 const label = fc.stringMatching(/^[a-z][a-z0-9_-]{0,11}$/);
 
 // This tests the actual host config with the existing Next-based resolver.
 // It does not model the child response or certify deployed redirect behavior.
 // Invariants: only these pages gain an upstream slash; file/asset paths and
 // query values survive unchanged; incoming slash normalization stays on host.
-describe("rent and property tax report routes", () => {
+describe("rent and property tax report and calculator routes", () => {
   test.each(PAGES.flatMap((page) => [page, `${page}/`]))(
     "given page %s then reach its slash-terminated child destination",
     async (path) => {
@@ -28,7 +28,7 @@ describe("rent and property tax report routes", () => {
     },
   );
 
-  test("given report and methods pages then exact rules precede the broad file route", async () => {
+  test("given report, methods and calculator pages then exact rules precede the broad file route", async () => {
     const rewrites = await nextConfig.rewrites!();
     if (Array.isArray(rewrites)) throw new Error("Expected phased rewrites");
     const beforeFiles = rewrites.beforeFiles ?? [];
@@ -50,7 +50,9 @@ describe("rent and property tax report routes", () => {
     `${BASE}/__next._full.txt`,
     `${BASE}/report/__next.report.__PAGE__.txt`,
     `${BASE}/methods/__next._tree.txt`,
+    `${BASE}/calculator/__next.calculator.__PAGE__.txt`,
     `${BASE}/report.txt`,
+    `${BASE}/calculator.txt`,
     `${ASSETS}/chunks/turbopack-2ldtdtmjp3oyl.js`,
     `${ASSETS}/chunks/1-332mdft_t7o.css`,
     `${ASSETS}/media/font.woff2`,
@@ -115,11 +117,12 @@ describe("rent and property tax report routes", () => {
   test("given any generated deep file then preserve its path without a page slash", async () => {
     await fc.assert(
       fc.asyncProperty(
+        fc.constantFrom("report", "methods", "calculator"),
         label,
         fc.constantFrom("json", "csv", "txt"),
         label,
-        async (name, extension, value) => {
-          const path = `${BASE}/report/data/${name}.${extension}`;
+        async (page, name, extension, value) => {
+          const path = `${BASE}/${page}/data/${name}.${extension}`;
           const resolved = await resolveRoute(`${path}?q=${value}`);
           expect(resolved.upstream?.origin).toBe(CHILD);
           expect(resolved.upstream?.pathname).toBe(path);

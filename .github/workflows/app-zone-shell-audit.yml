@@ -40,6 +40,20 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Save exact pull request base routes
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if ! [[ "$PR_BASE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid pull request base SHA" >&2
+            exit 1
+          fi
+          git show "${PR_BASE_SHA}:website/src/data/appZoneRoutes.ts" > "$RUNNER_TEMP/app-zone-base-routes.ts"
+          echo "APP_ZONE_BASE_ROUTES_FILE=$RUNNER_TEMP/app-zone-base-routes.ts" >> "$GITHUB_ENV"
 
       # This job connects to production sites over HTTPS, and Node.js checks
       # certificates against a CA list compiled into its binary. Node 20 gets
