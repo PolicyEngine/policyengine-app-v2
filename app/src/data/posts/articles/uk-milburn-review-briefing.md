@@ -81,22 +81,6 @@ We don't model the review's other proposals, among them the Opportunity and Supp
 
 [See the proposals on the dashboard](https://www.policyengine.org/uk/milburn-review?tab=policies).
 
-## Modelling choices
-
-Four of our choices raise both the saving and the fall in household net income:
-
-- **No replacement awards.** Any amount the Additional Cost Allowance, the Severe and Complex Needs Insurance or the Health and Disability Fund paid would lower both.
-- **Ending the entitlements that follow PIP**, which adds £0.6 billion in 2029-30.
-- **Including Scottish Adult Disability Payment**, which adds £121 million in 2029-30. Adult Disability Payment is the Scottish Government's, so a UK change to PIP would not itself change it, but the review's welfare costing covers the UK.
-- **Moving everyone at once.** The phased run saves less in each year (Table 6).
-
-Two lower both:
-
-- **Keeping carers' awards.** A carer can qualify for Carer's Allowance and the UC carer element through the daily living component of the PIP award of the person they care for. The model keeps both awards because it doesn't link carers to care recipients. The review leaves open whether the replacements would preserve that entitlement.
-- **Keeping the assessment of limited capability for work**, and so today's work allowance, for claimants who would no longer receive the health element.
-
-Other choices, which don't move the results in a single direction, are in the appendix.
-
 ## Results
 
 ### Public finances
@@ -586,9 +570,21 @@ Our estimates come from PolicyEngine's [Milburn review dashboard](https://www.po
 
 The results for each run, by decile, age and NEET status, and the household examples come from the dashboard's results tables. The split of the PIP saving, the Scottish figure and the overlap of the two removals come from further runs on the same model and data, and the 2025 figures from the same data build at its 2025 calibration. The carer example is a constructed household, run on the same model. Every figure from the review comes from its report, analytical annex or data tables, as cited.
 
-## Appendix: other modelling choices
+### Modelling choices
 
-The dashboard's [Methodology tab](https://www.policyengine.org/uk/milburn-review?tab=methodology) gives the full detail. These choices don't move the results in a single direction:
+Four of our choices raise both the saving and the fall in household net income:
+
+- **No replacement awards.** Any amount the Additional Cost Allowance, the Severe and Complex Needs Insurance or the Health and Disability Fund paid would lower both.
+- **Ending the entitlements that follow PIP**, which adds £0.6 billion in 2029-30.
+- **Including Scottish Adult Disability Payment**, which adds £121 million in 2029-30. Adult Disability Payment is the Scottish Government's, so a UK change to PIP would not itself change it, but the review's welfare costing covers the UK.
+- **Moving everyone at once.** The phased run saves less in each year (Table 6).
+
+Two lower both:
+
+- **Keeping carers' awards.** A carer can qualify for Carer's Allowance and the UC carer element through the daily living component of the PIP award of the person they care for. The model keeps both awards because it doesn't link carers to care recipients. The review leaves open whether the replacements would preserve that entitlement.
+- **Keeping the assessment of limited capability for work**, and so today's work allowance, for claimants who would no longer receive the health element.
+
+Other choices don't move the results in a single direction:
 
 - we hold employment fixed, where the review assumes more young people move into work;
 - we set the work allowance at a level the review doesn't give (Table 4);
@@ -602,3 +598,5 @@ The phased run and the household examples also rest on these assumptions:
 
 - **Phased run.** People who turned 18 since April 2028 move at once, and 45% of the remaining claimants are reassessed each year, drawn at random because the data hold no reassessment dates.
 - **Household examples.** Renters pay £500 a month to a private landlord in the North West. Net income is after taxes and benefits and before housing costs. It leaves out Council Tax and takes off the model's £180 TV licence, which a young person living with their parents doesn't pay. Every award is claimed in full.
+
+The dashboard's [Methodology tab](https://www.policyengine.org/uk/milburn-review?tab=methodology) gives the full detail.
