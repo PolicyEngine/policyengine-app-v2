@@ -8,6 +8,11 @@ const BANNER_DISMISSED_KEY = "featured-research-banner-dismissed";
 
 const cards = [
   {
+    href: "/uk/research/uk-energy-price-cap-january-2027-forecast",
+    title: "The January 2027 energy price cap forecast",
+    desc: "What Cornwall Insight's forecast would mean for household energy bills",
+  },
+  {
     href: "/uk/triple-lock",
     title: "Replacing the triple lock",
     desc: "What the Burnham plan would save, and which households would have less income",
