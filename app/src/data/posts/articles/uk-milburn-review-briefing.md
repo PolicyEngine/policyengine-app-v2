@@ -319,7 +319,7 @@ The two removals would lower household net income for 2.0% of people in each of 
 ```chart
 {
   "type": "bar",
-  "title": "Figure 3: The two removals by age, static, 2029-30",
+  "title": "Figure 3: The two removals by single year of age, 16 to 24, static, 2029-30",
   "xKey": "age",
   "series": [
     {
@@ -346,49 +346,59 @@ The two removals would lower household net income for 2.0% of people in each of 
   ],
   "data": [
     {
-      "age": "0 to 15",
-      "share": 1.7,
-      "change": -244
+      "age": "16",
+      "share": 2.8,
+      "change": -335
     },
     {
-      "age": "16 to 24",
-      "share": 7.8,
-      "change": -1005
+      "age": "17",
+      "share": 4.9,
+      "change": -542
     },
     {
-      "age": "25 to 34",
-      "share": 0.9,
-      "change": -115
+      "age": "18",
+      "share": 11.0,
+      "change": -1463
     },
     {
-      "age": "35 to 49",
-      "share": 1.4,
-      "change": -188
+      "age": "19",
+      "share": 11.8,
+      "change": -1728
     },
     {
-      "age": "50 to 64",
-      "share": 2.3,
-      "change": -287
+      "age": "20",
+      "share": 6.6,
+      "change": -834
     },
     {
-      "age": "65+",
-      "share": 0.3,
-      "change": -40
+      "age": "21",
+      "share": 9.5,
+      "change": -1206
     },
     {
-      "age": "All",
-      "share": 2.0,
-      "change": -266
+      "age": "22",
+      "share": 8.3,
+      "change": -956
+    },
+    {
+      "age": "23",
+      "share": 6.9,
+      "change": -862
+    },
+    {
+      "age": "24",
+      "share": 8.3,
+      "change": -1164
     }
   ],
   "select": {
     "label": "Measure"
   },
-  "subtitle": "Each person takes their household's change; people of other ages live with an affected young person"
+  "subtitle": "Each person takes their household's change"
 }
 ```
 
-PolicyEngine estimates. Each person takes their household's change in net income, averaged over everyone in the age group, so it differs from Figure 2's average over households. People of other ages see a change only where they share a household with a young person whose PIP or health element ends. Run together at our assumed work allowance, the higher rate and the work allowance would raise household net income for 545,000 people aged 16 to 24 (7.3%) in 2029-30.
+PolicyEngine estimates. Each person takes their household's change in net income, averaged over everyone of that age, so it differs from Figure 2's average over households. Across ages 16 to 24, 7.8% of people would live in a household whose net income falls, and the average change would be −£1,005 a year. The share is lowest at 16 and 17 (2.8% and 4.9%), below the age at which the PIP change starts, and highest at 19 (11.8%), where the average fall is also largest (£1,728); our data overcount PIP recipients aged 16 to 19 in England (see the comparison with the review's estimates). People of other ages see a change only where they share a household with a young person whose PIP or health element ends. Run together at our assumed work allowance, the higher rate and the work allowance would raise household net income for 545,000 people aged 16 to 24 (7.3%) in 2029-30.
 
 [See the results by age on the dashboard](https://www.policyengine.org/uk/milburn-review?tab=dashboard&sub=age).
 
@@ -481,16 +491,7 @@ PolicyEngine estimates, from the [NEET table on the dashboard](https://www.polic
 }
 ```
 
-**Table 8: Change in poverty under the two removals, static, 2029-30**
-
-| Measure                        | All people (percentage points) | All people (number) | Children (percentage points) |
-| ------------------------------ | -----------------------------: | ------------------: | ---------------------------: |
-| Absolute, before housing costs |                           +0.5 |            +342,000 |                         +0.7 |
-| Absolute, after housing costs  |                           +0.6 |            +391,000 |                         +1.0 |
-| Relative, before housing costs |                           +0.4 |            +256,000 |                         +0.5 |
-| Relative, after housing costs  |                           +0.4 |            +260,000 |                         +0.6 |
-
-PolicyEngine estimates, from [poverty on the dashboard](https://www.policyengine.org/uk/milburn-review?tab=dashboard&sub=poverty). Absolute poverty before housing costs would rise by 0.5 percentage points, or 342,000 people, and relative poverty after housing costs by 0.4 points, or 260,000 people. Children here are HBAI dependent children: everyone under 16, and 16 to 19-year-olds in non-advanced education living with a parent, who include 18 and 19-year-olds whose own PIP would end. Absolute child poverty before housing costs would rise by 0.7 points, against 0.5 for all people. The same holds for each removal on its own: 0.6 against 0.4 points for PIP; for the health element both round to 0.1 points, the children's figure the higher. Our results don't split child poverty by age or by whose benefit ends, so they don't show the reason. Absolute poverty before housing costs would rise by 0.5 points in each of 2030-31 and 2031-32, and relative poverty after housing costs by 0.4 and 0.3 points.
+PolicyEngine estimates, from [poverty on the dashboard](https://www.policyengine.org/uk/milburn-review?tab=dashboard&sub=poverty). Relative poverty after housing costs would rise by 0.4 percentage points, or 260,000 people. Children here are HBAI dependent children: everyone under 16, and 16 to 19-year-olds in non-advanced education living with a parent, who include 18 and 19-year-olds whose own PIP would end. Absolute child poverty before housing costs would rise by 0.7 points, against 0.5 for all people, and the same holds for each removal on its own: 0.6 against 0.4 points for PIP; for the health element both round to 0.1 points, the children's figure the higher. Our results don't split child poverty by age or by whose benefit ends, so they don't show the reason. Absolute poverty before housing costs would rise by 0.5 points in each of 2030-31 and 2031-32, and relative poverty after housing costs by 0.4 and 0.3 points.
 
 The review estimates that relative poverty after housing costs would fall by 50,000 people, a steady-state estimate that its [annex](https://www.gov.uk/government/publications/from-a-welfare-state-to-a-working-state-a-new-settlement-for-the-next-generation/from-a-welfare-state-to-a-working-state-analytical-annex) models up to 2030-31 with DWP's Policy Simulation Model. It includes the Additional Cost Allowance, the Severe and Complex Needs Insurance, the Health and Disability Fund, the Youth Allowance, the work allowance and 440,000 more young people in work; our estimate includes none of these. The review doesn't publish how much of its figure comes from each part, or a poverty figure for children.
 
@@ -502,7 +503,7 @@ On a static basis, the two removals would raise the Gini index of income inequal
 
 The review publishes its costings for 2036-37, in 2026-27 prices; our model runs to 2031-32 in cash terms, so the two share no year.
 
-**Table 9: The review's estimates for 2036-37 (£ million, 2026-27 prices)**
+**Table 8: The review's estimates for 2036-37 (£ million, 2026-27 prices)**
 
 |                                    |    2036-37 |
 | ---------------------------------- | ---------: |
@@ -522,17 +523,15 @@ Source: the review's [data tables](https://assets.publishing.service.gov.uk/medi
 
 On the review's figures, the proposals it costs would save £0.2 billion in 2036-37; none of its lines includes the National Insurance change. Its welfare savings of £3.6 billion cover PIP and UC across the UK, net of its replacement awards, its Youth Allowance and work allowance and the new UC claims it expects, with an assumed rise in employment among UC health claimants. Fiscal offsets are the extra tax paid, and benefits no longer paid, as employment rises.
 
-**Table 10: The review's figures and ours**
+**Table 9: The review's figures and ours**
 
 | Figure                                  |     Published | Source                                                                                                                                                                                         | PolicyEngine | Basis                                                                                                                                                      |
 | --------------------------------------- | ------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Welfare saving                          |        £3.6bn | [Review](https://www.gov.uk/government/publications/from-a-welfare-state-to-a-working-state-a-new-settlement-for-the-next-generation/from-a-welfare-state-to-a-working-state-analytical-annex) |       £4.7bn | Review: 2036-37, 2026-27 prices, net of its new support and claims, with a rise in employment; ours: 2029-30, cash, static, no replacement awards; both UK |
 | PIP spending, 16 to 24                  |        £3.8bn | [Interim report Table 28](https://www.gov.uk/government/publications/young-people-and-work-interim-report)                                                                                     |       £3.3bn | England and Wales; review 2025-26, ours 2025                                                                                                               |
-| PIP spending, 18 to 24                  |             — | —                                                                                                                                                                                              |       £3.1bn | Ours: UK, 2029-30                                                                                                                                          |
 | UC health element spending              |       £0.92bn | [Interim report Table 28](https://www.gov.uk/government/publications/young-people-and-work-interim-report)                                                                                     |       £1.2bn | Review: 16 to 24, England and Wales, 2025-26; ours: young claimants, Great Britain, 2025                                                                   |
 | Young people with the UC health element |       181,000 | [Interim report Table 28](https://www.gov.uk/government/publications/young-people-and-work-interim-report)                                                                                     |      233,000 | 16 to 24; review: England and Wales, 2025-26; ours: Great Britain, 2025                                                                                    |
 | Young people with the UC health element |       176,000 | [Resolution Foundation](https://www.resolutionfoundation.org/press-releases/government-must-match-milburns-ambition-to-properly-invest-in-young-people/)                                       |      233,000 | 16 to 24; ours: Great Britain, 2025                                                                                                                        |
-| Of whom also receiving PIP              |         62.5% | [Resolution Foundation](https://www.resolutionfoundation.org/press-releases/government-must-match-milburns-ambition-to-properly-invest-in-young-people/)                                       |        90.6% | 16 to 24; ours: Great Britain, 2025                                                                                                                        |
 | Young people receiving PIP              | about 408,000 | [DWP Stat-Xplore](https://stat-xplore.dwp.gov.uk/)                                                                                                                                             |      407,000 | 16 to 24, England and Wales, 2025                                                                                                                          |
 | Young people receiving PIP              |       465,000 | [Interim report Table 28](https://www.gov.uk/government/publications/young-people-and-work-interim-report)                                                                                     |      407,000 | 16 to 24, England and Wales; review 2025-26, ours 2025                                                                                                     |
 
