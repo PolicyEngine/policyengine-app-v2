@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { useReportYearEconomy } from '@/hooks/useReportYearEconomy';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { useReportYearEconomies, useReportYearEconomy } from '@/hooks/useReportYearEconomy';
+import {
+  hideBrowserTab,
+  restoreBrowserTabTracking,
+} from '@/tests/fixtures/libs/queries/browserTabMocks';
 
 const execute = vi.fn();
 vi.mock('@/libs/calculations/economy/SocietyWideCalcStrategy', () => ({
@@ -23,6 +27,50 @@ const args = {
   region: 'state/ny',
   year: '2027',
 };
+
+/** How often a year still computing is checked on. */
+const REPORT_YEAR_POLL_INTERVAL_MS = 2000;
+
+const COMPUTING_YEAR = { status: 'pending', progress: 10, message: 'Computing...' };
+
+describe('report year polling while the tab is hidden', () => {
+  beforeEach(() => {
+    execute.mockReset();
+    execute.mockResolvedValue(COMPUTING_YEAR);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    hideBrowserTab();
+  });
+
+  afterEach(() => {
+    restoreBrowserTabTracking();
+    vi.useRealTimers();
+  });
+
+  test('given the tab hidden while a picked year computes then it is still checked on', async () => {
+    // Given
+    renderHook(() => useReportYearEconomy({ ...args, enabled: true }), { wrapper });
+    await waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(REPORT_YEAR_POLL_INTERVAL_MS * 2));
+
+    // Then
+    expect(execute).toHaveBeenCalledTimes(3);
+  });
+
+  test('given the tab hidden while a requested year of the window computes then it is still checked on', async () => {
+    // Given
+    const { year, ...windowArgs } = args;
+    renderHook(() => useReportYearEconomies({ ...windowArgs, years: [year] }), { wrapper });
+    await waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(REPORT_YEAR_POLL_INTERVAL_MS * 2));
+
+    // Then
+    expect(execute).toHaveBeenCalledTimes(3);
+  });
+});
 
 describe('useReportYearEconomy', () => {
   beforeEach(() => execute.mockReset());

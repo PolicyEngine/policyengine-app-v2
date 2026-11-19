@@ -2,10 +2,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
 import { billRegion, useBillEconomy } from '@/hooks/useBillEconomy';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
+import {
+  hideBrowserTab,
+  restoreBrowserTabTracking,
+} from '@/tests/fixtures/libs/queries/browserTabMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const { mockCreatePolicy, mockFetchSocietyWide } = vi.hoisted(() => ({
@@ -191,6 +195,38 @@ describe('useBillEconomy', () => {
     expect(mockCreatePolicy).not.toHaveBeenCalled();
     expect(mockFetchSocietyWide).not.toHaveBeenCalled();
     expect(result.current.output).toBeNull();
+  });
+
+  describe('while the tab is hidden', () => {
+    /** How often a bill's run still computing is checked on. */
+    const BILL_POLL_INTERVAL_MS = 2000;
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      hideBrowserTab();
+    });
+
+    afterEach(() => {
+      restoreBrowserTabTracking();
+      vi.useRealTimers();
+    });
+
+    test('given the tab hidden while the run computes then it is still checked on', async () => {
+      // Given
+      mockFetchSocietyWide.mockResolvedValue({
+        status: 'computing',
+        queue_position: 3,
+        result: null,
+      });
+      renderHook(() => useBillEconomy(BILL), { wrapper });
+      await waitFor(() => expect(mockFetchSocietyWide).toHaveBeenCalledTimes(1));
+
+      // When
+      await act(() => vi.advanceTimersByTimeAsync(BILL_POLL_INTERVAL_MS * 2));
+
+      // Then
+      expect(mockFetchSocietyWide).toHaveBeenCalledTimes(3);
+    });
   });
 });
 

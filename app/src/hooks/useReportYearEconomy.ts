@@ -74,6 +74,8 @@ export function useReportYearEconomy({
     enabled: ready,
     refetchInterval: (query) =>
       (query.state.data as CalcStatus | undefined)?.status === 'pending' ? 2000 : false,
+    // Keep checking while the tab is hidden.
+    refetchIntervalInBackground: true,
     staleTime: Infinity,
   });
 
@@ -148,6 +150,8 @@ export function useReportYearEconomies({
       enabled: ready,
       refetchInterval: (query: { state: { data?: CalcStatus } }) =>
         query.state.data?.status === 'pending' ? 2000 : false,
+      // Keep checking while the tab is hidden.
+      refetchIntervalInBackground: true,
       staleTime: Infinity,
     })),
   });

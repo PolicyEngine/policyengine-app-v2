@@ -99,6 +99,8 @@ export function useBillEconomy(
     enabled: enabled && !!reformPolicyId && !!baselinePolicyId,
     refetchInterval: (query) =>
       (query.state.data as CalcStatus | undefined)?.status === 'pending' ? 2000 : false,
+    // Keep checking while the tab is hidden.
+    refetchIntervalInBackground: true,
     staleTime: Infinity,
   });
 
