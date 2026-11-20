@@ -1,0 +1,6 @@
+policyengine-uk==2.175.5
+policyengine-core==3.34.7
+hypothesis
+numpy
+pytest
+scipy
