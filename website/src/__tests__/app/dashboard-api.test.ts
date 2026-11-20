@@ -635,6 +635,7 @@ describe("dashboard API origins", () => {
   // routes' *.vercel.app hosts don't cover, with the repository each serves.
   test.each([
     ["autumn-budget-2025-in-review", "autumn-budget-2025-in-review.vercel.app"],
+    ["montana-flat-tax-dashboard", "montana-flat-tax-dashboard.vercel.app"],
     ["nc-stein-2027-tax-proposals", "nc-governor-tax-proposals.vercel.app"],
     [
       "nc-stein-2027-tax-proposals",
