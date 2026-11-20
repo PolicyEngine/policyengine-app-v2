@@ -1,8 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, waitFor, within } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { act, render, screen, userEvent, waitFor, within } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { BudgetWindowResponse } from '@/api/budgetWindow';
 import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
+import { MAX_FAILED_POLLS } from '@/libs/calculations/polledRun';
+import {
+  BUDGET_WINDOW_CHECK_FAILURE,
+  BUDGET_WINDOW_COMPUTING,
+  BUDGET_WINDOW_POLL_INTERVAL_MS,
+} from '@/tests/fixtures/hooks/useBudgetWindowMocks';
 
 const mockFetchBudgetWindow = vi.fn();
 
@@ -126,5 +132,57 @@ describe('BudgetWindowCard', () => {
     expect(await screen.findByText('The 2031 simulation failed.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     await waitFor(() => expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(2));
+  });
+
+  test('given a retry of a failed window fails then the latest failure shows', async () => {
+    // Given
+    mockFetchBudgetWindow
+      .mockResolvedValueOnce({
+        status: 'error',
+        result: null,
+        error: 'The 2031 simulation failed.',
+      })
+      .mockRejectedValue(new Error('Failed to fetch'));
+    const user = userEvent.setup();
+    renderCard();
+    await screen.findByText('The 2031 simulation failed.');
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(await screen.findByText('Failed to fetch')).toBeInTheDocument();
+    expect(screen.queryByText('The 2031 simulation failed.')).not.toBeInTheDocument();
+  });
+
+  describe('while its checks keep failing', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    test('given one more failed check after MAX_FAILED_POLLS then the error shows with a retry', async () => {
+      // Given
+      mockFetchBudgetWindow
+        .mockResolvedValueOnce(BUDGET_WINDOW_COMPUTING)
+        .mockRejectedValue(BUDGET_WINDOW_CHECK_FAILURE);
+      renderCard();
+      await waitFor(() => expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(1));
+
+      // When
+      await act(() =>
+        vi.advanceTimersByTimeAsync(BUDGET_WINDOW_POLL_INTERVAL_MS * (MAX_FAILED_POLLS + 1))
+      );
+
+      // Then
+      expect(
+        await screen.findByText('The budget window could not be calculated')
+      ).toBeInTheDocument();
+      expect(screen.getByText(BUDGET_WINDOW_CHECK_FAILURE.message)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    });
   });
 });
