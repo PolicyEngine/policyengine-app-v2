@@ -45,9 +45,17 @@
  * from zero, and labels each stack's end with the row's total. List first
  * the series readers should compare across rows, since only it shares a
  * baseline.
+ *
+ * "select" (optional, e.g. { "label": "Year", "default": "y2029" }) shows one
+ * series at a time, with a labelled control of the series names above the
+ * chart (BlogOptionControl.tsx: a segmented button group for a few short
+ * names, else a drop-down); "default" is the key shown first (the first series without it). A
+ * series may then carry its own "format" and "yLabel", which replace the
+ * chart's while it is shown. Without "select" every series is drawn, as
+ * before, and per-series formats are not used.
  */
 
-import { type ReactNode, useId } from "react";
+import { type ReactNode, useId, useState } from "react";
 import {
   AXIS_STYLE,
   GRID_STYLE,
@@ -77,9 +85,11 @@ import {
   isFiniteNumber,
   isRecord,
   niceTicks,
+  validFormat,
   validSharedFields,
 } from "./blogChartUtils";
 import { type BlogLineSpec, LineBody, parseLineSpec } from "./BlogLineChart";
+import { BlogOptionControl } from "./BlogOptionControl";
 import {
   type BlogStateMapSpec,
   StateMapBody,
@@ -98,6 +108,17 @@ export interface BlogChartSeries {
   key: string;
   name: string;
   color?: ChartColorName;
+  /** With "select": the format while this series is shown. */
+  format?: BlogChartFormat;
+  /** With "select": the value axis label while this series is shown. */
+  yLabel?: string;
+}
+
+/** Show one series at a time, chosen from a labelled drop-down. */
+export interface BlogChartSelect {
+  label: string;
+  /** The key of the series shown first; the first series without it. */
+  default?: string;
 }
 
 export interface BlogBarChartSpec {
@@ -113,6 +134,7 @@ export interface BlogBarChartSpec {
   orientation?: "vertical" | "horizontal";
   legend?: boolean;
   stacked?: boolean;
+  select?: BlogChartSelect;
   source?: string;
   height?: number;
 }
@@ -142,12 +164,28 @@ function parseBarSpec(s: Record<string, unknown>): BlogBarChartSpec | null {
   if (
     !s.series.every(
       (x) =>
-        isRecord(x) && typeof x.key === "string" && typeof x.name === "string",
+        isRecord(x) &&
+        typeof x.key === "string" &&
+        typeof x.name === "string" &&
+        validFormat(x.format) &&
+        (x.yLabel === undefined || typeof x.yLabel === "string"),
     )
   ) {
     return null;
   }
   const keys = (s.series as BlogChartSeries[]).map((x) => x.key);
+  if (s.select !== undefined) {
+    const select = s.select;
+    if (
+      !isRecord(select) ||
+      typeof select.label !== "string" ||
+      select.label.trim() === "" ||
+      (select.default !== undefined &&
+        !(typeof select.default === "string" && keys.includes(select.default)))
+    ) {
+      return null;
+    }
+  }
   const xKey = s.xKey;
   if (
     !s.data.every(
@@ -243,7 +281,53 @@ function ValueLabel({
   );
 }
 
-function BarBody({ spec }: { spec: BlogBarChartSpec }) {
+/**
+ * A bar chart with "select": a labelled control of the series names, and
+ * the chosen series drawn alone, in its own color, format and axis label.
+ */
+function SelectableBarBody({
+  spec,
+  select,
+}: {
+  spec: BlogBarChartSpec;
+  select: BlogChartSelect;
+}) {
+  const [chosen, setChosen] = useState(select.default ?? spec.series[0].key);
+  const index = Math.max(
+    0,
+    spec.series.findIndex((s) => s.key === chosen),
+  );
+  const series = spec.series[index];
+  const shown: BlogBarChartSpec = {
+    ...spec,
+    series: [series],
+    format: series.format ?? spec.format,
+    yLabel: series.yLabel ?? spec.yLabel,
+    legend: false,
+    select: undefined,
+  };
+  return (
+    <>
+      <BlogOptionControl
+        label={select.label}
+        options={spec.series.map((s) => ({ value: s.key, label: s.name }))}
+        value={series.key}
+        onChange={setChosen}
+        className="tw:mb-3 tw:sm:max-w-[28rem]"
+      />
+      <BarBody spec={shown} colorIndex={index} />
+    </>
+  );
+}
+
+function BarBody({
+  spec,
+  colorIndex,
+}: {
+  spec: BlogBarChartSpec;
+  /** The palette index of a lone series chosen with "select". */
+  colorIndex?: number;
+}) {
   const format = spec.format ?? {};
   const hasNegative = spec.data.some((row) =>
     spec.series.some(
@@ -367,7 +451,7 @@ function BarBody({ spec }: { spec: BlogBarChartSpec }) {
               key={s.key}
               dataKey={s.key}
               name={s.name}
-              fill={chartColor(s.color, i)}
+              fill={chartColor(s.color, colorIndex ?? i)}
               stackId={spec.stacked ? "stack" : undefined}
               radius={
                 rounded
@@ -476,7 +560,12 @@ export function BlogChart({ data }: { data: string | string[] }) {
   if (!spec) return null;
   return (
     <ChartFigure spec={spec}>
-      {spec.type === "bar" && <BarBody spec={spec} />}
+      {spec.type === "bar" &&
+        (spec.select ? (
+          <SelectableBarBody spec={spec} select={spec.select} />
+        ) : (
+          <BarBody spec={spec} />
+        ))}
       {spec.type === "line" && <LineBody spec={spec} />}
       {spec.type === "waterfall" && <WaterfallBody spec={spec} />}
       {spec.type === "stateMap" && <StateMapBody spec={spec} />}
