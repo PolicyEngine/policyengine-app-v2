@@ -24,6 +24,10 @@ import {
   TIME_LIMIT_MESSAGE,
   UK_BREAKDOWN_REQUEST,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
+import {
+  hideBrowserTab,
+  restoreBrowserTabTracking,
+} from '@/tests/fixtures/libs/queries/browserTabMocks';
 
 vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
@@ -49,6 +53,7 @@ describe('useUKLocalAreaBreakdown', () => {
   });
 
   afterEach(() => {
+    restoreBrowserTabTracking();
     vi.useRealTimers();
   });
 
@@ -83,6 +88,23 @@ describe('useUKLocalAreaBreakdown', () => {
     await waitFor(() => expect(result.current.status).toBe('complete'));
     expect(result.current.breakdown).toEqual(NORMALIZED_BREAKDOWN);
     expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(2);
+  });
+
+  test('given the tab hidden while the run computes then it is still polled', async () => {
+    // Given
+    mockFetchLocalAreaBreakdown.mockResolvedValue(QUEUED_RESPONSE);
+    const { result } = renderHook(() => useUKLocalAreaBreakdown(UK_BREAKDOWN_REQUEST), {
+      wrapper: wrapperFor(createQueryClient()),
+    });
+    act(() => result.current.start());
+    await waitFor(() => expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(1));
+    hideBrowserTab();
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(BREAKDOWN_POLL_INTERVAL_MS * 2));
+
+    // Then
+    expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(3);
   });
 
   test('given a run that reports its stage then it exposes the stage and a progress inside it', async () => {

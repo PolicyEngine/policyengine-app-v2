@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { CalcMetadata, CalcParams } from '@/types/calculation';
+import type { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 
 export const TEST_CALC_IDS = {
   REPORT_123: 'report-123',
@@ -71,4 +71,28 @@ export const mockHouseholdParams = (calcId: string = TEST_CALC_IDS.SIM_456): Cal
   populationId: TEST_POPULATION_IDS.HOUSEHOLD_123,
   year: '2024',
   calcId,
+});
+
+/** An economy run's query key, as a hook that polls one names it. */
+export const TEST_ECONOMY_RUN_QUERY_KEY = [
+  'test-economy-run',
+  'us',
+  'policy-2',
+  'policy-1',
+  '2024',
+];
+
+/** How often the test economy run is polled while pending. */
+export const TEST_ECONOMY_RUN_POLL_INTERVAL_MS = 2000;
+
+/** A query as `refetchInterval` reads it: only its cached status matters. */
+export const cachedQueryOf = (status: Pick<CalcStatus, 'status'> | undefined) =>
+  ({ state: { data: status } }) as { state: { data?: CalcStatus } };
+
+/** A calculation's status as the query cache holds it from its last poll: computing. */
+export const mockCachedComputingStatus = (metadata: CalcMetadata): CalcStatus => ({
+  status: 'pending',
+  progress: 40,
+  message: 'Running society-wide calculation...',
+  metadata,
 });
