@@ -21,6 +21,7 @@ import {
   blogTypography,
 } from "./blogStyles";
 import { LazyBlogChart } from "./LazyBlogChart";
+import { LazyBlogHousehold } from "./LazyBlogHousehold";
 import { LazyPlot } from "./LazyPlot";
 import { isSafeHref } from "./safeHref";
 import { useDisplayCategory } from "./useDisplayCategory";
@@ -940,6 +941,9 @@ export function MarkdownFormatter({
       if (className === "language-chart") {
         return <LazyBlogChart data={childText} />;
       }
+      if (className === "language-household") {
+        return <LazyBlogHousehold data={childText} />;
+      }
       if (className === "language-plotly") {
         return <PlotlyChartCode data={childText} />;
       }
@@ -972,8 +976,9 @@ export function MarkdownFormatter({
         codeChild as React.ReactElement<{ className?: string }>
       )?.props?.className?.replace("language-", "");
 
-      // Chart blocks render their own figure, without the code-block frame.
-      if (language === "chart") {
+      // Chart and household blocks render their own figure, without the
+      // code-block frame.
+      if (language === "chart" || language === "household") {
         return <>{children}</>;
       }
 
