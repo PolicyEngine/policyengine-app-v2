@@ -117,34 +117,14 @@ PIP is not means-tested, so a young person in a higher-income household can rece
 ```chart
 {
   "type": "bar",
-  "title": "Figure 1: Change in household net income by income quintile, UC health element and PIP removals, static",
+  "title": "Figure 1: Change in household net income by income quintile, UC health element and PIP removals, static, 2029-30",
   "subtitle": "Quintile 1 has the lowest incomes",
   "xKey": "quintile",
   "series": [
     {
       "key": "pct2029",
-      "name": "2029-30: % of net income",
+      "name": "% of net income",
       "color": "primary",
-      "format": {
-        "decimals": 1,
-        "suffix": "%"
-      },
-      "yLabel": "Change in net income (%)"
-    },
-    {
-      "key": "pct2030",
-      "name": "2030-31: % of net income",
-      "color": "tertiary",
-      "format": {
-        "decimals": 1,
-        "suffix": "%"
-      },
-      "yLabel": "Change in net income (%)"
-    },
-    {
-      "key": "pct2031",
-      "name": "2031-32: % of net income",
-      "color": "quinary",
       "format": {
         "decimals": 1,
         "suffix": "%"
@@ -153,30 +133,8 @@ PIP is not means-tested, so a young person in a higher-income household can rece
     },
     {
       "key": "gbp2029",
-      "name": "2029-30: £ a year",
+      "name": "£ a year",
       "color": "primary",
-      "format": {
-        "decimals": 0,
-        "prefix": "£",
-        "separator": true
-      },
-      "yLabel": "Change in net income (£ a year)"
-    },
-    {
-      "key": "gbp2030",
-      "name": "2030-31: £ a year",
-      "color": "tertiary",
-      "format": {
-        "decimals": 0,
-        "prefix": "£",
-        "separator": true
-      },
-      "yLabel": "Change in net income (£ a year)"
-    },
-    {
-      "key": "gbp2031",
-      "name": "2031-32: £ a year",
-      "color": "quinary",
       "format": {
         "decimals": 0,
         "prefix": "£",
@@ -189,52 +147,32 @@ PIP is not means-tested, so a young person in a higher-income household can rece
     {
       "quintile": "1",
       "pct2029": -0.2,
-      "pct2030": -0.2,
-      "pct2031": -0.2,
-      "gbp2029": -79,
-      "gbp2030": -81,
-      "gbp2031": -83
+      "gbp2029": -79
     },
     {
       "quintile": "2",
       "pct2029": -0.5,
-      "pct2030": -0.5,
-      "pct2031": -0.6,
-      "gbp2029": -258,
-      "gbp2030": -258,
-      "gbp2031": -271
+      "gbp2029": -258
     },
     {
       "quintile": "3",
       "pct2029": -0.3,
-      "pct2030": -0.3,
-      "pct2031": -0.3,
-      "gbp2029": -169,
-      "gbp2030": -179,
-      "gbp2031": -173
+      "gbp2029": -169
     },
     {
       "quintile": "4",
       "pct2029": -0.3,
-      "pct2030": -0.3,
-      "pct2031": -0.3,
-      "gbp2029": -225,
-      "gbp2030": -231,
-      "gbp2031": -236
+      "gbp2029": -225
     },
     {
       "quintile": "5",
       "pct2029": -0.1,
-      "pct2030": -0.1,
-      "pct2031": -0.1,
-      "gbp2029": -71,
-      "gbp2030": -73,
-      "gbp2031": -74
+      "gbp2029": -71
     }
   ],
   "valueLabels": true,
   "select": {
-    "label": "Year and measure",
+    "label": "Measure",
     "default": "pct2029"
   }
 }
