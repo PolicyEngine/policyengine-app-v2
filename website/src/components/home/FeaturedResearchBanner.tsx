@@ -8,24 +8,24 @@ const BANNER_DISMISSED_KEY = "featured-research-banner-dismissed";
 
 const cards = [
   {
+    href: "/uk/milburn-review",
+    title: "The Milburn review of young people and work",
+    desc: "What its benefit and employer National Insurance proposals would change, by age and household",
+  },
+  {
     href: "/uk/research/uk-energy-price-cap-january-2027-forecast",
     title: "The January 2027 energy price cap forecast",
     desc: "What Cornwall Insight's forecast would mean for household energy bills",
   },
   {
+    href: "/uk/budgets/autumn-2026",
+    title: "Autumn Budget 2026",
+    desc: "What the Budget's measures mean for the public finances and household incomes",
+  },
+  {
     href: "/uk/triple-lock",
     title: "Replacing the triple lock",
     desc: "What the Burnham plan would save, and which households would have less income",
-  },
-  {
-    href: "/uk/energy-autumn-budget",
-    title: "Energy bills and the Autumn Budget",
-    desc: "What households will pay over the next two winters, and seven ways the Chancellor could help",
-  },
-  {
-    href: "/uk/targeted-energy-discount",
-    title: "A targeted energy bill discount",
-    desc: "Who would gain, and at what cost, from the Resolution Foundation's proposal",
   },
 ];
 
@@ -98,7 +98,7 @@ export default function FeaturedResearchBanner({
             letterSpacing: "-0.01em",
           }}
         >
-          Our latest research ahead of the Autumn Budget
+          Our latest research
         </p>
 
         <div
