@@ -5,6 +5,8 @@ import { colors, spacing, typography } from "@/designTokens";
 const DASHBOARD_URL = "/uk/budgets/autumn-2026";
 // The Milburn review dashboard, served the same way.
 const MILBURN_REVIEW_URL = "/uk/milburn-review";
+// Our briefing on the review's proposals.
+const MILBURN_BRIEFING_URL = "/uk/research/uk-milburn-review-briefing";
 // The recording of our Budget-day webinar on 28 October.
 const RECORDING_URL = "https://www.youtube.com/watch?v=ZutKULXLhU0";
 
@@ -77,14 +79,26 @@ export default function AutumnBudgetEventBanner({
         <span style={links}>
           <a
             href={MILBURN_REVIEW_URL}
-            aria-label="See the analysis of the Milburn review of young people and work"
+            aria-label="See the dashboard of the Milburn review of young people and work"
             style={{
               ...pill,
               background: colors.secondary[700],
               color: colors.white,
             }}
           >
-            See the analysis &rarr;
+            See the dashboard &rarr;
+          </a>
+          <a
+            href={MILBURN_BRIEFING_URL}
+            aria-label="Read the briefing on the Milburn review of young people and work"
+            style={{
+              ...pill,
+              background: colors.white,
+              color: colors.secondary[700],
+              border: `1px solid ${colors.secondary[700]}`,
+            }}
+          >
+            Read the briefing &rarr;
           </a>
         </span>
       </div>

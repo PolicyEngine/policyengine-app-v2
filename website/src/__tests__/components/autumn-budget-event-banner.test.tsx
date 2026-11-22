@@ -10,11 +10,21 @@ describe("AutumnBudgetEventBanner", () => {
   test("links the UK home page to the Milburn review dashboard, which an app zone serves", () => {
     render(<AutumnBudgetEventBanner countryId="uk" />);
 
-    const link = screen.getByRole("link", { name: MILBURN_LINK_NAME });
+    const link = screen.getByRole("link", {
+      name: /dashboard of the milburn review/i,
+    });
     expect(link).toHaveAttribute("href", "/uk/milburn-review");
     expect(appZoneRewrites.map((route) => route.source)).toContain(
       "/uk/milburn-review",
     );
+  });
+
+  test("links the Milburn review's briefing beside its dashboard", () => {
+    render(<AutumnBudgetEventBanner countryId="uk" />);
+
+    expect(
+      screen.getByRole("link", { name: /briefing on the milburn review/i }),
+    ).toHaveAttribute("href", "/uk/research/uk-milburn-review-briefing");
   });
 
   test("keeps the Budget dashboard's link beside the Milburn review's", () => {
@@ -35,9 +45,11 @@ describe("AutumnBudgetEventBanner", () => {
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(milburn.style.background).not.toBe(budget.style.background);
-    expect(milburn).toContainElement(
-      screen.getByRole("link", { name: MILBURN_LINK_NAME }),
-    );
+    for (const link of screen.getAllByRole("link", {
+      name: MILBURN_LINK_NAME,
+    })) {
+      expect(milburn).toContainElement(link);
+    }
   });
 
   // Voice control matches a link by its visible text, so each aria-label
@@ -46,7 +58,7 @@ describe("AutumnBudgetEventBanner", () => {
     render(<AutumnBudgetEventBanner countryId="uk" />);
 
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(3);
+    expect(links).toHaveLength(4);
     for (const link of links) {
       const visible = link.textContent!.replace("→", "").trim().toLowerCase();
       const label = link.getAttribute("aria-label")!.toLowerCase();
