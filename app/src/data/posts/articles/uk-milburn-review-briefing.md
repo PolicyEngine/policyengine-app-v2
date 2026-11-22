@@ -345,7 +345,7 @@ On our approximation, 1.07 million people (14.3% of 16 to 24-year-olds) are NEET
 | Whose own PIP or health element ends              |      16.7% (180,000) |           3.3% (212,000) |         5.2% (391,000) |
 | Average change in household net income (£ a year) |               −2,556 |                     −746 |                 −1,005 |
 
-PolicyEngine estimates, from the [NEET table on the dashboard](https://www.policyengine.org/uk/milburn-review?tab=dashboard&sub=age&age=16-24). A person counts in the third row if the two removals would end their own PIP, or the health element in an award in which they are the claimant with limited capability for work; each person counts once. The averages hold employment fixed. Our 2025 data put 90.6% of 16 to 24-year-olds receiving the UC health element in Great Britain on PIP too, against 62.5% in [the Resolution Foundation's figures](https://www.resolutionfoundation.org/press-releases/government-must-match-milburns-ambition-to-properly-invest-in-young-people/), so more of the people in the third row receive both payments than its figures imply. The data count part-time students as in education, and someone who worked earlier in the year as not NEET. Figures may not sum because of rounding.
+PolicyEngine estimates, from the [NEET table on the dashboard](https://www.policyengine.org/uk/milburn-review?tab=dashboard&sub=age). A person counts in the third row if the two removals would end their own PIP, or the health element in an award in which they are the claimant with limited capability for work; each person counts once. The averages hold employment fixed. Our 2025 data put 90.6% of 16 to 24-year-olds receiving the UC health element in Great Britain on PIP too, against 62.5% in [the Resolution Foundation's figures](https://www.resolutionfoundation.org/press-releases/government-must-match-milburns-ambition-to-properly-invest-in-young-people/), so more of the people in the third row receive both payments than its figures imply. The data count part-time students as in education, and someone who worked earlier in the year as not NEET. Figures may not sum because of rounding.
 
 ### Poverty
 
@@ -435,19 +435,19 @@ The review publishes its costings for 2036-37, in 2026-27 prices; our model runs
 
 **Table 8: The review's estimates for 2036-37 (£ million, 2026-27 prices)**
 
-|                                    |    2036-37 |
-| ---------------------------------- | ---------: |
-| **Spending**                       |            |
-| Education                          |      2,100 |
-| Opportunity and Support Guarantees |      1,900 |
-| Youth hiring incentives            |      1,100 |
-| Health                             |        700 |
-| Local system reform                | negligible |
-| Total spending                     |      5,800 |
-| **Savings**                        |            |
-| Welfare savings                    |      3,600 |
-| Fiscal offsets                     |      2,400 |
-| **Net saving**                     |        200 |
+|                                    |   2036-37 |
+| ---------------------------------- | --------: |
+| **Spending**                       |           |
+| Education                          |     2,100 |
+| Opportunity and Support Guarantees |     1,900 |
+| Youth hiring incentives            |     1,100 |
+| Health                             |       700 |
+| Local system reform                | under 100 |
+| Total spending                     |     5,800 |
+| **Savings**                        |           |
+| Welfare savings                    |     3,600 |
+| Fiscal offsets                     |     2,400 |
+| **Net saving**                     |       200 |
 
 Source: the review's [data tables](https://assets.publishing.service.gov.uk/media/6af74c9b9be17c68c69ca838/from-a-welfare-state-to-a-working-state-accompanying-data-tables.ods), table 2, and [analytical annex](https://www.gov.uk/government/publications/from-a-welfare-state-to-a-working-state-a-new-settlement-for-the-next-generation/from-a-welfare-state-to-a-working-state-analytical-annex), section 1, rounded to the nearest £100 million. The review's table shows the net saving as a total net cost of −£200 million.
 
@@ -459,7 +459,7 @@ On the review's figures, the proposals it costs would save £0.2 billion in 2036
 | --------------------------------------- | ------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Welfare saving                          |        £3.6bn | [Review](https://www.gov.uk/government/publications/from-a-welfare-state-to-a-working-state-a-new-settlement-for-the-next-generation/from-a-welfare-state-to-a-working-state-analytical-annex) |       £4.7bn | Review: 2036-37, 2026-27 prices, net of its new support and claims, with a rise in employment; ours: 2029-30, cash, static, no replacement awards; both UK |
 | PIP spending, 16 to 24                  |        £3.8bn | [Interim report Table 28](https://www.gov.uk/government/publications/young-people-and-work-interim-report)                                                                                     |       £3.3bn | England and Wales; review 2025-26, ours 2025                                                                                                               |
-| UC health element spending              |       £0.92bn | [Interim report Table 28](https://www.gov.uk/government/publications/young-people-and-work-interim-report)                                                                                     |       £1.2bn | Review: 16 to 24, England and Wales, 2025-26; ours: young claimants, Great Britain, 2025                                                                   |
+| UC health element spending              |        £0.9bn | [Interim report Table 28](https://www.gov.uk/government/publications/young-people-and-work-interim-report)                                                                                     |       £1.2bn | Review: 16 to 24, England and Wales, 2025-26; ours: young claimants, Great Britain, 2025                                                                   |
 | Young people with the UC health element |       181,000 | [Interim report Table 28](https://www.gov.uk/government/publications/young-people-and-work-interim-report)                                                                                     |      233,000 | 16 to 24; review: England and Wales, 2025-26; ours: Great Britain, 2025                                                                                    |
 | Young people with the UC health element |       176,000 | [Resolution Foundation](https://www.resolutionfoundation.org/press-releases/government-must-match-milburns-ambition-to-properly-invest-in-young-people/)                                       |      233,000 | 16 to 24; ours: Great Britain, 2025                                                                                                                        |
 | Young people receiving PIP              | about 408,000 | [DWP Stat-Xplore](https://stat-xplore.dwp.gov.uk/)                                                                                                                                             |      407,000 | 16 to 24, England and Wales, 2025                                                                                                                          |
@@ -469,7 +469,7 @@ Published figures as linked; the PolicyEngine column is PolicyEngine estimates. 
 
 The estimates differ for these reasons:
 
-- **Design.** The review's saving is net of its replacement awards, its Youth Allowance and work allowance and the new UC claims it expects. Our £4.7 billion leaves out all of these; our £4.0 billion adds the higher rate and the work allowance.
+- **Design.** The review's saving is net of its replacement awards, its Youth Allowance and work allowance and the new UC claims it expects. Our £4.7 billion leaves out all of these; our £4,050 million adds the higher rate and the work allowance.
 - **Behaviour.** The review's welfare saving assumes an additional employment impact of 9% among UC health claimants. Ours is static.
 - **Age band and area.** The review's spending figures cover 16 to 24-year-olds in England and Wales; our PIP change covers 18 to 24-year-olds in the UK. Our 2025 PIP spending covers England and Wales, as the review's does, and is 14% lower than its figure. Our 2025 health element spending covers Great Britain, so it doesn't compare like for like with the review's England and Wales figure.
 - **Data.** Our 2025 data count 33% more young people receiving the UC health element than the Resolution Foundation reported, and 90.6% of them also receive PIP, against 62.5% in its figures, so in our data more young people would no longer receive either payment than its counts imply. Within ages 16 to 24 the data overcount PIP recipients aged 16 to 19 in England and undercount those aged 20 to 24, which affects a change that starts at 18. After 2025 the data grow young caseloads with the population only, while the interim report's Table 28 has PIP at ages 16 to 24 in England and Wales rising from 416,000 in 2024-25 to 511,000 in 2026-27 and 634,000 in 2029-30.
