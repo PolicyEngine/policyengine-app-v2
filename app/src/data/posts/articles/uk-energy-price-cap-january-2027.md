@@ -91,7 +91,11 @@ Sources: Ofgem, [energy price cap unit rates and standing charges](https://www.o
 }
 ```
 
-At typical consumption, the gas bill changes by **[Ofgem: inputs.typical_fuel_change.gas]** and the electricity bill by **[Ofgem: inputs.typical_fuel_change.electricity]** (**[Ofgem: difference]** in total on Ofgem's rates as published, against Ofgem's **[Ofgem: difference]**), so gas accounts for **[Ofgem: gas share]** of the change. **[Ofgem: the reasons Ofgem gives for the change, from its announcement]**
+At typical consumption, the gas bill changes by **[Ofgem: inputs.typical_fuel_change.gas]** and the electricity bill by **[Ofgem: inputs.typical_fuel_change.electricity]** (**[Ofgem: difference]** in total on Ofgem's rates as published, against Ofgem's **[Ofgem: difference]**), so gas accounts for **[Ofgem: gas share]** of the change.
+
+### Why the cap changed
+
+**[Ofgem: the reasons Ofgem gives for the change, attributed to its announcement in its own words, such as wholesale gas prices]** **[Ofgem: how the January cap compares with the 2022-23 peak, from inputs.json peak_2022]**
 
 Ofgem expresses the cap as an annual rate. A household pays the January rates for three months. UK households use on average 29.3% of a year's electricity and 42.5% of a year's gas in January to March.[^1] Applying those shares to the unit-rate part of the bill, and 90 days to the standing charges, the cap changes a typical household's bills over January to March by about **[Ofgem: examples.typical_dual_fuel.q1_change]**.
 
@@ -268,11 +272,98 @@ We estimate that at October rates, 2.2 million households spend more than 10% of
 
 The bills in these figures leave out the support that households receive outside the cap, such as the £100 Household Energy Payment in England, the Warm Home Discount and the Winter Fuel Payment. Net income counts those payments as income, as the Households Below Average Income statistics do for the Warm Home Discount and the Winter Fuel Payment and did for the 2022 energy support.
 
+## Support set against the change
+
+The Autumn Budget announced two measures for this winter outside the cap rates themselves. The £100 Household Energy Payment is a one-off payment, from January 2027, to households in council tax bands A to D in England. The zero rate of VAT on household electricity took effect on 1 October 2026 and runs to July 2027; the Department for Energy Security and Net Zero [says](https://www.gov.uk/government/news/what-the-autumn-budget-2026-means-for-your-energy-bills) it saves households an average of £45 a year, and the [Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) says the extension takes around £50 off the cap from April 2027. In our data, the VAT cut is worth **[Pending the 6.20.3 model run]** a year to the average household in Great Britain at October rates and **[Ofgem: support.gb.vat_cut_jan]** at January rates.
+
+Both October and January caps already carry no VAT on electricity, so the change from October to January in the sections above already includes the VAT cut. Table 5 and Figure 8 set the support against that change in three steps: the change in the annual bill; the change less the Household Energy Payment; and the change less the payment and less what 5% VAT would add to the January electricity bill. The payment is made once, while the change is an annual rate: across Great Britain, the payment averages **[Pending the 6.20.3 model run]** a household, **[Ofgem: support.gb.share_change_offset_by_hep]** of the average change of **[Ofgem: gb.mean_change]**.
+
+**Table 5: Change in the average household energy bill by income decile, gross and net of support, Great Britain (£ a year)**
+
+| Income decile | Change in bill | Household Energy Payment | Change less the payment | VAT cut at January rates | Change less the payment and the VAT cut |
+| ------------- | -------------: | -----------------------: | ----------------------: | -----------------------: | --------------------------------------: |
+| 1 (lowest) | **[Ofgem: decile 1]** | **[Ofgem: support]** | **[Ofgem: decile 1]** | **[Ofgem: decile 1]** | **[Ofgem: decile 1]** |
+| 2 | **[Ofgem: decile 2]** | **[Ofgem: support]** | **[Ofgem: decile 2]** | **[Ofgem: decile 2]** | **[Ofgem: decile 2]** |
+| 3 | **[Ofgem: decile 3]** | **[Ofgem: support]** | **[Ofgem: decile 3]** | **[Ofgem: decile 3]** | **[Ofgem: decile 3]** |
+| 4 | **[Ofgem: decile 4]** | **[Ofgem: support]** | **[Ofgem: decile 4]** | **[Ofgem: decile 4]** | **[Ofgem: decile 4]** |
+| 5 | **[Ofgem: decile 5]** | **[Ofgem: support]** | **[Ofgem: decile 5]** | **[Ofgem: decile 5]** | **[Ofgem: decile 5]** |
+| 6 | **[Ofgem: decile 6]** | **[Ofgem: support]** | **[Ofgem: decile 6]** | **[Ofgem: decile 6]** | **[Ofgem: decile 6]** |
+| 7 | **[Ofgem: decile 7]** | **[Ofgem: support]** | **[Ofgem: decile 7]** | **[Ofgem: decile 7]** | **[Ofgem: decile 7]** |
+| 8 | **[Ofgem: decile 8]** | **[Ofgem: support]** | **[Ofgem: decile 8]** | **[Ofgem: decile 8]** | **[Ofgem: decile 8]** |
+| 9 | **[Ofgem: decile 9]** | **[Ofgem: support]** | **[Ofgem: decile 9]** | **[Ofgem: decile 9]** | **[Ofgem: decile 9]** |
+| 10 (highest) | **[Ofgem: decile 10]** | **[Ofgem: support]** | **[Ofgem: decile 10]** | **[Ofgem: decile 10]** | **[Ofgem: decile 10]** |
+| All | **[Ofgem: all households]** | **[Ofgem: support]** | **[Ofgem: all households]** | **[Ofgem: all households]** | **[Ofgem: all households]** |
+
+```chart
+{
+  "type": "bar",
+  "title": "Figure 8: Change in the average household energy bill by income decile, gross and net of support, Great Britain",
+  "subtitle": "Annual rate, from Ofgem's October to December 2026 rates to its January to March 2027 rates; less the one-off £100 Household Energy Payment (England, council tax bands A to D), then less the value of the zero VAT rate on electricity at January rates",
+  "xKey": "decile",
+  "series": [
+    { "key": "gross", "name": "Change in bill", "color": "quinary" },
+    { "key": "net_hep", "name": "Less the payment", "color": "primary" },
+    { "key": "net_both", "name": "Less the payment and the VAT cut", "color": "secondary" }
+  ],
+  "data": [
+    { "decile": "1" },
+    { "decile": "2" },
+    { "decile": "3" },
+    { "decile": "4" },
+    { "decile": "5" },
+    { "decile": "6" },
+    { "decile": "7" },
+    { "decile": "8" },
+    { "decile": "9" },
+    { "decile": "10" }
+  ],
+  "yLabel": "Change in average annual bill (£)",
+  "format": { "decimals": 0, "prefix": "£", "signed": true },
+  "valueLabels": false
+}
+```
+
+## Who the Household Energy Payment reaches
+
+We estimate that **[Pending the 6.20.3 model run]** households receive the payment, at a cost of £**[Pending the 6.20.3 model run]** billion; the Budget puts the cost at £2.6 billion for "up to 20 million households". That is **[Pending the 6.20.3 model run]** of households in England and **[Pending the 6.20.3 model run]** of households in Great Britain. Scotland and Wales receive funding through the Barnett formula instead, which their governments decide how to use and which we do not model.
+
+Figure 9 shows the share of households in each income decile that receive the payment. In the lowest income decile, **[Pending the 6.20.3 model run]** of households in England receive it and **[Pending the 6.20.3 model run]** (**[Pending the 6.20.3 model run]**) do not, because they live in a home in council tax band E or above; across Great Britain, **[Pending the 6.20.3 model run]** of the lowest decile do not receive it. In the highest decile, **[Pending the 6.20.3 model run]** of households in England receive it.
+
+```chart
+{
+  "type": "bar",
+  "title": "Figure 9: Share of households receiving the Household Energy Payment by income decile",
+  "subtitle": "Households in council tax bands A to D in England receive £100; shares of households in England and in Great Britain",
+  "xKey": "decile",
+  "series": [
+    { "key": "england", "name": "England", "color": "primary" },
+    { "key": "gb", "name": "Great Britain", "color": "quinary" }
+  ],
+  "data": [
+    { "decile": "1" },
+    { "decile": "2" },
+    { "decile": "3" },
+    { "decile": "4" },
+    { "decile": "5" },
+    { "decile": "6" },
+    { "decile": "7" },
+    { "decile": "8" },
+    { "decile": "9" },
+    { "decile": "10" }
+  ],
+  "yLabel": "Households receiving the payment (%)",
+  "format": { "decimals": 0, "suffix": "%" },
+  "valueLabels": false
+}
+```
+
+The model pays every household in a home in bands A to D in England. The Government says households whose landlord is liable for council tax are not eligible; our data cannot identify them, so we overstate recipients slightly. We also leave out the £100 million the Budget gives local authorities for discretionary support to households outside bands A to D.
+
 ## Ofgem's cap against the forecast
 
-Cornwall Insight forecast a typical bill of £2,166; Ofgem's cap is **[Ofgem: typical_bill_announced]**. Table 5 and Figure 8 run both through the same model and data, so the differences come from the rates alone.
+Cornwall Insight forecast a typical bill of £2,166; Ofgem's cap is **[Ofgem: typical_bill_announced]**. Table 6 and Figure 10 run both through the same model and data, so the differences come from the rates alone.
 
-**Table 5: Cornwall Insight's forecast and Ofgem's cap for January to March 2027, Great Britain (annual rates)**
+**Table 6: Cornwall Insight's forecast and Ofgem's cap for January to March 2027, Great Britain (annual rates)**
 
 |  | Cornwall Insight forecast (18 November) | Ofgem cap (**[Ofgem: announcement date]**) | Difference |
 | - | -: | -: | -: |
@@ -287,7 +378,7 @@ Cornwall Insight forecast a typical bill of £2,166; Ofgem's cap is **[Ofgem: ty
 ```chart
 {
   "type": "bar",
-  "title": "Figure 8: Change in the average household energy bill by income decile, forecast and actual cap, Great Britain",
+  "title": "Figure 10: Change in the average household energy bill by income decile, forecast and actual cap, Great Britain",
   "subtitle": "Annual rate, from Ofgem's October to December 2026 rates to Cornwall Insight's January to March 2027 forecast and to Ofgem's January to March 2027 cap",
   "xKey": "decile",
   "series": [
