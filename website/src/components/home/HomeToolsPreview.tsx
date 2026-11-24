@@ -9,6 +9,7 @@ import {
   IconHomeDollar,
   IconSchool,
   IconStairsDown,
+  IconStethoscope,
   type TablerIcon,
 } from "@tabler/icons-react";
 import { colors, spacing } from "@/designTokens";
@@ -18,6 +19,7 @@ import HomeSectionHeading from "./HomeSectionHeading";
 
 const TOOL_ICONS: Record<string, TablerIcon> = {
   [MAIN_APP_ID]: IconAdjustmentsHorizontal,
+  "aca-calc": IconStethoscope,
   cliffwatch: IconStairsDown,
   "uk-cliff-watch": IconStairsDown,
   "coverage-compass": IconCompass,
