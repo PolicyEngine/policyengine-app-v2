@@ -1,7 +1,7 @@
 [
   {
     "title": "Ofgem's January 2027 energy price cap: what it means for household energy bills",
-    "description": "Ofgem's cap for January to March 2027 is [Ofgem: typical_bill_announced] a year for a household with typical consumption, a change of [Ofgem: change] from the October to December cap. PolicyEngine estimates it changes average household energy spending in Great Britain by [Ofgem: gb.mean_change] a year, holding energy use fixed.",
+    "description": "Ofgem's January to March 2027 cap is [Ofgem: typical_bill_announced] a year for typical use, [Ofgem: change] on October to December. Holding energy use fixed, we estimate average household energy spending in Great Britain changes by [Ofgem: gb.mean_change] a year.",
     "date": "2026-11-25 09:00:00",
     "tags": ["uk", "policy"],
     "authors": ["vahid-ahmadi", "maria-juaristi"],
