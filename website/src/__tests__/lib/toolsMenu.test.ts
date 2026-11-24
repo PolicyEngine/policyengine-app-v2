@@ -60,6 +60,7 @@ describe("tools menu", () => {
   test("given the US then lists the main app, then the current-law calculators by label", () => {
     expect(getToolsMenu("us").map((tool) => tool.label)).toEqual([
       "PolicyEngine app",
+      "ACA calculator",
       "CliffWatch",
       "Coverage Compass",
       "GiveCalc",

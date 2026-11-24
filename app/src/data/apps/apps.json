@@ -584,8 +584,8 @@
   {
     "type": "iframe",
     "slug": "aca-reforms-calculator",
-    "title": "ACA Reforms Calculator",
-    "description": "Compare how ACA policy changes like the IRA extension, 700% FPL bill, and CRFB reform proposals would affect your household's premium tax credits",
+    "title": "ACA calculator",
+    "description": "See what a household would pay for its benchmark marketplace plan in 2026 and 2027 under current law, and in 2027 under H.R. 1834, which would revive the enhanced premium tax credits.",
     "source": "https://aca-calc.vercel.app/?embedded=true",
     "tags": ["us", "featured", "healthcare", "policy", "interactives"],
     "countryId": "us"
@@ -593,11 +593,12 @@
   {
     "type": "iframe",
     "slug": "aca-calc",
-    "title": "ACA Reforms Calculator",
-    "description": "Compare how ACA policy changes like the IRA extension, 700% FPL bill, and CRFB reform proposals would affect your household's premium tax credits",
+    "title": "ACA calculator",
+    "description": "See what a household would pay for its benchmark marketplace plan in 2026 and 2027 under current law, and in 2027 under H.R. 1834, which would revive the enhanced premium tax credits.",
     "source": "https://aca-calc.vercel.app/?embedded=true",
     "tags": ["us", "healthcare", "policy", "interactives"],
-    "countryId": "us"
+    "countryId": "us",
+    "toolsMenu": { "label": "ACA calculator" }
   },
   {
     "type": "iframe",
