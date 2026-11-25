@@ -5,8 +5,8 @@ Using [PolicyEngine UK](https://policyengine.org/uk), we estimate what Ofgem's c
 Key results under Ofgem's cap (annual rates unless stated, Great Britain):
 
 - A household with typical consumption sees its bill change by +£443 a year at the January rates (+25.7%), or about +£167 over January to March
-- The average household in Great Britain spends £2,116 a year on electricity and gas at the January rates, against £1,701 at October rates (a change of +£415)
-- Bills in the bottom income decile change by an average of +£374 a year, and households' energy spending goes from 9.4% to 11.6% of their net income; in the top decile, bills change by an average of +£523, and households' energy spending goes from 1.6% to 2.0% of their net income
+- The average household in Great Britain spends £2,116 a year on electricity and gas at the January rates, against £1,701 at October rates (a change of +£415 a year, or +£152 over January to March)
+- Bills in the bottom income decile change by an average of +£374 a year (+£136 over January to March), and households' energy spending goes from 9.4% to 11.6% of their net income; in the top decile, bills change by an average of +£523 (+£191 over January to March), and households' energy spending goes from 1.6% to 2.0% of their net income
 - The number of households spending more than 10% of their net income on energy goes from 2.3 million to 3.6 million
 - On Cornwall Insight's forecast, the same model gives an average change of +£414 a year, against +£415 under Ofgem's cap
 
@@ -146,7 +146,7 @@ Standing charges change by −0.1% (electricity) and −0.1% (gas), and unit rat
 
 ## Bills across the income distribution
 
-We apply Ofgem's cap to the electricity and gas spending of every household in Great Britain in PolicyEngine UK's data, [Microcosm UK](https://www.policyengine.org/uk/model/data). We first restate each household's spending at October to December 2026 prices, using PolicyEngine UK's energy price indices. We then change each household's electricity spending by +18.5% and its gas spending by +32.8%, the changes in the typical bill for each fuel in Table 2. All figures are annual rates and assume that households do not change how much energy they use. At October prices, households that use both fuels spend an average of £1,806 a year in our data, and the median such household spends £1,508, against Ofgem's typical bill of £1,723.
+We apply Ofgem's cap to the electricity and gas spending of every household in Great Britain in PolicyEngine UK's data, [Microcosm UK](https://www.policyengine.org/uk/model/data). We first restate each household's spending at October to December 2026 prices, using PolicyEngine UK's energy price indices. We then change each household's electricity spending by +18.5% and its gas spending by +32.8%, the changes in the typical bill for each fuel in Table 2. Figures are annual rates unless they say January to March, and assume that households do not change how much energy they use. At October prices, households that use both fuels spend an average of £1,806 a year in our data, and the median such household spends £1,508, against Ofgem's typical bill of £1,723.
 
 ```chart
 {
@@ -210,44 +210,47 @@ Households in the top decile spend more on energy than those in the bottom (Figu
 {
   "type": "bar",
   "title": "Figure 6: Change in the average household energy bill by income decile, Great Britain",
-  "subtitle": "Annual rate, from Ofgem's October to December 2026 rates to its January to March 2027 rates; +£415 across all households",
+  "subtitle": "From Ofgem's October to December 2026 rates to its January to March 2027 rates, at an annual rate and over the three months; +£415 a year and +£152 over January to March across all households",
   "xKey": "decile",
-  "series": [{ "key": "change", "name": "Change in average bill", "color": "primary" }],
-  "data": [
-    { "decile": "1", "change": 374.0 },
-    { "decile": "2", "change": 385.0 },
-    { "decile": "3", "change": 377.0 },
-    { "decile": "4", "change": 398.0 },
-    { "decile": "5", "change": 403.0 },
-    { "decile": "6", "change": 397.0 },
-    { "decile": "7", "change": 421.0 },
-    { "decile": "8", "change": 415.0 },
-    { "decile": "9", "change": 458.0 },
-    { "decile": "10", "change": 523.0 }
+  "series": [
+    { "key": "change", "name": "Annual rate", "color": "primary" },
+    { "key": "q1", "name": "Over January to March", "color": "quinary" }
   ],
-  "yLabel": "Change in average annual bill (£)",
+  "data": [
+    { "decile": "1", "change": 374.0, "q1": 136.0 },
+    { "decile": "2", "change": 385.0, "q1": 141.0 },
+    { "decile": "3", "change": 377.0, "q1": 138.0 },
+    { "decile": "4", "change": 398.0, "q1": 145.0 },
+    { "decile": "5", "change": 403.0, "q1": 148.0 },
+    { "decile": "6", "change": 397.0, "q1": 145.0 },
+    { "decile": "7", "change": 421.0, "q1": 155.0 },
+    { "decile": "8", "change": 415.0, "q1": 151.0 },
+    { "decile": "9", "change": 458.0, "q1": 167.0 },
+    { "decile": "10", "change": 523.0, "q1": 191.0 }
+  ],
+  "yLabel": "Change in average bill (£)",
   "format": { "decimals": 0, "prefix": "£", "signed": true },
-  "legend": false
+  "valueLabels": false
 }
 ```
 
-**Table 4: Household energy bills by income decile, Great Britain (annual rates)**
+**Table 4: Household energy bills by income decile, Great Britain**
 
-| Income decile | Average net income | Bill, October rates | Bill, January rates | Change | Share of income, October | Share of income, January |
-| ------------- | -----------------: | ------------------: | ------------------: | -----: | -----------------------: | -----------------------: |
-| 1 (lowest) | £16,412 | £1,535 | £1,909 | +£374 | 9.4% | 11.6% |
-| 2 | £27,421 | £1,583 | £1,968 | +£385 | 5.8% | 7.2% |
-| 3 | £31,600 | £1,541 | £1,918 | +£377 | 4.9% | 6.1% |
-| 4 | £36,225 | £1,632 | £2,030 | +£398 | 4.5% | 5.6% |
-| 5 | £41,201 | £1,638 | £2,041 | +£403 | 4.0% | 5.0% |
-| 6 | £47,984 | £1,630 | £2,027 | +£397 | 3.4% | 4.2% |
-| 7 | £56,963 | £1,718 | £2,139 | +£421 | 3.0% | 3.8% |
-| 8 | £64,442 | £1,715 | £2,130 | +£415 | 2.7% | 3.3% |
-| 9 | £77,353 | £1,881 | £2,340 | +£458 | 2.4% | 3.0% |
-| 10 (highest) | £131,524 | £2,143 | £2,666 | +£523 | 1.6% | 2.0% |
-| All | | £1,701 | £2,116 | +£415 | 3.2% | 4.0% |
+| Income decile | Average net income | Bill, October rates | Bill, January rates | Change, annual rate | Change over January to March | Share of income, October | Share of income, January |
+| ------------- | -----------------: | ------------------: | ------------------: | ------------------: | ---------------------------: | -----------------------: | -----------------------: |
+| 1 (lowest) | £16,412 | £1,535 | £1,909 | +£374 | +£136 | 9.4% | 11.6% |
+| 2 | £27,421 | £1,583 | £1,968 | +£385 | +£141 | 5.8% | 7.2% |
+| 3 | £31,600 | £1,541 | £1,918 | +£377 | +£138 | 4.9% | 6.1% |
+| 4 | £36,225 | £1,632 | £2,030 | +£398 | +£145 | 4.5% | 5.6% |
+| 5 | £41,201 | £1,638 | £2,041 | +£403 | +£148 | 4.0% | 5.0% |
+| 6 | £47,984 | £1,630 | £2,027 | +£397 | +£145 | 3.4% | 4.2% |
+| 7 | £56,963 | £1,718 | £2,139 | +£421 | +£155 | 3.0% | 3.8% |
+| 8 | £64,442 | £1,715 | £2,130 | +£415 | +£151 | 2.7% | 3.3% |
+| 9 | £77,353 | £1,881 | £2,340 | +£458 | +£167 | 2.4% | 3.0% |
+| 10 (highest) | £131,524 | £2,143 | £2,666 | +£523 | +£191 | 1.6% | 2.0% |
+| All | | £1,701 | £2,116 | +£415 | +£152 | 3.2% | 4.0% |
 
-We calculate changes from unrounded bills. Net income is household net income before housing costs, as in the Department for Work and Pensions' Households Below Average Income statistics. We rank households into deciles by that income, adjusted for household size, so that each decile holds a tenth of people in the UK.
+Bills, income and shares are annual rates. The change over January to March applies each fuel's share of a year's use in January to March (29.3% for electricity and 42.5% for gas) to each household's annual change, as in Table 5. We calculate changes from unrounded bills. Net income is household net income before housing costs, as in the Department for Work and Pensions' Households Below Average Income statistics. We rank households into deciles by that income, adjusted for household size, so that each decile holds a tenth of people in the UK.
 
 In our data, 4.5 million households in Great Britain have no gas spending. Their bills change by an average of +£211 a year, against +£453 for the 23.9 million households that use both fuels.
 
