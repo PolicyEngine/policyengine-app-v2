@@ -282,7 +282,7 @@ On our approximation, 986,000 people (13.2% of 16 to 24-year-olds) are NEET in 2
 | ------------------------------------------------- | -------------------: | -----------------------: | ---------------------: |
 | People                                            |              986,000 |                6,508,000 |              7,495,000 |
 | In households whose net income falls              |      21.0% (207,000) |           6.2% (402,000) |         8.1% (609,000) |
-| Whose own PIP or health element ends              |      18.4% (181,000) |           5.1% (330,000) |         6.8% (511,000) |
+| Whose own PIP or health element ends              |      17.5% (173,000) |           3.4% (223,000) |         5.3% (395,000) |
 | Average change in household net income (£ a year) |               −2,642 |                     −655 |                   −917 |
 
 PolicyEngine estimates, from the [NEET table on the dashboard](https://www.policyengine.org/uk/milburn-review?tab=dashboard&sub=age). A person counts in the third row if the two removals would end their own PIP, or the health element in an award in which they are the claimant with limited capability for work; each person counts once. The averages hold employment fixed. Our 2025 data put 83.4% of 16 to 24-year-olds receiving the UC health element in Great Britain on PIP too, against 62.5% in [the Resolution Foundation's figures](https://www.resolutionfoundation.org/press-releases/government-must-match-milburns-ambition-to-properly-invest-in-young-people/), so more of the people in the third row receive both payments than its figures imply. The data count part-time students as in education, and someone who worked earlier in the year as not NEET. Figures may not sum because of rounding.
