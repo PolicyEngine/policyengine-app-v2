@@ -1,14 +1,14 @@
-On **[Ofgem: announcement date]**, Ofgem [announced](https://www.ofgem.gov.uk/energy-price-cap) the energy price cap for 1 January to 31 March 2027: **[Ofgem: typical_bill_announced]** a year for a household with typical consumption paying by Direct Debit, a change of **[Ofgem: difference]** (**[Ofgem: change]**) from the [current cap](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges) of £1,723. The consultancy Cornwall Insight had forecast £2,166 on 18 November; Ofgem's cap is **[Ofgem: difference]** **[Ofgem: above or below]** that forecast.
+On 25 November 2026, Ofgem [announced](https://www.ofgem.gov.uk/sites/default/files/2026-11/summary-of-changes-to-energy-price-cap-1-January-to-31-March-2027.pdf) the energy price cap for 1 January to 31 March 2027: £2,166 a year for a household with typical consumption paying by Direct Debit, a change of +£443 (+25.7%) from the [current cap](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges) of £1,723. The consultancy Cornwall Insight had forecast £2,166 on 18 November; Ofgem's cap equals that forecast.
 
 Using [PolicyEngine UK](https://policyengine.org/uk), we estimate what Ofgem's cap means for household energy bills across the income distribution in Great Britain. Our [earlier post](https://policyengine.org/uk/research/uk-energy-price-cap-january-2027-forecast) estimated the effects of Cornwall Insight's forecast; this post uses Ofgem's announced rates, and the last section compares the two.
 
 Key results under Ofgem's cap (annual rates unless stated, Great Britain):
 
-- A household with typical consumption sees its bill change by **[Ofgem: examples.typical_dual_fuel.change]** a year at the January rates (**[Ofgem: examples.typical_dual_fuel.change_pct]**), or about **[Ofgem: examples.typical_dual_fuel.q1_change]** over January to March
-- The average household in Great Britain spends **[Ofgem: gb.mean_after]** a year on electricity and gas at the January rates, against £1,701 at October rates (a change of **[Ofgem: gb.mean_change]**)
-- Bills in the bottom income decile change by an average of **[Ofgem: deciles.0.mean_change]** a year, and households' energy spending goes from 9.4% to **[Ofgem: deciles.0.share_after]** of their net income; in the top decile, bills change by an average of **[Ofgem: deciles.9.mean_change]**, and households' energy spending goes from 1.6% to **[Ofgem: deciles.9.share_after]** of their net income
-- The number of households spending more than 10% of their net income on energy goes from 2.3 million to **[Ofgem: gb.spend_over_10pct_income_after_m]**
-- On Cornwall Insight's forecast, the same model gives an average change of +£414 a year, against **[Ofgem: gb.mean_change]** under Ofgem's cap
+- A household with typical consumption sees its bill change by +£443 a year at the January rates (+25.7%), or about +£167 over January to March
+- The average household in Great Britain spends £2,116 a year on electricity and gas at the January rates, against £1,701 at October rates (a change of +£415)
+- Bills in the bottom income decile change by an average of +£374 a year, and households' energy spending goes from 9.4% to 11.6% of their net income; in the top decile, bills change by an average of +£523, and households' energy spending goes from 1.6% to 2.0% of their net income
+- The number of households spending more than 10% of their net income on energy goes from 2.3 million to 3.6 million
+- On Cornwall Insight's forecast, the same model gives an average change of +£414 a year, against +£415 under Ofgem's cap
 
 ## The cap
 
@@ -30,7 +30,7 @@ Ofgem caps the unit rate and the daily standing charge that suppliers may charge
     { "quarter": "Apr–Jun 2026", "ofgem": 1477 },
     { "quarter": "Jul–Sep 2026", "ofgem": 1663 },
     { "quarter": "Oct–Dec 2026", "ofgem": 1723 },
-    { "quarter": "Jan–Mar 2027" }
+    { "quarter": "Jan–Mar 2027", "ofgem": 2166.0 }
   ],
   "yLabel": "Typical annual bill (£)",
   "format": { "decimals": 0, "prefix": "£", "separator": true },
@@ -52,9 +52,9 @@ Until July 2026, Ofgem quoted the cap at its previous typical values of 2,700 kW
 | April to June 2026 | 1,641 | 2,700 and 11,500 | 1,477 |
 | July to September 2026 | 1,862 | 2,700 and 11,500 | 1,663 |
 | October to December 2026 | 1,723 | 2,500 and 9,500 | 1,723 |
-| January to March 2027 | **[Ofgem: typical_bill_announced]** (Ofgem's cap) | 2,500 and 9,500 | **[Ofgem: typical_bill_announced]** |
+| January to March 2027 | 2,166 (Ofgem's cap) | 2,500 and 9,500 | 2,166 |
 
-Sources: Ofgem's announcements of each cap, from [January to March 2025](https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-january-and-31-march-2025) to [October to December 2026](https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-october-and-31-december-2026) and **[Ofgem: link to the January to March 2027 announcement]**, and its [restatement of the April to June and July to September 2026 caps](https://www.ofgem.gov.uk/sites/default/files/2026-06/Summary-of-changes-to-energy-price-cap-1-July-to-30-September-2026-revised-TDCV.pdf). The last column for January 2025 to March 2026 is our calculation from Ofgem's average rates for each quarter.
+Sources: Ofgem's announcements of each cap, from [January to March 2025](https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-january-and-31-march-2025) to [October to December 2026](https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-october-and-31-december-2026) and [January to March 2027](https://www.ofgem.gov.uk/sites/default/files/2026-11/summary-of-changes-to-energy-price-cap-1-January-to-31-March-2027.pdf), and its [restatement of the April to June and July to September 2026 caps](https://www.ofgem.gov.uk/sites/default/files/2026-06/Summary-of-changes-to-energy-price-cap-1-July-to-30-September-2026-revised-TDCV.pdf). The last column for January 2025 to March 2026 is our calculation from Ofgem's average rates for each quarter.
 
 Table 2 and Figure 2 compare Ofgem's January rates with its October rates and with Cornwall Insight's forecast.
 
@@ -62,13 +62,13 @@ Table 2 and Figure 2 compare Ofgem's January rates with its October rates and wi
 
 |  | October to December 2026 (Ofgem) | January to March 2027 (Ofgem) | Change | January to March 2027 (Cornwall Insight forecast) |
 | - | -: | -: | -: | -: |
-| Electricity unit rate (pence per kWh) | 26.32 | **[Ofgem: inputs.jan_unit_p_per_kwh.electricity]** | **[Ofgem: inputs.unit_change_pct.electricity]** | 32.54 |
-| Electricity standing charge (pence per day) | 54.83 | **[Ofgem: inputs.jan_standing_p_per_day.electricity]** | **[Ofgem: inputs.standing_change_pct.electricity]** | 55.78 |
-| Gas unit rate (pence per kWh) | 7.97 | **[Ofgem: inputs.jan_unit_p_per_kwh.gas]** | **[Ofgem: inputs.unit_change_pct.gas]** | 10.90 |
-| Gas standing charge (pence per day) | 29.68 | **[Ofgem: inputs.jan_standing_p_per_day.gas]** | **[Ofgem: inputs.standing_change_pct.gas]** | 31.04 |
-| Typical electricity bill (£ a year) | 858 | **[Ofgem: inputs.jan_typical_bill.electricity]** | **[Ofgem: inputs.typical_fuel_change_pct.electricity]** | 1,017 |
-| Typical gas bill (£ a year) | 865 | **[Ofgem: inputs.jan_typical_bill.gas]** | **[Ofgem: inputs.typical_fuel_change_pct.gas]** | 1,149 |
-| **Typical dual-fuel bill (£ a year)** | **1,723** | ****[Ofgem: typical_bill_announced]**** | ****[Ofgem: change]**** | **2,166** |
+| Electricity unit rate (pence per kWh) | 26.32 | 32.69 | +24.2% | 32.54 |
+| Electricity standing charge (pence per day) | 54.83 | 54.77 | −0.1% | 55.78 |
+| Gas unit rate (pence per kWh) | 7.97 | 10.96 | +37.5% | 10.90 |
+| Gas standing charge (pence per day) | 29.68 | 29.65 | −0.1% | 31.04 |
+| Typical electricity bill (£ a year) | 858 | 1,017 | +18.5% | 1,017 |
+| Typical gas bill (£ a year) | 865 | 1,149 | +32.8% | 1,149 |
+| **Typical dual-fuel bill (£ a year)** | **1,723** | **2,166** | **+25.7%** | **2,166** |
 
 Sources: Ofgem, [energy price cap unit rates and standing charges](https://www.ofgem.gov.uk/your-energy-supply/your-energy-bill/energy-price-cap-unit-rates-and-standing-charges); Cornwall Insight, [press release](https://www.cornwall-insight.com/press-releases/energy-bills-set-for-steep-rise-in-january/), 18 November 2026. We compute the typical bills by fuel from Ofgem's rates. Ofgem's rates carry no VAT on electricity and 5% VAT on gas. Cornwall Insight publishes standing charges to the nearest penny a day; the forecast column gives the standing charges its fuel totals imply.
 
@@ -83,21 +83,21 @@ Sources: Ofgem, [energy price cap unit rates and standing charges](https://www.o
     { "key": "standing", "name": "Standing charge", "color": "quinary" }
   ],
   "data": [
-    { "fuel": "Electricity" },
-    { "fuel": "Gas" }
+    { "fuel": "Electricity", "unit": 24.2, "standing": -0.1 },
+    { "fuel": "Gas", "unit": 37.5, "standing": -0.1 }
   ],
   "yLabel": "Change (%)",
   "format": { "decimals": 1, "suffix": "%", "signed": true }
 }
 ```
 
-At typical consumption, the gas bill changes by **[Ofgem: inputs.typical_fuel_change.gas]** and the electricity bill by **[Ofgem: inputs.typical_fuel_change.electricity]** (**[Ofgem: difference]** in total on Ofgem's rates as published, against Ofgem's **[Ofgem: difference]**), so gas accounts for **[Ofgem: gas share]** of the change.
+At typical consumption, the gas bill changes by +£284 and the electricity bill by +£159 (+£443 in total on Ofgem's rates as published, against Ofgem's +£443), so gas accounts for 64% of the change.
 
 ### Why the cap changed
 
-**[Ofgem: the reasons Ofgem gives for the change, attributed to its announcement in its own words, such as wholesale gas prices]** **[Ofgem: how the January cap compares with the 2022-23 peak, from inputs.json peak_2022]**
+Ofgem's [letter on the January update](https://www.ofgem.gov.uk/sites/default/files/2026-11/summary-of-changes-to-energy-price-cap-1-January-to-31-March-2027.pdf) attributes the change mainly to wholesale costs. Its wholesale cost allowance rises by 50%, to 56% of the typical bill from 47% in October to December: by 59% for gas and 39% for electricity. Ofgem cites conflict and geopolitical instability in the Middle East, historically low European gas storage at the start of winter, and greater reliance on gas-fired power during periods of low wind. Allowances that move with the cap level, including suppliers' earnings allowance, headroom, debt costs and VAT on gas, rise with it.
 
-Ofgem expresses the cap as an annual rate. A household pays the January rates for three months. UK households use on average 29.3% of a year's electricity and 42.5% of a year's gas in January to March.[^1] Applying those shares to the unit-rate part of the bill, and 90 days to the standing charges, the cap changes a typical household's bills over January to March by about **[Ofgem: examples.typical_dual_fuel.q1_change]**.
+Ofgem expresses the cap as an annual rate. A household pays the January rates for three months. UK households use on average 29.3% of a year's electricity and 42.5% of a year's gas in January to March.[^1] Applying those shares to the unit-rate part of the bill, and 90 days to the standing charges, the cap changes a typical household's bills over January to March by about +£167.
 
 Ofgem's cap includes the zero rate of VAT on household electricity, which the [Autumn Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) extended to July 2027. It leaves out the one-off £100 Household Energy Payment, which the Autumn Budget announced for households in council tax bands A to D in England from January 2027 and which local authorities pay outside the cap, and the Government's plan to remove standing charges from household gas bills, which the Budget asks Ofgem to deliver by the end of 2027 or as soon as possible after, with no start date set. Ofgem sets the cap for April to June 2027 separately, in February 2027.
 
@@ -116,10 +116,10 @@ Table 3 and Figures 3 and 4 apply the rates in Table 2 to four levels of consump
     { "key": "jan", "name": "January to March 2027", "color": "primary" }
   ],
   "data": [
-    { "household": "Low use", "oct": 1016.0 },
-    { "household": "Typical use", "oct": 1724.0 },
-    { "household": "High use", "oct": 3139.0 },
-    { "household": "Electricity only", "oct": 858.0 }
+    { "household": "Low use", "oct": 1016.0, "jan": 1237.0 },
+    { "household": "Typical use", "oct": 1724.0, "jan": 2167.0 },
+    { "household": "High use", "oct": 3139.0, "jan": 4025.0 },
+    { "household": "Electricity only", "oct": 858.0, "jan": 1017.0 }
   ],
   "yLabel": "Annual bill (£)",
   "format": { "decimals": 0, "prefix": "£", "separator": true }
@@ -137,10 +137,10 @@ Table 3 and Figures 3 and 4 apply the rates in Table 2 to four levels of consump
     { "key": "gas", "name": "Gas", "color": "quinary" }
   ],
   "data": [
-    { "household": "Low use" },
-    { "household": "Typical use" },
-    { "household": "High use" },
-    { "household": "Electricity only" }
+    { "household": "Low use", "electricity": 609.0, "gas": 629.0 },
+    { "household": "Typical use", "electricity": 1017.0, "gas": 1149.0 },
+    { "household": "High use", "electricity": 1834.0, "gas": 2191.0 },
+    { "household": "Electricity only", "electricity": 1017.0 }
   ],
   "yLabel": "Annual bill (£)",
   "format": { "decimals": 0, "prefix": "£", "separator": true },
@@ -152,18 +152,18 @@ Table 3 and Figures 3 and 4 apply the rates in Table 2 to four levels of consump
 
 | Household | Electricity | Gas | Total | Standing charges | Unit rates | Change, annual rate | Change over January to March |
 | --------- | ----------: | --: | ----: | ---------------: | ---------: | ------------------: | ---------------------------: |
-| Low use (half typical) | £529 to **[Ofgem: examples.low_dual_fuel_half_typical.jan.electricity]** | £487 to **[Ofgem: examples.low_dual_fuel_half_typical.jan.gas]** | £1,016 to **[Ofgem: examples.low_dual_fuel_half_typical.jan.total]** | £308 to **[Ofgem: examples.low_dual_fuel_half_typical.jan.standing]** | £708 to **[Ofgem: examples.low_dual_fuel_half_typical.jan.unit]** | **[Ofgem: examples.low_dual_fuel_half_typical.change]** (**[Ofgem: examples.low_dual_fuel_half_typical.change_pct]**) | **[Ofgem: examples.low_dual_fuel_half_typical.q1_change]** |
-| Typical use | £858 to **[Ofgem: examples.typical_dual_fuel.jan.electricity]** | £865 to **[Ofgem: examples.typical_dual_fuel.jan.gas]** | £1,724 to **[Ofgem: examples.typical_dual_fuel.jan.total]** | £308 to **[Ofgem: examples.typical_dual_fuel.jan.standing]** | £1,415 to **[Ofgem: examples.typical_dual_fuel.jan.unit]** | **[Ofgem: examples.typical_dual_fuel.change]** (**[Ofgem: examples.typical_dual_fuel.change_pct]**) | **[Ofgem: examples.typical_dual_fuel.q1_change]** |
-| High use (double typical) | £1,516 to **[Ofgem: examples.high_dual_fuel_double_typical.jan.electricity]** | £1,623 to **[Ofgem: examples.high_dual_fuel_double_typical.jan.gas]** | £3,139 to **[Ofgem: examples.high_dual_fuel_double_typical.jan.total]** | £308 to **[Ofgem: examples.high_dual_fuel_double_typical.jan.standing]** | £2,830 to **[Ofgem: examples.high_dual_fuel_double_typical.jan.unit]** | **[Ofgem: examples.high_dual_fuel_double_typical.change]** (**[Ofgem: examples.high_dual_fuel_double_typical.change_pct]**) | **[Ofgem: examples.high_dual_fuel_double_typical.q1_change]** |
-| Electricity only, typical | £858 to **[Ofgem: examples.electric_only_typical_electricity.jan.electricity]** | £0 | £858 to **[Ofgem: examples.electric_only_typical_electricity.jan.total]** | £200 to **[Ofgem: examples.electric_only_typical_electricity.jan.standing]** | £658 to **[Ofgem: examples.electric_only_typical_electricity.jan.unit]** | **[Ofgem: examples.electric_only_typical_electricity.change]** (**[Ofgem: examples.electric_only_typical_electricity.change_pct]**) | **[Ofgem: examples.electric_only_typical_electricity.q1_change]** |
+| Low use (half typical) | £529 to £609 | £487 to £629 | £1,016 to £1,237 | £308 to £308 | £708 to £929 | +£221 (+21.8%) | +£84 |
+| Typical use | £858 to £1,017 | £865 to £1,149 | £1,724 to £2,167 | £308 to £308 | £1,415 to £1,858 | +£443 (+25.7%) | +£167 |
+| High use (double typical) | £1,516 to £1,834 | £1,623 to £2,191 | £3,139 to £4,025 | £308 to £308 | £2,830 to £3,717 | +£886 (+28.2%) | +£335 |
+| Electricity only, typical | £858 to £1,017 | £0 | £858 to £1,017 | £200 to £200 | £658 to £817 | +£159 (+18.5%) | +£47 |
 
 Cells with two figures give the October bill, then the January bill, at annual rates. The standing charge and unit-rate columns split the total bill. Figures may not sum because of rounding. The last column applies the change in unit rates to the shares of a year's electricity (29.3%) and gas (42.5%) used in January to March and the change in standing charges to 90 days, as for the typical household above. Ofgem publishes its rates to two decimal places, so the typical bill here can differ from Ofgem's headline by £1.
 
-Standing charges change by **[Ofgem: inputs.standing_change_pct.electricity]** (electricity) and **[Ofgem: inputs.standing_change_pct.gas]** (gas), and unit rates by **[Ofgem: inputs.unit_change_pct.electricity]** and **[Ofgem: inputs.unit_change_pct.gas]**, so the bill changes by **[Ofgem: examples.low_dual_fuel_half_typical.change_pct]** at low use, **[Ofgem: examples.typical_dual_fuel.change_pct]** at typical use and **[Ofgem: examples.high_dual_fuel_double_typical.change_pct]** at high use. Standing charges make up **[Ofgem: examples.low_dual_fuel_half_typical.standing_share_jan]** of the low-use bill in January and **[Ofgem: examples.high_dual_fuel_double_typical.standing_share_jan]** of the high-use bill. A home without gas using 2,500 kWh faces a change of **[Ofgem: examples.electric_only_typical_electricity.change_pct]**, against **[Ofgem: examples.typical_dual_fuel.change_pct]** at typical use of both fuels, because the typical electricity bill changes by **[Ofgem: inputs.typical_fuel_change_pct.electricity]** and the typical gas bill by **[Ofgem: inputs.typical_fuel_change_pct.gas]** (Table 2). In our data, households that do not use gas spend an average of £1,141 a year on electricity at October prices, against £858 at 2,500 kWh.
+Standing charges change by −0.1% (electricity) and −0.1% (gas), and unit rates by +24.2% and +37.5%, so the bill changes by +21.8% at low use, +25.7% at typical use and +28.2% at high use. Standing charges make up 24.9% of the low-use bill in January and 7.7% of the high-use bill. A home without gas using 2,500 kWh faces a change of +18.5%, against +25.7% at typical use of both fuels, because the typical electricity bill changes by +18.5% and the typical gas bill by +32.8% (Table 2). In our data, households that do not use gas spend an average of £1,141 a year on electricity at October prices, against £858 at 2,500 kWh.
 
 ## Bills across the income distribution
 
-We apply Ofgem's cap to the electricity and gas spending of every household in Great Britain in PolicyEngine UK's data, [Microcosm UK](https://www.policyengine.org/uk/model/data). We first restate each household's spending at October to December 2026 prices, using PolicyEngine UK's energy price indices. We then change each household's electricity spending by **[Ofgem: inputs.typical_fuel_change_pct.electricity]** and its gas spending by **[Ofgem: inputs.typical_fuel_change_pct.gas]**, the changes in the typical bill for each fuel in Table 2. All figures are annual rates and assume that households do not change how much energy they use. At October prices, households that use both fuels spend an average of £1,806 a year in our data, and the median such household spends £1,508, against Ofgem's typical bill of £1,723.
+We apply Ofgem's cap to the electricity and gas spending of every household in Great Britain in PolicyEngine UK's data, [Microcosm UK](https://www.policyengine.org/uk/model/data). We first restate each household's spending at October to December 2026 prices, using PolicyEngine UK's energy price indices. We then change each household's electricity spending by +18.5% and its gas spending by +32.8%, the changes in the typical bill for each fuel in Table 2. All figures are annual rates and assume that households do not change how much energy they use. At October prices, households that use both fuels spend an average of £1,806 a year in our data, and the median such household spends £1,508, against Ofgem's typical bill of £1,723.
 
 ```chart
 {
@@ -176,16 +176,16 @@ We apply Ofgem's cap to the electricity and gas spending of every household in G
     { "key": "jan", "name": "January to March 2027", "color": "primary" }
   ],
   "data": [
-    { "decile": "1", "oct": 1535.0 },
-    { "decile": "2", "oct": 1583.0 },
-    { "decile": "3", "oct": 1541.0 },
-    { "decile": "4", "oct": 1632.0 },
-    { "decile": "5", "oct": 1638.0 },
-    { "decile": "6", "oct": 1630.0 },
-    { "decile": "7", "oct": 1718.0 },
-    { "decile": "8", "oct": 1715.0 },
-    { "decile": "9", "oct": 1881.0 },
-    { "decile": "10", "oct": 2143.0 }
+    { "decile": "1", "oct": 1535.0, "jan": 1909.0 },
+    { "decile": "2", "oct": 1583.0, "jan": 1968.0 },
+    { "decile": "3", "oct": 1541.0, "jan": 1918.0 },
+    { "decile": "4", "oct": 1632.0, "jan": 2030.0 },
+    { "decile": "5", "oct": 1638.0, "jan": 2041.0 },
+    { "decile": "6", "oct": 1630.0, "jan": 2027.0 },
+    { "decile": "7", "oct": 1718.0, "jan": 2139.0 },
+    { "decile": "8", "oct": 1715.0, "jan": 2130.0 },
+    { "decile": "9", "oct": 1881.0, "jan": 2340.0 },
+    { "decile": "10", "oct": 2143.0, "jan": 2666.0 }
   ],
   "yLabel": "Average annual bill (£)",
   "format": { "decimals": 0, "prefix": "£", "separator": true },
@@ -193,7 +193,7 @@ We apply Ofgem's cap to the electricity and gas spending of every household in G
 }
 ```
 
-Households in the top decile spend more on energy than those in the bottom (Figure 5). Their bills change by an average of **[Ofgem: deciles.9.mean_change]** a year, against **[Ofgem: deciles.0.mean_change]** in the bottom decile (Figure 7). As a share of net income (Figure 6 and Table 4), spending goes from 9.4% to **[Ofgem: deciles.0.share_after]** in the bottom decile and from 1.6% to **[Ofgem: deciles.9.share_after]** in the top.
+Households in the top decile spend more on energy than those in the bottom (Figure 5). Their bills change by an average of +£523 a year, against +£374 in the bottom decile (Figure 7). As a share of net income (Figure 6 and Table 4), spending goes from 9.4% to 11.6% in the bottom decile and from 1.6% to 2.0% in the top.
 
 ```chart
 {
@@ -206,16 +206,16 @@ Households in the top decile spend more on energy than those in the bottom (Figu
     { "key": "jan", "name": "January to March 2027", "color": "primary" }
   ],
   "data": [
-    { "decile": "1", "oct": 9.355 },
-    { "decile": "2", "oct": 5.772 },
-    { "decile": "3", "oct": 4.877 },
-    { "decile": "4", "oct": 4.506 },
-    { "decile": "5", "oct": 3.975 },
-    { "decile": "6", "oct": 3.398 },
-    { "decile": "7", "oct": 3.015 },
-    { "decile": "8", "oct": 2.661 },
-    { "decile": "9", "oct": 2.432 },
-    { "decile": "10", "oct": 1.629 }
+    { "decile": "1", "oct": 9.355, "jan": 11.632 },
+    { "decile": "2", "oct": 5.772, "jan": 7.177 },
+    { "decile": "3", "oct": 4.877, "jan": 6.068 },
+    { "decile": "4", "oct": 4.506, "jan": 5.604 },
+    { "decile": "5", "oct": 3.975, "jan": 4.954 },
+    { "decile": "6", "oct": 3.398, "jan": 4.225 },
+    { "decile": "7", "oct": 3.015, "jan": 3.755 },
+    { "decile": "8", "oct": 2.661, "jan": 3.305 },
+    { "decile": "9", "oct": 2.432, "jan": 3.024 },
+    { "decile": "10", "oct": 1.629, "jan": 2.027 }
   ],
   "yLabel": "Share of net income (%)",
   "format": { "decimals": 1, "suffix": "%" },
@@ -227,20 +227,20 @@ Households in the top decile spend more on energy than those in the bottom (Figu
 {
   "type": "bar",
   "title": "Figure 7: Change in the average household energy bill by income decile, Great Britain",
-  "subtitle": "Annual rate, from Ofgem's October to December 2026 rates to its January to March 2027 rates; **[Ofgem: gb.mean_change]** across all households",
+  "subtitle": "Annual rate, from Ofgem's October to December 2026 rates to its January to March 2027 rates; +£415 across all households",
   "xKey": "decile",
   "series": [{ "key": "change", "name": "Change in average bill", "color": "primary" }],
   "data": [
-    { "decile": "1" },
-    { "decile": "2" },
-    { "decile": "3" },
-    { "decile": "4" },
-    { "decile": "5" },
-    { "decile": "6" },
-    { "decile": "7" },
-    { "decile": "8" },
-    { "decile": "9" },
-    { "decile": "10" }
+    { "decile": "1", "change": 374.0 },
+    { "decile": "2", "change": 385.0 },
+    { "decile": "3", "change": 377.0 },
+    { "decile": "4", "change": 398.0 },
+    { "decile": "5", "change": 403.0 },
+    { "decile": "6", "change": 397.0 },
+    { "decile": "7", "change": 421.0 },
+    { "decile": "8", "change": 415.0 },
+    { "decile": "9", "change": 458.0 },
+    { "decile": "10", "change": 523.0 }
   ],
   "yLabel": "Change in average annual bill (£)",
   "format": { "decimals": 0, "prefix": "£", "signed": true },
@@ -252,47 +252,47 @@ Households in the top decile spend more on energy than those in the bottom (Figu
 
 | Income decile | Average net income | Bill, October rates | Bill, January rates | Change | Share of income, October | Share of income, January |
 | ------------- | -----------------: | ------------------: | ------------------: | -----: | -----------------------: | -----------------------: |
-| 1 (lowest) | £16,412 | £1,535 | **[Ofgem: decile 1]** | **[Ofgem: decile 1]** | 9.4% | **[Ofgem: decile 1]** |
-| 2 | £27,421 | £1,583 | **[Ofgem: decile 2]** | **[Ofgem: decile 2]** | 5.8% | **[Ofgem: decile 2]** |
-| 3 | £31,600 | £1,541 | **[Ofgem: decile 3]** | **[Ofgem: decile 3]** | 4.9% | **[Ofgem: decile 3]** |
-| 4 | £36,225 | £1,632 | **[Ofgem: decile 4]** | **[Ofgem: decile 4]** | 4.5% | **[Ofgem: decile 4]** |
-| 5 | £41,201 | £1,638 | **[Ofgem: decile 5]** | **[Ofgem: decile 5]** | 4.0% | **[Ofgem: decile 5]** |
-| 6 | £47,984 | £1,630 | **[Ofgem: decile 6]** | **[Ofgem: decile 6]** | 3.4% | **[Ofgem: decile 6]** |
-| 7 | £56,963 | £1,718 | **[Ofgem: decile 7]** | **[Ofgem: decile 7]** | 3.0% | **[Ofgem: decile 7]** |
-| 8 | £64,442 | £1,715 | **[Ofgem: decile 8]** | **[Ofgem: decile 8]** | 2.7% | **[Ofgem: decile 8]** |
-| 9 | £77,353 | £1,881 | **[Ofgem: decile 9]** | **[Ofgem: decile 9]** | 2.4% | **[Ofgem: decile 9]** |
-| 10 (highest) | £131,524 | £2,143 | **[Ofgem: decile 10]** | **[Ofgem: decile 10]** | 1.6% | **[Ofgem: decile 10]** |
-| All | | £1,701 | **[Ofgem: gb.mean_after]** | **[Ofgem: gb.mean_change]** | 3.2% | **[Ofgem: gb.share_of_income_after]** |
+| 1 (lowest) | £16,412 | £1,535 | £1,909 | +£374 | 9.4% | 11.6% |
+| 2 | £27,421 | £1,583 | £1,968 | +£385 | 5.8% | 7.2% |
+| 3 | £31,600 | £1,541 | £1,918 | +£377 | 4.9% | 6.1% |
+| 4 | £36,225 | £1,632 | £2,030 | +£398 | 4.5% | 5.6% |
+| 5 | £41,201 | £1,638 | £2,041 | +£403 | 4.0% | 5.0% |
+| 6 | £47,984 | £1,630 | £2,027 | +£397 | 3.4% | 4.2% |
+| 7 | £56,963 | £1,718 | £2,139 | +£421 | 3.0% | 3.8% |
+| 8 | £64,442 | £1,715 | £2,130 | +£415 | 2.7% | 3.3% |
+| 9 | £77,353 | £1,881 | £2,340 | +£458 | 2.4% | 3.0% |
+| 10 (highest) | £131,524 | £2,143 | £2,666 | +£523 | 1.6% | 2.0% |
+| All | | £1,701 | £2,116 | +£415 | 3.2% | 4.0% |
 
 We calculate changes from unrounded bills. Net income is household net income before housing costs, as in the Department for Work and Pensions' Households Below Average Income statistics. We rank households into deciles by that income, adjusted for household size, so that each decile holds a tenth of people in the UK.
 
-In our data, 4.5 million households in Great Britain have no gas spending. Their bills change by an average of **[Ofgem: gb.elec_only_mean_change]** a year, against **[Ofgem: gb.dual_mean_change]** for the 23.9 million households that use both fuels.
+In our data, 4.5 million households in Great Britain have no gas spending. Their bills change by an average of +£211 a year, against +£453 for the 23.9 million households that use both fuels.
 
-We estimate that at October rates, 2.3 million households spend more than 10% of their net income before housing costs on energy, counting the 0.1 million with zero income (the Households Below Average Income statistics reset negative incomes to zero). At the January rates, held for a full year, **[Ofgem: gb.spend_over_10pct_income_after_m]** would. This is not an official fuel poverty measure. It also differs from the fuel-stress measure in the Autumn Budget, which compares energy spending with income after housing costs; our [analysis of the Budget's energy bill measures](https://policyengine.org/uk/research/budget-2026-energy-bills) uses that measure.
+We estimate that at October rates, 2.3 million households spend more than 10% of their net income before housing costs on energy, counting the 0.1 million with zero income (the Households Below Average Income statistics reset negative incomes to zero). At the January rates, held for a full year, 3.6 million would. This is not an official fuel poverty measure. It also differs from the fuel-stress measure in the Autumn Budget, which compares energy spending with income after housing costs; our [analysis of the Budget's energy bill measures](https://policyengine.org/uk/research/budget-2026-energy-bills) uses that measure.
 
 The bills in these figures leave out the support that households receive outside the cap, such as the £100 Household Energy Payment in England, the Warm Home Discount and the Winter Fuel Payment. Net income counts those payments as income, as the Households Below Average Income statistics do for the Warm Home Discount and the Winter Fuel Payment and did for the 2022 energy support.
 
 ## Support set against the change
 
-The Autumn Budget announced two measures for this winter outside the cap rates themselves. The £100 Household Energy Payment is a one-off payment, from January 2027, to households in council tax bands A to D in England. The zero rate of VAT on household electricity took effect on 1 October 2026 and runs to July 2027; the Department for Energy Security and Net Zero [says](https://www.gov.uk/government/news/what-the-autumn-budget-2026-means-for-your-energy-bills) it saves households an average of £45 a year, and the [Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) says the extension takes around £50 off the cap from April 2027. In our data, the VAT cut is worth £50 a year to the average household in Great Britain at October rates and **[Ofgem: support.gb.vat_cut_jan]** at January rates.
+The Autumn Budget announced two measures for this winter outside the cap rates themselves. The £100 Household Energy Payment is a one-off payment, from January 2027, to households in council tax bands A to D in England. The zero rate of VAT on household electricity took effect on 1 October 2026 and runs to July 2027; the Department for Energy Security and Net Zero [says](https://www.gov.uk/government/news/what-the-autumn-budget-2026-means-for-your-energy-bills) it saves households an average of £45 a year, and the [Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) says the extension takes around £50 off the cap from April 2027. In our data, the VAT cut is worth £50 a year to the average household in Great Britain at October rates and £59 at January rates.
 
-Both October and January caps already carry no VAT on electricity, so the change from October to January in the sections above already includes the VAT cut. Table 5 and Figure 8 set the support against that change in three steps: the change in the annual bill; the change less the Household Energy Payment; and the change less the payment and less what 5% VAT would add to the January electricity bill. The payment is made once, while the change is an annual rate: across Great Britain, the payment averages £69 a household, **[Ofgem: support.gb.share_change_offset_by_hep]** of the average change of **[Ofgem: gb.mean_change]**.
+Both October and January caps already carry no VAT on electricity, so the change from October to January in the sections above already includes the VAT cut. Table 5 and Figure 8 set the support against that change in three steps: the change in the annual bill; the change less the Household Energy Payment; and the change less the payment and less what 5% VAT would add to the January electricity bill. The payment is made once, while the change is an annual rate: across Great Britain, the payment averages £69 a household, 17% of the average change of +£415.
 
 **Table 5: Change in the average household energy bill by income decile, gross and net of support, Great Britain (£ a year)**
 
 | Income decile | Change in bill | Household Energy Payment | Change less the payment | VAT cut at January rates | Change less the payment and the VAT cut |
 | ------------- | -------------: | -----------------------: | ----------------------: | -----------------------: | --------------------------------------: |
-| 1 (lowest) | **[Ofgem: decile 1]** | £71 | **[Ofgem: decile 1]** | **[Ofgem: decile 1]** | **[Ofgem: decile 1]** |
-| 2 | **[Ofgem: decile 2]** | £78 | **[Ofgem: decile 2]** | **[Ofgem: decile 2]** | **[Ofgem: decile 2]** |
-| 3 | **[Ofgem: decile 3]** | £75 | **[Ofgem: decile 3]** | **[Ofgem: decile 3]** | **[Ofgem: decile 3]** |
-| 4 | **[Ofgem: decile 4]** | £78 | **[Ofgem: decile 4]** | **[Ofgem: decile 4]** | **[Ofgem: decile 4]** |
-| 5 | **[Ofgem: decile 5]** | £73 | **[Ofgem: decile 5]** | **[Ofgem: decile 5]** | **[Ofgem: decile 5]** |
-| 6 | **[Ofgem: decile 6]** | £75 | **[Ofgem: decile 6]** | **[Ofgem: decile 6]** | **[Ofgem: decile 6]** |
-| 7 | **[Ofgem: decile 7]** | £67 | **[Ofgem: decile 7]** | **[Ofgem: decile 7]** | **[Ofgem: decile 7]** |
-| 8 | **[Ofgem: decile 8]** | £66 | **[Ofgem: decile 8]** | **[Ofgem: decile 8]** | **[Ofgem: decile 8]** |
-| 9 | **[Ofgem: decile 9]** | £62 | **[Ofgem: decile 9]** | **[Ofgem: decile 9]** | **[Ofgem: decile 9]** |
-| 10 (highest) | **[Ofgem: decile 10]** | £49 | **[Ofgem: decile 10]** | **[Ofgem: decile 10]** | **[Ofgem: decile 10]** |
-| All | **[Ofgem: all households]** | £69 | **[Ofgem: all households]** | **[Ofgem: all households]** | **[Ofgem: all households]** |
+| 1 (lowest) | +£374 | £71 | +£302 | £54 | +£248 |
+| 2 | +£385 | £78 | +£307 | £56 | +£252 |
+| 3 | +£377 | £75 | +£302 | £54 | +£248 |
+| 4 | +£398 | £78 | +£320 | £57 | +£262 |
+| 5 | +£403 | £73 | +£330 | £56 | +£275 |
+| 6 | +£397 | £75 | +£322 | £57 | +£265 |
+| 7 | +£421 | £67 | +£354 | £59 | +£295 |
+| 8 | +£415 | £66 | +£349 | £61 | +£288 |
+| 9 | +£458 | £62 | +£396 | £66 | +£330 |
+| 10 (highest) | +£523 | £49 | +£474 | £75 | +£399 |
+| All | +£415 | £69 | +£345 | £59 | +£286 |
 
 ```chart
 {
@@ -306,16 +306,16 @@ Both October and January caps already carry no VAT on electricity, so the change
     { "key": "net_both", "name": "Less the payment and the VAT cut", "color": "secondary" }
   ],
   "data": [
-    { "decile": "1" },
-    { "decile": "2" },
-    { "decile": "3" },
-    { "decile": "4" },
-    { "decile": "5" },
-    { "decile": "6" },
-    { "decile": "7" },
-    { "decile": "8" },
-    { "decile": "9" },
-    { "decile": "10" }
+    { "decile": "1", "gross": 374.0, "net_hep": 302.0, "net_both": 248.0 },
+    { "decile": "2", "gross": 385.0, "net_hep": 307.0, "net_both": 252.0 },
+    { "decile": "3", "gross": 377.0, "net_hep": 302.0, "net_both": 248.0 },
+    { "decile": "4", "gross": 398.0, "net_hep": 320.0, "net_both": 262.0 },
+    { "decile": "5", "gross": 403.0, "net_hep": 330.0, "net_both": 275.0 },
+    { "decile": "6", "gross": 397.0, "net_hep": 322.0, "net_both": 265.0 },
+    { "decile": "7", "gross": 421.0, "net_hep": 354.0, "net_both": 295.0 },
+    { "decile": "8", "gross": 415.0, "net_hep": 349.0, "net_both": 288.0 },
+    { "decile": "9", "gross": 458.0, "net_hep": 396.0, "net_both": 330.0 },
+    { "decile": "10", "gross": 523.0, "net_hep": 474.0, "net_both": 399.0 }
   ],
   "yLabel": "Change in average annual bill (£)",
   "format": { "decimals": 0, "prefix": "£", "signed": true },
@@ -361,19 +361,19 @@ The model pays every household in a home in bands A to D in England. The Governm
 
 ## Ofgem's cap against the forecast
 
-Cornwall Insight forecast a typical bill of £2,166; Ofgem's cap is **[Ofgem: typical_bill_announced]**. Table 6 and Figure 10 run both through the same model and data, so the differences come from the rates alone.
+Cornwall Insight forecast a typical bill of £2,166; Ofgem's cap is £2,166. Table 6 and Figure 10 run both through the same model and data, so the differences come from the rates alone.
 
 **Table 6: Cornwall Insight's forecast and Ofgem's cap for January to March 2027, Great Britain (annual rates)**
 
-|  | Cornwall Insight forecast (18 November) | Ofgem cap (**[Ofgem: announcement date]**) | Difference |
+|  | Cornwall Insight forecast (18 November) | Ofgem cap (25 November 2026) | Difference |
 | - | -: | -: | -: |
-| Typical dual-fuel bill (£ a year) | 2,166 | **[Ofgem: typical_bill_announced]** | **[Ofgem: difference]** |
-| Electricity unit rate (pence per kWh) | 32.54 | **[Ofgem: inputs.jan_unit_p_per_kwh.electricity]** | **[Ofgem: difference]** |
-| Gas unit rate (pence per kWh) | 10.90 | **[Ofgem: inputs.jan_unit_p_per_kwh.gas]** | **[Ofgem: difference]** |
-| Change in the average household bill (£ a year) | +£414 | **[Ofgem: gb.mean_change]** | **[Ofgem: difference]** |
-| Change, lowest income decile (£ a year) | +£373 | **[Ofgem: deciles.0.mean_change]** | **[Ofgem: difference]** |
-| Change, highest income decile (£ a year) | +£522 | **[Ofgem: deciles.9.mean_change]** | **[Ofgem: difference]** |
-| Households spending over 10% of net income on energy (million) | 3.6 | **[Ofgem]** | **[Ofgem]** |
+| Typical dual-fuel bill (£ a year) | 2,166 | 2,166 | £0 |
+| Electricity unit rate (pence per kWh) | 32.54 | 32.69 | 0.15 |
+| Gas unit rate (pence per kWh) | 10.90 | 10.96 | 0.06 |
+| Change in the average household bill (£ a year) | +£414 | +£415 | +£1 |
+| Change, lowest income decile (£ a year) | +£373 | +£374 | +£1 |
+| Change, highest income decile (£ a year) | +£522 | +£523 | +£1 |
+| Households spending over 10% of net income on energy (million) | 3.6 | 3.6 | 0.0 |
 
 ```chart
 {
@@ -386,16 +386,16 @@ Cornwall Insight forecast a typical bill of £2,166; Ofgem's cap is **[Ofgem: ty
     { "key": "ofgem", "name": "Ofgem cap", "color": "primary" }
   ],
   "data": [
-    { "decile": "1", "forecast": 373.0 },
-    { "decile": "2", "forecast": 385.0 },
-    { "decile": "3", "forecast": 376.0 },
-    { "decile": "4", "forecast": 397.0 },
-    { "decile": "5", "forecast": 402.0 },
-    { "decile": "6", "forecast": 396.0 },
-    { "decile": "7", "forecast": 421.0 },
-    { "decile": "8", "forecast": 414.0 },
-    { "decile": "9", "forecast": 457.0 },
-    { "decile": "10", "forecast": 522.0 }
+    { "decile": "1", "forecast": 373.0, "ofgem": 374.0 },
+    { "decile": "2", "forecast": 385.0, "ofgem": 385.0 },
+    { "decile": "3", "forecast": 376.0, "ofgem": 377.0 },
+    { "decile": "4", "forecast": 397.0, "ofgem": 398.0 },
+    { "decile": "5", "forecast": 402.0, "ofgem": 403.0 },
+    { "decile": "6", "forecast": 396.0, "ofgem": 397.0 },
+    { "decile": "7", "forecast": 421.0, "ofgem": 421.0 },
+    { "decile": "8", "forecast": 414.0, "ofgem": 415.0 },
+    { "decile": "9", "forecast": 457.0, "ofgem": 458.0 },
+    { "decile": "10", "forecast": 522.0, "ofgem": 523.0 }
   ],
   "yLabel": "Change in average annual bill (£)",
   "format": { "decimals": 0, "prefix": "£", "signed": true },
@@ -413,7 +413,7 @@ The method has five limitations:
 
 - **Tariffs.** We apply the cap change to every household. The cap covers default tariffs; households on fixed tariffs see no change in January.
 - **Payment method.** We apply the Direct Debit change to every household. Ofgem sets a different cap for standard credit and prepayment, and our data do not separate Direct Debit from standard credit.
-- **Standing charges.** We scale each household's spending on a fuel by one factor, the change in the typical bill, so households that use less or more than the typical amount get the typical household's percentage change. For a household using half the typical amount, the cap gives **[Ofgem: examples.low_dual_fuel_half_typical.jan.fuel_change_pct.electricity]** against **[Ofgem: examples.typical_dual_fuel.jan.fuel_change_pct.electricity]** for electricity and **[Ofgem: examples.low_dual_fuel_half_typical.jan.fuel_change_pct.gas]** against **[Ofgem: examples.typical_dual_fuel.jan.fuel_change_pct.gas]** for gas.
+- **Standing charges.** We scale each household's spending on a fuel by one factor, the change in the typical bill, so households that use less or more than the typical amount get the typical household's percentage change. For a household using half the typical amount, the cap gives +15.0% against +18.5% for electricity and +29.1% against +32.8% for gas.
 - **Annual rates.** We hold the January rates for a full year, as Ofgem's typical bill does. Ofgem sets the cap for April to June 2027 separately, in February 2027.
 - **Fixed use.** We hold each household's energy use fixed as prices change.
 
