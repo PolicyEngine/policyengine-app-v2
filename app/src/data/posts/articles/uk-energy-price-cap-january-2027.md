@@ -76,7 +76,7 @@ Sources: Ofgem, [energy price cap unit rates and standing charges](https://www.o
 {
   "type": "bar",
   "title": "Figure 2: Change in energy price cap rates by fuel",
-  "subtitle": "Percentage change from Ofgem's October to December 2026 cap to its January to March 2027 cap, Direct Debit, Great Britain average",
+  "subtitle": "Percentage change from Ofgem's October to December 2026 cap to its January to March 2027 cap, Direct Debit, Great Britain average. Standing charges change by −0.1% for both fuels, too little to show as a bar",
   "xKey": "fuel",
   "series": [
     { "key": "unit", "name": "Unit rate", "color": "primary" },
