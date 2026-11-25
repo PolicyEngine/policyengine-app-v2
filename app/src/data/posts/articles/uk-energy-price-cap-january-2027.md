@@ -76,7 +76,7 @@ Sources: Ofgem, [energy price cap unit rates and standing charges](https://www.o
 {
   "type": "bar",
   "title": "Figure 2: Change in energy price cap rates by fuel",
-  "subtitle": "Percentage change from Ofgem's October to December 2026 cap to its January to March 2027 cap, Direct Debit, Great Britain average. Standing charges change by −0.1% for both fuels, too little to show as a bar",
+  "subtitle": "Percentage change from Ofgem's October to December 2026 cap to its January to March 2027 cap, Direct Debit, Great Britain average. Standing charges change by −0.1% for both fuels, too small to show as a bar",
   "xKey": "fuel",
   "series": [
     { "key": "unit", "name": "Unit rate", "color": "primary" },
@@ -95,7 +95,7 @@ At typical consumption, the gas bill changes by +£284 and the electricity bill 
 
 ### Why the cap changed
 
-Ofgem's [letter on the January update](https://www.ofgem.gov.uk/sites/default/files/2026-11/summary-of-changes-to-energy-price-cap-1-January-to-31-March-2027.pdf) attributes the change mainly to wholesale costs. Its wholesale cost allowance rises by 50%, to 56% of the typical bill from 47% in October to December: by 59% for gas and 39% for electricity. Ofgem calls conflict and geopolitical instability in the Middle East "the primary driver" of wholesale prices, compounded by historically low European gas storage at the start of winter; prices reached multiyear highs at the end of October before falling back in early November. It attributes the rise in electricity costs to the role gas plays in setting power prices, together with greater reliance on gas-fired power during periods of low wind. Allowances that move with the cap level, including suppliers' earnings allowance, headroom, debt costs and VAT on gas, rise with it.
+Ofgem's [letter on the January update](https://www.ofgem.gov.uk/sites/default/files/2026-11/summary-of-changes-to-energy-price-cap-1-January-to-31-March-2027.pdf) attributes the change mainly to wholesale costs. Its wholesale cost allowance rises by 50%, to 56% of the typical bill from 47% in October to December: by 59% for gas and 39% for electricity. Ofgem calls conflict and geopolitical instability in the Middle East "the primary driver" of wholesale prices, which it says historically low European gas storage at the start of winter compounded; it notes that prices reached multiyear highs at the end of October before falling back in early November. It attributes the rise in electricity costs to the role gas plays in setting power prices, together with greater reliance on gas-fired power during periods of low wind. In Ofgem's breakdown, allowances that move with the cap level, including suppliers' earnings allowance, headroom, debt costs and VAT on gas, rise with it.
 
 Ofgem expresses the cap as an annual rate. A household pays the January rates for three months. UK households use on average 29.3% of a year's electricity and 42.5% of a year's gas in January to March.[^1] Applying those shares to the unit-rate part of the bill, and 90 days to the standing charges, the cap changes a typical household's bills over January to March by about +£167.
 
@@ -274,49 +274,49 @@ The bills in these figures leave out the support that households receive outside
 
 ## Support set against the change
 
-Two measures bear on bills this winter. The Autumn Budget announced the £100 Household Energy Payment, a one-off payment from January 2027 to households in council tax bands A to D in England, which local authorities pay outside the cap. The zero rate of VAT on household electricity has applied since 1 October 2026, is in both the October and the January caps, and the [Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) extended it to July 2027; the Department for Energy Security and Net Zero [says](https://www.gov.uk/government/news/what-the-autumn-budget-2026-means-for-your-energy-bills) it saves households an average of £45 a year. In our data, 5% VAT would add £50 a year to the average household's electricity bill at October rates and £59 at January rates. Because both caps carry no VAT on electricity, the zero rate lowers the October-to-January change itself by only £9 a year for the average household (£8 at typical use), and the figures in this post already include it.
+Two Autumn Budget measures bear on bills this winter. The Autumn Budget announced the £100 Household Energy Payment, a one-off payment from January 2027 to households in council tax bands A to D in England, which local authorities pay outside the cap. The zero rate of VAT on household electricity has applied since 1 October 2026, is in both the October and the January caps, and the [Budget](https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html) extended it to July 2027; the Department for Energy Security and Net Zero [says](https://www.gov.uk/government/news/what-the-autumn-budget-2026-means-for-your-energy-bills) it saves households an average of £45 a year. In our data, 5% VAT would add £50 a year to the average household's electricity bill at October rates and £59 at January rates. Because both caps carry no VAT on electricity, the zero rate lowers the October-to-January change itself by £9 a year for the average household (£8 at typical use); the figures in this post already include it.
 
-The payment is made once, while the changes above are annual rates. Table 5 and Figure 8 therefore set the payment against the change over January to March, the three months the January cap covers. We approximate that change by multiplying each household's annual change for each fuel by the share of a year's use in January to March (29.3% for electricity and 42.5% for gas); this applies the same share to standing charges, which accrue evenly through the year. For the average household in Great Britain, bills change by +£152 over January to March and the payment averages £69, 46% of that change. For a typical household in England that receives it, £100 is 60% of the +£167 change over January to March, against 23% of the +£443 annual-rate change.
+The payment is made once, while the changes above are annual rates. Table 5 and Figure 8 set the payment against the change over January to March, the three months the January cap covers, for households in England, where the payment applies; Table 5 also gives the annual-rate change. We approximate that change by multiplying each household's annual change for each fuel by the share of a year's use in January to March (29.3% for electricity and 42.5% for gas); this applies the same share to standing charges, which accrue evenly through the year. For the average household in England, bills change by +£152 over January to March and the payment averages £81, 53% of that change (19% of the +£416 annual-rate change). For a typical household in England that receives it, £100 is 60% of the +£167 change over January to March, against 23% of the +£443 annual-rate change.
 
-**Table 5: Change in the average household energy bill by income decile, and the Household Energy Payment, Great Britain (£)**
+**Table 5: Change in the average household energy bill by income decile, and the Household Energy Payment, England (£)**
 
 | Income decile | Change in bill, annual rate | Change over January to March | Household Energy Payment | Change over January to March less the payment |
 | ------------- | --------------------------: | ---------------------------: | -----------------------: | --------------------------------------------: |
-| 1 (lowest) | +£374 | +£136 | £71 | +£65 |
-| 2 | +£385 | +£141 | £78 | +£63 |
-| 3 | +£377 | +£138 | £75 | +£63 |
-| 4 | +£398 | +£145 | £78 | +£67 |
-| 5 | +£403 | +£148 | £73 | +£76 |
-| 6 | +£397 | +£145 | £75 | +£70 |
-| 7 | +£421 | +£155 | £67 | +£88 |
-| 8 | +£415 | +£151 | £66 | +£85 |
-| 9 | +£458 | +£167 | £62 | +£106 |
-| 10 (highest) | +£523 | +£191 | £49 | +£142 |
-| All | +£415 | +£152 | £69 | +£82 |
+| 1 (lowest) | +£386 | +£141 | £86 | +£55 |
+| 2 | +£385 | +£141 | £91 | +£49 |
+| 3 | +£382 | +£140 | £89 | +£50 |
+| 4 | +£398 | +£145 | £91 | +£54 |
+| 5 | +£406 | +£149 | £84 | +£65 |
+| 6 | +£398 | +£146 | £87 | +£59 |
+| 7 | +£418 | +£153 | £77 | +£76 |
+| 8 | +£411 | +£150 | £78 | +£71 |
+| 9 | +£450 | +£164 | £70 | +£94 |
+| 10 (highest) | +£522 | +£191 | £54 | +£137 |
+| All | +£416 | +£152 | £81 | +£72 |
 
-The payment column averages the £100 over all households in each decile, including those in Scotland, Wales and households in England in bands E and above, which do not receive it.
+The table covers households in England only. The payment column averages the £100 over all households in England in each decile, including those in bands E and above, which do not receive it. The Welsh and Scottish payments described below are not modelled.
 
 ```chart
 {
   "type": "bar",
-  "title": "Figure 8: Change in the average household energy bill over January to March 2027 by income decile, before and after the Household Energy Payment, Great Britain",
-  "subtitle": "From Ofgem's October to December 2026 rates to its January to March 2027 rates, over the three months; less the one-off £100 Household Energy Payment (England, council tax bands A to D), averaged over all households",
+  "title": "Figure 8: Change in the average household energy bill over January to March 2027 by income decile, before and after the Household Energy Payment, England",
+  "subtitle": "From Ofgem's October to December 2026 rates to its January to March 2027 rates, over the three months; less the one-off £100 Household Energy Payment (England, council tax bands A to D), averaged over all households in England",
   "xKey": "decile",
   "series": [
     { "key": "q1", "name": "Change over January to March", "color": "quinary" },
     { "key": "q1_net_hep", "name": "Less the payment", "color": "primary" }
   ],
   "data": [
-    { "decile": "1", "q1": 136.0, "q1_net_hep": 65.0 },
-    { "decile": "2", "q1": 141.0, "q1_net_hep": 63.0 },
-    { "decile": "3", "q1": 138.0, "q1_net_hep": 63.0 },
-    { "decile": "4", "q1": 145.0, "q1_net_hep": 67.0 },
-    { "decile": "5", "q1": 148.0, "q1_net_hep": 76.0 },
-    { "decile": "6", "q1": 145.0, "q1_net_hep": 70.0 },
-    { "decile": "7", "q1": 155.0, "q1_net_hep": 88.0 },
-    { "decile": "8", "q1": 151.0, "q1_net_hep": 85.0 },
-    { "decile": "9", "q1": 167.0, "q1_net_hep": 106.0 },
-    { "decile": "10", "q1": 191.0, "q1_net_hep": 142.0 }
+    { "decile": "1", "q1": 141.0, "q1_net_hep": 55.0 },
+    { "decile": "2", "q1": 141.0, "q1_net_hep": 49.0 },
+    { "decile": "3", "q1": 140.0, "q1_net_hep": 50.0 },
+    { "decile": "4", "q1": 145.0, "q1_net_hep": 54.0 },
+    { "decile": "5", "q1": 149.0, "q1_net_hep": 65.0 },
+    { "decile": "6", "q1": 146.0, "q1_net_hep": 59.0 },
+    { "decile": "7", "q1": 153.0, "q1_net_hep": 76.0 },
+    { "decile": "8", "q1": 150.0, "q1_net_hep": 71.0 },
+    { "decile": "9", "q1": 164.0, "q1_net_hep": 94.0 },
+    { "decile": "10", "q1": 191.0, "q1_net_hep": 137.0 }
   ],
   "yLabel": "Change in average bill over January to March (£)",
   "format": { "decimals": 0, "prefix": "£", "signed": true },
@@ -328,7 +328,7 @@ The payment column averages the £100 over all households in each decile, includ
 
 We estimate that 19.7 million households receive the payment, 81% of households in England, at a cost of £1.97 billion. The Budget gives £2.6 billion, "supporting up to 20 million households"; that sum also funds £100 million for local authorities and the share that Scotland, Wales and Northern Ireland receive through the Barnett formula. Our [analysis of the Budget's energy bill measures](https://policyengine.org/uk/research/budget-2026-energy-bills) puts the payments in England at £2.10 billion, of which our estimate is 94%.
 
-The Welsh Government [has said](https://www.gov.wales/written-statement-welsh-government-response-uk-autumn-budget-2026) it will make a £100 cost-of-living payment to households in council tax bands A to D, and the Scottish Government [has said](https://www.gov.scot/news/uk-budget-delivers-real-cut-to-scotlands-funding/) that households in Scotland will benefit from a one-time £100 payment, without saying which households. We model neither, so the figures below cover England only.
+The Welsh Government [has said](https://www.gov.wales/written-statement-welsh-government-response-uk-autumn-budget-2026) it will make a £100 cost-of-living payment to households in council tax bands A to D, and the Scottish Government [has said](https://www.gov.scot/news/uk-budget-delivers-real-cut-to-scotlands-funding/) that households in Scotland will receive a one-time £100 payment, without saying which households. We model neither, so the figures below cover England only.
 
 Figure 9 shows the share of households in each income decile that receive the payment. In the lowest income decile, 86% of households in England receive it and 14% (0.4 million) do not, because they live in a home in council tax band E or above. In the highest decile, 54% of households in England receive it.
 
@@ -359,7 +359,7 @@ Figure 9 shows the share of households in each income decile that receive the pa
 }
 ```
 
-The model pays every household in a home in bands A to D in England. The Government [says](https://www.gov.uk/government/news/what-the-autumn-budget-2026-means-for-your-energy-bills) that households where the householder is not responsible for paying council tax are not eligible; our data cannot identify them, so we overstate recipients slightly. We also leave out the £100 million the Budget gives local authorities for further targeted support to households hit hard by rising energy bills, some of them in bands above A to D.
+The model pays every household in a home in bands A to D in England. The Government [says](https://www.gov.uk/government/news/what-the-autumn-budget-2026-means-for-your-energy-bills) that households where the householder is not responsible for paying council tax are not eligible; our data cannot identify them, so we overstate the number of recipients by an amount we cannot estimate. We also leave out the £100 million the Budget gives local authorities for further targeted support.
 
 ## Ofgem's cap against the forecast
 
