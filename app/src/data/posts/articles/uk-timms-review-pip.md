@@ -52,7 +52,6 @@ Applied to every award, the average fall in net income is largest in the lowest 
 {
   "type": "bar",
   "title": "Figure 1: Change in household net income by income decile, PIP daily living as the route to the UC health element, no protection, static, 2029-30",
-  "subtitle": "Decile 1 has the lowest incomes. Averaged over all households in each decile",
   "xKey": "decile",
   "series": [
     {
