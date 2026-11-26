@@ -42,7 +42,7 @@ In all three, awards with a claimant on PIP daily living but no element gain it 
 | Change in absolute poverty before housing costs               | +148,000 (+0.2pp) | −52,000 (−0.1pp) |          −75,000 (−0.1pp) |
 | Change in absolute poverty after housing costs                | +113,000 (+0.2pp) |          −18,000 |          −53,000 (−0.1pp) |
 
-[PolicyEngine UK](https://www.policyengine.org/uk/model) 2.179.2, [Microcosm build b891aa69](https://www.policyengine.org/uk/model/data) (policyengine 6.20.3), UK. Static: no change in behaviour, claims or take-up. The benefit cap row is the rise in benefit cap reductions on awards that lose their exemption with the element.
+[PolicyEngine UK](https://www.policyengine.org/uk/model) 2.179.2 (policyengine 6.20.3), UK. Static: no change in behaviour, claims or take-up. The benefit cap row is the rise in benefit cap reductions on awards that lose their exemption with the element.
 
 Applied to every award, 636,000 of the 703,000 claimants who lose the element receive no PIP at all, and 67,000 receive only the mobility component. Most are single people without children (513,000), and 270,000 are aged 50 or over. About 45,000 families would become subject to the benefit cap, and absolute child poverty would rise by 8,000 children before housing costs (0.1 percentage points) and 39,000 after housing costs (0.3 percentage points). In every version, about 6,000 of the families gaining the element would become entitled to UC for the first time.
 
