@@ -1,8 +1,8 @@
 On 13 January 1913, the first people insured under the [National Insurance Act 1911](https://www.legislation.gov.uk/ukpga/Geo5/1-2/55/pdfs/ukpga_19110055_en.pdf) became [entitled to sickness benefit](https://api.parliament.uk/historic-hansard/commons/1913/jan/07/sick-and-maternity-benefit): 10 shillings a week for men and 7 shillings and 6 pence for women. On the definition we set out below, Great Britain has had 16 national benefits for people who are sick or disabled since then. Six are open to new claims in 2026: Employment and Support Allowance (ESA), Industrial Injuries Disablement Benefit, Attendance Allowance, Disability Living Allowance (DLA, now for children only), the Personal Independence Payment (PIP) and Statutory Sick Pay. Universal Credit (UC) also pays a health element to claimants found to have limited capability for work and work-related activity. This post sets out when each benefit started and ended, and how spending, caseloads and rates have changed.
 
 - **Benefits open to new claims:** one in 1913, seven from 1976 to 1991, eight from 1992 to 1994, and six in 2026.
-- **Spending:** the benefits in Figures 2 and 3 cost £77.9 billion in 2025-26, 2.54% of GDP: 1.47% on the extra-costs benefits, 1.04% on out-of-work sickness benefits including UC for people with health conditions, and 0.02% on industrial injuries benefits.
-- **Largest caseloads in 2025-26:** 3.88 million people received PIP in England and Wales, and 3.14 million UC awards included health-related support.
+- **Spending:** the benefits in Figures 2 and 3 cost £77.9 billion in 2025-26, 2.54% of GDP (Great Britain, with England and Wales only for five benefits from 2020-21, and with UC included from 2019-20): 1.47% on the extra-costs benefits, 1.04% on out-of-work sickness benefits including UC for people with health conditions, and 0.02% on industrial injuries benefits.
+- **Largest caseloads in 2025-26:** 3.88 million people received PIP in England and Wales, and DWP counted 3.14 million UC awards in which someone had limited capability for work, with or without work-related activity, or was waiting for an assessment.
 - **2026 changes:** under the Universal Credit Act 2025, new UC claims from 6 April 2026 receive a health element of £217.26 a month, against £429.80 for claims that already had it and for people who meet new severe conditions criteria or are terminally ill. The Act also sets the standard allowance at least 2.3% above its inflation-only level in 2026-27.
 - **Reviews in November 2026:** the Milburn review of young people not in education, employment or training (NEET) proposes replacing the UC health element and PIP for people under 25 with a Youth Allowance, an Additional Cost Allowance and other support, without setting their amounts. The Timms review sets out changes to PIP.
 
@@ -1026,7 +1026,7 @@ The Non-contributory Invalidity Pension, for people unable to work who had not p
 
 ## Employers and severe disablement, 1983 to 1986
 
-From 6 April 1983, the [Social Security and Housing Benefits Act 1982](https://www.legislation.gov.uk/ukpga/1982/24/enacted) required employers to pay Statutory Sick Pay for the first eight weeks of sickness, at one of three rates from £25 to £37 a week depending on earnings, and abolished injury benefit ([commencement order](https://www.legislation.gov.uk/uksi/1982/893/made)). The [Social Security Act 1985](https://www.legislation.gov.uk/ukpga/1985/53/pdfs/ukpga_19850053_en.pdf) extended Statutory Sick Pay to 28 weeks from April 1986. Severe Disablement Allowance replaced both non-contributory invalidity pensions on [29 November 1984](https://api.parliament.uk/historic-hansard/written-answers/1992/dec/03/invalidity-pension).
+From 6 April 1983, the [Social Security and Housing Benefits Act 1982](https://www.legislation.gov.uk/ukpga/1982/24/enacted) required employers to pay Statutory Sick Pay for up to eight weeks' worth in any period of sickness or tax year, and abolished injury benefit ([commencement order](https://www.legislation.gov.uk/uksi/1982/893/made)). The Act set three rates from £25 to £37 a week depending on earnings; the Statutory Sick Pay Up-rating Order 1982 raised them to £27.20, £33.75 and £40.25 before the scheme began ([House of Lords debate](https://api.parliament.uk/historic-hansard/lords/1983/jan/25/statutory-sick-pay-up-rating-order-1982)). The [Social Security Act 1985](https://www.legislation.gov.uk/ukpga/1985/53/pdfs/ukpga_19850053_en.pdf) extended Statutory Sick Pay to 28 weeks from April 1986. Severe Disablement Allowance replaced both non-contributory invalidity pensions on [29 November 1984](https://api.parliament.uk/historic-hansard/written-answers/1992/dec/03/invalidity-pension).
 
 ## DLA and Incapacity Benefit, 1992 to 2001
 
@@ -1036,7 +1036,7 @@ On 13 April 1995, Incapacity Benefit replaced sickness benefit and Invalidity Be
 
 ## ESA, Universal Credit and PIP, 2008 to 2013
 
-ESA replaced Incapacity Benefit for new claims on 27 October 2008, under the [Welfare Reform Act 2007](https://www.legislation.gov.uk/ukpga/2007/5/contents) ([commencement order](https://www.legislation.gov.uk/uksi/2008/787/made)). Its Work Capability Assessment placed claimants found to have limited capability for work in a work-related activity group, and those also found to have limited capability for work-related activity in a support group, each with its own addition to the basic allowance. DWP began reassessing existing Incapacity Benefit and Severe Disablement Allowance claimants for ESA in March 2011, and converted claims to contributory ESA [largely between January 2011 and October 2014](https://www.gov.uk/government/statistics/esa-underpayments-progress-on-checking-june-2021/june-2021-esa-underpayments-numbers-affected-expenditure-and-final-update-on-checking). From 1 May 2012, the [Welfare Reform Act 2012](https://www.legislation.gov.uk/ukpga/2012/5/section/51) limited contributory ESA outside the support group to 365 days ([commencement order](https://www.legislation.gov.uk/uksi/2012/863/made)).
+ESA replaced Incapacity Benefit for new claims on 27 October 2008, under the [Welfare Reform Act 2007](https://www.legislation.gov.uk/ukpga/2007/5/contents) ([commencement order](https://www.legislation.gov.uk/uksi/2008/787/made)). Its Work Capability Assessment placed claimants found to have limited capability for work in a work-related activity group, and those also found to have limited capability for work-related activity in a support group, each with its own addition to the basic allowance. DWP reassessed existing Incapacity Benefit and Severe Disablement Allowance claimants for ESA from 2011, and most had moved [by 2014](https://www.gov.uk/government/statistics/esa-underpayments-progress-on-checking-june-2021/june-2021-esa-underpayments-numbers-affected-expenditure-and-final-update-on-checking). From 1 May 2012, the [Welfare Reform Act 2012](https://www.legislation.gov.uk/ukpga/2012/5/section/51) limited contributory ESA outside the support group to 365 days ([commencement order](https://www.legislation.gov.uk/uksi/2012/863/made)).
 
 UC began on [29 April 2013](https://www.legislation.gov.uk/uksi/2013/983/made). It applies the same assessment and adds a limited capability for work element (£123.62 a month in 2013) or a limited capability for work and work-related activity element (£303.66) to the standard allowance ([UC Regulations 2013](https://www.legislation.gov.uk/uksi/2013/376/made)). PIP replaced DLA for new claims from people aged 16 to State Pension age: in some postcodes from [8 April 2013](https://www.legislation.gov.uk/uksi/2013/358/made), and everywhere from [10 June 2013](https://www.legislation.gov.uk/uksi/2013/1250/made). Children under 16 [still claim DLA](https://www.gov.uk/dla-disability-living-allowance-benefit) in England and Wales.
 
@@ -1063,7 +1063,7 @@ DWP's [benefit expenditure and caseload tables](https://www.gov.uk/government/pu
 {
   "type": "bar",
   "title": "Figure 2: Spending on sickness and disability benefits as a share of GDP, 1948-49 to 2025-26",
-  "subtitle": "Great Britain; England and Wales for AA, DLA, PIP, SDA and IIDB from 2020-21",
+  "subtitle": "Great Britain. Series breaks: industrial injuries shown from 1970-71, UC from 2019-20, Scotland left out for AA, DLA, PIP, SDA and IIDB from 2020-21",
   "xKey": "year",
   "series": [
     {
@@ -1578,7 +1578,7 @@ DWP's [benefit expenditure and caseload tables](https://www.gov.uk/government/pu
 {
   "type": "bar",
   "title": "Figure 3: Spending on sickness and disability benefits in cash terms, 1948-49 to 2025-26",
-  "subtitle": "Not adjusted for inflation. Great Britain; England and Wales for AA, DLA, PIP, SDA and IIDB from 2020-21",
+  "subtitle": "Not adjusted for inflation. Great Britain. Series breaks: industrial injuries shown from 1970-71, UC from 2019-20, Scotland left out for AA, DLA, PIP, SDA and IIDB from 2020-21",
   "xKey": "year",
   "series": [
     {
@@ -1610,482 +1610,481 @@ DWP's [benefit expenditure and caseload tables](https://www.gov.uk/government/pu
   "data": [
     {
       "year": "1948-49",
-      "incapacity": 44
+      "incapacity": 0.043
     },
     {
       "year": "1949-50",
-      "incapacity": 66
+      "incapacity": 0.066
     },
     {
       "year": "1950-51",
-      "incapacity": 69
+      "incapacity": 0.069
     },
     {
       "year": "1951-52",
-      "incapacity": 63
+      "incapacity": 0.063
     },
     {
       "year": "1952-53",
-      "incapacity": 79
+      "incapacity": 0.079
     },
     {
       "year": "1953-54",
-      "incapacity": 85
+      "incapacity": 0.085
     },
     {
       "year": "1954-55",
-      "incapacity": 84
+      "incapacity": 0.085
     },
     {
       "year": "1955-56",
-      "incapacity": 100
+      "incapacity": 0.1
     },
     {
       "year": "1956-57",
-      "incapacity": 97
+      "incapacity": 0.097
     },
     {
       "year": "1957-58",
-      "incapacity": 111
+      "incapacity": 0.111
     },
     {
       "year": "1958-59",
-      "incapacity": 134
+      "incapacity": 0.134
     },
     {
       "year": "1959-60",
-      "incapacity": 131
+      "incapacity": 0.131
     },
     {
       "year": "1960-61",
-      "incapacity": 135
+      "incapacity": 0.135
     },
     {
       "year": "1961-62",
-      "incapacity": 155
+      "incapacity": 0.155
     },
     {
       "year": "1962-63",
-      "incapacity": 162
+      "incapacity": 0.162
     },
     {
       "year": "1963-64",
-      "incapacity": 191
+      "incapacity": 0.191
     },
     {
       "year": "1964-65",
-      "incapacity": 201
+      "incapacity": 0.201
     },
     {
       "year": "1965-66",
-      "incapacity": 248
+      "incapacity": 0.248
     },
     {
       "year": "1966-67",
-      "incapacity": 262
+      "incapacity": 0.262
     },
     {
       "year": "1967-68",
-      "incapacity": 323
+      "incapacity": 0.323
     },
     {
       "year": "1968-69",
-      "incapacity": 348
+      "incapacity": 0.348
     },
     {
       "year": "1969-70",
-      "incapacity": 383
+      "incapacity": 0.383
     },
     {
       "year": "1970-71",
-      "incapacity": 374,
-      "industrial": 77
+      "incapacity": 0.374,
+      "industrial": 0.077
     },
     {
       "year": "1971-72",
-      "incapacity": 414,
-      "extra_costs": 6,
-      "industrial": 84
+      "incapacity": 0.414,
+      "extra_costs": 0.006,
+      "industrial": 0.084
     },
     {
       "year": "1972-73",
-      "incapacity": 487,
-      "extra_costs": 23,
-      "industrial": 93
+      "incapacity": 0.487,
+      "extra_costs": 0.023,
+      "industrial": 0.093
     },
     {
       "year": "1973-74",
-      "incapacity": 548,
-      "extra_costs": 36,
-      "industrial": 104
+      "incapacity": 0.548,
+      "extra_costs": 0.036,
+      "industrial": 0.104
     },
     {
       "year": "1974-75",
-      "incapacity": 665,
-      "extra_costs": 62,
-      "industrial": 131
+      "incapacity": 0.665,
+      "extra_costs": 0.062,
+      "industrial": 0.131
     },
     {
       "year": "1975-76",
-      "incapacity": 885,
-      "extra_costs": 96,
-      "industrial": 171
+      "incapacity": 0.885,
+      "extra_costs": 0.096,
+      "industrial": 0.171
     },
     {
       "year": "1976-77",
-      "incapacity": 1093,
-      "extra_costs": 136,
-      "industrial": 197
+      "incapacity": 1.093,
+      "extra_costs": 0.136,
+      "industrial": 0.197
     },
     {
       "year": "1977-78",
-      "incapacity": 1331,
-      "extra_costs": 186,
-      "industrial": 225
+      "incapacity": 1.331,
+      "extra_costs": 0.186,
+      "industrial": 0.225
     },
     {
       "year": "1978-79",
-      "incapacity": 1605,
-      "extra_costs": 215,
-      "industrial": 253
+      "incapacity": 1.605,
+      "extra_costs": 0.215,
+      "industrial": 0.253
     },
     {
       "year": "1979-80",
-      "incapacity": 1735,
-      "extra_costs": 280,
-      "industrial": 285
+      "incapacity": 1.735,
+      "extra_costs": 0.28,
+      "industrial": 0.285
     },
     {
       "year": "1980-81",
-      "incapacity": 1912,
-      "extra_costs": 385,
-      "industrial": 329
+      "incapacity": 1.912,
+      "extra_costs": 0.385,
+      "industrial": 0.329
     },
     {
       "year": "1981-82",
-      "incapacity": 2180,
-      "extra_costs": 503,
-      "industrial": 367
+      "incapacity": 2.18,
+      "extra_costs": 0.503,
+      "industrial": 0.367
     },
     {
       "year": "1982-83",
-      "incapacity": 2301,
-      "extra_costs": 639,
-      "industrial": 399
+      "incapacity": 2.301,
+      "extra_costs": 0.639,
+      "industrial": 0.399
     },
     {
       "year": "1983-84",
-      "incapacity": 2319,
-      "extra_costs": 799,
-      "industrial": 428,
-      "ssp": 500
+      "incapacity": 2.319,
+      "extra_costs": 0.799,
+      "industrial": 0.428,
+      "ssp": 0.5
     },
     {
       "year": "1984-85",
-      "incapacity": 2657,
-      "extra_costs": 932,
-      "industrial": 441,
-      "ssp": 508
+      "incapacity": 2.657,
+      "extra_costs": 0.932,
+      "industrial": 0.441,
+      "ssp": 0.508
     },
     {
       "year": "1985-86",
-      "incapacity": 2891,
-      "extra_costs": 1108,
-      "industrial": 470,
-      "ssp": 545
+      "incapacity": 2.891,
+      "extra_costs": 1.108,
+      "industrial": 0.47,
+      "ssp": 0.545
     },
     {
       "year": "1986-87",
-      "incapacity": 3138,
-      "extra_costs": 1293,
-      "industrial": 505,
-      "ssp": 757
+      "incapacity": 3.138,
+      "extra_costs": 1.293,
+      "industrial": 0.505,
+      "ssp": 0.757
     },
     {
       "year": "1987-88",
-      "incapacity": 3457,
-      "extra_costs": 1494,
-      "industrial": 514,
-      "ssp": 840
+      "incapacity": 3.457,
+      "extra_costs": 1.494,
+      "industrial": 0.514,
+      "ssp": 0.84
     },
     {
       "year": "1988-89",
-      "incapacity": 3868,
-      "extra_costs": 1679,
-      "industrial": 514,
-      "ssp": 898
+      "incapacity": 3.868,
+      "extra_costs": 1.679,
+      "industrial": 0.514,
+      "ssp": 0.898
     },
     {
       "year": "1989-90",
-      "incapacity": 4386,
-      "extra_costs": 1928,
-      "industrial": 533,
-      "ssp": 949
+      "incapacity": 4.386,
+      "extra_costs": 1.928,
+      "industrial": 0.533,
+      "ssp": 0.949
     },
     {
       "year": "1990-91",
-      "incapacity": 5076,
-      "extra_costs": 2265,
-      "industrial": 584,
-      "ssp": 941
+      "incapacity": 5.076,
+      "extra_costs": 2.265,
+      "industrial": 0.584,
+      "ssp": 0.941
     },
     {
       "year": "1991-92",
-      "incapacity": 6355,
-      "extra_costs": 2768,
-      "industrial": 655,
-      "ssp": 781
+      "incapacity": 6.355,
+      "extra_costs": 2.768,
+      "industrial": 0.655,
+      "ssp": 0.781
     },
     {
       "year": "1992-93",
-      "incapacity": 7214,
-      "extra_costs": 3595,
-      "industrial": 668,
-      "ssp": 688
+      "incapacity": 7.214,
+      "extra_costs": 3.595,
+      "industrial": 0.668,
+      "ssp": 0.688
     },
     {
       "year": "1993-94",
-      "incapacity": 8136,
-      "extra_costs": 4568,
-      "industrial": 686,
-      "ssp": 659
+      "incapacity": 8.136,
+      "extra_costs": 4.568,
+      "industrial": 0.686,
+      "ssp": 0.659
     },
     {
       "year": "1994-95",
-      "incapacity": 8823,
-      "extra_costs": 5087,
-      "industrial": 707,
-      "ssp": 80
+      "incapacity": 8.823,
+      "extra_costs": 5.087,
+      "industrial": 0.707,
+      "ssp": 0.08
     },
     {
       "year": "1995-96",
-      "incapacity": 8726,
-      "extra_costs": 5996,
-      "industrial": 731,
-      "ssp": 36
+      "incapacity": 8.726,
+      "extra_costs": 5.996,
+      "industrial": 0.731,
+      "ssp": 0.036
     },
     {
       "year": "1996-97",
-      "incapacity": 8567,
-      "extra_costs": 6891,
-      "industrial": 743,
-      "ssp": 98
+      "incapacity": 8.567,
+      "extra_costs": 6.891,
+      "industrial": 0.743,
+      "ssp": 0.098
     },
     {
       "year": "1997-98",
-      "incapacity": 8411,
-      "extra_costs": 7475,
-      "industrial": 747,
-      "ssp": 26
+      "incapacity": 8.411,
+      "extra_costs": 7.475,
+      "industrial": 0.747,
+      "ssp": 0.026
     },
     {
       "year": "1998-99",
-      "incapacity": 8235,
-      "extra_costs": 7996,
-      "industrial": 761,
-      "ssp": 27
+      "incapacity": 8.235,
+      "extra_costs": 7.996,
+      "industrial": 0.761,
+      "ssp": 0.027
     },
     {
       "year": "1999-00",
-      "incapacity": 7796,
-      "extra_costs": 8483,
-      "industrial": 753,
-      "ssp": 66
+      "incapacity": 7.796,
+      "extra_costs": 8.483,
+      "industrial": 0.753,
+      "ssp": 0.066
     },
     {
       "year": "2000-01",
-      "incapacity": 7780,
-      "extra_costs": 8999,
-      "industrial": 759,
-      "ssp": 67
+      "incapacity": 7.78,
+      "extra_costs": 8.999,
+      "industrial": 0.759,
+      "ssp": 0.067
     },
     {
       "year": "2001-02",
-      "incapacity": 7789,
-      "extra_costs": 9705,
-      "industrial": 778,
-      "ssp": 69
+      "incapacity": 7.789,
+      "extra_costs": 9.705,
+      "industrial": 0.778,
+      "ssp": 0.069
     },
     {
       "year": "2002-03",
-      "incapacity": 7716,
-      "extra_costs": 10303,
-      "industrial": 783,
-      "ssp": 70
+      "incapacity": 7.716,
+      "extra_costs": 10.303,
+      "industrial": 0.783,
+      "ssp": 0.07
     },
     {
       "year": "2003-04",
-      "incapacity": 7660,
-      "extra_costs": 11039,
-      "industrial": 783,
-      "ssp": 80
+      "incapacity": 7.66,
+      "extra_costs": 11.039,
+      "industrial": 0.783,
+      "ssp": 0.08
     },
     {
       "year": "2004-05",
-      "incapacity": 7580,
-      "extra_costs": 11753,
-      "industrial": 795,
-      "ssp": 43
+      "incapacity": 7.58,
+      "extra_costs": 11.753,
+      "industrial": 0.795,
+      "ssp": 0.043
     },
     {
       "year": "2005-06",
-      "incapacity": 7550,
-      "extra_costs": 12542,
-      "industrial": 788,
-      "ssp": 41
+      "incapacity": 7.55,
+      "extra_costs": 12.542,
+      "industrial": 0.788,
+      "ssp": 0.041
     },
     {
       "year": "2006-07",
-      "incapacity": 7470,
-      "extra_costs": 13305,
-      "industrial": 790,
-      "ssp": 45
+      "incapacity": 7.47,
+      "extra_costs": 13.305,
+      "industrial": 0.79,
+      "ssp": 0.045
     },
     {
       "year": "2007-08",
-      "incapacity": 7555,
-      "extra_costs": 14311,
-      "industrial": 795,
-      "ssp": 43
+      "incapacity": 7.555,
+      "extra_costs": 14.311,
+      "industrial": 0.795,
+      "ssp": 0.043
     },
     {
       "year": "2008-09",
-      "incapacity": 7530,
-      "extra_costs": 15260,
-      "industrial": 816,
-      "ssp": 46
+      "incapacity": 7.53,
+      "extra_costs": 15.26,
+      "industrial": 0.816,
+      "ssp": 0.046
     },
     {
       "year": "2009-10",
-      "incapacity": 8282,
-      "extra_costs": 16565,
-      "industrial": 844,
-      "ssp": 47
+      "incapacity": 8.282,
+      "extra_costs": 16.565,
+      "industrial": 0.844,
+      "ssp": 0.047
     },
     {
       "year": "2010-11",
-      "incapacity": 8676,
-      "extra_costs": 17104,
-      "industrial": 888,
-      "ssp": 44
+      "incapacity": 8.676,
+      "extra_costs": 17.104,
+      "industrial": 0.888,
+      "ssp": 0.044
     },
     {
       "year": "2011-12",
-      "incapacity": 9370,
-      "extra_costs": 17905,
-      "industrial": 888,
-      "ssp": 47
+      "incapacity": 9.37,
+      "extra_costs": 17.905,
+      "industrial": 0.888,
+      "ssp": 0.047
     },
     {
       "year": "2012-13",
-      "incapacity": 10942,
-      "extra_costs": 18906,
-      "industrial": 905,
-      "ssp": 56
+      "incapacity": 10.942,
+      "extra_costs": 18.906,
+      "industrial": 0.905,
+      "ssp": 0.056
     },
     {
       "year": "2013-14",
-      "incapacity": 12483,
-      "extra_costs": 19283,
-      "industrial": 901,
-      "ssp": 50
+      "incapacity": 12.483,
+      "extra_costs": 19.283,
+      "industrial": 0.901,
+      "ssp": 0.05
     },
     {
       "year": "2014-15",
-      "incapacity": 13807,
-      "extra_costs": 20785,
-      "industrial": 908,
-      "ssp": 5
+      "incapacity": 13.807,
+      "extra_costs": 20.785,
+      "industrial": 0.908,
+      "ssp": 0.005
     },
     {
       "year": "2015-16",
-      "incapacity": 14803,
-      "extra_costs": 21727,
-      "industrial": 892,
-      "ssp": 0
+      "incapacity": 14.803,
+      "extra_costs": 21.727,
+      "industrial": 0.892,
+      "ssp": 0.0
     },
     {
       "year": "2016-17",
-      "incapacity": 15080,
-      "extra_costs": 22157,
-      "industrial": 861,
-      "ssp": 0
+      "incapacity": 15.08,
+      "extra_costs": 22.157,
+      "industrial": 0.861,
+      "ssp": 0.0
     },
     {
       "year": "2017-18",
-      "incapacity": 15481,
-      "extra_costs": 23546,
-      "industrial": 840,
-      "ssp": 0
+      "incapacity": 15.481,
+      "extra_costs": 23.546,
+      "industrial": 0.84,
+      "ssp": 0.0
     },
     {
       "year": "2018-19",
-      "incapacity": 15195,
-      "extra_costs": 24427,
-      "industrial": 838,
-      "ssp": 0
+      "incapacity": 15.195,
+      "extra_costs": 24.427,
+      "industrial": 0.838,
+      "ssp": 0.0
     },
     {
       "year": "2019-20",
-      "incapacity": 13945,
-      "uc_health": 3211,
-      "extra_costs": 25644,
-      "industrial": 831,
-      "ssp": 0
+      "incapacity": 13.945,
+      "uc_health": 3.211,
+      "extra_costs": 25.644,
+      "industrial": 0.831,
+      "ssp": 0.0
     },
     {
       "year": "2020-21",
-      "incapacity": 13461,
-      "uc_health": 5716,
-      "extra_costs": 24841,
-      "industrial": 723,
-      "ssp": 50
+      "incapacity": 13.461,
+      "uc_health": 5.716,
+      "extra_costs": 24.841,
+      "industrial": 0.723,
+      "ssp": 0.05
     },
     {
       "year": "2021-22",
-      "incapacity": 12751,
-      "uc_health": 8036,
-      "extra_costs": 26291,
-      "industrial": 705,
-      "ssp": 66
+      "incapacity": 12.751,
+      "uc_health": 8.036,
+      "extra_costs": 26.291,
+      "industrial": 0.705,
+      "ssp": 0.066
     },
     {
       "year": "2022-23",
-      "incapacity": 12158,
-      "uc_health": 9498,
-      "extra_costs": 29320,
-      "industrial": 695
+      "incapacity": 12.158,
+      "uc_health": 9.498,
+      "extra_costs": 29.32,
+      "industrial": 0.695
     },
     {
       "year": "2023-24",
-      "incapacity": 12413,
-      "uc_health": 12954,
-      "extra_costs": 35364,
-      "industrial": 736
+      "incapacity": 12.413,
+      "uc_health": 12.954,
+      "extra_costs": 35.364,
+      "industrial": 0.736
     },
     {
       "year": "2024-25",
-      "incapacity": 12392,
-      "uc_health": 17244,
-      "extra_costs": 41424,
-      "industrial": 752
+      "incapacity": 12.392,
+      "uc_health": 17.244,
+      "extra_costs": 41.424,
+      "industrial": 0.752
     },
     {
       "year": "2025-26",
-      "incapacity": 7150,
-      "uc_health": 24739,
-      "extra_costs": 45251,
-      "industrial": 738
+      "incapacity": 7.15,
+      "uc_health": 24.739,
+      "extra_costs": 45.251,
+      "industrial": 0.738
     }
   ],
   "stacked": true,
   "valueLabels": false,
-  "yLabel": "£ million, cash",
+  "yLabel": "£ billion, cash",
   "format": {
-    "decimals": 0,
+    "decimals": 2,
     "prefix": "£",
-    "suffix": "m",
-    "separator": true
+    "suffix": "bn"
   },
   "source": "DWP benefit expenditure and caseload tables, Autumn Budget 2026, Table 1a"
 }
@@ -2625,11 +2624,11 @@ From 2020-21 the tables leave out Scottish spending on Attendance Allowance, DLA
 }
 ```
 
-DWP counts caseloads as averages over the financial year and warns that they cannot be added across benefits, because some people receive more than one. In 2025-26, 3.88 million people received PIP, 1.76 million Attendance Allowance and 1.37 million DLA in England and Wales. In Great Britain, 964,000 people received ESA, including people who receive National Insurance credits only, and 3.14 million UC awards included health-related support, a count of benefit units that DWP calls experimental. Incapacity Benefit reached 2.51 million people in 2004-05, and ESA 2.38 million in 2016-17; these counts of people cannot be compared directly with the UC count of benefit units. From July 2024, DWP sent people on ESA migration notices to move to UC, and by September 2025 it had [sent them to most people on ESA](https://www.gov.uk/government/publications/completing-the-move-to-universal-credit-completing-the-move-for-households-previously-on-employment-and-support-allowance/completing-the-move-to-universal-credit-completing-the-move-for-households-previously-on-employment-and-support-allowance).
+DWP counts caseloads as averages over the financial year and warns that they cannot be added across benefits, because some people receive more than one. In 2025-26, 3.88 million people received PIP, 1.76 million Attendance Allowance and 1.37 million DLA in England and Wales. In Great Britain, 964,000 people received ESA, including people who receive National Insurance credits only, and DWP counted 3.14 million UC awards in which someone had limited capability for work, with or without work-related activity, or was waiting for an assessment. Not all of these awards include the health element: awards waiting for an assessment, and limited capability for work awards made since April 2017 ([Welfare Reform and Work Act 2016, s. 16](https://www.legislation.gov.uk/ukpga/2016/7/section/16)), do not. DWP counts them as benefit units and calls the figures experimental. Incapacity Benefit reached 2.51 million people in 2004-05, and ESA 2.38 million in 2016-17; these counts of people cannot be compared directly with the UC count of benefit units. From July 2024, DWP sent people on ESA migration notices to move to UC, and by September 2025 it had [sent them to most people on ESA](https://www.gov.uk/government/publications/completing-the-move-to-universal-credit-completing-the-move-for-households-previously-on-employment-and-support-allowance/completing-the-move-to-universal-credit-completing-the-move-for-households-previously-on-employment-and-support-allowance).
 
 ## The main rates over time
 
-Table 2 gives the weekly rate for a single adult without dependants at the introduction of each main out-of-work sickness benefit, and in 2026-27, in cash and at April 2025 prices. For Incapacity Benefit it gives the long-term rate, and for ESA the support group rate, each benefit's highest rate for a single adult. The Retail Prices Index (RPI) is the only price index that covers the whole period; the Consumer Prices Index (CPI) starts in 1988. RPI has risen faster than CPI since 1988, so real changes since then are smaller on CPI. UC and the income-related form of ESA are means-tested; the other benefits in Table 2 depend on National Insurance contributions.
+Table 2 gives the weekly rate for a single adult without dependants at the introduction of each main out-of-work sickness benefit, and in 2026-27, in cash and at April 2025 prices. For Incapacity Benefit it gives the long-term rate without age additions, and for ESA the support group rate without premiums: the main rate of each for a single adult. For 2026-27 it gives the new style ESA rate; income-related ESA pays £97.75 plus a £48.50 support component. Real values are at April 2025 prices, the base year of DWP's Abstract of benefit rate statistics, so the 2026-27 real values are below the cash rates. The Retail Prices Index (RPI) is the only price index that covers the whole period; the Consumer Prices Index (CPI) starts in 1988. RPI has risen faster than CPI since 1988, so rates from before 2025 are lower in April 2025 prices on CPI than on RPI. From the Incapacity Benefit long-term rate in 1995 to the ESA support group rate in 2026-27, the real change is −11% on RPI and +17% on CPI. UC and the income-related form of ESA are means-tested; the other benefits in Table 2 depend on National Insurance contributions.
 
 **Table 2: Weekly rate for a single adult without dependants, at introduction and in 2026-27**
 
@@ -2642,7 +2641,7 @@ Table 2 gives the weekly rate for a single adult without dependants at the intro
 | Incapacity Benefit, long-term rate (April 1995) | 58.85 | 158.78 | 121.21 | [DWP Abstract 2025, Table 26](https://assets.publishing.service.gov.uk/media/697391a9276692606c0137af/data-tables-abstract-of-dwp-benefit-rate-statistics-2025.ods) |
 | ESA support group, aged 25 or over (October 2008) | 89.50 | 165.27 | 143.78 | [ESA Regulations 2008, Schedule 4](https://www.legislation.gov.uk/uksi/2008/794/schedule/4/made) |
 | UC standard allowance and health element, aged 25 or over (April 2013) | 141.97 | 228.75 | 199.31 | [DWP benefit rates, April 2013](https://assets.publishing.service.gov.uk/media/5a7c72e840f0b626628ac231/benefit-rates.csv) |
-| ESA support group, aged 25 or over (2026-27) | 145.90 | 141.53 | 141.69 | [DWP benefit rates 2026-27](https://www.gov.uk/government/publications/benefit-and-pension-rates-2026-to-2027/proposed-benefit-and-pension-rates-2026-to-2027) |
+| ESA support group, new style, aged 25 or over (2026-27) | 145.90 | 141.53 | 141.69 | [DWP benefit rates 2026-27](https://www.gov.uk/government/publications/benefit-and-pension-rates-2026-to-2027/proposed-benefit-and-pension-rates-2026-to-2027) |
 | UC standard allowance and health element, aged 25 or over, claim from before April 2026 (2026-27) | 197.24 | 191.34 | 191.55 | [DWP benefit rates 2026-27](https://www.gov.uk/government/publications/benefit-and-pension-rates-2026-to-2027/proposed-benefit-and-pension-rates-2026-to-2027) |
 | UC standard allowance and health element, aged 25 or over, new claim (2026-27) | 148.19 | 143.76 | 143.91 | [DWP benefit rates 2026-27](https://www.gov.uk/government/publications/benefit-and-pension-rates-2026-to-2027/proposed-benefit-and-pension-rates-2026-to-2027) |
 
@@ -2650,7 +2649,7 @@ DWP's [Abstract of benefit rate statistics 2025](https://www.gov.uk/government/s
 
 ## The Timms and Milburn reviews
 
-On 24 November 2026, DWP published the [final report of the Timms review of PIP](https://www.gov.uk/government/publications/the-timms-review-final-report/final-report-of-the-timms-review-of-personal-independence-payment), co-chaired by Sir Stephen Timms, Sharon Brennan and Dr Clenton Farquharson. The report states that its recommendations do not constitute government policy. It makes 15 recommendations for PIP as it stands, among them fewer award reviews for lifelong or degenerative conditions, a simpler application form, independent advocacy and more face-to-face assessments. It also describes a reformed benefit with an initial gateway, fast-track routes for serious, well-evidenced conditions and for people at the end of life, and an assessment of the impact of a condition that includes an element for extra costs.
+On 24 November 2026, DWP published the [final report of the Timms review of PIP](https://www.gov.uk/government/publications/the-timms-review-final-report/final-report-of-the-timms-review-of-personal-independence-payment), co-chaired by Sir Stephen Timms, Sharon Brennan and Dr Clenton Farquharson. The report states that its recommendations do not constitute government policy. It makes 15 recommendations for PIP as it stands, among them fewer award reviews for lifelong or degenerative conditions, a simpler application form, independent advocacy and more capacity for face-to-face assessments. It also describes a reformed benefit with an initial gateway, fast-track routes for serious, well-evidenced conditions and for people at the end of life, and an assessment of the impact of a condition that includes an element for extra costs.
 
 On 17 November 2026, DWP published [_From a Welfare State to a Working State_](https://www.gov.uk/government/publications/from-a-welfare-state-to-a-working-state-a-new-settlement-for-the-next-generation), Alan Milburn's independent review of the rise in the number of young people who are NEET. For people under 25, the review proposes:
 
@@ -2663,7 +2662,7 @@ The review proposes a phased rollout for new claimants, subject to legislation, 
 
 ## A household example
 
-Take a single 22-year-old with no earnings who claims UC and has been assessed as having limited capability for work and work-related activity. We leave out housing costs, which UC meets through a separate element, and PIP. PolicyEngine UK gives the UC award in 2026-27 for a claim that included the health element before 6 April 2026, for a new claim from that date, and with the health element removed as the Milburn review proposes for people under 25. The review does not set the amounts of its replacement support, so the third row includes none.
+Take a single 22-year-old with no earnings who claims UC and has been assessed as having limited capability for work and work-related activity. We leave out housing costs, which UC meets through a separate element, and PIP. PolicyEngine UK gives the UC award in 2026-27 for a claim that included the health element before 6 April 2026, for a new claim from that date, and with the health element removed as the Milburn review proposes for people under 25. The review does not set the amounts of its replacement support, so the third row includes none; any replacement support the review proposes would add to the amount in that row.
 
 **Table 3: Universal Credit for a single 22-year-old with limited capability for work and work-related activity, no earnings and no housing costs, 2026-27**
 
