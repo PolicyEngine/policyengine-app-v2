@@ -103,16 +103,6 @@ The report's principle that spending stays within the OBR forecast applies to PI
 
 Our caseload is below DWP's count: we estimate 3.8 million recipients in England and Wales in 2029-30, against 4.1 million in DWP's statistics for July 2026, even though our figure is for a later year.
 
-## The report's own figures
-
-The report gives context figures rather than costings:
-
-- Spending on disability benefits for people of working age was about £14.5 billion in 2019-20 and is forecast to exceed £34.6 billion in 2031-32, in 2026-27 prices (p. 51). This covers more than PIP.
-- About 32% of the PIP caseload had an ongoing award in March 2026 (p. 67).
-- Fewer than 20% of working-age recipients are in work (p. 56).
-- Of people receiving the enhanced daily living rate, 24% are in the bottom third of claimants for care needs; of those with no daily living award, 16% are in the top third (p. 55).
-- The sharpest rises in disability benefit receipt have been among people aged 16 to 19, people in their thirties and women (p. 50).
-
 ## How it relates to the Milburn review
 
 A week earlier, Alan Milburn's review of young people and work proposed ending PIP and the UC health element for people under 25 and replacing PIP with three new forms of support. We estimate that ending the two without the replacements would save £4.4 billion in 2029-30 (see our [Milburn briefing](https://www.policyengine.org/uk/research/uk-milburn-review-briefing) and [dashboard](https://www.policyengine.org/uk/milburn-review)). The Timms Review makes no recommendation by age and names the Milburn review twice: among the reviews running alongside it (p. 20), and in saying that joining up the reviews' findings "does not suggest endorsement" (p. 124). Its principles do not differ by age. The government has not yet responded to either review.
