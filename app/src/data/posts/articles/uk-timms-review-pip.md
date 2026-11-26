@@ -6,7 +6,7 @@ The change with the clearest effect on incomes is one the report discusses rathe
 - **Applied to new claims only,** with awards at the earlier, protected rate kept, UC spending would rise by £0.2 billion: 134,000 claimants would lose the element and 227,000 would gain it, and absolute poverty before housing costs would fall by 0.1 percentage points, or 52,000 people.
 - **With every existing award protected,** UC spending would rise by £0.6 billion and absolute poverty before housing costs would fall by 0.1 percentage points, or 75,000 people.
 
-Most of the report's other recommendations cannot be estimated yet; the last section explains why.
+Most of the report's other recommendations cannot be estimated yet; the methodology explains why.
 
 ## What the report recommends
 
@@ -107,10 +107,10 @@ Our caseload is below DWP's count: we estimate 3.8 million recipients in England
 
 A week earlier, Alan Milburn's review of young people and work proposed ending PIP and the UC health element for people under 25 and replacing PIP with three new forms of support. We estimate that ending the two without the replacements would save £4.4 billion in 2029-30 (see our [Milburn briefing](https://www.policyengine.org/uk/research/uk-milburn-review-briefing) and [dashboard](https://www.policyengine.org/uk/milburn-review)). The Timms Review makes no recommendation by age and names the Milburn review twice: among the reviews running alongside it (p. 20), and in saying that joining up the reviews' findings "does not suggest endorsement" (p. 124). Its principles do not differ by age. The government has not yet responded to either review.
 
-## What we can't estimate
-
-Most of the report's recommendations can't be estimated from the survey data PolicyEngine UK uses. The data record whether someone receives PIP, but not review dates, scores for each activity or long hospital stays, so the changes to award reviews, fluctuating conditions and the hospital rule are out of reach. The reformed benefit's fast-track pathways, impact assessment, flexible payments and rebalancing of eligibility have no criteria or amounts yet. When the government responds, we will estimate any changes it sets out that the model can express.
-
 ## Methodology
 
 We modelled the route to the UC health element by rewriting each benefit unit's health element in 2029-30 after PolicyEngine UK applies the UC rebalancing rules, then recalculating UC, household net income and poverty. A claimant passes the route when they are a UC claimant receiving PIP daily living above zero. Counts of people losing or gaining the element cover benefit units whose UC changes, so a family's stored element that changes with no effect on its payments isn't counted. Results cover the UK; for Scotland, the data record Adult Disability Payment as PIP. Every published figure rests on at least three survey households. Page numbers are the report's printed page numbers.
+
+### What we can't estimate
+
+Most of the report's recommendations can't be estimated from the survey data PolicyEngine UK uses. The data record whether someone receives PIP, but not review dates, scores for each activity or long hospital stays, so the changes to award reviews, fluctuating conditions and the hospital rule are out of reach. The reformed benefit's fast-track pathways, impact assessment, flexible payments and rebalancing of eligibility have no criteria or amounts yet. When the government responds, we will estimate any changes it sets out that the model can express.
