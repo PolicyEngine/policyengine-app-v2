@@ -1,10 +1,15 @@
 import { describe, expect, test } from 'vitest';
 import { Household } from '@/models/Household';
 import {
+  US_SINGLE_PARENT_V2_BODY,
+  V2_CODEC_YEAR,
+} from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
+import {
   buildHouseholdVariationAxes,
   getHouseholdVariationIndexForEarnings,
   getHouseholdVariationMaxEarnings,
   HOUSEHOLD_VARIATION_POINT_COUNT,
+  v2EarningsVariationAxes,
 } from '@/utils/householdVariationAxes';
 
 const YEAR = '2026';
@@ -51,5 +56,48 @@ describe('getHouseholdVariationMaxEarnings', () => {
 
   test('given earnings above half the floor then the range reaches twice the earnings', () => {
     expect(getHouseholdVariationMaxEarnings(150_000)).toBe(300_000);
+  });
+});
+
+describe('v2EarningsVariationAxes', () => {
+  test('given a stored household and its head then the earnings axis varies that person, by position', () => {
+    // When
+    const axes = v2EarningsVariationAxes(
+      US_SINGLE_PARENT_V2_BODY.household_data,
+      V2_CODEC_YEAR,
+      'your first dependent'
+    );
+
+    // Then
+    expect(axes).toEqual([
+      [
+        {
+          name: 'employment_income',
+          period: V2_CODEC_YEAR,
+          min: 0,
+          max: 200_000,
+          count: HOUSEHOLD_VARIATION_POINT_COUNT,
+          index: 1,
+        },
+      ],
+    ]);
+  });
+
+  test('given no head then the axis varies "you", up to twice their earnings', () => {
+    // Given
+    const document = {
+      ...US_SINGLE_PARENT_V2_BODY.household_data,
+      people: US_SINGLE_PARENT_V2_BODY.household_data.people.map((person) =>
+        person.source_name === 'you'
+          ? { ...person, values: { ...person.values, employment_income: { 2026: 150_000 } } }
+          : person
+      ),
+    };
+
+    // When
+    const [[axis]] = v2EarningsVariationAxes(document, V2_CODEC_YEAR, null);
+
+    // Then
+    expect(axis).toMatchObject({ max: 300_000, index: 0 });
   });
 });
