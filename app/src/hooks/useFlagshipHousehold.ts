@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ApiFlagshipHouseholdStore } from '@/api/flagshipHouseholdStore';
 import { fetchPolicyById } from '@/api/policy';
@@ -9,10 +10,12 @@ import { useV3Policies } from '@/hooks/useV3Policies';
 import { useParallelQueries } from '@/hooks/utils/queryUtils';
 import type { CountryId } from '@/libs/countries';
 import { runFlagshipHouseholdPayload } from '@/libs/flagship/householdRun';
+import { runV2FlagshipHousehold, v2PolicyIdFor } from '@/libs/flagship/v2HouseholdRun';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
-import { policyKeys } from '@/libs/queryKeys';
+import { policyKeys, v2StoredHouseholdKeys } from '@/libs/queryKeys';
 import type { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
+import type { RootState } from '@/store';
 import type { Policy } from '@/types/ingredients/Policy';
 
 /**
@@ -69,6 +72,95 @@ export interface RequestedHousehold {
   payload: V1HouseholdCreateEnvelope;
 }
 
+/** Called with the household's ID once the API has stored it, while it is calculated. */
+type OnHouseholdCreated = (householdId: string, payload: V1HouseholdCreateEnvelope) => void;
+
+interface HouseholdRunQueryArgs {
+  year: string;
+  baselinePolicyId: string;
+  reformPolicyId: string;
+  /** The household asked for; nothing runs while null. */
+  requested: RequestedHousehold | null;
+  onCreated?: OnHouseholdCreated;
+}
+
+/** On the v1 routes: the household is created and calculated through v1's household routes. */
+function useV1HouseholdRunQuery({
+  year,
+  baselinePolicyId,
+  reformPolicyId,
+  requested,
+  onCreated,
+}: HouseholdRunQueryArgs) {
+  return useFlagshipHouseholdPayload({
+    year,
+    baselinePolicyId,
+    reformPolicyId,
+    payload: requested?.payload ?? null,
+    onCreated,
+  });
+}
+
+/**
+ * On the v2 routes: the household is stored and calculated through
+ * `/v2/household-calculations`, current law as no policy and a reform by
+ * its v2 policy. Once stored, the session keeps the stored household (it
+ * never changes) and the caller hears its ID. Keyed by what is sent, as on
+ * the v1 routes.
+ */
+function useV2HouseholdRunQuery({
+  year,
+  baselinePolicyId,
+  reformPolicyId,
+  requested,
+  onCreated,
+}: HouseholdRunQueryArgs) {
+  const queryClient = useQueryClient();
+  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  // The latest callback, outside the query's key.
+  const created = useRef(onCreated);
+  created.current = onCreated;
+  return useQuery({
+    queryKey: [
+      'flagship-household-v2',
+      requested?.payload.country_id ?? null,
+      year,
+      baselinePolicyId,
+      reformPolicyId,
+      currentLawId,
+      requested?.payload ?? null,
+    ],
+    queryFn: ({ signal }) =>
+      runV2FlagshipHousehold(
+        {
+          year,
+          household: requested!.household,
+          baselinePolicyId: v2PolicyIdFor(baselinePolicyId, currentLawId),
+          reformPolicyId: v2PolicyIdFor(reformPolicyId, currentLawId),
+        },
+        {
+          signal,
+          onStored: (stored) => {
+            queryClient.setQueryData(
+              v2StoredHouseholdKeys.byId(stored.country_id, stored.id),
+              stored
+            );
+            created.current?.(stored.id, requested!.payload);
+          },
+        }
+      ),
+    enabled: !!requested,
+    staleTime: Infinity,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+}
+
+/** A requested household's run on the routes v3 uses (V3_API_ROUTES, a constant). */
+const useHouseholdRunQuery =
+  V3_API_ROUTES === 'v2' ? useV2HouseholdRunQuery : useV1HouseholdRunQuery;
+
 const samePayload = (first: V1HouseholdCreateEnvelope, second: V1HouseholdCreateEnvelope) =>
   JSON.stringify(first) === JSON.stringify(second);
 
@@ -88,14 +180,14 @@ export function useRequestedHouseholdRun({
   baselinePolicyId: string;
   reformPolicyId: string;
   /** Called with the household's ID once the API has stored it, while it is calculated. */
-  onCreated?: (householdId: string, payload: V1HouseholdCreateEnvelope) => void;
+  onCreated?: OnHouseholdCreated;
 }) {
   const [requested, setRequested] = useState<RequestedHousehold | null>(null);
-  const run = useFlagshipHouseholdPayload({
+  const run = useHouseholdRunQuery({
     year,
     baselinePolicyId,
     reformPolicyId,
-    payload: requested?.payload ?? null,
+    requested,
     onCreated,
   });
   const running = !!requested && run.isFetching;
