@@ -204,6 +204,15 @@ describe('HouseholdReportPage', () => {
     ]);
   });
 
+  test('given a household and a reform then its result has the heading "Household impact"', async () => {
+    renderReport({ household: FAMILY_HOUSEHOLD, reformPolicyId: REFORM_POLICY_ID });
+
+    await calculate();
+
+    await screen.findByRole('region', { name: 'Household impact' });
+    expect(screen.getByRole('heading', { level: 3, name: 'Household impact' })).toBeVisible();
+  });
+
   test("given no reform then it reports the household's net income under the baseline alone", async () => {
     renderReport({ household: FAMILY_HOUSEHOLD });
 
