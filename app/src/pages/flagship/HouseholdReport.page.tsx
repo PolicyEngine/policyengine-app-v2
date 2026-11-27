@@ -319,7 +319,8 @@ export default function HouseholdReportPage({
           const policy = policyQuery.policies.find((loaded) => loaded.id === policyId);
           return {
             role,
-            household: requested.household,
+            // The household as it was sent, so the code calculates what API v1 did.
+            household: requested.sent,
             policy: policy ? convertPoliciesToV1Format([policy]).baseline.data : null,
             spmConfig: provenance.spmConfig,
             spmProvenance: provenance.spmProvenance,
@@ -339,7 +340,9 @@ export default function HouseholdReportPage({
         <Text style={quietText}>{comparison}</Text>
       </Stack>
 
-      {/* The builder, the results and the inputs read every variable (v2 loads them in the background). */}
+      {/* Everything below reads the model's variables, and a UK household's
+          roles depend on them: on the v2 routes it waits until they load,
+          as the Household tab does. */}
       <V3VariablesGate label="Loading the household report">
         <ReportSection label="Household">
           <Stack style={{ gap: spacing.lg }}>

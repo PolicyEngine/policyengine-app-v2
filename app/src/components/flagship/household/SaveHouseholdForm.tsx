@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { IconDeviceFloppy } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
 import type { SavedHousehold } from '@/api/savedHouseholdStore';
 import { SAVED_HOUSEHOLDS_UNAVAILABLE } from '@/components/flagship/household/savedHouseholdDisplay';
 import { Button, Input, Label, Stack, Text } from '@/components/ui';
@@ -12,6 +13,8 @@ import {
 import type { Household } from '@/models/Household';
 import { haveSameStoredContent } from '@/models/household/v2DocumentCodec';
 import { copyHouseholdToYear } from '@/pages/reportBuilder/utils/changeReportYear';
+import type { RootState } from '@/store';
+import { householdAsSent } from '@/utils/householdAsSent';
 
 /**
  * A saved household as the builder holds it in `year`: a report moves a
@@ -34,7 +37,8 @@ function inYear(household: Household, year: number | null): Household {
  * household is saved under the label. A saved household's changes are
  * saved to it, keeping its id: an edit is stored as a new household
  * (stored households never change) and the saved household pointed at
- * it; a new label alone only renames it.
+ * it; a new label alone only renames it. The household is stored as every
+ * v3 household is sent (householdAsSent), and compared in that form.
  */
 export default function SaveHouseholdForm({
   household,
@@ -51,12 +55,20 @@ export default function SaveHouseholdForm({
   saved?: SavedHousehold | null;
   /**
    * The saved household after the save. Not called for a save that
-   * finishes after the form has gone, as when the page opens another
-   * saved household (which gives the form a new key) while it runs.
+   * finishes after the form has gone: when the page opens another saved
+   * household (which gives the form a new key) while it runs, or when the
+   * page stops showing the form, as the standalone report does while the
+   * model's variables load.
    */
   onSaved?: (saved: SavedHousehold) => void;
 }) {
   const labelId = useId();
+  const metadata = useSelector((state: RootState) => state.metadata);
+  // The household as it is stored: as it is sent, with its UK roles.
+  const householdToStore = useMemo(
+    () => householdAsSent(household, metadata),
+    [household, metadata]
+  );
   const { store } = useSavedHouseholdStore();
   const saveHousehold = useSaveHousehold();
   const saveChanges = useSaveHouseholdChanges();
@@ -65,13 +77,15 @@ export default function SaveHouseholdForm({
   // The saved household this form's last successful save made or changed.
   const [savedByThisForm, setSavedByThisForm] = useState<SavedHousehold | null>(null);
   const editing = saved ?? savedByThisForm;
-  // What the last save stored: "Saved" shows only while the household and
-  // label on screen are still what it stored.
+  // What the last save was given: "Saved" shows only while the household
+  // and label on screen are still what it saved. The household is compared
+  // as it is sent now, as the one on screen is, so model information that
+  // loads after the save changes neither.
   const [lastSaved, setLastSaved] = useState<{ household: Household; label: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const savedInBuilderYear = useMemo(
-    () => (editing ? inYear(editing.household, household.year) : null),
-    [editing, household.year]
+    () => (editing ? householdAsSent(inYear(editing.household, household.year), metadata) : null),
+    [editing, household.year, metadata]
   );
   const shown = useRef(true);
   useEffect(() => {
@@ -90,13 +104,13 @@ export default function SaveHouseholdForm({
   }
 
   const contentChanged =
-    !savedInBuilderYear || !haveSameStoredContent(household, savedInBuilderYear);
+    !savedInBuilderYear || !haveSameStoredContent(householdToStore, savedInBuilderYear);
   const labelChanged = !editing || label.trim() !== (editing.label ?? '');
   const nothingToSave = !!editing && !contentChanged && !labelChanged;
   const showsSaved =
     !!lastSaved &&
     lastSaved.label === label.trim() &&
-    haveSameStoredContent(household, lastSaved.household);
+    haveSameStoredContent(householdToStore, householdAsSent(lastSaved.household, metadata));
 
   const save = async () => {
     setSaving(true);
@@ -106,11 +120,11 @@ export default function SaveHouseholdForm({
         ? await saveChanges.mutateAsync({
             saved: editing,
             changes: {
-              ...(contentChanged ? { household } : {}),
+              ...(contentChanged ? { household: householdToStore } : {}),
               ...(labelChanged ? { label } : {}),
             },
           })
-        : await saveHousehold.mutateAsync({ household, label });
+        : await saveHousehold.mutateAsync({ household: householdToStore, label });
       if (!shown.current) {
         return;
       }

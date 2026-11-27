@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor, within } from '@test-utils';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { Household } from '@/models/Household';
+import { UK_CLAIMANT_OR_PARTNER_VARIABLE, type Household } from '@/models/Household';
 import HouseholdReportPage from '@/pages/flagship/HouseholdReport.page';
 import metadataReducer from '@/reducers/metadataReducer';
 import {
@@ -17,6 +17,8 @@ import {
   SAVED_HOUSEHOLD_IDS,
   storedV2HouseholdItem,
   TWO_YEAR_FAMILY_HOUSEHOLD,
+  UK_HOME_LABEL,
+  UK_HOME_ROW,
   userHouseholdItem,
   V2_HOUSEHOLD_IDS,
   v2HouseholdItem,
@@ -40,6 +42,13 @@ import {
   UK_BASELINE_RESULT,
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
 import {
+  BUILDER_PEOPLE,
+  ROLE_TEST_YEAR,
+  singleParentWithAdultDependant,
+  UK_METADATA_WITH_CLAIMANT_ROLES,
+  ukBuilderMetadata,
+} from '@/tests/fixtures/models/builderClaimantRolesMocks';
+import {
   LATER_MODEL_YEAR,
   MODEL_YEARS,
   NOT_READY_TO_RUN,
@@ -49,6 +58,7 @@ import {
   REFORM_PARAMETER_METADATA,
   REFORM_POLICY_JSON,
 } from '@/tests/fixtures/pages/flagship/householdReportPageMocks';
+import type { MetadataState } from '@/types/metadata';
 
 /**
  * v3's standalone household report: one household under a baseline and,
@@ -151,14 +161,27 @@ vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (imp
     ),
   };
 });
+// The model's variables: ready, as on the v1 routes, unless a test says otherwise.
+const mockV3Variables = vi.fn();
+vi.mock('@/hooks/useV3Variables', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/hooks/useV3Variables')>()),
+  useV3Variables: () => mockV3Variables(),
+}));
 const mockHouseholdValidation = vi.fn();
 vi.mock('@/utils/HouseholdValidation', () => ({
   HouseholdValidation: { isReadyForSimulation: () => mockHouseholdValidation() },
 }));
 
-function renderReport(props: Partial<React.ComponentProps<typeof HouseholdReportPage>> = {}) {
+/** UK model information that defines the claimant and partner roles. */
+const UK_ROLE_METADATA = ukBuilderMetadata(UK_METADATA_WITH_CLAIMANT_ROLES);
+
+function renderReport(
+  props: Partial<React.ComponentProps<typeof HouseholdReportPage>> = {},
+  /** The model information the store holds; none loaded unless given. */
+  modelMetadata?: MetadataState
+) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const initialMetadata = metadataReducer(undefined, { type: 'test/init' });
+  const initialMetadata = modelMetadata ?? metadataReducer(undefined, { type: 'test/init' });
   const store = configureStore({
     reducer: { metadata: metadataReducer },
     preloadedState: {
@@ -198,6 +221,7 @@ const createdPayload = (callIndex = 0) => mockCreateHousehold.mock.calls[callInd
 describe('HouseholdReportPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockV3Variables.mockReturnValue({ status: 'ready', message: null, retry: vi.fn() });
     mockHouseholdValidation.mockReturnValue(READY_TO_RUN);
     mockSavedWork.mockReturnValue({ account: null, scope: 'browser' });
     mockFetchPolicyById.mockImplementation(async (countryId: string, policyId: string) =>
@@ -540,7 +564,113 @@ describe('HouseholdReportPage', () => {
     expect(createdPayload().spm).toBeUndefined();
   });
 
+  test('given a UK lone parent and their adult child then they are sent with their claimant and partner roles, and the result is not out of date', async () => {
+    mockFetchHouseholdCalculation.mockResolvedValue(UK_BASELINE_RESULT);
+    renderReport(
+      { countryId: 'uk', household: singleParentWithAdultDependant() },
+      UK_ROLE_METADATA
+    );
+
+    await calculate();
+
+    await screen.findByRole('region', { name: 'Household net income' });
+    const sentPeople = createdPayload().data.people;
+    expect(sentPeople[BUILDER_PEOPLE.YOU][UK_CLAIMANT_OR_PARTNER_VARIABLE]).toEqual({
+      [ROLE_TEST_YEAR]: true,
+    });
+    expect(sentPeople[BUILDER_PEOPLE.FIRST_DEPENDANT][UK_CLAIMANT_OR_PARTNER_VARIABLE]).toEqual({
+      [ROLE_TEST_YEAR]: false,
+    });
+    expect(screen.getByRole('button', { name: 'Calculate' })).toBeDisabled();
+  });
+
+  test('given a UK household sent with its roles then Reproduce in Python reproduces it with them', async () => {
+    mockFetchHouseholdCalculation.mockResolvedValue(UK_BASELINE_RESULT);
+    renderReport(
+      { countryId: 'uk', household: singleParentWithAdultDependant() },
+      UK_ROLE_METADATA
+    );
+
+    await calculate();
+
+    const reproduce = await screen.findByRole('region', { name: 'Reproduce in Python' });
+    const code = within(reproduce).getByRole('region', { name: 'Baseline simulation' }).textContent;
+    // The parent is the claimant, and their adult child is not a partner.
+    expect(code).toMatch(new RegExp(`${UK_CLAIMANT_OR_PARTNER_VARIABLE}[^}]*True`));
+    expect(code).toMatch(new RegExp(`${UK_CLAIMANT_OR_PARTNER_VARIABLE}[^}]*False`));
+  });
+
+  test("given the model's variables still loading then the report waits for them, with nothing to describe, calculate or save", () => {
+    // Signed in, so the saved households and the save form would show.
+    const { fetchMock, context } = createTestApiContext('us');
+    mockSavedWork.mockReturnValue({ account: context, scope: 'account:test' });
+    const requests = routeRequests(fetchMock, {
+      'GET /v2/user-households': () => pageResponse([]),
+    });
+    mockV3Variables.mockReturnValue({ status: 'loading', message: null, retry: vi.fn() });
+    renderReport({ household: FAMILY_HOUSEHOLD });
+
+    expect(screen.getByRole('status', { name: 'Loading the household report' })).toBeVisible();
+    expect(screen.queryByLabelText('Household builder')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Saved households' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Household label' })).not.toBeInTheDocument();
+    expect(requests).toEqual([]);
+  });
+
   describe('saved households', () => {
+    test('given a UK lone parent and their adult child saved then they are stored with their roles, with nothing left to save', async () => {
+      const user = userEvent.setup();
+      const { fetchMock, context } = createTestApiContext('uk');
+      mockSavedWork.mockReturnValue({ account: context, scope: 'account:test' });
+      const requests = routeRequests(fetchMock, {
+        'GET /v2/user-households': () => pageResponse([]),
+        'POST /v2/households': (request) =>
+          itemResponse(storedV2HouseholdItem(request.body, V2_HOUSEHOLD_IDS.UK_HOME), 201),
+        'POST /v2/user-households': () => itemResponse(UK_HOME_ROW, 201),
+      });
+      renderReport(
+        { countryId: 'uk', household: singleParentWithAdultDependant() },
+        UK_ROLE_METADATA
+      );
+
+      await user.type(screen.getByRole('textbox', { name: 'Household label' }), UK_HOME_LABEL);
+      await user.click(screen.getByRole('button', { name: 'Save household' }));
+
+      expect(await screen.findByText('Saved')).toHaveAttribute('role', 'status');
+      expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+      const stored = requests.find(
+        (request) => request.method === 'POST' && request.path === '/v2/households'
+      )?.body;
+      const parent = stored?.household_data.people.find(
+        (person: { source_name?: string }) => person.source_name === BUILDER_PEOPLE.YOU
+      );
+      expect(parent?.values[UK_CLAIMANT_OR_PARTNER_VARIABLE]).toEqual({ [ROLE_TEST_YEAR]: true });
+    });
+
+    test('given a UK household saved without its roles then opening it leaves nothing to save', async () => {
+      const { fetchMock, context } = createTestApiContext('uk');
+      mockSavedWork.mockReturnValue({ account: context, scope: 'account:test' });
+      routeRequests(fetchMock, {
+        'GET /v2/user-households': () => pageResponse([UK_HOME_ROW]),
+        [`GET /v2/households/${V2_HOUSEHOLD_IDS.UK_HOME}`]: () =>
+          itemResponse(v2HouseholdItem(singleParentWithAdultDependant(), V2_HOUSEHOLD_IDS.UK_HOME)),
+      });
+      const savedWithoutRoles = {
+        ...SAVED_FAMILY,
+        id: SAVED_HOUSEHOLD_IDS.UK_HOME,
+        countryId: 'uk' as const,
+        label: UK_HOME_LABEL,
+        householdId: V2_HOUSEHOLD_IDS.UK_HOME,
+        household: singleParentWithAdultDependant().withId(V2_HOUSEHOLD_IDS.UK_HOME),
+      };
+
+      renderReport({ countryId: 'uk', savedHousehold: savedWithoutRoles }, UK_ROLE_METADATA);
+
+      // It is sent with its roles, but they add nothing for the reader to save.
+      expect(await screen.findByRole('button', { name: 'Save changes' })).toBeDisabled();
+    });
+
     /** Signed in, with the family saved; `moreRoutes` answers the saves a test makes. */
     function signedInWithFamily(moreRoutes: Parameters<typeof routeRequests>[1] = {}) {
       const { fetchMock, context } = createTestApiContext('us');

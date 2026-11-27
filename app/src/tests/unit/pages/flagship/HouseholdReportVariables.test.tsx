@@ -15,10 +15,12 @@ import { READY_TO_RUN } from '@/tests/fixtures/pages/flagship/householdReportPag
 
 /**
  * v3's household report and its household builder read the model's
- * variables. On the v2 routes these load in the background, so both wait
- * for them, and a failed load says so and asks again, as the other v3
- * views that read variables do (V3VariablesGate). The variables' status is
- * set by each test here; on the v1 routes it is always "ready".
+ * variables, which load in the background on the v2 routes. The report
+ * waits for them (V3VariablesGate; its placeholder is tested with the
+ * page), and a failed load says so and asks again, as the other v3 views
+ * that read variables do; the builder panel leaves the wait to its
+ * callers. The variables' status is set by each test here; on the v1
+ * routes it is always "ready".
  */
 
 const mockVariables = vi.fn();
@@ -77,20 +79,6 @@ describe('the household report and builder while the model variables load', () =
   beforeEach(() => {
     vi.clearAllMocks();
     mockVariables.mockReturnValue({ status: 'ready', message: null, retry: mockRetryVariables });
-  });
-
-  test('given the variables still loading then the household report waits behind a placeholder', () => {
-    // Given
-    mockVariables.mockReturnValue({ status: 'loading', message: null, retry: mockRetryVariables });
-
-    // When
-    renderReport();
-
-    // Then
-    expect(
-      screen.getByRole('status', { name: 'Loading the household report' })
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
   });
 
   test('given the variables failed to load then the household report says so and asks for them again', async () => {

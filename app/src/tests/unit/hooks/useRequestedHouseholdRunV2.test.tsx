@@ -30,6 +30,12 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
   V3_API_ROUTES: 'v2',
 }));
 
+/** How the hook prepares a household to send; the household itself unless a test says otherwise. */
+const mockHouseholdAsSent = vi.fn();
+vi.mock('@/utils/householdAsSent', () => ({
+  householdAsSent: (household: unknown) => mockHouseholdAsSent(household),
+}));
+
 const mockRunV2Household = vi.fn();
 const mockRunV1Household = vi.fn();
 vi.mock('@/libs/flagship/v2HouseholdRun', async (importOriginal) => ({
@@ -101,6 +107,7 @@ function renderRunHook(
 describe('useRequestedHouseholdRun with v3 on the v2 routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockHouseholdAsSent.mockImplementation((household: unknown) => household);
     mockRunV2Household.mockImplementation(storeThenAnswer);
   });
 
@@ -126,26 +133,17 @@ describe('useRequestedHouseholdRun with v3 on the v2 routes', () => {
     expect(mockRunV1Household).not.toHaveBeenCalled();
   });
 
-  test('given a payload the household is sent as then the v2 run is given it', async () => {
-    // Given: a payload that carries more than the household model, as a UK
-    // household's claimant and partner roles make the Household tab's
-    const sentPayload = US_SINGLE_PARENT.setPersonVariableAtYear(
+  test('given the household as it is sent then the v2 run stores that household', async () => {
+    // Given: the household as sent carries more than the one described, as
+    // a UK household's claimant and partner roles make it
+    const sentHousehold = US_SINGLE_PARENT.setPersonVariableAtYear(
       'you',
       'employment_income',
       V2_CODEC_YEAR,
       30000
-    ).toV1CreationPayload();
-    const queryClient = testQueryClient();
-    const { result } = renderHook(
-      () =>
-        useRequestedHouseholdRun({
-          year: V2_CODEC_YEAR,
-          baselinePolicyId: String(TEST_CURRENT_LAW_ID),
-          reformPolicyId: V2_REFORM_POLICY_ID,
-          payloadOf: () => sentPayload,
-        }),
-      { wrapper: wrapperWith(queryClient) }
     );
+    mockHouseholdAsSent.mockReturnValue(sentHousehold);
+    const { result } = renderRunHook(V2_REFORM_POLICY_ID);
 
     // When
     act(() => result.current.request(US_SINGLE_PARENT));
@@ -153,7 +151,7 @@ describe('useRequestedHouseholdRun with v3 on the v2 routes', () => {
     // Then
     await waitFor(() => expect(result.current.result).toEqual(V2_RUN));
     expect(mockRunV2Household).toHaveBeenCalledWith(
-      expect.objectContaining({ household: US_SINGLE_PARENT, payload: sentPayload }),
+      expect.objectContaining({ payload: sentHousehold.toV1CreationPayload() }),
       expect.anything()
     );
   });

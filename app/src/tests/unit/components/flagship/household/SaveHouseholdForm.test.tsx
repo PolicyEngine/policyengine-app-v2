@@ -1,7 +1,10 @@
+import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
+import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SaveHouseholdForm from '@/components/flagship/household/SaveHouseholdForm';
+import metadataReducer from '@/reducers/metadataReducer';
 import {
   EDITED_FAMILY_HOUSEHOLD,
   FAMILY_HOUSEHOLD,
@@ -11,6 +14,9 @@ import {
   routeRequests,
   SAVED_FAMILY,
   SAVED_HOUSEHOLD_IDS,
+  storedV2HouseholdItem,
+  UK_HOME_LABEL,
+  UK_HOME_ROW,
   userHouseholdItem,
   V2_HOUSEHOLD_IDS,
   v2HouseholdItem,
@@ -20,6 +26,12 @@ import {
   errorResponse,
   itemResponse,
 } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  singleParentWithAdultDependant,
+  UK_METADATA_WITH_CLAIMANT_ROLES,
+  ukBuilderMetadata,
+} from '@/tests/fixtures/models/builderClaimantRolesMocks';
+import type { MetadataState } from '@/types/metadata';
 
 const mockSavedWork = vi.fn();
 vi.mock('@/hooks/useFlagshipStores', () => ({
@@ -49,6 +61,43 @@ const routedPaths = (requests: { method: string; path: string }[]) =>
 describe('SaveHouseholdForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  test('given UK model information that loads after a save then the form still says it is saved, with nothing left to save', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { fetchMock, context } = createTestApiContext('uk');
+    mockSavedWork.mockReturnValue({ account: context, scope: 'account:test' });
+    routeRequests(fetchMock, {
+      'POST /v2/households': (request) =>
+        itemResponse(storedV2HouseholdItem(request.body, V2_HOUSEHOLD_IDS.UK_HOME), 201),
+      'POST /v2/user-households': () => itemResponse(UK_HOME_ROW, 201),
+    });
+    const household = singleParentWithAdultDependant();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const formWith = (modelMetadata: MetadataState) => (
+      <Provider
+        store={configureStore({
+          reducer: { metadata: metadataReducer },
+          preloadedState: { metadata: modelMetadata },
+        })}
+      >
+        <QueryClientProvider client={queryClient}>
+          <SaveHouseholdForm household={household} />
+        </QueryClientProvider>
+      </Provider>
+    );
+    const view = render(formWith(metadataReducer(undefined, { type: 'test/init' })), 'uk');
+    await user.type(screen.getByRole('textbox', { name: 'Household label' }), UK_HOME_LABEL);
+    await user.click(screen.getByRole('button', { name: 'Save household' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Saved');
+
+    // When
+    view.rerender(formWith(ukBuilderMetadata(UK_METADATA_WITH_CLAIMANT_ROLES)));
+
+    // Then
+    expect(screen.getByRole('status')).toHaveTextContent('Saved');
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
   });
 
   test('given a label then the household is saved with it', async () => {
