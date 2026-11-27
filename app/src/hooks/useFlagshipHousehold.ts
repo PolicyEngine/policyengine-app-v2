@@ -83,12 +83,18 @@ export function useRequestedHouseholdRun({
   baselinePolicyId,
   reformPolicyId,
   onCreated,
+  payloadOf = (household) => household.toV1CreationPayload(),
 }: {
   year: string;
   baselinePolicyId: string;
   reformPolicyId: string;
   /** Called with the household's ID once the API has stored it, while it is calculated. */
   onCreated?: (householdId: string, payload: V1HouseholdCreateEnvelope) => void;
+  /**
+   * The payload sent for a household, which a household on screen is also
+   * compared in; the household's own v1 creation payload unless given.
+   */
+  payloadOf?: (household: Household) => V1HouseholdCreateEnvelope;
 }) {
   const [requested, setRequested] = useState<RequestedHousehold | null>(null);
   const run = useFlagshipHouseholdPayload({
@@ -106,7 +112,7 @@ export function useRequestedHouseholdRun({
    * query, which keeps its error until asked again, so it asks once more.
    */
   const request = (household: Household) => {
-    const payload = household.toV1CreationPayload();
+    const payload = payloadOf(household);
     if (requested && samePayload(requested.payload, payload)) {
       void run.refetch();
     } else {
@@ -140,7 +146,7 @@ export function useRequestedHouseholdRun({
     clear: () => setRequested(null),
     /** Whether the household on screen, or on its way, is this one. */
     shows: (household: Household) =>
-      !!requested && !failed && samePayload(requested.payload, household.toV1CreationPayload()),
+      !!requested && !failed && samePayload(requested.payload, payloadOf(household)),
   };
 }
 
