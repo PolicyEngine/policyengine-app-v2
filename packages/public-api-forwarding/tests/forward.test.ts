@@ -775,4 +775,76 @@ describe("fetchFromServer", () => {
     expect(failure).toMatchObject({ statusCode: 404 });
     expect(fetchImplementation).not.toHaveBeenCalled();
   });
+
+  test("given the caller's signal aborts then it rejects with the signal's reason", async () => {
+    // Given an API v1 that answers only when the request is aborted
+    const forwarder = createPublicApiForwarder({
+      environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
+      callerName: "policyengine-test-caller",
+      sharedTokenStore: null,
+      clientAddress: () => undefined,
+      fetchImplementation: (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(init.signal?.reason),
+          );
+        }),
+      logger: silentLogger,
+    });
+    const controller = new AbortController();
+    const callerLeft = new Error("The caller went away.");
+
+    // When
+    const pendingRequest = forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, {
+        signal: controller.signal,
+        timeoutMilliseconds: 1_000,
+      })
+      .catch((error: unknown) => error);
+    controller.abort(callerLeft);
+    const failure = await pendingRequest;
+
+    // Then
+    expect(failure).toBe(callerLeft);
+  });
+
+  test("given the token request fails then the error says the request never reached API v1", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      tokenAnswer: () => jsonResponse({ error: "access_denied" }, 403),
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({
+      statusCode: 502,
+      requestMayHaveArrived: false,
+    });
+  });
+
+  test("given API v1 cannot be reached then the error says the request may have arrived", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      publicApiAnswer: () => {
+        throw new TypeError("fetch failed");
+      },
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({
+      statusCode: 502,
+      requestMayHaveArrived: true,
+    });
+  });
 });
