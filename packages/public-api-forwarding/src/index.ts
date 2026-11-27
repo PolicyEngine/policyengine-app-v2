@@ -29,6 +29,7 @@ export {
   type PublicApiForwarderOptions,
   type PublicApiMethod,
   type PublicApiRequest,
+  type PublicApiUnavailableReason,
   type ServerRequestOptions,
 } from "./forward";
 export {

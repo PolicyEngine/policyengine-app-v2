@@ -18,20 +18,19 @@ The calculator's pages reach the Public API only through its route (`BASE_URL` i
   - without one, it stays in `Authorization`, as on a direct browser call.
 
   Cookies, `Origin`, `Referer` and any `PolicyEngine-User-Authorization` the browser sends are dropped.
-
 - **Streams the answer back** with an allow list of response headers (`Content-Type`, `ETag`, `Last-Modified`, `Retry-After`, `WWW-Authenticate` and the Public API's request IDs). `Content-Encoding` and `Content-Length` are dropped, because `fetch` has already decompressed the body. Streaming matters because Vercel caps a buffered function answer at 4.5 MB.
 - **Caches nothing it should not**: the route's `cacheControl` applies only to 2xx and 304 answers; every other answer is `no-store`, and so is every answer when the route gives none.
 - **Maps failures to JSON** in the Public API's own error shape, `{"status": "error", "message": ..., "result": null}`, marked with `X-PolicyEngine-Route-Error: true` (`ROUTE_ERROR_HEADER`) so a same-origin caller, such as the calculator's pages, can tell them from the Public API's own errors, such as its 502 for a failed calculation. A cross-origin caller sees the header only if the route's CORS policy exposes it, and the website's dashboard API doesn't:
 
-  | Failure                                                                                | Status                 |
-  | -------------------------------------------------------------------------------------- | ---------------------- |
-  | A path outside the letters, digits and `-_.~` segments a route may name                | 404                    |
-  | `POLICYENGINE_API_URL` missing outside production, or a partial credential             | 503                    |
-  | Auth0 refuses or does not answer the token request                                     | 502                    |
-  | The Public API cannot be reached                                                       | 502                    |
-  | The Public API answers with a redirect (never followed: it would carry the credential) | 502                    |
-  | No response headers within the route's timeout                                         | 504                    |
-  | A non-JSON error from in front of the Public API, such as the load balancer's 429      | same status, JSON body |
+  | Failure | Status |
+  | --- | --- |
+  | A path outside the letters, digits and `-_.~` segments a route may name | 404 |
+  | `POLICYENGINE_API_URL` missing outside production, or a partial credential | 503 |
+  | Auth0 refuses or does not answer the token request | 502 |
+  | The Public API cannot be reached | 502 |
+  | The Public API answers with a redirect (never followed: it would carry the credential) | 502 |
+  | No response headers within the route's timeout | 504 |
+  | A non-JSON error from in front of the Public API, such as the load balancer's 429 | same status, JSON body |
 
   JSON errors from the Public API itself pass through unchanged.
 
@@ -45,7 +44,11 @@ The Auth0 token request never follows a redirect, which would re-send the client
 
 `isJsonMediaType()` is the JSON content-type check the package and its routes share: `application/json` or any `application/...+json` type.
 
-`fetchFromServer()` also takes a `signal`. When it aborts, the request stops and `fetchFromServer()` rejects with the signal's reason. Its `PublicApiUnavailableError` says in `requestMayHaveArrived` whether API v1 may have received the request: `false` when it was never sent (an unknown path, no configuration, or no credential), `true` when fetch rejected or timed out. Fetch doesn't say whether anything was sent, so it is `true` even for a connection refused before sending. An abort while the credential is being fetched also rejects with the signal's reason.
+The sections below call the Public API "API v1", its name in PolicyEngine's other repositories.
+
+`fetchFromServer()` also takes a `signal`. When it aborts, the request stops and `fetchFromServer()` rejects with the signal's reason at once, also while the server credential is being fetched; that token request goes on, since other requests may be waiting on it.
+
+Its `PublicApiUnavailableError` names why API v1 cannot be called in `reason`: `unknown_route`, `not_configured` or `credential_unavailable`, found before anything is sent; or `unreachable`, `timed_out` or `answer_lost` (API v1 answered, but the answer was lost while it arrived). `requestMayHaveArrived` is `false` for the first three and `true` for the others: API v1 may have received the request. Fetch doesn't say whether anything was sent, so it is `true` even for a connection refused before sending.
 
 ## Household calculations
 
@@ -73,23 +76,24 @@ calculated.household; // what /calculate answered as `result`
 What it does, through `fetchFromServer()`:
 
 1. Submits `{country_id, household, policy?, axes?, add_missing_variables?, spm?}` to `POST /v2/household-calculations`. `household` is the situation without its `axes`, which go in the request's own `axes` field; the caller's object is not changed. API v1 keeps the calculation as a household job only: no stored household, policy or user association.
-2. Reads `GET /v2/household-calculations/{calculation_id}` every 2 seconds until the calculation succeeds or fails.
+2. Reads `GET /v2/household-calculations/{calculation_id}` every 2 seconds until the calculation succeeds or fails. When the submission's answer already says `succeeded` or `failed`, which the simulation service answers for a job that finished before it could confirm the call, it reads the calculation at once.
 3. Gives up 10 minutes after the call starts, or after `timeLimitMilliseconds`: a number, 0 or more, or `Infinity`; anything else rejects with `RangeError` before submitting. No wait runs past that deadline; the last read happens at it, and an accepted calculation is read at least once, even with a limit of 0.
 
-The submission may take until the deadline, and at least 30 seconds: it may wait for an API v1 instance to start, which takes minutes after the service has scaled to zero, and timing it out sooner would leave a job that may exist. Each read takes at most 30 seconds. So a request in flight at the deadline may take up to 30 seconds more; with the 10-minute default, a call ends within about 10.5 minutes.
+The submission may take until the deadline, and at least 30 seconds: it may wait for an API v1 instance to start, which takes minutes after the service has scaled to zero, and timing it out sooner would leave a job that may exist. Each read takes at most 30 seconds. A request's timeout starts once the server credential is in hand, which takes up to 10 seconds when a new token is needed. So a request in flight at the deadline may take up to about 40 seconds more; with the 10-minute default, a call ends within about 11 minutes, inside the website route's 800-second limit.
 
 It resolves with the calculated household, `warnings`, `spmConfig`, `spmProvenance`, the calculation ID and the versions it ran with. It throws:
 
 - `HouseholdCalculationFailedError` when the calculation fails, with the household function's `code` (such as `invalid_inputs`), `inputErrors` and `spmError`. A null `code` means the function raised or was cancelled, and submitting again may succeed.
 - `HouseholdCalculationTimeoutError` when the time limit passes, with the calculation ID and the last status read (the submission's status if no read succeeded).
+- `RangeError` for a time limit that is not a number, 0 or more, or `Infinity`. A limit that isn't a whole number is fine: timeouts are rounded up to whole milliseconds.
 - `HouseholdCalculationRefusedError` when API v1 refuses a request or its answer cannot be read, with the HTTP status, API v1's message and `code` (such as `missing_parameters`), the parsed body, `Retry-After` and the observability and request IDs.
 - `PublicApiUnavailableError` when API v1 cannot be called.
 - The signal's reason when the signal aborts.
 
 Brief outages are retried until 90 seconds pass without a good answer:
 
-- **Reads** are retried on 429, 502, 503 and 504, and when API v1 cannot be reached, does not answer in time, or the credential cannot be obtained. A 429 or 503 with `Retry-After` waits that many seconds, or 2 seconds if that is longer; anything else waits 2 seconds.
-- **The submission** is retried only when no job can exist: on API v1's own 503 (with its `{status: "error", message}` body), which it answers when no job of the submission will run, and when the credential cannot be obtained, so the request was never sent. It is not retried on any other 503, such as Cloud Run's plain-text one when its connection to an instance fails; on a 502; or when fetch rejects or times out after the request was handed to it: in each case API v1 may have created the job, and submitting again would create a second one. Nor is it retried when the wait before it would reach the deadline, since the calculation could then not be read.
+- **Reads** are retried on 429, 502, 503 and 504, and on a `PublicApiUnavailableError` whose `reason` is `credential_unavailable`, `unreachable`, `timed_out` or `answer_lost`. A 429 or 503 with `Retry-After` waits that many seconds, or 2 seconds if that is longer; anything else waits 2 seconds.
+- **The submission** is retried only when no job can exist: on API v1's own 503 (with its `{status: "error", message}` body), which it answers when no job of the submission will run, and when the credential cannot be obtained (`reason: "credential_unavailable"`), so the request was never sent. It is not retried on any other 503, such as Cloud Run's plain-text one when its connection to an instance fails; on a 502; or when fetch rejects or times out after the request was handed to it: in each case API v1 may have created the job, and submitting again would create a second one. Nor is it retried when the wait before it would reach the deadline, since the calculation could then not be read.
 - Nothing else is retried, including 400, 401, 403, 404, 409, 413, 422 and 500.
 
 How `calculated` differs from `/calculate`'s answer: there is no `{status, message, result}` envelope; `warnings` and `spm_provenance` are fields of the result, as `warnings` and `spmProvenance`; and inputs the model does not recognise come back as a failed calculation (`code: "invalid_inputs"`, `inputErrors`), thrown as `HouseholdCalculationFailedError`, not as a 400 with `errors`.

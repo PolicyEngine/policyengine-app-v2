@@ -13,6 +13,7 @@ import {
   PublicApiUnavailableError,
   type PublicApiForwarder,
   type PublicApiRequest,
+  type PublicApiUnavailableReason,
 } from "./forward";
 
 /** How long the helper waits between reads of a calculation. */
@@ -163,9 +164,11 @@ export class HouseholdCalculationTimeoutError extends Error {
     readonly calculationId: string,
     /**
      * The status the last successful read gave, or the submission's when no
-     * read succeeded.
+     * read succeeded. It is "succeeded" or "failed" only when the
+     * submission's answer said so and no read could get the outcome before
+     * the deadline.
      */
-    readonly lastStatus: HouseholdCalculationUnfinishedStatus,
+    readonly lastStatus: HouseholdCalculationStatus,
   ) {
     super(message);
   }
@@ -222,7 +225,36 @@ interface ApiV1Answer {
 
 interface SubmittedCalculation {
   readonly calculationId: string;
-  readonly status: HouseholdCalculationUnfinishedStatus;
+  /**
+   * Usually "pending". The simulation service answers with the job's
+   * current status, so a fast job can already have finished.
+   */
+  readonly status: HouseholdCalculationStatus;
+}
+
+const CALCULATION_STATUSES: ReadonlySet<unknown> = new Set([
+  "pending",
+  "running",
+  "succeeded",
+  "failed",
+]);
+
+function isCalculationStatus(
+  value: unknown,
+): value is HouseholdCalculationStatus {
+  return CALCULATION_STATUSES.has(value);
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === "string";
+}
+
+/** A list of strings; an absent list is empty; anything else is undefined. */
+function stringsOrUndefined(value: unknown): string[] | undefined {
+  if (value === undefined || value === null) {
+    return [];
+  }
+  return Array.isArray(value) && value.every(isString) ? value : undefined;
 }
 
 function isJsonObject(value: unknown): value is JsonObject {
@@ -347,7 +379,7 @@ function readSubmitted(answer: ApiV1Answer): SubmittedCalculation {
   if (
     typeof calculationId !== "string" ||
     !CALCULATION_ID_PATTERN.test(calculationId) ||
-    (status !== "pending" && status !== "running")
+    !isCalculationStatus(status)
   ) {
     throw unreadable(
       answer,
@@ -391,12 +423,11 @@ function readCalculation(
     if (!isJsonObject(result) || !isJsonObject(result.household)) {
       throw cannotRead();
     }
-    const warnings = result.warnings ?? [];
+    const warnings = stringsOrUndefined(result.warnings);
     const spmConfig = objectOrNull(result.spm_config);
     const spmProvenance = objectOrNull(result.spm_provenance);
     if (
-      !Array.isArray(warnings) ||
-      !warnings.every((warning) => typeof warning === "string") ||
+      warnings === undefined ||
       spmConfig === undefined ||
       spmProvenance === undefined ||
       typeof item.country_package_version !== "string" ||
@@ -456,20 +487,28 @@ function readCalculation(
 function isUnsentCredentialFailure(error: unknown): boolean {
   return (
     error instanceof PublicApiUnavailableError &&
-    !error.requestMayHaveArrived &&
-    error.statusCode === 502
+    error.reason === "credential_unavailable"
   );
 }
 
+/** Failures of fetchFromServer that a brief outage explains. */
+const BRIEF_OUTAGE_REASONS: ReadonlySet<PublicApiUnavailableReason> = new Set([
+  "credential_unavailable",
+  "unreachable",
+  "timed_out",
+  "answer_lost",
+]);
+
 /**
  * A failure of fetchFromServer that a brief outage explains: the credential
- * could not be obtained, or API v1 could not be reached or did not answer in
- * time. A deployment with no API v1 configured is not one.
+ * could not be obtained, or API v1 could not be reached, did not answer in
+ * time, or its answer was lost. An unknown route or a deployment with no
+ * API v1 configured is not one.
  */
 function isBriefOutage(error: unknown): boolean {
   return (
     error instanceof PublicApiUnavailableError &&
-    (error.requestMayHaveArrived || error.statusCode === 502)
+    BRIEF_OUTAGE_REASONS.has(error.reason)
   );
 }
 
@@ -500,7 +539,7 @@ export function createHouseholdCalculator(
       throw new PublicApiUnavailableError(
         "API v1's answer was lost before it could be read.",
         502,
-        true,
+        "answer_lost",
       );
     }
     let body: unknown = null;
@@ -563,9 +602,15 @@ export function createHouseholdCalculator(
       // take minutes, so it may take until the deadline (at least the
       // forwarder's usual 30 seconds). Timing it out sooner would leave a
       // job that may exist, which the helper must not submit again.
-      const timeoutMilliseconds = Math.min(
-        Math.max(DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS, deadline - now()),
-        LONGEST_TIMER_MILLISECONDS,
+      // AbortSignal.timeout takes whole milliseconds only.
+      const timeoutMilliseconds = Math.ceil(
+        Math.min(
+          Math.max(
+            DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS,
+            deadline - now(),
+          ),
+          LONGEST_TIMER_MILLISECONDS,
+        ),
       );
       let answer: ApiV1Answer;
       try {
@@ -615,9 +660,14 @@ export function createHouseholdCalculator(
   ): Promise<CalculatedHousehold> {
     const { calculationId } = submitted;
     const path = `${SUBMISSION_PATH}/${calculationId}`;
-    let lastStatus: HouseholdCalculationUnfinishedStatus = submitted.status;
+    let lastStatus: HouseholdCalculationStatus = submitted.status;
     let lastGoodAnswerAt = now();
-    let nextWaitMilliseconds = HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS;
+    // A calculation the submission's answer says has finished is read at
+    // once, for its result or error.
+    let nextWaitMilliseconds =
+      submitted.status === "succeeded" || submitted.status === "failed"
+        ? 0
+        : HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS;
     const outageLimitReached = () =>
       now() - lastGoodAnswerAt >=
       HOUSEHOLD_CALCULATION_OUTAGE_LIMIT_MILLISECONDS;
