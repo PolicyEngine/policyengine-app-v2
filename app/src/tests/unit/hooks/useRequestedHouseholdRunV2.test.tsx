@@ -33,7 +33,7 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
 /** How the hook prepares a household to send; the household itself unless a test says otherwise. */
 const mockHouseholdAsSent = vi.fn();
 vi.mock('@/utils/householdAsSent', () => ({
-  householdAsSent: (household: unknown) => mockHouseholdAsSent(household),
+  householdAsSent: (...args: unknown[]) => mockHouseholdAsSent(...args),
 }));
 
 const mockRunV2Household = vi.fn();
@@ -133,7 +133,7 @@ describe('useRequestedHouseholdRun with v3 on the v2 routes', () => {
     expect(mockRunV1Household).not.toHaveBeenCalled();
   });
 
-  test('given the household as it is sent then the v2 run stores that household', async () => {
+  test('given the household as it is sent then the v2 run is given that household and its payload', async () => {
     // Given: the household as sent carries more than the one described, as
     // a UK household's claimant and partner roles make it
     const sentHousehold = US_SINGLE_PARENT.setPersonVariableAtYear(
@@ -150,8 +150,16 @@ describe('useRequestedHouseholdRun with v3 on the v2 routes', () => {
 
     // Then
     await waitFor(() => expect(result.current.result).toEqual(V2_RUN));
+    expect(mockHouseholdAsSent).toHaveBeenCalledWith(
+      US_SINGLE_PARENT,
+      expect.objectContaining({ currentLawId: TEST_CURRENT_LAW_ID }),
+      V2_CODEC_YEAR
+    );
     expect(mockRunV2Household).toHaveBeenCalledWith(
-      expect.objectContaining({ payload: sentHousehold.toV1CreationPayload() }),
+      expect.objectContaining({
+        household: sentHousehold,
+        payload: sentHousehold.toV1CreationPayload(),
+      }),
       expect.anything()
     );
   });
