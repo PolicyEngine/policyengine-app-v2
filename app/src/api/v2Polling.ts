@@ -61,6 +61,36 @@ export function waitOrAbort(milliseconds: number, signal?: AbortSignal): Promise
 }
 
 /**
+ * One read of unfinished work, asked again an interval later after a
+ * failure that may pass (no answer, or 503), up to TRANSIENT_READ_RETRIES
+ * times in a row; any other failure, or the last one, rejects. A request
+ * the signal cancelled ends the read with the abort.
+ */
+export async function readRetryingTransientFailures<Answer>(
+  read: (signal?: AbortSignal) => Promise<Answer>,
+  {
+    pollIntervalMs = POLL_INTERVAL_MS,
+    wait = waitOrAbort,
+    signal,
+  }: Pick<PollOptions, 'pollIntervalMs' | 'wait' | 'signal'> = {}
+): Promise<Answer> {
+  for (let retries = 0; ; retries += 1) {
+    try {
+      return await read(signal);
+    } catch (error) {
+      // A request the signal cancelled fails as the client reports it; the
+      // wait ends with the abort, and is not asked again.
+      signal?.throwIfAborted();
+      if (!isTransientFailure(error) || retries >= TRANSIENT_READ_RETRIES) {
+        throw error;
+      }
+    }
+    await wait(pollIntervalMs, signal);
+    signal?.throwIfAborted();
+  }
+}
+
+/**
  * The first answer (a submission, or the first read when none is given),
  * then each read, until one has finished; rejects with `timeoutMessage`
  * once the time limit has passed, and with the signal's reason (an
@@ -87,22 +117,8 @@ export async function pollUntilFinished<Answer>({
   timeoutMessage: string;
 }): Promise<Answer> {
   const startedAt = now();
-  const readWithRetries = async (): Promise<Answer> => {
-    for (let retries = 0; ; retries += 1) {
-      try {
-        return await read(signal);
-      } catch (error) {
-        // A request the signal cancelled fails as the client reports it; the
-        // wait ends with the abort, and is not asked again.
-        signal?.throwIfAborted();
-        if (!isTransientFailure(error) || retries >= TRANSIENT_READ_RETRIES) {
-          throw error;
-        }
-      }
-      await wait(pollIntervalMs, signal);
-      signal?.throwIfAborted();
-    }
-  };
+  const readWithRetries = () =>
+    readRetryingTransientFailures(read, { pollIntervalMs, wait, signal });
   const sendFirst = async (): Promise<Answer> => {
     if (!first) {
       return readWithRetries();

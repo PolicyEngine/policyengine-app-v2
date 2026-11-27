@@ -5,7 +5,11 @@ import {
   type PublicApiClient,
 } from '@/api/publicApi/client';
 import type { components } from '@/api/publicApi/schema';
-import { pollUntilFinished, type PollOptions } from '@/api/v2Polling';
+import {
+  pollUntilFinished,
+  readRetryingTransientFailures,
+  type PollOptions,
+} from '@/api/v2Polling';
 
 /**
  * Households calculated on API v1's `/v2/` routes: a household stored on
@@ -120,7 +124,9 @@ export async function calculateV2Household(
       const submitted = await submitV2HouseholdCalculation(request, client, signal);
       calculationId = submitted.calculation_id;
       // Not yet read: the submission's answer has no result.
-      return hasFinished(submitted.status) ? read(signal) : null;
+      return hasFinished(submitted.status)
+        ? readRetryingTransientFailures(read, { ...pollOptions, signal })
+        : null;
     },
     read,
     isFinished: (answer) => answer !== null && hasFinished(answer.status),
