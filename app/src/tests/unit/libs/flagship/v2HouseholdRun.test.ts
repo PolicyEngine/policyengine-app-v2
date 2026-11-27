@@ -2,7 +2,9 @@
 // These requests carry an abort signal, which Node's Request accepts only from
 // Node's own AbortController, not from jsdom's.
 import { describe, expect, test, vi } from 'vitest';
+import { V2ApiError } from '@/api/v2UserClient';
 import {
+  plainV2HouseholdError,
   runV2FlagshipHousehold,
   spmOfV2Calculation,
   v2PolicyIdFor,
@@ -310,6 +312,27 @@ describe('v2PolicyIdFor', () => {
     expect(() => v2PolicyIdFor(REFORM_POLICY_ID, CURRENT_LAW_ID)).toThrow(
       `Policy ${REFORM_POLICY_ID} is a v1 policy, which the v2 household calculations cannot use.`
     );
+  });
+});
+
+describe('plainV2HouseholdError', () => {
+  test('given no answer from API v1 then the failure says PolicyEngine could not be reached', () => {
+    // When
+    const failure = plainV2HouseholdError(new V2ApiError(0, 'Network error: Failed to fetch'));
+
+    // Then
+    expect(failure.message).toBe('Could not reach PolicyEngine. Check your connection.');
+  });
+
+  test('given an answer the app could not read then the failure keeps its own reason', () => {
+    // Given: the /v2/ clients report a failed request as status 0, never as a TypeError
+    const unreadable = new TypeError("Cannot read properties of null (reading 'people')");
+
+    // When
+    const failure = plainV2HouseholdError(unreadable);
+
+    // Then
+    expect(failure).toBe(unreadable);
   });
 });
 
