@@ -234,3 +234,28 @@ export const US_SINGLE_PARENT_CALCULATED_IN_V1_NAMES = {
     'your marital unit': { members: ['you'] },
   },
 };
+
+/**
+ * The US single parent as the simulation service answers when asked to add
+ * no variable: the stored household in the situation shape, named by
+ * record IDs, with only the values it stored (none of them null, so
+ * nothing is calculated): no net income, no taxes, no benefits.
+ */
+export const US_SINGLE_PARENT_INPUTS_SITUATION = {
+  people: {
+    'person-1': { age: { 2026: 30 }, employment_income: { 2026: 0 } },
+    'person-2': {
+      age: { 2026: 10 },
+      is_tax_unit_dependent: { 2026: true },
+      employment_income: { 2026: 0 },
+    },
+  },
+  households: { 'household-1': { members: ['person-1', 'person-2'], state_name: { 2026: 'CA' } } },
+  families: { 'family-1': { members: ['person-1', 'person-2'] } },
+  tax_units: { 'tax_unit-1': { members: ['person-1', 'person-2'] } },
+  spm_units: { 'spm_unit-1': { members: ['person-1', 'person-2'] } },
+  marital_units: {
+    'marital_unit-1': { members: ['person-2'] },
+    'marital_unit-2': { members: ['person-1'] },
+  },
+};
