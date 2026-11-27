@@ -69,6 +69,7 @@ import {
   trackHouseholdRemoved,
   trackHouseholdVariableAdded,
 } from '@/utils/analytics';
+import { withSupportedBuilderClaimantRoles } from '@/utils/builderClaimantRoles';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getNormalizedVariableMetadata } from '@/utils/variableMetadata';
 import { getInputVariables, type VariableInfo } from '@/utils/VariableResolver';
@@ -668,12 +669,19 @@ function HouseholdCard({
     };
   };
 
+  // The household as it is sent: a UK builder household with its claimant
+  // and partner roles, when the model takes them, as everywhere else the
+  // app saves a household. What is on screen is compared with what was sent
+  // in the same form, so the roles never make a result read as out of date.
+  const creationPayloadOf = (described: Household) =>
+    withSupportedBuilderClaimantRoles(described, metadata, year).toV1CreationPayload();
+
   // Inputs until the household first runs; its results from then on.
   const [view, setView] = useState<'inputs' | 'results'>('inputs');
 
   const calculate = () => {
     startRun();
-    const payload = household.toV1CreationPayload();
+    const payload = creationPayloadOf(household);
     // The same household again, after a failure, asks once more.
     if (requested && JSON.stringify(requested.payload) === JSON.stringify(payload)) {
       void run.refetch();
@@ -784,7 +792,7 @@ function HouseholdCard({
   const sameAsShown =
     !!requested &&
     !failed &&
-    JSON.stringify(requested.payload) === JSON.stringify(household.toV1CreationPayload());
+    JSON.stringify(requested.payload) === JSON.stringify(creationPayloadOf(household));
   // A result for inputs the reader has since changed.
   const stale = !!result && !sameAsShown;
 
