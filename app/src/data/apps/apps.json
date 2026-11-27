@@ -10,6 +10,32 @@
   },
   {
     "type": "iframe",
+    "slug": "milburn-review",
+    "title": "The Milburn review of young people and work",
+    "description": "Explore PolicyEngine UK estimates of the benefit and employer National Insurance measures in the Milburn review's final report: the public finances, households by age, and your own household.",
+    "source": "https://uk-milburn-review.vercel.app/uk/milburn-review",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-milburn-review-briefing/cover.webp",
+    "date": "2026-11-22 12:00:00",
+    "authors": ["vahid-ahmadi", "maria-juaristi"]
+  },
+  {
+    "type": "iframe",
+    "slug": "autumn-budget-2026",
+    "title": "Autumn Budget 2026 dashboard",
+    "description": "Explore how Autumn Budget 2026 policies affect the public finances and households, by income, area and age, and for your own household, alongside the pre-measures forecast, modelled with PolicyEngine UK.",
+    "source": "https://uk-autumn-budget-2026.vercel.app/uk/autumn-budget-2026",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-autumn-budget-2026-briefing/cover.webp",
+    "date": "2026-10-28 12:00:00",
+    "authors": ["max-ghenis", "vahid-ahmadi", "maria-juaristi"]
+  },
+  {
+    "type": "iframe",
     "slug": "energy-autumn-budget",
     "title": "Energy bills and the Autumn Budget 2026",
     "description": "Estimate what UK households will pay for energy at forecast prices in 2026-27 and 2027-28, and what Autumn Budget support options would cost and who they would reach, modelled with PolicyEngine UK.",
