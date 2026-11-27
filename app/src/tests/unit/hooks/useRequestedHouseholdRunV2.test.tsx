@@ -127,7 +127,8 @@ describe('useRequestedHouseholdRun with v3 on the v2 routes', () => {
   });
 
   test('given a payload the household is sent as then the v2 run is given it', async () => {
-    // Given: as the Household tab sends a UK household with claimant and partner roles
+    // Given: a payload that carries more than the household model, as a UK
+    // household's claimant and partner roles make the Household tab's
     const sentPayload = US_SINGLE_PARENT.setPersonVariableAtYear(
       'you',
       'employment_income',
