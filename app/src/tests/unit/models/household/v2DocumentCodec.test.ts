@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   haveSameStoredContent,
+  householdDataFromV2Calculation,
   householdFromV2Item,
   householdToV2CreateBody,
   V2HouseholdDocumentError,
@@ -16,6 +17,8 @@ import {
   US_COUPLE_WITH_TWO_CHILDREN,
   US_PERSON_WITHOUT_MARITAL_UNIT,
   US_SINGLE_PARENT,
+  US_SINGLE_PARENT_CALCULATED_IN_V1_NAMES,
+  US_SINGLE_PARENT_CALCULATED_SITUATION,
   US_SINGLE_PARENT_V2_BODY,
   V2_CODEC_YEAR,
 } from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
@@ -143,5 +146,39 @@ describe('haveSameStoredContent', () => {
     expect(
       haveSameStoredContent(US_PERSON_WITHOUT_MARITAL_UNIT, US_PERSON_WITHOUT_MARITAL_UNIT)
     ).toBe(false);
+  });
+});
+
+describe('householdDataFromV2Calculation', () => {
+  test('given a calculated household named by record IDs then people, groups and members take their v1 names', () => {
+    const data = householdDataFromV2Calculation(
+      'us',
+      US_SINGLE_PARENT_V2_BODY.household_data,
+      US_SINGLE_PARENT_CALCULATED_SITUATION
+    );
+
+    expect(data).toEqual(US_SINGLE_PARENT_CALCULATED_IN_V1_NAMES);
+  });
+
+  test('given a household stored without v1 names then the calculation keeps its record IDs', () => {
+    const data = householdDataFromV2Calculation('uk', UK_DOCUMENT_WITHOUT_SOURCE_NAMES, {
+      people: { adult: { age: { 2026: 45 } } },
+      households: { home: { members: ['adult'] } },
+      benunits: { family: { members: ['adult'] } },
+    });
+
+    expect(data).toEqual({
+      people: { adult: { age: { 2026: 45 } } },
+      households: { home: { members: ['adult'] } },
+      benunits: { family: { members: ['adult'] } },
+    });
+  });
+
+  test('given a calculation that names a record the household lacks then it fails, naming it', () => {
+    expect(() =>
+      householdDataFromV2Calculation('uk', UK_SINGLE_PARENT_V2_BODY.household_data, {
+        people: { 'person-9': { age: { 2026: 45 } } },
+      })
+    ).toThrow(new V2HouseholdDocumentError('The calculation names person-9, who is not a person.'));
   });
 });
