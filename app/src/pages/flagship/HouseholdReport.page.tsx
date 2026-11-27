@@ -24,6 +24,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import {
   useFlagshipHouseholdPolicies,
   useRequestedHouseholdRun,
+  type RequestedHousehold,
 } from '@/hooks/useFlagshipHousehold';
 import { describeHousehold } from '@/libs/flagship/householdDescription';
 import { householdAmountInputs, newV3Household } from '@/libs/flagship/householdReport';
@@ -171,26 +172,32 @@ export default function HouseholdReportPage({
   // either output first opens and kept here, with its start time, while
   // its result shows: the outputs fetch it themselves, and a fetch with no
   // one left to read it is cancelled, so without this, moving between
-  // them would start the run, and its progress bar, again from 0.
+  // them would start the run, and its progress bar, again from 0. A run
+  // belongs to one request: the same household asked for again, after its
+  // result cleared, shows the result already held, but its run starts
+  // afresh when an output opens.
   const [variationRun, setVariationRun] = useState<{
+    requested: RequestedHousehold;
     key: string;
     source: HouseholdVariationSource;
     startedAt: number;
   } | null>(null);
   const resultHouseholdId = result?.householdId;
-  const requestedPayload = requested?.payload;
   // The calculation a variation run belongs to.
   const variationKey = resultHouseholdId
     ? [resultHouseholdId, year, baselinePolicyId, runReformPolicyId].join('|')
     : null;
+  const belongsHere = (run: NonNullable<typeof variationRun> | null) =>
+    !!run && run.requested === requested && run.key === variationKey;
   const openVariation = useCallback(() => {
-    if (!variationKey || !resultHouseholdId || !requestedPayload) {
+    if (!variationKey || !resultHouseholdId || !requested) {
       return;
     }
     setVariationRun((current) =>
-      current?.key === variationKey
+      current?.requested === requested && current.key === variationKey
         ? current
         : {
+            requested,
             key: variationKey,
             source: {
               countryId,
@@ -198,7 +205,7 @@ export default function HouseholdReportPage({
               householdId: resultHouseholdId,
               baselinePolicyId,
               reformPolicyId: runReformPolicyId,
-              household: requestedPayload.data as unknown as HouseholdCalculationData,
+              household: requested.payload.data as unknown as HouseholdCalculationData,
             },
             startedAt: Date.now(),
           }
@@ -206,14 +213,14 @@ export default function HouseholdReportPage({
   }, [
     variationKey,
     resultHouseholdId,
-    requestedPayload,
+    requested,
     countryId,
     year,
     baselinePolicyId,
     runReformPolicyId,
   ]);
-  // Only the shown result's run: another calculation's is let go.
-  const shownVariation = variationRun && variationRun.key === variationKey ? variationRun : null;
+  // Only the shown result's run: another request's is let go.
+  const shownVariation = belongsHere(variationRun) ? variationRun : null;
 
   const policyIds = useMemo(
     () => (runsReform ? [baselinePolicyId, reformPolicyId] : [baselinePolicyId]),
