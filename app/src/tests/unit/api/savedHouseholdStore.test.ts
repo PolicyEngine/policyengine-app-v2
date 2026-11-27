@@ -332,7 +332,7 @@ describe('ApiSavedHouseholdStore', () => {
       const { store, fetchMock } = savedHouseholdStore();
       const saved = await savedFamily(store, fetchMock);
       const requests = routeRequests(fetchMock, {
-        // The Public API deduplicates: identical content is the stored household.
+        // API v1 deduplicates: identical content is the stored household.
         'POST /v2/households': () => itemResponse(familyHouseholdItem),
       });
 
@@ -398,7 +398,7 @@ describe('ApiSavedHouseholdStore', () => {
 });
 
 describe('getSavedHouseholdStore', () => {
-  test('given an account then saved households go to the Public API; without one there are none', () => {
+  test('given an account then saved households go to API v1; without one there are none', () => {
     expect(getSavedHouseholdStore(createTestApiContext().context)).toBeInstanceOf(
       ApiSavedHouseholdStore
     );

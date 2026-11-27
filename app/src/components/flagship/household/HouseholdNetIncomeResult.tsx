@@ -58,7 +58,7 @@ export default function HouseholdNetIncomeResult({
         <Title id={`${id}-heading`} order={3} style={{ margin: 0 }}>
           Household net income
         </Title>
-        <Text style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+        <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
           {summary}
         </Text>
       </Stack>

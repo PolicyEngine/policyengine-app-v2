@@ -103,7 +103,7 @@ export interface RoutedRequest {
 type RouteHandler = (request: RoutedRequest) => Response | Promise<Response>;
 
 /**
- * Answers the store's requests by method and path, as the Public API
+ * Answers the store's requests by method and path, as API v1
  * would, and keeps each request in order. A request no route expects
  * fails the test.
  */

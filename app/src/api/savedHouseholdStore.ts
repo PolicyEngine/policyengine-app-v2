@@ -18,7 +18,7 @@ import type { AssociationCountryId, V2ItemResult } from '@/types/v2User';
 /**
  * v3's saved households, in the account (signed in, or signed out as this
  * browser's unauthenticated user). A household's content is stored once
- * on the Public API's `/v2/households`, which never changes a household
+ * on API v1's `/v2/households`, which never changes a household
  * and returns the existing one for identical content; the user's saved
  * household is a `/v2/user-households` row holding their name for it and
  * the household's v2 id. An edit stores the new content and points the
@@ -171,7 +171,7 @@ function savedHouseholdOf(
   return { ...rowOf(item), householdId, household };
 }
 
-/** The user's name for a household, as the Public API takes it: at most 255 characters, else none. */
+/** The user's name for a household, as API v1 takes it: at most 255 characters, else none. */
 function nameFor(label: string): string | null {
   return clampStoreText(label.trim()) || null;
 }

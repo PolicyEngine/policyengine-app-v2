@@ -18,16 +18,16 @@ import type {
 import { isAssociationCountry } from '@/types/v2User';
 
 /**
- * The app's household model to and from the Public API's v2 household
+ * The app's household model to and from API v1's v2 household
  * document (`/v2/households`).
  *
- * The document is built exactly as the Public API translates a v1
+ * The document is built exactly as API v1 translates a v1
  * household (`translate_legacy_household`): people and each collection's
  * groups take ids in name order ("person-1", "tax_unit-2"), each keeps its
  * v1 name as `source_name`, each group's members become every person's
  * `memberships`, and the SPM settings move onto the document. So a
  * household v3 saves is the same stored household as the dual-write copy
- * of the identical v1 household: the Public API deduplicates them.
+ * of the identical v1 household: API v1 deduplicates them.
  */
 
 /** A v2 document's collections of groups: every key but its people and its SPM settings. */
@@ -86,7 +86,7 @@ function collectionsFor(countryId: string) {
 }
 
 /**
- * Ids in name order, as the Public API gives them (Python's `sorted`,
+ * Ids in name order, as API v1 gives them (Python's `sorted`,
  * which orders by code point, as JavaScript's default sort does).
  */
 function stableIds(kind: string, names: string[]): Map<string, string> {
@@ -229,7 +229,7 @@ function sortedKeyJson(value: unknown): string {
  * Whether two households would be the same stored household: compared as
  * `POST /v2/households` takes them, whatever their ids, labels and the
  * order of their people, groups and inputs. A household read back from
- * the Public API lists its groups in name order, so it can differ in order
+ * API v1 lists its groups in name order, so it can differ in order
  * alone from the same household as the builder holds it.
  */
 export function haveSameStoredContent(first: Household, second: Household): boolean {

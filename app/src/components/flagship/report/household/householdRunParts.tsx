@@ -11,7 +11,7 @@ import type { ValidationResult } from '@/utils/HouseholdValidation';
  * button, the run's progress and its failure.
  */
 
-/** Both policies run at once; a household new to the Public API takes about three minutes. */
+/** Both policies run at once; a household new to API v1 takes about three minutes. */
 export const HOUSEHOLD_RUN_EXPECTED_MS = 3 * 60 * 1000;
 
 /** Calculate, with the first reason the household cannot run beside it. */
@@ -57,7 +57,7 @@ export function HouseholdRunProgress({ startedAt }: { startedAt?: number } = {})
   );
 }
 
-/** A household run that failed, with the Public API's reason and a way to try again. */
+/** A household run that failed, with API v1's reason and a way to try again. */
 export function HouseholdRunFailure({
   error,
   onRetry,
@@ -70,7 +70,7 @@ export function HouseholdRunFailure({
       compact
       title="This household could not be calculated"
       description={
-        // A Public API message can carry a long unbroken path.
+        // An API v1 message can carry a long unbroken path.
         error?.message && <span style={{ overflowWrap: 'anywhere' }}>{error.message}</span>
       }
       onRetry={onRetry}

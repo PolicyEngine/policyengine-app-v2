@@ -53,7 +53,7 @@ import {
 /**
  * v3's standalone household report: one household under a baseline and,
  * optionally, a reform (issues #498, #1095, #1096). No route renders it
- * before v3 moves to the Public API's v2 routes.
+ * before v3 moves to API v1's v2 routes.
  */
 
 const mockCreateHousehold = vi.fn();
@@ -192,7 +192,7 @@ async function calculate() {
   return user;
 }
 
-/** The household the report sent to the Public API's v1 household route. */
+/** The household the report sent to API v1's `/{country}/household` route. */
 const createdPayload = (callIndex = 0) => mockCreateHousehold.mock.calls[callIndex][0];
 
 describe('HouseholdReportPage', () => {

@@ -21,7 +21,7 @@ import {
 } from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
 
 describe('householdToV2CreateBody', () => {
-  test('given a US household then it is the document the Public API translates its v1 form into', () => {
+  test('given a US household then it is the document API v1 translates its v1 form into', () => {
     expect(householdToV2CreateBody(US_SINGLE_PARENT)).toEqual(US_SINGLE_PARENT_V2_BODY);
   });
 
@@ -112,7 +112,7 @@ describe('householdFromV2Item', () => {
 });
 
 describe('haveSameStoredContent', () => {
-  test('given a household and the same household read back from the Public API then they are the same', () => {
+  test('given a household and the same household read back from API v1 then they are the same', () => {
     const body = householdToV2CreateBody(US_COUPLE_WITH_TWO_CHILDREN);
     const readBack = householdFromV2Item(storedV2Household(body.country_id, body.household_data));
 

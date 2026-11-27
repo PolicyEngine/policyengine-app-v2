@@ -2,7 +2,7 @@ import type { SPMSelection } from '@/types/spm';
 import type { AssociationCountryId } from '@/types/v2User';
 
 /**
- * Wire types for the Public API's v2 household routes: immutable,
+ * Wire types for API v1's v2 household routes: immutable,
  * deduplicated household content (`/v2/households`) and the user's saved
  * households that point at it (`/v2/user-households`). Field names are
  * snake_case, as on the wire.
@@ -87,7 +87,7 @@ export interface UserHouseholdCreateBody {
 /**
  * `PATCH /v2/user-households/{id}`: only the supplied fields change.
  * `household_id` points the saved household at another stored household,
- * keeping its id, name and creation date; the Public API checks that the new
+ * keeping its id, name and creation date; API v1 checks that the new
  * household is in the saved household's country.
  */
 export interface UserHouseholdPatchBody {

@@ -1,9 +1,9 @@
 /**
- * v3's household features that work only on the Public API's v2 routes,
+ * v3's household features that work only on API v1's v2 routes,
  * gathered in one place: the standalone household report and saved
  * households.
  *
- * Saved households live on the Public API's `/v2/households` and
+ * Saved households live on API v1's `/v2/households` and
  * `/v2/user-households`, and household reports will be saved through
  * `/v2/reports`. So until v3 moves to the v2 routes, no route or control
  * reaches anything exported here, and nothing routed imports this module

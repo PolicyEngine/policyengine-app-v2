@@ -1,6 +1,6 @@
 /** Fixtures for v3's standalone household report page. */
 
-/** A policy as the Public API returns it: no parameter changes unless given. */
+/** A policy as API v1 returns it: no parameter changes unless given. */
 export function policyMetadata(countryId: string, policyId: string, policyJson = {}) {
   return {
     id: policyId,
