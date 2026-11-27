@@ -6,22 +6,23 @@ import { formatElapsed } from '@/libs/flagship/reportStages';
 import type { RunStage } from '@/types/calculation';
 
 /**
- * When the run started — `startedAt` when known (a run begun on another
- * page, or a request sent after the bar appeared), else when the component
- * mounted — and the time now, ticking each second. A start time still
- * ahead of the clock counts from the mount until the clock reaches it.
+ * When the run started — `startedAt` when known and no later than the
+ * mount (a run begun on another page), else when the component mounted —
+ * and the time now, ticking each second. A run whose first request is sent
+ * after its bar appears, such as a bill's while its reform policy is
+ * created, counts from the mount, so its elapsed time never steps back.
  */
 function useRunClock(startedAt?: number): { started: number; now: number } {
   const [mounted] = useState(() => Date.now());
+  const started =
+    typeof startedAt === 'number' && Number.isFinite(startedAt) && startedAt <= mounted
+      ? startedAt
+      : mounted;
   const [now, setNow] = useState(mounted);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  const started =
-    typeof startedAt === 'number' && Number.isFinite(startedAt) && startedAt <= now
-      ? startedAt
-      : mounted;
   return { started, now };
 }
 
