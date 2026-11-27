@@ -106,6 +106,16 @@ describe("nextConfig images", () => {
 });
 
 describe("nextConfig redirects", () => {
+  test("redirects the bare /donate path to the US donate page", async () => {
+    const redirects = await getRedirects();
+
+    expect(redirects).toContainEqual({
+      source: "/donate",
+      destination: "/us/donate",
+      permanent: false,
+    });
+  });
+
   test("redirects the bare /policybench vanity path to policybench.org", async () => {
     const redirects = await getRedirects();
 
