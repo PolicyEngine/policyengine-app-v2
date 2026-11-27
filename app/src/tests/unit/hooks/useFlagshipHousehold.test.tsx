@@ -20,6 +20,7 @@ import {
   makeAuthValue,
   signedInAuthValue,
 } from '@/tests/fixtures/libs/auth/authMocks';
+import { STORED_V2_HOUSEHOLD_ID } from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
 
 const CALCULATED_HOUSEHOLD = {
   countryId: 'us',
@@ -98,6 +99,34 @@ describe('useSaveCalculatedHousehold', () => {
     });
     expect(requestsWithMethod('GET')).toHaveLength(1);
     expect(requestsWithMethod('POST')).toHaveLength(1);
+  });
+
+  test('given a stored v2 household calculated on the v2 routes then it is saved to the user by its v2 ID', async () => {
+    // Given
+    const { wrapper } = wrapperFor(signedInAuthValue());
+
+    // When
+    renderHook(
+      () =>
+        useSaveCalculatedHousehold({
+          countryId: 'us',
+          household: { id: STORED_V2_HOUSEHOLD_ID, name: HOUSEHOLD_SUMMARY },
+        }),
+      { wrapper }
+    );
+
+    // Then
+    await waitFor(() => expect(requestsWithMethod('POST')).toHaveLength(1));
+    const [lookupUrl] = requestsWithMethod('GET')[0] as [string, RequestInit];
+    expect(new URL(lookupUrl, 'https://app.test').searchParams.get('household_id')).toBe(
+      STORED_V2_HOUSEHOLD_ID
+    );
+    const [, init] = requestsWithMethod('POST')[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toEqual({
+      country_id: 'us',
+      household_id: STORED_V2_HOUSEHOLD_ID,
+      name: HOUSEHOLD_SUMMARY,
+    });
   });
 
   test('given the same household shown again after six minutes then it is not looked up again', async () => {
