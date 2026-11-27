@@ -25,7 +25,7 @@ export const REFORM_RUN_BUNDLE: PolicyEngineBundle = {
 /** The SPM settings a US calculation response echoes. */
 export const NATIONAL_SPM_CONFIG: SPMSelection = { geography_kind: 'national' };
 
-/** One policy's calculation as the Public API's v1 household route answers it: the result and how it was made. */
+/** One policy's calculation as API v1's household route answers it: the result and how it was made. */
 export function calculationResponse(
   result: HouseholdCalculationData,
   provenance: Omit<HouseholdCalculationResult, 'result'> = {}
@@ -36,7 +36,7 @@ export function calculationResponse(
 /** A country whose household results v3 does not list (no rows of taxes and benefits). */
 export const COUNTRY_WITHOUT_HOUSEHOLD_RESULT_ROWS = 'ca';
 
-/** A married couple with two children, as the household builder sends it to the Public API. */
+/** A married couple with two children, as the household builder sends it to API v1. */
 export const US_COUPLE_WITH_CHILDREN_PAYLOAD = Household.starter('us', HOUSEHOLD_YEAR)
   .withBuilderMaritalStatus(HOUSEHOLD_YEAR, 'married')
   .withBuilderChildCount(HOUSEHOLD_YEAR, 2)
@@ -262,8 +262,8 @@ export const UK_FAMILY_REFORM_RESULT = ukHouseholdResult({
 /**
  * Issue #358's UK household, in the report's year: an adult earning £100
  * and a dependant aged 10 earning £10, in one benefit unit, with a BRMA,
- * region and local authority that name different places. The Public API
- * once failed to calculate it; policyengine-uk 2.130.1 calculates it.
+ * region and local authority that name different places. API v1 once
+ * failed to calculate it; policyengine-uk 2.130.1 calculates it.
  */
 export const ISSUE_358_HOUSEHOLD = Household.fromV1CreationPayload({
   country_id: 'uk',
