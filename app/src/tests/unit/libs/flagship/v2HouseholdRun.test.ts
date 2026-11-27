@@ -120,6 +120,31 @@ describe('runV2FlagshipHousehold', () => {
     expect(submissionsWhenStored).toEqual([0]);
   });
 
+  test('given the payload the household is sent as then the household is stored as sent', async () => {
+    // Given: the payload carries an input the household model itself lacks,
+    // as a UK household's claimant and partner roles do
+    const sentPayload = US_SINGLE_PARENT.setPersonVariableAtYear(
+      'you',
+      'employment_income',
+      V2_CODEC_YEAR,
+      30000
+    ).toV1CreationPayload();
+    const { client, householdClient, fetchMock } = clientForSingleParent();
+
+    // When
+    await runV2FlagshipHousehold(
+      { ...SINGLE_PARENT_UNDER_REFORM, payload: sentPayload },
+      { client, householdClient, wait: noWait }
+    );
+
+    // Then
+    const [storeRequest] = requestsFor(fetchMock, STORE);
+    const stored = (await storeRequest.json()) as typeof US_SINGLE_PARENT_V2_BODY;
+    expect(stored.household_data.people[0].values.employment_income).toEqual({
+      [V2_CODEC_YEAR]: 30000,
+    });
+  });
+
   test('given both calculations then the run compares them, in the v1 names, for the stored household', async () => {
     // Given
     const { client, householdClient } = clientForSingleParent();

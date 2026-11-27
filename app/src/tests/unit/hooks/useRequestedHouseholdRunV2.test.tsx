@@ -117,12 +117,44 @@ describe('useRequestedHouseholdRun with v3 on the v2 routes', () => {
       {
         year: V2_CODEC_YEAR,
         household: US_SINGLE_PARENT,
+        payload: US_SINGLE_PARENT.toV1CreationPayload(),
         baselinePolicyId: null,
         reformPolicyId: V2_REFORM_POLICY_ID,
       },
       expect.objectContaining({ signal: expect.any(AbortSignal) })
     );
     expect(mockRunV1Household).not.toHaveBeenCalled();
+  });
+
+  test('given a payload the household is sent as then the v2 run is given it', async () => {
+    // Given: as the Household tab sends a UK household with claimant and partner roles
+    const sentPayload = US_SINGLE_PARENT.setPersonVariableAtYear(
+      'you',
+      'employment_income',
+      V2_CODEC_YEAR,
+      30000
+    ).toV1CreationPayload();
+    const queryClient = testQueryClient();
+    const { result } = renderHook(
+      () =>
+        useRequestedHouseholdRun({
+          year: V2_CODEC_YEAR,
+          baselinePolicyId: String(TEST_CURRENT_LAW_ID),
+          reformPolicyId: V2_REFORM_POLICY_ID,
+          payloadOf: () => sentPayload,
+        }),
+      { wrapper: wrapperWith(queryClient) }
+    );
+
+    // When
+    act(() => result.current.request(US_SINGLE_PARENT));
+
+    // Then
+    await waitFor(() => expect(result.current.result).toEqual(V2_RUN));
+    expect(mockRunV2Household).toHaveBeenCalledWith(
+      expect.objectContaining({ household: US_SINGLE_PARENT, payload: sentPayload }),
+      expect.anything()
+    );
   });
 
   test('given a reform known only by its v1 policy number then the run fails, saying why', async () => {

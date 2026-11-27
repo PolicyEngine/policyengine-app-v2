@@ -4,6 +4,7 @@ import {
   householdDataFromV2Calculation,
   householdFromV2Item,
   householdToV2CreateBody,
+  v2CreateBodyFromV1Payload,
   V2HouseholdDocumentError,
 } from '@/models/household/v2DocumentCodec';
 import {
@@ -22,6 +23,20 @@ import {
   US_SINGLE_PARENT_V2_BODY,
   V2_CODEC_YEAR,
 } from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
+
+describe('v2CreateBodyFromV1Payload', () => {
+  test("given a household's own v1 payload and its year then the body is the household's", () => {
+    expect(v2CreateBodyFromV1Payload(US_SINGLE_PARENT.toV1CreationPayload(), 2026)).toEqual(
+      US_SINGLE_PARENT_V2_BODY
+    );
+  });
+
+  test('given no year then it cannot be stored', () => {
+    expect(() => v2CreateBodyFromV1Payload(US_SINGLE_PARENT.toV1CreationPayload(), null)).toThrow(
+      new V2HouseholdDocumentError('The household has no year to save it in.')
+    );
+  });
+});
 
 describe('householdToV2CreateBody', () => {
   test('given a US household then it is the document API v1 translates its v1 form into', () => {
