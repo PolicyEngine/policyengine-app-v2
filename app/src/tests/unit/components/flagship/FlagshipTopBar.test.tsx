@@ -4,6 +4,7 @@ import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import { colors, spacing } from '@/designTokens';
 import { countryIds } from '@/libs/countries';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
+import { setExploreEnabled } from '@/libs/featureFlags';
 import {
   clickIsCancelled,
   linkRows,
@@ -75,6 +76,22 @@ describe('FlagshipTopBar', () => {
     expect(primary).toContainElement(
       screen.getByRole('button', { name: /more policyengine links/i })
     );
+  });
+
+  test('given the Explore flag then Explore is the first section', async () => {
+    setExploreEnabled(true);
+    renderTopBar();
+
+    const explore = await screen.findByRole('button', { name: 'Explore' });
+    const primary = screen.getByRole('navigation', { name: 'Primary' });
+    expect(primary.querySelectorAll('button')[0]).toBe(explore);
+    setExploreEnabled(false);
+  });
+
+  test('given no Explore flag then the bar has no Explore section', () => {
+    renderTopBar();
+
+    expect(screen.queryByRole('button', { name: 'Explore' })).not.toBeInTheDocument();
   });
 
   test('given the Ask page is paused then it has no nav item', () => {

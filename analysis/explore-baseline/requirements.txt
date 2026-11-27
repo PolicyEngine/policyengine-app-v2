@@ -1,0 +1,5 @@
+policyengine[us]==6.20.2
+policyengine-us==2.2.2
+policyengine-core==3.34.10
+spm-calculator==1.1.0
+huggingface_hub

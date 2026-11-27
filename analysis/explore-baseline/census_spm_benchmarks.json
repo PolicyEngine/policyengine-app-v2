@@ -1,0 +1,730 @@
+{
+ "us": {
+  "poverty": {
+   "value": 0.129,
+   "period": "2024",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www.census.gov/library/publications/2025/demo/p60-287.html"
+  },
+  "child_poverty": {
+   "value": 0.134,
+   "period": "2024",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www.census.gov/library/publications/2025/demo/p60-287.html"
+  }
+ },
+ "state/al": {
+  "poverty": {
+   "value": 0.135,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.146,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ak": {
+  "poverty": {
+   "value": 0.104,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.106,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/az": {
+  "poverty": {
+   "value": 0.129,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.147,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ar": {
+  "poverty": {
+   "value": 0.136,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.146,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ca": {
+  "poverty": {
+   "value": 0.177,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.182,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/co": {
+  "poverty": {
+   "value": 0.103,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.077,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ct": {
+  "poverty": {
+   "value": 0.099,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.109,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/de": {
+  "poverty": {
+   "value": 0.093,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.103,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/dc": {
+  "poverty": {
+   "value": 0.153,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.187,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/fl": {
+  "poverty": {
+   "value": 0.16,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.176,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ga": {
+  "poverty": {
+   "value": 0.135,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.137,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/hi": {
+  "poverty": {
+   "value": 0.108,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.122,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/id": {
+  "poverty": {
+   "value": 0.084,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.058,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/il": {
+  "poverty": {
+   "value": 0.111,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.109,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/in": {
+  "poverty": {
+   "value": 0.093,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.091,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ia": {
+  "poverty": {
+   "value": 0.077,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.07,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ks": {
+  "poverty": {
+   "value": 0.091,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.097,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ky": {
+  "poverty": {
+   "value": 0.143,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.158,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/la": {
+  "poverty": {
+   "value": 0.177,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.189,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/me": {
+  "poverty": {
+   "value": 0.067,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.05,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/md": {
+  "poverty": {
+   "value": 0.112,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.124,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ma": {
+  "poverty": {
+   "value": 0.117,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.116,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/mi": {
+  "poverty": {
+   "value": 0.105,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.103,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/mn": {
+  "poverty": {
+   "value": 0.075,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.063,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ms": {
+  "poverty": {
+   "value": 0.164,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.171,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/mo": {
+  "poverty": {
+   "value": 0.1,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.108,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/mt": {
+  "poverty": {
+   "value": 0.094,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.081,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ne": {
+  "poverty": {
+   "value": 0.082,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.064,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/nv": {
+  "poverty": {
+   "value": 0.147,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.15,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/nh": {
+  "poverty": {
+   "value": 0.086,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.07,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/nj": {
+  "poverty": {
+   "value": 0.124,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.141,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/nm": {
+  "poverty": {
+   "value": 0.124,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.103,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ny": {
+  "poverty": {
+   "value": 0.144,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.155,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/nc": {
+  "poverty": {
+   "value": 0.14,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.152,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/nd": {
+  "poverty": {
+   "value": 0.082,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.092,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/oh": {
+  "poverty": {
+   "value": 0.093,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.1,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ok": {
+  "poverty": {
+   "value": 0.116,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.112,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/or": {
+  "poverty": {
+   "value": 0.111,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.11,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/pa": {
+  "poverty": {
+   "value": 0.106,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.11,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ri": {
+  "poverty": {
+   "value": 0.091,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.081,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/sc": {
+  "poverty": {
+   "value": 0.117,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.128,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/sd": {
+  "poverty": {
+   "value": 0.079,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.074,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/tn": {
+  "poverty": {
+   "value": 0.101,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.082,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/tx": {
+  "poverty": {
+   "value": 0.143,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.158,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/ut": {
+  "poverty": {
+   "value": 0.084,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.059,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/vt": {
+  "poverty": {
+   "value": 0.095,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.08,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/va": {
+  "poverty": {
+   "value": 0.105,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.111,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/wa": {
+  "poverty": {
+   "value": 0.108,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.096,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/wv": {
+  "poverty": {
+   "value": 0.125,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.11,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/wi": {
+  "poverty": {
+   "value": 0.077,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.065,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ },
+ "state/wy": {
+  "poverty": {
+   "value": 0.083,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state.xlsx"
+  },
+  "child_poverty": {
+   "value": 0.064,
+   "period": "2022-2024 3-year average",
+   "source": "Census Bureau, P60-287",
+   "url": "https://www2.census.gov/programs-surveys/demo/tables/p60/287/spm_opm_state_by_age.xlsx"
+  }
+ }
+}

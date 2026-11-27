@@ -1,5 +1,5 @@
 import { useAppPathname } from '@/contexts/LocationContext';
-import { isFlagshipPagePath } from '@/libs/flagship/shellRoutes';
+import { isFlagshipPagePath, isFullBleedPagePath } from '@/libs/flagship/shellRoutes';
 import FlagshipTopBar from './FlagshipTopBar';
 import { SIDE_PANEL_SLOT_ID } from './SidePanel';
 
@@ -32,6 +32,16 @@ const FLAGSHIP_LAYOUT = {
 };
 
 /**
+ * A v3 page that draws to the edges (Explore's map): no padding, and on
+ * wider screens no scrolling, since the page fills the area itself. On a
+ * phone it scrolls, with the map on top and the place card under it.
+ */
+const FULL_BLEED_LAYOUT = {
+  ...FLAGSHIP_LAYOUT,
+  main: 'tw:relative tw:flex-1 tw:min-w-0 tw:min-h-0 tw:overflow-y-auto tw:overflow-x-hidden tw:lg:overflow-hidden tw:bg-gray-50',
+};
+
+/**
  * The legacy v2 pages the shell also hosts while the flag is on keep the
  * layout they have always had, on every screen.
  */
@@ -50,7 +60,12 @@ const LEGACY_LAYOUT = {
  * panel keeps a slim bar across the bottom (see SidePanel).
  */
 export default function FlagshipShell({ children }: FlagshipShellProps) {
-  const layout = isFlagshipPagePath(useAppPathname()) ? FLAGSHIP_LAYOUT : LEGACY_LAYOUT;
+  const pathname = useAppPathname();
+  const layout = isFullBleedPagePath(pathname)
+    ? FULL_BLEED_LAYOUT
+    : isFlagshipPagePath(pathname)
+      ? FLAGSHIP_LAYOUT
+      : LEGACY_LAYOUT;
 
   // data-flagship-shell: where a phone's drawer finds the page it covers (see SidePanel).
   return (

@@ -1,14 +1,14 @@
 type WorkspaceRoute =
-  | { country: string; screen: "build" | "reforms" }
+  | { country: string; screen: "build" | "reforms" | "explore" }
   | { country: string; screen: "bill" | "report"; id: string };
 
 /** Only these client-only screens are rendered locally by WorkspaceNavigation. */
 export function workspaceRoute(path: string): WorkspaceRoute | null {
-  const match = /^\/(us|uk)\/(build|reforms)\/?(?:[?#].*)?$/.exec(path);
+  const match = /^\/(us|uk)\/(build|reforms|explore)\/?(?:[?#].*)?$/.exec(path);
   if (match) {
     return {
       country: match[1],
-      screen: match[2] as "build" | "reforms",
+      screen: match[2] as "build" | "reforms" | "explore",
     };
   }
   const report =

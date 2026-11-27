@@ -2,11 +2,12 @@
 
 import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { isFlagshipShellEnabled } from "@/libs/featureFlags";
+import { isExploreEnabled, isFlagshipShellEnabled } from "@/libs/featureFlags";
 
 /**
  * Country index route — redirects to /:countryId/reports, or to the
- * flagship Build page when the flagship shell flag is on (Ask is paused).
+ * flagship Build page when the flagship shell flag is on (Ask is paused),
+ * or to Explore when its flag is on too (US only).
  * Mirrors the React Router <Navigate replace />.
  */
 export default function CountryIndexRoute({
@@ -18,7 +19,11 @@ export default function CountryIndexRoute({
   const router = useRouter();
 
   useEffect(() => {
-    const landing = isFlagshipShellEnabled(countryId) ? "build" : "reports";
+    const landing = isExploreEnabled(countryId)
+      ? "explore"
+      : isFlagshipShellEnabled(countryId)
+        ? "build"
+        : "reports";
     router.replace(`/${countryId}/${landing}`);
   }, [router, countryId]);
 
