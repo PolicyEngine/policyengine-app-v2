@@ -29,6 +29,12 @@ const nextConfig: NextConfig = {
         destination: "/us",
         permanent: false,
       },
+      // Bare /donate, as shared without a country, → the US donate page
+      {
+        source: "/donate",
+        destination: "/us/donate",
+        permanent: false,
+      },
       // Claude-branded skills page → runtime-agnostic AI agents page
       {
         source: "/iariw-2026",
