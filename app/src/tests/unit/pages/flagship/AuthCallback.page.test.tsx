@@ -12,6 +12,7 @@ import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { takeSignInReturnTo } from '@/libs/auth/AuthProvider';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import AuthCallbackPage from '@/pages/flagship/AuthCallback.page';
+import { publicApiPathOf, requestUrlOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import { errorResponse, mockMeItem, okResponse } from '@/tests/fixtures/api/v2UserMocks';
 import {
   AuthTestProvider,
@@ -41,7 +42,7 @@ function renderCallback(auth: AuthContextValue) {
 /** Answers the upgrade with `outcome`, or with a failure. */
 function answerUpgrade(answer: UpgradeOutcome | 'fail') {
   fetchMock.mockImplementation(async (url: string) => {
-    if (new URL(url).pathname !== '/v2/me/upgrade') {
+    if (publicApiPathOf(url) !== '/v2/me/upgrade') {
       return new Response('', { status: 404 });
     }
     return answer === 'fail'
@@ -52,7 +53,7 @@ function answerUpgrade(answer: UpgradeOutcome | 'fail') {
 
 function upgradeRequest(index = 0) {
   const [url, init] = fetchMock.mock.calls[index] as [string, RequestInit];
-  return { url: new URL(url), headers: init.headers as Record<string, string> };
+  return { url: requestUrlOf(url), headers: init.headers as Record<string, string> };
 }
 
 beforeEach(() => {

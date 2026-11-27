@@ -222,12 +222,68 @@ describe('rerunSettings', () => {
       expect(settings.baseline).toEqual({ reformId: 'rf-plan-b', label: 'Plan B', policyId: 87 });
     });
 
+    test('given the API cannot be read and the saved reform is a v2 policy then the comparison is its parameters', async () => {
+      // Given: saved on the v2 routes, the reform has no v1 policy to run against.
+      fetchReportById.mockRejectedValue(new Error('down'));
+      const v2PlanB: Reform = {
+        ...PLAN_B,
+        policyId: null,
+        v2PolicyId: '6f1c2a9e-3b4d-4e5f-8a7b-9c0d1e2f3a4b',
+        parameters: [
+          {
+            name: 'gov.irs.deductions.standard.amount.SINGLE',
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 20000 }],
+          },
+        ],
+      };
+
+      // When
+      const settings = await rerunSettings('us', ACCOUNT_REPORT, {
+        savedReform: (reformId) => (reformId === v2PlanB.id ? v2PlanB : undefined),
+      });
+
+      // Then: the run makes a v1 policy from the parameters, as Build's runs do.
+      expect(settings.baseline).toEqual({
+        reformId: 'rf-plan-b',
+        label: 'Plan B',
+        parameters: v2PlanB.parameters,
+      });
+    });
+
     test('given neither the API nor the saved reform names the comparison then it does not run', async () => {
       // Given
       fetchReportById.mockRejectedValue(new Error('down'));
 
       // When / Then: rather than run against current law
       await expect(rerunSettings('us', ACCOUNT_REPORT)).rejects.toThrow();
+    });
+
+    describe('given the run it replaces must be read, as a transfer needs', () => {
+      test('then a report the API cannot read fails, rather than run nationwide this year', async () => {
+        // Given
+        fetchReportById.mockRejectedValue(new Error('down'));
+
+        // When / Then
+        await expect(
+          rerunSettings('us', ACCOUNT_REPORT, { savedReform, requireRun: true })
+        ).rejects.toThrow('down');
+      });
+
+      test('then a report whose year nobody records fails', async () => {
+        // Given: the API's report has no year, and an account row keeps none
+        fetchReportById.mockResolvedValue({ simulation_1_id: '9' });
+
+        // When / Then
+        await expect(
+          rerunSettings('us', ACCOUNT_REPORT, { savedReform, requireRun: true })
+        ).rejects.toThrow('The report’s year could not be read');
+      });
+
+      test('then a readable report gives the same settings as a re-run', async () => {
+        expect(
+          await rerunSettings('us', ACCOUNT_REPORT, { savedReform, requireRun: true })
+        ).toEqual(await rerunSettings('us', ACCOUNT_REPORT, { savedReform }));
+      });
     });
   });
 });

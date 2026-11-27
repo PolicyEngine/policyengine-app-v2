@@ -22,6 +22,11 @@ function withDeepRoute(route: AppZoneRoute): AppZoneRoute[] {
 
 export const appZoneRoutes: AppZoneRoute[] = [
   {
+    source: "/us/rent-and-property-taxes",
+    destination:
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/",
+  },
+  {
     source: "/uk/energy-autumn-budget",
     destination:
       "https://uk-energy-autumn-budget.vercel.app/uk/energy-autumn-budget",
@@ -249,6 +254,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://uk-autumn-budget-2026.vercel.app/uk/autumn-budget-2026",
   },
   {
+    source: "/uk/milburn-review",
+    destination: "https://uk-milburn-review.vercel.app/uk/milburn-review",
+  },
+  {
     source: "/uk/public-services-spending",
     destination:
       "https://uk-public-services-imputation.vercel.app/uk/public-services-spending",
@@ -342,6 +351,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
 
 export const appZoneAssetRoutes: AppZoneRoute[] = [
   {
+    source: "/_zones/property-tax-relief/:path*",
+    destination:
+      "https://property-tax-relief.vercel.app/_zones/property-tax-relief/:path*",
+  },
+  {
     source: "/2025-year-in-review/:path*",
     destination:
       "https://policyengine-2025-year-in-review.vercel.app/2025-year-in-review/:path*",
@@ -358,6 +372,23 @@ export const appZoneRewrites: AppZoneRoute[] = [
     source: "/uk/2025-year-in-review",
     destination:
       "https://policyengine-2025-year-in-review.vercel.app/2025-year-in-review/uk",
+  },
+  // This static-export zone uses trailing slashes for pages. Keep these exact
+  // page destinations ahead of its broad route, which also serves files.
+  {
+    source: "/us/rent-and-property-taxes/report",
+    destination:
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/report/",
+  },
+  {
+    source: "/us/rent-and-property-taxes/methods",
+    destination:
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/methods/",
+  },
+  {
+    source: "/us/rent-and-property-taxes/calculator",
+    destination:
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/calculator/",
   },
   ...appZoneRoutes.flatMap(withDeepRoute),
   ...appZoneAssetRoutes,

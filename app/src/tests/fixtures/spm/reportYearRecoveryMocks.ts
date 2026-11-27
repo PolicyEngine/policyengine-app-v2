@@ -5,6 +5,7 @@ import type {
   V1HouseholdCreateEnvelope,
   V1HouseholdMetadataEnvelope,
 } from '@/models/household/v1Types';
+import { publicApiPathOf } from '@/tests/fixtures/api/publicApiRouteMocks';
 import { REPRODUCTION_CONFIGS } from '@/tests/fixtures/pages/report-output/reproduce-in-python/householdSPMReproductionMocks';
 import {
   GENERIC_ENVELOPES,
@@ -132,7 +133,7 @@ export class ReportYearRecoveryHTTP extends GenericOrchestrationHTTP {
     });
     const orchestrationFetch = this.fetch;
     this.fetch = async (input, init) => {
-      const pathname = new URL(String(input)).pathname;
+      const pathname = publicApiPathOf(String(input));
       const method = init?.method ?? 'GET';
       if (method !== 'GET') {
         this.writes.push(`${method} ${pathname}`);

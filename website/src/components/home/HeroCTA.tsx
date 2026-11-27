@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { colors, spacing, typography } from "@/designTokens";
+import { isCalculatorCountry } from "@/lib/countries";
 import { getMainAppHref } from "@/lib/toolsMenu";
 
 const ctaVariant = {
@@ -19,6 +20,12 @@ const ctaVariant = {
 };
 
 export default function HeroCTA({ countryId }: { countryId: string }) {
+  // The website has home pages for countries the calculator does not offer;
+  // a button to their calculator would lead to its not-found page.
+  if (!isCalculatorCountry(countryId)) {
+    return null;
+  }
+
   return (
     <motion.div
       variants={ctaVariant}

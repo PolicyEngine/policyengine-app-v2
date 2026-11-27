@@ -22,13 +22,13 @@ import PovertyImpactByRaceSubPage from './poverty-impact/PovertyImpactByRaceSubP
 interface Props {
   output: SocietyWideOutput;
   view?: string;
-  /** Reform policy ID retained for optional manual district data fetches */
+  /** Reform policy ID, for a nationwide report's state district runs */
   reformPolicyId?: string;
-  /** Baseline policy ID retained for optional manual district data fetches */
+  /** Baseline policy ID, for a nationwide report's state district runs */
   baselinePolicyId?: string;
   /** Year for calculations */
   year?: string;
-  /** Region/geography for the report (e.g., 'enhanced_us' for national, 'ca' for California) */
+  /** The report's region: 'us' for nationwide, 'state/ca' for a state, or another region */
   region?: string;
 }
 
@@ -63,8 +63,9 @@ const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
  * Sub-router for Comparative Analysis tab - maps :view URL parameter to specific chart components.
  * Acts as a mini-router to keep SocietyWideReportOutput clean as we add 20+ analysis charts.
  *
- * Wraps content with CongressionalDistrictDataProvider so district label metadata
- * is shared between congressional district views.
+ * Wraps content with CongressionalDistrictDataProvider, which gives the
+ * congressional district views their labels, scope, policies and year; a
+ * nationwide report's two district views share one set of state runs.
  */
 export function ComparativeAnalysisPage({
   output,
@@ -84,7 +85,6 @@ export function ComparativeAnalysisPage({
   const content = ViewComponent ? <ViewComponent output={output} /> : <NotFoundSubPage />;
 
   // Wrap with CongressionalDistrictDataProvider if we have the required props.
-  // This ensures label metadata is shared between absolute and relative district views.
   if (reformPolicyId && baselinePolicyId && year) {
     return (
       <CongressionalDistrictDataProvider

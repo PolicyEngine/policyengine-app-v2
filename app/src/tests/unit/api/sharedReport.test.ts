@@ -9,6 +9,7 @@ import {
   itemResponse,
   sharedReportItem,
 } from '@/tests/fixtures/api/v2UserMocks';
+import { REMOVED_COUNTRY_AS_COUNTRY_ID } from '@/tests/fixtures/libs/countriesMocks';
 
 describe('fetchSharedReport', () => {
   test('given a report link then it reads the saved report with no credential', async () => {
@@ -56,7 +57,9 @@ describe('fetchSharedReport', () => {
     const { fetchMock, client } = createTestPublicClient();
 
     // When / Then
-    await expect(fetchSharedReport('ca', ASSOCIATION_IDS.REPORT, client)).resolves.toBeNull();
+    await expect(
+      fetchSharedReport(REMOVED_COUNTRY_AS_COUNTRY_ID, ASSOCIATION_IDS.REPORT, client)
+    ).resolves.toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

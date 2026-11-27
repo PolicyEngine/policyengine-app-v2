@@ -93,6 +93,21 @@ export const EXPECTED_BREAKDOWN = {
   },
 };
 
+/**
+ * The withheld ONS codes a breakdown result lists, sorted, as the
+ * simulation API gives them (PolicyEngine/policyengine-sim-api#968): two
+ * constituencies, Cardiff East and Cardiff West, and no local authority.
+ */
+export const LISTED_CONSTITUENCY_WITHHELD_CODES = ['W07000089', 'W07000092'];
+export const LISTED_LOCAL_AUTHORITY_WITHHELD_CODES: string[] = [];
+
+/** A `breakdown=local_areas` result that also lists each level's withheld codes. */
+export const LIST_SHAPE_BREAKDOWN_RESULT_WITH_WITHHELD_CODES = {
+  ...LIST_SHAPE_BREAKDOWN_RESULT,
+  constituency_withheld_codes: LISTED_CONSTITUENCY_WITHHELD_CODES,
+  local_authority_withheld_codes: LISTED_LOCAL_AUTHORITY_WITHHELD_CODES,
+};
+
 /** A breakdown in which disclosure control withheld every area. */
 export const EMPTY_BREAKDOWN_RESULT = {
   ...BREAKDOWN_PROVENANCE,
@@ -257,7 +272,13 @@ export const BREAKDOWN_ERROR_RESPONSE = {
 
 /** An HTTP error response whose body the test chooses. */
 export function mockErrorResponseWithBody(status: number, statusText: string, body: string) {
-  return { ok: false, status, statusText, text: vi.fn().mockResolvedValue(body) };
+  return {
+    ok: false,
+    status,
+    statusText,
+    headers: new Headers(),
+    text: vi.fn().mockResolvedValue(body),
+  };
 }
 
 /** A Public API error body with a message, as JSON. */

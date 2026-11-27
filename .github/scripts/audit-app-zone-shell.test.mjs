@@ -2,14 +2,18 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
 import {
+  auditRoute,
   extractRoutes,
   extractSitemapLocs,
   inspectTopShellData,
   isPendingStaticDeploy,
   isShellBrandExempt,
+  newExplicitRouteSources,
   resolveDestinationForSource,
+  redirectNavigationErrorCode,
   SHELL_BRAND_EXEMPT_SOURCES,
   shouldAllowDestinationFallback,
+  shouldFallbackAfterRedirectFailure,
   sourcePathFromSitemapLoc,
   staticAssetPathFor,
 } from "./audit-app-zone-shell.mjs";
@@ -252,6 +256,281 @@ describe("shouldAllowDestinationFallback", () => {
   });
 });
 
+describe("new pull-request route redirect fallback", () => {
+  const route = {
+    source: "/us/rent-and-property-taxes/calculator",
+    destination:
+      "https://property-tax-relief.vercel.app/us/rent-and-property-taxes/calculator/",
+  };
+  const failure = {
+    ok: false,
+    status: null,
+    navigationErrorCode: "ERR_TOO_MANY_REDIRECTS",
+  };
+  const options = {
+    allowDestinationFallback: true,
+    isPullRequest: true,
+    newExplicitSources: new Set([route.source]),
+    baseUrl: "https://policyengine.org",
+  };
+
+  test("destination-only edits are existing sources; only explicit additions qualify", () => {
+    const existing = {
+      source: "/us/existing",
+      destination: "https://old.example.com",
+    };
+    const added = newExplicitRouteSources(
+      [{ ...existing, destination: "https://new.example.com" }, route],
+      [existing],
+    );
+    assert.deepEqual([...added], [route.source]);
+    assert.equal(added.has(route.source + "/discovered"), false);
+  });
+
+  test("classifies only the exact browser redirect-loop code", () => {
+    assert.equal(
+      redirectNavigationErrorCode(
+        "page.goto: net::ERR_TOO_MANY_REDIRECTS at https://policyengine.org/us/example",
+      ),
+      "ERR_TOO_MANY_REDIRECTS",
+    );
+    for (const reason of [
+      "net::ERR_TIMED_OUT",
+      "net::ERR_TOO_MANY_REDIRECTS_OTHER",
+      "navigation failed",
+    ]) {
+      assert.equal(redirectNavigationErrorCode(reason), null);
+    }
+  });
+
+  test("permits checking an external destination for an explicit new PR source", () => {
+    assert.equal(
+      shouldFallbackAfterRedirectFailure(failure, route, options),
+      true,
+    );
+  });
+
+  test("preserves existing production sources, manual runs, and non-loop failures", () => {
+    for (const overrides of [
+      { allowDestinationFallback: false },
+      { isPullRequest: false },
+      { newExplicitSources: new Set() },
+    ]) {
+      assert.equal(
+        shouldFallbackAfterRedirectFailure(failure, route, {
+          ...options,
+          ...overrides,
+        }),
+        false,
+      );
+    }
+    for (const overrides of [
+      { ok: true },
+      { status: 200 },
+      { status: 404 },
+      { status: 500 },
+      { navigationErrorCode: null },
+      { navigationErrorCode: "ERR_TIMED_OUT" },
+    ]) {
+      assert.equal(
+        shouldFallbackAfterRedirectFailure(
+          { ...failure, ...overrides },
+          route,
+          options,
+        ),
+        false,
+      );
+    }
+  });
+
+  test("rejects internal, same-origin, or credential-bearing destinations", () => {
+    for (const destination of [
+      "/assets/posts/example/index.html",
+      "https://policyengine.org/us/example",
+      "https://www.policyengine.org/us/example",
+      "http://child.example.com/us/example",
+      "https://user:password@child.example.com/us/example",
+    ]) {
+      assert.equal(
+        shouldFallbackAfterRedirectFailure(
+          failure,
+          { ...route, destination },
+          options,
+        ),
+        false,
+      );
+    }
+  });
+
+  function browserFixture({
+    firstStatus = null,
+    errorCode = "ERR_TOO_MANY_REDIRECTS",
+    destinationStatus = 200,
+    destinationHasShell = true,
+  } = {}) {
+    const visited = [];
+    const pages = [];
+    const events = [];
+    async function newPage(pageOptions) {
+      const info = { closed: false, options: pageOptions };
+      pages.push(info);
+      const index = pages.length - 1;
+      events.push(`create:${index}`);
+      let poisoned = false;
+      const page = {
+        async goto(url) {
+          visited.push(url);
+          if (poisoned) {
+            throw new Error(
+              'page.goto: Navigation interrupted by another navigation to "chrome-error://chromewebdata/"',
+            );
+          }
+          if (visited.length === 1 && firstStatus === null) {
+            poisoned = true;
+            throw new Error(`page.goto: net::${errorCode}`);
+          }
+          return {
+            status: () =>
+              visited.length === 1 ? firstStatus : destinationStatus,
+          };
+        },
+        async waitForLoadState() {},
+        async waitForTimeout() {},
+        locator: () => ({
+          innerText: async () =>
+            "Calculator content that is long enough to require the full visible PolicyEngine shell check.",
+        }),
+        async evaluate() {
+          return destinationHasShell
+            ? [
+                visibleTopElement({
+                  ariaLabel: "PolicyEngine header",
+                  textContent: "Research Model API Donate",
+                }),
+              ]
+            : [];
+        },
+        async close() {
+          info.closed = true;
+          events.push(`close:${index}`);
+        },
+      };
+      info.page = page;
+      return page;
+    }
+    return {
+      browser: { newPage },
+      visited,
+      pages,
+      events,
+      isClosed: () => pages.every((page) => page.closed),
+    };
+  }
+
+  test("a new source redirect loop passes only after the destination renders its shell", async () => {
+    const fixture = browserFixture();
+    const result = await auditRoute(
+      fixture.browser,
+      route,
+      options.baseUrl,
+      10,
+      true,
+      undefined,
+      options,
+    );
+    assert.equal(result.ok, true);
+    assert.equal(result.usedFallback, true);
+    assert.equal(result.testedUrl, route.destination);
+    assert.equal(fixture.visited.length, 2);
+    assert.equal(fixture.pages.length, 2);
+    assert.notEqual(fixture.pages[0].page, fixture.pages[1].page);
+    assert.deepEqual(fixture.pages[0].options, fixture.pages[1].options);
+    assert.deepEqual(fixture.pages[1].options, {
+      viewport: { width: 1440, height: 1000 },
+      userAgent: "policyengine-app-zone-shell-audit/1.0",
+    });
+    assert.deepEqual(fixture.events, [
+      "create:0",
+      "close:0",
+      "create:1",
+      "close:1",
+    ]);
+    assert.equal(fixture.isClosed(), true);
+  });
+
+  test("destination HTTP200 without the PolicyEngine shell and destination404 still fail", async () => {
+    for (const fixtureOptions of [
+      { destinationHasShell: false },
+      { destinationStatus: 404 },
+    ]) {
+      const fixture = browserFixture(fixtureOptions);
+      const result = await auditRoute(
+        fixture.browser,
+        route,
+        options.baseUrl,
+        10,
+        true,
+        undefined,
+        options,
+      );
+      assert.equal(result.ok, false);
+      assert.equal(result.usedFallback, false);
+      assert.equal(result.pending, undefined);
+      assert.match(result.reason, /ERR_TOO_MANY_REDIRECTS/);
+      assert.match(
+        result.reason,
+        fixtureOptions.destinationHasShell === false
+          ? /destination check failed: PolicyEngine brand missing from top shell/
+          : /destination check failed: HTTP 404/,
+      );
+      assert.equal(fixture.visited.length, 2);
+      assert.equal(fixture.isClosed(), true);
+    }
+  });
+
+  test("disabled fallback, existing source, and navigation timeout never visit destination", async () => {
+    for (const [allowed, overrides, fixtureOptions] of [
+      [false, {}, {}],
+      [true, { newExplicitSources: new Set() }, {}],
+      [true, { isPullRequest: false }, {}],
+      [true, {}, { errorCode: "ERR_TIMED_OUT" }],
+    ]) {
+      const fixture = browserFixture(fixtureOptions);
+      const result = await auditRoute(
+        fixture.browser,
+        route,
+        options.baseUrl,
+        10,
+        allowed,
+        undefined,
+        { ...options, ...overrides },
+      );
+      assert.equal(result.ok, false);
+      assert.equal(result.usedFallback, false);
+      assert.equal(fixture.visited.length, 1);
+      assert.equal(fixture.isClosed(), true);
+    }
+  });
+
+  test("the existing404 destination fallback still runs without the new redirect exception", async () => {
+    const fixture = browserFixture({ firstStatus: 404 });
+    const result = await auditRoute(
+      fixture.browser,
+      route,
+      options.baseUrl,
+      10,
+      true,
+      undefined,
+      { isPullRequest: false },
+    );
+    assert.equal(result.ok, true);
+    assert.equal(result.usedFallback, true);
+    assert.equal(fixture.visited.length, 2);
+    assert.equal(fixture.pages.length, 1);
+    assert.equal(fixture.isClosed(), true);
+  });
+});
+
 describe("isShellBrandExempt", () => {
   test("exempts nothing — every zone child renders its own shell", () => {
     // The list only ever shrinks; it drained to empty when the last nine
@@ -268,10 +547,7 @@ describe("isShellBrandExempt", () => {
     );
     assert.equal(isShellBrandExempt("/us/obbba-household-explorer"), false);
     assert.equal(isShellBrandExempt("/uk/bus-fare-cap"), false);
-    assert.equal(
-      isShellBrandExempt("/us/snap-payment-error-simulator"),
-      false,
-    );
+    assert.equal(isShellBrandExempt("/us/snap-payment-error-simulator"), false);
     assert.equal(isShellBrandExempt("/uk/marriage"), false);
   });
 });

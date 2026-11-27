@@ -72,28 +72,45 @@ export function placeOnUKHexLayout(
 
 /** The areas of a report's region a result leaves out, by ONS code, and how many the region has. */
 export interface UKWithheldAreaCodes {
+  /** The areas drawn as withheld, and counted in the note under the map. */
   codes: string[];
+  /**
+   * The region's other areas the result leaves out, which have no data:
+   * those a breakdown's list of withheld codes does not name. Empty
+   * without a list.
+   */
+  noDataCodes: string[];
   total: number;
 }
 
 /**
  * The ONS codes of a report's region's areas that a result leaves out, by
- * the result's codes against the layout, and how many areas the region
- * has; null when the result cannot be matched to the layout. The hex map's
- * withheld areas and the note's count under it both follow this rule, so
- * they always agree.
+ * the result's codes against the layout, split into the withheld ones and
+ * the ones with no data, and how many areas the region has; null when the
+ * result cannot be matched to the layout. The hex map's withheld areas and
+ * the note's count under it both follow this rule, so they always agree.
+ *
+ * With a breakdown's list of withheld codes (`listedWithheldCodes`, even
+ * an empty one), an area the result leaves out is withheld only when the
+ * list names it, and has no data otherwise: an area can be missing for
+ * another reason, such as having no households in the local-area dataset.
+ * A listed code outside the region's layout, or one the result publishes,
+ * is not withheld. Without a list (null or absent, as in a result from
+ * before the simulation API gave one), every area the result leaves out
+ * is withheld.
  *
  * The region's areas are the layout's: all of them for a UK-wide report
  * (`uk`, or no region), and the nation's for a nation's report. The result
  * cannot be matched when an area has no code (an older saved result) or a
  * code outside the region's layout (such as a district abolished in April
  * 2023, or an area of another nation), or when the region is neither the
- * UK nor a nation.
+ * UK nor a nation; a list does not change that.
  */
 export function withheldUKAreaCodes(
   level: UKBoundaryLevel,
   codes: (string | null | undefined)[],
-  region?: string | null
+  region?: string | null,
+  listedWithheldCodes?: readonly string[] | null
 ): UKWithheldAreaCodes | null {
   const nation = ukNationFromRegion(region);
   if (region && region.toLowerCase() !== 'uk' && !nation) {
@@ -107,53 +124,46 @@ export function withheldUKAreaCodes(
     return null;
   }
   const reportedCodes = new Set(codes);
+  const absentCodes = regionCodes.filter((code) => !reportedCodes.has(code));
+  if (!listedWithheldCodes) {
+    return { codes: absentCodes, noDataCodes: [], total: regionCodes.length };
+  }
+  const listed = new Set(listedWithheldCodes);
   return {
-    codes: regionCodes.filter((code) => !reportedCodes.has(code)),
+    codes: absentCodes.filter((code) => listed.has(code)),
+    noDataCodes: absentCodes.filter((code) => !listed.has(code)),
     total: regionCodes.length,
   };
 }
 
 /**
- * The areas of a report's region that a result leaves out, as hex-map
- * areas without a value: each at its layout position, named from the
- * boundary files, with its ONS code as its id. For a disclosure-controlled
- * breakdown these are the areas disclosure control withheld.
- *
- * They follow withheldUKAreaCodes, and none are listed when the result
- * cannot be matched to the layout: a layout area the result lacks may then
- * be covered by one of the result's unmatched areas, such as the districts
- * a 2023 unitary authority replaced, so calling it withheld could be wrong.
- * A hex map that leaves out areas placeOnUKHexLayout cannot place
- * therefore draws no withheld areas either.
+ * Layout codes as hex-map areas without a value: each at its layout
+ * position, named from the boundary files, with its ONS code as its id.
  */
-export function withheldUKHexAreas(
-  level: UKBoundaryLevel,
-  points: Pick<UKAreaChoroplethDataPoint, 'code'>[],
-  region?: string | null
-): HexMapMissingArea[] {
-  const withheld = withheldUKAreaCodes(
-    level,
-    points.map((point) => point.code),
-    region
-  );
-  // Each withheld code is one of the layout's own keys, so it has a position.
-  return (withheld?.codes ?? []).map((code) => ({
+function layoutHexAreas(level: UKBoundaryLevel, codes: string[]): HexMapMissingArea[] {
+  // Each code is one of the layout's own keys, so it has a position.
+  return codes.map((code) => ({
     id: code,
     label: UK_HEX_AREA_NAMES[level][code] ?? code,
     ...gridPosition(UK_HEX_LAYOUTS[level][code]),
   }));
 }
 
-/** A level's hex map: its result's areas, placed, and the areas drawn as withheld. */
+/** A level's hex map: its result's areas, placed, and the region's areas it leaves out. */
 export interface UKHexMap {
   /** The result's areas the layout places, at their layout positions. */
   points: HexMapDataPoint[];
   /**
-   * The region's areas the result leaves out, which the map draws as not
-   * reported: only for a disclosure-controlled level whose areas the layout
-   * can all match.
+   * The region's areas the result leaves out that are withheld, which the
+   * map draws as not reported: only for a disclosure-controlled level whose
+   * areas the layout can all match.
    */
   withheldAreas: HexMapMissingArea[];
+  /**
+   * The region's other areas the result leaves out, which the map draws as
+   * having no data: only when the breakdown lists its withheld codes.
+   */
+  noDataAreas: HexMapMissingArea[];
 }
 
 /**
@@ -161,16 +171,42 @@ export interface UKHexMap {
  * tiled grid: the result's areas placed from the layout, leaving out any it
  * cannot place (placeOnUKHexLayout), and, for a level from a
  * disclosure-controlled breakdown, the region's areas the result leaves out
- * (withheldUKHexAreas), of which there are none when any of the result's
- * areas cannot be matched to the layout. A saved level has none.
+ * (withheldUKAreaCodes): withheld, or with no data when the breakdown's
+ * list of withheld codes does not name them. Each is at its layout
+ * position, named from the boundary files, with its ONS code as its id.
+ *
+ * None are listed when any of the result's areas cannot be matched to the
+ * layout: a layout area the result lacks may then be covered by one of the
+ * result's unmatched areas, such as the districts a 2023 unitary authority
+ * replaced, so calling it withheld, or saying it has no data, could be
+ * wrong. A hex map that leaves out areas placeOnUKHexLayout cannot place
+ * therefore draws neither. A saved level has none.
  */
 export function placeUKHexMap(
   level: UKBoundaryLevel,
   points: UKAreaChoroplethDataPoint[],
-  { disclosureControlled, region }: { disclosureControlled: boolean; region?: string | null }
+  {
+    disclosureControlled,
+    region,
+    listedWithheldCodes,
+  }: {
+    disclosureControlled: boolean;
+    region?: string | null;
+    /** The breakdown's withheld codes at this level; null or absent when it does not list them. */
+    listedWithheldCodes?: readonly string[] | null;
+  }
 ): UKHexMap {
+  const missing = disclosureControlled
+    ? withheldUKAreaCodes(
+        level,
+        points.map((point) => point.code),
+        region,
+        listedWithheldCodes
+      )
+    : null;
   return {
     points: placeOnUKHexLayout(level, points),
-    withheldAreas: disclosureControlled ? withheldUKHexAreas(level, points, region) : [],
+    withheldAreas: layoutHexAreas(level, missing?.codes ?? []),
+    noDataAreas: layoutHexAreas(level, missing?.noDataCodes ?? []),
   };
 }

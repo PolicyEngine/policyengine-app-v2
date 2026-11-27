@@ -34,18 +34,29 @@ function apiMessage(raw: string): string | null {
   return typeof message === 'string' ? message : null;
 }
 
+/** The error codes in the JSON body's `errors` list, e.g. SPM_CONFIGURATION_UNAVAILABLE. */
+function apiErrorCodes(raw: string): string[] {
+  const errors = apiBody(raw)?.errors;
+  return Array.isArray(errors)
+    ? errors.map((error) => (typeof error?.code === 'string' ? error.code : ''))
+    : [];
+}
+
+/**
+ * The code the Public API sends when the requested year is outside the
+ * years the country's model and data cover. Running it again gives the
+ * same answer; its message says which years are covered.
+ */
+const DATASET_YEAR_UNAVAILABLE = 'DATASET_YEAR_UNAVAILABLE';
+
 /**
  * Whether a 4xx says the API itself could not serve the run, not that the
  * reform is wrong: an error code for something unavailable
  * (SPM_CONFIGURATION_UNAVAILABLE), or a message about its worker.
  */
 function serverUnavailable(raw: string, message: string | null): boolean {
-  const errors = apiBody(raw)?.errors;
-  const codes = Array.isArray(errors)
-    ? errors.map((error) => (typeof error?.code === 'string' ? error.code : ''))
-    : [];
   return (
-    codes.some((code) => /_UNAVAILABLE$/.test(code)) ||
+    apiErrorCodes(raw).some((code) => /_UNAVAILABLE$/.test(code)) ||
     /\bworker\b|unavailable/i.test(message ?? '')
   );
 }
@@ -63,6 +74,19 @@ export function describeCalculationError(
   const message = apiMessage(detail);
   const reference = detail.match(/correlation_id=([A-Za-z0-9-]+)/)?.[1] ?? null;
 
+  // Checked before the other unavailable codes: it is about the year
+  // asked for, not the servers, so a retry does not help.
+  if (apiErrorCodes(detail).includes(DATASET_YEAR_UNAVAILABLE)) {
+    return {
+      retryable: false,
+      title: 'The model does not cover this year',
+      body:
+        message ??
+        "This year is outside the years the model's data cover. Choose another year and run the report again.",
+      reference,
+      detail,
+    };
+  }
   if (/timed? ?out|timeout/i.test(detail)) {
     return {
       retryable: true,

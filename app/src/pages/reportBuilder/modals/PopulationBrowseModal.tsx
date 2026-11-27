@@ -114,7 +114,7 @@ export function PopulationBrowseModal({
         count: usDistricts.length,
         regions: usDistricts,
       },
-      // Populace does not yet support place-level simulations. Re-enable this
+      // Microcosm does not yet support place-level simulations. Re-enable this
       // before launching the simulation API on policyengine.py 4.18.6+ once
       // place computation is supported.
       /*

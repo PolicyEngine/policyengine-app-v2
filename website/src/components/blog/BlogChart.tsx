@@ -23,15 +23,39 @@
  *   "yLabel": "...",
  *   "format": { "decimals": 2, "suffix": " pp", "signed": true },
  *   "valueLabels": false,
+ *   "orientation": "horizontal",
+ *   "legend": false,
+ *   "stacked": true,
  *   "source": "..."
  * }
  *
- * "valueLabels" (default true) prints each bar's value above it. Set it to
+ * "valueLabels" (default true) prints each bar's value at its end. Set it to
  * false when several series make the labels overlap; the tooltip still
  * gives each value.
+ *
+ * "orientation" (default "vertical") sets the direction the bars run.
+ * "horizontal" lists the categories down the left and runs the bars along a
+ * quantitative x-axis, which suits long category lists and ranked data.
+ * "yLabel" then labels that value axis.
+ *
+ * "legend" (default true) shows the series names. Set it to false for a
+ * single series that the title or subtitle already names.
+ *
+ * "stacked" (default false) stacks the series in each row, in series order
+ * from zero, and labels each stack's end with the row's total. List first
+ * the series readers should compare across rows, since only it shares a
+ * baseline.
+ *
+ * "select" (optional, e.g. { "label": "Year", "default": "y2029" }) shows one
+ * series at a time, with a labelled control of the series names above the
+ * chart (BlogOptionControl.tsx: a segmented button group for a few short
+ * names, else a drop-down); "default" is the key shown first (the first series without it). A
+ * series may then carry its own "format" and "yLabel", which replace the
+ * chart's while it is shown. Without "select" every series is drawn, as
+ * before, and per-series formats are not used.
  */
 
-import { type ReactNode, useId } from "react";
+import { type ReactNode, useId, useState } from "react";
 import {
   AXIS_STYLE,
   GRID_STYLE,
@@ -61,9 +85,11 @@ import {
   isFiniteNumber,
   isRecord,
   niceTicks,
+  validFormat,
   validSharedFields,
 } from "./blogChartUtils";
 import { type BlogLineSpec, LineBody, parseLineSpec } from "./BlogLineChart";
+import { BlogOptionControl } from "./BlogOptionControl";
 import {
   type BlogStateMapSpec,
   StateMapBody,
@@ -82,6 +108,17 @@ export interface BlogChartSeries {
   key: string;
   name: string;
   color?: ChartColorName;
+  /** With "select": the format while this series is shown. */
+  format?: BlogChartFormat;
+  /** With "select": the value axis label while this series is shown. */
+  yLabel?: string;
+}
+
+/** Show one series at a time, chosen from a labelled drop-down. */
+export interface BlogChartSelect {
+  label: string;
+  /** The key of the series shown first; the first series without it. */
+  default?: string;
 }
 
 export interface BlogBarChartSpec {
@@ -94,6 +131,10 @@ export interface BlogBarChartSpec {
   yLabel?: string;
   format?: BlogChartFormat;
   valueLabels?: boolean;
+  orientation?: "vertical" | "horizontal";
+  legend?: boolean;
+  stacked?: boolean;
+  select?: BlogChartSelect;
   source?: string;
   height?: number;
 }
@@ -109,17 +150,42 @@ function parseBarSpec(s: Record<string, unknown>): BlogBarChartSpec | null {
   if (s.valueLabels !== undefined && typeof s.valueLabels !== "boolean") {
     return null;
   }
+  if (
+    s.orientation !== undefined &&
+    s.orientation !== "vertical" &&
+    s.orientation !== "horizontal"
+  ) {
+    return null;
+  }
+  if (s.legend !== undefined && typeof s.legend !== "boolean") return null;
+  if (s.stacked !== undefined && typeof s.stacked !== "boolean") return null;
   if (!Array.isArray(s.series) || s.series.length === 0) return null;
   if (!Array.isArray(s.data) || s.data.length === 0) return null;
   if (
     !s.series.every(
       (x) =>
-        isRecord(x) && typeof x.key === "string" && typeof x.name === "string",
+        isRecord(x) &&
+        typeof x.key === "string" &&
+        typeof x.name === "string" &&
+        validFormat(x.format) &&
+        (x.yLabel === undefined || typeof x.yLabel === "string"),
     )
   ) {
     return null;
   }
   const keys = (s.series as BlogChartSeries[]).map((x) => x.key);
+  if (s.select !== undefined) {
+    const select = s.select;
+    if (
+      !isRecord(select) ||
+      typeof select.label !== "string" ||
+      select.label.trim() === "" ||
+      (select.default !== undefined &&
+        !(typeof select.default === "string" && keys.includes(select.default)))
+    ) {
+      return null;
+    }
+  }
   const xKey = s.xKey;
   if (
     !s.data.every(
@@ -163,16 +229,44 @@ interface ValueLabelProps {
   height?: unknown;
   value?: unknown;
   format: BlogChartFormat;
+  horizontal?: boolean;
 }
 
-/** Value label above a positive bar and below a negative one; the unit lives on the axis. */
-function ValueLabel({ x, y, width, height, value, format }: ValueLabelProps) {
+/**
+ * Value label at the bar's end: above a positive bar and below a negative
+ * one, or right and left of them when the bars run horizontally. The unit
+ * lives on the axis.
+ */
+function ValueLabel({
+  x,
+  y,
+  width,
+  height,
+  value,
+  format,
+  horizontal = false,
+}: ValueLabelProps) {
   const v = Number(value);
   if (!Number.isFinite(v)) return null;
   const nx = Number(x),
     ny = Number(y),
     nw = Number(width),
     nh = Number(height);
+  if (horizontal) {
+    const left = Math.min(nx, nx + nw);
+    const right = Math.max(nx, nx + nw);
+    return (
+      <text
+        x={v >= 0 ? right + 6 : left - 6}
+        y={ny + nh / 2}
+        textAnchor={v >= 0 ? "start" : "end"}
+        dominantBaseline="central"
+        style={{ ...AXIS_STYLE, fill: "var(--text-secondary)" }}
+      >
+        {formatChartValue(v, { ...format, suffix: "" })}
+      </text>
+    );
+  }
   const top = Math.min(ny, ny + nh);
   const bottom = Math.max(ny, ny + nh);
   return (
@@ -187,54 +281,153 @@ function ValueLabel({ x, y, width, height, value, format }: ValueLabelProps) {
   );
 }
 
-function BarBody({ spec }: { spec: BlogBarChartSpec }) {
+/**
+ * A bar chart with "select": a labelled control of the series names, and
+ * the chosen series drawn alone, in its own color, format and axis label.
+ */
+function SelectableBarBody({
+  spec,
+  select,
+}: {
+  spec: BlogBarChartSpec;
+  select: BlogChartSelect;
+}) {
+  const [chosen, setChosen] = useState(select.default ?? spec.series[0].key);
+  const index = Math.max(
+    0,
+    spec.series.findIndex((s) => s.key === chosen),
+  );
+  const series = spec.series[index];
+  const shown: BlogBarChartSpec = {
+    ...spec,
+    series: [series],
+    format: series.format ?? spec.format,
+    yLabel: series.yLabel ?? spec.yLabel,
+    legend: false,
+    select: undefined,
+  };
+  return (
+    <>
+      <BlogOptionControl
+        label={select.label}
+        options={spec.series.map((s) => ({ value: s.key, label: s.name }))}
+        value={series.key}
+        onChange={setChosen}
+        className="tw:mb-3 tw:sm:max-w-[28rem]"
+      />
+      <BarBody spec={shown} colorIndex={index} />
+    </>
+  );
+}
+
+function BarBody({
+  spec,
+  colorIndex,
+}: {
+  spec: BlogBarChartSpec;
+  /** The palette index of a lone series chosen with "select". */
+  colorIndex?: number;
+}) {
   const format = spec.format ?? {};
   const hasNegative = spec.data.some((row) =>
     spec.series.some(
       (s) => typeof row[s.key] === "number" && (row[s.key] as number) < 0,
     ),
   );
-  const values = spec.data.flatMap((row) =>
+  const rowValues = (row: BlogChartRow) =>
     spec.series
       .map((s) => row[s.key])
-      .filter((v): v is number => typeof v === "number"),
+      .filter((v): v is number => typeof v === "number");
+  const rowTotal = (row: BlogChartRow) =>
+    rowValues(row).reduce((sum, v) => sum + v, 0);
+  // A stack reaches its row's total, so the axis must cover the totals too.
+  const values = spec.data.flatMap((row) =>
+    spec.stacked ? [...rowValues(row), rowTotal(row)] : rowValues(row),
   );
   const axis = niceTicks(values);
   const tickFormat = (v: number) =>
     formatChartValue(v, { ...format, decimals: axis.decimals });
+  const horizontal = spec.orientation === "horizontal";
+  const valueAxis = {
+    tick: AXIS_STYLE,
+    axisLine: false,
+    tickLine: false,
+    tickFormatter: tickFormat,
+    domain: axis.domain,
+    ticks: axis.ticks,
+  };
+  const categoryAxis = {
+    dataKey: spec.xKey,
+    tick: AXIS_STYLE,
+    axisLine: false,
+    tickLine: false,
+  };
+  // Room for the longest category name down the left of horizontal bars.
+  const longest = Math.max(
+    ...spec.data.map((row) => String(row[spec.xKey] ?? "").length),
+  );
+  const categoryWidth = Math.min(180, 16 + 8 * longest);
+  const height =
+    spec.height ??
+    (horizontal ? Math.max(200, 48 + 36 * spec.data.length) : 360);
 
   return (
-    <ResponsiveContainer width="100%" height={spec.height ?? 360}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart
         data={spec.data}
-        margin={{ top: 24, right: 16, bottom: 8, left: 8 }}
+        layout={horizontal ? "vertical" : "horizontal"}
+        margin={
+          horizontal
+            ? { top: 8, right: 48, bottom: spec.yLabel ? 24 : 8, left: 8 }
+            : { top: 24, right: 16, bottom: 8, left: 8 }
+        }
       >
-        <CartesianGrid {...GRID_STYLE} vertical={false} />
-        <XAxis
-          dataKey={spec.xKey}
-          tick={AXIS_STYLE}
-          axisLine={false}
-          tickLine={false}
+        <CartesianGrid
+          {...GRID_STYLE}
+          vertical={horizontal}
+          horizontal={!horizontal}
         />
-        <YAxis
-          tick={AXIS_STYLE}
-          axisLine={false}
-          tickLine={false}
-          tickFormatter={tickFormat}
-          domain={axis.domain}
-          ticks={axis.ticks}
-          label={
-            spec.yLabel
-              ? {
-                  value: spec.yLabel,
-                  angle: -90,
-                  position: "insideLeft",
-                  style: { ...AXIS_STYLE, textAnchor: "middle" },
-                }
-              : undefined
-          }
-        />
-        {hasNegative && <ReferenceLine y={0} stroke="var(--border-dark)" />}
+        {horizontal ? (
+          <XAxis
+            type="number"
+            {...valueAxis}
+            label={
+              spec.yLabel
+                ? {
+                    value: spec.yLabel,
+                    position: "insideBottom",
+                    offset: -16,
+                    style: { ...AXIS_STYLE, textAnchor: "middle" },
+                  }
+                : undefined
+            }
+          />
+        ) : (
+          <XAxis {...categoryAxis} />
+        )}
+        {horizontal ? (
+          <YAxis type="category" {...categoryAxis} width={categoryWidth} />
+        ) : (
+          <YAxis
+            {...valueAxis}
+            label={
+              spec.yLabel
+                ? {
+                    value: spec.yLabel,
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { ...AXIS_STYLE, textAnchor: "middle" },
+                  }
+                : undefined
+            }
+          />
+        )}
+        {hasNegative &&
+          (horizontal ? (
+            <ReferenceLine x={0} stroke="var(--border-dark)" />
+          ) : (
+            <ReferenceLine y={0} stroke="var(--border-dark)" />
+          ))}
         <Tooltip
           {...TOOLTIP_STYLE}
           cursor={{ fill: "var(--background-tertiary)" }}
@@ -243,24 +436,52 @@ function BarBody({ spec }: { spec: BlogBarChartSpec }) {
             String(name),
           ]}
         />
-        <Legend {...LEGEND_STYLE} iconType="square" />
-        {spec.series.map((s, i) => (
-          <Bar
-            key={s.key}
-            dataKey={s.key}
-            name={s.name}
-            fill={chartColor(s.color, i)}
-            radius={[2, 2, 0, 0]}
-            isAnimationActive={false}
-          >
-            {spec.valueLabels !== false && (
-              <LabelList
-                dataKey={s.key}
-                content={(props) => <ValueLabel {...props} format={format} />}
-              />
-            )}
-          </Bar>
-        ))}
+        {spec.legend !== false && (
+          <Legend {...LEGEND_STYLE} iconType="square" />
+        )}
+        {spec.series.map((s, i) => {
+          const last = i === spec.series.length - 1;
+          // In a stack only the outer segment gets rounded corners and the
+          // label, which gives the row's total.
+          const rounded = !spec.stacked || last;
+          const labelled =
+            spec.valueLabels !== false && (!spec.stacked || last);
+          return (
+            <Bar
+              key={s.key}
+              dataKey={s.key}
+              name={s.name}
+              fill={chartColor(s.color, colorIndex ?? i)}
+              stackId={spec.stacked ? "stack" : undefined}
+              radius={
+                rounded
+                  ? horizontal
+                    ? [0, 2, 2, 0]
+                    : [2, 2, 0, 0]
+                  : [0, 0, 0, 0]
+              }
+              isAnimationActive={false}
+            >
+              {labelled && (
+                <LabelList
+                  dataKey={s.key}
+                  content={(props) => (
+                    <ValueLabel
+                      {...props}
+                      value={
+                        spec.stacked && typeof props.index === "number"
+                          ? rowTotal(spec.data[props.index])
+                          : props.value
+                      }
+                      format={format}
+                      horizontal={horizontal}
+                    />
+                  )}
+                />
+              )}
+            </Bar>
+          );
+        })}
       </BarChart>
     </ResponsiveContainer>
   );
@@ -339,7 +560,12 @@ export function BlogChart({ data }: { data: string | string[] }) {
   if (!spec) return null;
   return (
     <ChartFigure spec={spec}>
-      {spec.type === "bar" && <BarBody spec={spec} />}
+      {spec.type === "bar" &&
+        (spec.select ? (
+          <SelectableBarBody spec={spec} select={spec.select} />
+        ) : (
+          <BarBody spec={spec} />
+        ))}
       {spec.type === "line" && <LineBody spec={spec} />}
       {spec.type === "waterfall" && <WaterfallBody spec={spec} />}
       {spec.type === "stateMap" && <StateMapBody spec={spec} />}

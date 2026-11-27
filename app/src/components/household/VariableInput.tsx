@@ -68,6 +68,12 @@ export default function VariableInput({
   };
   const currentValue = getValue(household, resolvedVariable.name, metadata, year, entityName);
   const numericFormatting = getInputFormattingProps(resolvedVariable);
+  // A whole-number input shows a whole amount without cents ("45,000", not
+  // "45,000.00"); cents typed in still show.
+  const displayFormatting =
+    wholeNumbers && numericFormatting.decimalScale
+      ? { ...numericFormatting, decimalScale: undefined }
+      : numericFormatting;
   const isPercentage = resolvedVariable.unit === '/1';
   const rawNumericValue =
     typeof currentValue === 'number'
@@ -93,9 +99,9 @@ export default function VariableInput({
     }
 
     if (!isEditingNumericValue) {
-      setNumericInputValue(formatNumericDisplay(editableNumericValue, numericFormatting));
+      setNumericInputValue(formatNumericDisplay(editableNumericValue, displayFormatting));
     }
-  }, [editableNumericValue, isEditingNumericValue, numericFormatting, resolvedVariable.valueType]);
+  }, [editableNumericValue, isEditingNumericValue, displayFormatting, resolvedVariable.valueType]);
 
   useEffect(() => {
     if (resolvedVariable.valueType === 'float' || resolvedVariable.valueType === 'int') {
@@ -128,7 +134,7 @@ export default function VariableInput({
     const parsedValue = isClearedNumericInput ? 0 : parseNumericInput(numericInputValue);
     if (parsedValue === null) {
       setIsEditingNumericValue(false);
-      setNumericInputValue(formatNumericDisplay(editableNumericValue, numericFormatting));
+      setNumericInputValue(formatNumericDisplay(editableNumericValue, displayFormatting));
       return;
     }
 
@@ -136,7 +142,7 @@ export default function VariableInput({
     const coercedValue = coerceByValueType(normalizedValue, resolvedVariable.valueType);
 
     setIsEditingNumericValue(false);
-    setNumericInputValue(formatNumericDisplay(parsedValue, numericFormatting));
+    setNumericInputValue(formatNumericDisplay(parsedValue, displayFormatting));
 
     if (isClearedNumericInput && currentValue === 0) {
       return;

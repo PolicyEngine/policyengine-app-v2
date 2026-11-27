@@ -9,7 +9,9 @@ import AiPage from "../../app/[countryId]/ai/page";
 
 describe("static pages", () => {
   test("Donate page renders heading", async () => {
-    const el = await DonatePage();
+    const el = await DonatePage({
+      params: Promise.resolve({ countryId: "us" }),
+    });
     render(el);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       /donate/i,

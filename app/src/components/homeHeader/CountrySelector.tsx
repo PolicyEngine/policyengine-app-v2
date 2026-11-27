@@ -2,15 +2,51 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconWorld } from '@tabler/icons-react';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
-import { colors, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { countryIds } from '@/libs/countries';
+import { getCountryDisplayName } from '@/models/geography';
 
-const countries = [
-  { id: 'us', label: 'United States' },
-  { id: 'uk', label: 'United Kingdom' },
-];
+const countries = countryIds.map((id) => ({ id, label: getCountryDisplayName(id) }));
 
-export default function CountrySelector() {
+/** 'inverse' for the teal calculator header; 'default' for light bars. */
+type CountrySelectorVariant = 'default' | 'inverse';
+
+/**
+ * The globe button's icon and hover colors and its corners, by the bar it
+ * sits on: a light bar's buttons have container corners.
+ */
+const TRIGGER_STYLES: Record<
+  CountrySelectorVariant,
+  { icon: string; hoverBackground: string; borderRadius: string }
+> = {
+  default: {
+    icon: colors.gray[700],
+    hoverBackground: colors.gray[100],
+    borderRadius: spacing.radius.container,
+  },
+  inverse: {
+    icon: colors.text.inverse,
+    hoverBackground: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: '6px',
+  },
+};
+
+interface CountrySelectorProps {
+  variant?: CountrySelectorVariant;
+  /**
+   * Classes that size the globe button, for example to a bar's other buttons;
+   * without them, the button fits its icon. The button's inline styles
+   * (padding, corner radius, colors, layout) take precedence over classes.
+   */
+  triggerClassName?: string;
+}
+
+export default function CountrySelector({
+  variant = 'default',
+  triggerClassName,
+}: CountrySelectorProps) {
+  const triggerStyle = TRIGGER_STYLES[variant];
   const countryId = useCurrentCountry();
   const nav = useAppNavigate();
   const location = useAppLocation();
@@ -23,15 +59,20 @@ export default function CountrySelector() {
   const handleCountryChange = useCallback(
     (newCountryId: string) => {
       setOpen(false);
+      if (newCountryId === countryId) {
+        return;
+      }
       const pathParts = location.pathname.split('/').filter(Boolean);
-      if (pathParts.length > 0) {
+      // A v3 report (/us/report/…, /us/report/bill/…) is one country's, so
+      // switching from it opens the other country's landing page instead.
+      if (pathParts.length > 0 && pathParts[1] !== 'report') {
         pathParts[0] = newCountryId;
         nav.push(`/${pathParts.join('/')}`);
       } else {
         nav.push(`/${newCountryId}`);
       }
     },
-    [location.pathname, nav]
+    [countryId, location.pathname, nav]
   );
 
   useEffect(() => {
@@ -73,25 +114,28 @@ export default function CountrySelector() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Country selector"
+        aria-expanded={open}
+        className={triggerClassName}
         style={{
           background: 'transparent',
           border: 'none',
           cursor: 'pointer',
           padding: '6px',
-          borderRadius: '6px',
+          borderRadius: triggerStyle.borderRadius,
           transition: 'background-color 0.15s ease',
           lineHeight: 1,
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'center',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
+          e.currentTarget.style.backgroundColor = triggerStyle.hoverBackground;
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
         }}
       >
-        <IconWorld size={18} color={colors.text.inverse} />
+        <IconWorld size={18} color={triggerStyle.icon} />
       </button>
 
       {(open || contentHeight > 0) && (

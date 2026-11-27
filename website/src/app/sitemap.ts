@@ -63,6 +63,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [
     "research",
     "team",
+    "users",
     "donate",
     "supporters",
     "ai-agents",

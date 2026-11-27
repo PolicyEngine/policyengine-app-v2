@@ -28,4 +28,15 @@ describe("HeroCTA", () => {
       ).toHaveAttribute("href", getToolsMenu(countryId)[0].href);
     },
   );
+
+  test.each(["ca", "ng", "il"])(
+    "given the %s home page, a country the calculator does not offer, then there is no calculator button",
+    (countryId) => {
+      render(<HeroCTA countryId={countryId} />);
+
+      expect(
+        screen.queryByRole("link", { name: "Enter PolicyEngine" }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });

@@ -170,7 +170,8 @@ describe('calculator error pages', () => {
     test.each([
       ['/uk/reports/123', '/uk/reports'],
       ['/uk', '/uk/reports'],
-      ['/ca/households', '/ca/reports'],
+      // A country the calculator no longer offers.
+      ['/ca/households', '/us/reports'],
       ['/us/reports', '/us/reports'],
       ['/', '/us/reports'],
       ['/xx/reports', '/us/reports'],

@@ -49,7 +49,6 @@ export const VALIDATION_PERSON_NAMES = {
 export const VALIDATION_COUNTRIES = {
   US: 'us',
   UK: 'uk',
-  CA: 'ca',
   WRONG: 'wrong',
 } as const;
 

@@ -70,3 +70,19 @@ export function describeHousehold(
     ...(place ? [place] : []),
   ].join(' · ');
 }
+
+/** The earnings a household's summary counts: wages and self-employment profit. */
+const EARNINGS_VARIABLES = ['employment_income', 'self_employment_income'];
+
+/** The household's earnings in the year, summed across its people; 0 when none are set. */
+export function householdEarnings(household: Household, year: string): number {
+  return household.personNames.reduce(
+    (total, person) =>
+      total +
+      EARNINGS_VARIABLES.reduce((sum, variable) => {
+        const value = household.getPersonVariableAtYear(person, variable, year);
+        return sum + (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+      }, 0),
+    0
+  );
+}

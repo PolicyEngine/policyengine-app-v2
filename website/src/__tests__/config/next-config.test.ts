@@ -106,6 +106,16 @@ describe("nextConfig images", () => {
 });
 
 describe("nextConfig redirects", () => {
+  test("redirects the bare /donate path to the US donate page", async () => {
+    const redirects = await getRedirects();
+
+    expect(redirects).toContainEqual({
+      source: "/donate",
+      destination: "/us/donate",
+      permanent: false,
+    });
+  });
+
   test("redirects the bare /policybench vanity path to policybench.org", async () => {
     const redirects = await getRedirects();
 
@@ -170,6 +180,25 @@ describe("nextConfig redirects", () => {
     ].map((rewrite) => rewrite.source);
     expect(sources).toContain("/uk/autumn-budget-2026");
     expect(sources).toContain("/uk/autumn-budget-2026/:path*");
+  });
+
+  test("proxies /uk/milburn-review to the Milburn review dashboard, under the same path", async () => {
+    const rewrites = await nextConfig.rewrites!();
+    if (Array.isArray(rewrites)) {
+      throw new Error("Expected rewrites to be grouped by phase.");
+    }
+    const zone = (rewrites.beforeFiles ?? []).filter((rewrite) =>
+      rewrite.source.startsWith("/uk/milburn-review"),
+    );
+    expect(zone.map((rewrite) => rewrite.source)).toEqual([
+      "/uk/milburn-review",
+      "/uk/milburn-review/:path*",
+    ]);
+    for (const rewrite of zone) {
+      expect(new URL(rewrite.destination).pathname).toMatch(
+        /^\/uk\/milburn-review(\/:path\*)?$/,
+      );
+    }
   });
 });
 

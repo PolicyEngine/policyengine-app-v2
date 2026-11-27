@@ -187,6 +187,32 @@ export const RECHARTS_FONT_STYLE = {
   fill: colors.gray[500],
 } as const;
 
+/**
+ * A household variation chart's legend. Tidied (the v3 report): above the
+ * plot on the right, in the ticks' size, with room under it. Otherwise as
+ * the v2 report has it: at the top left, in the page's size.
+ */
+export function householdChartLegendProps(tidy = false) {
+  return tidy
+    ? ({
+        verticalAlign: 'top',
+        align: 'right',
+        iconSize: 10,
+        wrapperStyle: {
+          fontFamily: RECHARTS_FONT_STYLE.fontFamily,
+          fontSize: RECHARTS_FONT_STYLE.fontSize,
+          lineHeight: '16px',
+          paddingBottom: 12,
+        },
+      } as const)
+    : ({ verticalAlign: 'top', align: 'left' } as const);
+}
+
+/** The y-axis title's offset from `getYAxisLayout`; tidied, it sits closer to the ticks. */
+export function householdChartLabelDx(labelDx: number, tidy = false): number {
+  return tidy ? labelDx + 8 : labelDx;
+}
+
 // ---------------------------------------------------------------------------
 // Y-axis layout (dynamic width, margin, and label offset)
 // ---------------------------------------------------------------------------

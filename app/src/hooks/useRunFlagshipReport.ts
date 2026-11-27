@@ -1,22 +1,54 @@
 import { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { CURRENT_YEAR } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
+import { cacheCreatedReport } from '@/hooks/useFlagshipReport';
+import {
+  cacheSharedReport,
+  savedReportQueryKeys,
+  useFlagshipReportStore,
+} from '@/hooks/useFlagshipStores';
 import { markDraftRun } from '@/libs/draftReform';
 import {
   flagshipReportQueryKeys,
   runFlagshipReport,
   RunReportBaseline,
   RunReportProvision,
+  type FlagshipRunRecords,
 } from '@/libs/flagship/runReport';
+import { windowSizeWithin } from '@/libs/flagship/supportedYears';
+import { getLastSupportedYear } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
+import type { Reform } from '@/types/ingredients/Reform';
+
+/**
+ * Puts what a run created where its report page reads it, so the page
+ * opens on the run's own answers rather than reading the saved report,
+ * the report and its simulations back one after another. Whatever cannot
+ * be put in place, the page reads as before: this never fails a run.
+ */
+function cacheRunRecords(
+  queryClient: QueryClient,
+  countryId: string,
+  records: FlagshipRunRecords
+): void {
+  try {
+    cacheCreatedReport(queryClient, records);
+    if (records.savedReport) {
+      cacheSharedReport(queryClient, countryId, records.savedReport);
+    }
+  } catch {
+    // The page reads them itself.
+  }
+}
 
 /**
  * Runs the flagship report pipeline for a set of provisions and
  * navigates to the report page, exposing pending/error state for the
- * triggering button.
+ * triggering button. A run answers the report's link, or null when it
+ * did not start.
  */
 export function useRunFlagshipReport() {
   const nav = useAppNavigate();
@@ -25,6 +57,7 @@ export function useRunFlagshipReport() {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const reportStore = useFlagshipReportStore();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const lastSupportedYear = useSelector(getLastSupportedYear);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,30 +79,51 @@ export function useRunFlagshipReport() {
     year?: number,
     {
       fromDraft = false,
+      reformPolicies,
       region,
       windowYears,
       baseline,
+      savedReportId,
+      currentLink,
     }: {
       /** A run from the draft hands the draft over: its report clears it. */
       fromDraft?: boolean;
+      /**
+       * The policies the caller's save of the reform (`reformId`) just
+       * made, as the reform store answered them. The run reuses
+       * `policyId`, the v1 policy, rather than creating it again; without
+       * one (a reform saved only as a v2 policy) it creates it. Only
+       * `policyId` is passed on: `v2PolicyId` is accepted for a run on the
+       * v2 routes, which does not exist yet.
+       */
+      reformPolicies?: Pick<Reform, 'policyId' | 'v2PolicyId'>;
       /** A state or congressional district ("state/ca"); the whole country when unset. */
       region?: string;
       /** Years of budget to score alongside the report, e.g. 10. */
       windowYears?: number;
       /** A saved reform to compare with; current law when unset. */
       baseline?: RunReportBaseline;
+      /** A saved report to move onto this run, instead of saving a new one. */
+      savedReportId?: string;
+      /** The report link the page shows: a run that answers it stays on the page. */
+      currentLink?: string;
     } = {}
-  ) => {
+  ): Promise<string | null> => {
     if (isRunning) {
-      return;
+      return null;
     }
     if (!currentLawId) {
       setError('Model metadata is still loading — try again in a moment.');
-      return;
+      return null;
     }
     setIsRunning(true);
     setError(null);
+    // No run asks for a year after the last one the model and data cover:
+    // a window that would (a report re-run from before, say) ends on it.
+    const runWindowYears =
+      windowYears && windowSizeWithin(windowYears, year ?? Number(CURRENT_YEAR), lastSupportedYear);
     try {
+      const created: { records?: FlagshipRunRecords } = {};
       const userReportId = await runFlagshipReport({
         countryId,
         title,
@@ -78,13 +132,18 @@ export function useRunFlagshipReport() {
         currentLawId: Number(currentLawId),
         parameters,
         reformId,
+        reformPolicyId: reformPolicies?.policyId,
         year,
         region,
-        windowYears,
+        windowYears: runWindowYears,
         baseline,
         // With accounts, the run's record goes through the API (the account,
         // or this browser's unauthenticated user); otherwise this browser's.
         accountReportStore: reportStore.isAccount ? reportStore.store : null,
+        savedReportId,
+        onRecordsCreated: (records) => {
+          created.records = records;
+        },
       });
       if (fromDraft) {
         markDraftRun(userReportId);
@@ -92,10 +151,31 @@ export function useRunFlagshipReport() {
       // Your reforms lists the new report at once, not when its cache goes stale.
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.all });
       void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.statuses });
-      nav.push(`/${countryId}/report/${userReportId}`);
+      if (savedReportId) {
+        // The saved report now points at this run. Its page, open now or
+        // cached from earlier, reads it afresh rather than show the old run
+        // (and offer its transfer again) until a refetch returns. It keeps
+        // its link, so the page may stay mounted, and its next run must not
+        // wait on this one.
+        void queryClient.resetQueries({ queryKey: savedReportQueryKeys.shared });
+        void queryClient.resetQueries({ queryKey: savedReportQueryKeys.record });
+        setIsRunning(false);
+      }
+      // After the resets above, which would drop the saved report put in
+      // place here: its page then shows this run at once.
+      if (created.records) {
+        cacheRunRecords(queryClient, countryId, created.records);
+      }
+      // Opened again, the page the run started from would add a second
+      // history entry for itself.
+      if (userReportId !== currentLink) {
+        nav.push(`/${countryId}/report/${userReportId}`);
+      }
+      return userReportId;
     } catch {
       setError('Could not start the report. Try again.');
       setIsRunning(false);
+      return null;
     }
   };
 

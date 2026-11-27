@@ -6,7 +6,7 @@ import OptimisedImage from "@/components/ui/OptimisedImage";
 import {
   CountryId,
   getOrgsForCountry,
-  Organization,
+  LogoOrganization,
 } from "@/data/organizations";
 import { colors, spacing, typography } from "@/designTokens";
 
@@ -23,7 +23,7 @@ function shuffle<T>(array: T[]): T[] {
   return result;
 }
 
-function LogoItem({ org }: { org: Organization }) {
+function LogoItem({ org }: { org: LogoOrganization }) {
   return (
     <a
       href={org.link}

@@ -3,6 +3,9 @@ import { appZoneRewrites } from "./src/data/appZoneRoutes";
 import { policyEngineIconRewrites } from "./src/data/policyEngineIconRewrites";
 
 const nextConfig: NextConfig = {
+  // Workspace packages that ship TypeScript source rather than a build.
+  transpilePackages: ["@policyengine/public-api-forwarding"],
+
   // Vercel's image optimiser (/_vercel/image) only accepts widths from this
   // allowlist (imageSizes ∪ deviceSizes). For Next.js projects this config is
   // the source of truth — the `images` block in vercel.json is ignored — and
@@ -24,6 +27,12 @@ const nextConfig: NextConfig = {
       {
         source: "/",
         destination: "/us",
+        permanent: false,
+      },
+      // Bare /donate, as shared without a country, → the US donate page
+      {
+        source: "/donate",
+        destination: "/us/donate",
         permanent: false,
       },
       // Claude-branded skills page → runtime-agnostic AI agents page

@@ -1,3 +1,4 @@
+import { fireEvent, screen, within } from '@test-utils';
 import { vi } from 'vitest';
 import type {
   GeoJSONFeatureCollection,
@@ -45,11 +46,13 @@ function localAuthorityBoundary(code: string, name: string, west: number, south:
   return squareBoundary({ LAD23CD: code, LAD23NM: name }, west, south);
 }
 
-/** Real PCON24 codes and names: four in Wales and one in England. */
+/** Real PCON24 codes and names: six in Wales and one in England. */
 export const CLWYD_EAST_CODE = 'W07000094';
 export const MONMOUTHSHIRE_CODE = 'W07000101';
 export const GOWER_CODE = 'W07000097';
 export const CARDIFF_EAST_CODE = 'W07000089';
+export const CARDIFF_WEST_CODE = 'W07000092';
+export const CARDIFF_NORTH_CODE = 'W07000090';
 export const ALDERSHOT_CODE = 'E14001063';
 
 export const MOCK_UK_CONSTITUENCY_BOUNDARIES: GeoJSONFeatureCollection = {
@@ -59,13 +62,17 @@ export const MOCK_UK_CONSTITUENCY_BOUNDARIES: GeoJSONFeatureCollection = {
     constituencyBoundary(MONMOUTHSHIRE_CODE, 'Monmouthshire', -2.9, 51.7),
     constituencyBoundary(GOWER_CODE, 'Gower', -4.1, 51.6),
     constituencyBoundary(CARDIFF_EAST_CODE, 'Cardiff East', -3.1, 51.45),
+    constituencyBoundary(CARDIFF_WEST_CODE, 'Cardiff West', -3.3, 51.45),
+    constituencyBoundary(CARDIFF_NORTH_CODE, 'Cardiff North', -3.2, 51.55),
     constituencyBoundary(ALDERSHOT_CODE, 'Aldershot', -0.8, 51.25),
   ],
 };
 
-/** Real LAD23 codes and names: two in Wales and one in England. */
+/** Real LAD23 codes and names: four in Wales and one in England. */
 export const CARDIFF_CODE = 'W06000015';
 export const POWYS_CODE = 'W06000023';
+export const SWANSEA_CODE = 'W06000011';
+export const NEWPORT_CODE = 'W06000022';
 export const HARTLEPOOL_CODE = 'E06000001';
 
 export const MOCK_UK_LOCAL_AUTHORITY_BOUNDARIES: GeoJSONFeatureCollection = {
@@ -73,6 +80,8 @@ export const MOCK_UK_LOCAL_AUTHORITY_BOUNDARIES: GeoJSONFeatureCollection = {
   features: [
     localAuthorityBoundary(CARDIFF_CODE, 'Cardiff', -3.25, 51.45),
     localAuthorityBoundary(POWYS_CODE, 'Powys', -3.5, 52.2),
+    localAuthorityBoundary(SWANSEA_CODE, 'Swansea', -4.0, 51.6),
+    localAuthorityBoundary(NEWPORT_CODE, 'Newport', -3.0, 51.55),
     localAuthorityBoundary(HARTLEPOOL_CODE, 'Hartlepool', -1.25, 54.65),
   ],
 };
@@ -140,3 +149,19 @@ export const HEX_MAP_TAB = 'Hex grid';
 
 /** The geographic map's legend, which shows once its boundaries have loaded. */
 export const MAP_LEGEND_NAME = 'Color scale legend';
+
+/**
+ * The ONS codes of the drawn boundaries whose tooltip reads `text`, in
+ * drawing order: each boundary is hovered in turn and its tooltip read.
+ */
+export function boundariesReading(text: string): string[] {
+  return screen
+    .getAllByTestId(/^area-/)
+    .filter((boundary) => {
+      fireEvent.mouseEnter(boundary);
+      const reads = within(screen.getByRole('tooltip')).queryByText(text) !== null;
+      fireEvent.mouseLeave(boundary);
+      return reads;
+    })
+    .map((boundary) => boundary.getAttribute('data-testid')!.replace(/^area-/, ''));
+}

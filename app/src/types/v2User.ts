@@ -1,3 +1,5 @@
+import type { paths } from '@/api/publicApi/schema';
+
 /**
  * Wire types for the PolicyEngine API's saved-work routes (`/v2/me*` and
  * `/v2/user-*`). Field names are snake_case, as on the wire. The server
@@ -17,11 +19,15 @@ export function isAssociationCountry(countryId: unknown): countryId is Associati
   );
 }
 
-/** `{"status": "ok", "message": null, "result": <R>}` or `{"status": "error", "message": "…"}`. */
+/**
+ * `{"status": "ok", "message": null, "result": <R>}` or
+ * `{"status": "error", "message": "…"}`, where some errors add a `code`.
+ */
 export interface V2Envelope<R> {
   status: 'ok' | 'error';
   message: string | null;
   result?: R;
+  code?: unknown;
 }
 
 export interface V2ItemResult<T> {
@@ -35,8 +41,30 @@ export interface V2PageResult<T> {
   has_more: boolean;
 }
 
-/** An unauthenticated user is this browser's; a standard user signs in with Auth0. */
-export type UserType = 'unauthenticated' | 'standard';
+/**
+ * Every user type, from fewest permissions to most: each type has every
+ * permission of the types before it. An unauthenticated user is this
+ * browser's; a signed-in user (Auth0) is standard, author or admin, as the
+ * API stores it.
+ */
+export const USER_TYPES = ['unauthenticated', 'standard', 'author', 'admin'] as const;
+export type UserType = (typeof USER_TYPES)[number];
+
+export function isUserType(value: unknown): value is UserType {
+  return typeof value === 'string' && (USER_TYPES as readonly string[]).includes(value);
+}
+
+/**
+ * Whether `userType` has every permission of `minimum`: it is `minimum` or
+ * comes after it in `USER_TYPES`. The Public API's
+ * `user_type_meets_minimum` decides the same way. False when either is not
+ * in `USER_TYPES`.
+ */
+export function userTypeMeetsMinimum(userType: UserType, minimum: UserType): boolean {
+  const userTypeRank = USER_TYPES.indexOf(userType);
+  const minimumRank = USER_TYPES.indexOf(minimum);
+  return userTypeRank !== -1 && minimumRank !== -1 && userTypeRank >= minimumRank;
+}
 
 export interface MeItem {
   /** The PolicyEngine user ID that owns every association. */
@@ -48,7 +76,18 @@ export interface MeItem {
   last_name: string | null;
   email: string | null;
   created_at: string;
+  /**
+   * The signed-in user's latest type change until they dismiss it, else
+   * null. `GET /v2/me` sends it beside the user, and `fetchMe` copies it
+   * here; absent from other answers, and from an API that does not send it.
+   */
+  latest_type_change?: LatestUserTypeChange | null;
 }
+
+/** A signed-in user's type change, as `GET /v2/me` names it until the user dismisses it. */
+export type LatestUserTypeChange = NonNullable<
+  paths['/v2/me']['get']['responses'][200]['content']['application/json']['result']['latest_type_change']
+>;
 
 export interface ProvenanceWire {
   source: 'manual' | 'chat' | 'bill' | 'tool';
@@ -142,21 +181,8 @@ export interface SharedReportItem {
 
 /* Create and patch bodies (strict on the server: unknown keys are a 400). */
 
-export interface UserPolicyCreateBody {
-  country_id: AssociationCountryId;
-  legacy_policy_id: number;
-  name?: string | null;
-  description?: string | null;
-  baseline?: BaselineWire | null;
-  provenance?: ProvenanceWire | null;
-}
-
-export type UserPolicyPatchBody = Partial<
-  Pick<
-    UserPolicyCreateBody,
-    'legacy_policy_id' | 'name' | 'description' | 'baseline' | 'provenance'
-  >
->;
+// The `/v2/user-policies` bodies are the generated UserPolicyCreateRequest
+// and UserPolicyPatchRequest (see api/reformStore.ts).
 
 export interface UserReportCreateBody {
   country_id: AssociationCountryId;
@@ -179,9 +205,15 @@ export interface UserHouseholdCreateBody {
   description?: string | null;
 }
 
+/** The fields a saved report's update may change; `legacy_report_id` repoints it to another run. */
+export type UserReportPatchBody = Partial<Omit<UserReportCreateBody, 'country_id'>>;
+
 /* /v2/me/export */
 
-/** Everything saved to the account, in every country; downloaded as is. */
+/**
+ * Everything saved to the account, in every country. The downloaded file
+ * leaves out `user` and each record's `user_id` (see DownloadMyData).
+ */
 export interface MeExportResult {
   /** Null for a signed-out browser that has saved nothing yet. */
   user: MeItem | null;

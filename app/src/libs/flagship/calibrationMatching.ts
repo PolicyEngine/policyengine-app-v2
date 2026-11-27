@@ -4,7 +4,7 @@
  * A reform's parameter paths reach a set of model variables (via the
  * traced dependency map). Each of those variables may be a calibration
  * target of the microdata: an administrative total the survey weights
- * were fit to, with a known relative error in the current populace
+ * were fit to, with a known relative error in the current Microcosm
  * release. This module joins the two: which of the variables this reform
  * moves are calibrated, how well, and how close to the reform they sit.
  *

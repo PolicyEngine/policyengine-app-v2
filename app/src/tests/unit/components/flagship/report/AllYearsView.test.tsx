@@ -1,24 +1,29 @@
 import { render, screen, userEvent, within } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import AllYearsView from '@/components/flagship/report/AllYearsView';
 
-const budgetWindow = vi.hoisted(() => ({ perYear: -600e6 }));
+const budgetWindow = vi.hoisted(() => ({
+  perYear: -600e6,
+  /** The query's state in place of a finished window, when a test sets one. */
+  queryState: null as Record<string, unknown> | null,
+}));
 
 vi.mock('@/hooks/useBudgetWindow', () => ({
-  useBudgetWindow: () => ({
-    data: {
-      status: 'ok',
-      result: {
-        annualImpacts: [
-          { year: 2026, budgetaryImpact: budgetWindow.perYear },
-          { year: 2027, budgetaryImpact: budgetWindow.perYear },
-          { year: 2028, budgetaryImpact: budgetWindow.perYear },
-        ],
-        totals: { year: 'Total', budgetaryImpact: budgetWindow.perYear * 3 },
+  useBudgetWindow: () =>
+    budgetWindow.queryState ?? {
+      data: {
+        status: 'ok',
+        result: {
+          annualImpacts: [
+            { year: 2026, budgetaryImpact: budgetWindow.perYear },
+            { year: 2027, budgetaryImpact: budgetWindow.perYear },
+            { year: 2028, budgetaryImpact: budgetWindow.perYear },
+          ],
+          totals: { year: 'Total', budgetaryImpact: budgetWindow.perYear * 3 },
+        },
       },
     },
-  }),
 }));
 
 const OUTPUT_2026 = {
@@ -100,5 +105,100 @@ describe('AllYearsView', () => {
     expect(budget).toHaveTextContent('£0');
     expect(budget).not.toHaveTextContent('$');
     budgetWindow.perYear = -600e6;
+  });
+
+  describe('when the budget window failed', () => {
+    afterEach(() => {
+      budgetWindow.queryState = null;
+    });
+
+    test('given the window failed then the error shows with a retry, as on a single year', async () => {
+      // Given
+      const user = userEvent.setup();
+      const refetch = vi.fn();
+      budgetWindow.queryState = {
+        data: { status: 'error', result: null, error: 'Budget window request failed (502)' },
+        isError: false,
+        isFetching: false,
+        refetch,
+      };
+      render(
+        <AllYearsView
+          countryId="us"
+          reformPolicyId="1"
+          baselinePolicyId="2"
+          years={['2026', '2027']}
+          outputs={{ '2026': OUTPUT_2026, '2027': null }}
+          statusByYear={{ '2026': 'done', '2027': 'computing' }}
+          onCalculateAll={vi.fn()}
+        />
+      );
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+      // Then
+      expect(screen.getByText('The budget window could not be calculated')).toBeInTheDocument();
+      expect(screen.getByText('Budget window request failed (502)')).toBeInTheDocument();
+      expect(refetch).toHaveBeenCalledTimes(1);
+    });
+
+    test('given the window is requested again then its figures read as calculating', () => {
+      // Given
+      budgetWindow.queryState = {
+        data: { status: 'error', result: null, error: 'Budget window request failed (502)' },
+        isError: false,
+        isFetching: true,
+        refetch: vi.fn(),
+      };
+
+      // When
+      render(
+        <AllYearsView
+          countryId="us"
+          reformPolicyId="1"
+          baselinePolicyId="2"
+          years={['2026', '2027']}
+          outputs={{ '2026': OUTPUT_2026, '2027': null }}
+          statusByYear={{ '2026': 'done', '2027': 'computing' }}
+          onCalculateAll={vi.fn()}
+        />
+      );
+
+      // Then
+      const budget = within(screen.getByRole('table')).getByRole('row', {
+        name: /budgetary impact/i,
+      });
+      expect(budget).toHaveTextContent('Calculating…');
+      expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+    });
+
+    test('given a retry of the failed window fails then the latest failure shows', () => {
+      // Given: the window's answer is the first failure; the retry's request failed after it.
+      budgetWindow.queryState = {
+        data: { status: 'error', result: null, error: 'Budget window request failed (502)' },
+        isError: true,
+        error: new Error('Failed to fetch'),
+        isFetching: false,
+        refetch: vi.fn(),
+      };
+
+      // When
+      render(
+        <AllYearsView
+          countryId="us"
+          reformPolicyId="1"
+          baselinePolicyId="2"
+          years={['2026', '2027']}
+          outputs={{ '2026': OUTPUT_2026, '2027': null }}
+          statusByYear={{ '2026': 'done', '2027': 'computing' }}
+          onCalculateAll={vi.fn()}
+        />
+      );
+
+      // Then
+      expect(screen.getByText('Failed to fetch')).toBeInTheDocument();
+      expect(screen.queryByText('Budget window request failed (502)')).not.toBeInTheDocument();
+    });
   });
 });

@@ -42,7 +42,7 @@ describe('BrowserProvider', () => {
     expect(result).toBe('GB');
   });
 
-  test('given French language then maps to CA', async () => {
+  test('given French without a country then no country is inferred', async () => {
     // Given
     Object.defineProperty(global.navigator, 'language', {
       value: 'fr',
@@ -54,7 +54,7 @@ describe('BrowserProvider', () => {
     const result = await provider.detect();
 
     // Then
-    expect(result).toBe('CA');
+    expect(result).toBeNull();
   });
 
   test('given English without country then maps to US', async () => {
@@ -72,7 +72,7 @@ describe('BrowserProvider', () => {
     expect(result).toBe('US');
   });
 
-  test('given Hebrew language then maps to IL', async () => {
+  test('given Hebrew without a country then no country is inferred', async () => {
     // Given
     Object.defineProperty(global.navigator, 'language', {
       value: 'he',
@@ -84,7 +84,7 @@ describe('BrowserProvider', () => {
     const result = await provider.detect();
 
     // Then
-    expect(result).toBe('IL');
+    expect(result).toBeNull();
   });
 
   test('given language with multiple hyphens then extracts country', async () => {

@@ -111,11 +111,14 @@ export function buildPythonPackageHouseholdDataFromAppInput(args: {
   return householdData;
 }
 
-export function getPythonPackageHouseholdVariationMaxEarnings(
-  currentEarnings: number,
-  countryId: string
-): number {
-  return Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
+/**
+ * The lowest upper end of the earnings variation range, in the household's
+ * currency. Every country the app offers uses the same floor.
+ */
+const VARIATION_EARNINGS_FLOOR = 200_000;
+
+export function getPythonPackageHouseholdVariationMaxEarnings(currentEarnings: number): number {
+  return Math.max(VARIATION_EARNINGS_FLOOR, 2 * currentEarnings);
 }
 
 function getPythonPackageVariationPersonKey(
@@ -155,7 +158,6 @@ function getPythonPackageEarningsForYear(
 export function addVariationAxesToPythonPackageHouseholdData(
   householdInput: PythonPackageHouseholdData,
   year: string,
-  countryId: string,
   personName?: string | null
 ): PythonPackageHouseholdWithAxes {
   if (Object.keys(householdInput.people).length === 0) {
@@ -173,7 +175,7 @@ export function addVariationAxesToPythonPackageHouseholdData(
     targetPersonKey,
     year
   );
-  const maxEarnings = getPythonPackageHouseholdVariationMaxEarnings(currentEarnings, countryId);
+  const maxEarnings = getPythonPackageHouseholdVariationMaxEarnings(currentEarnings);
   const existingEmploymentIncome = isYearValueMap(targetPerson.employment_income)
     ? targetPerson.employment_income
     : {};

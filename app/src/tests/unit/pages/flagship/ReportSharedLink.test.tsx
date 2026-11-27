@@ -92,6 +92,8 @@ function sharedReport(overrides: Partial<FlagshipReportData> = {}): FlagshipRepo
     error: null,
     notFound: false,
     failedPolicyIds: [],
+    policiesChecked: true,
+    missingParameters: [],
     retry: vi.fn(),
     ...overrides,
   };

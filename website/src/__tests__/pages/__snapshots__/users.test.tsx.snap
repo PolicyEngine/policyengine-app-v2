@@ -1,0 +1,148 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`users page entries > given the entries then they match the reviewed copy 1`] = `
+[
+  {
+    "entries": [
+      {
+        "name": "No 10 data science team",
+        "sentence": "The data science team at No 10 Downing Street and PolicyEngine co-founder Nikhil Woodruff, a No10 Innovation Fellow from summer 2025, built the 10ds-microsim package on PolicyEngine to estimate how policy reforms affect living standards and local area incomes, and their distributional impacts; the team uses the results as supplementary, experimental analysis.",
+        "sources": [
+          "https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation/",
+          "https://www.policyengine.org/uk/research/policyengine-10-downing-street",
+        ],
+      },
+      {
+        "name": "Bureau of Economic Analysis",
+        "sentence": "The Bureau of Economic Analysis runs PolicyEngine to estimate tax liabilities for 2021 and later years in its statistics on the distribution of personal income: the national series and the prototype state series.",
+        "sources": [
+          "https://apps.bea.gov/data/special-topics/distribution-of-personal-income/national/technical-document.pdf",
+          "https://www.bea.gov/sites/default/files/2026-07/Summary%20of%20Methodological%20Updates%20to%20Distribution%20of%20Personal%20Income%20by%20State-July26.pdf",
+        ],
+      },
+      {
+        "name": "Joint Economic Committee Republicans",
+        "sentence": "The Joint Economic Committee Republicans used PolicyEngine's microsimulation model to estimate individual tax liability and SNAP benefits in their Immigration Fiscal Impact Calculator.",
+        "sources": [
+          "https://www.jec.senate.gov/public/index.cfm/republicans/2026/3/immigration-fiscal-impact-calculator",
+        ],
+      },
+    ],
+    "group": "Government",
+  },
+  {
+    "entries": [
+      {
+        "name": "Brookings Institution",
+        "sentence": "Brookings authors Sarah Calame and Tara Watson used the PolicyEngine microsimulation model to estimate the cost, poverty effects and distributional effects of a hypothetical plan to make the Earned Income Tax Credit the same for workers with and without children and pay child benefits only through the Child Tax Credit.",
+        "sources": [
+          "https://www.brookings.edu/wp-content/uploads/2026/06/Supporting_children_and_incentivizing_employment_July2026.pdf",
+        ],
+      },
+      {
+        "name": "National Institute of Economic and Social Research",
+        "sentence": "The National Institute of Economic and Social Research, with help from PolicyEngine staff, used PolicyEngine in its UK Living Standards Review 2025 to estimate how tax and benefit changes would affect poverty and the incomes of the bottom tenth of earners, and what each would cost.",
+        "sources": [
+          "https://niesr.ac.uk/wp-content/uploads/2025/03/JC871-NIESR-UK-Living-Standards-Review-2025-final-version.pdf",
+        ],
+      },
+      {
+        "name": "Tax Policy Associates",
+        "sentence": "Tax Policy Associates ran PolicyEngine UK to check its own cost estimate for Universities UK's proposed employer National Insurance exemption for under-25s.",
+        "sources": [
+          "https://taxpolicy.org.uk/2026/09/10/universities-uk-national-insurance-proposal/",
+        ],
+      },
+      {
+        "name": "UHERO at the University of Hawaiʻi",
+        "sentence": "UHERO based its 2024 analysis of Hawaiʻi's SNAP benefit cliff on an enriched version of PolicyEngine's model, and used PolicyEngine US for the household calculations in its May 2026 brief on the cost of subsidizing child care.",
+        "sources": [
+          "https://uhero.hawaii.edu/hawai%CA%BBis-unnecessary-benefit-cliff-how-one-small-policy-change-could-deliver-in-45m-per-year-in-federally-funded-snap-benefits/",
+          "https://uhero.hawaii.edu/the-true-cost-of-subsidizing-childcare/",
+        ],
+      },
+      {
+        "name": "New Economics Foundation",
+        "sentence": "The New Economics Foundation, with modelling help from PolicyEngine staff, used a microsimulation model that PolicyEngine built to compare an employer National Insurance exemption for hiring inactive or disabled workers with a previously proposed cut to Personal Independence Payment.",
+        "sources": [
+          "https://neweconomics.org/2026/07/insecure-low-quality-work-a-major-driver-of-uks-neets-and-inactivity-crisis",
+          "https://new-economicsf.files.svdcdn.com/production/files/The-good-work-effect-final.pdf",
+        ],
+      },
+      {
+        "name": "Progress and Poverty Institute",
+        "sentence": "The Progress and Poverty Institute, with the Center for Land Economics, modeled three property-tax relief policies in PolicyEngine for the Maine Legislature's Real Estate Property Tax Relief Task Force.",
+        "sources": [
+          "https://legislature.maine.gov/doc/12515",
+        ],
+      },
+      {
+        "name": "Niskanen Center",
+        "sentence": "Since 2024, Niskanen Center researchers Joshua McCabe and Leah Sargeant have used PolicyEngine to estimate what federal and state child tax credit, earned income tax credit and baby bonus proposals would cost and how they would affect child poverty and incomes.",
+        "sources": [
+          "https://www.niskanencenter.org/building-a-stronger-foundation-for-american-families-options-for-child-tax-credit-reform/",
+          "https://www.niskanencenter.org/newborn-needs-the-case-for-an-american-baby-bonus/",
+          "https://www.niskanencenter.org/rhode-island-child-tax-credit-would-be-bold-simple-and-fiscally-responsible/",
+        ],
+      },
+      {
+        "name": "Prenatal-to-3 Policy Impact Center",
+        "sentence": "The Prenatal-to-3 Policy Impact Center at Vanderbilt University has used PolicyEngine in its Policy Impact Calculator since the 2024 edition, to compute federal and state income taxes, the federal Earned Income Tax Credit and payroll taxes.",
+        "sources": [
+          "https://pn3policy.org/wp-content/uploads/2024/10/PN3PIC_MethodsSources_PolicyImpactCalculator.pdf",
+          "https://pn3policy.org/wp-content/uploads/2026/08/PN3PIC_MethodsSources_PolicyImpactCalculator_2026.pdf",
+        ],
+      },
+      {
+        "name": "Living Wage Institute",
+        "sentence": "Starting with its 2026 data, the Living Wage Institute uses PolicyEngine's TAXSIM emulator to estimate federal and state income taxes and payroll taxes for the living wage figures it publishes on the MIT Living Wage Calculator.",
+        "sources": [
+          "https://www.livingwage.institute/post/how-we-re-improving-tax-calculations-in-partnership-with-policyengine",
+          "https://livingwage.mit.edu/resources/living_wage_technical_documentation.pdf",
+        ],
+      },
+    ],
+    "group": "Research",
+  },
+  {
+    "entries": [
+      {
+        "name": "MyFriendBen",
+        "sentence": "MyFriendBen powers the rules engine behind its benefits screener with PolicyEngine.",
+        "sources": [
+          "https://www.myfriendben.org/about-us/",
+        ],
+      },
+      {
+        "name": "Amplifi",
+        "sentence": "Amplifi powers the eligibility screening calculations in its Benefit Navigator with PolicyEngine.",
+        "sources": [
+          "https://www.amplifi.org/about-benefit-navigator",
+        ],
+      },
+      {
+        "name": "Mirza",
+        "sentence": "Mirza uses PolicyEngine's API to screen families for federal and state benefit programs.",
+        "sources": [
+          "https://www.policyengine.org/us/research/us-giving-tuesday-2025",
+        ],
+      },
+      {
+        "name": "Starlight",
+        "sentence": "Starlight has used PolicyEngine's API to power benefits discovery.",
+        "sources": [
+          "https://www.policyengine.org/us/2025-year-in-review",
+        ],
+      },
+      {
+        "name": "Student Basic Needs Coalition",
+        "sentence": "The Student Basic Needs Coalition uses an Impactica Labs toolkit for SNAP benefit access that PolicyEngine powers.",
+        "sources": [
+          "https://www.policyengine.org/us/2025-year-in-review",
+        ],
+      },
+    ],
+    "group": "Benefit services",
+  },
+]
+`;

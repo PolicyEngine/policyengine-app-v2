@@ -20,12 +20,12 @@ import {
   weightedMeanAbsError,
 } from '@/libs/flagship/calibrationMatching';
 import {
+  MICROCOSM_RELEASE_ID,
   mockCalibrationMatches,
   mockCalibrationRows,
   mockCtcLimitingMatch,
   mockDcFitRows,
   mockEitcCalibrationRow,
-  POPULACE_RELEASE_ID,
   UC_BAND_ROWS,
   UC_HOUSEHOLDS_ROW,
   UC_SPENDING_ROW,
@@ -154,7 +154,7 @@ describe('formatCalibrationValue', () => {
 describe('fetchGeographyCalibrationTargets', () => {
   test('given a state then the route is asked for all its targets', async () => {
     const fetchMock = vi.fn(async () =>
-      okResponse({ releaseId: POPULACE_RELEASE_ID, rows: mockDcFitRows })
+      okResponse({ releaseId: MICROCOSM_RELEASE_ID, rows: mockDcFitRows })
     );
     vi.stubGlobal('fetch', fetchMock);
 
@@ -165,7 +165,7 @@ describe('fetchGeographyCalibrationTargets', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ variables: [], geography: 'DC', all: true }),
     });
-    expect(result).toEqual({ releaseId: POPULACE_RELEASE_ID, rows: mockDcFitRows });
+    expect(result).toEqual({ releaseId: MICROCOSM_RELEASE_ID, rows: mockDcFitRows });
   });
 
   test('given the route fails then null returns', async () => {
@@ -180,7 +180,7 @@ describe('fetchGeographyCalibrationTargets', () => {
 
 describe('summarizeGeographyFit', () => {
   test('given a state’s targets then it counts them, the close fits, the weighted gap and the worst', () => {
-    const fit = summarizeGeographyFit('DC', POPULACE_RELEASE_ID, [...mockDcFitRows].reverse(), 3);
+    const fit = summarizeGeographyFit('DC', MICROCOSM_RELEASE_ID, [...mockDcFitRows].reverse(), 3);
 
     expect(fit.targetCount).toBe(5);
     // DC income tax (6.5%), returns (2%) and population (0.1%) are within 10%.
@@ -259,7 +259,7 @@ describe('summarizeMatches', () => {
 describe('fetchCalibrationTargets', () => {
   test('given variables then the route is posted the variables and geography', async () => {
     const fetchMock = vi.fn(async () =>
-      okResponse({ releaseId: POPULACE_RELEASE_ID, rows: mockCalibrationRows })
+      okResponse({ releaseId: MICROCOSM_RELEASE_ID, rows: mockCalibrationRows })
     );
     vi.stubGlobal('fetch', fetchMock);
 
@@ -270,7 +270,7 @@ describe('fetchCalibrationTargets', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ variables: ['ctc', 'refundable_ctc'], geography: 'CA' }),
     });
-    expect(result).toEqual({ releaseId: POPULACE_RELEASE_ID, rows: mockCalibrationRows });
+    expect(result).toEqual({ releaseId: MICROCOSM_RELEASE_ID, rows: mockCalibrationRows });
   });
 
   test('given no variables then nothing is fetched', async () => {
@@ -298,13 +298,13 @@ describe('calibrationMatchesForPaths', () => {
   test('given a CTC path then the reached calibrated variables come back with the release', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => okResponse({ releaseId: POPULACE_RELEASE_ID, rows: mockCalibrationRows }))
+      vi.fn(async () => okResponse({ releaseId: MICROCOSM_RELEASE_ID, rows: mockCalibrationRows }))
     );
 
     const result = await calibrationMatchesForPaths([CTC_BASE_AMOUNT_PATH], 'US');
 
     expect(result).toMatchObject({
-      releaseId: POPULACE_RELEASE_ID,
+      releaseId: MICROCOSM_RELEASE_ID,
       geography: 'US',
       modelVersion: mockParameterDependencyMap.model.version,
     });
@@ -315,7 +315,7 @@ describe('calibrationMatchesForPaths', () => {
   });
 
   test('given a path reaching nothing calibrated then matches are empty', async () => {
-    const fetchMock = vi.fn(async () => okResponse({ releaseId: POPULACE_RELEASE_ID, rows: [] }));
+    const fetchMock = vi.fn(async () => okResponse({ releaseId: MICROCOSM_RELEASE_ID, rows: [] }));
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await calibrationMatchesForPaths([STANDARD_DEDUCTION_PATH], 'US');
@@ -329,7 +329,7 @@ describe('calibrationMatchesForPaths', () => {
       'fetch',
       vi.fn(async () =>
         okResponse({
-          releaseId: POPULACE_RELEASE_ID,
+          releaseId: MICROCOSM_RELEASE_ID,
           rows: [...mockCalibrationRows, mockEitcCalibrationRow],
         })
       )
