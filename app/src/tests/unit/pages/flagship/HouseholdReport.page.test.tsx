@@ -119,17 +119,38 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
     );
   },
 }));
-// The v2 breakdowns, tested on their own: a stand-in shows what each is given.
-vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
-  >()),
-  default: ({ view, source }: any) => (
-    <div aria-label="Breakdown" data-inputs={(source.householdInputs ?? []).join(' ')}>
-      {[view, source.baselinePolicyId, source.reformPolicyId].join(' · ')}
-    </div>
-  ),
-}));
+// The v2 breakdowns, tested on their own: a stand-in shows what each is
+// given, and the variation run's keeper a stand-in naming its household.
+vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (importOriginal) => {
+  const { useEffect } = await import('react');
+  function BreakdownStandIn({ view, source, variationStartedAt, onVariationOpen }: any) {
+    // As the breakdowns do: a variation output opening asks for its run.
+    const opensVariation = view === 'earnings-variation' || view === 'marginal-tax-rates';
+    useEffect(() => {
+      if (opensVariation) {
+        onVariationOpen?.();
+      }
+    }, [opensVariation, onVariationOpen]);
+    return (
+      <div
+        aria-label="Breakdown"
+        data-inputs={(source.householdInputs ?? []).join(' ')}
+        data-variation-started-at={variationStartedAt ?? ''}
+      >
+        {[view, source.baselinePolicyId, source.reformPolicyId].join(' · ')}
+      </div>
+    );
+  }
+  return {
+    ...(await importOriginal<
+      typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
+    >()),
+    default: BreakdownStandIn,
+    HouseholdVariationKeeper: ({ source }: any) => (
+      <div aria-label="Variation run" data-household={source.householdId} />
+    ),
+  };
+});
 const mockHouseholdValidation = vi.fn();
 vi.mock('@/utils/HouseholdValidation', () => ({
   HouseholdValidation: { isReadyForSimulation: () => mockHouseholdValidation() },
@@ -209,9 +230,49 @@ describe('HouseholdReportPage', () => {
 
     await calculate();
 
-    await screen.findByRole('region', { name: 'Household impact' });
-    expect(screen.getByRole('heading', { level: 3, name: 'Household impact' })).toBeVisible();
+    const result = await screen.findByRole('region', { name: 'Household impact' });
+    const heading = screen.getByRole('heading', { level: 3, name: 'Household impact' });
+    expect(heading).toBeVisible();
+    // The heading and the result share one card.
+    expect(heading.parentElement).toContainElement(result);
   });
+
+  test.each([
+    ['a reform', { reformPolicyId: REFORM_POLICY_ID }, 'Household impact'],
+    ['no reform', {}, 'Household net income'],
+  ])(
+    'given %s then the variation run, once opened, keeps its start time as the reader moves between the outputs',
+    async (_case, reportProps, resultName) => {
+      renderReport({ household: FAMILY_HOUSEHOLD, ...reportProps });
+      const user = await calculate();
+      const result = await screen.findByRole('region', { name: resultName });
+      expect(screen.queryByLabelText('Variation run')).not.toBeInTheDocument();
+
+      await user.click(within(result).getByRole('tab', { name: 'Varying earnings' }));
+      const startedAt = within(result)
+        .getByLabelText('Breakdown')
+        .getAttribute('data-variation-started-at');
+      expect(startedAt).toMatch(/^\d+$/);
+      expect(screen.getByLabelText('Variation run')).toHaveAttribute(
+        'data-household',
+        CREATED_HOUSEHOLD_ID
+      );
+
+      await user.click(within(result).getByRole('tab', { name: 'Marginal tax rates' }));
+      expect(within(result).getByLabelText('Breakdown')).toHaveAttribute(
+        'data-variation-started-at',
+        startedAt
+      );
+
+      await user.click(within(result).getByRole('tab', { name: 'Net income' }));
+      await user.click(within(result).getByRole('tab', { name: 'Varying earnings' }));
+      expect(within(result).getByLabelText('Breakdown')).toHaveAttribute(
+        'data-variation-started-at',
+        startedAt
+      );
+      expect(screen.getByLabelText('Variation run')).toBeInTheDocument();
+    }
+  );
 
   test("given no reform then it reports the household's net income under the baseline alone", async () => {
     renderReport({ household: FAMILY_HOUSEHOLD });
