@@ -2,7 +2,6 @@
 import {
   HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS,
   HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS,
-  TOKEN_REQUEST_TIMEOUT_MILLISECONDS,
 } from "@policyengine/public-api-forwarding";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -55,8 +54,7 @@ const CALCULATION_ANSWER = {
   message: null,
   result: CALCULATED_HOUSEHOLD,
 };
-// What the fake Public API answers on any route but the household
-// calculation's.
+// What the fake API v1 answers on any route but the household calculation's.
 const OTHER_ROUTE_ANSWER = { status: "ok", message: null, result: {} };
 const COMPUTING_ANSWER = { status: "computing", message: null, result: null };
 const STORED_POLICY_ID = 98765;
@@ -70,6 +68,7 @@ const SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS = 396_000;
 // How long after its time limit the helper can still end a call: a
 // submission started just before the limit takes at least 30 s, the read
 // owed after it up to 30 s, and each may first wait up to 10 s for a token.
+// Token waits before then count within the time limit.
 const LONGEST_CALL_AFTER_TIME_LIMIT_MILLISECONDS = 80_000;
 // Reading the request and streaming a large answer back.
 const BODY_TRANSFER_MILLISECONDS = 30_000;
@@ -136,7 +135,7 @@ function calculationAnswer(status: CalculationStatus): Response {
 }
 
 /**
- * A fake Public API whose household calculation goes through `statuses`:
+ * A fake API v1 whose household calculation goes through `statuses`:
  * the submission's answer gives the first, each read the next, and the
  * last repeats. The submission answers after
  * `submissionAnswerAfterMilliseconds`; aborting it rejects it, as fetch
@@ -259,7 +258,7 @@ afterEach(() => {
 });
 
 describe("POST /api/household/calculate", () => {
-  test("given a household then it submits it to the Public API's household calculations, reads the calculation until it succeeds and answers as /calculate did", async () => {
+  test("given a household then it submits it to API v1's household calculations, reads the calculation until it succeeds and answers as /calculate did", async () => {
     // Given
     vi.useFakeTimers();
     fetchMock.mockImplementation(
@@ -296,7 +295,7 @@ describe("POST /api/household/calculate", () => {
     }
   });
 
-  test("given a policy then the Public API calculates the household under it", async () => {
+  test("given a policy then API v1 calculates the household under it", async () => {
     // When
     const response = await householdCalculateRoute.POST(
       dashboardRequest("/api/household/calculate", {
@@ -334,7 +333,7 @@ describe("POST /api/household/calculate", () => {
     });
   });
 
-  test("given a browser request then the Public API gets the calculation as the website server's own request, without the browser's token or address", async () => {
+  test("given a browser request then API v1 gets the calculation as the website server's own request, without the browser's token or address", async () => {
     // When
     await householdCalculateRoute.POST(
       dashboardRequest("/api/household/calculate", {
@@ -489,7 +488,7 @@ describe("POST /api/household/calculate", () => {
     expect(response.status).toBe(403);
   });
 
-  test("given the Public API takes as long as its slowest recorded household answer to accept the calculation then the route still answers with the calculated household", async () => {
+  test("given API v1 takes as long as its slowest recorded household answer to accept the calculation then the route still answers with the calculated household", async () => {
     // Given
     vi.useFakeTimers();
     fetchMock.mockImplementation(
@@ -586,11 +585,10 @@ describe("POST /api/household/calculate", () => {
     });
   });
 
-  test("given the helper's time limit then the function may run long enough to get a token, calculate and stream the answer, within the Pro plan's maximum", () => {
+  test("given the helper's time limit then the function may run long enough to calculate and stream the answer, within the Pro plan's maximum", () => {
     // Then
     expect(householdCalculateRoute.maxDuration * 1000).toBeGreaterThanOrEqual(
-      TOKEN_REQUEST_TIMEOUT_MILLISECONDS +
-        HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS +
+      HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS +
         LONGEST_CALL_AFTER_TIME_LIMIT_MILLISECONDS +
         BODY_TRANSFER_MILLISECONDS,
     );

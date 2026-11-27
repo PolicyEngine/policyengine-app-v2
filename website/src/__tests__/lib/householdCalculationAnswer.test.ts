@@ -43,7 +43,7 @@ const US_REQUEST: InlineHouseholdCalculationRequest = {
   household: SITUATION,
 };
 const INVALID_INPUT_ERROR = {
-  type: "unknown_variable",
+  type: "household_variable",
   name: "employment_incme",
   path: "people.you.employment_incme",
   message: "employment_incme is not a variable of the US model.",
@@ -114,15 +114,25 @@ async function answerFor(
 function refusedWith(
   statusCode: number,
   message: string,
-  retryAfterSeconds: number | null = null,
+  {
+    body = { status: "error", message },
+    retryAfterSeconds = null,
+    requestId = null,
+    observabilityId = null,
+  }: {
+    body?: unknown;
+    retryAfterSeconds?: number | null;
+    requestId?: string | null;
+    observabilityId?: string | null;
+  } = {},
 ): HouseholdCalculationRefusedError {
   return new HouseholdCalculationRefusedError(message, {
     statusCode,
-    body: { status: "error", message },
+    body,
     code: null,
     retryAfterSeconds,
-    observabilityId: null,
-    requestId: null,
+    observabilityId,
+    requestId,
     calculationId: null,
   });
 }
@@ -311,15 +321,30 @@ describe("householdCalculationAnswer", () => {
   });
 
   test.each([
-    ["no code, because the household function raised", null],
-    ["calculation_failed", "calculation_failed"],
-    ["bundle_mismatch", "bundle_mismatch"],
+    [
+      "calculation_failed, whose message already says what /calculate's did",
+      "calculation_failed",
+      "Error calculating household under policy: model exploded",
+      "Error calculating household under policy: model exploded",
+    ],
+    [
+      "no code, because the household function raised",
+      null,
+      "household_function_error: division by zero",
+      "Error calculating household under policy: household_function_error: division by zero",
+    ],
+    [
+      "bundle_mismatch",
+      "bundle_mismatch",
+      "The worker's country package is not the catalog's.",
+      "Error calculating household under policy: The worker's country package is not the catalog's.",
+    ],
   ])(
-    "given a calculation that fails with %s then it answers 500 as /calculate did, and logs the calculation",
-    async (_label, code) => {
+    "given a calculation that fails with %s then it answers 500 with /calculate's message and body, and logs the calculation",
+    async (_label, code, functionMessage, expectedMessage) => {
       // Given
       const failure = new HouseholdCalculationFailedError(
-        "household_function_error: division by zero",
+        functionMessage,
         CALCULATION_ID,
         code,
         [],
@@ -333,9 +358,7 @@ describe("householdCalculationAnswer", () => {
       expect(response.status).toBe(500);
       expect(await response.json()).toEqual({
         status: "error",
-        message:
-          "Error calculating household under policy: household_function_error: division by zero",
-        result: null,
+        message: expectedMessage,
       });
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining(CALCULATION_ID),
@@ -381,10 +404,94 @@ describe("householdCalculationAnswer", () => {
     },
   );
 
+  test("given API v1 refuses the household with a list of the inputs it doesn't recognise then the 400 lists them in errors, as /calculate did", async () => {
+    // Given
+    const message =
+      "Unrecognized calculate input(s): employment_incme is not a variable of the US model.";
+    const refusal = refusedWith(422, message, {
+      body: { status: "error", message, errors: [INVALID_INPUT_ERROR] },
+    });
+
+    // When
+    const { response } = await answerFor(refusal);
+
+    // Then
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      status: "error",
+      message,
+      result: null,
+      errors: [INVALID_INPUT_ERROR],
+    });
+  });
+
+  test("given API v1 refuses a request then its request and observability IDs reach the caller", async () => {
+    // Given
+    const refusal = refusedWith(404, "Household calculation not found", {
+      requestId: "request-7f3a",
+      observabilityId: "obs-4d2c1b0a",
+    });
+
+    // When
+    const { response } = await answerFor(refusal);
+
+    // Then
+    expect(response.headers.get("x-policyengine-request-id")).toBe(
+      "request-7f3a",
+    );
+    expect(response.headers.get("x-policyengine-observability-id")).toBe(
+      "obs-4d2c1b0a",
+    );
+  });
+
+  test("given an error from in front of API v1 that isn't API v1's JSON then it answers with the same status as the route's own error", async () => {
+    // Given
+    const refusal = refusedWith(413, "API v1 answered HTTP 413.", {
+      body: null,
+    });
+
+    // When
+    const { response } = await answerFor(refusal);
+
+    // Then
+    expect(response.status).toBe(413);
+    expect(await response.json()).toEqual({
+      status: "error",
+      message: "API v1 answered HTTP 413.",
+      result: null,
+    });
+    expect(response.headers.get(ROUTE_ERROR_HEADER)).toBe("true");
+  });
+
+  test.each([301, 302, 307, 308])(
+    "given API v1 answers with a %i redirect then it answers 502 as the route's own error and logs it",
+    async (statusCode) => {
+      // Given
+      const refusal = refusedWith(
+        statusCode,
+        `API v1 answered HTTP ${statusCode}.`,
+        { body: null },
+      );
+
+      // When
+      const { response, logger } = await answerFor(refusal);
+
+      // Then
+      expect(response.status).toBe(502);
+      expect(await response.json()).toEqual({
+        status: "error",
+        message: "API v1 answered with a redirect.",
+        result: null,
+      });
+      expect(response.headers.get(ROUTE_ERROR_HEADER)).toBe("true");
+      expect(logger.error).toHaveBeenCalled();
+    },
+  );
+
   test("given API v1 limits the rate of requests then the caller gets 429 with its Retry-After", async () => {
     // When
     const { response } = await answerFor(
-      refusedWith(429, "Too many requests", 30),
+      refusedWith(429, "Too many requests", { retryAfterSeconds: 30 }),
     );
 
     // Then
@@ -458,6 +565,23 @@ describe("householdCalculationAnswer", () => {
       result: null,
     });
     expect(response.headers.get(ROUTE_ERROR_HEADER)).toBe("true");
+  });
+
+  test("given API v1's answer is lost while it arrives then it answers 502 and logs it", async () => {
+    // Given
+    const answerLost = new PublicApiUnavailableError(
+      "API v1's answer was lost before it could be read.",
+      502,
+      "answer_lost",
+    );
+
+    // When
+    const { response, logger } = await answerFor(answerLost);
+
+    // Then
+    expect(response.status).toBe(502);
+    expect(response.headers.get(ROUTE_ERROR_HEADER)).toBe("true");
+    expect(logger.error).toHaveBeenCalled();
   });
 
   test("given the browser has gone away then it answers 502 without logging an error", async () => {
