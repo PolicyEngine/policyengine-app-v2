@@ -124,6 +124,13 @@ export interface CalcStatus {
   error?: CalcError;
 
   /**
+   * Failed polls in a row that a computing society-wide run has outlasted,
+   * up to MAX_FAILED_POLLS; the status is otherwise the last computing one.
+   * Absent once a poll is answered.
+   */
+  failedPolls?: number;
+
+  /**
    * Metadata about this calculation
    */
   metadata: CalcMetadata;

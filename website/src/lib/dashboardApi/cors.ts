@@ -32,6 +32,8 @@ export const DASHBOARD_VERCEL_HOSTS: ReadonlySet<string> = new Set(
 export const OTHER_DASHBOARD_HOSTS: ReadonlySet<string> = new Set([
   // autumn-budget-2025-in-review's Vercel project. Not on the website yet.
   "autumn-budget-2025-in-review.vercel.app",
+  // montana-flat-tax-dashboard's Vercel project. Not on the website yet.
+  "montana-flat-tax-dashboard.vercel.app",
   // nc-stein-2027-tax-proposals: both production domains of its Vercel
   // project, nc-governor-tax-proposals. Not on the website yet.
   "nc-governor-tax-proposals.vercel.app",

@@ -142,7 +142,8 @@ export default function BudgetWindowCard({
         <ErrorState
           compact
           title="The budget window could not be calculated"
-          description={data?.error || budget.error?.message}
+          // The latest request's failure, else the window's own error.
+          description={budget.error?.message || data?.error}
           onRetry={() => budget.refetch()}
         />
       )}

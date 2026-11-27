@@ -1,11 +1,14 @@
 import { Query } from '@tanstack/react-query';
 import {
+  EconomyCalculationError,
+  failedCalculationOf,
   fetchSocietyWideCalculation,
   SocietyWideCalculationParams,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
 import { getDurationForCountry, getDurationForRegion } from '@/constants/calculationDurations';
 import { CalcMetadata, CalcParams, CalcStatus, RunStage } from '@/types/calculation';
+import { MAX_FAILED_POLLS } from '../polledRun';
 import { CalcExecutionStrategy, RefetchConfig } from '../strategies/types';
 
 /** How a caller wants the run's duration estimated. */
@@ -17,6 +20,22 @@ export interface DurationEstimateOptions {
 }
 
 /**
+ * Whether an economy request's error is a failed request, which a computing
+ * run outlasts because its job may still run on the server: a network
+ * error, or a 5xx that is not a calculation the Public API reports as failed
+ * (failedCalculationOf), such as a gateway's 502 page or the 502 and 504 the
+ * calculator's route writes when the Public API cannot be reached or does
+ * not answer in time. A failed calculation, and a refusal such as a 404 or a
+ * 422, are the run's answer instead.
+ */
+function isFailedRequest(error: unknown): boolean {
+  if (failedCalculationOf(error)) {
+    return false;
+  }
+  return !(error instanceof EconomyCalculationError) || error.status >= 500;
+}
+
+/**
  * Strategy for executing society-wide calculations
  * Uses server-side polling with checkpointed state
  */
@@ -24,8 +43,20 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
   /**
    * Execute a society-wide calculation
    * Makes direct API call - server manages state and queuing
+   *
+   * A computing run outlasts MAX_FAILED_POLLS failed requests in a row
+   * (isFailedRequest), as pollRun's runs do: it keeps `previous`, its last
+   * computing status, and fails on the next failed request after these. A
+   * first request that fails, with no `previous`, fails at once.
+   *
+   * @param previous - The run's status from its last poll, as the query
+   *   cache holds it; none for a run's first request.
    */
-  async execute(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus> {
+  async execute(
+    params: CalcParams,
+    metadata: CalcMetadata,
+    previous?: CalcStatus
+  ): Promise<CalcStatus> {
     try {
       // Pass the region value AS-IS to the API (NO prefix stripping)
       // For UK: includes prefix like "constituency/Sheffield Central" or "country/england"
@@ -53,6 +84,18 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
         region: apiRegion,
       });
     } catch (error) {
+      const failedPolls = (previous?.failedPolls ?? 0) + 1;
+      if (
+        previous?.status === 'pending' &&
+        failedPolls <= MAX_FAILED_POLLS &&
+        isFailedRequest(error)
+      ) {
+        console.warn(
+          `[SocietyWideCalcStrategy.execute] Poll failed (${failedPolls} of ${MAX_FAILED_POLLS} in a row); polling again:`,
+          error
+        );
+        return { ...previous, failedPolls };
+      }
       console.error('[SocietyWideCalcStrategy.execute] Calculation failed:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Society-wide calculation failed';
@@ -70,7 +113,8 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
 
   /**
    * Get refetch configuration for society-wide calculations
-   * Polls every 1 second while computing, stops when complete/error
+   * Polls every 1 second while computing, including after a failed poll
+   * that execute outlasts, and stops when complete/error
    */
   getRefetchConfig(): RefetchConfig {
     return {

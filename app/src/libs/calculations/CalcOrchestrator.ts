@@ -155,7 +155,7 @@ export class CalcOrchestrator {
     year: string,
     recordReportErrors = false
   ): void {
-    const { queryKey, queryFn, refetchInterval } = queryOptions;
+    const { queryKey, queryFn, refetchInterval, refetchIntervalInBackground } = queryOptions;
 
     // SAFETY CHECK: Should never happen since household returns 'complete' immediately
     if (refetchInterval === false) {
@@ -176,6 +176,8 @@ export class CalcOrchestrator {
       refetchInterval: (typeof refetchInterval === 'function'
         ? refetchInterval
         : refetchInterval) as any, // Type assertion needed for QueryObserver
+      // From calculationQueries: polling goes on while the tab is hidden.
+      refetchIntervalInBackground,
     });
 
     // Subscribe to updates

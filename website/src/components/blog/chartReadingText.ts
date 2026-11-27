@@ -6,10 +6,17 @@
 
 /** A ```chart fence; either fence line may carry trailing spaces or a CR. */
 export const CHART_FENCE = /^```chart[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm;
+/** A ```household fence (BlogHousehold), read the same way as a chart. */
+export const HOUSEHOLD_FENCE =
+  /^```household[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm;
 const PROSE_FIELDS = ["title", "subtitle", "note", "source"];
 
 export function chartBlocksAsProse(markdown: string): string {
-  return markdown.replace(CHART_FENCE, (_, raw: string) => {
+  return blocksAsProse(blocksAsProse(markdown, CHART_FENCE), HOUSEHOLD_FENCE);
+}
+
+function blocksAsProse(markdown: string, fence: RegExp): string {
+  return markdown.replace(fence, (_, raw: string) => {
     try {
       const spec: unknown = JSON.parse(raw);
       if (!spec || typeof spec !== "object") return " ";
