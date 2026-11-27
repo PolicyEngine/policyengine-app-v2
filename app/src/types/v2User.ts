@@ -198,12 +198,15 @@ export interface UserReportCreateBody {
   last_run_at?: string | null;
 }
 
-export interface UserHouseholdCreateBody {
+/** A saved household's row names a stored v2 household or a v1 household, never both. */
+export type UserHouseholdCreateBody = {
   country_id: AssociationCountryId;
-  legacy_household_id: number;
   name?: string | null;
   description?: string | null;
-}
+} & (
+  | { household_id: string; legacy_household_id?: never }
+  | { legacy_household_id: number; household_id?: never }
+);
 
 /** The fields a saved report's update may change; `legacy_report_id` repoints it to another run. */
 export type UserReportPatchBody = Partial<Omit<UserReportCreateBody, 'country_id'>>;
