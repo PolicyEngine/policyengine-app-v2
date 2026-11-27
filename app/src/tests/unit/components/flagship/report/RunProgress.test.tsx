@@ -123,18 +123,18 @@ describe('RunProgress', () => {
       vi.useRealTimers();
     });
 
-    test('then the bar measures from that request, as a bar shown later for the run does', () => {
+    test('then its elapsed time keeps counting from when the bar appeared', () => {
       // Given - a bill's bar appears while its reform policy is still being created
       vi.useFakeTimers();
       const barAppearedAt = Date.now();
       const typicalStateRunMs = 190_000;
-      const policyCreationMs = 5_000;
+      const policyCreationMs = 8_000;
       const { rerender } = render(
         <RunProgress title="Calculating the full results" expectedMs={typicalStateRunMs} />
       );
       act(() => vi.advanceTimersByTime(policyCreationMs));
 
-      // When - the run's first request is sent, then 95 seconds pass
+      // When - the run's first request is sent, then 2 seconds pass
       rerender(
         <RunProgress
           title="Calculating the full results"
@@ -143,13 +143,10 @@ describe('RunProgress', () => {
           startedAt={barAppearedAt + policyCreationMs}
         />
       );
-      act(() => vi.advanceTimersByTime(95_000));
+      act(() => vi.advanceTimersByTime(2_000));
 
-      // Then - 95 seconds of a 190-second run: half of 85%
-      expect(
-        screen.getByRole('progressbar', { name: 'Calculating the full results, about 43%' })
-      ).toBeInTheDocument();
-      expect(screen.getByRole('status')).toHaveTextContent('1m 35s');
+      // Then - the elapsed time does not step back to the request's 2 seconds
+      expect(screen.getByRole('status')).toHaveTextContent('10s');
     });
   });
 
