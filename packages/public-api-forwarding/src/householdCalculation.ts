@@ -82,8 +82,10 @@ export interface HouseholdCalculationOptions {
   /**
    * How long after the call starts to give up, 10 minutes by default. The
    * last read happens at the deadline, and an accepted calculation is read
-   * at least once. A request in flight at the deadline may take up to 30
-   * seconds more.
+   * at least once. So a call can end up to about 80 seconds after the
+   * deadline: a submission started just before it takes at least 30
+   * seconds, the read after it up to 30, and each may first wait up to 10
+   * seconds for a new server token.
    */
   readonly timeLimitMilliseconds?: number;
 }
@@ -599,9 +601,11 @@ export function createHouseholdCalculator(
     for (;;) {
       signal?.throwIfAborted();
       // A submission may wait for an API v1 instance to start, which can
-      // take minutes, so it may take until the deadline (at least the
-      // forwarder's usual 30 seconds). Timing it out sooner would leave a
-      // job that may exist, which the helper must not submit again.
+      // take minutes, so its timeout is the time left before the deadline
+      // (at least the forwarder's usual 30 seconds). Timing it out sooner
+      // would leave a job that may exist, which the helper must not submit
+      // again. Node's fetch and API v1's Cloud Run service each end a
+      // request after 300 seconds anyway.
       // AbortSignal.timeout takes whole milliseconds only.
       const timeoutMilliseconds = Math.ceil(
         Math.min(

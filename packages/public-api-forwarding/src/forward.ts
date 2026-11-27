@@ -65,12 +65,6 @@ export interface ServerRequestOptions {
 }
 
 /**
- * The Public API cannot be called: it is not configured, the server
- * credential cannot be obtained, or the path is not one a route may name.
- * Or, from fetchFromServer, API v1 could not be reached or did not answer in
- * time. The message is safe to show; details go to the server's log.
- */
-/**
  * Why API v1 cannot be called:
  * - "unknown_route": the path is not one a route may name;
  * - "not_configured": the deployment has no API v1 URL, or a partial
@@ -95,6 +89,12 @@ const REASONS_AFTER_SENDING: ReadonlySet<PublicApiUnavailableReason> = new Set([
   "answer_lost",
 ]);
 
+/**
+ * The Public API cannot be called: it is not configured, the server
+ * credential cannot be obtained, or the path is not one a route may name.
+ * Or, from fetchFromServer, API v1 could not be reached or did not answer in
+ * time. The message is safe to show; details go to the server's log.
+ */
 export class PublicApiUnavailableError extends Error {
   override name = "PublicApiUnavailableError";
   /**
