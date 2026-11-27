@@ -11,10 +11,8 @@ import {
 } from "@policyengine/public-api-forwarding";
 import { describe, expect, test, vi } from "vitest";
 
-import {
-  householdCalculationAnswer,
-  type ApiV1AnswerIds,
-} from "@/lib/dashboardApi/householdCalculationAnswer";
+import { householdCalculationAnswer } from "@/lib/dashboardApi/householdCalculationAnswer";
+import type { ApiV1AnswerIds } from "@/lib/publicApi/apiV1AnswerIds";
 
 const SITE_URL = "https://www.policyengine.org";
 const DASHBOARD_ORIGIN = "https://keep-your-pay-act.vercel.app";
@@ -100,7 +98,7 @@ function fakeLogger() {
   return { error: vi.fn(), warn: vi.fn() };
 }
 
-const LAST_ANSWER_IDS: ApiV1AnswerIds = {
+const SUBMISSION_ANSWER_IDS: ApiV1AnswerIds = {
   requestId: "request-7f3a",
   observabilityId: "obs-4d2c1b0a",
 };
@@ -109,10 +107,10 @@ async function answerFor(
   outcome: CalculatedHousehold | Error,
   {
     incomingRequest = browserRequest(),
-    lastAnswerIds,
+    submissionAnswerIds,
   }: {
     incomingRequest?: Request;
-    lastAnswerIds?: ApiV1AnswerIds;
+    submissionAnswerIds?: ApiV1AnswerIds;
   } = {},
 ) {
   const { calculator, calculateHousehold } = calculatorFinishingWith(outcome);
@@ -121,9 +119,9 @@ async function answerFor(
     incomingRequest,
     responseHeaders: CORS_HEADERS,
     logger,
-    ...(lastAnswerIds === undefined
+    ...(submissionAnswerIds === undefined
       ? {}
-      : { lastAnswerIds: () => lastAnswerIds }),
+      : { submissionAnswerIds: () => submissionAnswerIds }),
   });
   return { response, calculateHousehold, logger };
 }
@@ -197,10 +195,10 @@ describe("householdCalculationAnswer", () => {
     expect(response.headers.get(ROUTE_ERROR_HEADER)).toBeNull();
   });
 
-  test("given the IDs of the API v1 answer the household came from then the answer carries them, as /calculate's did", async () => {
+  test("given the IDs of API v1's answer to the submission then the calculated household's answer carries them, as /calculate's did", async () => {
     // When
     const { response } = await answerFor(calculatedHousehold(), {
-      lastAnswerIds: LAST_ANSWER_IDS,
+      submissionAnswerIds: SUBMISSION_ANSWER_IDS,
     });
 
     // Then
@@ -217,7 +215,7 @@ describe("householdCalculationAnswer", () => {
     ["invalid_inputs", 400],
     ["calculation_failed", 500],
   ])(
-    "given a calculation that fails with %s then the answer carries the IDs of the API v1 answer that said so",
+    "given a calculation that fails with %s then the answer carries the IDs of API v1's answer to the submission",
     async (code, statusCode) => {
       // Given
       const failure = new HouseholdCalculationFailedError(
@@ -230,7 +228,7 @@ describe("householdCalculationAnswer", () => {
 
       // When
       const { response } = await answerFor(failure, {
-        lastAnswerIds: LAST_ANSWER_IDS,
+        submissionAnswerIds: SUBMISSION_ANSWER_IDS,
       });
 
       // Then

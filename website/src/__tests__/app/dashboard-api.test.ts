@@ -63,10 +63,12 @@ const STORED_POLICY_ID = 98765;
 const CALCULATION_ID = "8a1f6b0e-3c2d-4e5f-9a7b-1c2d3e4f5a6b";
 const SUBMISSION_URL = `${STAGING_PUBLIC_API_URL}/v2/household-calculations`;
 const CALCULATION_URL = `${SUBMISSION_URL}/${CALCULATION_ID}`;
-// The slowest household calculation answer the Public API's load balancer
-// recorded (2026-11-08): over Cloud Run's 300 s, which counts from when an
-// instance takes the request.
-const SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS = 396_000;
+// A submission that waits minutes for an API v1 instance to start: longer
+// than fetchFromServer's usual 30 s timeout, and within the 300 s Node's
+// fetch waits for an answer's headers. API v1's load balancer recorded
+// household answers after up to 396 s (2026-11-08), which Node's fetch no
+// longer waits for.
+const SLOW_SUBMISSION_MILLISECONDS = 290_000;
 // How long after its time limit the helper can still end a call: a
 // submission started just before the limit takes at least 30 s, the read
 // owed after it up to 30 s, and each may first wait up to 10 s for a token.
@@ -84,14 +86,31 @@ type CalculationStatus = "pending" | "running" | "succeeded";
 
 const fetchMock = vi.fn<typeof fetch>();
 
-/** The request ID API v1 gives its answer to the request at `requestIndex`. */
-function requestIdOf(requestIndex: number): string {
-  return `request-${requestIndex}`;
+/**
+ * The IDs the fake API v1 gives its answer to the submission of a household
+ * of `country`.
+ */
+function submissionIdsOf(country: string) {
+  return {
+    requestId: `submission-${country}`,
+    observabilityId: `obs-${country}`,
+  };
 }
 
-/** Adds API v1's request ID header to an answer. */
-function withRequestId(answer: Response, requestIndex: number): Response {
-  answer.headers.set("X-PolicyEngine-Request-Id", requestIdOf(requestIndex));
+/**
+ * Adds API v1's ID headers to an answer: a request ID on every answer, and
+ * an observability ID only when given, as API v1 sets one only on the
+ * submission's answer.
+ */
+function withIds(
+  answer: Response,
+  requestId: string,
+  observabilityId?: string,
+): Response {
+  answer.headers.set("X-PolicyEngine-Request-Id", requestId);
+  if (observabilityId !== undefined) {
+    answer.headers.set("X-PolicyEngine-Observability-Id", observabilityId);
+  }
   return answer;
 }
 
@@ -172,23 +191,36 @@ function calculationAnswer(status: CalculationStatus): Response {
 /**
  * A fake API v1 whose household calculation goes through `statuses`:
  * the submission's answer gives the first, each read the next, and the
- * last repeats. Each answer's request ID is `request-<n>`: 0 for the
- * submission, then 1, 2, … for the reads. The submission answers after
- * `submissionAnswerAfterMilliseconds`; aborting it rejects it, as fetch
- * does. Other routes answer OTHER_ROUTE_ANSWER.
+ * last repeats. The submission's answer carries submissionIdsOf(its
+ * country); each read's carries the request ID `read-<n>` and no
+ * observability ID, as API v1's do. The submission answers after
+ * `submissionAnswerAfterMilliseconds` (for its country, when that is a
+ * function); aborting it rejects it, as fetch does. Other routes answer
+ * OTHER_ROUTE_ANSWER.
  */
 function publicApiCalculating(
   statuses: readonly CalculationStatus[],
-  submissionAnswerAfterMilliseconds = 0,
+  submissionAnswerAfterMilliseconds: number | ((country: string) => number) = 0,
 ): typeof fetch {
   let readCount = 0;
   return (input, init) => {
     const url = String(input);
     if (url === SUBMISSION_URL && init?.method === "POST") {
+      const country = String(JSON.parse(String(init.body)).country_id);
+      const submissionIds = submissionIdsOf(country);
       return new Promise<Response>((resolve, reject) => {
         const answerTimer = setTimeout(
-          () => resolve(withRequestId(submittedAnswer(statuses[0]), 0)),
-          submissionAnswerAfterMilliseconds,
+          () =>
+            resolve(
+              withIds(
+                submittedAnswer(statuses[0]),
+                submissionIds.requestId,
+                submissionIds.observabilityId,
+              ),
+            ),
+          typeof submissionAnswerAfterMilliseconds === "number"
+            ? submissionAnswerAfterMilliseconds
+            : submissionAnswerAfterMilliseconds(country),
         );
         init.signal?.addEventListener(
           "abort",
@@ -204,7 +236,7 @@ function publicApiCalculating(
       readCount += 1;
       const status = statuses[Math.min(readCount, statuses.length - 1)];
       return Promise.resolve(
-        withRequestId(calculationAnswer(status), readCount),
+        withIds(calculationAnswer(status), `read-${readCount}`),
       );
     }
     return Promise.resolve(jsonAnswer(OTHER_ROUTE_ANSWER));
@@ -320,7 +352,10 @@ describe("POST /api/household/calculate", () => {
     expect(await response.json()).toEqual(CALCULATION_ANSWER);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(response.headers.get("x-policyengine-request-id")).toBe(
-      requestIdOf(2),
+      submissionIdsOf("us").requestId,
+    );
+    expect(response.headers.get("x-policyengine-observability-id")).toBe(
+      submissionIdsOf("us").observabilityId,
     );
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(publicApiCall(0)).toMatchObject({
@@ -529,15 +564,50 @@ describe("POST /api/household/calculate", () => {
     expect(response.status).toBe(403);
   });
 
-  test("given API v1 takes as long as its slowest recorded household answer to accept the calculation then the route still answers with the calculated household", async () => {
+  test("given two calculations at once then each answer carries the IDs of its own submission's answer", async () => {
+    // Given
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(
+      publicApiCalculating(["succeeded"], (country) =>
+        country === "us" ? 2_000 : 1_000,
+      ),
+    );
+
+    // When
+    const answers = Promise.all(
+      ["us", "uk"].map((country) =>
+        householdCalculateRoute.POST(
+          dashboardRequest("/api/household/calculate", {
+            method: "POST",
+            body: { country, household: HOUSEHOLD },
+          }),
+        ),
+      ),
+    );
+    await vi.advanceTimersByTimeAsync(2_000);
+    const [usAnswer, ukAnswer] = await answers;
+
+    // Then
+    for (const [answer, country] of [
+      [usAnswer, "us"],
+      [ukAnswer, "uk"],
+    ] as const) {
+      expect(answer.status).toBe(200);
+      expect(answer.headers.get("x-policyengine-request-id")).toBe(
+        submissionIdsOf(country).requestId,
+      );
+      expect(answer.headers.get("x-policyengine-observability-id")).toBe(
+        submissionIdsOf(country).observabilityId,
+      );
+    }
+  });
+
+  test("given API v1 takes minutes to accept the calculation, longer than the forwarder's usual 30 s, then the route still answers with the calculated household", async () => {
     // Given
     vi.useFakeTimers();
     timeOutRequestsOnTheFakeClock();
     fetchMock.mockImplementation(
-      publicApiCalculating(
-        ["succeeded"],
-        SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS,
-      ),
+      publicApiCalculating(["succeeded"], SLOW_SUBMISSION_MILLISECONDS),
     );
 
     // When
@@ -547,9 +617,7 @@ describe("POST /api/household/calculate", () => {
         body: { country: "us", household: HOUSEHOLD },
       }),
     );
-    await vi.advanceTimersByTimeAsync(
-      SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS,
-    );
+    await vi.advanceTimersByTimeAsync(SLOW_SUBMISSION_MILLISECONDS);
     const response = await responsePromise;
 
     // Then
