@@ -8,7 +8,7 @@ import {
   spmOfV2Calculation,
   v2PolicyIdFor,
 } from '@/libs/flagship/v2HouseholdRun';
-import { v2StoredHouseholdKeys } from '@/libs/queryKeys';
+import { v2HouseholdVariationKeys, v2StoredHouseholdKeys } from '@/libs/queryKeys';
 import { householdDataFromV2Calculation } from '@/models/household/v2DocumentCodec';
 import type { RootState } from '@/store';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
@@ -38,7 +38,8 @@ const VARIATION_GC_TIME = 35 * 60 * 1000;
  * marginal tax rates, and the Household tab's background variation, read
  * the same calculation, so it is kept as long as v1's variation is, and
  * never fetched again on its own. The stored household comes from the
- * session (the run keeps it), else from `GET /v2/households/{id}`. The
+ * query cache, where the run puts it, else from `GET /v2/households/{id}`,
+ * and stays cached as long as the variation. The
  * household comes back in its v1 names, as the variation pages read it.
  */
 export function useV2HouseholdVariation({
@@ -52,21 +53,22 @@ export function useV2HouseholdVariation({
   const queryClient = useQueryClient();
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   return useQuery({
-    queryKey: [
-      'v2-household-variation',
+    queryKey: v2HouseholdVariationKeys.byParams(
       countryId,
       householdId,
       policyId,
       currentLawId,
       year,
-      personName ?? '',
-    ],
+      personName
+    ),
     queryFn: async ({ signal }): Promise<HouseholdCalculationOutput> => {
       try {
         const stored = await queryClient.fetchQuery({
           queryKey: v2StoredHouseholdKeys.byId(countryId, householdId),
           queryFn: () => fetchV2Household(countryId, householdId),
           staleTime: Infinity,
+          // Kept as long as the variation that reads it.
+          gcTime: VARIATION_GC_TIME,
         });
         const calculation = await calculateV2Household(
           {

@@ -156,7 +156,7 @@ describe('useRequestedHouseholdRun with v3 on the v2 routes', () => {
     );
   });
 
-  test('given the household stored then the session keeps it, so it is not read again', async () => {
+  test('given the household stored then it is in the query cache under its stored-household key', async () => {
     // Given
     const { result, queryClient } = renderRunHook(V2_REFORM_POLICY_ID);
 

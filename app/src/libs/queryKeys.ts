@@ -193,3 +193,29 @@ export const v2StoredHouseholdKeys = {
   byId: (countryId: string, householdId: string) =>
     [...v2StoredHouseholdKeys.all, countryId, householdId] as const,
 };
+
+/**
+ * A policy's calculation of a stored v2 household across earnings: the
+ * Household tab's background variation and both variation charts read it
+ * under this one key.
+ */
+export const v2HouseholdVariationKeys = {
+  all: ['v2-household-variation'] as const,
+  byParams: (
+    countryId: string,
+    householdId: string,
+    policyId: string,
+    currentLawId: string | number,
+    year: string,
+    personName: string | null
+  ) =>
+    [
+      ...v2HouseholdVariationKeys.all,
+      countryId,
+      householdId,
+      policyId,
+      currentLawId,
+      year,
+      personName ?? '',
+    ] as const,
+};

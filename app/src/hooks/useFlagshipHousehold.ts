@@ -104,9 +104,10 @@ function useV1HouseholdRunQuery({
 /**
  * On the v2 routes: the household is stored and calculated through
  * `/v2/household-calculations`, current law as no policy and a reform by
- * its v2 policy. Once stored, the session keeps the stored household (it
- * never changes) and the caller hears its ID. Keyed by what is sent, as on
- * the v1 routes.
+ * its v2 policy. Once stored, the stored household (which never changes)
+ * goes into the query cache, for the variation to read without asking
+ * again, and the caller hears its ID. Keyed by what is sent, as on the v1
+ * routes.
  */
 function useV2HouseholdRunQuery({
   year,
