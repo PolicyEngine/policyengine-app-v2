@@ -317,7 +317,8 @@ export default function HouseholdReportPage({
           const policy = policyQuery.policies.find((loaded) => loaded.id === policyId);
           return {
             role,
-            household: requested.household,
+            // The household as it was sent, so the code calculates what API v1 did.
+            household: requested.sent,
             policy: policy ? convertPoliciesToV1Format([policy]).baseline.data : null,
             spmConfig: provenance.spmConfig,
             spmProvenance: provenance.spmProvenance,

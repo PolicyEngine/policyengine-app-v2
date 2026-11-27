@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ApiFlagshipHouseholdStore } from '@/api/flagshipHouseholdStore';
 import { fetchPolicyById } from '@/api/policy';
@@ -13,7 +14,9 @@ import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { policyKeys } from '@/libs/queryKeys';
 import type { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
+import type { RootState } from '@/store';
 import type { Policy } from '@/types/ingredients/Policy';
+import { householdAsSent } from '@/utils/householdAsSent';
 
 /**
  * A household built in full (the household builder's model), run for a
@@ -63,9 +66,13 @@ export function useFlagshipHouseholdPayload({
   });
 }
 
-/** The household a run was asked for, and the payload sent for it. */
+/** The household a run was asked for, and what was sent for it. */
 export interface RequestedHousehold {
+  /** The household as the reader described it. */
   household: Household;
+  /** The household as it was sent (householdAsSent): what its result is for. */
+  sent: Household;
+  /** API v1's payload for `sent`. */
   payload: V1HouseholdCreateEnvelope;
 }
 
@@ -77,25 +84,23 @@ const samePayload = (first: V1HouseholdCreateEnvelope, second: V1HouseholdCreate
  * Calculate, for the report section's households and the standalone
  * household report alike. The household asked for is fixed when asked,
  * so the result keeps describing it while the reader edits the builder.
+ * Every household is sent as householdAsSent prepares it, and the one on
+ * screen is compared in that form.
  */
 export function useRequestedHouseholdRun({
   year,
   baselinePolicyId,
   reformPolicyId,
   onCreated,
-  payloadOf = (household) => household.toV1CreationPayload(),
 }: {
   year: string;
   baselinePolicyId: string;
   reformPolicyId: string;
   /** Called with the household's ID once the API has stored it, while it is calculated. */
   onCreated?: (householdId: string, payload: V1HouseholdCreateEnvelope) => void;
-  /**
-   * The payload sent for a household, which a household on screen is also
-   * compared in; the household's own v1 creation payload unless given.
-   */
-  payloadOf?: (household: Household) => V1HouseholdCreateEnvelope;
 }) {
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const sentFor = (household: Household) => householdAsSent(household, metadata, year);
   const [requested, setRequested] = useState<RequestedHousehold | null>(null);
   const run = useFlagshipHouseholdPayload({
     year,
@@ -112,11 +117,12 @@ export function useRequestedHouseholdRun({
    * query, which keeps its error until asked again, so it asks once more.
    */
   const request = (household: Household) => {
-    const payload = payloadOf(household);
+    const sent = sentFor(household);
+    const payload = sent.toV1CreationPayload();
     if (requested && samePayload(requested.payload, payload)) {
       void run.refetch();
     } else {
-      setRequested({ household, payload });
+      setRequested({ household, sent, payload });
     }
   };
 
@@ -146,7 +152,9 @@ export function useRequestedHouseholdRun({
     clear: () => setRequested(null),
     /** Whether the household on screen, or on its way, is this one. */
     shows: (household: Household) =>
-      !!requested && !failed && samePayload(requested.payload, payloadOf(household)),
+      !!requested &&
+      !failed &&
+      samePayload(requested.payload, sentFor(household).toV1CreationPayload()),
   };
 }
 
