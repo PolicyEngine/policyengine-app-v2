@@ -819,7 +819,7 @@ describe("fetchFromServer", () => {
     expect(failure).toBe(callerLeft);
   });
 
-  test("given the caller aborts while the token is fetched and the token request fails then it rejects with the signal's reason", async () => {
+  test("given the caller aborts while the token is fetched then it rejects with the signal's reason without waiting for the token request", async () => {
     // Given a token request that fails only when the test says so
     let tokenRequested: () => void = () => {};
     const requested = new Promise<void>((resolve) => {
@@ -839,14 +839,14 @@ describe("fetchFromServer", () => {
     const controller = new AbortController();
     const callerLeft = new Error("The caller went away.");
 
-    // When
+    // When the caller aborts while the token request is still running
     const pendingRequest = forwarder
       .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, { signal: controller.signal })
       .catch((error: unknown) => error);
     await requested;
     controller.abort(callerLeft);
-    failTokenRequest();
     const failure = await pendingRequest;
+    failTokenRequest();
 
     // Then
     expect(failure).toBe(callerLeft);
@@ -868,6 +868,7 @@ describe("fetchFromServer", () => {
     expect(failure).toBeInstanceOf(PublicApiUnavailableError);
     expect(failure).toMatchObject({
       statusCode: 502,
+      reason: "credential_unavailable",
       requestMayHaveArrived: false,
     });
   });
@@ -889,6 +890,70 @@ describe("fetchFromServer", () => {
     expect(failure).toBeInstanceOf(PublicApiUnavailableError);
     expect(failure).toMatchObject({
       statusCode: 502,
+      reason: "unreachable",
+      requestMayHaveArrived: true,
+    });
+  });
+
+  test("given a path that could leave API v1 then the error names an unknown route that was never sent", async () => {
+    // Given
+    const { forwarder } = forwarderWith();
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer({ method: "GET", path: "/../deployment" })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({
+      reason: "unknown_route",
+      requestMayHaveArrived: false,
+    });
+  });
+
+  test("given no API v1 URL on a preview deployment then the error names a missing configuration that was never sent", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      environment: { VERCEL_ENV: "preview" },
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({
+      reason: "not_configured",
+      requestMayHaveArrived: false,
+    });
+  });
+
+  test("given API v1 does not answer in time then the error names a timeout that may have arrived", async () => {
+    // Given an API v1 that answers only when the request is aborted
+    const forwarder = createPublicApiForwarder({
+      environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
+      callerName: "policyengine-test-caller",
+      sharedTokenStore: null,
+      clientAddress: () => undefined,
+      fetchImplementation: (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("timed out", "TimeoutError")),
+          );
+        }),
+      logger: silentLogger,
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, { timeoutMilliseconds: 10 })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({
+      statusCode: 504,
+      reason: "timed_out",
       requestMayHaveArrived: true,
     });
   });

@@ -76,7 +76,7 @@ const EMPLOYMENT_INCOME_AXES = [
   ],
 ];
 
-function submittedAnswer(): Response {
+function submittedAnswer(status: CalculationStatus = "pending"): Response {
   return jsonResponse(
     {
       status: "ok",
@@ -84,7 +84,7 @@ function submittedAnswer(): Response {
       result: {
         item: {
           calculation_id: CALCULATION_ID,
-          status: "pending",
+          status,
           country_id: "us",
           household_id: null,
           policy_id: null,
@@ -195,6 +195,11 @@ function fakeApiV1(
   const waits: number[] = [];
   const fetchFromServer = vi.fn(
     async (request: PublicApiRequest, options?: ServerRequestOptions) => {
+      // fetchFromServer hands the timeout to AbortSignal.timeout, which
+      // throws for a value it cannot take; so does the fake.
+      if (options?.timeoutMilliseconds !== undefined) {
+        AbortSignal.timeout(options.timeoutMilliseconds);
+      }
       requests.push({ request, options, atMilliseconds: clock.milliseconds });
       const answer = answerFor(request);
       if (answer instanceof Error) {
@@ -453,7 +458,11 @@ describe("calculateHousehold", () => {
     const api = fakeApiV1(
       inOrder([
         submittedAnswer(),
-        new PublicApiUnavailableError("Could not be reached.", 502, true),
+        new PublicApiUnavailableError(
+          "Could not be reached.",
+          502,
+          "unreachable",
+        ),
         succeededAnswer(),
       ]),
     );
@@ -566,7 +575,7 @@ describe("calculateHousehold", () => {
     const timedOut = new PublicApiUnavailableError(
       "The Public API did not answer in time.",
       504,
-      true,
+      "timed_out",
     );
     const api = fakeApiV1(inOrder([timedOut]));
 
@@ -587,7 +596,7 @@ describe("calculateHousehold", () => {
         new PublicApiUnavailableError(
           "Could not obtain a credential for the Public API.",
           502,
-          false,
+          "credential_unavailable",
         ),
         submittedAnswer(),
         succeededAnswer(),
@@ -608,7 +617,7 @@ describe("calculateHousehold", () => {
     const notConfigured = new PublicApiUnavailableError(
       "The Public API is not configured on this deployment.",
       503,
-      false,
+      "not_configured",
     );
     const api = fakeApiV1(inOrder([notConfigured]));
 
@@ -887,7 +896,7 @@ describe("calculateHousehold", () => {
     const connectionLost = new PublicApiUnavailableError(
       "The Public API could not be reached.",
       502,
-      true,
+      "unreachable",
     );
     const api = fakeApiV1(inOrder([connectionLost]));
 
@@ -969,7 +978,7 @@ describe("calculateHousehold", () => {
         new PublicApiUnavailableError(
           "Could not obtain a credential for the Public API.",
           502,
-          false,
+          "credential_unavailable",
         ),
         succeededAnswer(),
       ]),
@@ -989,7 +998,7 @@ describe("calculateHousehold", () => {
     const notConfigured = new PublicApiUnavailableError(
       "The Public API is not configured on this deployment.",
       503,
-      false,
+      "not_configured",
     );
     const api = fakeApiV1(inOrder([submittedAnswer(), notConfigured]));
 
@@ -1110,16 +1119,22 @@ describe("calculateHousehold", () => {
     // Given
     const controller = new AbortController();
     const callerLeft = new Error("The caller went away.");
-    const abortingAnswer = new Response(
-      new ReadableStream({
-        start(streamController) {
-          controller.abort(callerLeft);
-          streamController.error(new DOMException("aborted", "AbortError"));
-        },
-      }),
-      { status: 202 },
-    );
-    const api = fakeApiV1(inOrder([abortingAnswer]));
+    // Built when the submission is sent; the caller aborts only when the
+    // helper starts reading the answer's body.
+    const abortingAnswer = () =>
+      new Response(
+        new ReadableStream(
+          {
+            pull(streamController) {
+              controller.abort(callerLeft);
+              streamController.error(new DOMException("aborted", "AbortError"));
+            },
+          },
+          { highWaterMark: 0 },
+        ),
+        { status: 202 },
+      );
+    const api = fakeApiV1(() => abortingAnswer());
 
     // When
     const failure = await failureOf(
@@ -1130,5 +1145,76 @@ describe("calculateHousehold", () => {
 
     // Then
     expect(failure).toBe(callerLeft);
+    expect(api.submissions()).toHaveLength(1);
+  });
+  test.each([
+    [
+      "succeeded",
+      () => succeededAnswer(),
+      async (outcome: Promise<unknown>) => {
+        await expect(outcome).resolves.toMatchObject({
+          household: CALCULATED_US_SITUATION,
+        });
+      },
+    ],
+    [
+      "failed",
+      () =>
+        calculationAnswer("failed", {
+          error: {
+            code: "invalid_household",
+            message: "The household has no people.",
+            input_errors: [],
+            spm_error: null,
+          },
+        }),
+      async (outcome: Promise<unknown>) => {
+        await expect(outcome).rejects.toBeInstanceOf(
+          HouseholdCalculationFailedError,
+        );
+      },
+    ],
+  ] as const)(
+    "given the submission answers that the calculation already %s then it reads it at once",
+    async (status, readAnswer, checkOutcome) => {
+      // Given
+      const api = fakeApiV1(inOrder([submittedAnswer(status), readAnswer()]));
+
+      // When
+      const outcome = api.calculator.calculateHousehold(US_REFORM_REQUEST);
+
+      // Then
+      await checkOutcome(outcome);
+      expect(api.reads()).toHaveLength(1);
+      expect(api.waits).toEqual([]);
+    },
+  );
+
+  test("given a time limit that is not a whole number then the submission's timeout is whole milliseconds", async () => {
+    // Given
+    const api = fakeApiV1(inOrder([submittedAnswer(), succeededAnswer()]));
+
+    // When
+    const calculated = await api.calculator.calculateHousehold(
+      US_REFORM_REQUEST,
+      { timeLimitMilliseconds: 45_000.5 },
+    );
+
+    // Then
+    expect(calculated.calculationId).toBe(CALCULATION_ID);
+    expect(api.submissions()[0].options?.timeoutMilliseconds).toBe(45_001);
+  });
+
+  test("given an infinite time limit then the submission's timeout is the longest a timer can wait", async () => {
+    // Given
+    const api = fakeApiV1(inOrder([submittedAnswer(), succeededAnswer()]));
+
+    // When
+    await api.calculator.calculateHousehold(US_REFORM_REQUEST, {
+      timeLimitMilliseconds: Number.POSITIVE_INFINITY,
+    });
+
+    // Then
+    expect(api.submissions()[0].options?.timeoutMilliseconds).toBe(2 ** 31 - 1);
   });
 });
