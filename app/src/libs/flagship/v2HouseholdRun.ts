@@ -84,11 +84,16 @@ export function provenanceOfV2Calculation(
 /**
  * A v2 household failure in plain words, as the v1 run gives them: a
  * request that never reached API v1, and a calculation that took too long;
- * any other failure keeps its message.
+ * any other failure keeps its message. The /v2/ clients report a request
+ * that got no answer as status 0, so a TypeError here comes from reading
+ * an answer and keeps its own reason, unlike on the v1 routes.
  */
 export function plainV2HouseholdError(error: unknown): Error {
   if (isV2ApiError(error, 0)) {
     return new Error('Could not reach PolicyEngine. Check your connection.', { cause: error });
+  }
+  if (error instanceof TypeError) {
+    return error;
   }
   return plainHouseholdError(error);
 }
