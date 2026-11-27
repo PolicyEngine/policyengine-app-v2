@@ -1,3 +1,4 @@
+import type { V2HouseholdCalculationAxis } from '@/api/v2HouseholdCalculations';
 import type { Household } from '@/models/Household';
 import {
   addVariationAxesToPythonPackageHouseholdData,
@@ -9,6 +10,7 @@ import type {
   PythonPackageHouseholdVariationAxis,
   PythonPackageHouseholdWithAxes,
 } from '@/models/household/pythonPackageTypes';
+import type { V2HouseholdDocument } from '@/types/v2Households';
 
 export const HOUSEHOLD_VARIATION_POINT_COUNT = PYTHON_PACKAGE_HOUSEHOLD_VARIATION_POINT_COUNT;
 export type HouseholdVariationAxis = PythonPackageHouseholdVariationAxis;
@@ -63,4 +65,52 @@ export function buildHouseholdVariationAxes(
     year,
     personName
   );
+}
+
+/**
+ * One varied input of a v2 household calculation (`/v2/household-calculations`):
+ * API v1's axis, with the period and the varied person's position
+ * (`index`, among the stored household's people) always set.
+ */
+export type V2HouseholdVariationAxis = V2HouseholdCalculationAxis & {
+  period: string;
+  index: number;
+};
+
+/**
+ * The earnings axis for a stored v2 household, as v1's variation varies
+ * it: the person's employment income from zero to the variation's maximum
+ * (twice their earnings, or the floor), across the variation's points.
+ * The person is `personName` (the head), else "you", else the first
+ * person; a v2 axis names them by their position among the stored people,
+ * which is the order the calculation reads them in.
+ */
+export function v2EarningsVariationAxes(
+  document: V2HouseholdDocument,
+  year: string,
+  personName?: string | null
+): V2HouseholdVariationAxis[][] {
+  const names = document.people.map((person) => person.source_name ?? person.id);
+  if (names.length === 0) {
+    throw new Error('Household has no people defined');
+  }
+  const positionOf = (name: string | null | undefined) => (name ? names.indexOf(name) : -1);
+  const index = [positionOf(personName), positionOf('you')].find((position) => position >= 0) ?? 0;
+  const earnings = (document.people[index].values.employment_income ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const currentEarnings = typeof earnings[year] === 'number' ? (earnings[year] as number) : 0;
+  return [
+    [
+      {
+        name: 'employment_income',
+        period: year,
+        min: 0,
+        max: getHouseholdVariationMaxEarnings(currentEarnings),
+        count: HOUSEHOLD_VARIATION_POINT_COUNT,
+        index,
+      },
+    ],
+  ];
 }
