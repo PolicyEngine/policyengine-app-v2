@@ -181,7 +181,7 @@ const UK_DATASET_INPUTS = new RegExp(
  * microdata sets (ids, weights, take-up draws), inputs only the UK
  * dataset supplies, and inputs the model keeps only for old API callers.
  */
-export function describesAHousehold(variable: VariableInfo, countryId: string = 'us'): boolean {
+export function describesAHousehold(variable: VariableInfo, countryId: string): boolean {
   const module = variable.moduleName ?? '';
   return !(
     /^deprecated/i.test(variable.documentation ?? '') ||

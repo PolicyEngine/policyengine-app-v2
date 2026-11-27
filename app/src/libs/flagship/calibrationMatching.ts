@@ -555,7 +555,7 @@ export async function calibrationMatchesForPaths(
 ): Promise<CalibrationMatches | null> {
   let map;
   try {
-    map = await loadParameterDependencies();
+    map = await loadParameterDependencies('us');
   } catch {
     return null;
   }

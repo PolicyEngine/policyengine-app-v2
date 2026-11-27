@@ -69,6 +69,7 @@ import {
   trackHouseholdRemoved,
   trackHouseholdVariableAdded,
 } from '@/utils/analytics';
+import { withSupportedBuilderClaimantRoles } from '@/utils/builderClaimantRoles';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getNormalizedVariableMetadata } from '@/utils/variableMetadata';
 import { getInputVariables, type VariableInfo } from '@/utils/VariableResolver';
@@ -99,8 +100,9 @@ export function ukNationPlace(region: string | undefined): Record<string, string
 
 /**
  * A new household: the household builder's own start, one adult and
- * nothing else set. A US household is measured against national poverty
- * thresholds; only the US model has them. A UK household in a report on
+ * nothing else set. A US household starts on national poverty
+ * thresholds, which the builder's SPM geography choice can change to a
+ * county's; only the US model has them. A UK household in a report on
  * Scotland, Wales or Northern Ireland starts there.
  */
 function newHousehold(countryId: CountryId, year: string, region?: string): Household {
@@ -234,15 +236,22 @@ function HeadingRow({ heading, action }: { heading?: ReactNode; action?: ReactNo
 }
 
 /**
- * The household inputs the reform's parameters read, nearest first; none
- * until the dependency map loads, or when it traces none of them, or for
- * a country without a traced map.
+ * The household inputs the reform's parameters read, nearest first, from
+ * the country's own traced map; none until the map loads, or when it
+ * traces none of them, or for a country without a traced map. Only inputs
+ * a reader describes a household with are suggested, as the builder's
+ * search lists only those.
  */
 function useSuggestedInputs(paths: string[], countryId: string): string[] {
   const metadata = useSelector((state: RootState) => state.metadata);
   const inputs = useMemo(
-    () => new Set(getInputVariables(metadata).map((variable) => variable.name)),
-    [metadata]
+    () =>
+      new Set(
+        getInputVariables(metadata)
+          .filter((variable) => describesAHousehold(variable, countryId))
+          .map((variable) => variable.name)
+      ),
+    [metadata, countryId]
   );
   const preferred = useMemo(
     () => new Set(commonHouseholdInputs(countryId).map((input) => input.name)),
@@ -256,18 +265,11 @@ function useSuggestedInputs(paths: string[], countryId: string): string[] {
       setSuggested([]);
       return;
     }
-    loadParameterDependencies()
+    loadParameterDependencies(countryId)
       .then((map) => {
         if (!cancelled) {
           setSuggested(
-            suggestedHouseholdInputs(
-              pathsKey.split('\n'),
-              map,
-              inputs,
-              undefined,
-              preferred,
-              countryId
-            )
+            suggestedHouseholdInputs(pathsKey.split('\n'), map, inputs, countryId, { preferred })
           );
         }
       })
@@ -667,12 +669,19 @@ function HouseholdCard({
     };
   };
 
+  // The household as it is sent: a UK builder household with its claimant
+  // and partner roles, when the model takes them, as everywhere else the
+  // app saves a household. What is on screen is compared with what was sent
+  // in the same form, so the roles never make a result read as out of date.
+  const creationPayloadOf = (described: Household) =>
+    withSupportedBuilderClaimantRoles(described, metadata, year).toV1CreationPayload();
+
   // Inputs until the household first runs; its results from then on.
   const [view, setView] = useState<'inputs' | 'results'>('inputs');
 
   const calculate = () => {
     startRun();
-    const payload = household.toV1CreationPayload();
+    const payload = creationPayloadOf(household);
     // The same household again, after a failure, asks once more.
     if (requested && JSON.stringify(requested.payload) === JSON.stringify(payload)) {
       void run.refetch();
@@ -783,7 +792,7 @@ function HouseholdCard({
   const sameAsShown =
     !!requested &&
     !failed &&
-    JSON.stringify(requested.payload) === JSON.stringify(household.toV1CreationPayload());
+    JSON.stringify(requested.payload) === JSON.stringify(creationPayloadOf(household));
   // A result for inputs the reader has since changed.
   const stale = !!result && !sameAsShown;
 
@@ -918,8 +927,6 @@ function HouseholdCard({
                   setHousehold(household.withBuilderChildCount(year, count))
                 }
                 disabled={running}
-                // National poverty thresholds, the model's default, without the choice.
-                hideSpmGeography
                 layout="columns"
                 suggestedVariables={suggestedVariables}
                 suggestedLabel="Related to this reform"
@@ -1021,6 +1028,11 @@ function HouseholdCard({
                   impact={result}
                   countryId={countryId}
                   describe={describeVariable}
+                  methodology={{
+                    baseline: result.provenance.baseline,
+                    // One calculation served both policies: its methodology shows once.
+                    reform: baselinePolicyId === reformPolicyId ? null : result.provenance.reform,
+                  }}
                   summary={`${requested.summary} · ${year}`}
                   breakdowns={breakdowns}
                   programmes={programmes}

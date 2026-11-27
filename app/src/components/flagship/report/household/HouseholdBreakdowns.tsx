@@ -261,8 +261,6 @@ export default function HouseholdBreakdowns({
       reform,
       simulations,
       policies: policyQuery.policies,
-      // v3 households use national thresholds, so the footnote says nothing new.
-      hideSpmFootnote: true,
       renderLoading: () => (
         <RunProgress
           title={

@@ -78,37 +78,50 @@ describe('describesAHousehold', () => {
   const input = (name: string, moduleName: string, documentation?: string) =>
     ({ name, label: name, moduleName, documentation }) as VariableInfo;
 
+  test('given no country then the call does not type-check, so no country is read as the US', () => {
+    // @ts-expect-error Every caller names the household's country.
+    expect(describesAHousehold(input('rent', 'household.expense.housing.rent'))).toBe(true);
+  });
+
   test('given survey totals, incidence inputs or deprecated inputs then they are left out', () => {
     expect(
-      describesAHousehold(input('spm_unit_snap', 'household.income.spm_unit.spm_unit_snap'))
+      describesAHousehold(input('spm_unit_snap', 'household.income.spm_unit.spm_unit_snap'), 'us')
     ).toBe(false);
-    expect(
-      describesAHousehold(input('cbo_excise_tax', 'household.income.household.cbo_excise_tax'))
-    ).toBe(false);
-    expect(describesAHousehold(input('ssi_reported', 'household.income.person.ssi_reported'))).toBe(
-      false
-    );
     expect(
       describesAHousehold(
-        input('use_reported_ssi', 'household.income.person.use_reported_ssi', 'Deprecated: …')
+        input('cbo_excise_tax', 'household.income.household.cbo_excise_tax'),
+        'us'
+      )
+    ).toBe(false);
+    expect(
+      describesAHousehold(input('ssi_reported', 'household.income.person.ssi_reported'), 'us')
+    ).toBe(false);
+    expect(
+      describesAHousehold(
+        input('use_reported_ssi', 'household.income.person.use_reported_ssi', 'Deprecated: …'),
+        'us'
       )
     ).toBe(false);
   });
 
   test('given what a household is described by then it is kept', () => {
-    expect(describesAHousehold(input('rent', 'household.expense.housing.rent'))).toBe(true);
-    expect(describesAHousehold(input('tip_income', 'household.income.person.tip_income'))).toBe(
-      true
-    );
+    expect(describesAHousehold(input('rent', 'household.expense.housing.rent'), 'us')).toBe(true);
+    expect(
+      describesAHousehold(input('tip_income', 'household.income.person.tip_income'), 'us')
+    ).toBe(true);
   });
 
   test('given US ids and weights then they are left out, and the US inputs beside them kept', () => {
     expect(
-      describesAHousehold(input('tax_unit_id', 'household.demographic.identifiers.tax_unit_id'))
+      describesAHousehold(
+        input('tax_unit_id', 'household.demographic.identifiers.tax_unit_id'),
+        'us'
+      )
     ).toBe(false);
     expect(
       describesAHousehold(
-        input('household_weight', 'household.demographic.weights.household_weight')
+        input('household_weight', 'household.demographic.weights.household_weight'),
+        'us'
       )
     ).toBe(false);
     for (const [name, moduleName] of [
@@ -118,7 +131,7 @@ describe('describesAHousehold', () => {
       ['state_name', 'household.demographic.geographic.state.state_name'],
       ['pension_income', 'household.income.person.pension_income'],
     ]) {
-      expect(describesAHousehold(input(name, moduleName))).toBe(true);
+      expect(describesAHousehold(input(name, moduleName), 'us')).toBe(true);
     }
   });
 

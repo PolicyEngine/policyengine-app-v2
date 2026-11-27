@@ -59,8 +59,6 @@ interface Props {
   reformVariation?: HouseholdCalculationOutput | null;
   /** What shows while the variation calculates; a spinner and a line by default. */
   renderLoading?: () => ReactNode;
-  /** Leave out the SPM methodology footnote under the chart; shown by default. */
-  hideSpmFootnote?: boolean;
   /** Name the country's currency in the explainer ("next pound" in the UK); "dollar" by default. */
   currencyAwareText?: boolean;
   /**
@@ -134,7 +132,6 @@ export default function MarginalTaxRatesSubPage({
   baselineVariation: providedBaselineVariation = null,
   reformVariation: providedReformVariation = null,
   renderLoading,
-  hideSpmFootnote = false,
   currencyAwareText = false,
   tidyChart = false,
 }: Props) {
@@ -543,12 +540,10 @@ export default function MarginalTaxRatesSubPage({
         {renderChart()}
         <ChartWatermark />
       </div>
-      {!hideSpmFootnote && (
-        <SPMMethodologyFootnote
-          output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
-          context="variation"
-        />
-      )}
+      <SPMMethodologyFootnote
+        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+        context="variation"
+      />
     </Stack>
   );
 }

@@ -782,10 +782,11 @@ async function fetchScorecardComparisons(
   signal: AbortSignal
 ): Promise<ScorecardComparisonsResult> {
   let variables: string[] = [];
-  // The committed dependency map is US-only. Never use it for another country.
+  // The scorecard is the US model's: only the US dependency map is read, and
+  // never for another country.
   if (countryId === 'us') {
     try {
-      variables = variablesReachedByPaths(paths, await loadParameterDependencies()).map(
+      variables = variablesReachedByPaths(paths, await loadParameterDependencies('us')).map(
         (entry) => entry.variable
       );
     } catch {
