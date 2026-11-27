@@ -803,11 +803,12 @@ describe("fetchFromServer", () => {
     const controller = new AbortController();
     const callerLeft = new Error("The caller went away.");
 
-    // When the caller aborts while the request is in flight
+    // When the caller aborts while the request is in flight, long before
+    // the request's own timeout would end it
     const pendingRequest = forwarder
       .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, {
         signal: controller.signal,
-        timeoutMilliseconds: 1_000,
+        timeoutMilliseconds: 60_000,
       })
       .catch((error: unknown) => error);
     await started;

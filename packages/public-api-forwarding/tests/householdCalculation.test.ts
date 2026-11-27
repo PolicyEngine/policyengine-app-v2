@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import {
   PublicApiUnavailableError,
@@ -718,10 +718,15 @@ describe("calculateHousehold", () => {
         calculationAnswer("running"),
       ),
       {
-        wait: async (_milliseconds, signal) => {
-          controller.abort(callerLeft);
-          signal?.throwIfAborted();
-        },
+        // A wait that ends only through the signal it is given: without
+        // it, the call would never finish.
+        wait: (_milliseconds, signal) =>
+          new Promise<void>((_resolve, reject) => {
+            signal?.addEventListener("abort", () => reject(signal.reason), {
+              once: true,
+            });
+            controller.abort(callerLeft);
+          }),
       },
     );
 
@@ -1216,5 +1221,125 @@ describe("calculateHousehold", () => {
 
     // Then
     expect(api.submissions()[0].options?.timeoutMilliseconds).toBe(2 ** 31 - 1);
+  });
+  test.each([
+    ["answers 503", () => errorAnswer(503, "Storage is unavailable")],
+    [
+      "cannot reach API v1",
+      () =>
+        new PublicApiUnavailableError(
+          "The Public API could not be reached.",
+          502,
+          "unreachable",
+        ),
+    ],
+  ])(
+    "given a read at the deadline %s then it throws HouseholdCalculationTimeoutError without reading again",
+    async (_description, failedRead) => {
+      // Given
+      const api = fakeApiV1(inOrder([submittedAnswer(), failedRead()]));
+
+      // When
+      const failure = await failureOf(
+        api.calculator.calculateHousehold(US_REFORM_REQUEST, {
+          timeLimitMilliseconds: 2_000,
+        }),
+      );
+
+      // Then
+      expect(failure).toBeInstanceOf(HouseholdCalculationTimeoutError);
+      expect(failure).toMatchObject({ lastStatus: "pending" });
+      expect(api.reads()).toHaveLength(1);
+    },
+  );
+
+  test("given reads cannot reach API v1 for 90 seconds then it throws the last failure", async () => {
+    // Given
+    const unreachable = new PublicApiUnavailableError(
+      "The Public API could not be reached.",
+      502,
+      "unreachable",
+    );
+    const api = fakeApiV1(
+      submissionThenEveryRead(submittedAnswer, () => unreachable),
+    );
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST),
+    );
+
+    // Then
+    expect(failure).toBe(unreachable);
+    expect(api.reads().at(-1)?.atMilliseconds).toBe(90_000);
+    expect(api.reads()).toHaveLength(45);
+  });
+});
+
+describe("calculateHousehold with its own timer", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function calculatorWithTimer(answers: ScriptedAnswer[]) {
+    const answerFor = inOrder(answers);
+    const fetchFromServer = vi.fn(async (request: PublicApiRequest) => {
+      const answer = answerFor(request);
+      if (answer instanceof Error) {
+        throw answer;
+      }
+      return answer;
+    });
+    const calculator = createHouseholdCalculator({
+      forwarder: { fetchFromServer },
+      now: () => Date.now(),
+    });
+    return { calculator, fetchFromServer };
+  }
+
+  test("given no wait of its own then it reads after 2 seconds", async () => {
+    // Given
+    vi.useFakeTimers();
+    const { calculator, fetchFromServer } = calculatorWithTimer([
+      submittedAnswer(),
+      succeededAnswer(),
+    ]);
+
+    // When
+    const calculation = calculator.calculateHousehold(US_REFORM_REQUEST);
+    await vi.advanceTimersByTimeAsync(1_999);
+    const requestsBeforeTheInterval = fetchFromServer.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(1);
+    const calculated = await calculation;
+
+    // Then
+    expect(requestsBeforeTheInterval).toBe(1);
+    expect(fetchFromServer).toHaveBeenCalledTimes(2);
+    expect(calculated.calculationId).toBe(CALCULATION_ID);
+  });
+
+  test("given the signal aborts during its own wait then it rejects at once and leaves no timer", async () => {
+    // Given
+    vi.useFakeTimers();
+    const controller = new AbortController();
+    const callerLeft = new Error("The caller went away.");
+    const { calculator, fetchFromServer } = calculatorWithTimer([
+      submittedAnswer(),
+    ]);
+
+    // When
+    const calculation = failureOf(
+      calculator.calculateHousehold(US_REFORM_REQUEST, {
+        signal: controller.signal,
+      }),
+    );
+    await vi.advanceTimersByTimeAsync(500);
+    controller.abort(callerLeft);
+    const failure = await calculation;
+
+    // Then
+    expect(failure).toBe(callerLeft);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(fetchFromServer).toHaveBeenCalledTimes(1);
   });
 });
