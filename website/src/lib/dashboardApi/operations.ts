@@ -1,9 +1,9 @@
 // The dashboard API's four operations, each checked and turned into what it
-// asks of the Public API: the one request it stands for, or for a household
-// calculation, the household the website's server calculates through
-// /v2/household-calculations. Dashboards see only these shapes, never the
-// Public API's paths, so the Public API can change its routes without a
-// change to any dashboard.
+// asks of API v1 (the Public API): the one request it stands for, or for a
+// household calculation, the household the website's server calculates
+// through /v2/household-calculations. Dashboards see only these shapes,
+// never API v1's paths, so API v1 can change its routes without a change to
+// any dashboard.
 
 import type {
   InlineHouseholdCalculationRequest,
@@ -14,8 +14,8 @@ import type {
 export const DASHBOARD_API_COUNTRIES = ["us", "uk"] as const;
 export type DashboardApiCountry = (typeof DASHBOARD_API_COUNTRIES)[number];
 
-export type OperationResult<Request = PublicApiRequest> =
-  | { readonly ok: true; readonly request: Request }
+export type OperationResult<Requested = PublicApiRequest> =
+  | { readonly ok: true; readonly request: Requested }
   | { readonly ok: false; readonly message: string };
 
 const POLICY_ID_PATTERN = /^[0-9]{1,10}$/;

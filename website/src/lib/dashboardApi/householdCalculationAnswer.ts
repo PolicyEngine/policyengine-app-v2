@@ -33,6 +33,16 @@ const INPUT_FAILURE_CODES: ReadonlySet<string | null> = new Set([
   "invalid_spm_selection",
 ]);
 
+/**
+ * The start of /calculate's message for a calculation that failed
+ * unexpectedly. The household function already starts a
+ * "calculation_failed" message with it.
+ */
+const UNEXPECTED_FAILURE_PREFIX = "Error calculating household under policy: ";
+
+const REQUEST_ID_HEADER = "X-PolicyEngine-Request-Id";
+const OBSERVABILITY_ID_HEADER = "X-PolicyEngine-Observability-Id";
+
 /** Bytes per part of a streamed answer. */
 const STREAMED_PART_BYTES = 64 * 1024;
 
@@ -60,18 +70,18 @@ function apiV1Answer(
   statusCode: number,
   body: Record<string, unknown>,
   responseHeaders: HeadersInit | undefined,
-  extraHeaders: Record<string, string> = {},
 ): Response {
   const headers = new Headers(responseHeaders);
   headers.set("Content-Type", "application/json");
   headers.set("Cache-Control", "no-store");
-  for (const [name, value] of Object.entries(extraHeaders)) {
-    headers.set(name, value);
-  }
   return new Response(streamedText(JSON.stringify(body)), {
     status: statusCode,
     headers,
   });
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /** /calculate's answer for a calculated household. */
@@ -124,42 +134,72 @@ function failedAnswer(
     500,
     {
       status: "error",
-      message: `Error calculating household under policy: ${failure.message}`,
-      result: null,
+      message: failure.message.startsWith(UNEXPECTED_FAILURE_PREFIX)
+        ? failure.message
+        : `${UNEXPECTED_FAILURE_PREFIX}${failure.message}`,
     },
     responseHeaders,
   );
 }
 
 /**
- * API v1's refusal, as /calculate would have given it: its status and
- * message, except that a household API v1 refuses as invalid (422) answers
- * 400, as /calculate did. A success status means API v1's answer could not
- * be read, which is the route's own 502.
+ * API v1's refusal, as /calculate would have given it: its status, message
+ * and `errors`, except that a household API v1 refuses as invalid (422)
+ * answers 400, as /calculate did. The route answers for API v1 itself, as
+ * the forwarder did, when API v1's answer can't be read (a success status),
+ * is a redirect, or isn't API v1's JSON, such as a load balancer's error.
  */
 function refusedAnswer(
   refusal: HouseholdCalculationRefusedError,
   responseHeaders: HeadersInit | undefined,
   logger: Pick<ForwardingLogger, "error">,
 ): Response {
+  const requestDescription = `HTTP ${refusal.statusCode}, request ${refusal.requestId ?? "unknown"}`;
   if (refusal.statusCode < 300) {
     logger.error(
-      `API v1's answer for a household calculation could not be read (HTTP ${refusal.statusCode}, request ${refusal.requestId ?? "unknown"}): ${refusal.message}`,
+      `API v1's answer for a household calculation could not be read (${requestDescription}): ${refusal.message}`,
     );
     return errorResponse(502, refusal.message, responseHeaders);
   }
-  if (refusal.statusCode >= 500) {
+  if (refusal.statusCode < 400) {
     logger.error(
-      `API v1 answered a household calculation with HTTP ${refusal.statusCode} (request ${refusal.requestId ?? "unknown"}): ${refusal.message}`,
+      `API v1 answered a household calculation with a redirect (${requestDescription}).`,
+    );
+    return errorResponse(
+      502,
+      "API v1 answered with a redirect.",
+      responseHeaders,
     );
   }
+  if (refusal.statusCode >= 500) {
+    logger.error(
+      `API v1 answered a household calculation with ${requestDescription}: ${refusal.message}`,
+    );
+  }
+
+  const headers = new Headers(responseHeaders);
+  if (refusal.retryAfterSeconds !== null) {
+    headers.set("Retry-After", String(refusal.retryAfterSeconds));
+  }
+  if (refusal.requestId !== null) {
+    headers.set(REQUEST_ID_HEADER, refusal.requestId);
+  }
+  if (refusal.observabilityId !== null) {
+    headers.set(OBSERVABILITY_ID_HEADER, refusal.observabilityId);
+  }
+  if (!isJsonObject(refusal.body) || refusal.body.status !== "error") {
+    return errorResponse(refusal.statusCode, refusal.message, headers);
+  }
+  const errors = refusal.body.errors;
   return apiV1Answer(
     refusal.statusCode === 422 ? 400 : refusal.statusCode,
-    { status: "error", message: refusal.message, result: null },
-    responseHeaders,
-    refusal.retryAfterSeconds === null
-      ? {}
-      : { "Retry-After": String(refusal.retryAfterSeconds) },
+    {
+      status: "error",
+      message: refusal.message,
+      result: null,
+      ...(Array.isArray(errors) && errors.length > 0 ? { errors } : {}),
+    },
+    headers,
   );
 }
 
@@ -205,7 +245,13 @@ export async function householdCalculationAnswer(
       );
     }
     if (error instanceof PublicApiUnavailableError) {
-      // fetchFromServer has logged why.
+      // fetchFromServer logs every other reason itself; the helper finds
+      // a lost answer while reading it.
+      if (error.reason === "answer_lost") {
+        logger.error(
+          `API v1's answer for a household calculation was lost: ${error.message}`,
+        );
+      }
       return errorResponse(error.statusCode, error.message, responseHeaders);
     }
     logger.error(
