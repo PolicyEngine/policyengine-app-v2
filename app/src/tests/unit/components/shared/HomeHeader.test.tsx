@@ -27,6 +27,7 @@ const CALCULATOR_URL = 'https://app.policyengine.org';
 // that work for any household under current law, by label.
 const US_TOOLS_ROWS = [
   'PolicyEngine app',
+  'ACA calculator',
   'CliffWatch',
   'Coverage Compass',
   'GiveCalc',

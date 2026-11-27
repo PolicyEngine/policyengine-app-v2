@@ -41,7 +41,9 @@ export default function BudgetWindowSummary({
   const data = budget.data;
   const span = `${startYear}–${startYear + windowSize - 1}`;
   const total = data?.status === 'ok' ? data.result?.totals.budgetaryImpact : undefined;
-  const failed = budget.isError || data?.status === 'error';
+  // As the Budget window card has it: a window being requested again is
+  // calculating, until its answer says otherwise.
+  const failed = !budget.isFetching && (budget.isError || data?.status === 'error');
   const progress = typeof data?.progress === 'number' ? data.progress : 0;
 
   const totalText =
