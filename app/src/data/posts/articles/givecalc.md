@@ -72,6 +72,6 @@ Visit [policyengine.org/us/givecalc](https://legacy.policyengine.org/us/givecalc
 
 - [Report issues or contribute](https://github.com/PolicyEngine/givecalc/issues)
 
-- [Support PolicyEngine](https://legacy.policyengine.org/us/donate) with a tax-deductible donation — and use GiveCalc to estimate its impact
+- [Support PolicyEngine](https://policyengine.org/us/donate) with a tax-deductible donation — and use GiveCalc to estimate its impact
 
 Share your feedback and feature requests in the comments below or [open an issue](https://github.com/PolicyEngine/givecalc/issues) on GitHub.
