@@ -5,7 +5,8 @@ import {
   type ApiStoreContext,
 } from '@/api/v2Associations';
 import { clampStoreText } from '@/libs/flagship/storeText';
-import type { UserHouseholdCreateBody, UserHouseholdItem } from '@/types/v2User';
+import type { UserHouseholdCreateBody } from '@/types/v2Households';
+import type { UserHouseholdItem } from '@/types/v2User';
 
 /**
  * The households v3 calculates, saved to the user as `/v2/user-households`
