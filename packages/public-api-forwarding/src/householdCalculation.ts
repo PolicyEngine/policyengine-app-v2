@@ -620,10 +620,21 @@ export function createHouseholdCalculator(
   return {
     async calculateHousehold(request, options = {}) {
       const { signal } = options;
-      const deadline =
-        now() +
-        (options.timeLimitMilliseconds ??
-          HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS);
+      const timeLimitMilliseconds =
+        options.timeLimitMilliseconds ??
+        HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS;
+      // Anything else would make a deadline that never comes, or waits that
+      // setTimeout runs at once.
+      if (
+        typeof timeLimitMilliseconds !== "number" ||
+        Number.isNaN(timeLimitMilliseconds) ||
+        timeLimitMilliseconds < 0
+      ) {
+        throw new RangeError(
+          `timeLimitMilliseconds must be a number, 0 or more, or Infinity; got ${String(timeLimitMilliseconds)}.`,
+        );
+      }
+      const deadline = now() + timeLimitMilliseconds;
       const submitted = await submit(request, deadline, signal);
       return readUntilFinished(submitted, deadline, signal);
     },

@@ -74,7 +74,7 @@ What it does, through `fetchFromServer()`:
 
 1. Submits `{country_id, household, policy?, add_missing_variables?, spm?}` to `POST /v2/household-calculations`. API v1 keeps the calculation as a household job only: no stored household, policy or user association.
 2. Reads `GET /v2/household-calculations/{calculation_id}` every 2 seconds until the calculation succeeds or fails.
-3. Gives up 10 minutes after the call starts (`timeLimitMilliseconds`). No wait runs past that deadline; the last read happens at it.
+3. Gives up 10 minutes after the call starts, or after `timeLimitMilliseconds`: a number, 0 or more, or `Infinity`; anything else rejects with `RangeError` before submitting. No wait runs past that deadline; the last read happens at it.
 
 It resolves with the calculated household, `warnings`, `spmConfig`, `spmProvenance`, the calculation ID and the versions it ran with. It throws:
 
