@@ -75,8 +75,10 @@ export default function SaveHouseholdForm({
   // The saved household this form's last successful save made or changed.
   const [savedByThisForm, setSavedByThisForm] = useState<SavedHousehold | null>(null);
   const editing = saved ?? savedByThisForm;
-  // What the last save stored: "Saved" shows only while the household and
-  // label on screen are still what it stored.
+  // What the last save was given: "Saved" shows only while the household
+  // and label on screen are still what it saved. The household is compared
+  // as it is sent now, as the one on screen is, so model information that
+  // loads after the save changes neither.
   const [lastSaved, setLastSaved] = useState<{ household: Household; label: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const savedInBuilderYear = useMemo(
@@ -106,7 +108,7 @@ export default function SaveHouseholdForm({
   const showsSaved =
     !!lastSaved &&
     lastSaved.label === label.trim() &&
-    haveSameStoredContent(householdToStore, lastSaved.household);
+    haveSameStoredContent(householdToStore, householdAsSent(lastSaved.household, metadata));
 
   const save = async () => {
     setSaving(true);
@@ -125,7 +127,7 @@ export default function SaveHouseholdForm({
         return;
       }
       setSavedByThisForm(result);
-      setLastSaved({ household: householdToStore, label: label.trim() });
+      setLastSaved({ household, label: label.trim() });
       onSaved?.(result);
     } catch (error) {
       setLastSaved(null);
