@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { calculationKeys } from '@/libs/queryKeys';
+import { describe, expect, it, test } from 'vitest';
+import { calculationKeys, v2StoredHouseholdKeys } from '@/libs/queryKeys';
 
 describe('calculationKeys', () => {
   describe('all', () => {
@@ -73,5 +73,15 @@ describe('calculationKeys', () => {
       expect(reportKey[1]).toBe('report');
       expect(simKey[1]).toBe('simulation');
     });
+  });
+});
+
+describe('v2StoredHouseholdKeys', () => {
+  test('given a country and a stored household then its key names both, under the stored households', () => {
+    expect(v2StoredHouseholdKeys.byId('uk', 'household-uuid')).toEqual([
+      'v2-stored-household',
+      'uk',
+      'household-uuid',
+    ]);
   });
 });
