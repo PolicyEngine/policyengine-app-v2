@@ -50,7 +50,14 @@ describe('runProgressAt', () => {
   test('given time passes then the bar never decreases', () => {
     // Given
     const state = { startedAt: RUN_STARTED_AT, highestProgress: 12, runStage: SIMULATING_STAGE };
-    const elapsedTimes = [0, 1_000, 60_000, TYPICAL_RUN_MS, 3 * TYPICAL_RUN_MS, 30 * TYPICAL_RUN_MS];
+    const elapsedTimes = [
+      0,
+      1_000,
+      60_000,
+      TYPICAL_RUN_MS,
+      3 * TYPICAL_RUN_MS,
+      30 * TYPICAL_RUN_MS,
+    ];
 
     // When
     const values = elapsedTimes.map((elapsedMs) =>

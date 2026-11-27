@@ -275,7 +275,9 @@ describe('BillReportPage', () => {
   test('given the full run is calculating then its bar follows the clock from the run’s first request', async () => {
     // Given - half of a typical US nationwide run (6 minutes) since the first request
     const user = userEvent.setup();
-    mockUseBillEconomy.mockReturnValue(economy({ progress: 1, startedAt: Date.now() - 3 * 60_000 }));
+    mockUseBillEconomy.mockReturnValue(
+      economy({ progress: 1, startedAt: Date.now() - 3 * 60_000 })
+    );
     renderReport();
 
     // When

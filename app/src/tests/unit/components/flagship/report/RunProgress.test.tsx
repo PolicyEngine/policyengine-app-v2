@@ -1,10 +1,7 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
-import RunProgress, {
-  clockProgress,
-  runProgressValue,
-  runStageCaption,
-} from '@/components/flagship/report/RunProgress';
+import RunProgress, { runStageCaption } from '@/components/flagship/report/RunProgress';
+import { clockProgress, runProgressValue } from '@/libs/calculations/runProgress';
 
 describe('runProgressValue', () => {
   test('given no run stage then the time estimate is the value', () => {

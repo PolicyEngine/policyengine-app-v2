@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { billRunYear, type TrackedBill } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { economyRunStartedAt, runProgressStateOf } from '@/libs/calculations/runProgress';
 import { createReformPolicy } from '@/libs/flagship/runReport';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
 import type { RootState } from '@/store';
-import type { RunStage } from '@/types/calculation';
+import type { CalcStatus, RunStage } from '@/types/calculation';
 
 /** How often a bill's run still computing is checked on. */
 const POLL_MS = 2000;
@@ -17,10 +17,12 @@ export interface BillEconomy {
   status: 'pending' | 'complete' | 'error';
   message?: string;
   queuePosition?: number;
-  /** 0–100 while pending: the calculation strategy's estimate from typical run times. */
+  /** 0–100 while pending: the highest value the run's bar reached at a poll. */
   progress?: number;
   /** The run's stage from the API while pending, when it reports one. */
   runStage?: RunStage;
+  /** When the run was first requested (epoch ms), while it computes. */
+  startedAt?: number;
   reformPolicyId?: string;
   baselinePolicyId?: string;
   year: string;
@@ -70,16 +72,7 @@ export function useBillEconomy(
 
   const reformPolicyId = policy.data === undefined ? undefined : String(policy.data);
   const baselinePolicyId = currentLawId ? String(currentLawId) : undefined;
-  // Progress is measured from when this page began waiting on the run.
-  const metadata = useMemo(
-    () => ({
-      calcId: `bill-${bill?.id}`,
-      calcType: 'societyWide' as const,
-      targetType: 'report' as const,
-      startedAt: Date.now(),
-    }),
-    [bill?.id, reformPolicyId]
-  );
+  const calcId = `bill-${bill?.id}`;
 
   const economy = useQuery({
     ...calculationQueries.forEconomyRun({
@@ -98,10 +91,19 @@ export function useBillEconomy(
         populationId: region,
         region,
         year,
-        calcId: metadata.calcId,
+        calcId,
         estimateByRegion: true,
       },
-      metadata,
+      // Built when each request is sent, from the run's cached status: a run
+      // still computing keeps its first request's start time, which its bar
+      // measures from, across polls and visits to the page; a new run, or one
+      // tried again after it failed, starts now.
+      metadata: (cached: CalcStatus | undefined) => ({
+        calcId,
+        calcType: 'societyWide' as const,
+        targetType: 'report' as const,
+        startedAt: economyRunStartedAt(cached),
+      }),
       pollIntervalMs: POLL_MS,
     }),
     enabled: enabled && !!reformPolicyId && !!baselinePolicyId,
@@ -127,6 +129,7 @@ export function useBillEconomy(
     queuePosition: economy.data?.queuePosition,
     progress: economy.data?.progress,
     runStage: economy.data?.runStage,
+    startedAt: runProgressStateOf(economy.data)?.startedAt,
     reformPolicyId,
     baselinePolicyId,
     year,

@@ -502,7 +502,10 @@ describe('SocietyWideCalcStrategy', () => {
     it('given the last poll is of another run then its progress does not carry over', async () => {
       // Given - the run failed and was tried again a second ago
       const params = mockSocietyWideCalcParams({ estimateByRegion: true });
-      const previous = mockComputingSocietyWideStatus({ progress: 80, metadata: startedAgo(60_000) });
+      const previous = mockComputingSocietyWideStatus({
+        progress: 80,
+        metadata: startedAgo(60_000),
+      });
       mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
 
       // When

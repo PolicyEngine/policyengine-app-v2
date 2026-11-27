@@ -1,6 +1,6 @@
 import type { EconomyCalculationResponse } from '@/api/societyWideCalculation';
-import { clockProgress, runProgressValue } from '@/components/flagship/report/RunProgress';
 import type { RunStage } from '@/types/calculation';
+import { runProgressAt } from './runProgress';
 
 /**
  * Failed polls in a row (for example a 502 from a gateway) that a computing
@@ -74,21 +74,25 @@ function runFromResponse<Result, Kept>(
   options: PollRunOptions<Result, Kept>
 ): PolledRun<Kept> {
   if (response.status === 'computing') {
-    const elapsed = Date.now() - startedAt;
-    if (elapsed > options.timeLimitMs) {
+    const now = Date.now();
+    if (now - startedAt > options.timeLimitMs) {
       return { status: 'error', startedAt, result: null, error: options.timeLimitMessage };
     }
-    const progress = runProgressValue(
-      clockProgress(elapsed, options.expectedMs),
-      runStageOf(response)
-    );
     return {
       status: 'computing',
       startedAt,
       result: null,
-      // The bar never moves backwards between polls.
-      progress:
-        previous?.status === 'computing' ? Math.max(previous.progress ?? 0, progress) : progress,
+      // The bar is shown only as it stands at each poll, so it never moves
+      // backwards as long as it keeps the last poll's value.
+      progress: runProgressAt(
+        {
+          startedAt,
+          highestProgress: previous?.status === 'computing' ? previous.progress : undefined,
+          runStage: runStageOf(response),
+        },
+        now,
+        { expectedMs: options.expectedMs }
+      ),
       stage: typeof response.stage === 'string' ? response.stage : undefined,
       queuePosition: response.queue_position,
     };

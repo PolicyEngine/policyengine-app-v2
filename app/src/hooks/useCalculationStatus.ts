@@ -23,7 +23,8 @@ import { useSyntheticProgress } from './useSyntheticProgress';
  *
  * Enhances status with client-side synthetic progress for better UX:
  * - Household: Shows smooth progress during 30-45s API call
- * - Economy: Blends server progress with synthetic smoothing
+ * - Economy: none; the cached progress is the highest value the run's bar
+ *   reached at a poll, which RunProgress carries on from (runProgressAt)
  */
 function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simulation') {
   const queryClient = useQueryClient();
@@ -92,10 +93,11 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
   // Determine calculation type from metadata
   const calcType = status?.metadata?.calcType || 'household';
 
-  // Activate synthetic progress when:
-  // - Query is loading (isPending for household - long-running API call)
-  // - OR status is computing (for economy - queued/processing)
-  const needsSyntheticProgress = isLoading || status?.status === 'pending';
+  // Activate synthetic progress for a household calculation while its one
+  // long-running request is loading or computing. An economy run's progress
+  // comes from its cached status instead.
+  const needsSyntheticProgress =
+    calcType === 'household' && (isLoading || status?.status === 'pending');
 
   // Generate synthetic progress
   const synthetic = useSyntheticProgress(needsSyntheticProgress, calcType, {

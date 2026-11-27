@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { economyRunStartedAt, runProgressStateOf } from '@/libs/calculations/runProgress';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
-import type { RunStage } from '@/types/calculation';
+import type { CalcStatus, RunStage } from '@/types/calculation';
 
 /** How often a year still computing is checked on. */
 const POLL_MS = 2000;
@@ -11,10 +11,88 @@ export interface ReportYearEconomy {
   output: SocietyWideReportOutput | null;
   status: 'idle' | 'pending' | 'complete' | 'error';
   message?: string;
+  /** 0–100 while pending: the highest value the year's bar reached at a poll. */
   progress?: number;
   runStage?: RunStage;
   queuePosition?: number;
+  /** When the year's run was first requested (epoch ms), while it computes. */
+  startedAt?: number;
   retry: () => void;
+}
+
+interface ReportYearRun {
+  countryId: string;
+  reformPolicyId?: string;
+  baselinePolicyId?: string;
+  /** The region as sent to the API, or the country for a nationwide report. */
+  population: string;
+  year: string;
+}
+
+/** The query options of one year's economy run. */
+function reportYearQuery({
+  countryId,
+  reformPolicyId,
+  baselinePolicyId,
+  population,
+  year,
+}: ReportYearRun) {
+  const calcId = `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`;
+  return calculationQueries.forEconomyRun({
+    queryKey: [
+      'flagship-report-year',
+      countryId,
+      reformPolicyId,
+      baselinePolicyId,
+      population,
+      year,
+    ],
+    params: {
+      countryId: countryId as 'us',
+      calcType: 'societyWide' as const,
+      policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
+      populationId: population,
+      region: population,
+      year,
+      calcId,
+      estimateByRegion: true,
+    },
+    // Built when each request is sent, from the year's cached status: a year
+    // still computing keeps its first request's start time, which its bar
+    // measures from; a new run, or one tried again after it failed, starts now.
+    metadata: (cached: CalcStatus | undefined) => ({
+      calcId,
+      calcType: 'societyWide' as const,
+      targetType: 'report' as const,
+      startedAt: economyRunStartedAt(cached),
+    }),
+    pollIntervalMs: POLL_MS,
+  });
+}
+
+/** One year's run, as the page reads it. */
+function reportYearEconomyOf(
+  economy: UseQueryResult<CalcStatus>,
+  ready: boolean
+): ReportYearEconomy {
+  const status: ReportYearEconomy['status'] = !ready
+    ? 'idle'
+    : economy.isError || economy.data?.status === 'error'
+      ? 'error'
+      : economy.data?.status === 'complete'
+        ? 'complete'
+        : 'pending';
+  return {
+    output:
+      economy.data?.status === 'complete' ? (economy.data.result as SocietyWideReportOutput) : null,
+    status,
+    message: status === 'error' ? economy.data?.error?.message : economy.data?.message,
+    progress: economy.data?.progress,
+    runStage: economy.data?.runStage,
+    queuePosition: economy.data?.queuePosition,
+    startedAt: runProgressStateOf(economy.data)?.startedAt,
+    retry: () => void economy.refetch(),
+  };
 }
 
 /**
@@ -38,60 +116,18 @@ export function useReportYearEconomy({
   year: string;
   enabled: boolean;
 }): ReportYearEconomy {
-  const population = region || countryId;
-  const metadata = useMemo(
-    () => ({
-      calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
-      calcType: 'societyWide' as const,
-      targetType: 'report' as const,
-      startedAt: Date.now(),
-    }),
-    [reformPolicyId, baselinePolicyId, population, year]
-  );
   const ready = enabled && !!reformPolicyId && !!baselinePolicyId;
   const economy = useQuery({
-    ...calculationQueries.forEconomyRun({
-      queryKey: [
-        'flagship-report-year',
-        countryId,
-        reformPolicyId,
-        baselinePolicyId,
-        population,
-        year,
-      ],
-      params: {
-        countryId: countryId as 'us',
-        calcType: 'societyWide',
-        policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
-        populationId: population,
-        region: population,
-        year,
-        calcId: metadata.calcId,
-        estimateByRegion: true,
-      },
-      metadata,
-      pollIntervalMs: POLL_MS,
+    ...reportYearQuery({
+      countryId,
+      reformPolicyId,
+      baselinePolicyId,
+      population: region || countryId,
+      year,
     }),
     enabled: ready,
   });
-
-  const status: ReportYearEconomy['status'] = !ready
-    ? 'idle'
-    : economy.isError || economy.data?.status === 'error'
-      ? 'error'
-      : economy.data?.status === 'complete'
-        ? 'complete'
-        : 'pending';
-  return {
-    output:
-      economy.data?.status === 'complete' ? (economy.data.result as SocietyWideReportOutput) : null,
-    status,
-    message: status === 'error' ? economy.data?.error?.message : economy.data?.message,
-    progress: economy.data?.progress,
-    runStage: economy.data?.runStage,
-    queuePosition: economy.data?.queuePosition,
-    retry: () => void economy.refetch(),
-  };
+  return reportYearEconomyOf(economy, ready);
 }
 
 /**
@@ -116,63 +152,11 @@ export function useReportYearEconomies({
   const ready = !!reformPolicyId && !!baselinePolicyId;
   const results = useQueries({
     queries: years.map((year) => ({
-      ...calculationQueries.forEconomyRun({
-        queryKey: [
-          'flagship-report-year',
-          countryId,
-          reformPolicyId,
-          baselinePolicyId,
-          population,
-          year,
-        ],
-        params: {
-          countryId: countryId as 'us',
-          calcType: 'societyWide' as const,
-          policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
-          populationId: population,
-          region: population,
-          year,
-          calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
-          estimateByRegion: true,
-        },
-        // Built when each request is sent, so `startedAt`, which the strategy
-        // measures progress from, doesn't depend on when the page last rendered.
-        metadata: () => ({
-          calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
-          calcType: 'societyWide' as const,
-          targetType: 'report' as const,
-          startedAt: Date.now(),
-        }),
-        pollIntervalMs: POLL_MS,
-      }),
+      ...reportYearQuery({ countryId, reformPolicyId, baselinePolicyId, population, year }),
       enabled: ready,
     })),
   });
   return Object.fromEntries(
-    years.map((year, index) => {
-      const economy = results[index];
-      const status: ReportYearEconomy['status'] = !ready
-        ? 'idle'
-        : economy.isError || economy.data?.status === 'error'
-          ? 'error'
-          : economy.data?.status === 'complete'
-            ? 'complete'
-            : 'pending';
-      return [
-        year,
-        {
-          output:
-            economy.data?.status === 'complete'
-              ? (economy.data.result as SocietyWideReportOutput)
-              : null,
-          status,
-          message: status === 'error' ? economy.data?.error?.message : economy.data?.message,
-          progress: economy.data?.progress,
-          runStage: economy.data?.runStage,
-          queuePosition: economy.data?.queuePosition,
-          retry: () => void economy.refetch(),
-        },
-      ];
-    })
+    years.map((year, index) => [year, reportYearEconomyOf(results[index], ready)])
   );
 }

@@ -63,4 +63,12 @@ export interface CalcStartConfig {
    * Off by default: a failed run leaves the record as it was.
    */
   recordReportErrors?: boolean;
+
+  /**
+   * When the run was first requested (epoch ms), when known, such as a
+   * report's saved request time (optional). The run's progress is measured
+   * from it, so a run resumed on a later visit keeps its clock. Absent, or
+   * later than now, the run starts now.
+   */
+  startedAt?: number;
 }

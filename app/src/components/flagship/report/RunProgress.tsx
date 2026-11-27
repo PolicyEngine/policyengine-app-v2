@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Progress, Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { clockProgress, runProgressAt, runProgressValue } from '@/libs/calculations/runProgress';
 import { formatElapsed } from '@/libs/flagship/reportStages';
 import type { RunStage } from '@/types/calculation';
 
 /**
- * Milliseconds since the run started — `startedAt` when known (a run begun
- * on another page), else since the component mounted — ticking each second.
+ * When the run started — `startedAt` when known (a run begun on another
+ * page), else when the component mounted — and the time now, ticking each
+ * second.
  */
-function useElapsed(startedAt?: number): number {
+function useRunClock(startedAt?: number): { started: number; now: number } {
   const [mounted] = useState(() => Date.now());
   const started =
     typeof startedAt === 'number' && Number.isFinite(startedAt) && startedAt <= mounted
@@ -19,18 +21,7 @@ function useElapsed(startedAt?: number): number {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  return now - started;
-}
-
-/**
- * The bar by the clock alone: steady to 85% over the typical run, then
- * slowing toward 95%, so a run that takes longer still moves.
- */
-export function clockProgress(elapsed: number, expectedMs: number): number {
-  if (elapsed <= expectedMs) {
-    return (elapsed / expectedMs) * 85;
-  }
-  return 85 + 10 * (1 - Math.exp(-(elapsed - expectedMs) / expectedMs));
+  return { started, now };
 }
 
 /** The run's card. */
@@ -95,24 +86,17 @@ export function runStageCaption(runStage?: RunStage): string | undefined {
 }
 
 /**
- * The bar's value: the time estimate, held inside the stage the API reports
- * (from where the stage starts to just before the next one), else the
- * estimate alone.
- */
-export function runProgressValue(estimate: number, runStage?: RunStage): number {
-  if (typeof runStage?.floor !== 'number' || typeof runStage.max !== 'number') {
-    return estimate;
-  }
-  return Math.min(Math.max(estimate, runStage.floor), runStage.max);
-}
-
-/**
  * A society-wide run in progress, as a bar: what is running, how long it
- * has taken, and how far along it is. The bar follows the run's typical
- * duration (the calculation strategy's estimate, held short of the end
- * until the results arrive). When the API reports the run's stage, the
- * estimate is held inside that stage, and the stage names the line under
- * the title. The bar never moves backwards.
+ * has taken, and how far along it is. With the run's start time, the bar is
+ * the shared progress model's value (runProgressAt): the clock since the
+ * run's first request, held inside the stage the API reports, and never
+ * below `progress`, the highest value the run reached at a poll. Without
+ * one, the bar is `progress` (or the clock since the bar appeared), held
+ * inside the stage. The stage names the line under the title. The bar
+ * never moves backwards.
+ *
+ * Give each run its own instance (`key`), so one run's highest value does
+ * not carry over to another's bar.
  */
 export default function RunProgress({
   title,
@@ -125,7 +109,10 @@ export default function RunProgress({
 }: {
   /** e.g. "Calculating the nationwide results" */
   title: string;
-  /** 0–100, from the calculation status; absent, the bar follows the clock. */
+  /**
+   * 0–100, from the calculation status: with `startedAt`, the highest value
+   * the run's bar reached at a poll; absent, the bar follows the clock.
+   */
   progress?: number;
   /** The run's stage from the API, when it reports one. */
   runStage?: RunStage;
@@ -141,19 +128,18 @@ export default function RunProgress({
    */
   startedAt?: number;
 }) {
-  const elapsed = useElapsed(startedAt);
-  const byClock = clockProgress(elapsed, expectedMs);
-  // The calculation's own estimate restarts with the page; the run's clock does not.
+  const { started, now } = useRunClock(startedAt);
+  const elapsed = now - started;
   const estimate =
-    typeof progress === 'number'
-      ? typeof startedAt === 'number'
-        ? Math.max(progress, byClock)
-        : progress
-      : byClock;
+    typeof startedAt === 'number'
+      ? runProgressAt({ startedAt: started, highestProgress: progress, runStage }, now, {
+          expectedMs,
+        })
+      : runProgressValue(progress ?? clockProgress(elapsed, expectedMs), runStage);
   // The highest value shown so far: a stage's range can start lower than an
   // earlier estimate (a queued run's path is not known yet).
   const shown = useRef(0);
-  shown.current = Math.max(shown.current, runProgressValue(estimate, runStage));
+  shown.current = Math.max(shown.current, estimate);
   const value = shown.current;
   const percent = Math.max(0, Math.min(Math.round(value), 99));
   const line =

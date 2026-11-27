@@ -219,6 +219,7 @@ function FullResultsStatus({
       runStage={economy.runStage}
       detail={queued}
       expectedMs={getDurationForRegion(countryId, economy.region)}
+      startedAt={economy.startedAt}
       note="Later visits load from the cache."
     />
   );

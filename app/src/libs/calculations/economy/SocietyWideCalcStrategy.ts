@@ -9,6 +9,7 @@ import {
 import { getDurationForCountry, getDurationForRegion } from '@/constants/calculationDurations';
 import { CalcMetadata, CalcParams, CalcStatus, RunStage } from '@/types/calculation';
 import { MAX_FAILED_POLLS } from '../polledRun';
+import { highestProgressAtPoll, runProgressStateOf } from '../runProgress';
 import { CalcExecutionStrategy, RefetchConfig } from '../strategies/types';
 
 /** How a caller wants the run's duration estimated. */
@@ -79,10 +80,13 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       );
 
       // Transform to unified status with provided metadata
-      return this.transformResponseWithMetadata(response, metadata, params.countryId, {
-        estimateByRegion: params.estimateByRegion,
-        region: apiRegion,
-      });
+      return this.transformResponseWithMetadata(
+        response,
+        metadata,
+        params.countryId,
+        { estimateByRegion: params.estimateByRegion, region: apiRegion },
+        previous
+      );
     } catch (error) {
       const failedPolls = (previous?.failedPolls ?? 0) + 1;
       if (
@@ -130,26 +134,37 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
 
   /**
    * Transform society-wide API response with provided metadata
+   *
+   * A computing run's progress is the highest value its bar has reached by
+   * this poll (highestProgressAtPoll): the clock since `metadata.startedAt`,
+   * held inside the stage the API reports, and never below the value
+   * `previous` kept for the same run.
+   *
    * @param estimate - Opt-in (v3): with estimateByRegion, progress follows the
    *   region estimate and pending statuses carry estimatedDurationMs. Without
    *   it, the country estimate applies and no estimatedDurationMs is set.
+   * @param previous - The run's status from its last poll, as the query
+   *   cache holds it; none for a run's first request.
    */
   transformResponseWithMetadata(
     apiResponse: unknown,
     metadata: CalcMetadata,
     countryId?: string,
-    estimate: DurationEstimateOptions = {}
+    estimate: DurationEstimateOptions = {},
+    previous?: CalcStatus
   ): CalcStatus {
     const response = apiResponse as SocietyWideCalculationResponse;
 
     // Map computing status from API to pending status in CalcStatus
     if (response.status === 'computing') {
-      // Calculate synthetic progress based on elapsed time (mimicking household calculations)
-      const elapsed = Date.now() - metadata.startedAt;
       const estimatedDuration = this.getEstimatedDuration(countryId, estimate);
-      const progress = Math.min((elapsed / estimatedDuration) * 100, 95); // Cap at 95%
-
       const runStage = estimate.estimateByRegion ? this.getRunStage(response) : undefined;
+      const progress = highestProgressAtPoll(
+        { startedAt: metadata.startedAt, runStage },
+        runProgressStateOf(previous),
+        Date.now(),
+        { expectedMs: estimatedDuration }
+      );
 
       return {
         status: 'pending',
