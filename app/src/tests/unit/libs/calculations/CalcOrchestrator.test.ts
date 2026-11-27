@@ -250,6 +250,38 @@ describe('CalcOrchestrator', () => {
       // Then
       expect(calculationQueries.forReport).toHaveBeenCalled();
     });
+
+    it('given the run was first requested earlier then its metadata keeps that start time', async () => {
+      // Given - the report's saved request time, from an earlier visit
+      const requestedAt = Date.now() - 2 * 60 * 1000;
+      const mockQueryFn = vi.fn().mockResolvedValue(mockPendingSocietyWideStatus());
+      (calculationQueries.forReport as any).mockImplementation((calcId: string) =>
+        mockSocietyWideQueryOptions(calcId, mockQueryFn)
+      );
+
+      // When
+      await orchestrator.startCalculation(mockSocietyWideCalcConfig({ startedAt: requestedAt }));
+
+      // Then
+      expect((calculationQueries.forReport as any).mock.calls[0][1].startedAt).toBe(requestedAt);
+    });
+
+    it('given a start time later than now then the run starts now', async () => {
+      // Given - a saved request time ahead of this browser's clock
+      const now = Date.now();
+      const mockQueryFn = vi.fn().mockResolvedValue(mockPendingSocietyWideStatus());
+      (calculationQueries.forReport as any).mockImplementation((calcId: string) =>
+        mockSocietyWideQueryOptions(calcId, mockQueryFn)
+      );
+
+      // When
+      await orchestrator.startCalculation(mockSocietyWideCalcConfig({ startedAt: now + 60_000 }));
+
+      // Then
+      const { startedAt } = (calculationQueries.forReport as any).mock.calls[0][1];
+      expect(startedAt).toBeGreaterThanOrEqual(now);
+      expect(startedAt).toBeLessThanOrEqual(Date.now());
+    });
   });
 
   describe('params building', () => {

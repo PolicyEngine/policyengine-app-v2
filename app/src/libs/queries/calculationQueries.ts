@@ -14,24 +14,33 @@ function cachedStatus(context?: QueryFunctionContext): CalcStatus | undefined {
 }
 
 /**
+ * A run's metadata, or how to build it for each request from the query's
+ * last status: a run still computing can keep its start time.
+ */
+type MetadataForRequest = CalcMetadata | ((cached: CalcStatus | undefined) => CalcMetadata);
+
+/**
  * What every calculation query polls with: each poll gives the strategy the
- * query's last status, so a computing run outlasts failed polls, and
- * polling goes on while the tab is hidden, so a run is followed to its end.
+ * query's last status, so a computing run outlasts failed polls and keeps
+ * its highest progress, and polling goes on while the tab is hidden, so a
+ * run is followed to its end.
  */
 function pollingQuery<TQueryKey extends QueryKey>(
   queryKey: TQueryKey,
   strategy: CalcExecutionStrategy,
   params: CalcParams,
-  metadata: CalcMetadata | (() => CalcMetadata)
+  metadata: MetadataForRequest
 ) {
   return {
     queryKey,
-    queryFn: async (context?: QueryFunctionContext) =>
-      strategy.execute(
+    queryFn: async (context?: QueryFunctionContext) => {
+      const cached = cachedStatus(context);
+      return strategy.execute(
         params,
-        typeof metadata === 'function' ? metadata() : metadata,
-        cachedStatus(context)
-      ),
+        typeof metadata === 'function' ? metadata(cached) : metadata,
+        cached
+      );
+    },
     refetchIntervalInBackground: true,
   };
 }
@@ -72,7 +81,8 @@ export const calculationQueries = {
    * to write to, such as a report's other budget-window years or a tracked
    * bill, under the caller's own query key. It polls as a report's run
    * does, every `pollIntervalMs` while the run is pending. `metadata` may
-   * be a function, called when each request is sent.
+   * be a function, called when each request is sent with the query's last
+   * status, so a run still computing keeps its start time.
    */
   forEconomyRun: <TQueryKey extends QueryKey>({
     queryKey,
@@ -82,7 +92,7 @@ export const calculationQueries = {
   }: {
     queryKey: TQueryKey;
     params: CalcParams;
-    metadata: CalcMetadata | (() => CalcMetadata);
+    metadata: MetadataForRequest;
     pollIntervalMs: number;
   }) => ({
     ...pollingQuery(queryKey, CalcStrategyFactory.getStrategy('societyWide'), params, metadata),
@@ -90,5 +100,9 @@ export const calculationQueries = {
       query.state.data?.status === 'pending' ? pollIntervalMs : false,
     // A finished run doesn't change; the server caches it.
     staleTime: Infinity,
+    // Kept for the session, as UK local areas and state district runs are: a
+    // run still computing keeps its start time and highest progress here, so
+    // its bar carries on after the reader visits another page and returns.
+    gcTime: Infinity,
   }),
 };

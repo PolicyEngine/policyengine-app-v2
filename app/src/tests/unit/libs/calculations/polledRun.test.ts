@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { clockProgress } from '@/components/flagship/report/RunProgress';
 import { MAX_FAILED_POLLS, pollRun, runStageOf } from '@/libs/calculations/polledRun';
+import { clockProgress } from '@/libs/calculations/runProgress';
 import {
   COMPLETE_RESULT,
   computingRun,

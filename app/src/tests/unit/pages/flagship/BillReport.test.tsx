@@ -272,6 +272,24 @@ describe('BillReportPage', () => {
     expect(screen.queryByText('Current law')).not.toBeInTheDocument();
   });
 
+  test('given the full run is calculating then its bar follows the clock from the run’s first request', async () => {
+    // Given - half of a typical US nationwide run (6 minutes) since the first request
+    const user = userEvent.setup();
+    mockUseBillEconomy.mockReturnValue(
+      economy({ progress: 1, startedAt: Date.now() - 3 * 60_000 })
+    );
+    renderReport();
+
+    // When
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
+
+    // Then - 85% at the typical time, so about 43% at half of it
+    expect(
+      screen.getByRole('progressbar', { name: 'Calculating the full results, about 43%' })
+    ).toBeInTheDocument();
+  });
+
   test('given the full results then the overview and charts use them', async () => {
     const user = userEvent.setup();
     mockUseBillEconomy.mockReturnValue(

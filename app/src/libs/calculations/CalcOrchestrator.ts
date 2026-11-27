@@ -259,12 +259,18 @@ export class CalcOrchestrator {
   private buildMetadata(config: CalcStartConfig): CalcMetadata {
     const populationType = config.simulations.simulation1.populationType || 'geography';
     const calcType = populationType === 'household' ? 'household' : 'societyWide';
+    const now = Date.now();
 
     return {
       calcId: config.calcId,
       calcType,
       targetType: config.targetType,
-      startedAt: Date.now(),
+      // A run resumed on a later visit keeps its first request's clock; one
+      // stamped ahead of this browser's clock starts now.
+      startedAt:
+        typeof config.startedAt === 'number' && Number.isFinite(config.startedAt)
+          ? Math.min(config.startedAt, now)
+          : now,
       reportId: config.reportId, // Pass through parent report ID for household sim-level calcs
     };
   }

@@ -1,10 +1,7 @@
-import { render, screen } from '@test-utils';
-import { describe, expect, test } from 'vitest';
-import RunProgress, {
-  clockProgress,
-  runProgressValue,
-  runStageCaption,
-} from '@/components/flagship/report/RunProgress';
+import { act, render, screen } from '@test-utils';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import RunProgress, { runStageCaption } from '@/components/flagship/report/RunProgress';
+import { clockProgress, runProgressValue } from '@/libs/calculations/runProgress';
 
 describe('runProgressValue', () => {
   test('given no run stage then the time estimate is the value', () => {
@@ -102,6 +99,55 @@ describe('RunProgress', () => {
     );
 
     expect(screen.getByText(/· 20%/)).toBeInTheDocument();
+  });
+
+  test('given a run whose highest value is above its current stage then a new bar starts from that value', () => {
+    // Given - a US nationwide run held at 24% while queued, now loading its data (3–4%),
+    // shown again after the reader left it
+    render(
+      <RunProgress
+        title="Calculating 2027"
+        expectedMs={360000}
+        progress={24}
+        runStage={{ stage: 'loading_data', floor: 3, max: 4 }}
+        startedAt={Date.now() - 30_000}
+      />
+    );
+
+    // Then
+    expect(screen.getByText(/· 24%/)).toBeInTheDocument();
+  });
+
+  describe('given the run’s first request is sent after the bar appears', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    test('then its elapsed time keeps counting from when the bar appeared', () => {
+      // Given - a bill's bar appears while its reform policy is still being created
+      vi.useFakeTimers();
+      const barAppearedAt = Date.now();
+      const typicalStateRunMs = 190_000;
+      const policyCreationMs = 8_000;
+      const { rerender } = render(
+        <RunProgress title="Calculating the full results" expectedMs={typicalStateRunMs} />
+      );
+      act(() => vi.advanceTimersByTime(policyCreationMs));
+
+      // When - the run's first request is sent, then 2 seconds pass
+      rerender(
+        <RunProgress
+          title="Calculating the full results"
+          expectedMs={typicalStateRunMs}
+          progress={0}
+          startedAt={barAppearedAt + policyCreationMs}
+        />
+      );
+      act(() => vi.advanceTimersByTime(2_000));
+
+      // Then - the elapsed time does not step back to the request's 2 seconds
+      expect(screen.getByRole('status')).toHaveTextContent('10s');
+    });
   });
 
   test('given a run past its typical time then the bar still moves and says it takes longer', () => {

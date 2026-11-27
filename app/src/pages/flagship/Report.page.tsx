@@ -261,6 +261,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         estimateByRegion: true,
         // A failed run says so on its record, so Your reforms can say Failed.
         recordReportErrors: true,
+        // A run begun from Build, then opened again (or reloaded), keeps its clock.
+        startedAt: runStartedAt(meta?.createdAt, report.requestedAt),
         populations: {
           household1: null,
           household2: null,
@@ -269,7 +271,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         },
       } as CalcStartConfig,
     ];
-  }, [report, simulations, householdReport]);
+  }, [report, simulations, householdReport, meta?.createdAt]);
 
   // A report whose record is complete opens from the results stored on
   // it: run again, each open would ask for the economy once more and
@@ -540,8 +542,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                 : undefined
             }
             expectedMs={getDurationForRegion(report?.countryId ?? 'us', region)}
-            // A run begun from Build, then opened again, keeps its clock.
-            startedAt={runStartedAt(meta?.createdAt, report?.requestedAt)}
+            // The run's start time as its cached status keeps it, which its
+            // progress at each poll is measured from.
+            startedAt={'metadata' in calcStatus ? calcStatus.metadata?.startedAt : undefined}
           />
         ) : (
           <RunLoading label="Loading report" />
@@ -610,10 +613,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         />
       ) : (
         <RunProgress
+          // Each year's own bar, so one year's highest value never shows on another's.
+          key={year}
           title={`Calculating ${reportYearLabel(year, report?.countryId)}`}
           progress={yearEconomy?.progress}
           runStage={yearEconomy?.runStage}
           expectedMs={getDurationForRegion(report?.countryId ?? 'us', region)}
+          startedAt={yearEconomy?.startedAt}
         />
       )
     ) : undefined;
