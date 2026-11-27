@@ -19,7 +19,12 @@ const APP_SOURCE = existsSync(resolve(process.cwd(), 'src/pages/flagship'))
   : resolve(process.cwd(), 'app/src');
 const CALCULATOR_SOURCE = resolve(APP_SOURCE, '../../calculator-app/src');
 
-/** The modules only the household features use, by the specifier the app imports them with. */
+/**
+ * The modules only the household features use, by the specifier the app
+ * imports them with. The v2 household codec is not one of them: the
+ * household calculations on the v2 routes store households and read their
+ * calculations with it (api/v2Households, libs/flagship/v2HouseholdRun).
+ */
 const UNROUTED_MODULES = [
   '@/pages/flagship/householdEntryPoints',
   '@/pages/flagship/HouseholdReport.page',
@@ -31,7 +36,6 @@ const UNROUTED_MODULES = [
   '@/components/flagship/household/HouseholdNetIncomeResult',
   '@/hooks/useSavedHouseholds',
   '@/api/savedHouseholdStore',
-  '@/models/household/v2DocumentCodec',
 ];
 
 function sourceFiles(directory: string): string[] {
