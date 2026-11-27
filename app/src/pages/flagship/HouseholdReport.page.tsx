@@ -1,11 +1,15 @@
-import { useId, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import type { SavedHousehold } from '@/api/savedHouseholdStore';
 import HouseholdBuilderPanel from '@/components/flagship/household/HouseholdBuilderPanel';
 import HouseholdNetIncomeResult from '@/components/flagship/household/HouseholdNetIncomeResult';
 import SavedHouseholdPicker from '@/components/flagship/household/SavedHouseholdPicker';
 import SaveHouseholdForm from '@/components/flagship/household/SaveHouseholdForm';
-import type { HouseholdBreakdownSource } from '@/components/flagship/report/household/HouseholdBreakdowns';
+import {
+  HouseholdVariationKeeper,
+  type HouseholdBreakdownSource,
+  type HouseholdVariationSource,
+} from '@/components/flagship/report/household/HouseholdBreakdowns';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
 import { householdResultCardStyle } from '@/components/flagship/report/household/householdResultParts';
 import {
@@ -31,6 +35,7 @@ import PolicySubPage from '@/pages/report-output/PolicySubPage';
 import HouseholdReproducibility from '@/pages/report-output/reproduce-in-python/HouseholdReproducibility';
 import { copyHouseholdToYear } from '@/pages/reportBuilder/utils/changeReportYear';
 import type { RootState } from '@/store';
+import type { HouseholdCalculationData } from '@/types/calculation/household';
 import type { AssociationCountryId } from '@/types/v2User';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { convertPoliciesToV1Format, type HouseholdReproduction } from '@/utils/reproducibilityCode';
@@ -158,12 +163,57 @@ export default function HouseholdReportPage({
   // The form starts again, with the opened household's label, only then; a
   // save keeps it, so its confirmation or its error stays on screen.
   const [savedHouseholdOpenings, setSavedHouseholdOpenings] = useState(0);
+  const runReformPolicyId = runsReform ? reformPolicyId : baselinePolicyId;
   const { requested, run, running, failed, result, request, retry, clear, shows } =
-    useRequestedHouseholdRun({
-      year,
-      baselinePolicyId,
-      reformPolicyId: runsReform ? reformPolicyId : baselinePolicyId,
-    });
+    useRequestedHouseholdRun({ year, baselinePolicyId, reformPolicyId: runReformPolicyId });
+
+  // The variation run (Varying earnings, Marginal tax rates), started when
+  // either output first opens and kept here, with its start time, while
+  // its result shows: the outputs fetch it themselves, and a fetch with no
+  // one left to read it is cancelled, so without this, moving between
+  // them would start the run, and its progress bar, again from 0.
+  const [variationRun, setVariationRun] = useState<{
+    key: string;
+    source: HouseholdVariationSource;
+    startedAt: number;
+  } | null>(null);
+  const resultHouseholdId = result?.householdId;
+  const requestedPayload = requested?.payload;
+  // The calculation a variation run belongs to.
+  const variationKey = resultHouseholdId
+    ? [resultHouseholdId, year, baselinePolicyId, runReformPolicyId].join('|')
+    : null;
+  const openVariation = useCallback(() => {
+    if (!variationKey || !resultHouseholdId || !requestedPayload) {
+      return;
+    }
+    setVariationRun((current) =>
+      current?.key === variationKey
+        ? current
+        : {
+            key: variationKey,
+            source: {
+              countryId,
+              year,
+              householdId: resultHouseholdId,
+              baselinePolicyId,
+              reformPolicyId: runReformPolicyId,
+              household: requestedPayload.data as unknown as HouseholdCalculationData,
+            },
+            startedAt: Date.now(),
+          }
+    );
+  }, [
+    variationKey,
+    resultHouseholdId,
+    requestedPayload,
+    countryId,
+    year,
+    baselinePolicyId,
+    runReformPolicyId,
+  ]);
+  // Only the shown result's run: another calculation's is let go.
+  const shownVariation = variationRun && variationRun.key === variationKey ? variationRun : null;
 
   const policyIds = useMemo(
     () => (runsReform ? [baselinePolicyId, reformPolicyId] : [baselinePolicyId]),
@@ -231,7 +281,7 @@ export default function HouseholdReportPage({
         year,
         householdId: result.householdId,
         baselinePolicyId,
-        reformPolicyId: runsReform ? reformPolicyId : baselinePolicyId,
+        reformPolicyId: runReformPolicyId,
         baseline: result.baseline,
         reform: runsReform ? result.reform : result.baseline,
         gains: runsReform && Math.round(result.netIncome.change) > 0,
@@ -360,6 +410,8 @@ export default function HouseholdReportPage({
                   reform: result.provenance.reform,
                 }}
                 breakdowns={breakdowns}
+                variationStartedAt={shownVariation?.startedAt}
+                onVariationOpen={openVariation}
               />
             </div>
           ) : (
@@ -369,8 +421,11 @@ export default function HouseholdReportPage({
               summary={summary}
               methodology={result.provenance.baseline}
               breakdowns={breakdowns}
+              variationStartedAt={shownVariation?.startedAt}
+              onVariationOpen={openVariation}
             />
           )}
+          {shownVariation && <HouseholdVariationKeeper source={shownVariation.source} />}
 
           <ReportSection label="Household inputs">
             <HouseholdSubPage baselineHousehold={requested.household} />

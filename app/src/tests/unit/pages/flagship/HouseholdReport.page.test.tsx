@@ -255,7 +255,7 @@ describe('HouseholdReportPage', () => {
       expect(startedAt).toMatch(/^\d+$/);
       expect(screen.getByLabelText('Variation run')).toHaveAttribute(
         'data-household',
-        CREATED_HOUSEHOLD_ID
+        String(CREATED_HOUSEHOLD_ID)
       );
 
       await user.click(within(result).getByRole('tab', { name: 'Marginal tax rates' }));
