@@ -182,3 +182,14 @@ export const adminUserKeys = {
   savedItems: (subject: string | null, userId: string) =>
     [...adminUserKeys.all(subject), 'saved-items', userId] as const,
 };
+
+/**
+ * Stored v2 households (`/v2/households`), per country. Stored households
+ * never change, so the household run that stores one and the variation
+ * charts that read it share one entry.
+ */
+export const v2StoredHouseholdKeys = {
+  all: ['v2-stored-household'] as const,
+  byId: (countryId: string, householdId: string) =>
+    [...v2StoredHouseholdKeys.all, countryId, householdId] as const,
+};
