@@ -299,7 +299,8 @@ export const useFlagshipHouseholdPolicies =
 
 /**
  * Saves each household the report calculates to the session's user, in the
- * background: a `/v2/user-households` row for its v1 household. Only where
+ * background: a `/v2/user-households` row for its v1 household, or for its
+ * stored v2 household on the v2 routes (V3_API_ROUTES). Only where
  * saved work goes to the account (see useV3SavedWork), and in the account's
  * country. Once saved, a household is not looked up or saved again on the
  * page, even when the session ends on it. A failed save is logged to the
@@ -313,8 +314,9 @@ export function useSaveCalculatedHousehold({
 }: {
   countryId: CountryId;
   /**
-   * The calculated v1 household and its summary, which names the row;
-   * nothing is saved while there is none.
+   * The calculated household (its v1 ID, or its stored v2 ID on the v2
+   * routes) and its summary, which names the row; nothing is saved while
+   * there is none.
    */
   household: { id: string; name: string } | undefined;
 }) {

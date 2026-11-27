@@ -12,9 +12,11 @@ import type { UserHouseholdItem } from '@/types/v2User';
  * The households v3 calculates, saved to the user as `/v2/user-households`
  * rows, as v3 saves its reforms and reports: on the v1 routes a row points
  * at the v1 household (`legacy_household_id`), and on the v2 routes at the
- * stored v2 household (`household_id`). Nothing in v3 reads these rows
- * yet: they keep each user's households for API v1's `/v2/` household
- * routes.
+ * stored v2 household (`household_id`). They keep each user's households
+ * for API v1's `/v2/` household routes. Nothing reachable in v3 reads them
+ * yet; the saved-households list (#1392, unreachable until the switch)
+ * lists every row of the user, so whether it shows these is decided before
+ * the switch.
  */
 export class ApiFlagshipHouseholdStore {
   private readonly routes: AccountAssociationRoutes<UserHouseholdItem>;
