@@ -694,4 +694,48 @@ describe("calculateHousehold", () => {
     expect(failure).toBe(callerLeft);
     expect(api.reads()).toHaveLength(0);
   });
+
+  test.each([
+    ["not a number", Number.NaN],
+    ["negative", -1],
+    ["a string", "600000" as unknown as number],
+  ])(
+    "given a time limit that is %s then it rejects with RangeError before submitting",
+    async (_description, timeLimitMilliseconds) => {
+      // Given
+      const api = fakeApiV1(inOrder([submittedAnswer(), succeededAnswer()]));
+
+      // When
+      const failure = await failureOf(
+        api.calculator.calculateHousehold(US_REFORM_REQUEST, {
+          timeLimitMilliseconds,
+        }),
+      );
+
+      // Then
+      expect(failure).toBeInstanceOf(RangeError);
+      expect(api.requests).toHaveLength(0);
+    },
+  );
+
+  test("given an infinite time limit then it keeps reading until the calculation finishes", async () => {
+    // Given
+    const api = fakeApiV1(
+      inOrder([
+        submittedAnswer(),
+        ...Array.from({ length: 400 }, () => calculationAnswer("running")),
+        succeededAnswer(),
+      ]),
+    );
+
+    // When
+    const calculated = await api.calculator.calculateHousehold(
+      US_REFORM_REQUEST,
+      { timeLimitMilliseconds: Number.POSITIVE_INFINITY },
+    );
+
+    // Then
+    expect(calculated.calculationId).toBe(CALCULATION_ID);
+    expect(api.reads()).toHaveLength(401);
+  });
 });
