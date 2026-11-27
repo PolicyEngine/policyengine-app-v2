@@ -1,5 +1,9 @@
 // @vitest-environment node
-import { TOKEN_REQUEST_TIMEOUT_MILLISECONDS } from "@policyengine/public-api-forwarding";
+import {
+  HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS,
+  HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS,
+  TOKEN_REQUEST_TIMEOUT_MILLISECONDS,
+} from "@policyengine/public-api-forwarding";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import * as economyCompareRoute from "@/app/api/economy/compare/route";
@@ -11,7 +15,6 @@ import {
   isAllowedDashboardOrigin,
   OTHER_DASHBOARD_HOSTS,
 } from "@/lib/dashboardApi/cors";
-import { HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS } from "@/lib/dashboardApi/operations";
 
 import { getLegacyAppRedirectUrl } from "@/lib/legacyRedirect";
 
@@ -28,52 +31,147 @@ const BROWSER_ADDRESS = "203.0.113.7";
 
 const HOUSEHOLD = {
   people: { you: { age: { 2026: 40 } } },
-  households: { your_household: { members: ["you"] } },
+  households: {
+    your_household: { members: ["you"], household_net_income: { 2026: null } },
+  },
+};
+const CALCULATED_HOUSEHOLD = {
+  people: { you: { age: { 2026: 40 } } },
+  households: {
+    your_household: {
+      members: ["you"],
+      household_net_income: { 2026: 31_850.25 },
+    },
+  },
 };
 const REFORM_PARAMETERS = {
   "gov.irs.credits.ctc.amount.base[0].amount": {
     "2026-01-01.2100-12-31": 3000,
   },
 };
-const CALCULATION_ANSWER = { status: "ok", message: null, result: HOUSEHOLD };
+// What the route answers for a calculated household: /calculate's answer.
+const CALCULATION_ANSWER = {
+  status: "ok",
+  message: null,
+  result: CALCULATED_HOUSEHOLD,
+};
+// What the fake Public API answers on any route but the household
+// calculation's.
+const OTHER_ROUTE_ANSWER = { status: "ok", message: null, result: {} };
 const COMPUTING_ANSWER = { status: "computing", message: null, result: null };
 const STORED_POLICY_ID = 98765;
+const CALCULATION_ID = "8a1f6b0e-3c2d-4e5f-9a7b-1c2d3e4f5a6b";
+const SUBMISSION_URL = `${STAGING_PUBLIC_API_URL}/v2/household-calculations`;
+const CALCULATION_URL = `${SUBMISSION_URL}/${CALCULATION_ID}`;
 // The slowest household calculation answer the Public API's load balancer
 // recorded (2026-11-08): over Cloud Run's 300 s, which counts from when an
 // instance takes the request.
 const SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS = 396_000;
+// How long after its time limit the helper can still end a call: a
+// submission started just before the limit takes at least 30 s, the read
+// owed after it up to 30 s, and each may first wait up to 10 s for a token.
+const LONGEST_CALL_AFTER_TIME_LIMIT_MILLISECONDS = 80_000;
 // Reading the request and streaming a large answer back.
 const BODY_TRANSFER_MILLISECONDS = 30_000;
 // Vercel's longest function duration on the Pro plan with Fluid compute.
 const VERCEL_PRO_MAXIMUM_DURATION_SECONDS = 800;
 
+type CalculationStatus = "pending" | "running" | "succeeded";
+
 const fetchMock = vi.fn<typeof fetch>();
 
-/**
- * A Public API that answers the calculation after the given time, or never
- * when it is null. Aborting the request rejects it, as fetch does.
- */
-function publicApiAnsweringAfter(
-  answerAfterMilliseconds: number | null,
-): typeof fetch {
-  return (_input, init) =>
-    new Promise<Response>((resolve, reject) => {
-      const answerTimer =
-        answerAfterMilliseconds === null
-          ? undefined
-          : setTimeout(
-              () => resolve(jsonAnswer(CALCULATION_ANSWER)),
-              answerAfterMilliseconds,
-            );
-      init?.signal?.addEventListener(
-        "abort",
-        () => {
-          clearTimeout(answerTimer);
-          reject(new DOMException("The request was aborted.", "AbortError"));
+function submittedAnswer(status: CalculationStatus): Response {
+  return jsonAnswer(
+    {
+      status: "ok",
+      message: null,
+      result: {
+        item: {
+          calculation_id: CALCULATION_ID,
+          status,
+          country_id: "us",
+          household_id: null,
+          policy_id: null,
+          dynamic_id: null,
+          year: 2026,
         },
-        { once: true },
-      );
-    });
+      },
+    },
+    202,
+  );
+}
+
+function calculationAnswer(status: CalculationStatus): Response {
+  return jsonAnswer({
+    status: "ok",
+    message: null,
+    result: {
+      item: {
+        calculation_id: CALCULATION_ID,
+        country_id: "us",
+        household_id: null,
+        policy_id: null,
+        dynamic_id: null,
+        year: 2026,
+        catalog_version_id: "0b9d7c55-6e1f-4a2b-8c3d-4e5f6a7b8c9d",
+        country_package_version: "1.500.0",
+        policyengine_version: "3.4.0",
+        status,
+        created_at: "2026-11-28T12:00:00Z",
+        started_at: status === "pending" ? null : "2026-11-28T12:00:01Z",
+        completed_at: status === "succeeded" ? "2026-11-28T12:00:05Z" : null,
+        result:
+          status === "succeeded"
+            ? {
+                household: CALCULATED_HOUSEHOLD,
+                warnings: [],
+                spm_config: null,
+                spm_provenance: null,
+              }
+            : null,
+        error: null,
+      },
+    },
+  });
+}
+
+/**
+ * A fake Public API whose household calculation goes through `statuses`:
+ * the submission's answer gives the first, each read the next, and the
+ * last repeats. The submission answers after
+ * `submissionAnswerAfterMilliseconds`; aborting it rejects it, as fetch
+ * does. Other routes answer OTHER_ROUTE_ANSWER.
+ */
+function publicApiCalculating(
+  statuses: readonly CalculationStatus[],
+  submissionAnswerAfterMilliseconds = 0,
+): typeof fetch {
+  let readCount = 0;
+  return (input, init) => {
+    const url = String(input);
+    if (url === SUBMISSION_URL && init?.method === "POST") {
+      return new Promise<Response>((resolve, reject) => {
+        const answerTimer = setTimeout(
+          () => resolve(submittedAnswer(statuses[0])),
+          submissionAnswerAfterMilliseconds,
+        );
+        init.signal?.addEventListener(
+          "abort",
+          () => {
+            clearTimeout(answerTimer);
+            reject(new DOMException("The request was aborted.", "AbortError"));
+          },
+          { once: true },
+        );
+      });
+    }
+    if (url === CALCULATION_URL && init?.method === "GET") {
+      readCount += 1;
+      const status = statuses[Math.min(readCount, statuses.length - 1)];
+      return Promise.resolve(calculationAnswer(status));
+    }
+    return Promise.resolve(jsonAnswer(OTHER_ROUTE_ANSWER));
+  };
 }
 
 function jsonAnswer(body: unknown, statusCode = 200): Response {
@@ -91,18 +189,25 @@ function dashboardRequest(
     body,
     contentType = "application/json",
     fetchSite,
+    authorization,
+    signal,
   }: {
     method?: string;
     origin?: string;
     body?: unknown;
     contentType?: string;
     fetchSite?: string;
+    authorization?: string;
+    signal?: AbortSignal;
   } = {},
 ): Request {
   const headers = new Headers({
     host: "www.policyengine.org",
     "x-real-ip": BROWSER_ADDRESS,
   });
+  if (authorization !== undefined) {
+    headers.set("authorization", authorization);
+  }
   if (origin !== undefined) {
     headers.set("origin", origin);
   }
@@ -116,6 +221,7 @@ function dashboardRequest(
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
+    signal,
   });
 }
 
@@ -136,7 +242,9 @@ function publicApiCall(callIndex = 0) {
 
 beforeEach(() => {
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue(jsonAnswer(CALCULATION_ANSWER));
+  // The submission's answer already says the calculation succeeded, so the
+  // helper reads it at once and tests that don't fake timers never wait.
+  fetchMock.mockImplementation(publicApiCalculating(["succeeded"]));
   vi.stubGlobal("fetch", fetchMock);
   vi.stubEnv("VERCEL_ENV", "preview");
   vi.stubEnv("POLICYENGINE_API_URL", STAGING_PUBLIC_API_URL);
@@ -151,39 +259,99 @@ afterEach(() => {
 });
 
 describe("POST /api/household/calculate", () => {
-  test("given a household then it posts it to the Public API's calculate route and streams the answer back", async () => {
+  test("given a household then it submits it to the Public API's household calculations, reads the calculation until it succeeds and answers as /calculate did", async () => {
+    // Given
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(
+      publicApiCalculating(["pending", "running", "succeeded"]),
+    );
+
     // When
-    const response = await householdCalculateRoute.POST(
+    const responsePromise = householdCalculateRoute.POST(
       dashboardRequest("/api/household/calculate", {
         method: "POST",
         body: { country: "us", household: HOUSEHOLD },
       }),
     );
+    await vi.advanceTimersByTimeAsync(
+      2 * HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS,
+    );
+    const response = await responsePromise;
 
     // Then
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(CALCULATION_ANSWER);
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(publicApiCall()).toMatchObject({
-      url: `${STAGING_PUBLIC_API_URL}/us/calculate`,
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(publicApiCall(0)).toMatchObject({
+      url: SUBMISSION_URL,
       method: "POST",
-      body: { household: HOUSEHOLD, policy: {} },
+      body: { country_id: "us", household: HOUSEHOLD },
+    });
+    for (const readIndex of [1, 2]) {
+      expect(publicApiCall(readIndex)).toMatchObject({
+        url: CALCULATION_URL,
+        method: "GET",
+      });
+    }
+  });
+
+  test("given a policy then the Public API calculates the household under it", async () => {
+    // When
+    const response = await householdCalculateRoute.POST(
+      dashboardRequest("/api/household/calculate", {
+        method: "POST",
+        body: {
+          country: "us",
+          household: HOUSEHOLD,
+          policy: REFORM_PARAMETERS,
+        },
+      }),
+    );
+
+    // Then
+    expect(response.status).toBe(200);
+    expect(publicApiCall(0).body).toEqual({
+      country_id: "us",
+      household: HOUSEHOLD,
+      policy: REFORM_PARAMETERS,
     });
   });
 
-  test("given a browser request then the Public API receives the browser's address", async () => {
+  test("given an empty policy then the household is calculated under current law, with no policy sent", async () => {
+    // When
+    await householdCalculateRoute.POST(
+      dashboardRequest("/api/household/calculate", {
+        method: "POST",
+        body: { country: "uk", household: HOUSEHOLD, policy: {} },
+      }),
+    );
+
+    // Then
+    expect(publicApiCall(0).body).toEqual({
+      country_id: "uk",
+      household: HOUSEHOLD,
+    });
+  });
+
+  test("given a browser request then the Public API gets the calculation as the website server's own request, without the browser's token or address", async () => {
     // When
     await householdCalculateRoute.POST(
       dashboardRequest("/api/household/calculate", {
         method: "POST",
         body: { country: "us", household: HOUSEHOLD },
+        authorization: "Bearer browser-user-token",
       }),
     );
 
     // Then
-    expect(publicApiCall().headers.get("x-forwarded-for")).toBe(
-      BROWSER_ADDRESS,
-    );
+    const submission = publicApiCall(0);
+    expect(submission.headers.get("user-agent")).toBe("policyengine-website");
+    expect(submission.headers.get("authorization")).toBeNull();
+    expect(
+      submission.headers.get("policyengine-user-authorization"),
+    ).toBeNull();
+    expect(submission.headers.get("x-forwarded-for")).toBeNull();
   });
 
   test.each([
@@ -321,11 +489,14 @@ describe("POST /api/household/calculate", () => {
     expect(response.status).toBe(403);
   });
 
-  test("given the Public API takes as long as its slowest recorded household answer then the household calculation still passes its answer through", async () => {
+  test("given the Public API takes as long as its slowest recorded household answer to accept the calculation then the route still answers with the calculated household", async () => {
     // Given
     vi.useFakeTimers();
     fetchMock.mockImplementation(
-      publicApiAnsweringAfter(SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS),
+      publicApiCalculating(
+        ["succeeded"],
+        SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS,
+      ),
     );
 
     // When
@@ -345,10 +516,10 @@ describe("POST /api/household/calculate", () => {
     expect(await response.json()).toEqual(CALCULATION_ANSWER);
   });
 
-  test("given the Public API has not answered within the household wait then the household calculation answers 504", async () => {
+  test("given the calculation has not finished within the helper's time limit then the household calculation answers 504", async () => {
     // Given
     vi.useFakeTimers();
-    fetchMock.mockImplementation(publicApiAnsweringAfter(null));
+    fetchMock.mockImplementation(publicApiCalculating(["pending"]));
     let hasAnswered = false;
 
     // When
@@ -364,27 +535,63 @@ describe("POST /api/household/calculate", () => {
         return response;
       });
     await vi.advanceTimersByTimeAsync(
-      HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS - 1,
+      HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS - 1,
     );
-    const answeredBeforeTheWaitEnded = hasAnswered;
+    const answeredBeforeTheLimit = hasAnswered;
     await vi.advanceTimersByTimeAsync(1);
     const response = await responsePromise;
 
     // Then
-    expect(answeredBeforeTheWaitEnded).toBe(false);
+    expect(answeredBeforeTheLimit).toBe(false);
     expect(response.status).toBe(504);
     expect(await response.json()).toEqual({
       status: "error",
-      message: "The Public API did not answer in time.",
+      message: "The household calculation did not finish in time.",
       result: null,
     });
   });
 
-  test("given the household wait then the function may run long enough to get a token, wait and stream the answer, within the Pro plan's maximum", () => {
+  test("given the browser goes away while the calculation runs then the route stops reading it", async () => {
+    // Given
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(publicApiCalculating(["pending"]));
+    const browserConnection = new AbortController();
+
+    // When
+    const responsePromise = householdCalculateRoute.POST(
+      dashboardRequest("/api/household/calculate", {
+        method: "POST",
+        body: { country: "us", household: HOUSEHOLD },
+        signal: browserConnection.signal,
+      }),
+    );
+    await vi.advanceTimersByTimeAsync(
+      HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS,
+    );
+    const requestsBeforeLeaving = fetchMock.mock.calls.length;
+    browserConnection.abort();
+    await vi.advanceTimersByTimeAsync(
+      10 * HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS,
+    );
+    const response = await responsePromise;
+
+    // Then
+    expect(requestsBeforeLeaving).toBe(2);
+    expect(fetchMock).toHaveBeenCalledTimes(requestsBeforeLeaving);
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({
+      status: "error",
+      message: "The browser closed the request.",
+      result: null,
+    });
+  });
+
+  test("given the helper's time limit then the function may run long enough to get a token, calculate and stream the answer, within the Pro plan's maximum", () => {
     // Then
     expect(householdCalculateRoute.maxDuration * 1000).toBeGreaterThanOrEqual(
       TOKEN_REQUEST_TIMEOUT_MILLISECONDS +
-        HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS +
+        HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS +
+        LONGEST_CALL_AFTER_TIME_LIMIT_MILLISECONDS +
         BODY_TRANSFER_MILLISECONDS,
     );
     expect(householdCalculateRoute.maxDuration).toBeLessThanOrEqual(
@@ -568,13 +775,14 @@ describe("the dashboard API's server credential", () => {
     );
     vi.stubEnv("POLICYENGINE_API_AUTH0_CLIENT_ID", "website-client-id");
     vi.stubEnv("POLICYENGINE_API_AUTH0_CLIENT_SECRET", "website-client-secret");
-    fetchMock.mockImplementation(async (input) =>
+    const publicApi = publicApiCalculating(["succeeded"]);
+    fetchMock.mockImplementation(async (input, init) =>
       String(input) === "https://auth.example.test/oauth/token"
         ? jsonAnswer({
             access_token: "website-server-token",
             expires_in: 86_400,
           })
-        : jsonAnswer(CALCULATION_ANSWER),
+        : publicApi(input, init),
     );
 
     // When
@@ -587,12 +795,15 @@ describe("the dashboard API's server credential", () => {
 
     // Then
     expect(response.status).toBe(200);
-    const calculateCall = fetchMock.mock.calls.findIndex(([input]) =>
-      String(input).endsWith("/us/calculate"),
+    const calculationCalls = fetchMock.mock.calls.flatMap(([input], index) =>
+      String(input).startsWith(SUBMISSION_URL) ? [index] : [],
     );
-    expect(publicApiCall(calculateCall).headers.get("authorization")).toBe(
-      "Bearer website-server-token",
-    );
+    expect(calculationCalls).toHaveLength(2);
+    for (const callIndex of calculationCalls) {
+      expect(publicApiCall(callIndex).headers.get("authorization")).toBe(
+        "Bearer website-server-token",
+      );
+    }
     expect(await response.text()).not.toContain("website-server-token");
   });
 
