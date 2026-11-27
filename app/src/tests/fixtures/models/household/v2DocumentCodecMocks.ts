@@ -16,7 +16,7 @@ export const US_SINGLE_PARENT = Household.starter('us', V2_CODEC_YEAR)
   .withSPM({ geography_kind: 'national' });
 
 /**
- * The same household as the Public API translates its v1 form
+ * The same household as API v1 translates its v1 form
  * (translate_legacy_household): people and groups take ids in name order,
  * each keeps its v1 name as source_name, group members become each
  * person's memberships, and the SPM settings move onto the document.
@@ -110,7 +110,7 @@ export const US_COUPLE_WITH_TWO_CHILDREN = Household.starter('us', V2_CODEC_YEAR
   .withSPM({ geography_kind: 'county' })
   .setGroupVariableAtYear('households', 'your household', 'county_fips', V2_CODEC_YEAR, '06037');
 
-/** A stored v2 household as the Public API returns it. */
+/** A stored v2 household as API v1 returns it. */
 export function storedV2Household(
   countryId: V2HouseholdItem['country_id'],
   householdData: V2HouseholdDocument

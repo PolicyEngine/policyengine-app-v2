@@ -4,7 +4,7 @@ import { colors, spacing, typography } from '@/designTokens';
 
 /**
  * v3's list of saved households, to rename or delete. Saved households
- * live on the Public API's `/v2/households` and `/v2/user-households`, so
+ * live on API v1's `/v2/households` and `/v2/user-households`, so
  * no route renders this page until v3 moves to those routes: see
  * `pages/flagship/householdEntryPoints.ts`.
  */

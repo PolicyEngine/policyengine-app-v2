@@ -6,8 +6,8 @@ import PopulationPicker from '@/components/flagship/reform/PopulationPicker';
 import * as householdEntryPoints from '@/pages/flagship/householdEntryPoints';
 
 /**
- * v3's standalone household report and saved households work only on the
- * Public API's v2 routes, so until v3 moves to them nothing a user can
+ * v3's standalone household report and saved households work only on
+ * API v1's v2 routes, so until v3 moves to them nothing a user can
  * reach leads there. These checks keep it so: the change that moves v3
  * changes them on purpose. (A report whose simulations are households
  * still shows "This report cannot open here": see ReportLoadStates.test.tsx.)

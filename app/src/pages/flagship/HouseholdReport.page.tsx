@@ -1,11 +1,15 @@
-import { useId, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import type { SavedHousehold } from '@/api/savedHouseholdStore';
 import HouseholdBuilderPanel from '@/components/flagship/household/HouseholdBuilderPanel';
 import HouseholdNetIncomeResult from '@/components/flagship/household/HouseholdNetIncomeResult';
 import SavedHouseholdPicker from '@/components/flagship/household/SavedHouseholdPicker';
 import SaveHouseholdForm from '@/components/flagship/household/SaveHouseholdForm';
-import type { HouseholdBreakdownSource } from '@/components/flagship/report/household/HouseholdBreakdowns';
+import {
+  HouseholdVariationKeeper,
+  type HouseholdBreakdownSource,
+  type HouseholdVariationSource,
+} from '@/components/flagship/report/household/HouseholdBreakdowns';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
 import { householdResultCardStyle } from '@/components/flagship/report/household/householdResultParts';
 import {
@@ -21,6 +25,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import {
   useFlagshipHouseholdPolicies,
   useRequestedHouseholdRun,
+  type RequestedHousehold,
 } from '@/hooks/useFlagshipHousehold';
 import { describeHousehold } from '@/libs/flagship/householdDescription';
 import { householdAmountInputs, newV3Household } from '@/libs/flagship/householdReport';
@@ -32,6 +37,7 @@ import PolicySubPage from '@/pages/report-output/PolicySubPage';
 import HouseholdReproducibility from '@/pages/report-output/reproduce-in-python/HouseholdReproducibility';
 import { copyHouseholdToYear } from '@/pages/reportBuilder/utils/changeReportYear';
 import type { RootState } from '@/store';
+import type { HouseholdCalculationData } from '@/types/calculation/household';
 import type { AssociationCountryId } from '@/types/v2User';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { convertPoliciesToV1Format, type HouseholdReproduction } from '@/utils/reproducibilityCode';
@@ -106,6 +112,24 @@ function openingHousehold(
   };
 }
 
+/** A variation run the report keeps, with the request and calculation it was opened for. */
+interface KeptVariationRun {
+  requested: RequestedHousehold;
+  /** The calculation: the household's id, the year and both policies. */
+  key: string;
+  source: HouseholdVariationSource;
+  startedAt: number;
+}
+
+/** Whether a kept run is the one for this request and calculation. */
+function isKeptFor(
+  run: KeptVariationRun | null,
+  requested: RequestedHousehold | null,
+  key: string | null
+): run is KeptVariationRun {
+  return !!run && run.requested === requested && run.key === key;
+}
+
 /** One section of the report, named for assistive technology. */
 function ReportSection({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -125,9 +149,10 @@ function ReportSection({ label, children }: { label: string; children: ReactNode
  * pandas DataFrame option, issue #1095). With accounts, a saved household
  * can be opened, and the household saved or its changes saved.
  *
- * It calculates as the report section does: through API v1's v1 household
- * routes, and through `/v2/household-calculations` once V3_API_ROUTES is
- * 'v2'. No route renders it yet: see `pages/flagship/householdEntryPoints.ts`.
+ * It calculates as the report section does: through API v1's
+ * `/{country}/household` routes, and through `/v2/household-calculations`
+ * once V3_API_ROUTES is 'v2'. No route renders it yet: see
+ * `pages/flagship/householdEntryPoints.ts`.
  */
 export default function HouseholdReportPage({
   countryId,
@@ -159,12 +184,56 @@ export default function HouseholdReportPage({
   // The form starts again, with the opened household's label, only then; a
   // save keeps it, so its confirmation or its error stays on screen.
   const [savedHouseholdOpenings, setSavedHouseholdOpenings] = useState(0);
+  const runReformPolicyId = runsReform ? reformPolicyId : baselinePolicyId;
   const { requested, run, running, failed, result, request, retry, clear, shows } =
-    useRequestedHouseholdRun({
-      year,
-      baselinePolicyId,
-      reformPolicyId: runsReform ? reformPolicyId : baselinePolicyId,
-    });
+    useRequestedHouseholdRun({ year, baselinePolicyId, reformPolicyId: runReformPolicyId });
+
+  // The variation run (Varying earnings, Marginal tax rates), started when
+  // either output first opens and kept here, with its start time, while
+  // its result shows: the outputs fetch it themselves, and a fetch with no
+  // one left to read it is cancelled, so without this, moving between
+  // them would start the run, and its progress bar, again from 0. A run
+  // belongs to one request: the same household asked for again, after its
+  // result cleared, shows the result already held, but its run starts
+  // afresh when an output opens.
+  const [variationRun, setVariationRun] = useState<KeptVariationRun | null>(null);
+  const resultHouseholdId = result?.householdId;
+  // The calculation a variation run belongs to.
+  const variationKey = resultHouseholdId
+    ? [resultHouseholdId, year, baselinePolicyId, runReformPolicyId].join('|')
+    : null;
+  const openVariation = useCallback(() => {
+    if (!variationKey || !resultHouseholdId || !requested) {
+      return;
+    }
+    setVariationRun((current) =>
+      isKeptFor(current, requested, variationKey)
+        ? current
+        : {
+            requested,
+            key: variationKey,
+            source: {
+              countryId,
+              year,
+              householdId: resultHouseholdId,
+              baselinePolicyId,
+              reformPolicyId: runReformPolicyId,
+              household: requested.payload.data as unknown as HouseholdCalculationData,
+            },
+            startedAt: Date.now(),
+          }
+    );
+  }, [
+    variationKey,
+    resultHouseholdId,
+    requested,
+    countryId,
+    year,
+    baselinePolicyId,
+    runReformPolicyId,
+  ]);
+  // Only the shown result's run: another request's is let go.
+  const shownVariation = isKeptFor(variationRun, requested, variationKey) ? variationRun : null;
 
   const policyIds = useMemo(
     () => (runsReform ? [baselinePolicyId, reformPolicyId] : [baselinePolicyId]),
@@ -232,7 +301,7 @@ export default function HouseholdReportPage({
         year,
         householdId: result.householdId,
         baselinePolicyId,
-        reformPolicyId: runsReform ? reformPolicyId : baselinePolicyId,
+        reformPolicyId: runReformPolicyId,
         baseline: result.baseline,
         reform: runsReform ? result.reform : result.baseline,
         gains: runsReform && Math.round(result.netIncome.change) > 0,
@@ -363,6 +432,8 @@ export default function HouseholdReportPage({
                     reform: result.provenance.reform,
                   }}
                   breakdowns={breakdowns}
+                  variationStartedAt={shownVariation?.startedAt}
+                  onVariationOpen={openVariation}
                 />
               </div>
             ) : (
@@ -372,8 +443,11 @@ export default function HouseholdReportPage({
                 summary={summary}
                 methodology={result.provenance.baseline}
                 breakdowns={breakdowns}
+                variationStartedAt={shownVariation?.startedAt}
+                onVariationOpen={openVariation}
               />
             )}
+            {shownVariation && <HouseholdVariationKeeper source={shownVariation.source} />}
 
             <ReportSection label="Household inputs">
               <HouseholdSubPage baselineHousehold={requested.household} />

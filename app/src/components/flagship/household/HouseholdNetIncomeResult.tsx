@@ -26,6 +26,8 @@ export default function HouseholdNetIncomeResult({
   netIncome,
   summary,
   breakdowns,
+  variationStartedAt,
+  onVariationOpen,
   countryId,
   methodology,
 }: {
@@ -35,6 +37,10 @@ export default function HouseholdNetIncomeResult({
   summary: string;
   /** The run the breakdowns read; its baseline and reform policies are the same one. */
   breakdowns: HouseholdBreakdownSource;
+  /** When the household's variation run started, if it has: its bar carries on from there. */
+  variationStartedAt?: number;
+  /** Called when a variation output opens. */
+  onVariationOpen?: () => void;
   /** The household's country: its currency. */
   countryId: CountryId;
   /**
@@ -52,7 +58,7 @@ export default function HouseholdNetIncomeResult({
         <Title id={`${id}-heading`} order={3} style={{ margin: 0 }}>
           Household net income
         </Title>
-        <Text style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+        <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
           {summary}
         </Text>
       </Stack>
@@ -80,7 +86,12 @@ export default function HouseholdNetIncomeResult({
       <HouseholdOutputTabs options={HOUSEHOLD_BREAKDOWN_VIEWS} selected={view} onSelect={setView} />
 
       <div style={{ minWidth: 0 }}>
-        <HouseholdBreakdowns view={view} source={breakdowns} />
+        <HouseholdBreakdowns
+          view={view}
+          source={breakdowns}
+          variationStartedAt={variationStartedAt}
+          onVariationOpen={onVariationOpen}
+        />
       </div>
 
       {/* The variation views show their own calculation's methodology. */}

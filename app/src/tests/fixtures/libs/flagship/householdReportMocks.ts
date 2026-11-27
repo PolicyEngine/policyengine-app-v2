@@ -3,7 +3,7 @@ import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 
 export const REPORT_YEAR = '2026';
 
-/** Points across earnings in a variation, as the Public API returns them (401 in production). */
+/** Points across earnings in a variation, as API v1 returns them (401 in production). */
 const VARIATION_POINTS = 5;
 const acrossEarnings = (step: number) =>
   Array.from({ length: VARIATION_POINTS }, (_, pointIndex) => pointIndex * step);

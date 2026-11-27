@@ -53,7 +53,7 @@ import {
 /**
  * v3's standalone household report: one household under a baseline and,
  * optionally, a reform (issues #498, #1095, #1096). No route renders it
- * before v3 moves to the Public API's v2 routes.
+ * before v3 moves to API v1's v2 routes.
  */
 
 const mockCreateHousehold = vi.fn();
@@ -119,17 +119,38 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
     );
   },
 }));
-// The v2 breakdowns, tested on their own: a stand-in shows what each is given.
-vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
-  >()),
-  default: ({ view, source }: any) => (
-    <div aria-label="Breakdown" data-inputs={(source.householdInputs ?? []).join(' ')}>
-      {[view, source.baselinePolicyId, source.reformPolicyId].join(' · ')}
-    </div>
-  ),
-}));
+// The v2 breakdowns, tested on their own: a stand-in shows what each is
+// given, and the variation run's keeper a stand-in naming its household.
+vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (importOriginal) => {
+  const { useEffect } = await import('react');
+  function BreakdownStandIn({ view, source, variationStartedAt, onVariationOpen }: any) {
+    // As the breakdowns do: a variation output opening asks for its run.
+    const opensVariation = view === 'earnings-variation' || view === 'marginal-tax-rates';
+    useEffect(() => {
+      if (opensVariation) {
+        onVariationOpen?.();
+      }
+    }, [opensVariation, onVariationOpen]);
+    return (
+      <div
+        aria-label="Breakdown"
+        data-inputs={(source.householdInputs ?? []).join(' ')}
+        data-variation-started-at={variationStartedAt ?? ''}
+      >
+        {[view, source.baselinePolicyId, source.reformPolicyId].join(' · ')}
+      </div>
+    );
+  }
+  return {
+    ...(await importOriginal<
+      typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
+    >()),
+    default: BreakdownStandIn,
+    HouseholdVariationKeeper: ({ source }: any) => (
+      <div aria-label="Variation run" data-household={source.householdId} />
+    ),
+  };
+});
 const mockHouseholdValidation = vi.fn();
 vi.mock('@/utils/HouseholdValidation', () => ({
   HouseholdValidation: { isReadyForSimulation: () => mockHouseholdValidation() },
@@ -171,7 +192,7 @@ async function calculate() {
   return user;
 }
 
-/** The household the report sent to the Public API's v1 household route. */
+/** The household the report sent to API v1's `/{country}/household` route. */
 const createdPayload = (callIndex = 0) => mockCreateHousehold.mock.calls[callIndex][0];
 
 describe('HouseholdReportPage', () => {
@@ -209,8 +230,88 @@ describe('HouseholdReportPage', () => {
 
     await calculate();
 
-    await screen.findByRole('region', { name: 'Household impact' });
-    expect(screen.getByRole('heading', { level: 3, name: 'Household impact' })).toBeVisible();
+    const result = await screen.findByRole('region', { name: 'Household impact' });
+    const heading = screen.getByRole('heading', { level: 3, name: 'Household impact' });
+    expect(heading).toBeVisible();
+    // The heading and the result share one card.
+    expect(heading.parentElement).toContainElement(result);
+  });
+
+  test.each([
+    ['a reform', { reformPolicyId: REFORM_POLICY_ID }, 'Household impact'],
+    ['no reform', {}, 'Household net income'],
+  ])(
+    'given %s then the variation run, once opened, keeps its start time as the reader moves between the outputs',
+    async (_case, reportProps, resultName) => {
+      renderReport({ household: FAMILY_HOUSEHOLD, ...reportProps });
+      const user = await calculate();
+      const result = await screen.findByRole('region', { name: resultName });
+      expect(screen.queryByLabelText('Variation run')).not.toBeInTheDocument();
+
+      await user.click(within(result).getByRole('tab', { name: 'Varying earnings' }));
+      const startedAt = within(result)
+        .getByLabelText('Breakdown')
+        .getAttribute('data-variation-started-at');
+      expect(startedAt).toMatch(/^\d+$/);
+      expect(screen.getByLabelText('Variation run')).toHaveAttribute(
+        'data-household',
+        String(CREATED_HOUSEHOLD_ID)
+      );
+
+      await user.click(within(result).getByRole('tab', { name: 'Marginal tax rates' }));
+      expect(within(result).getByLabelText('Breakdown')).toHaveAttribute(
+        'data-variation-started-at',
+        startedAt
+      );
+
+      await user.click(within(result).getByRole('tab', { name: 'Net income' }));
+      await user.click(within(result).getByRole('tab', { name: 'Varying earnings' }));
+      expect(within(result).getByLabelText('Breakdown')).toHaveAttribute(
+        'data-variation-started-at',
+        startedAt
+      );
+      expect(screen.getByLabelText('Variation run')).toBeInTheDocument();
+    }
+  );
+
+  test('given the same household calculated again after its result cleared then its variation run waits for an output to open, then starts afresh', async () => {
+    renderReport({ household: FAMILY_HOUSEHOLD });
+    const user = await calculate();
+    const firstResult = await screen.findByRole('region', { name: 'Household net income' });
+    await user.click(within(firstResult).getByRole('tab', { name: 'Varying earnings' }));
+    expect(screen.getByLabelText('Variation run')).toBeInTheDocument();
+    const firstStartedAt = within(firstResult)
+      .getByLabelText('Breakdown')
+      .getAttribute('data-variation-started-at');
+
+    // Another year clears the result; back in its own year, the household
+    // calculates as before, and its result is the one already held.
+    const yearSelect = screen.getByRole('combobox', { name: 'Year' });
+    await user.selectOptions(yearSelect, LATER_MODEL_YEAR);
+    await user.selectOptions(yearSelect, HOUSEHOLD_YEAR);
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    const secondResult = await screen.findByRole('region', { name: 'Household net income' });
+    expect(mockCreateHousehold).toHaveBeenCalledTimes(1);
+
+    expect(screen.queryByLabelText('Variation run')).not.toBeInTheDocument();
+    expect(within(secondResult).queryByLabelText('Breakdown')).toHaveAttribute(
+      'data-variation-started-at',
+      ''
+    );
+
+    // Opened again a minute later, the run starts afresh, with that time.
+    const realNow = Date.now.bind(Date);
+    const aMinuteLater = vi.spyOn(Date, 'now').mockImplementation(() => realNow() + 60_000);
+    try {
+      await user.click(within(secondResult).getByRole('tab', { name: 'Varying earnings' }));
+    } finally {
+      aMinuteLater.mockRestore();
+    }
+    expect(screen.getByLabelText('Variation run')).toBeInTheDocument();
+    const secondStartedAt = within(secondResult)
+      .getByLabelText('Breakdown')
+      .getAttribute('data-variation-started-at');
+    expect(Number(secondStartedAt)).toBeGreaterThanOrEqual(Number(firstStartedAt) + 60_000);
   });
 
   test("given no reform then it reports the household's net income under the baseline alone", async () => {

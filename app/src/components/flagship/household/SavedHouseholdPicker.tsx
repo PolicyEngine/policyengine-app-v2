@@ -14,7 +14,7 @@ import type { AssociationCountryId } from '@/types/v2User';
 /**
  * The session's saved households in a country, to open one: each by its
  * label, with who it describes. One that cannot open (saved before
- * households moved to the Public API's v2 routes, or failing to load) is
+ * households moved to API v1's v2 routes, or failing to load) is
  * listed but cannot be chosen.
  */
 export default function SavedHouseholdPicker({
