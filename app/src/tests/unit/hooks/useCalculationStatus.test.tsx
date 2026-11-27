@@ -126,10 +126,9 @@ describe('useCalculationStatus', () => {
         expect(result.current.isPending).toBe(true);
         expect(result.current.isComplete).toBe(false);
         expect(result.current.isError).toBe(false);
-        // Synthetic progress overrides server progress (mocked to return 12 for economy)
-        expect(result.current.progress).toBe(12);
-        expect(result.current.message).toBe('Loading population data...');
-        // Server data still available
+        // An economy run's progress and message are its cached ones
+        expect(result.current.progress).toBe(calcStatus.progress);
+        expect(result.current.message).toBe(calcStatus.message);
         expect(result.current.queuePosition).toBe(calcStatus.queuePosition);
         expect(result.current.estimatedTimeRemaining).toBe(calcStatus.estimatedTimeRemaining);
       });
