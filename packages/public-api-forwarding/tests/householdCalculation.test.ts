@@ -64,6 +64,18 @@ const INVALID_INPUT_ERROR = {
 
 type CalculationStatus = "pending" | "running" | "succeeded" | "failed";
 
+const EMPLOYMENT_INCOME_AXES = [
+  [
+    {
+      name: "employment_income",
+      count: 401,
+      min: 0,
+      max: 200_000,
+      period: 2026,
+    },
+  ],
+];
+
 function submittedAnswer(): Response {
   return jsonResponse(
     {
@@ -86,15 +98,16 @@ function submittedAnswer(): Response {
 }
 
 function calculationAnswer(
-  status: CalculationStatus,
+  status: CalculationStatus | "queued",
   outcome: { result?: unknown; error?: unknown } = {},
+  calculationId = CALCULATION_ID,
 ): Response {
   return jsonResponse({
     status: "ok",
     message: null,
     result: {
       item: {
-        calculation_id: CALCULATION_ID,
+        calculation_id: calculationId,
         country_id: "us",
         household_id: null,
         policy_id: null,
@@ -139,6 +152,26 @@ function errorAnswer(
     statusCode,
     headers,
   );
+}
+
+/** An answer whose body is lost while it arrives: reading it rejects. */
+function lostBodyAnswer(statusCode: number): Response {
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.error(new TypeError("terminated"));
+      },
+    }),
+    { status: statusCode, headers: { "Content-Type": "application/json" } },
+  );
+}
+
+/** A 503 from Cloud Run in front of API v1: plain text, not API v1's envelope. */
+function cloudRunUnavailableAnswer(): Response {
+  return new Response("Service Unavailable", {
+    status: 503,
+    headers: { "Content-Type": "text/html" },
+  });
 }
 
 type ScriptedAnswer = Response | Error;
@@ -737,5 +770,365 @@ describe("calculateHousehold", () => {
     // Then
     expect(calculated.calculationId).toBe(CALCULATION_ID);
     expect(api.reads()).toHaveLength(401);
+  });
+  test("given a household with axes then the submission sends them as a separate axes field", async () => {
+    // Given
+    const householdWithAxes = { ...US_SITUATION, axes: EMPLOYMENT_INCOME_AXES };
+    const api = fakeApiV1(inOrder([submittedAnswer(), succeededAnswer()]));
+
+    // When
+    await api.calculator.calculateHousehold({
+      country: "us",
+      household: householdWithAxes,
+      policy: CHILD_TAX_CREDIT_REFORM,
+    });
+
+    // Then
+    expect(submittedBody(api.submissions()[0])).toEqual({
+      country_id: "us",
+      household: US_SITUATION,
+      policy: CHILD_TAX_CREDIT_REFORM,
+      axes: EMPLOYMENT_INCOME_AXES,
+    });
+    expect(householdWithAxes.axes).toBe(EMPLOYMENT_INCOME_AXES);
+  });
+
+  test("given the default time limit then the submission may take until the deadline and each read 30 seconds", async () => {
+    // Given
+    const api = fakeApiV1(
+      inOrder([
+        submittedAnswer(),
+        calculationAnswer("running"),
+        succeededAnswer(),
+      ]),
+    );
+
+    // When
+    await api.calculator.calculateHousehold(US_REFORM_REQUEST);
+
+    // Then
+    expect(api.submissions()[0].options?.timeoutMilliseconds).toBe(600_000);
+    expect(
+      api.reads().map(({ options }) => options?.timeoutMilliseconds),
+    ).toEqual([30_000, 30_000]);
+  });
+
+  test("given a short time limit then the submission still gets 30 seconds", async () => {
+    // Given
+    const api = fakeApiV1(inOrder([submittedAnswer(), succeededAnswer()]));
+
+    // When
+    await api.calculator.calculateHousehold(US_REFORM_REQUEST, {
+      timeLimitMilliseconds: 5_000,
+    });
+
+    // Then
+    expect(api.submissions()[0].options?.timeoutMilliseconds).toBe(30_000);
+  });
+
+  test("given the submission gets a 503 that is not API v1's own then it throws without submitting again", async () => {
+    // Given
+    const api = fakeApiV1(inOrder([cloudRunUnavailableAnswer()]));
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST),
+    );
+
+    // Then
+    expect(failure).toBeInstanceOf(HouseholdCalculationRefusedError);
+    expect(failure).toMatchObject({ statusCode: 503, body: null });
+    expect(api.submissions()).toHaveLength(1);
+  });
+
+  test("given a submission retry would wait until the deadline then it throws the last failure without submitting again", async () => {
+    // Given
+    const api = fakeApiV1(
+      inOrder([
+        errorAnswer(503, "No job will run", {}, { "Retry-After": "10" }),
+      ]),
+    );
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST, {
+        timeLimitMilliseconds: 5_000,
+      }),
+    );
+
+    // Then
+    expect(failure).toBeInstanceOf(HouseholdCalculationRefusedError);
+    expect(failure).toMatchObject({ statusCode: 503 });
+    expect(api.submissions()).toHaveLength(1);
+    expect(api.waits).toEqual([]);
+  });
+
+  test("given a time limit of 0 then it submits, reads once and throws HouseholdCalculationTimeoutError", async () => {
+    // Given
+    const api = fakeApiV1(
+      inOrder([submittedAnswer(), calculationAnswer("running")]),
+    );
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST, {
+        timeLimitMilliseconds: 0,
+      }),
+    );
+
+    // Then
+    expect(failure).toBeInstanceOf(HouseholdCalculationTimeoutError);
+    expect(failure).toMatchObject({ lastStatus: "running" });
+    expect(api.reads()).toHaveLength(1);
+  });
+
+  test("given the submission's connection fails after sending then it throws without submitting again", async () => {
+    // Given
+    const connectionLost = new PublicApiUnavailableError(
+      "The Public API could not be reached.",
+      502,
+      true,
+    );
+    const api = fakeApiV1(inOrder([connectionLost]));
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST),
+    );
+
+    // Then
+    expect(failure).toBe(connectionLost);
+    expect(api.submissions()).toHaveLength(1);
+  });
+
+  test("given the submission's answer is lost while it arrives then it throws without submitting again", async () => {
+    // Given
+    const api = fakeApiV1(inOrder([lostBodyAnswer(202)]));
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST),
+    );
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({ requestMayHaveArrived: true });
+    expect(api.submissions()).toHaveLength(1);
+  });
+
+  test("given the submission answers 429 then it throws without submitting again", async () => {
+    // Given
+    const api = fakeApiV1(inOrder([errorAnswer(429, "Too many requests")]));
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST),
+    );
+
+    // Then
+    expect(failure).toMatchObject({ statusCode: 429 });
+    expect(api.submissions()).toHaveLength(1);
+  });
+
+  test("given the submission answers 503 for 90 seconds then it throws the last answer", async () => {
+    // Given
+    const api = fakeApiV1(() => errorAnswer(503, "No job will run"));
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST),
+    );
+
+    // Then
+    expect(failure).toBeInstanceOf(HouseholdCalculationRefusedError);
+    expect(failure).toMatchObject({ statusCode: 503 });
+    expect(api.submissions().at(-1)?.atMilliseconds).toBe(90_000);
+    expect(api.submissions()).toHaveLength(46);
+  });
+
+  test("given a read's answer is lost while it arrives then it reads again", async () => {
+    // Given
+    const api = fakeApiV1(
+      inOrder([submittedAnswer(), lostBodyAnswer(200), succeededAnswer()]),
+    );
+
+    // When
+    const calculated =
+      await api.calculator.calculateHousehold(US_REFORM_REQUEST);
+
+    // Then
+    expect(calculated.calculationId).toBe(CALCULATION_ID);
+    expect(api.reads()).toHaveLength(2);
+  });
+
+  test("given the credential cannot be obtained for a read then it reads again", async () => {
+    // Given
+    const api = fakeApiV1(
+      inOrder([
+        submittedAnswer(),
+        new PublicApiUnavailableError(
+          "Could not obtain a credential for the Public API.",
+          502,
+          false,
+        ),
+        succeededAnswer(),
+      ]),
+    );
+
+    // When
+    const calculated =
+      await api.calculator.calculateHousehold(US_REFORM_REQUEST);
+
+    // Then
+    expect(calculated.calculationId).toBe(CALCULATION_ID);
+    expect(api.reads()).toHaveLength(2);
+  });
+
+  test("given API v1 is no longer configured when it reads then it throws without reading again", async () => {
+    // Given
+    const notConfigured = new PublicApiUnavailableError(
+      "The Public API is not configured on this deployment.",
+      503,
+      false,
+    );
+    const api = fakeApiV1(inOrder([submittedAnswer(), notConfigured]));
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST),
+    );
+
+    // Then
+    expect(failure).toBe(notConfigured);
+    expect(api.reads()).toHaveLength(1);
+  });
+
+  test("given a read answers 429 with Retry-After then it waits that many seconds", async () => {
+    // Given
+    const api = fakeApiV1(
+      inOrder([
+        submittedAnswer(),
+        errorAnswer(429, "Too many requests", {}, { "Retry-After": "5" }),
+        succeededAnswer(),
+      ]),
+    );
+
+    // When
+    await api.calculator.calculateHousehold(US_REFORM_REQUEST);
+
+    // Then
+    expect(api.waits).toEqual([2_000, 5_000]);
+  });
+
+  test("given a Retry-After that is a date then it waits one interval", async () => {
+    // Given
+    const api = fakeApiV1(
+      inOrder([
+        submittedAnswer(),
+        errorAnswer(
+          503,
+          "Storage is unavailable",
+          {},
+          { "Retry-After": "Sat, 28 Nov 2026 12:00:00 GMT" },
+        ),
+        succeededAnswer(),
+      ]),
+    );
+
+    // When
+    await api.calculator.calculateHousehold(US_REFORM_REQUEST);
+
+    // Then
+    expect(api.waits).toEqual([2_000, 2_000]);
+  });
+
+  test.each([
+    [
+      "another calculation's ID",
+      () =>
+        calculationAnswer(
+          "running",
+          {},
+          "00000000-0000-4000-8000-000000000000",
+        ),
+    ],
+    ["an unknown status", () => calculationAnswer("queued")],
+    ["a failure without its error", () => calculationAnswer("failed")],
+    ["a success without its result", () => calculationAnswer("succeeded")],
+  ])(
+    "given a read answer with %s then it throws HouseholdCalculationRefusedError",
+    async (_description, unreadableAnswer) => {
+      // Given
+      const api = fakeApiV1(inOrder([submittedAnswer(), unreadableAnswer()]));
+
+      // When
+      const failure = await failureOf(
+        api.calculator.calculateHousehold(US_REFORM_REQUEST),
+      );
+
+      // Then
+      expect(failure).toBeInstanceOf(HouseholdCalculationRefusedError);
+      expect(failure).toMatchObject({
+        statusCode: 200,
+        calculationId: CALCULATION_ID,
+      });
+      expect(api.reads()).toHaveLength(1);
+    },
+  );
+
+  test("given a failure without a code then HouseholdCalculationFailedError has a null code", async () => {
+    // Given
+    const api = fakeApiV1(
+      inOrder([
+        submittedAnswer(),
+        calculationAnswer("failed", {
+          error: {
+            code: null,
+            message: "household_function_error: worker ran out of memory",
+            input_errors: [],
+            spm_error: null,
+          },
+        }),
+      ]),
+    );
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST),
+    );
+
+    // Then
+    expect(failure).toBeInstanceOf(HouseholdCalculationFailedError);
+    expect(failure).toMatchObject({
+      code: null,
+      message: "household_function_error: worker ran out of memory",
+      inputErrors: [],
+    });
+  });
+
+  test("given the signal aborts while an answer arrives then it rejects with the abort reason", async () => {
+    // Given
+    const controller = new AbortController();
+    const callerLeft = new Error("The caller went away.");
+    const abortingAnswer = new Response(
+      new ReadableStream({
+        start(streamController) {
+          controller.abort(callerLeft);
+          streamController.error(new DOMException("aborted", "AbortError"));
+        },
+      }),
+      { status: 202 },
+    );
+    const api = fakeApiV1(inOrder([abortingAnswer]));
+
+    // When
+    const failure = await failureOf(
+      api.calculator.calculateHousehold(US_REFORM_REQUEST, {
+        signal: controller.signal,
+      }),
+    );
+
+    // Then
+    expect(failure).toBe(callerLeft);
   });
 });

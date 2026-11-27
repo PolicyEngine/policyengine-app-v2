@@ -777,35 +777,80 @@ describe("fetchFromServer", () => {
   });
 
   test("given the caller's signal aborts then it rejects with the signal's reason", async () => {
-    // Given an API v1 that answers only when the request is aborted
+    // Given an API v1 that answers only when the request is aborted, and
+    // says when the request has started
+    let requestStarted: () => void = () => {};
+    const started = new Promise<void>((resolve) => {
+      requestStarted = resolve;
+    });
+    const fetchImplementation = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(init.signal?.reason),
+          );
+          requestStarted();
+        }),
+    );
     const forwarder = createPublicApiForwarder({
       environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
       callerName: "policyengine-test-caller",
       sharedTokenStore: null,
       clientAddress: () => undefined,
-      fetchImplementation: (_input, init) =>
-        new Promise<Response>((_resolve, reject) => {
-          init?.signal?.addEventListener("abort", () =>
-            reject(init.signal?.reason),
-          );
-        }),
+      fetchImplementation,
       logger: silentLogger,
     });
     const controller = new AbortController();
     const callerLeft = new Error("The caller went away.");
 
-    // When
+    // When the caller aborts while the request is in flight
     const pendingRequest = forwarder
       .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, {
         signal: controller.signal,
         timeoutMilliseconds: 1_000,
       })
       .catch((error: unknown) => error);
+    await started;
     controller.abort(callerLeft);
     const failure = await pendingRequest;
 
     // Then
+    expect(fetchImplementation).toHaveBeenCalledTimes(1);
     expect(failure).toBe(callerLeft);
+  });
+
+  test("given the caller aborts while the token is fetched and the token request fails then it rejects with the signal's reason", async () => {
+    // Given a token request that fails only when the test says so
+    let tokenRequested: () => void = () => {};
+    const requested = new Promise<void>((resolve) => {
+      tokenRequested = resolve;
+    });
+    let failTokenRequest: () => void = () => {};
+    const tokenFailure = new Promise<Response>((resolve) => {
+      failTokenRequest = () =>
+        resolve(jsonResponse({ error: "access_denied" }, 403));
+    });
+    const { forwarder, publicApiCalls } = forwarderWith({
+      tokenAnswer: () => {
+        tokenRequested();
+        return tokenFailure;
+      },
+    });
+    const controller = new AbortController();
+    const callerLeft = new Error("The caller went away.");
+
+    // When
+    const pendingRequest = forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, { signal: controller.signal })
+      .catch((error: unknown) => error);
+    await requested;
+    controller.abort(callerLeft);
+    failTokenRequest();
+    const failure = await pendingRequest;
+
+    // Then
+    expect(failure).toBe(callerLeft);
+    expect(publicApiCalls()).toHaveLength(0);
   });
 
   test("given the token request fails then the error says the request never reached API v1", async () => {
