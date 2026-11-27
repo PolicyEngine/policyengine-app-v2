@@ -344,16 +344,24 @@ export default function HouseholdReportPage({
       {result && requested && breakdowns && (
         <>
           {runsReform ? (
-            <HouseholdImpactResult
-              impact={result}
-              countryId={countryId}
-              summary={summary}
-              methodology={{
-                baseline: result.provenance.baseline,
-                reform: result.provenance.reform,
-              }}
-              breakdowns={breakdowns}
-            />
+            // The result has no card or heading of its own (the Household
+            // tab's panel names it there), so the report gives it both, as
+            // the baseline-only result has them.
+            <div style={{ ...householdResultCardStyle, gap: spacing.xs, minWidth: 0 }}>
+              <Title order={3} style={{ margin: 0 }}>
+                Household impact
+              </Title>
+              <HouseholdImpactResult
+                impact={result}
+                countryId={countryId}
+                summary={summary}
+                methodology={{
+                  baseline: result.provenance.baseline,
+                  reform: result.provenance.reform,
+                }}
+                breakdowns={breakdowns}
+              />
+            </div>
           ) : (
             <HouseholdNetIncomeResult
               netIncome={result.netIncome.baseline}
