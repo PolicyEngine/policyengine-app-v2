@@ -12,6 +12,7 @@ import { fetchParameterChildren } from '@/api/publicApi/parameterChildren';
 import { fetchParameterSearchFile } from '@/api/publicApi/searchFile';
 import { createV2ReformPolicy, fetchV2PolicyItem } from '@/api/reformStore';
 import { createReport, fetchReportById, markReportCompleted } from '@/api/report';
+import { ApiSavedHouseholdStore } from '@/api/savedHouseholdStore';
 import { fetchSharedReport } from '@/api/sharedReport';
 import {
   createSimulation,
@@ -42,6 +43,8 @@ import {
 import { deleteMe, dismissTypeChange, exportMe, fetchMe, upgradeAccount } from '@/api/v2Me';
 import { createV2UserClient } from '@/api/v2UserClient';
 import { matchAllowedOperation, PUBLIC_API_ROUTE_PREFIX } from '@/libs/publicApiRoute/allowList';
+import { FAMILY_HOUSEHOLD, userHouseholdItem } from '@/tests/fixtures/api/savedHouseholdMocks';
+import { itemResponse } from '@/tests/fixtures/api/v2UserMocks';
 import type { Report } from '@/types/ingredients/Report';
 import type {
   HouseholdCreationPayload,
@@ -62,6 +65,8 @@ const savedRecords = (path: string) =>
     path,
     'Saved record'
   );
+const savedHouseholds = () =>
+  new ApiSavedHouseholdStore({ client: browserUserClient(), countryId: 'us' });
 
 interface SentRequest {
   readonly method: string;
@@ -356,6 +361,30 @@ const PUBLIC_API_CALLS: ReadonlyArray<[string, () => Promise<unknown>, string, s
     'POST',
     '/v2/user-households',
   ],
+  [
+    'a saved household',
+    () => savedHouseholds().get(SAVED_RECORD_ID),
+    'GET',
+    `/v2/user-households/${SAVED_RECORD_ID}`,
+  ],
+  [
+    'a saved household rename',
+    () => savedHouseholds().rename(SAVED_RECORD_ID, 'Renamed'),
+    'PATCH',
+    `/v2/user-households/${SAVED_RECORD_ID}`,
+  ],
+  [
+    'a saved household deletion',
+    () => savedHouseholds().remove(SAVED_RECORD_ID),
+    'DELETE',
+    `/v2/user-households/${SAVED_RECORD_ID}`,
+  ],
+  [
+    'a household stored for saving',
+    () => savedHouseholds().save({ household: FAMILY_HOUSEHOLD, label: 'Family' }),
+    'POST',
+    '/v2/households',
+  ],
 ];
 
 beforeEach(() => {
@@ -397,4 +426,35 @@ describe('the Public API calls the calculator makes from the browser', () => {
       ).not.toBeNull();
     }
   );
+
+  test('given a saved household opened then its stored household is read through the same-origin route, which forwards it', async () => {
+    // Given
+    const row = userHouseholdItem({ id: SAVED_RECORD_ID });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        sentRequests.push(recordRequest(input, init));
+        return sentRequests.length === 1
+          ? itemResponse(row)
+          : Response.json({ status: 'ok', message: null, result: {} });
+      })
+    );
+
+    // When
+    await savedHouseholds()
+      .get(SAVED_RECORD_ID)
+      .catch(() => undefined);
+
+    // Then
+    const householdRead = sentRequests[1];
+    expect(householdRead?.method).toBe('GET');
+    const requestUrl = new URL(householdRead.url, window.location.origin);
+    expect(requestUrl.origin).toBe(window.location.origin);
+    expect(requestUrl.pathname).toBe(
+      `${PUBLIC_API_ROUTE_PREFIX}/v2/households/${row.household_id}`
+    );
+    expect(
+      matchAllowedOperation('GET', requestUrl.pathname.slice(PUBLIC_API_ROUTE_PREFIX.length))
+    ).not.toBeNull();
+  });
 });
