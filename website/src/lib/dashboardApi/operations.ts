@@ -1,16 +1,21 @@
-// The dashboard API's four operations, each checked and turned into the one
-// Public API request it stands for. Dashboards see only these shapes, never
-// the Public API's paths, so the Public API can change its routes without a
+// The dashboard API's four operations, each checked and turned into what it
+// asks of the Public API: the one request it stands for, or for a household
+// calculation, the household the website's server calculates through
+// /v2/household-calculations. Dashboards see only these shapes, never the
+// Public API's paths, so the Public API can change its routes without a
 // change to any dashboard.
 
-import type { PublicApiRequest } from "@policyengine/public-api-forwarding";
+import type {
+  InlineHouseholdCalculationRequest,
+  PublicApiRequest,
+} from "@policyengine/public-api-forwarding";
 
 /** The countries the Public API serves. */
 export const DASHBOARD_API_COUNTRIES = ["us", "uk"] as const;
 export type DashboardApiCountry = (typeof DASHBOARD_API_COUNTRIES)[number];
 
-export type OperationResult =
-  | { readonly ok: true; readonly request: PublicApiRequest }
+export type OperationResult<Request = PublicApiRequest> =
+  | { readonly ok: true; readonly request: Request }
   | { readonly ok: false; readonly message: string };
 
 const POLICY_ID_PATTERN = /^[0-9]{1,10}$/;
@@ -28,7 +33,7 @@ function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function refused(message: string): OperationResult {
+function refused(message: string): { ok: false; message: string } {
   return { ok: false, message };
 }
 
@@ -48,19 +53,13 @@ function countryMessage(): string {
 }
 
 /**
- * How long POST /api/household/calculate waits for the Public API's response
- * headers: as long as the route's function may run (`maxDuration`, 800 s,
- * Vercel Pro's limit on Fluid compute), less 50 s for reading the request,
- * getting a token and streaming the answer, the same wait as the calculator's
- * Public API route. The Public API's Cloud Run services end a request 300 s
- * after an instance takes it, but a request can first wait for an instance to
- * start: its load balancer recorded household calculations answering after
- * up to 396 s (2026-11-08).
+ * POST /api/household/calculate {country, household, policy?}: the household
+ * to calculate, under the policy's parameter values, or under current law
+ * when the policy is absent or empty.
  */
-export const HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS = 750_000;
-
-/** POST /api/household/calculate {country, household, policy?} */
-export function householdCalculation(body: unknown): OperationResult {
+export function householdCalculation(
+  body: unknown,
+): OperationResult<InlineHouseholdCalculationRequest> {
   if (!isJsonObject(body)) {
     return refused("The request body must be a JSON object.");
   }
@@ -81,9 +80,9 @@ export function householdCalculation(body: unknown): OperationResult {
   return {
     ok: true,
     request: {
-      method: "POST",
-      path: `/${body.country}/calculate`,
-      body: JSON.stringify({ household: body.household, policy }),
+      country: body.country,
+      household: body.household,
+      ...(Object.keys(policy).length === 0 ? {} : { policy }),
     },
   };
 }
