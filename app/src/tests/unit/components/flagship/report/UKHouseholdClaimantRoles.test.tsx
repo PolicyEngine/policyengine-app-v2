@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { HouseholdVariationSource } from '@/components/flagship/report/household/HouseholdBreakdowns';
 import HouseholdImpactSection from '@/components/flagship/report/household/HouseholdImpactSection';
 import { UK_CLAIMANT_OR_PARTNER_VARIABLE, type Household } from '@/models/Household';
 import {
@@ -13,6 +14,7 @@ import {
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
 import {
   BUILDER_PEOPLE,
+  coupleWithAdultDependant,
   ROLE_TEST_YEAR,
   singleParentWithAdultDependant,
   UK_METADATA_WITH_CLAIMANT_ROLES,
@@ -54,16 +56,20 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
       <button type="button" onClick={() => onChange(mockDescribedHousehold())}>
         Describe the household
       </button>
+      <button type="button" onClick={() => onChange(coupleWithAdultDependant())}>
+        Describe a couple and their adult child instead
+      </button>
     </div>
   ),
 }));
-// The variation run's keeper, tested on its own: a stand-in shows the
-// roles of the household it calculates.
+// The variation run's keeper, tested on its own: a stand-in shows the roles
+// in the household it is handed (the one sent; it reads whose earnings vary
+// from it, and calculates the household stored under its id).
 vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (importOriginal) => ({
   ...(await importOriginal<
     typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
   >()),
-  HouseholdVariationKeeper: ({ source }: any) => (
+  HouseholdVariationKeeper: ({ source }: { source: HouseholdVariationSource }) => (
     <div aria-label="Variation household">
       {Object.entries(source.household.people as Record<string, Record<string, unknown>>)
         .map(
@@ -138,12 +144,31 @@ describe('UK claimant and partner roles in the Household tab', () => {
     );
   });
 
-  test('given a household sent with its roles then its variation run calculates it with them', async () => {
+  test('given a household sent with its roles then its variation run is handed the household as sent', async () => {
     await calculateUKHousehold();
 
     expect(await screen.findByLabelText('Variation household')).toHaveTextContent(
       `${BUILDER_PEOPLE.YOU}: {"${ROLE_TEST_YEAR}":true}; ${BUILDER_PEOPLE.FIRST_DEPENDANT}: {"${ROLE_TEST_YEAR}":false}`
     );
+  });
+
+  test('given a household sent with its roles then editing it marks the result out of date', async () => {
+    const user = userEvent.setup();
+    await calculateUKHousehold();
+    await screen.findByRole('region', { name: 'Household impact' });
+
+    await user.click(screen.getByRole('tab', { name: 'Inputs' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Describe a couple and their adult child instead' })
+    );
+    expect(screen.queryByText(/These inputs are calculated/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Calculate again' })).not.toHaveAttribute(
+      'aria-disabled'
+    );
+    await user.click(screen.getByRole('tab', { name: 'Results' }));
+    expect(
+      screen.getByText('The inputs changed after this result was calculated.')
+    ).toBeInTheDocument();
   });
 
   test('given a UK model without the roles then a household that carries them is sent without', async () => {

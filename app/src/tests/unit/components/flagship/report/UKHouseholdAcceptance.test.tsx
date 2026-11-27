@@ -14,6 +14,10 @@ import {
   UK_COUPLE_WITH_BENEFIT_UNIT_INPUT,
   UK_REFORM_RESULT,
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
+import {
+  UK_METADATA_WITH_CLAIMANT_ROLES,
+  ukBuilderMetadata,
+} from '@/tests/fixtures/models/builderClaimantRolesMocks';
 
 /**
  * Acceptance checks for UK households in v3's report section, from issues
@@ -21,7 +25,17 @@ import {
  * UK household checklist: several people, an input on the benefit unit,
  * the report's policies, the whole run). Saving and reusing a household
  * (#562's second item) belongs to the standalone household report.
+ *
+ * The UK model information is loaded, with its claimant and partner role
+ * variable, so each household is sent as the tab sends it in a UK report:
+ * with its roles (#1240).
  */
+
+const mockUKMetadata = ukBuilderMetadata(UK_METADATA_WITH_CLAIMANT_ROLES);
+vi.mock('react-redux', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-redux')>()),
+  useSelector: (selector: (state: any) => unknown) => selector({ metadata: mockUKMetadata }),
+}));
 
 const mockCreateHousehold = vi.fn();
 const mockFetchHouseholdCalculation = vi.fn();
@@ -50,6 +64,13 @@ vi.mock('@/components/household/HouseholdBuilderForm', async () => {
     ),
   };
 });
+// The variation run's keeper, tested on its own: no variation runs here.
+vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
+  >()),
+  HouseholdVariationKeeper: () => null,
+}));
 vi.mock('@/utils/HouseholdValidation', () => ({
   HouseholdValidation: { isReadyForSimulation: () => ({ isValid: true, errors: [] }) },
 }));
@@ -85,10 +106,16 @@ describe('UK households in the report section (issues #358 and #562)', () => {
     );
   });
 
-  test("given issue 358's household then it is sent as described, and its result shows", async () => {
+  test("given issue 358's household then it is sent as described, with its roles, and its result shows", async () => {
     const sent = await calculateUKHousehold("Describe issue 358's household");
 
-    expect(sent).toEqual(ISSUE_358_HOUSEHOLD.toV1CreationPayload());
+    expect(sent).toEqual(
+      ISSUE_358_HOUSEHOLD.withBuilderClaimantRoles(HOUSEHOLD_YEAR).toV1CreationPayload()
+    );
+    expect(sent.data.people.you.is_claimant_or_partner).toEqual({ [HOUSEHOLD_YEAR]: true });
+    expect(sent.data.people['your first dependent'].is_claimant_or_partner).toEqual({
+      [HOUSEHOLD_YEAR]: false,
+    });
     expect(sent.data.benunits['your benefit unit'].members).toEqual([
       'you',
       'your first dependent',
@@ -116,7 +143,11 @@ describe('UK households in the report section (issues #358 and #562)', () => {
   test('given an input on the benefit unit then it is sent on the benefit unit', async () => {
     const sent = await calculateUKHousehold('Describe a couple with a child');
 
-    expect(sent).toEqual(UK_COUPLE_WITH_BENEFIT_UNIT_INPUT.toV1CreationPayload());
+    expect(sent).toEqual(
+      UK_COUPLE_WITH_BENEFIT_UNIT_INPUT.withBuilderClaimantRoles(
+        HOUSEHOLD_YEAR
+      ).toV1CreationPayload()
+    );
     expect(sent.data.benunits['your benefit unit'].child_benefit_opts_out).toEqual({
       [HOUSEHOLD_YEAR]: true,
     });
