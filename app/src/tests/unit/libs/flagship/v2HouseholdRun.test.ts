@@ -1,0 +1,378 @@
+// @vitest-environment node
+// These requests carry an abort signal, which Node's Request accepts only from
+// Node's own AbortController, not from jsdom's.
+import { describe, expect, test, vi } from 'vitest';
+import { V2ApiError } from '@/api/v2UserClient';
+import {
+  plainV2HouseholdError,
+  runV2FlagshipHousehold,
+  spmOfV2Calculation,
+  v2PolicyIdFor,
+} from '@/libs/flagship/v2HouseholdRun';
+import {
+  calculationOutput,
+  calculationResponse,
+  calculationRoutesByPolicy,
+  failedCalculation,
+  noWait,
+  readCalculation,
+  requestsFor,
+  routedClient,
+  runningCalculation,
+  SUBMIT_CALCULATION,
+  submittedResponse,
+  V2_CALCULATION_COUNTRY_PACKAGE_VERSION,
+  V2_CALCULATION_IDS,
+  V2_CALCULATION_POLICYENGINE_VERSION,
+  V2_REFORM_POLICY_ID,
+  V2_SPM_CONFIG,
+  V2_SPM_PROVENANCE,
+} from '@/tests/fixtures/api/v2HouseholdCalculationMocks';
+import { itemResponse } from '@/tests/fixtures/api/v2UserMocks';
+import { REFORM_POLICY_ID } from '@/tests/fixtures/libs/flagship/householdRunMocks';
+import {
+  STORED_V2_HOUSEHOLD_ID,
+  storedV2Household,
+  US_SINGLE_PARENT,
+  US_SINGLE_PARENT_CALCULATED_IN_V1_NAMES,
+  US_SINGLE_PARENT_V2_BODY,
+  V2_CODEC_YEAR,
+} from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
+
+const STORE = 'POST /v2/households';
+const READ_BASELINE = readCalculation(V2_CALCULATION_IDS.BASELINE);
+const READ_REFORM = readCalculation(V2_CALCULATION_IDS.REFORM);
+
+/** The single parent under current law and the reform, for the report's year. */
+const SINGLE_PARENT_UNDER_REFORM = {
+  year: V2_CODEC_YEAR,
+  household: US_SINGLE_PARENT,
+  payload: US_SINGLE_PARENT.toV1CreationPayload(),
+  baselinePolicyId: null,
+  reformPolicyId: V2_REFORM_POLICY_ID,
+};
+
+function storedSingleParentAnswer() {
+  return itemResponse(storedV2Household('us', US_SINGLE_PARENT_V2_BODY.household_data), 201);
+}
+
+function clientForSingleParent() {
+  return routedClient({
+    [STORE]: storedSingleParentAnswer,
+    ...calculationRoutesByPolicy(V2_REFORM_POLICY_ID),
+  });
+}
+
+async function submittedBodies(fetchMock: ReturnType<typeof routedClient>['fetchMock']) {
+  return Promise.all(requestsFor(fetchMock, SUBMIT_CALCULATION).map((request) => request.json()));
+}
+
+describe('runV2FlagshipHousehold', () => {
+  test('given a household and a reform then it is stored once and calculated under each policy, with every variable', async () => {
+    // Given
+    const { client, householdClient, fetchMock } = clientForSingleParent();
+
+    // When
+    await runV2FlagshipHousehold(SINGLE_PARENT_UNDER_REFORM, {
+      client,
+      householdClient,
+      wait: noWait,
+    });
+
+    // Then
+    expect(requestsFor(fetchMock, STORE)).toHaveLength(1);
+    expect(await submittedBodies(fetchMock)).toEqual([
+      {
+        country_id: 'us',
+        household_id: STORED_V2_HOUSEHOLD_ID,
+        policy_id: null,
+        add_missing_variables: true,
+      },
+      {
+        country_id: 'us',
+        household_id: STORED_V2_HOUSEHOLD_ID,
+        policy_id: V2_REFORM_POLICY_ID,
+        add_missing_variables: true,
+      },
+    ]);
+  });
+
+  test('given a household then the stored household is handed over before it is calculated', async () => {
+    // Given
+    const { client, householdClient, fetchMock } = clientForSingleParent();
+    const submissionsWhenStored: number[] = [];
+    const onStored = vi.fn(() => {
+      submissionsWhenStored.push(requestsFor(fetchMock, SUBMIT_CALCULATION).length);
+    });
+
+    // When
+    await runV2FlagshipHousehold(SINGLE_PARENT_UNDER_REFORM, {
+      client,
+      householdClient,
+      wait: noWait,
+      onStored,
+    });
+
+    // Then
+    expect(onStored).toHaveBeenCalledOnce();
+    expect(onStored).toHaveBeenCalledWith(
+      storedV2Household('us', US_SINGLE_PARENT_V2_BODY.household_data)
+    );
+    expect(submissionsWhenStored).toEqual([0]);
+  });
+
+  test('given the payload the household is sent as then the household is stored as sent', async () => {
+    // Given: the payload carries an input the household model itself lacks,
+    // as a UK household's claimant and partner roles do
+    const sentPayload = US_SINGLE_PARENT.setPersonVariableAtYear(
+      'you',
+      'employment_income',
+      V2_CODEC_YEAR,
+      30000
+    ).toV1CreationPayload();
+    const { client, householdClient, fetchMock } = clientForSingleParent();
+
+    // When
+    await runV2FlagshipHousehold(
+      { ...SINGLE_PARENT_UNDER_REFORM, payload: sentPayload },
+      { client, householdClient, wait: noWait }
+    );
+
+    // Then
+    const [storeRequest] = requestsFor(fetchMock, STORE);
+    const stored = (await storeRequest.json()) as typeof US_SINGLE_PARENT_V2_BODY;
+    expect(stored.household_data.people[0].values.employment_income).toEqual({
+      [V2_CODEC_YEAR]: 30000,
+    });
+  });
+
+  test('given both calculations then the run compares them, in the v1 names, for the stored household', async () => {
+    // Given
+    const { client, householdClient } = clientForSingleParent();
+
+    // When
+    const run = await runV2FlagshipHousehold(SINGLE_PARENT_UNDER_REFORM, {
+      client,
+      householdClient,
+      wait: noWait,
+    });
+
+    // Then
+    expect(run.householdId).toBe(STORED_V2_HOUSEHOLD_ID);
+    expect(run.baseline).toEqual(US_SINGLE_PARENT_CALCULATED_IN_V1_NAMES);
+    expect(run.netIncome).toEqual({ baseline: 12000, reform: 13500, change: 1500 });
+    expect(run.programs.map((program) => [program.id, program.change])).toEqual([['eitc', 1500]]);
+  });
+
+  test('given the same policy as baseline and reform then one calculation serves both', async () => {
+    // Given
+    const { client, householdClient, fetchMock } = clientForSingleParent();
+
+    // When
+    const run = await runV2FlagshipHousehold(
+      { ...SINGLE_PARENT_UNDER_REFORM, reformPolicyId: null },
+      { client, householdClient, wait: noWait }
+    );
+
+    // Then
+    expect(requestsFor(fetchMock, SUBMIT_CALCULATION)).toHaveLength(1);
+    expect(run.reform).toEqual(run.baseline);
+    expect(run.netIncome.change).toBe(0);
+  });
+
+  test('given a US calculation then each policy keeps its SPM settings and receipt and the versions it ran with', async () => {
+    // Given
+    const { client, householdClient } = clientForSingleParent();
+
+    // When
+    const run = await runV2FlagshipHousehold(SINGLE_PARENT_UNDER_REFORM, {
+      client,
+      householdClient,
+      wait: noWait,
+    });
+
+    // Then
+    expect(run.provenance.reform).toEqual({
+      policyengineBundle: {
+        policyengine_version: V2_CALCULATION_POLICYENGINE_VERSION,
+        model_version: V2_CALCULATION_COUNTRY_PACKAGE_VERSION,
+      },
+      spmConfig: V2_SPM_CONFIG,
+      spmProvenance: V2_SPM_PROVENANCE,
+    });
+  });
+
+  test('given a calculation that fails then the run fails with the reason', async () => {
+    // Given
+    const failed = failedCalculation('The household has a negative age.');
+    const { client, householdClient } = routedClient({
+      [STORE]: storedSingleParentAnswer,
+      [SUBMIT_CALCULATION]: () => submittedResponse(runningCalculation()),
+      [READ_BASELINE]: () => calculationResponse(failed),
+    });
+
+    // When
+    const run = runV2FlagshipHousehold(
+      { ...SINGLE_PARENT_UNDER_REFORM, reformPolicyId: null },
+      { client, householdClient, wait: noWait }
+    );
+
+    // Then
+    await expect(run).rejects.toThrow('The household has a negative age.');
+  });
+
+  test("given one policy's calculation fails then the other's is no longer read", async () => {
+    // Given
+    const reformFailure = failedCalculation('The reform changes a parameter this version lacks.', {
+      calculation_id: V2_CALCULATION_IDS.REFORM,
+      policy_id: V2_REFORM_POLICY_ID,
+    });
+    const { client, householdClient, fetchMock } = routedClient({
+      [STORE]: storedSingleParentAnswer,
+      [SUBMIT_CALCULATION]: async (request) => {
+        const { policy_id: policyId } = (await request.clone().json()) as {
+          policy_id: string | null;
+        };
+        return submittedResponse(
+          policyId === V2_REFORM_POLICY_ID ? reformFailure : runningCalculation()
+        );
+      },
+      [READ_REFORM]: () => calculationResponse(reformFailure),
+      [READ_BASELINE]: () => calculationResponse(runningCalculation()),
+    });
+
+    // When
+    await expect(
+      runV2FlagshipHousehold(SINGLE_PARENT_UNDER_REFORM, {
+        client,
+        householdClient,
+        pollIntervalMs: 5,
+      })
+    ).rejects.toThrow('The reform changes a parameter this version lacks.');
+    const readsAtFailure = requestsFor(fetchMock, READ_BASELINE).length;
+    await new Promise((resolve) => {
+      setTimeout(resolve, 60);
+    });
+
+    // Then
+    expect(requestsFor(fetchMock, READ_BASELINE)).toHaveLength(readsAtFailure);
+  });
+
+  test('given API v1 cannot be reached then the run fails in plain words', async () => {
+    // Given
+    const { client, householdClient } = routedClient({
+      [STORE]: () => Promise.reject(new TypeError('Failed to fetch')),
+    });
+
+    // When
+    const run = runV2FlagshipHousehold(SINGLE_PARENT_UNDER_REFORM, {
+      client,
+      householdClient,
+      wait: noWait,
+    });
+
+    // Then
+    await expect(run).rejects.toThrow('Could not reach PolicyEngine. Check your connection.');
+  });
+
+  test('given a calculation that does not finish within the time limit then the run says it took too long', async () => {
+    // Given
+    let clock = 0;
+    const { client, householdClient } = routedClient({
+      [STORE]: storedSingleParentAnswer,
+      [SUBMIT_CALCULATION]: () => submittedResponse(runningCalculation()),
+      [READ_BASELINE]: () => calculationResponse(runningCalculation()),
+    });
+
+    // When
+    const run = runV2FlagshipHousehold(
+      { ...SINGLE_PARENT_UNDER_REFORM, reformPolicyId: null },
+      {
+        client,
+        householdClient,
+        timeLimitMs: 6000,
+        now: () => clock,
+        wait: async (milliseconds) => {
+          clock += milliseconds;
+        },
+      }
+    );
+
+    // Then
+    await expect(run).rejects.toThrow('The calculation took too long.');
+  });
+
+  test('given a household whose inputs are in another year then nothing is sent', async () => {
+    // Given
+    const { client, householdClient, fetchMock } = clientForSingleParent();
+
+    // When
+    const run = runV2FlagshipHousehold(
+      { ...SINGLE_PARENT_UNDER_REFORM, year: '2027' },
+      { client, householdClient, wait: noWait }
+    );
+
+    // Then
+    await expect(run).rejects.toThrow('The household is set up for 2026, not 2027.');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('v2PolicyIdFor', () => {
+  /** The catalog's current-law policy, as the model catalog names it. */
+  const CURRENT_LAW_ID = 2;
+
+  test.each([
+    ["the catalog's current-law ID", String(CURRENT_LAW_ID)],
+    ['no policy', undefined],
+    ['an empty ID', ''],
+  ])('given %s then the calculation is for current law', (_case, policyId) => {
+    expect(v2PolicyIdFor(policyId, CURRENT_LAW_ID)).toBeNull();
+  });
+
+  test('given a v2 policy ID then the calculation names it', () => {
+    expect(v2PolicyIdFor(V2_REFORM_POLICY_ID, CURRENT_LAW_ID)).toBe(V2_REFORM_POLICY_ID);
+  });
+
+  test('given a policy known only by its v1 number then it is refused, saying why', () => {
+    expect(() => v2PolicyIdFor(REFORM_POLICY_ID, CURRENT_LAW_ID)).toThrow(
+      `Policy ${REFORM_POLICY_ID} is a v1 policy, which the v2 household calculations cannot use.`
+    );
+  });
+});
+
+describe('plainV2HouseholdError', () => {
+  test('given no answer from API v1 then the failure says PolicyEngine could not be reached', () => {
+    // When
+    const failure = plainV2HouseholdError(new V2ApiError(0, 'Network error: Failed to fetch'));
+
+    // Then
+    expect(failure.message).toBe('Could not reach PolicyEngine. Check your connection.');
+  });
+
+  test('given an answer the app could not read then the failure keeps its own reason', () => {
+    // Given: the /v2/ clients report a failed request as status 0, never as a TypeError
+    const unreadable = new TypeError("Cannot read properties of null (reading 'people')");
+
+    // When
+    const failure = plainV2HouseholdError(unreadable);
+
+    // Then
+    expect(failure).toBe(unreadable);
+  });
+});
+
+describe('spmOfV2Calculation', () => {
+  test('given a US calculation then its SPM settings and receipt are read as the app types them', () => {
+    expect(spmOfV2Calculation(calculationOutput())).toEqual({
+      spmConfig: V2_SPM_CONFIG,
+      spmProvenance: V2_SPM_PROVENANCE,
+    });
+  });
+
+  test('given a calculation without SPM settings then neither is read', () => {
+    expect(
+      spmOfV2Calculation(calculationOutput({ spm_config: null, spm_provenance: null }))
+    ).toEqual({});
+  });
+});

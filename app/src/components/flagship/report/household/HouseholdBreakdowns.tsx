@@ -9,6 +9,9 @@ import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPolicies } from '@/hooks/useFlagshipHousehold';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
+import { useV2HouseholdVariation } from '@/hooks/useV2HouseholdVariation';
+import type { CountryId } from '@/libs/countries';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { normalizeHouseholdGroupAppKey } from '@/models/household/schema';
 import EarningsVariationSubPage from '@/pages/report-output/earnings-variation/EarningsVariationSubPage';
 import MarginalTaxRatesSubPage from '@/pages/report-output/marginal-tax-rates/MarginalTaxRatesSubPage';
@@ -19,6 +22,7 @@ import type {
 } from '@/types/calculation/household';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import { getHeadOfHouseholdPersonName } from '@/utils/householdHead';
+import V2HouseholdVariation from './V2HouseholdVariation';
 
 /** The v2 household outputs a v3 household result offers, after its own summary. */
 export const HOUSEHOLD_BREAKDOWN_VIEWS = [
@@ -124,17 +128,23 @@ export interface HouseholdVariationSource {
 }
 
 /**
- * Runs a household's variation (Varying earnings, Marginal tax rates) in
- * the background, beside its own run: either output then opens on the
- * chart, or on the bar already running. The v2 outputs ask for the same
- * two variations (the same query keys), so they read this run rather than
- * start one; and while its caller renders it, the run carries on with
- * neither output open. The Household tab's card starts it once the
- * household is stored and keeps it while another household or tab is
- * open; the standalone household report starts it when either output
- * first opens and keeps it while that result shows. It shows nothing.
+ * The person a variation varies: the household's head, found as the
+ * outputs find it, by the country's groups. Every v3 household has "you",
+ * whom the lookup returns first, so the background variation and the
+ * charts name the same person and share one calculation.
  */
-export function HouseholdVariationKeeper({ source }: { source: HouseholdVariationSource }) {
+function variationPersonName(source: HouseholdVariationSource): string | null {
+  return getHeadOfHouseholdPersonName(
+    {
+      countryId: source.countryId as CountryId,
+      householdData: toAppCalculationData(source.household),
+    },
+    source.year
+  );
+}
+
+/** On the v1 routes: each policy's variation sends the policy's parameters (`/calculate-full`). */
+function V1HouseholdVariationKeeper({ source }: { source: HouseholdVariationSource }) {
   const { countryId, year, householdId, baselinePolicyId, reformPolicyId } = source;
   const samePolicy = baselinePolicyId === reformPolicyId;
   const policyIds = useMemo(
@@ -157,14 +167,7 @@ export function HouseholdVariationKeeper({ source }: { source: HouseholdVariatio
   );
   // The person the outputs vary, as they choose it: the same people under
   // each policy, so the same person for both.
-  const personName = useMemo(
-    () =>
-      getHeadOfHouseholdPersonName(
-        { householdData: toAppCalculationData(source.household) } as HouseholdCalculationOutput,
-        year
-      ),
-    [source.household, year]
-  );
+  const personName = useMemo(() => variationPersonName(source), [source]);
   useHouseholdVariation({
     householdId,
     policyId: baselinePolicyId,
@@ -185,6 +188,49 @@ export function HouseholdVariationKeeper({ source }: { source: HouseholdVariatio
   });
   return null;
 }
+
+/**
+ * On the v2 routes: each policy's variation is a calculation of the stored
+ * household across earnings (`/v2/household-calculations`), which needs
+ * the policy's ID only, so both start at once.
+ */
+function V2HouseholdVariationKeeper({ source }: { source: HouseholdVariationSource }) {
+  const { countryId, year, householdId, baselinePolicyId, reformPolicyId } = source;
+  const personName = useMemo(() => variationPersonName(source), [source]);
+  useV2HouseholdVariation({
+    countryId,
+    year,
+    householdId,
+    policyId: baselinePolicyId,
+    personName,
+    enabled: true,
+  });
+  useV2HouseholdVariation({
+    countryId,
+    year,
+    householdId,
+    policyId: reformPolicyId,
+    personName,
+    enabled: baselinePolicyId !== reformPolicyId,
+  });
+  return null;
+}
+
+/**
+ * Runs a household's variation (Varying earnings, Marginal tax rates) in
+ * the background, beside its own run: either output then opens on the
+ * chart, or on the bar already running. The v2 outputs ask for the same
+ * two variations (the same query keys), so they read this run rather than
+ * start one; and while its caller renders it, the run carries on with
+ * neither output open. The Household tab's card starts it once the
+ * household is stored and keeps it while another household or tab is
+ * open; the standalone household report starts it when either output
+ * first opens and keeps it while that result shows. It shows nothing. The
+ * routes v3 uses (V3_API_ROUTES, a constant) pick how the variation is
+ * calculated.
+ */
+export const HouseholdVariationKeeper =
+  V3_API_ROUTES === 'v2' ? V2HouseholdVariationKeeper : V1HouseholdVariationKeeper;
 
 /**
  * One v2 household output for a v3 household, with the v2 component
@@ -216,11 +262,24 @@ export default function HouseholdBreakdowns({
       onVariationOpen?.();
     }
   }, [needsPolicies, onVariationOpen]);
+  // On the v2 routes the variation needs only the policies' IDs.
   const policyQuery = useFlagshipHouseholdPolicies({
     countryId,
     policyIds,
-    enabled: needsPolicies,
+    enabled: needsPolicies && V3_API_ROUTES !== 'v2',
   });
+  const renderVariationLoading = () => (
+    <RunProgress
+      title={
+        view === 'earnings-variation'
+          ? 'Calculating the household across earnings'
+          : 'Calculating marginal tax rates across earnings'
+      }
+      expectedMs={VARIATION_EXPECTED_MS}
+      startedAt={variationStartedAt}
+      note="Both views use this one calculation, so the other opens at once."
+    />
+  );
 
   let content: ReactNode;
   if (view === 'net-income') {
@@ -243,6 +302,17 @@ export default function HouseholdBreakdowns({
           Click on any item to see its detailed breakdown
         </Text>
       </Stack>
+    );
+  } else if (V3_API_ROUTES === 'v2') {
+    content = (
+      <V2HouseholdVariation
+        view={view}
+        source={source}
+        baseline={baseline}
+        reform={reform}
+        simulations={simulations}
+        renderLoading={renderVariationLoading}
+      />
     );
   } else if (policyQuery.error) {
     content = (
@@ -268,18 +338,7 @@ export default function HouseholdBreakdowns({
       reform,
       simulations,
       policies: policyQuery.policies,
-      renderLoading: () => (
-        <RunProgress
-          title={
-            view === 'earnings-variation'
-              ? 'Calculating the household across earnings'
-              : 'Calculating marginal tax rates across earnings'
-          }
-          expectedMs={VARIATION_EXPECTED_MS}
-          startedAt={variationStartedAt}
-          note="Both views use this one calculation, so the other opens at once."
-        />
-      ),
+      renderLoading: renderVariationLoading,
     };
     content =
       view === 'earnings-variation' ? (

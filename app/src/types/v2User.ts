@@ -198,13 +198,6 @@ export interface UserReportCreateBody {
   last_run_at?: string | null;
 }
 
-export interface UserHouseholdCreateBody {
-  country_id: AssociationCountryId;
-  legacy_household_id: number;
-  name?: string | null;
-  description?: string | null;
-}
-
 /** The fields a saved report's update may change; `legacy_report_id` repoints it to another run. */
 export type UserReportPatchBody = Partial<Omit<UserReportCreateBody, 'country_id'>>;
 

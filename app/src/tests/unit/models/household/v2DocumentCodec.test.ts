@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import {
   haveSameStoredContent,
+  householdDataFromV2Calculation,
   householdFromV2Item,
   householdToV2CreateBody,
+  v2CreateBodyFromV1Payload,
   V2HouseholdDocumentError,
 } from '@/models/household/v2DocumentCodec';
 import {
@@ -16,9 +18,25 @@ import {
   US_COUPLE_WITH_TWO_CHILDREN,
   US_PERSON_WITHOUT_MARITAL_UNIT,
   US_SINGLE_PARENT,
+  US_SINGLE_PARENT_CALCULATED_IN_V1_NAMES,
+  US_SINGLE_PARENT_CALCULATED_SITUATION,
   US_SINGLE_PARENT_V2_BODY,
   V2_CODEC_YEAR,
 } from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
+
+describe('v2CreateBodyFromV1Payload', () => {
+  test("given a household's own v1 payload and its year then the body is the household's", () => {
+    expect(v2CreateBodyFromV1Payload(US_SINGLE_PARENT.toV1CreationPayload(), 2026)).toEqual(
+      US_SINGLE_PARENT_V2_BODY
+    );
+  });
+
+  test('given no year then it cannot be stored', () => {
+    expect(() => v2CreateBodyFromV1Payload(US_SINGLE_PARENT.toV1CreationPayload(), null)).toThrow(
+      new V2HouseholdDocumentError('The household has no year to save it in.')
+    );
+  });
+});
 
 describe('householdToV2CreateBody', () => {
   test('given a US household then it is the document API v1 translates its v1 form into', () => {
@@ -143,5 +161,39 @@ describe('haveSameStoredContent', () => {
     expect(
       haveSameStoredContent(US_PERSON_WITHOUT_MARITAL_UNIT, US_PERSON_WITHOUT_MARITAL_UNIT)
     ).toBe(false);
+  });
+});
+
+describe('householdDataFromV2Calculation', () => {
+  test('given a calculated household named by record IDs then people, groups and members take their v1 names', () => {
+    const data = householdDataFromV2Calculation(
+      'us',
+      US_SINGLE_PARENT_V2_BODY.household_data,
+      US_SINGLE_PARENT_CALCULATED_SITUATION
+    );
+
+    expect(data).toEqual(US_SINGLE_PARENT_CALCULATED_IN_V1_NAMES);
+  });
+
+  test('given a household stored without v1 names then the calculation keeps its record IDs', () => {
+    const data = householdDataFromV2Calculation('uk', UK_DOCUMENT_WITHOUT_SOURCE_NAMES, {
+      people: { adult: { age: { 2026: 45 } } },
+      households: { home: { members: ['adult'] } },
+      benunits: { family: { members: ['adult'] } },
+    });
+
+    expect(data).toEqual({
+      people: { adult: { age: { 2026: 45 } } },
+      households: { home: { members: ['adult'] } },
+      benunits: { family: { members: ['adult'] } },
+    });
+  });
+
+  test('given a calculation that names a record the household lacks then it fails, naming it', () => {
+    expect(() =>
+      householdDataFromV2Calculation('uk', UK_SINGLE_PARENT_V2_BODY.household_data, {
+        people: { 'person-9': { age: { 2026: 45 } } },
+      })
+    ).toThrow(new V2HouseholdDocumentError('The calculation names person-9, who is not a person.'));
   });
 });

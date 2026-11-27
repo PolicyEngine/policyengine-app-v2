@@ -11,6 +11,7 @@ import {
   LEGACY_IDS,
   pageResponse,
 } from '@/tests/fixtures/api/v2UserMocks';
+import { STORED_V2_HOUSEHOLD_ID } from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
 
 const CALCULATED_HOUSEHOLD_ID = String(LEGACY_IDS.HOUSEHOLD);
 
@@ -83,16 +84,81 @@ describe('ApiFlagshipHouseholdStore', () => {
     expect(Array.from(savedName)).toHaveLength(MAX_STORE_NAME_LENGTH);
   });
 
-  test('given an ID that is not a v1 household ID then nothing is sent', async () => {
+  test('given a stored v2 household the account has not saved then one /v2/user-households row points at it by its v2 ID', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValueOnce(pageResponse([])).mockResolvedValueOnce(
+      itemResponse(
+        householdItem({
+          household_id: STORED_V2_HOUSEHOLD_ID,
+          legacy_household_id: null,
+          name: HOUSEHOLD_SUMMARY,
+        }),
+        201
+      )
+    );
+    const store = new ApiFlagshipHouseholdStore(context);
+
+    // When
+    const saved = await store.saveCalculated({
+      householdId: STORED_V2_HOUSEHOLD_ID,
+      name: HOUSEHOLD_SUMMARY,
+    });
+
+    // Then
+    const lookup = fetchCall(fetchMock, 0);
+    expect(lookup.method).toBe('GET');
+    expect(lookup.path).toBe('/v2/user-households');
+    expect(lookup.query).toEqual({
+      country_id: 'us',
+      household_id: STORED_V2_HOUSEHOLD_ID,
+      limit: '1',
+    });
+    const creation = fetchCall(fetchMock, 1);
+    expect(creation.method).toBe('POST');
+    expect(creation.path).toBe('/v2/user-households');
+    expect(creation.body).toEqual({
+      country_id: 'us',
+      household_id: STORED_V2_HOUSEHOLD_ID,
+      name: HOUSEHOLD_SUMMARY,
+    });
+    expect(saved.id).toBe(ASSOCIATION_IDS.HOUSEHOLD);
+  });
+
+  test('given the account already saved the stored v2 household then no second row is created', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValueOnce(
+      pageResponse([
+        householdItem({ household_id: STORED_V2_HOUSEHOLD_ID, legacy_household_id: null }),
+      ])
+    );
+    const store = new ApiFlagshipHouseholdStore(context);
+
+    // When
+    const saved = await store.saveCalculated({
+      householdId: STORED_V2_HOUSEHOLD_ID,
+      name: HOUSEHOLD_SUMMARY,
+    });
+
+    // Then
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(saved.id).toBe(ASSOCIATION_IDS.HOUSEHOLD);
+  });
+
+  test('given an ID that is neither a v1 household ID nor a stored v2 household ID then nothing is sent', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
     const store = new ApiFlagshipHouseholdStore(context);
 
     // When
-    const saving = store.saveCalculated({ householdId: 'not-a-v1-id', name: HOUSEHOLD_SUMMARY });
+    const saving = store.saveCalculated({
+      householdId: 'not-a-household-id',
+      name: HOUSEHOLD_SUMMARY,
+    });
 
     // Then
-    await expect(saving).rejects.toThrow('not-a-v1-id');
+    await expect(saving).rejects.toThrow('not-a-household-id');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

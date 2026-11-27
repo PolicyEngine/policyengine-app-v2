@@ -91,6 +91,28 @@ export const US_MODEL_CATALOG_RESULT: Schemas['MetadataModelCatalogResult'] = {
   spm: { available: false, settings_schema: null, defaults: null },
 };
 
+/**
+ * A US catalog version's SPM settings, as `GET /v2/model-catalog` gives
+ * them for a bundle with certified SPM support: the JSON schema of a
+ * household's `spm` selection, and the certified selection for every field
+ * a household leaves out.
+ */
+export const US_SPM_AVAILABILITY: Schemas['MetadataSPMAvailability'] = {
+  available: true,
+  settings_schema: {
+    title: 'SPMSelection',
+    type: 'object',
+    properties: { geography_kind: { enum: ['county', 'national', 'metro'] } },
+  },
+  defaults: { geography_kind: 'national', scenario: 'ce_trend' },
+};
+
+/** The small US catalog version, from a bundle that offers SPM settings. */
+export const US_MODEL_CATALOG_WITH_SPM: Schemas['MetadataModelCatalogResult'] = {
+  ...US_MODEL_CATALOG_RESULT,
+  spm: US_SPM_AVAILABILITY,
+};
+
 export function modelCatalogEnvelope(
   result: Schemas['MetadataModelCatalogResult'] = US_MODEL_CATALOG_RESULT
 ) {

@@ -1,10 +1,12 @@
 import type { CountryId } from '@/libs/countries';
 import { Household } from '@/models/Household';
 import type {
+  V1HouseholdCreateEnvelope,
   V1HouseholdData,
   V1HouseholdGroupData,
   V1HouseholdPersonData,
 } from '@/models/household/v1Types';
+import type { HouseholdCalculationData } from '@/types/calculation/household';
 import type { SPMSelection } from '@/types/spm';
 import type {
   V2HouseholdCreateBody,
@@ -196,12 +198,75 @@ export function v1DataFromV2Document(
   return { data, ...(spm ? { spm } : {}) };
 }
 
+/**
+ * A household as `/v2/household-calculations` calculated it, named as the
+ * v1 household routes name it: the calculation answers with the situation
+ * the country model took, whose people and groups are named by their
+ * record IDs ("person-1"), so each takes its record's v1 name (else its
+ * ID) from the stored document, and so does each group's list of members.
+ * Collections the document does not hold (such as axes) pass through.
+ */
+export function householdDataFromV2Calculation(
+  countryId: string,
+  document: V2HouseholdDocument,
+  situation: Record<string, unknown>
+): HouseholdCalculationData {
+  const collections = collectionsFor(countryId);
+  const nameOf = (record: V2HouseholdEntityRecord) => record.source_name ?? record.id;
+  const personNames = new Map(document.people.map((person) => [person.id, nameOf(person)]));
+  const personName = (id: string) => {
+    const name = personNames.get(id);
+    if (name === undefined) {
+      throw new V2HouseholdDocumentError(`The calculation names ${id}, who is not a person.`);
+    }
+    return name;
+  };
+  const groupsByCollection: V2DocumentCollections = document;
+  const renamed: Record<string, unknown> = { ...situation };
+  const people = (situation.people ?? {}) as Record<string, unknown>;
+  renamed.people = Object.fromEntries(
+    Object.entries(people).map(([id, values]) => [personName(id), values])
+  );
+  for (const [collection, v1Name] of collections) {
+    const groups = situation[v1Name] as Record<string, Record<string, unknown>> | undefined;
+    if (!groups) {
+      continue;
+    }
+    const groupNames = new Map(
+      (groupsByCollection[collection] ?? []).map((group) => [group.id, nameOf(group)])
+    );
+    renamed[v1Name] = Object.fromEntries(
+      Object.entries(groups).map(([id, group]) => {
+        const name = groupNames.get(id);
+        if (name === undefined) {
+          throw new V2HouseholdDocumentError(
+            `The calculation names ${id}, which is not a ${COLLECTION_NOUNS[collection]} of the household.`
+          );
+        }
+        const members = Array.isArray(group.members) ? group.members.map(String) : [];
+        return [name, { ...group, members: members.map(personName) }];
+      })
+    );
+  }
+  return renamed as unknown as HouseholdCalculationData;
+}
+
 /** What `POST /v2/households` takes for a household: its content, in its year, without its label. */
 export function householdToV2CreateBody(household: Household): V2HouseholdCreateBody {
-  const countryId = household.countryId;
+  return v2CreateBodyFromV1Payload(household.toV1CreationPayload(), household.year);
+}
+
+/**
+ * What `POST /v2/households` takes for a household as it is sent in its v1
+ * form (which may carry more than the household model, such as a UK
+ * household's claimant and partner roles), in the household's year.
+ */
+export function v2CreateBodyFromV1Payload(
+  payload: V1HouseholdCreateEnvelope,
+  year: number | null
+): V2HouseholdCreateBody {
+  const countryId = payload.country_id;
   collectionsFor(countryId);
-  const payload = household.toV1CreationPayload();
-  const year = household.year;
   if (year === null || !Number.isInteger(year)) {
     throw new V2HouseholdDocumentError('The household has no year to save it in.');
   }

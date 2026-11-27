@@ -128,6 +128,10 @@ export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
   operation('v2 policy creation', ['POST'], '/v2/policies'),
   operation('v2 policy', ['GET'], `/v2/policies/${OPAQUE_ID}`),
 
+  // Calculations of stored v2 households, polled (api/v2HouseholdCalculations.ts).
+  operation('household calculation submission', ['POST'], '/v2/household-calculations'),
+  operation('household calculation', ['GET'], `/v2/household-calculations/${UUID}`),
+
   // The signed-in account (api/v2Me.ts).
   operation('account', ['GET', 'DELETE'], '/v2/me'),
   operation('account export', ['GET'], '/v2/me/export'),
@@ -165,7 +169,8 @@ export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
   operation('saved households', ['GET', 'POST'], '/v2/user-households'),
   // A saved household's read, its changes (a new name, or the stored
   // household it names) and its deletion, and the stored households
-  // themselves (api/savedHouseholdStore.ts). A stored household never
+  // themselves (api/savedHouseholdStore.ts, through api/v2Households.ts,
+  // which the household calculations also store with). A stored household never
   // changes, so it is only created and read.
   operation('saved household', ['GET', 'PATCH', 'DELETE'], `/v2/user-households/${UUID}`),
   operation('stored household creation', ['POST'], '/v2/households'),

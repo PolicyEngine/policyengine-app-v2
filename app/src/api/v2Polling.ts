@@ -1,0 +1,144 @@
+/**
+ * Waiting for work API v1's `/v2/` routes run in the background (a
+ * household calculation): the work is read again at an interval until it
+ * has finished, for at most a time limit, and the wait stops at once when
+ * its signal is aborted (a query no longer needed, or a sibling
+ * calculation that failed): the timer stops, and each request is sent with
+ * the signal, so one in progress is cancelled. The work itself runs on in
+ * the simulation service.
+ */
+
+import { isV2ApiError } from '@/api/v2UserClient';
+
+/** How often unfinished work is read again. */
+export const POLL_INTERVAL_MS = 2000;
+
+/**
+ * How many times in a row one read is asked again after a failure that may
+ * pass (API v1 unreachable, or answering 503), before the wait fails.
+ */
+export const TRANSIENT_READ_RETRIES = 3;
+
+/** A read that failed for a reason that may pass: no answer, or 503. */
+function isTransientFailure(error: unknown): boolean {
+  return isV2ApiError(error, 0) || isV2ApiError(error, 503);
+}
+
+/**
+ * How long the app waits for work before it stops: a variation across
+ * earnings takes a few minutes, as on the v1 routes.
+ */
+export const POLL_TIME_LIMIT_MS = 10 * 60 * 1000;
+
+export interface PollOptions {
+  pollIntervalMs?: number;
+  timeLimitMs?: number;
+  /** Waits between reads; a timer that ends early when `signal` aborts, by default. */
+  wait?: (milliseconds: number, signal?: AbortSignal) => Promise<void>;
+  /** The time now, for the time limit; the clock by default. */
+  now?: () => number;
+  /** Stops waiting; the work itself runs on. */
+  signal?: AbortSignal;
+}
+
+/** A timer that rejects with the signal's reason as soon as the signal aborts. */
+export function waitOrAbort(milliseconds: number, signal?: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason);
+      return;
+    }
+    const abort = () => {
+      clearTimeout(timer);
+      reject(signal?.reason);
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', abort);
+      resolve();
+    }, milliseconds);
+    signal?.addEventListener('abort', abort, { once: true });
+  });
+}
+
+/**
+ * One read of unfinished work, asked again an interval later after a
+ * failure that may pass (no answer, or 503), up to TRANSIENT_READ_RETRIES
+ * times in a row; any other failure, or the last one, rejects. A request
+ * the signal cancelled ends the read with the abort.
+ */
+export async function readRetryingTransientFailures<Answer>(
+  read: (signal?: AbortSignal) => Promise<Answer>,
+  {
+    pollIntervalMs = POLL_INTERVAL_MS,
+    wait = waitOrAbort,
+    signal,
+  }: Pick<PollOptions, 'pollIntervalMs' | 'wait' | 'signal'> = {}
+): Promise<Answer> {
+  for (let retries = 0; ; retries += 1) {
+    try {
+      return await read(signal);
+    } catch (error) {
+      // A request the signal cancelled fails as the client reports it; the
+      // wait ends with the abort, and is not asked again.
+      signal?.throwIfAborted();
+      if (!isTransientFailure(error) || retries >= TRANSIENT_READ_RETRIES) {
+        throw error;
+      }
+    }
+    await wait(pollIntervalMs, signal);
+    signal?.throwIfAborted();
+  }
+}
+
+/**
+ * The first answer (a submission, or the first read when none is given),
+ * then each read, until one has finished; rejects with `timeoutMessage`
+ * once the time limit has passed, and with the signal's reason (an
+ * AbortError) once it aborts. A read that fails for a reason that may pass
+ * is asked again, an interval later, up to TRANSIENT_READ_RETRIES times in
+ * a row; a submission is never sent again.
+ */
+export async function pollUntilFinished<Answer>({
+  first,
+  read,
+  isFinished,
+  timeoutMessage,
+  pollIntervalMs = POLL_INTERVAL_MS,
+  timeLimitMs = POLL_TIME_LIMIT_MS,
+  wait = waitOrAbort,
+  now = Date.now,
+  signal,
+}: PollOptions & {
+  /** Sends the work, with the signal for its request. */
+  first?: (signal?: AbortSignal) => Promise<Answer>;
+  /** Reads the work, with the signal for its request. */
+  read: (signal?: AbortSignal) => Promise<Answer>;
+  isFinished: (answer: Answer) => boolean;
+  timeoutMessage: string;
+}): Promise<Answer> {
+  const startedAt = now();
+  const readWithRetries = () =>
+    readRetryingTransientFailures(read, { pollIntervalMs, wait, signal });
+  const sendFirst = async (): Promise<Answer> => {
+    if (!first) {
+      return readWithRetries();
+    }
+    try {
+      return await first(signal);
+    } catch (error) {
+      signal?.throwIfAborted();
+      throw error;
+    }
+  };
+  signal?.throwIfAborted();
+  let answer = await sendFirst();
+  while (!isFinished(answer)) {
+    if (now() - startedAt >= timeLimitMs) {
+      throw new Error(timeoutMessage);
+    }
+    await wait(pollIntervalMs, signal);
+    signal?.throwIfAborted();
+    answer = await readWithRetries();
+  }
+  return answer;
+}
