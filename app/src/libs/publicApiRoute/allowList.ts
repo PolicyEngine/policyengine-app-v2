@@ -162,6 +162,12 @@ export const ALLOWED_OPERATIONS: readonly AllowedOperation[] = [
   operation('saved reports', ['GET', 'POST'], '/v2/user-reports'),
   operation('saved report', ['GET', 'PATCH'], `/v2/user-reports/${UUID}`),
   operation('saved households', ['GET', 'POST'], '/v2/user-households'),
+  // A saved household's read, rename and deletion, and the stored household
+  // it names (api/savedHouseholdStore.ts). A stored household never changes,
+  // so it is only created and read.
+  operation('saved household', ['GET', 'PATCH', 'DELETE'], `/v2/user-households/${UUID}`),
+  operation('stored household creation', ['POST'], '/v2/households'),
+  operation('stored household', ['GET'], `/v2/households/${UUID}`),
 ];
 
 /** The operation a request names, or null when the route forwards no such request. */
