@@ -274,6 +274,29 @@ describe('HouseholdReportPage', () => {
     }
   );
 
+  test('given the same household calculated again after its result cleared then its variation run waits for an output to open again', async () => {
+    renderReport({ household: FAMILY_HOUSEHOLD });
+    const user = await calculate();
+    const firstResult = await screen.findByRole('region', { name: 'Household net income' });
+    await user.click(within(firstResult).getByRole('tab', { name: 'Varying earnings' }));
+    expect(screen.getByLabelText('Variation run')).toBeInTheDocument();
+
+    // Another year clears the result; back in its own year, the household
+    // calculates as before, and its result is the one already held.
+    const yearSelect = screen.getByRole('combobox', { name: 'Year' });
+    await user.selectOptions(yearSelect, LATER_MODEL_YEAR);
+    await user.selectOptions(yearSelect, HOUSEHOLD_YEAR);
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    const secondResult = await screen.findByRole('region', { name: 'Household net income' });
+    expect(mockCreateHousehold).toHaveBeenCalledTimes(1);
+
+    expect(screen.queryByLabelText('Variation run')).not.toBeInTheDocument();
+    expect(within(secondResult).queryByLabelText('Breakdown')).toHaveAttribute(
+      'data-variation-started-at',
+      ''
+    );
+  });
+
   test("given no reform then it reports the household's net income under the baseline alone", async () => {
     renderReport({ household: FAMILY_HOUSEHOLD });
 
