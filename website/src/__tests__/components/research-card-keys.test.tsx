@@ -6,8 +6,9 @@ import { BlogPostGrid } from "@/app/[countryId]/research/ResearchClient";
 import HomeBlogPreview from "@/components/home/HomeBlogPreview";
 import type { ResearchItem } from "@/data/posts/postTransformers";
 
-// apps.json lists a US and a UK research app under the one slug "marriage".
-// Both are tagged "global" here so that the home preview keeps both.
+// Slugs repeat across countries in apps.json (the US and UK "marriage" apps),
+// so two research apps can share one. Both are tagged "global" here so that
+// the home preview keeps both.
 function marriageApp(countryId: "us" | "uk"): ResearchItem {
   return {
     title: `Marriage incentive calculator (${countryId.toUpperCase()})`,
