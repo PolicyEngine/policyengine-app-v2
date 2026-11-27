@@ -140,6 +140,7 @@ describe('HouseholdImpactResult variable tips', () => {
       <HouseholdImpactResult
         impact={IMPACT}
         summary="Single · no children"
+        countryId="us"
         describe={(variable) => DESCRIPTIONS[variable]}
       />
     );
@@ -169,7 +170,7 @@ describe('HouseholdImpactResult variable tips', () => {
 
   test('given no descriptions then each line still says per year', async () => {
     const user = userEvent.setup();
-    render(<HouseholdImpactResult impact={IMPACT} summary="Single · no children" />);
+    render(<HouseholdImpactResult impact={IMPACT} summary="Single · no children" countryId="us" />);
     const parts = screen.getByRole('table', { name: 'Taxes and benefits' });
 
     await user.click(within(parts).getByRole('button', { name: 'About Federal income tax' }));
