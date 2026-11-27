@@ -125,12 +125,13 @@ export interface HouseholdVariationSource {
 
 /**
  * Runs a household's variation (Varying earnings, Marginal tax rates) in
- * the background, from when the household is stored, beside its own run:
- * either output then opens on the chart, or on the bar already running.
- * The v2 outputs ask for the same two variations (the same query keys),
- * so they read this run rather than start one; and as the household's
- * card holds it, the run carries on while another household or tab is
- * open. It shows nothing.
+ * the background, beside its own run: either output then opens on the
+ * chart, or on the bar already running. The v2 outputs ask for the same
+ * two variations (the same query keys), so they read this run rather than
+ * start one; and as the output's caller holds it, the run carries on
+ * while another output, household or tab is open. The Household tab's
+ * card starts it once the household is stored; the standalone household
+ * report, when either output first opens. It shows nothing.
  */
 export function HouseholdVariationKeeper({ source }: { source: HouseholdVariationSource }) {
   const { countryId, year, householdId, baselinePolicyId, reformPolicyId } = source;
