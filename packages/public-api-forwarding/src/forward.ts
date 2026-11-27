@@ -78,9 +78,11 @@ export class PublicApiUnavailableError extends Error {
     /** The status a route would answer with for this failure. */
     readonly statusCode: number,
     /**
-     * False when the request was never sent, so sending it again cannot
-     * repeat it. True when it was sent and the connection failed or timed
-     * out, so API v1 may have received it and acted on it.
+     * False when the request was never sent (an unknown path, no
+     * configuration, or no credential), so sending it again cannot repeat
+     * it. True when fetch rejected or timed out: API v1 may have received
+     * the request and acted on it. Fetch doesn't say whether anything was
+     * sent, so this is true even for a connection refused before sending.
      */
     readonly requestMayHaveArrived: boolean = false,
   ) {
@@ -481,11 +483,12 @@ export function createPublicApiForwarder(
     const callerSignal = serverOptions.signal;
     callerSignal?.throwIfAborted();
     const connection = await connect(publicApiRequest);
+    // Getting the token can take a while; the caller may have left meanwhile,
+    // and then the abort is the answer, not a failed token request.
+    callerSignal?.throwIfAborted();
     if (!connection.ok) {
       throw connection.error;
     }
-    // Getting the token can take a while; the caller may have left meanwhile.
-    callerSignal?.throwIfAborted();
     const { upstreamUrl, serverToken } = connection;
 
     const headers = new Headers({

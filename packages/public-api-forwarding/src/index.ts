@@ -44,6 +44,7 @@ export {
   type HouseholdCalculationOptions,
   type HouseholdCalculationRefusal,
   type HouseholdCalculationStatus,
+  type HouseholdCalculationUnfinishedStatus,
   type HouseholdCalculator,
   type HouseholdCalculatorDependencies,
   type InlineHouseholdCalculationRequest,

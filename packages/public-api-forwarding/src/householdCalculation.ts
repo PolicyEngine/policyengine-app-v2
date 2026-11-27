@@ -9,6 +9,7 @@
 // fetchFromServer, which adds the server credential.
 
 import {
+  DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS,
   PublicApiUnavailableError,
   type PublicApiForwarder,
   type PublicApiRequest,
@@ -29,8 +30,10 @@ const SUBMISSION_PATH = "/v2/household-calculations";
 const RETRIED_READ_STATUSES = new Set([429, 502, 503, 504]);
 /**
  * The submission answer after which API v1 says no job will run, so
- * submitting again cannot create a second one. A 502 is not retried: API v1
- * answers it when the job may exist.
+ * submitting again cannot create a second one. It counts only with API v1's
+ * own error body: Cloud Run, in front of API v1, also answers 503 when its
+ * connection to an instance fails mid-request, after which the job may
+ * exist. A 502 is never retried: API v1 answers it when the job may exist.
  */
 const RETRIED_SUBMISSION_STATUSES = new Set([503]);
 /** Answers whose Retry-After the helper waits out. */
@@ -48,24 +51,28 @@ export type HouseholdCalculationStatus =
   | "running"
   | "succeeded"
   | "failed";
-type UnfinishedStatus = "pending" | "running";
+/** The statuses of a calculation that has not finished yet. */
+export type HouseholdCalculationUnfinishedStatus = "pending" | "running";
 
 type JsonObject = Record<string, unknown>;
 
 /** A household to calculate, as POST /{country}/calculate takes it. */
 export interface InlineHouseholdCalculationRequest {
   readonly country: HouseholdCalculationCountry;
-  /** The household in the situation shape, axes included. */
-  readonly household: Readonly<JsonObject>;
+  /**
+   * The household in the situation shape. Its `axes`, if any, are sent as
+   * the request's own `axes` field, which is where API v1 takes them.
+   */
+  readonly household: Readonly<Record<string, unknown>>;
   /**
    * Parameter changes keyed by parameter path, each mapping a period such as
    * "2026-01-01.2100-12-31" to a value. Current law when omitted.
    */
-  readonly policy?: Readonly<JsonObject>;
+  readonly policy?: Readonly<Record<string, unknown>>;
   /** Adds every variable the household lacks, as /calculate-full does. */
   readonly addMissingVariables?: boolean;
   /** SPM settings for a US household. */
-  readonly spm?: Readonly<JsonObject>;
+  readonly spm?: Readonly<Record<string, unknown>>;
 }
 
 export interface HouseholdCalculationOptions {
@@ -73,7 +80,9 @@ export interface HouseholdCalculationOptions {
   readonly signal?: AbortSignal;
   /**
    * How long after the call starts to give up, 10 minutes by default. The
-   * last read happens at the deadline.
+   * last read happens at the deadline, and an accepted calculation is read
+   * at least once. A request in flight at the deadline may take up to 30
+   * seconds more.
    */
   readonly timeLimitMilliseconds?: number;
 }
@@ -85,13 +94,13 @@ export interface CalculatedHousehold {
    * The household with each calculated value filled in by period, in the
    * shape /calculate answered as `result`.
    */
-  readonly household: JsonObject;
+  readonly household: Record<string, unknown>;
   /** Inputs the country model ignored. */
   readonly warnings: readonly string[];
   /** For a US household, the SPM selection the calculation applied. */
-  readonly spmConfig: JsonObject | null;
+  readonly spmConfig: Record<string, unknown> | null;
   /** For a US household, the receipt of the SPM forecast it used. */
-  readonly spmProvenance: JsonObject | null;
+  readonly spmProvenance: Record<string, unknown> | null;
   readonly countryPackageVersion: string;
   readonly policyengineVersion: string;
 }
@@ -134,9 +143,9 @@ export class HouseholdCalculationFailedError extends Error {
      */
     readonly code: string | null,
     /** For "invalid_inputs", each input the country model does not recognise. */
-    readonly inputErrors: readonly JsonObject[],
+    readonly inputErrors: readonly Record<string, unknown>[],
     /** For "invalid_spm_selection", what is wrong with the SPM settings. */
-    readonly spmError: JsonObject | null,
+    readonly spmError: Record<string, unknown> | null,
   ) {
     super(message);
   }
@@ -152,8 +161,11 @@ export class HouseholdCalculationTimeoutError extends Error {
   constructor(
     message: string,
     readonly calculationId: string,
-    /** The status the last successful read gave. */
-    readonly lastStatus: UnfinishedStatus,
+    /**
+     * The status the last successful read gave, or the submission's when no
+     * read succeeded.
+     */
+    readonly lastStatus: HouseholdCalculationUnfinishedStatus,
   ) {
     super(message);
   }
@@ -210,7 +222,7 @@ interface ApiV1Answer {
 
 interface SubmittedCalculation {
   readonly calculationId: string;
-  readonly status: UnfinishedStatus;
+  readonly status: HouseholdCalculationUnfinishedStatus;
 }
 
 function isJsonObject(value: unknown): value is JsonObject {
@@ -255,13 +267,19 @@ function waitWithTimer(
   });
 }
 
+/**
+ * API v1's inline request: the situation without its axes, which go in the
+ * request's own `axes` field.
+ */
 function submissionBody(
   request: InlineHouseholdCalculationRequest,
 ): JsonObject {
+  const { axes, ...householdWithoutAxes } = request.household;
   return {
     country_id: request.country,
-    household: request.household,
+    household: householdWithoutAxes,
     ...(request.policy === undefined ? {} : { policy: request.policy }),
+    ...(axes === undefined ? {} : { axes }),
     ...(request.addMissingVariables === undefined
       ? {}
       : { add_missing_variables: request.addMissingVariables }),
@@ -305,13 +323,27 @@ function unreadable(
   );
 }
 
+/** `result.item` of a success answer, when the answer has one. */
+function resultItem(body: unknown): JsonObject | undefined {
+  const result = isJsonObject(body) ? body.result : undefined;
+  const item = isJsonObject(result) ? result.item : undefined;
+  return isJsonObject(item) ? item : undefined;
+}
+
+/** Whether a body is API v1's own error answer: `{status: "error", message}`. */
+function isApiV1ErrorBody(body: unknown): boolean {
+  return (
+    isJsonObject(body) &&
+    body.status === "error" &&
+    typeof body.message === "string"
+  );
+}
+
 /** The accepted calculation in a submission's answer. */
 function readSubmitted(answer: ApiV1Answer): SubmittedCalculation {
-  const item = isJsonObject(answer.body)
-    ? (answer.body.result as JsonObject | undefined)?.item
-    : undefined;
-  const calculationId = isJsonObject(item) ? item.calculation_id : undefined;
-  const status = isJsonObject(item) ? item.status : undefined;
+  const item = resultItem(answer.body);
+  const calculationId = item?.calculation_id;
+  const status = item?.status;
   if (
     typeof calculationId !== "string" ||
     !CALCULATION_ID_PATTERN.test(calculationId) ||
@@ -327,7 +359,7 @@ function readSubmitted(answer: ApiV1Answer): SubmittedCalculation {
 }
 
 type CalculationRead =
-  | { readonly status: UnfinishedStatus }
+  | { readonly status: HouseholdCalculationUnfinishedStatus }
   | { readonly status: "succeeded"; readonly calculated: CalculatedHousehold }
   | {
       readonly status: "failed";
@@ -345,10 +377,8 @@ function readCalculation(
       calculationId,
       `API v1's answer for household calculation ${calculationId} cannot be read.`,
     );
-  const item = isJsonObject(answer.body)
-    ? (answer.body.result as JsonObject | undefined)?.item
-    : undefined;
-  if (!isJsonObject(item) || item.calculation_id !== calculationId) {
+  const item = resultItem(answer.body);
+  if (item === undefined || item.calculation_id !== calculationId) {
     throw cannotRead();
   }
 
@@ -453,12 +483,16 @@ export function createHouseholdCalculator(
   async function send(
     request: PublicApiRequest,
     signal: AbortSignal | undefined,
+    timeoutMilliseconds: number,
   ): Promise<ApiV1Answer> {
-    const response = await forwarder.fetchFromServer(request, { signal });
+    const response = await forwarder.fetchFromServer(request, {
+      signal,
+      timeoutMilliseconds,
+    });
     let text: string;
     try {
       text = await response.text();
-    } catch (error) {
+    } catch {
       if (signal?.aborted) {
         throw signal.reason;
       }
@@ -478,7 +512,12 @@ export function createHouseholdCalculator(
     return { response, body };
   }
 
-  /** How long to wait before trying again after a retried answer. */
+  /**
+   * How long to wait before trying again after a retried answer: its
+   * Retry-After for a 429 or 503, but never less than one interval, so
+   * that a Retry-After of 0 cannot make the helper send requests back to
+   * back.
+   */
   function retryWaitMilliseconds(response: Response): number {
     const seconds = RETRY_AFTER_STATUSES.has(response.status)
       ? retryAfterSeconds(response)
@@ -491,20 +530,20 @@ export function createHouseholdCalculator(
         );
   }
 
-  /** Waits, but never past the deadline; false when no time is left. */
-  async function waitWithin(
+  /**
+   * Waits before submitting again, and true; or false, without waiting,
+   * when the wait would reach the deadline, since a calculation submitted
+   * then could not be read.
+   */
+  async function waitToResubmit(
     milliseconds: number,
     deadline: number,
     signal: AbortSignal | undefined,
   ): Promise<boolean> {
-    const remainingMilliseconds = deadline - now();
-    if (remainingMilliseconds <= 0) {
+    if (now() + milliseconds >= deadline) {
       return false;
     }
-    await wait(
-      Math.min(milliseconds, remainingMilliseconds, LONGEST_TIMER_MILLISECONDS),
-      signal,
-    );
+    await wait(Math.min(milliseconds, LONGEST_TIMER_MILLISECONDS), signal);
     return true;
   }
 
@@ -520,17 +559,26 @@ export function createHouseholdCalculator(
 
     for (;;) {
       signal?.throwIfAborted();
+      // A submission may wait for an API v1 instance to start, which can
+      // take minutes, so it may take until the deadline (at least the
+      // forwarder's usual 30 seconds). Timing it out sooner would leave a
+      // job that may exist, which the helper must not submit again.
+      const timeoutMilliseconds = Math.min(
+        Math.max(DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS, deadline - now()),
+        LONGEST_TIMER_MILLISECONDS,
+      );
       let answer: ApiV1Answer;
       try {
         answer = await send(
           { method: "POST", path: SUBMISSION_PATH, body },
           signal,
+          timeoutMilliseconds,
         );
       } catch (error) {
         if (
           !isUnsentCredentialFailure(error) ||
           !canRetry() ||
-          !(await waitWithin(
+          !(await waitToResubmit(
             HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS,
             deadline,
             signal,
@@ -547,8 +595,9 @@ export function createHouseholdCalculator(
       const failure = refusal(answer, null);
       if (
         !RETRIED_SUBMISSION_STATUSES.has(answer.response.status) ||
+        !isApiV1ErrorBody(answer.body) ||
         !canRetry() ||
-        !(await waitWithin(
+        !(await waitToResubmit(
           retryWaitMilliseconds(answer.response),
           deadline,
           signal,
@@ -566,30 +615,47 @@ export function createHouseholdCalculator(
   ): Promise<CalculatedHousehold> {
     const { calculationId } = submitted;
     const path = `${SUBMISSION_PATH}/${calculationId}`;
-    let lastStatus: UnfinishedStatus = submitted.status;
+    let lastStatus: HouseholdCalculationUnfinishedStatus = submitted.status;
     let lastGoodAnswerAt = now();
     let nextWaitMilliseconds = HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS;
     const outageLimitReached = () =>
       now() - lastGoodAnswerAt >=
       HOUSEHOLD_CALCULATION_OUTAGE_LIMIT_MILLISECONDS;
+    const timedOut = () =>
+      new HouseholdCalculationTimeoutError(
+        `Household calculation ${calculationId} did not finish in time.`,
+        calculationId,
+        lastStatus,
+      );
 
+    // Wait, read, then stop if the deadline has come: so the accepted
+    // calculation is read at least once, and the last read happens at the
+    // deadline.
     for (;;) {
-      if (!(await waitWithin(nextWaitMilliseconds, deadline, signal))) {
-        throw new HouseholdCalculationTimeoutError(
-          `Household calculation ${calculationId} did not finish in time.`,
-          calculationId,
-          lastStatus,
-        );
+      const waitMilliseconds = Math.min(
+        nextWaitMilliseconds,
+        Math.max(deadline - now(), 0),
+        LONGEST_TIMER_MILLISECONDS,
+      );
+      if (waitMilliseconds > 0) {
+        await wait(waitMilliseconds, signal);
       }
       signal?.throwIfAborted();
       nextWaitMilliseconds = HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS;
 
       let answer: ApiV1Answer;
       try {
-        answer = await send({ method: "GET", path }, signal);
+        answer = await send(
+          { method: "GET", path },
+          signal,
+          DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS,
+        );
       } catch (error) {
         if (!isBriefOutage(error) || outageLimitReached()) {
           throw error;
+        }
+        if (now() >= deadline) {
+          throw timedOut();
         }
         continue;
       }
@@ -600,6 +666,9 @@ export function createHouseholdCalculator(
           outageLimitReached()
         ) {
           throw refusal(answer, calculationId);
+        }
+        if (now() >= deadline) {
+          throw timedOut();
         }
         nextWaitMilliseconds = retryWaitMilliseconds(answer.response);
         continue;
@@ -614,6 +683,9 @@ export function createHouseholdCalculator(
         throw calculation.failure;
       }
       lastStatus = calculation.status;
+      if (now() >= deadline) {
+        throw timedOut();
+      }
     }
   }
 

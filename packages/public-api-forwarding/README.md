@@ -45,7 +45,7 @@ The Auth0 token request never follows a redirect, which would re-send the client
 
 `isJsonMediaType()` is the JSON content-type check the package and its routes share: `application/json` or any `application/...+json` type.
 
-`fetchFromServer()` also takes a `signal`. When it aborts, the request stops and `fetchFromServer()` rejects with the signal's reason. Its `PublicApiUnavailableError` says in `requestMayHaveArrived` whether API v1 may have received the request: `false` when it was never sent (an unknown path, no configuration, or no credential), `true` when the connection failed or timed out after sending.
+`fetchFromServer()` also takes a `signal`. When it aborts, the request stops and `fetchFromServer()` rejects with the signal's reason. Its `PublicApiUnavailableError` says in `requestMayHaveArrived` whether API v1 may have received the request: `false` when it was never sent (an unknown path, no configuration, or no credential), `true` when fetch rejected or timed out. Fetch doesn't say whether anything was sent, so it is `true` even for a connection refused before sending. An abort while the credential is being fetched also rejects with the signal's reason.
 
 ## Household calculations
 
@@ -58,7 +58,7 @@ const calculator = createHouseholdCalculator({ forwarder: websitePublicApi });
 const calculated = await calculator.calculateHousehold(
   {
     country: "us",
-    household: situation, // /calculate's situation, axes included
+    household: situation, // /calculate's situation; its axes are sent separately
     policy: {
       "gov.irs.credits.ctc.amount.base[0].amount": {
         "2026-01-01.2100-12-31": 3000,
@@ -72,14 +72,16 @@ calculated.household; // what /calculate answered as `result`
 
 What it does, through `fetchFromServer()`:
 
-1. Submits `{country_id, household, policy?, add_missing_variables?, spm?}` to `POST /v2/household-calculations`. API v1 keeps the calculation as a household job only: no stored household, policy or user association.
+1. Submits `{country_id, household, policy?, axes?, add_missing_variables?, spm?}` to `POST /v2/household-calculations`. `household` is the situation without its `axes`, which go in the request's own `axes` field; the caller's object is not changed. API v1 keeps the calculation as a household job only: no stored household, policy or user association.
 2. Reads `GET /v2/household-calculations/{calculation_id}` every 2 seconds until the calculation succeeds or fails.
-3. Gives up 10 minutes after the call starts, or after `timeLimitMilliseconds`: a number, 0 or more, or `Infinity`; anything else rejects with `RangeError` before submitting. No wait runs past that deadline; the last read happens at it.
+3. Gives up 10 minutes after the call starts, or after `timeLimitMilliseconds`: a number, 0 or more, or `Infinity`; anything else rejects with `RangeError` before submitting. No wait runs past that deadline; the last read happens at it, and an accepted calculation is read at least once, even with a limit of 0.
+
+The submission may take until the deadline, and at least 30 seconds: it may wait for an API v1 instance to start, which takes minutes after the service has scaled to zero, and timing it out sooner would leave a job that may exist. Each read takes at most 30 seconds. So a request in flight at the deadline may take up to 30 seconds more; with the 10-minute default, a call ends within about 10.5 minutes.
 
 It resolves with the calculated household, `warnings`, `spmConfig`, `spmProvenance`, the calculation ID and the versions it ran with. It throws:
 
 - `HouseholdCalculationFailedError` when the calculation fails, with the household function's `code` (such as `invalid_inputs`), `inputErrors` and `spmError`. A null `code` means the function raised or was cancelled, and submitting again may succeed.
-- `HouseholdCalculationTimeoutError` when the time limit passes, with the calculation ID and the last status read.
+- `HouseholdCalculationTimeoutError` when the time limit passes, with the calculation ID and the last status read (the submission's status if no read succeeded).
 - `HouseholdCalculationRefusedError` when API v1 refuses a request or its answer cannot be read, with the HTTP status, API v1's message and `code` (such as `missing_parameters`), the parsed body, `Retry-After` and the observability and request IDs.
 - `PublicApiUnavailableError` when API v1 cannot be called.
 - The signal's reason when the signal aborts.
@@ -87,20 +89,20 @@ It resolves with the calculated household, `warnings`, `spmConfig`, `spmProvenan
 Brief outages are retried until 90 seconds pass without a good answer:
 
 - **Reads** are retried on 429, 502, 503 and 504, and when API v1 cannot be reached, does not answer in time, or the credential cannot be obtained. A 429 or 503 with `Retry-After` waits that many seconds, or 2 seconds if that is longer; anything else waits 2 seconds.
-- **The submission** is retried only when no job can exist: on API v1's 503, which it answers when no job of the submission will run, and when the credential cannot be obtained, so the request was never sent. It is not retried on a 502, or when the connection fails or times out after sending, because API v1 may have created the job and submitting again would create a second one.
+- **The submission** is retried only when no job can exist: on API v1's own 503 (with its `{status: "error", message}` body), which it answers when no job of the submission will run, and when the credential cannot be obtained, so the request was never sent. It is not retried on any other 503, such as Cloud Run's plain-text one when its connection to an instance fails; on a 502; or when fetch rejects or times out after the request was handed to it: in each case API v1 may have created the job, and submitting again would create a second one. Nor is it retried when the wait before it would reach the deadline, since the calculation could then not be read.
 - Nothing else is retried, including 400, 401, 403, 404, 409, 413, 422 and 500.
 
 How `calculated` differs from `/calculate`'s answer: there is no `{status, message, result}` envelope; `warnings` and `spm_provenance` are fields of the result, as `warnings` and `spmProvenance`; and inputs the model does not recognise come back as a failed calculation (`code: "invalid_inputs"`, `inputErrors`), thrown as `HouseholdCalculationFailedError`, not as a 400 with `errors`.
 
 ## Configuration
 
-| Variable                               | Meaning                                                                                                                   |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `POLICYENGINE_API_URL`                 | The Public API's base URL, https (or http on localhost). Required outside production.                                     |
-| `POLICYENGINE_API_AUTH0_DOMAIN`        | Host of the Auth0 token endpoint. Tokens carry this host as their issuer, so it must be the issuer the Public API checks. |
-| `POLICYENGINE_API_AUTH0_AUDIENCE`      | The Auth0 API identifier the token is for.                                                                                |
-| `POLICYENGINE_API_AUTH0_CLIENT_ID`     | The caller's own Auth0 machine-to-machine client.                                                                         |
-| `POLICYENGINE_API_AUTH0_CLIENT_SECRET` | That client's secret. Read on the server only; never put it in a `NEXT_PUBLIC_*` or `VITE_*` variable.                    |
+| Variable | Meaning |
+| --- | --- |
+| `POLICYENGINE_API_URL` | The Public API's base URL, https (or http on localhost). Required outside production. |
+| `POLICYENGINE_API_AUTH0_DOMAIN` | Host of the Auth0 token endpoint. Tokens carry this host as their issuer, so it must be the issuer the Public API checks. |
+| `POLICYENGINE_API_AUTH0_AUDIENCE` | The Auth0 API identifier the token is for. |
+| `POLICYENGINE_API_AUTH0_CLIENT_ID` | The caller's own Auth0 machine-to-machine client. |
+| `POLICYENGINE_API_AUTH0_CLIENT_SECRET` | That client's secret. Read on the server only; never put it in a `NEXT_PUBLIC_*` or `VITE_*` variable. |
 
 Production deployments use the production Public API and a production Auth0 client. Preview and development deployments use the Public API's staging service and a staging client. For local work, `vercel env pull` writes the development values.
 
