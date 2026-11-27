@@ -1,9 +1,10 @@
 // POST /api/household/calculate {country, household, policy?}
 // -> API v1's POST /v2/household-calculations, then
 // GET /v2/household-calculations/{calculation_id} until the calculation
-// finishes. The answer is the one API v1's POST /{country}/calculate gave,
-// {status, message, result}, so the dashboards see no change. API v1 keeps
-// the calculation as a household job only: no stored household or policy.
+// finishes. The answer has the envelope API v1's POST /{country}/calculate
+// gave, {status, message, result}, and the same status for each outcome of
+// a calculation, so the dashboards need no change. API v1 keeps the
+// calculation as a household job only: no stored household or policy.
 
 import { errorResponse } from "@policyengine/public-api-forwarding";
 
@@ -50,7 +51,7 @@ export async function POST(request: Request): Promise<Response> {
       {
         incomingRequest: request,
         responseHeaders: corsHeaders,
-        lastAnswerIds: calculation.lastAnswerIds,
+        submissionAnswerIds: calculation.submissionAnswerIds,
       },
     );
   });

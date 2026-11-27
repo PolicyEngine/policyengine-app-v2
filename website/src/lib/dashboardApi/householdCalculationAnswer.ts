@@ -1,7 +1,7 @@
 // Turns a household calculation on API v1's /v2/household-calculations into
 // the answer POST /{country}/calculate gave, so the dashboards that call
-// POST /api/household/calculate see no change: {status, message, result},
-// with the same HTTP statuses.
+// POST /api/household/calculate get the same envelope, {status, message,
+// result}, and the same status for each outcome of a calculation.
 
 import {
   HouseholdCalculationFailedError,
@@ -15,11 +15,12 @@ import {
   type InlineHouseholdCalculationRequest,
 } from "@policyengine/public-api-forwarding";
 
-/** The IDs API v1 gave one of its answers, from its response headers. */
-export interface ApiV1AnswerIds {
-  readonly requestId: string | null;
-  readonly observabilityId: string | null;
-}
+import {
+  NO_ANSWER_IDS,
+  OBSERVABILITY_ID_HEADER,
+  REQUEST_ID_HEADER,
+  type ApiV1AnswerIds,
+} from "@/lib/publicApi/apiV1AnswerIds";
 
 export interface HouseholdCalculationAnswerOptions {
   /** The browser's request: the calculation stops when its signal aborts. */
@@ -28,11 +29,12 @@ export interface HouseholdCalculationAnswerOptions {
   readonly responseHeaders?: HeadersInit;
   readonly logger?: Pick<ForwardingLogger, "error">;
   /**
-   * The IDs of API v1's last answer to the calculation's requests, which a
+   * The IDs of API v1's answer to the calculation's submission, which a
    * calculated household's or a failed calculation's answer carries, as
-   * /calculate's did. Neither is sent without it.
+   * /calculate's answer carried those of the request that ran it. Neither
+   * is sent without it.
    */
-  readonly lastAnswerIds?: () => ApiV1AnswerIds;
+  readonly submissionAnswerIds?: () => ApiV1AnswerIds;
 }
 
 /**
@@ -51,9 +53,6 @@ const INPUT_FAILURE_CODES: ReadonlySet<string | null> = new Set([
  * "calculation_failed" message with it.
  */
 const UNEXPECTED_FAILURE_PREFIX = "Error calculating household under policy: ";
-
-export const REQUEST_ID_HEADER = "X-PolicyEngine-Request-Id";
-export const OBSERVABILITY_ID_HEADER = "X-PolicyEngine-Observability-Id";
 
 /** Bytes per part of a streamed answer. */
 const STREAMED_PART_BYTES = 64 * 1024;
@@ -256,10 +255,10 @@ export async function householdCalculationAnswer(
   const { incomingRequest, responseHeaders } = options;
   const logger = options.logger ?? console;
   const signal = incomingRequest.signal;
-  const lastAnswerHeaders = () =>
+  const submissionAnswerHeaders = () =>
     withAnswerIds(
       responseHeaders,
-      options.lastAnswerIds?.() ?? { requestId: null, observabilityId: null },
+      options.submissionAnswerIds?.() ?? NO_ANSWER_IDS,
     );
 
   let calculated: CalculatedHousehold;
@@ -275,7 +274,7 @@ export async function householdCalculationAnswer(
       );
     }
     if (error instanceof HouseholdCalculationFailedError) {
-      return failedAnswer(error, lastAnswerHeaders(), logger);
+      return failedAnswer(error, submissionAnswerHeaders(), logger);
     }
     if (error instanceof HouseholdCalculationRefusedError) {
       return refusedAnswer(error, responseHeaders, logger);
@@ -310,5 +309,9 @@ export async function householdCalculationAnswer(
       responseHeaders,
     );
   }
-  return apiV1Answer(200, calculatedAnswer(calculated), lastAnswerHeaders());
+  return apiV1Answer(
+    200,
+    calculatedAnswer(calculated),
+    submissionAnswerHeaders(),
+  );
 }

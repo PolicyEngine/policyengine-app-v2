@@ -8,29 +8,30 @@ import {
 } from "@policyengine/public-api-forwarding";
 
 import {
-  OBSERVABILITY_ID_HEADER,
-  REQUEST_ID_HEADER,
+  NO_ANSWER_IDS,
+  answerIdsOf,
   type ApiV1AnswerIds,
-} from "@/lib/dashboardApi/householdCalculationAnswer";
-
+} from "./apiV1AnswerIds";
 import { websitePublicApi } from "./forwarder";
 
 export interface WebsiteHouseholdCalculation {
   readonly calculator: HouseholdCalculator;
-  /** The IDs of API v1's last answer to this calculation's requests. */
-  readonly lastAnswerIds: () => ApiV1AnswerIds;
+  /**
+   * The IDs of API v1's answer to this calculation's submission: the
+   * request that started the calculation, as /calculate's request did, and
+   * the only one whose answer has an observability ID. A submission sent
+   * again after API v1 said no job would run replaces them.
+   */
+  readonly submissionAnswerIds: () => ApiV1AnswerIds;
 }
 
 /**
- * A calculator for one household calculation, which notes the IDs of each
- * answer API v1 gives it. One per calculation, so calculations running at
- * the same time don't see each other's IDs.
+ * A calculator for one household calculation, which notes the IDs of API
+ * v1's answer to its submission. One per calculation, so calculations
+ * running at the same time don't see each other's IDs.
  */
 export function websiteHouseholdCalculation(): WebsiteHouseholdCalculation {
-  let lastAnswerIds: ApiV1AnswerIds = {
-    requestId: null,
-    observabilityId: null,
-  };
+  let submissionAnswerIds = NO_ANSWER_IDS;
   const calculator = createHouseholdCalculator({
     forwarder: {
       async fetchFromServer(request, options) {
@@ -38,10 +39,10 @@ export function websiteHouseholdCalculation(): WebsiteHouseholdCalculation {
           request,
           options,
         );
-        lastAnswerIds = {
-          requestId: response.headers.get(REQUEST_ID_HEADER),
-          observabilityId: response.headers.get(OBSERVABILITY_ID_HEADER),
-        };
+        // The helper sends only its submission with POST.
+        if (request.method === "POST") {
+          submissionAnswerIds = answerIdsOf(response);
+        }
         return response;
       },
     },
@@ -50,5 +51,5 @@ export function websiteHouseholdCalculation(): WebsiteHouseholdCalculation {
     // as well as its waits.
     now: () => Date.now(),
   });
-  return { calculator, lastAnswerIds: () => lastAnswerIds };
+  return { calculator, submissionAnswerIds: () => submissionAnswerIds };
 }
