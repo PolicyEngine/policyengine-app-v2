@@ -1,6 +1,10 @@
 // POST /api/household/calculate {country, household, policy?}
-// -> the Public API's POST /{country}/calculate. The answer is the Public
-// API's {status, message, result}, streamed back unchanged.
+// -> API v1's POST /v2/household-calculations, then
+// GET /v2/household-calculations/{calculation_id} until the calculation
+// finishes. The answer has the envelope API v1's POST /{country}/calculate
+// gave, {status, message, result}, and the same status for each outcome of
+// a calculation, so the dashboards need no change. API v1 keeps the
+// calculation as a household job only: no stored household or policy.
 
 import { errorResponse } from "@policyengine/public-api-forwarding";
 
@@ -9,23 +13,21 @@ import {
   handleDashboardApiRequest,
   readJsonBody,
 } from "@/lib/dashboardApi/handler";
-import {
-  HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS,
-  householdCalculation,
-} from "@/lib/dashboardApi/operations";
-import { websitePublicApi } from "@/lib/publicApi/forwarder";
+import { householdCalculationAnswer } from "@/lib/dashboardApi/householdCalculationAnswer";
+import { householdCalculation } from "@/lib/dashboardApi/operations";
+import { websiteHouseholdCalculation } from "@/lib/publicApi/householdCalculator";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 // A household with many people, several years or a variation chart can take
-// minutes, and a request may first wait for a Public API instance to start.
+// minutes, and a submission may first wait for an API v1 instance to start.
 // The route may run for 800 s, Vercel Pro's limit on Fluid compute: reading
-// the request and getting a token (its Auth0 request is limited to 10 s; the
-// Runtime Cache reads and writes around it are not), a wait of up to 750 s
-// (HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS) and then the streamed answer.
+// the request, the helper's 10-minute limit on a calculation
+// (HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS), up to about 80 s after it
+// for the last requests and their tokens, and then the streamed answer.
 // website/vercel.json turns on Vercel's request cancellation for this route,
-// so a browser that goes away stops the function, which closes its
-// connection to the Public API, rather than holding both for that long.
+// so a browser that goes away stops the function, and with it the
+// calculation's reads, rather than holding the function for that long.
 export const maxDuration = 800;
 
 export function OPTIONS(request: Request): Response {
@@ -42,11 +44,15 @@ export async function POST(request: Request): Promise<Response> {
     if (!operation.ok) {
       return errorResponse(400, operation.message, corsHeaders);
     }
-    return websitePublicApi.forward(operation.request, {
-      incomingRequest: request,
-      responseHeaders: corsHeaders,
-      responseHeadersTimeoutMilliseconds:
-        HOUSEHOLD_CALCULATION_WAIT_MILLISECONDS,
-    });
+    const calculation = websiteHouseholdCalculation();
+    return householdCalculationAnswer(
+      calculation.calculator,
+      operation.request,
+      {
+        incomingRequest: request,
+        responseHeaders: corsHeaders,
+        submissionAnswerIds: calculation.submissionAnswerIds,
+      },
+    );
   });
 }

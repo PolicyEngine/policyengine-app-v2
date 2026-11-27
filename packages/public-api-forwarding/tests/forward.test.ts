@@ -775,4 +775,187 @@ describe("fetchFromServer", () => {
     expect(failure).toMatchObject({ statusCode: 404 });
     expect(fetchImplementation).not.toHaveBeenCalled();
   });
+
+  test("given the caller's signal aborts then it rejects with the signal's reason", async () => {
+    // Given an API v1 that answers only when the request is aborted, and
+    // says when the request has started
+    let requestStarted: () => void = () => {};
+    const started = new Promise<void>((resolve) => {
+      requestStarted = resolve;
+    });
+    const fetchImplementation = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(init.signal?.reason),
+          );
+          requestStarted();
+        }),
+    );
+    const forwarder = createPublicApiForwarder({
+      environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
+      callerName: "policyengine-test-caller",
+      sharedTokenStore: null,
+      clientAddress: () => undefined,
+      fetchImplementation,
+      logger: silentLogger,
+    });
+    const controller = new AbortController();
+    const callerLeft = new Error("The caller went away.");
+
+    // When the caller aborts while the request is in flight, long before
+    // the request's own timeout would end it
+    const pendingRequest = forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, {
+        signal: controller.signal,
+        timeoutMilliseconds: 60_000,
+      })
+      .catch((error: unknown) => error);
+    await started;
+    controller.abort(callerLeft);
+    const failure = await pendingRequest;
+
+    // Then
+    expect(fetchImplementation).toHaveBeenCalledTimes(1);
+    expect(failure).toBe(callerLeft);
+  });
+
+  test("given the caller aborts while the token is fetched then it rejects with the signal's reason without waiting for the token request", async () => {
+    // Given a token request that fails only when the test says so
+    let tokenRequested: () => void = () => {};
+    const requested = new Promise<void>((resolve) => {
+      tokenRequested = resolve;
+    });
+    let failTokenRequest: () => void = () => {};
+    const tokenFailure = new Promise<Response>((resolve) => {
+      failTokenRequest = () =>
+        resolve(jsonResponse({ error: "access_denied" }, 403));
+    });
+    const { forwarder, publicApiCalls } = forwarderWith({
+      tokenAnswer: () => {
+        tokenRequested();
+        return tokenFailure;
+      },
+    });
+    const controller = new AbortController();
+    const callerLeft = new Error("The caller went away.");
+
+    // When the caller aborts while the token request is still running
+    const pendingRequest = forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, { signal: controller.signal })
+      .catch((error: unknown) => error);
+    await requested;
+    controller.abort(callerLeft);
+    const failure = await pendingRequest;
+    failTokenRequest();
+
+    // Then
+    expect(failure).toBe(callerLeft);
+    expect(publicApiCalls()).toHaveLength(0);
+  });
+
+  test("given the token request fails then the error says the request never reached API v1", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      tokenAnswer: () => jsonResponse({ error: "access_denied" }, 403),
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({
+      statusCode: 502,
+      reason: "credential_unavailable",
+      requestMayHaveArrived: false,
+    });
+  });
+
+  test("given API v1 cannot be reached then the error says the request may have arrived", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      publicApiAnswer: () => {
+        throw new TypeError("fetch failed");
+      },
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toBeInstanceOf(PublicApiUnavailableError);
+    expect(failure).toMatchObject({
+      statusCode: 502,
+      reason: "unreachable",
+      requestMayHaveArrived: true,
+    });
+  });
+
+  test("given a path that could leave API v1 then the error names an unknown route that was never sent", async () => {
+    // Given
+    const { forwarder } = forwarderWith();
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer({ method: "GET", path: "/../deployment" })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({
+      reason: "unknown_route",
+      requestMayHaveArrived: false,
+    });
+  });
+
+  test("given no API v1 URL on a preview deployment then the error names a missing configuration that was never sent", async () => {
+    // Given
+    const { forwarder } = forwarderWith({
+      environment: { VERCEL_ENV: "preview" },
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST)
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({
+      reason: "not_configured",
+      requestMayHaveArrived: false,
+    });
+  });
+
+  test("given API v1 does not answer in time then the error names a timeout that may have arrived", async () => {
+    // Given an API v1 that answers only when the request is aborted
+    const forwarder = createPublicApiForwarder({
+      environment: PREVIEW_ENVIRONMENT_WITHOUT_CREDENTIAL,
+      callerName: "policyengine-test-caller",
+      sharedTokenStore: null,
+      clientAddress: () => undefined,
+      fetchImplementation: (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("timed out", "TimeoutError")),
+          );
+        }),
+      logger: silentLogger,
+    });
+
+    // When
+    const failure = await forwarder
+      .fetchFromServer(DEPLOYMENT_REPORT_REQUEST, { timeoutMilliseconds: 10 })
+      .catch((error: unknown) => error);
+
+    // Then
+    expect(failure).toMatchObject({
+      statusCode: 504,
+      reason: "timed_out",
+      requestMayHaveArrived: true,
+    });
+  });
 });
