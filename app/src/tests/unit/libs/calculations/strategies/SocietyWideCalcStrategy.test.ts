@@ -22,9 +22,15 @@ import {
 import { mockSocietyWideCalcParams } from '@/tests/fixtures/types/calculationFixtures';
 import type { CalcParams, CalcStatus } from '@/types/calculation';
 
+/** The highest value a queued run's bar can reach. */
+const QUEUED_STAGE_MAX = 24;
+
 // The country estimates that legacy (v2) progress bars use
 const THREE_MINUTES_MS = 3 * 60 * 1000;
 const SIX_MINUTES_MS = 6 * 60 * 1000;
+
+// The bar's clock reaches 85% at the typical time, so half of it is 42.5%.
+const CLOCK_PROGRESS_AT_HALF_THE_TYPICAL_TIME = 42.5;
 
 /** Metadata for a society-wide report run that started `elapsedMs` ago. */
 const startedAgo = (elapsedMs: number) => ({
@@ -364,7 +370,7 @@ describe('SocietyWideCalcStrategy', () => {
       ['us', 'state/ca', SIX_MINUTES_MS],
       ['us', 'congressional_district/CA-46', SIX_MINUTES_MS],
     ])(
-      'given the default and a %s run on %s then progress follows the %i ms country estimate',
+      'given the default and a %s run on %s then progress follows the clock for the %i ms country estimate',
       async (countryId, region, countryEstimateMs) => {
         // Given - half of the country estimate has passed
         const params = mockSocietyWideCalcParams({ countryId, region, populationId: region });
@@ -373,9 +379,9 @@ describe('SocietyWideCalcStrategy', () => {
         // When
         const result = await strategy.execute(params, startedAgo(countryEstimateMs / 2));
 
-        // Then - unchanged from before region estimates, with no estimate attached
+        // Then - no estimate attached
         expect(result.status).toBe('pending');
-        expect(result.progress).toBeCloseTo(50, 0);
+        expect(result.progress).toBeCloseTo(CLOCK_PROGRESS_AT_HALF_THE_TYPICAL_TIME, 1);
         expect(result).not.toHaveProperty('estimatedDurationMs');
       }
     );
@@ -387,7 +393,7 @@ describe('SocietyWideCalcStrategy', () => {
       ['us', 'state/ca', US_STATE_SOCIETY_WIDE_DURATION_MS],
       ['us', 'congressional_district/CA-46', US_DISTRICT_SOCIETY_WIDE_DURATION_MS],
     ])(
-      'given estimateByRegion and a %s run on %s then progress follows the %i ms region estimate',
+      'given estimateByRegion and a %s run on %s then progress follows the clock for the %i ms region estimate',
       async (countryId, region, regionEstimateMs) => {
         // Given - half of the region estimate has passed
         const params = mockSocietyWideCalcParams({
@@ -403,7 +409,7 @@ describe('SocietyWideCalcStrategy', () => {
 
         // Then
         expect(result.status).toBe('pending');
-        expect(result.progress).toBeCloseTo(50, 0);
+        expect(result.progress).toBeCloseTo(CLOCK_PROGRESS_AT_HALF_THE_TYPICAL_TIME, 1);
         expect(result.estimatedDurationMs).toBe(regionEstimateMs);
       }
     );
@@ -430,7 +436,7 @@ describe('SocietyWideCalcStrategy', () => {
       );
 
       // Then
-      expect(result.progress).toBeCloseTo(50, 0);
+      expect(result.progress).toBeCloseTo(CLOCK_PROGRESS_AT_HALF_THE_TYPICAL_TIME, 1);
       expect(result).not.toHaveProperty('estimatedDurationMs');
     });
 
@@ -468,6 +474,42 @@ describe('SocietyWideCalcStrategy', () => {
 
       // Then
       expect(result).not.toHaveProperty('runStage');
+    });
+
+    it('given the last poll went past the new stage then progress keeps the value shown', async () => {
+      // Given - a US nationwide run held at the queued stage's 24% ceiling, a minute in
+      const params = mockSocietyWideCalcParams({ estimateByRegion: true });
+      const metadata = startedAgo(60_000);
+      const previous = mockComputingSocietyWideStatus({
+        progress: QUEUED_STAGE_MAX,
+        runStage: { stage: 'queued', floor: 0, max: QUEUED_STAGE_MAX },
+        metadata,
+      });
+      mockFetchSocietyWideCalculation.mockResolvedValue({
+        ...mockSocietyWideComputingResponse(),
+        stage: 'loading_data',
+        progress: 3,
+        progress_max: 4,
+      });
+
+      // When - this poll reports the data loading, at 3–4%
+      const result = await strategy.execute(params, metadata, previous);
+
+      // Then
+      expect(result.progress).toBe(QUEUED_STAGE_MAX);
+    });
+
+    it('given the last poll is of another run then its progress does not carry over', async () => {
+      // Given - the run failed and was tried again a second ago
+      const params = mockSocietyWideCalcParams({ estimateByRegion: true });
+      const previous = mockComputingSocietyWideStatus({ progress: 80, metadata: startedAgo(60_000) });
+      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
+
+      // When
+      const result = await strategy.execute(params, startedAgo(1_000), previous);
+
+      // Then
+      expect(result.progress).toBeLessThan(1);
     });
 
     it('given estimateByRegion and no API stage fields then there is no run stage', () => {
@@ -574,7 +616,7 @@ describe('SocietyWideCalcStrategy', () => {
   });
 
   describe('transformResponseWithMetadata', () => {
-    it('given computing response with US country then includes synthetic progress', () => {
+    it('given computing response with US country then progress follows the clock', () => {
       // Given
       const apiResponse = mockSocietyWideComputingResponse();
       const metadata = {
@@ -591,8 +633,8 @@ describe('SocietyWideCalcStrategy', () => {
       expect(result.status).toBe('pending');
       expect(result.progress).toBeDefined();
       expect(result.progress).toBeGreaterThan(0);
-      // 1 minute elapsed / 6 minute estimate = 16.67%
-      expect(result.progress).toBeCloseTo(16.67, 0);
+      // 1 minute of a 6-minute estimate: a sixth of 85%
+      expect(result.progress).toBeCloseTo(14.17, 1);
     });
 
     it('given computing response with UK country then uses UK duration estimate', () => {
@@ -611,8 +653,8 @@ describe('SocietyWideCalcStrategy', () => {
       // Then
       expect(result.status).toBe('pending');
       expect(result.progress).toBeDefined();
-      // 1.5 minutes elapsed / 3 minute estimate = 50%
-      expect(result.progress).toBeCloseTo(50, 0);
+      // 1.5 minutes of a 3-minute estimate: half of 85%
+      expect(result.progress).toBeCloseTo(CLOCK_PROGRESS_AT_HALF_THE_TYPICAL_TIME, 1);
     });
 
     it('given computing response with unknown country then uses default duration', () => {
@@ -631,8 +673,8 @@ describe('SocietyWideCalcStrategy', () => {
       // Then
       expect(result.status).toBe('pending');
       expect(result.progress).toBeDefined();
-      // Uses default (6 minutes for US): 1 minute / 6 minutes = 16.67%
-      expect(result.progress).toBeCloseTo(16.67, 0);
+      // Uses default (6 minutes for US): a sixth of 85%
+      expect(result.progress).toBeCloseTo(14.17, 1);
     });
 
     it('given computing response with no country then uses default duration', () => {
@@ -651,11 +693,11 @@ describe('SocietyWideCalcStrategy', () => {
       // Then
       expect(result.status).toBe('pending');
       expect(result.progress).toBeDefined();
-      // Uses default (6 minutes for US): 2.5 minutes / 6 minutes = 41.67%
-      expect(result.progress).toBeCloseTo(41.67, 0);
+      // Uses default (6 minutes for US): 2.5 minutes of 6 is 35.42% on the clock
+      expect(result.progress).toBeCloseTo(35.42, 1);
     });
 
-    it('given long-running calculation then caps progress at 95%', () => {
+    it('given long-running calculation then progress slows toward 95% without reaching it', () => {
       // Given
       const apiResponse = mockSocietyWideComputingResponse();
       const metadata = {
@@ -668,9 +710,9 @@ describe('SocietyWideCalcStrategy', () => {
       // When
       const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'us');
 
-      // Then
+      // Then - 85% at 6 minutes, then easing toward 95%
       expect(result.status).toBe('pending');
-      expect(result.progress).toBe(95);
+      expect(result.progress).toBeCloseTo(89.87, 1);
     });
 
     it('given just-started calculation then shows low progress', () => {

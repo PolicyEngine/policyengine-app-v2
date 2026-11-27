@@ -182,6 +182,26 @@ describe('calculationQueries', () => {
       expect(mockStrategy.execute).toHaveBeenNthCalledWith(1, params, firstMetadata, undefined);
       expect(mockStrategy.execute).toHaveBeenNthCalledWith(2, params, secondMetadata, undefined);
     });
+
+    it('given metadata built for each request then it is built from the cached status', async () => {
+      // Given
+      const queryClient = new QueryClient();
+      const buildMetadata = vi.fn(() => mockSocietyWideMetadata());
+      const queryOptions = calculationQueries.forEconomyRun({
+        queryKey: TEST_ECONOMY_RUN_QUERY_KEY,
+        metadata: buildMetadata,
+        params: mockSocietyWideParams(),
+        pollIntervalMs: TEST_ECONOMY_RUN_POLL_INTERVAL_MS,
+      });
+      const cachedStatus = mockCachedComputingStatus(mockSocietyWideMetadata());
+      queryClient.setQueryData(queryOptions.queryKey, cachedStatus);
+
+      // When
+      await queryClient.fetchQuery({ ...queryOptions, staleTime: 0 });
+
+      // Then
+      expect(buildMetadata).toHaveBeenCalledWith(cachedStatus);
+    });
   });
 
   describe('forSimulation', () => {

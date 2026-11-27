@@ -33,6 +33,19 @@ const REPORT_YEAR_POLL_INTERVAL_MS = 2000;
 
 const COMPUTING_YEAR = { status: 'pending', progress: 10, message: 'Computing...' };
 
+/** A year still computing, as the strategy answers it: with the request's metadata. */
+const computingYearAsTheStrategyAnswers = async (_params: unknown, metadata: unknown) => ({
+  ...COMPUTING_YEAR,
+  metadata,
+});
+
+/** A year whose run failed, as the strategy answers it. */
+const failedYearAsTheStrategyAnswers = async (_params: unknown, metadata: unknown) => ({
+  status: 'error',
+  error: { code: 'SOCIETY_WIDE_CALC_ERROR', message: 'The run failed', retryable: true },
+  metadata,
+});
+
 describe('report year polling while the tab is hidden', () => {
   beforeEach(() => {
     execute.mockReset();
@@ -114,13 +127,9 @@ describe('report year checks give the strategy the last status', () => {
   });
 
   // The strategy measures a year's progress from this start time.
-  test('given a requested year of the window is checked again then that check has its own start time', async () => {
+  test('given a requested year of the window is checked again then that check keeps its first start time', async () => {
     // Given
-    const requestTimes: number[] = [];
-    execute.mockImplementation(async () => {
-      requestTimes.push(Date.now());
-      return COMPUTING_YEAR;
-    });
+    execute.mockImplementation(computingYearAsTheStrategyAnswers);
     const { year, ...windowArgs } = args;
     renderHook(() => useReportYearEconomies({ ...windowArgs, years: [year] }), { wrapper });
     await waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
@@ -130,7 +139,43 @@ describe('report year checks give the strategy the last status', () => {
 
     // Then
     expect(execute).toHaveBeenCalledTimes(2);
-    expect(execute.mock.calls[1][1].startedAt).toBe(requestTimes[1]);
+    expect(execute.mock.calls[1][1].startedAt).toBe(execute.mock.calls[0][1].startedAt);
+  });
+
+  // The year's bar measures from this start time.
+  test('given a requested year of the window computes then it gives its first request time', async () => {
+    // Given
+    execute.mockImplementation(computingYearAsTheStrategyAnswers);
+    const { year, ...windowArgs } = args;
+    const { result } = renderHook(() => useReportYearEconomies({ ...windowArgs, years: [year] }), {
+      wrapper,
+    });
+    await waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(REPORT_YEAR_POLL_INTERVAL_MS));
+
+    // Then
+    expect(result.current[year].startedAt).toBe(execute.mock.calls[0][1].startedAt);
+  });
+
+  test('given a requested year of the window failed then trying it again starts a new clock', async () => {
+    // Given
+    execute.mockImplementationOnce(failedYearAsTheStrategyAnswers);
+    execute.mockImplementation(computingYearAsTheStrategyAnswers);
+    const { year, ...windowArgs } = args;
+    const { result } = renderHook(() => useReportYearEconomies({ ...windowArgs, years: [year] }), {
+      wrapper,
+    });
+    await waitFor(() => expect(result.current[year].status).toBe('error'));
+    await act(() => vi.advanceTimersByTimeAsync(REPORT_YEAR_POLL_INTERVAL_MS));
+
+    // When
+    act(() => result.current[year].retry());
+    await waitFor(() => expect(execute).toHaveBeenCalledTimes(2));
+
+    // Then
+    expect(execute.mock.calls[1][1].startedAt).toBeGreaterThan(execute.mock.calls[0][1].startedAt);
   });
 });
 

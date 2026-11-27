@@ -236,6 +236,46 @@ describe('useBillEconomy', () => {
     });
   });
 
+  describe('the run’s start time', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    /** One query cache for the page opened, left and opened again. */
+    function sharedCacheWrapper() {
+      const store = configureStore({ reducer: { metadata: () => ({ currentLawId: 2 }) } });
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      return ({ children }: { children: React.ReactNode }) => (
+        <Provider store={store}>
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        </Provider>
+      );
+    }
+
+    test('given the page is left and opened again while the run computes then the run keeps its first start time', async () => {
+      // Given
+      mockFetchSocietyWide.mockResolvedValue(BILL_RUN_COMPUTING);
+      const sharedCache = sharedCacheWrapper();
+      const firstVisit = renderHook(() => useBillEconomy(BILL), { wrapper: sharedCache });
+      await waitFor(() => expect(firstVisit.result.current.startedAt).toBeDefined());
+      const firstStartedAt = firstVisit.result.current.startedAt;
+      await act(() => vi.advanceTimersByTimeAsync(BILL_POLL_INTERVAL_MS / 2));
+      firstVisit.unmount();
+
+      // When
+      const secondVisit = renderHook(() => useBillEconomy(BILL), { wrapper: sharedCache });
+      await act(() => vi.advanceTimersByTimeAsync(BILL_POLL_INTERVAL_MS * 2));
+
+      // Then
+      expect(mockFetchSocietyWide.mock.calls.length).toBeGreaterThan(1);
+      expect(secondVisit.result.current.startedAt).toBe(firstStartedAt);
+    });
+  });
+
   describe('while the tab is hidden', () => {
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });

@@ -104,6 +104,23 @@ describe('RunProgress', () => {
     expect(screen.getByText(/· 20%/)).toBeInTheDocument();
   });
 
+  test('given a run whose highest value is above its current stage then a new bar starts from that value', () => {
+    // Given - a US nationwide run held at 24% while queued, now loading its data (3–4%),
+    // shown again after the reader left it
+    render(
+      <RunProgress
+        title="Calculating 2027"
+        expectedMs={360000}
+        progress={24}
+        runStage={{ stage: 'loading_data', floor: 3, max: 4 }}
+        startedAt={Date.now() - 30_000}
+      />
+    );
+
+    // Then
+    expect(screen.getByText(/· 24%/)).toBeInTheDocument();
+  });
+
   test('given a run past its typical time then the bar still moves and says it takes longer', () => {
     expect(clockProgress(60_000, 60_000)).toBe(85);
     expect(clockProgress(120_000, 60_000)).toBeGreaterThan(90);

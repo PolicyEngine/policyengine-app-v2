@@ -331,7 +331,7 @@ describe('useCalculationStatus', () => {
       });
     });
 
-    test('given economy pending status then uses synthetic progress', async () => {
+    test('given economy pending status then the progress and message are the cached ones', async () => {
       // Given
       const calcStatus = mockCalcStatusComputing({
         metadata: {
@@ -353,17 +353,16 @@ describe('useCalculationStatus', () => {
         { wrapper }
       );
 
-      // Then - synthetic progress overrides server progress
+      // Then - the run's highest value at a poll, which its bar computes from
       await waitFor(() => {
         expect(result.current.isPending).toBe(true);
-        expect(result.current.progress).toBe(12); // Mocked synthetic progress for economy
-        expect(result.current.message).toBe('Loading population data...'); // Mocked synthetic message
-        // Server data still available
+        expect(result.current.progress).toBe(calcStatus.progress);
+        expect(result.current.message).toBe(calcStatus.message);
         expect(result.current.queuePosition).toBe(3);
       });
     });
 
-    test('given a pending status with a region estimate then the bar follows it', async () => {
+    test('given economy pending status then no synthetic timer runs', async () => {
       // Given
       vi.mocked(useSyntheticProgress).mockClear();
       queryClient.setQueryData<CalcStatus>(
@@ -380,50 +379,17 @@ describe('useCalculationStatus', () => {
       );
 
       // When
-      renderHook(() => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'), {
-        wrapper,
-      });
-
-      // Then
-      await waitFor(() => {
-        expect(useSyntheticProgress).toHaveBeenCalledWith(
-          true,
-          'societyWide',
-          expect.objectContaining({ estimatedDurationMs: TEST_ESTIMATED_DURATIONS_MS.US_STATE })
-        );
-      });
-    });
-
-    test('given a pending status without an estimate then the default applies', async () => {
-      // Given
-      vi.mocked(useSyntheticProgress).mockClear();
-      queryClient.setQueryData<CalcStatus>(
-        calculationKeys.byReportId(HOOK_TEST_CONSTANTS.TEST_REPORT_ID),
-        mockCalcStatusComputing({
-          metadata: {
-            calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'societyWide',
-            targetType: 'report',
-            startedAt: Date.now(),
-          },
-        })
-      );
-
-      // When
       const { result } = renderHook(
         () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'),
         { wrapper }
       );
 
-      // Then - every active call leaves the estimate unset
+      // Then
       await waitFor(() => expect(result.current.isPending).toBe(true));
       const activeCalls = vi
         .mocked(useSyntheticProgress)
         .mock.calls.filter(([isActive]) => isActive);
-      expect(activeCalls.length).toBeGreaterThan(0);
-      activeCalls.forEach(([, , serverProgress]) => {
-        expect(serverProgress?.estimatedDurationMs).toBeUndefined();
-      });
+      expect(activeCalls).toHaveLength(0);
     });
 
     test('given household pending status then uses synthetic progress', async () => {
