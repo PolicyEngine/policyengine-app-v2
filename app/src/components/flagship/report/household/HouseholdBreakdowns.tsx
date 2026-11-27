@@ -128,10 +128,11 @@ export interface HouseholdVariationSource {
  * the background, beside its own run: either output then opens on the
  * chart, or on the bar already running. The v2 outputs ask for the same
  * two variations (the same query keys), so they read this run rather than
- * start one; and as the output's caller holds it, the run carries on
- * while another output, household or tab is open. The Household tab's
- * card starts it once the household is stored; the standalone household
- * report, when either output first opens. It shows nothing.
+ * start one; and while its caller renders it, the run carries on with
+ * neither output open. The Household tab's card starts it once the
+ * household is stored and keeps it while another household or tab is
+ * open; the standalone household report starts it when either output
+ * first opens and keeps it while that result shows. It shows nothing.
  */
 export function HouseholdVariationKeeper({ source }: { source: HouseholdVariationSource }) {
   const { countryId, year, householdId, baselinePolicyId, reformPolicyId } = source;
@@ -208,8 +209,8 @@ export default function HouseholdBreakdowns({
   const { baseline, reform, simulations, policyIds } = useBreakdownInputs(source);
   // Only the variation outputs send the policies; fetched when one opens.
   const needsPolicies = view === 'earnings-variation' || view === 'marginal-tax-rates';
-  // Both outputs read one variation run, held by the household's card: its
-  // clock starts when either first opens, and carries on when either opens again.
+  // Both outputs read one variation run, which the caller holds with its
+  // start time: told when either opens, so the run starts or carries on.
   useEffect(() => {
     if (needsPolicies) {
       onVariationOpen?.();

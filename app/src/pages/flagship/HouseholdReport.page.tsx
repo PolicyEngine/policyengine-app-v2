@@ -111,6 +111,24 @@ function openingHousehold(
   };
 }
 
+/** A variation run the report keeps, with the request and calculation it was opened for. */
+interface KeptVariationRun {
+  requested: RequestedHousehold;
+  /** The calculation: the household's id, the year and both policies. */
+  key: string;
+  source: HouseholdVariationSource;
+  startedAt: number;
+}
+
+/** Whether a kept run is the one for this request and calculation. */
+function isKeptFor(
+  run: KeptVariationRun | null,
+  requested: RequestedHousehold | null,
+  key: string | null
+): run is KeptVariationRun {
+  return !!run && run.requested === requested && run.key === key;
+}
+
 /** One section of the report, named for assistive technology. */
 function ReportSection({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -176,25 +194,18 @@ export default function HouseholdReportPage({
   // belongs to one request: the same household asked for again, after its
   // result cleared, shows the result already held, but its run starts
   // afresh when an output opens.
-  const [variationRun, setVariationRun] = useState<{
-    requested: RequestedHousehold;
-    key: string;
-    source: HouseholdVariationSource;
-    startedAt: number;
-  } | null>(null);
+  const [variationRun, setVariationRun] = useState<KeptVariationRun | null>(null);
   const resultHouseholdId = result?.householdId;
   // The calculation a variation run belongs to.
   const variationKey = resultHouseholdId
     ? [resultHouseholdId, year, baselinePolicyId, runReformPolicyId].join('|')
     : null;
-  const belongsHere = (run: NonNullable<typeof variationRun> | null) =>
-    !!run && run.requested === requested && run.key === variationKey;
   const openVariation = useCallback(() => {
     if (!variationKey || !resultHouseholdId || !requested) {
       return;
     }
     setVariationRun((current) =>
-      current?.requested === requested && current.key === variationKey
+      isKeptFor(current, requested, variationKey)
         ? current
         : {
             requested,
@@ -220,7 +231,7 @@ export default function HouseholdReportPage({
     runReformPolicyId,
   ]);
   // Only the shown result's run: another request's is let go.
-  const shownVariation = belongsHere(variationRun) ? variationRun : null;
+  const shownVariation = isKeptFor(variationRun, requested, variationKey) ? variationRun : null;
 
   const policyIds = useMemo(
     () => (runsReform ? [baselinePolicyId, reformPolicyId] : [baselinePolicyId]),

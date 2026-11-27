@@ -274,12 +274,15 @@ describe('HouseholdReportPage', () => {
     }
   );
 
-  test('given the same household calculated again after its result cleared then its variation run waits for an output to open again', async () => {
+  test('given the same household calculated again after its result cleared then its variation run waits for an output to open, then starts afresh', async () => {
     renderReport({ household: FAMILY_HOUSEHOLD });
     const user = await calculate();
     const firstResult = await screen.findByRole('region', { name: 'Household net income' });
     await user.click(within(firstResult).getByRole('tab', { name: 'Varying earnings' }));
     expect(screen.getByLabelText('Variation run')).toBeInTheDocument();
+    const firstStartedAt = within(firstResult)
+      .getByLabelText('Breakdown')
+      .getAttribute('data-variation-started-at');
 
     // Another year clears the result; back in its own year, the household
     // calculates as before, and its result is the one already held.
@@ -295,6 +298,20 @@ describe('HouseholdReportPage', () => {
       'data-variation-started-at',
       ''
     );
+
+    // Opened again a minute later, the run starts afresh, with that time.
+    const realNow = Date.now.bind(Date);
+    const aMinuteLater = vi.spyOn(Date, 'now').mockImplementation(() => realNow() + 60_000);
+    try {
+      await user.click(within(secondResult).getByRole('tab', { name: 'Varying earnings' }));
+    } finally {
+      aMinuteLater.mockRestore();
+    }
+    expect(screen.getByLabelText('Variation run')).toBeInTheDocument();
+    const secondStartedAt = within(secondResult)
+      .getByLabelText('Breakdown')
+      .getAttribute('data-variation-started-at');
+    expect(Number(secondStartedAt)).toBeGreaterThanOrEqual(Number(firstStartedAt) + 60_000);
   });
 
   test("given no reform then it reports the household's net income under the baseline alone", async () => {
