@@ -3,8 +3,6 @@ import { act, render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { V2HouseholdCalculationRequest } from '@/api/v2HouseholdCalculations';
 import HouseholdImpactSection from '@/components/flagship/report/household/HouseholdImpactSection';
-import type { Household } from '@/models/Household';
-import { householdToV2CreateBody } from '@/models/household/v2DocumentCodec';
 import { store } from '@/store';
 import {
   calculationItem,
@@ -17,7 +15,11 @@ import {
   STORED_V2_HOUSEHOLD_ID,
   storedV2Household,
 } from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
-import type { V2HouseholdDocument, V2HouseholdEntityRecord } from '@/types/v2Households';
+import type {
+  V2HouseholdCreateBody,
+  V2HouseholdDocument,
+  V2HouseholdEntityRecord,
+} from '@/types/v2Households';
 
 /** v3 after the switch: V3_API_ROUTES is 'v2'. */
 vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
@@ -29,7 +31,7 @@ const mockStoreHousehold = vi.fn();
 const mockCalculate = vi.fn();
 vi.mock('@/api/v2Households', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/v2Households')>()),
-  storeV2Household: (...args: unknown[]) => mockStoreHousehold(...args),
+  storeV2HouseholdBody: (...args: unknown[]) => mockStoreHousehold(...args),
 }));
 vi.mock('@/api/v2HouseholdCalculations', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/v2HouseholdCalculations')>()),
@@ -111,8 +113,8 @@ function renderSection() {
 describe('HouseholdImpactSection with v3 on the v2 routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockStoreHousehold.mockImplementation(async (household: Household) => {
-      storedDocument = householdToV2CreateBody(household).household_data;
+    mockStoreHousehold.mockImplementation(async (body: V2HouseholdCreateBody) => {
+      storedDocument = body.household_data;
       return storedV2Household('us', storedDocument);
     });
     mockCalculate.mockImplementation(async (request: V2HouseholdCalculationRequest) => {

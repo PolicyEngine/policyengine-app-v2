@@ -1,6 +1,7 @@
 import type { CountryId } from '@/libs/countries';
 import { Household } from '@/models/Household';
 import type {
+  V1HouseholdCreateEnvelope,
   V1HouseholdData,
   V1HouseholdGroupData,
   V1HouseholdPersonData,
@@ -252,10 +253,20 @@ export function householdDataFromV2Calculation(
 
 /** What `POST /v2/households` takes for a household: its content, in its year, without its label. */
 export function householdToV2CreateBody(household: Household): V2HouseholdCreateBody {
-  const countryId = household.countryId;
+  return v2CreateBodyFromV1Payload(household.toV1CreationPayload(), household.year);
+}
+
+/**
+ * What `POST /v2/households` takes for a household as it is sent in its v1
+ * form (which may carry more than the household model, such as a UK
+ * household's claimant and partner roles), in the household's year.
+ */
+export function v2CreateBodyFromV1Payload(
+  payload: V1HouseholdCreateEnvelope,
+  year: number | null
+): V2HouseholdCreateBody {
+  const countryId = payload.country_id;
   collectionsFor(countryId);
-  const payload = household.toV1CreationPayload();
-  const year = household.year;
   if (year === null || !Number.isInteger(year)) {
     throw new V2HouseholdDocumentError('The household has no year to save it in.');
   }

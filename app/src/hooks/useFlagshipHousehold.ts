@@ -136,6 +136,7 @@ function useV2HouseholdRunQuery({
         {
           year,
           household: requested!.household,
+          payload: requested!.payload,
           baselinePolicyId: v2PolicyIdFor(baselinePolicyId, currentLawId),
           reformPolicyId: v2PolicyIdFor(reformPolicyId, currentLawId),
         },

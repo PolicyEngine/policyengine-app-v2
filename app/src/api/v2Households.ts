@@ -1,7 +1,7 @@
 import { createV2UserClient, type V2UserClient } from '@/api/v2UserClient';
 import type { Household } from '@/models/Household';
 import { householdToV2CreateBody } from '@/models/household/v2DocumentCodec';
-import type { V2HouseholdItem } from '@/types/v2Households';
+import type { V2HouseholdCreateBody, V2HouseholdItem } from '@/types/v2Households';
 import type { V2ItemResult } from '@/types/v2User';
 
 /**
@@ -17,11 +17,18 @@ function anyoneClient(): V2UserClient {
 }
 
 /** Stores a household's content (`POST /v2/households`), or finds the identical stored one. */
-export async function storeV2Household(
+export function storeV2Household(
   household: Household,
   client: V2UserClient = anyoneClient()
 ): Promise<V2HouseholdItem> {
-  const body = householdToV2CreateBody(household);
+  return storeV2HouseholdBody(householdToV2CreateBody(household), client);
+}
+
+/** Stores a household's content as `POST /v2/households` takes it, or finds the identical stored one. */
+export async function storeV2HouseholdBody(
+  body: V2HouseholdCreateBody,
+  client: V2UserClient = anyoneClient()
+): Promise<V2HouseholdItem> {
   const result = await client.request<V2ItemResult<V2HouseholdItem>>('POST', 'households', {
     query: { country_id: body.country_id },
     body,

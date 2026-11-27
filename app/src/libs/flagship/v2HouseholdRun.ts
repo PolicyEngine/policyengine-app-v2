@@ -5,7 +5,7 @@ import {
   type V2HouseholdCalculationOutput,
   type V2SucceededHouseholdCalculation,
 } from '@/api/v2HouseholdCalculations';
-import { storeV2Household } from '@/api/v2Households';
+import { storeV2HouseholdBody } from '@/api/v2Households';
 import { isV2ApiError, type V2UserClient } from '@/api/v2UserClient';
 import {
   compareHouseholds,
@@ -14,7 +14,11 @@ import {
   type HouseholdCalculationProvenance,
 } from '@/libs/flagship/householdRun';
 import type { Household } from '@/models/Household';
-import { householdDataFromV2Calculation } from '@/models/household/v2DocumentCodec';
+import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
+import {
+  householdDataFromV2Calculation,
+  v2CreateBodyFromV1Payload,
+} from '@/models/household/v2DocumentCodec';
 import type { SPMProvenance, SPMSelection } from '@/types/spm';
 import type { V2HouseholdItem } from '@/types/v2Households';
 
@@ -22,6 +26,12 @@ export interface V2HouseholdRunArgs {
   /** The report's year: the household's own year, which the calculation runs in. */
   year: string;
   household: Household;
+  /**
+   * The household as it is sent, when that carries more than the
+   * household model (a UK household's claimant and partner roles); the
+   * household's own v1 payload when left out.
+   */
+  payload?: V1HouseholdCreateEnvelope;
   /** A v2 policy (`/v2/policies`); null for current law. */
   baselinePolicyId: string | null;
   reformPolicyId: string | null;
@@ -146,7 +156,7 @@ export interface V2HouseholdRunOptions extends CalculateV2HouseholdOptions {
  * their v1 names, what the reform changes, and how each was calculated.
  */
 export async function runV2FlagshipHousehold(
-  { year, household, baselinePolicyId, reformPolicyId }: V2HouseholdRunArgs,
+  { year, household, payload, baselinePolicyId, reformPolicyId }: V2HouseholdRunArgs,
   { householdClient, onStored, ...options }: V2HouseholdRunOptions = {}
 ): Promise<FlagshipHouseholdRun> {
   if (household.year !== null && String(household.year) !== year) {
@@ -161,7 +171,10 @@ export async function runV2FlagshipHousehold(
   }
   options.signal?.addEventListener('abort', stopWithCaller, { once: true });
   try {
-    const stored = await storeV2Household(household, householdClient);
+    const stored = await storeV2HouseholdBody(
+      v2CreateBodyFromV1Payload(payload ?? household.toV1CreationPayload(), household.year),
+      householdClient
+    );
     onStored?.(stored);
     const calculate = (policyId: string | null) =>
       calculateV2Household(
