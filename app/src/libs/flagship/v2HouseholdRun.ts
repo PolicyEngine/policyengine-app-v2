@@ -25,12 +25,9 @@ import type { V2HouseholdItem } from '@/types/v2Households';
 export interface V2HouseholdRunArgs {
   /** The report's year: the household's own year, which the calculation runs in. */
   year: string;
+  /** The household as it is sent (householdAsSent: a UK household with its claimant and partner roles). */
   household: Household;
-  /**
-   * The household as it is sent, which is what is stored: its v1 payload,
-   * which may carry more than the household model (a UK household's
-   * claimant and partner roles). Its year is the household's.
-   */
+  /** That household's v1 payload, which is what is stored, in the household's year. */
   payload: V1HouseholdCreateEnvelope;
   /** A v2 policy (`/v2/policies`); null for current law. */
   baselinePolicyId: string | null;

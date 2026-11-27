@@ -140,7 +140,7 @@ function useV2HouseholdRunQuery({
       runV2FlagshipHousehold(
         {
           year,
-          household: requested!.household,
+          household: requested!.sent,
           payload: requested!.payload,
           baselinePolicyId: v2PolicyIdFor(baselinePolicyId, currentLawId),
           reformPolicyId: v2PolicyIdFor(reformPolicyId, currentLawId),
