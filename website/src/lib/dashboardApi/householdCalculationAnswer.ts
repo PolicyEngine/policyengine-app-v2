@@ -15,12 +15,24 @@ import {
   type InlineHouseholdCalculationRequest,
 } from "@policyengine/public-api-forwarding";
 
+/** The IDs API v1 gave one of its answers, from its response headers. */
+export interface ApiV1AnswerIds {
+  readonly requestId: string | null;
+  readonly observabilityId: string | null;
+}
+
 export interface HouseholdCalculationAnswerOptions {
   /** The browser's request: the calculation stops when its signal aborts. */
   readonly incomingRequest: Request;
   /** Headers added to every answer, such as CORS headers. */
   readonly responseHeaders?: HeadersInit;
   readonly logger?: Pick<ForwardingLogger, "error">;
+  /**
+   * The IDs of API v1's last answer to the calculation's requests, which a
+   * calculated household's or a failed calculation's answer carries, as
+   * /calculate's did. Neither is sent without it.
+   */
+  readonly lastAnswerIds?: () => ApiV1AnswerIds;
 }
 
 /**
@@ -40,8 +52,8 @@ const INPUT_FAILURE_CODES: ReadonlySet<string | null> = new Set([
  */
 const UNEXPECTED_FAILURE_PREFIX = "Error calculating household under policy: ";
 
-const REQUEST_ID_HEADER = "X-PolicyEngine-Request-Id";
-const OBSERVABILITY_ID_HEADER = "X-PolicyEngine-Observability-Id";
+export const REQUEST_ID_HEADER = "X-PolicyEngine-Request-Id";
+export const OBSERVABILITY_ID_HEADER = "X-PolicyEngine-Observability-Id";
 
 /** Bytes per part of a streamed answer. */
 const STREAMED_PART_BYTES = 64 * 1024;
@@ -82,6 +94,21 @@ function apiV1Answer(
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** The headers given, with API v1's answer IDs that are known. */
+function withAnswerIds(
+  responseHeaders: HeadersInit | undefined,
+  answerIds: ApiV1AnswerIds,
+): Headers {
+  const headers = new Headers(responseHeaders);
+  if (answerIds.requestId !== null) {
+    headers.set(REQUEST_ID_HEADER, answerIds.requestId);
+  }
+  if (answerIds.observabilityId !== null) {
+    headers.set(OBSERVABILITY_ID_HEADER, answerIds.observabilityId);
+  }
+  return headers;
 }
 
 /** /calculate's answer for a calculated household. */
@@ -147,7 +174,9 @@ function failedAnswer(
  * and `errors`, except that a household API v1 refuses as invalid (422)
  * answers 400, as /calculate did. The route answers for API v1 itself, as
  * the forwarder did, when API v1's answer can't be read (a success status),
- * is a redirect, or isn't API v1's JSON, such as a load balancer's error.
+ * is a redirect, or isn't API v1's JSON, such as a load balancer's error;
+ * and when API v1 refuses to read a calculation it accepted, which no
+ * fault of the caller's explains, except for a rate limit.
  */
 function refusedAnswer(
   refusal: HouseholdCalculationRefusedError,
@@ -159,7 +188,11 @@ function refusedAnswer(
     logger.error(
       `API v1's answer for a household calculation could not be read (${requestDescription}): ${refusal.message}`,
     );
-    return errorResponse(502, refusal.message, responseHeaders);
+    return errorResponse(
+      502,
+      "API v1's answer could not be read.",
+      responseHeaders,
+    );
   }
   if (refusal.statusCode < 400) {
     logger.error(
@@ -171,21 +204,29 @@ function refusedAnswer(
       responseHeaders,
     );
   }
+  if (
+    refusal.calculationId !== null &&
+    refusal.statusCode < 500 &&
+    refusal.statusCode !== 429
+  ) {
+    logger.error(
+      `API v1 refused to read household calculation ${refusal.calculationId} (${requestDescription}): ${refusal.message}`,
+    );
+    return errorResponse(
+      502,
+      "API v1 could not read the household calculation it accepted.",
+      responseHeaders,
+    );
+  }
   if (refusal.statusCode >= 500) {
     logger.error(
       `API v1 answered a household calculation with ${requestDescription}: ${refusal.message}`,
     );
   }
 
-  const headers = new Headers(responseHeaders);
+  const headers = withAnswerIds(responseHeaders, refusal);
   if (refusal.retryAfterSeconds !== null) {
     headers.set("Retry-After", String(refusal.retryAfterSeconds));
-  }
-  if (refusal.requestId !== null) {
-    headers.set(REQUEST_ID_HEADER, refusal.requestId);
-  }
-  if (refusal.observabilityId !== null) {
-    headers.set(OBSERVABILITY_ID_HEADER, refusal.observabilityId);
   }
   if (!isJsonObject(refusal.body) || refusal.body.status !== "error") {
     return errorResponse(refusal.statusCode, refusal.message, headers);
@@ -215,6 +256,11 @@ export async function householdCalculationAnswer(
   const { incomingRequest, responseHeaders } = options;
   const logger = options.logger ?? console;
   const signal = incomingRequest.signal;
+  const lastAnswerHeaders = () =>
+    withAnswerIds(
+      responseHeaders,
+      options.lastAnswerIds?.() ?? { requestId: null, observabilityId: null },
+    );
 
   let calculated: CalculatedHousehold;
   try {
@@ -229,7 +275,7 @@ export async function householdCalculationAnswer(
       );
     }
     if (error instanceof HouseholdCalculationFailedError) {
-      return failedAnswer(error, responseHeaders, logger);
+      return failedAnswer(error, lastAnswerHeaders(), logger);
     }
     if (error instanceof HouseholdCalculationRefusedError) {
       return refusedAnswer(error, responseHeaders, logger);
@@ -264,5 +310,5 @@ export async function householdCalculationAnswer(
       responseHeaders,
     );
   }
-  return apiV1Answer(200, calculatedAnswer(calculated), responseHeaders);
+  return apiV1Answer(200, calculatedAnswer(calculated), lastAnswerHeaders());
 }

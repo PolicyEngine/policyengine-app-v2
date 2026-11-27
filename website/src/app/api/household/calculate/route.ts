@@ -14,7 +14,7 @@ import {
 } from "@/lib/dashboardApi/handler";
 import { householdCalculationAnswer } from "@/lib/dashboardApi/householdCalculationAnswer";
 import { householdCalculation } from "@/lib/dashboardApi/operations";
-import { websiteHouseholdCalculator } from "@/lib/publicApi/householdCalculator";
+import { websiteHouseholdCalculation } from "@/lib/publicApi/householdCalculator";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,10 +43,15 @@ export async function POST(request: Request): Promise<Response> {
     if (!operation.ok) {
       return errorResponse(400, operation.message, corsHeaders);
     }
+    const calculation = websiteHouseholdCalculation();
     return householdCalculationAnswer(
-      websiteHouseholdCalculator,
+      calculation.calculator,
       operation.request,
-      { incomingRequest: request, responseHeaders: corsHeaders },
+      {
+        incomingRequest: request,
+        responseHeaders: corsHeaders,
+        lastAnswerIds: calculation.lastAnswerIds,
+      },
     );
   });
 }
