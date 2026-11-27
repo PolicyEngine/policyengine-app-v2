@@ -51,6 +51,7 @@ import {
   trackHouseholdRemoved,
   trackHouseholdVariableAdded,
 } from '@/utils/analytics';
+import { withSupportedBuilderClaimantRoles } from '@/utils/builderClaimantRoles';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getNormalizedVariableMetadata } from '@/utils/variableMetadata';
 import { getInputVariables } from '@/utils/VariableResolver';
@@ -507,8 +508,22 @@ function HouseholdCard({
       ),
     [countryId, year, baselinePolicyId, reformPolicyId]
   );
+  // The household as it is sent: a UK builder household with its claimant
+  // and partner roles, when the model takes them, as everywhere else the
+  // app saves a household. The run hook builds each request with it and
+  // compares what is on screen in the same form, so the roles never make a
+  // result read as out of date.
+  const creationPayloadOf = (described: Household) =>
+    withSupportedBuilderClaimantRoles(described, metadata, year).toV1CreationPayload();
+
   const { requested, run, running, failed, result, request, retry, shows } =
-    useRequestedHouseholdRun({ year, baselinePolicyId, reformPolicyId, onCreated: startVariation });
+    useRequestedHouseholdRun({
+      year,
+      baselinePolicyId,
+      reformPolicyId,
+      onCreated: startVariation,
+      payloadOf: creationPayloadOf,
+    });
   // Whether the household can run, as the household builder checks it.
   const validation = useMemo(
     () => HouseholdValidation.isReadyForSimulation(household, countryId, year, metadata),
