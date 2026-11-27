@@ -83,21 +83,21 @@ describe('v2EarningsVariationAxes', () => {
     ]);
   });
 
-  test('given no head then the axis varies "you", up to twice their earnings', () => {
-    // Given
+  test('given no head then the axis varies "you", wherever they are stored, up to twice their earnings', () => {
+    // Given: "you" stored second, after the dependent
+    const [you, dependent] = US_SINGLE_PARENT_V2_BODY.household_data.people;
     const document = {
       ...US_SINGLE_PARENT_V2_BODY.household_data,
-      people: US_SINGLE_PARENT_V2_BODY.household_data.people.map((person) =>
-        person.source_name === 'you'
-          ? { ...person, values: { ...person.values, employment_income: { 2026: 150_000 } } }
-          : person
-      ),
+      people: [
+        dependent,
+        { ...you, values: { ...you.values, employment_income: { 2026: 150_000 } } },
+      ],
     };
 
     // When
     const [[axis]] = v2EarningsVariationAxes(document, V2_CODEC_YEAR, null);
 
     // Then
-    expect(axis).toMatchObject({ max: 300_000, index: 0 });
+    expect(axis).toMatchObject({ max: 300_000, index: 1 });
   });
 });
