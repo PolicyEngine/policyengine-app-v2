@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconPencil, IconPlus, IconTable, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
+import HouseholdBuilderPanel from '@/components/flagship/household/HouseholdBuilderPanel';
 import {
   HouseholdVariationKeeper,
   toAppCalculationData,
@@ -10,49 +11,30 @@ import {
 import HouseholdComparison from '@/components/flagship/report/household/HouseholdComparison';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
 import { money } from '@/components/flagship/report/household/householdMoney';
+import { commonHouseholdInputs } from '@/components/flagship/report/household/householdPickerInputs';
 import {
-  commonHouseholdInputs,
-  householdInputDescriptionOf,
-  householdInputNameOf,
-  householdTopicIcon,
-} from '@/components/flagship/report/household/householdPickerInputs';
+  HouseholdRunFailure,
+  HouseholdRunProgress,
+} from '@/components/flagship/report/household/householdRunParts';
 import HouseholdSwitcher, {
   COMPARE_ALL,
   type HouseholdSelection,
   type HouseholdStatus,
 } from '@/components/flagship/report/household/HouseholdSwitcher';
-import RunProgress from '@/components/flagship/report/RunProgress';
-import { ErrorState } from '@/components/flagship/states';
-import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Button, SegmentedControl, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import {
-  useFlagshipHouseholdPayload,
-  useSaveCalculatedHousehold,
-} from '@/hooks/useFlagshipHousehold';
+import { useRequestedHouseholdRun, useSaveCalculatedHousehold } from '@/hooks/useFlagshipHousehold';
 import type { CountryId } from '@/libs/countries';
-import {
-  describeHousehold,
-  householdEarnings,
-  householdState,
-} from '@/libs/flagship/householdDescription';
+import { describeHousehold, householdEarnings } from '@/libs/flagship/householdDescription';
 import { householdProgrammeChanges } from '@/libs/flagship/householdProgrammeChanges';
+import { newV3Household } from '@/libs/flagship/householdReport';
 import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
-import {
-  describesAHousehold,
-  HOUSEHOLD_INCOME_SUBGROUPS,
-  HOUSEHOLD_VARIABLE_GROUPS,
-  householdVariableGroupOf,
-  householdVariableSubgroupOf,
-  listsForState,
-  twinsABasicInput,
-} from '@/libs/flagship/householdVariableGroups';
+import { describesAHousehold } from '@/libs/flagship/householdVariableGroups';
 import {
   hasParameterDependencies,
   loadParameterDependencies,
 } from '@/libs/flagship/parameterDependencies';
-import { getBasicInputFields } from '@/libs/metadataUtils';
-import { Household } from '@/models/Household';
+import type { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
 import type {
@@ -69,72 +51,12 @@ import {
   trackHouseholdRemoved,
   trackHouseholdVariableAdded,
 } from '@/utils/analytics';
-import { withSupportedBuilderClaimantRoles } from '@/utils/builderClaimantRoles';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getNormalizedVariableMetadata } from '@/utils/variableMetadata';
-import { getInputVariables, type VariableInfo } from '@/utils/VariableResolver';
+import { getInputVariables } from '@/utils/VariableResolver';
 
 /** The countries whose results, inputs and currency the section knows. */
 const HOUSEHOLD_COUNTRIES = new Set(['us', 'uk']);
-
-/** Both policies run at once; a household new to the API takes about three minutes. */
-const EXPECTED_MS = 3 * 60 * 1000;
-
-/**
- * Where a household in each UK nation lives unless the reader says
- * otherwise: the nation's region, with its capital's local authority and
- * Broad Rental Market Area, so the three name one place. England has no
- * one region; its households keep the model's defaults.
- */
-const UK_NATION_PLACES: Record<string, Record<string, string>> = {
-  scotland: { region: 'SCOTLAND', local_authority: 'CITY_OF_EDINBURGH', brma: 'LOTHIAN' },
-  wales: { region: 'WALES', local_authority: 'CARDIFF', brma: 'CARDIFF' },
-  northern_ireland: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
-};
-
-/** A UK report's nation's place, for "country/scotland"; none for any other region. */
-export function ukNationPlace(region: string | undefined): Record<string, string> | null {
-  const match = /^country\/(.+)$/i.exec(region ?? '');
-  return (match && UK_NATION_PLACES[match[1].toLowerCase()]) || null;
-}
-
-/**
- * A new household: the household builder's own start, one adult and
- * nothing else set. A US household starts on national poverty
- * thresholds, which the builder's SPM geography choice can change to a
- * county's; only the US model has them. A UK household in a report on
- * Scotland, Wales or Northern Ireland starts there.
- */
-function newHousehold(countryId: CountryId, year: string, region?: string): Household {
-  const household = Household.starter(countryId, year);
-  if (countryId === 'us') {
-    return household.withSPM({ geography_kind: 'national' });
-  }
-  const place = countryId === 'uk' ? ukNationPlace(region) : null;
-  const group = household.getPreferredGroupName('households');
-  if (!place || !group) {
-    return household;
-  }
-  return Object.entries(place).reduce(
-    (current, [name, value]) =>
-      current.setEntityVariableAtYear('households', group, name, year, value),
-    household
-  );
-}
-
-/**
- * A person's name as a country's builder shows it: a UK household's
- * dependants are its children ("your first child"), as the UK model's
- * benefits count them; the US keeps "dependent", which a tax unit's
- * dependants are called. Only the name shown changes, never the key.
- */
-export function householdPersonNameOf(
-  countryId: string
-): ((personKey: string) => string) | undefined {
-  return countryId === 'uk'
-    ? (personKey) => personKey.replace(/\bdependent\b/, 'child')
-    : undefined;
-}
 
 /** What the builder sets for each person it adds: not an input the reader chose. */
 const ADDED_PERSON_DEFAULTS = new Set(['age', 'is_tax_unit_dependent']);
@@ -153,7 +75,7 @@ export function nonDefaultInputCount(
 ): number {
   const keyOf = (scope: string, name: string, value: unknown) =>
     `${scope}|${name}|${JSON.stringify(value)}`;
-  const starter = newHousehold(countryId, year, region);
+  const starter = newV3Household(countryId, year, region);
   const starterPeople = new Set(starter.personNames);
   const starterKeys = new Set([
     ...starter.personNames.flatMap((person) =>
@@ -559,12 +481,7 @@ function HouseholdCard({
   // The household as the builder edits it: every input the model takes,
   // per person and per household, as in the household builder.
   const metadata = useSelector((state: RootState) => state.metadata);
-  const basicInputFields = useSelector(getBasicInputFields);
-  const [household, setHousehold] = useState(() => newHousehold(countryId, year, region));
-  const [requested, setRequested] = useState<{
-    payload: V1HouseholdCreateEnvelope;
-    summary: string;
-  } | null>(null);
+  const [household, setHousehold] = useState(() => newV3Household(countryId, year, region));
   // The household's variation run (Varying earnings, Marginal tax rates):
   // started in the background as soon as the API stores the household,
   // beside its own run, and held here, as the card stays mounted, so it
@@ -590,57 +507,33 @@ function HouseholdCard({
       ),
     [countryId, year, baselinePolicyId, reformPolicyId]
   );
-  const run = useFlagshipHouseholdPayload({
-    year,
-    baselinePolicyId,
-    reformPolicyId,
-    payload: requested?.payload ?? null,
-    onCreated: startVariation,
-  });
-  const composition = useMemo(() => household.deriveBuilderComposition(year), [household, year]);
-  const basicNonPersonFields = useMemo(
-    () =>
-      Object.entries(basicInputFields)
-        .filter(([key]) => key !== 'person')
-        .flatMap(([, fields]) => fields),
-    [basicInputFields]
-  );
-  // The variable search lists only the household's own state's programs,
-  // only inputs that describe a household (no survey-reported totals), and
-  // not the twin of a field the builder already shows.
-  const stateCode = householdState(household, year, countryId);
-  const basicPersonFields = basicInputFields.person;
-  const variableFilter = useCallback(
-    (variable: VariableInfo) =>
-      listsForState(variable, stateCode) &&
-      describesAHousehold(variable, countryId) &&
-      !twinsABasicInput(variable, basicPersonFields ?? []),
-    [stateCode, countryId, basicPersonFields]
-  );
-  // The picker's groups, featured inputs and names, for the country's model.
-  const picker = useMemo(
-    () => ({
-      groupOf: householdVariableGroupOf(countryId),
-      subgroupOf: householdVariableSubgroupOf(countryId),
-      common: commonHouseholdInputs(countryId),
-      nameOf: householdInputNameOf(countryId),
-      describe: householdInputDescriptionOf(countryId),
-      personNameOf: householdPersonNameOf(countryId),
-    }),
-    [countryId]
-  );
+  // The run hook sends the household as every v3 household is sent, with
+  // its UK claimant and partner roles (householdAsSent), and compares the
+  // one on screen in that form, so the roles never make a result read as
+  // out of date.
+  const { requested, run, running, failed, result, request, retry, shows } =
+    useRequestedHouseholdRun({ year, baselinePolicyId, reformPolicyId, onCreated: startVariation });
   // Whether the household can run, as the household builder checks it.
   const validation = useMemo(
     () => HouseholdValidation.isReadyForSimulation(household, countryId, year, metadata),
     [household, countryId, year, metadata]
   );
-  // Who the household is, with its earnings, so households that differ
+  // Who a household is, with its earnings, so households that differ
   // only in income read apart.
-  const summary = useMemo(() => {
-    const earnings = householdEarnings(household, year);
-    const who = describeHousehold(household, year, countryId, metadata?.variables);
-    return earnings > 0 ? `${who} · ${money(earnings, countryId)} earnings` : who;
-  }, [household, year, countryId, metadata?.variables]);
+  const summarize = useCallback(
+    (described: Household) => {
+      const earnings = householdEarnings(described, year);
+      const who = describeHousehold(described, year, countryId, metadata?.variables);
+      return earnings > 0 ? `${who} · ${money(earnings, countryId)} earnings` : who;
+    },
+    [year, countryId, metadata?.variables]
+  );
+  const summary = useMemo(() => summarize(household), [summarize, household]);
+  // The household calculated, as its result names it.
+  const requestedSummary = useMemo(
+    () => (requested ? summarize(requested.household) : undefined),
+    [summarize, requested]
+  );
   // A result line's variable as the country model describes it, for its tip.
   const describeVariable = useCallback(
     (name: string) => getNormalizedVariableMetadata(metadata?.variables?.[name]).documentation,
@@ -669,31 +562,15 @@ function HouseholdCard({
     };
   };
 
-  // The household as it is sent: a UK builder household with its claimant
-  // and partner roles, when the model takes them, as everywhere else the
-  // app saves a household. What is on screen is compared with what was sent
-  // in the same form, so the roles never make a result read as out of date.
-  const creationPayloadOf = (described: Household) =>
-    withSupportedBuilderClaimantRoles(described, metadata, year).toV1CreationPayload();
-
   // Inputs until the household first runs; its results from then on.
   const [view, setView] = useState<'inputs' | 'results'>('inputs');
 
   const calculate = () => {
     startRun();
-    const payload = creationPayloadOf(household);
-    // The same household again, after a failure, asks once more.
-    if (requested && JSON.stringify(requested.payload) === JSON.stringify(payload)) {
-      void run.refetch();
-    } else {
-      setRequested({ payload, summary });
-    }
+    request(household);
     setView('results');
   };
 
-  const running = !!requested && run.isFetching;
-  const failed = !!requested && !running && run.isError;
-  const result = requested && !running ? run.data : undefined;
   // The run the v2 breakdowns read.
   const breakdowns = useMemo<HouseholdBreakdownSource | undefined>(
     () =>
@@ -745,7 +622,7 @@ function HouseholdCard({
   useSaveCalculatedHousehold({
     countryId,
     household:
-      result && requested ? { id: result.householdId, name: requested.summary } : undefined,
+      result && requestedSummary ? { id: result.householdId, name: requestedSummary } : undefined,
   });
 
   // A run's end, sent once: a failure only after the run was seen running
@@ -778,21 +655,13 @@ function HouseholdCard({
     });
   }, [running, runData, runError, run.isError, countryId, householdCount]);
 
-  const retry = () => {
+  const tryAgain = () => {
     trackHouseholdCalculationRetried({ countryId });
-    // The household as it is now: an input fixed after the failure counts.
-    if (validation.isValid) {
-      calculate();
-    } else {
-      startRun();
-      void run.refetch();
-    }
+    startRun();
+    retry(household, validation.isValid);
   };
   // The household on screen, or on its way, is the one in the builder.
-  const sameAsShown =
-    !!requested &&
-    !failed &&
-    JSON.stringify(requested.payload) === JSON.stringify(creationPayloadOf(household));
+  const sameAsShown = shows(household);
   // A result for inputs the reader has since changed.
   const stale = !!result && !sameAsShown;
 
@@ -911,38 +780,13 @@ function HouseholdCard({
         <div style={{ padding: spacing.lg, minWidth: 0 }}>
           {view === 'inputs' ? (
             <Stack style={{ gap: spacing.lg, minWidth: 0 }}>
-              <HouseholdBuilderForm
+              <HouseholdBuilderPanel
                 household={household}
-                metadata={metadata}
+                countryId={countryId}
                 year={year}
-                maritalStatus={composition.maritalStatus}
-                numChildren={composition.numChildren}
-                basicPersonFields={basicInputFields.person || []}
-                basicNonPersonFields={basicNonPersonFields}
                 onChange={setHousehold}
-                onMaritalStatusChange={(status) =>
-                  setHousehold(household.withBuilderMaritalStatus(year, status))
-                }
-                onNumChildrenChange={(count) =>
-                  setHousehold(household.withBuilderChildCount(year, count))
-                }
                 disabled={running}
-                layout="columns"
                 suggestedVariables={suggestedVariables}
-                suggestedLabel="Related to this reform"
-                searchRanking="relevance"
-                variableGroupOf={picker.groupOf}
-                variableGroupOrder={HOUSEHOLD_VARIABLE_GROUPS}
-                variableFilter={variableFilter}
-                variableSubgroupOf={picker.subgroupOf}
-                variableSubgroupOrder={HOUSEHOLD_INCOME_SUBGROUPS}
-                searchByEntity
-                variablePickerCommon={picker.common}
-                variableGroupIcon={householdTopicIcon}
-                variableNameOf={picker.nameOf}
-                variableDescribe={picker.describe}
-                personDisplayNameOf={picker.personNameOf}
-                labelInputs
                 onVariablePickerOpen={(entity) => trackHouseholdPickerOpened({ countryId, entity })}
                 onVariableAdd={({ variable, source, entity }) =>
                   trackHouseholdVariableAdded({ countryId, variable, source, entity })
@@ -978,27 +822,9 @@ function HouseholdCard({
                 </div>
               )}
 
-              {running && (
-                <RunProgress
-                  title="Calculating this household"
-                  expectedMs={EXPECTED_MS}
-                  startedAt={runStartedAt}
-                />
-              )}
+              {running && <HouseholdRunProgress startedAt={runStartedAt} />}
 
-              {failed && (
-                <ErrorState
-                  compact
-                  title="This household could not be calculated"
-                  description={
-                    // An API message can carry a long unbroken path.
-                    run.error?.message && (
-                      <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
-                    )
-                  }
-                  onRetry={retry}
-                />
-              )}
+              {failed && <HouseholdRunFailure error={run.error} onRetry={tryAgain} />}
 
               {stale && (
                 <div
@@ -1023,7 +849,7 @@ function HouseholdCard({
                 </div>
               )}
 
-              {result && requested && (
+              {result && requestedSummary && (
                 <HouseholdImpactResult
                   impact={result}
                   countryId={countryId}
@@ -1033,7 +859,7 @@ function HouseholdCard({
                     // One calculation served both policies: its methodology shows once.
                     reform: baselinePolicyId === reformPolicyId ? null : result.provenance.reform,
                   }}
-                  summary={`${requested.summary} · ${year}`}
+                  summary={`${requestedSummary} · ${year}`}
                   breakdowns={breakdowns}
                   programmes={programmes}
                   variationStartedAt={variationStartedAt}

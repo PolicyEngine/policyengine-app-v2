@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ApiFlagshipHouseholdStore } from '@/api/flagshipHouseholdStore';
 import { fetchPolicyById } from '@/api/policy';
@@ -11,8 +12,11 @@ import type { CountryId } from '@/libs/countries';
 import { runFlagshipHouseholdPayload } from '@/libs/flagship/householdRun';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { policyKeys } from '@/libs/queryKeys';
+import type { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
+import type { RootState } from '@/store';
 import type { Policy } from '@/types/ingredients/Policy';
+import { householdAsSent } from '@/utils/householdAsSent';
 
 /**
  * A household built in full (the household builder's model), run for a
@@ -60,6 +64,98 @@ export function useFlagshipHouseholdPayload({
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+}
+
+/** The household a run was asked for, and what was sent for it. */
+export interface RequestedHousehold {
+  /** The household as the reader described it. */
+  household: Household;
+  /** The household as it was sent (householdAsSent): what its result is for. */
+  sent: Household;
+  /** API v1's payload for `sent`. */
+  payload: V1HouseholdCreateEnvelope;
+}
+
+const samePayload = (first: V1HouseholdCreateEnvelope, second: V1HouseholdCreateEnvelope) =>
+  JSON.stringify(first) === JSON.stringify(second);
+
+/**
+ * A v3 household result's run, asked for when the reader presses
+ * Calculate, for the report section's households and the standalone
+ * household report alike. The household asked for is fixed when asked,
+ * so the result keeps describing it while the reader edits the builder.
+ * Every household is sent as householdAsSent prepares it, and the one on
+ * screen is compared in that form.
+ */
+export function useRequestedHouseholdRun({
+  year,
+  baselinePolicyId,
+  reformPolicyId,
+  onCreated,
+}: {
+  year: string;
+  baselinePolicyId: string;
+  reformPolicyId: string;
+  /** Called with the household's ID once the API has stored it, while it is calculated. */
+  onCreated?: (householdId: string, payload: V1HouseholdCreateEnvelope) => void;
+}) {
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const sentFor = (household: Household) => householdAsSent(household, metadata, year);
+  const [requested, setRequested] = useState<RequestedHousehold | null>(null);
+  const run = useFlagshipHouseholdPayload({
+    year,
+    baselinePolicyId,
+    reformPolicyId,
+    payload: requested?.payload ?? null,
+    onCreated,
+  });
+  const running = !!requested && run.isFetching;
+  const failed = !!requested && !running && run.isError;
+
+  /**
+   * Asks for a household's run. The same household again is the same
+   * query, which keeps its error until asked again, so it asks once more.
+   */
+  const request = (household: Household) => {
+    const sent = sentFor(household);
+    const payload = sent.toV1CreationPayload();
+    if (requested && samePayload(requested.payload, payload)) {
+      void run.refetch();
+    } else {
+      setRequested({ household, sent, payload });
+    }
+  };
+
+  return {
+    /** The household asked for; null until Calculate. */
+    requested,
+    /** The run's query, for its data and error. */
+    run,
+    running,
+    failed,
+    /** The run's result, once it has one and is not running again. */
+    result: requested && !running ? run.data : undefined,
+    request,
+    /**
+     * After a failure: the household as it is now when it can run, so an
+     * input fixed after the failure counts; otherwise the household that
+     * failed, once more, never one that cannot run.
+     */
+    retry: (household: Household, canRun: boolean) => {
+      if (canRun) {
+        request(household);
+      } else {
+        void run.refetch();
+      }
+    },
+    /** Forgets the request and its result: the next result waits for Calculate. */
+    clear: () => setRequested(null),
+    /** Whether the household on screen, or on its way, is this one. */
+    shows: (household: Household) =>
+      !!requested &&
+      !failed &&
+      samePayload(requested.payload, sentFor(household).toV1CreationPayload()),
+  };
 }
 
 interface HouseholdPoliciesArgs {
