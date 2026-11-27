@@ -57,23 +57,96 @@ export interface ServerRequestOptions {
   };
   /** How long to wait for the whole request. */
   readonly timeoutMilliseconds?: number;
+  /**
+   * The caller's signal. When it aborts, the request stops and
+   * fetchFromServer rejects with the signal's reason.
+   */
+  readonly signal?: AbortSignal;
 }
+
+/**
+ * Why API v1 cannot be called:
+ * - "unknown_route": the path is not one a route may name;
+ * - "not_configured": the deployment has no API v1 URL, or a partial
+ *   credential;
+ * - "credential_unavailable": the server credential could not be obtained;
+ * - "unreachable": fetch rejected, so API v1 could not be reached;
+ * - "timed_out": API v1 did not answer in time;
+ * - "answer_lost": API v1 answered, but the answer was lost while it arrived.
+ * The first three are found before anything is sent.
+ */
+export type PublicApiUnavailableReason =
+  | "unknown_route"
+  | "not_configured"
+  | "credential_unavailable"
+  | "unreachable"
+  | "timed_out"
+  | "answer_lost";
+
+const REASONS_AFTER_SENDING: ReadonlySet<PublicApiUnavailableReason> = new Set([
+  "unreachable",
+  "timed_out",
+  "answer_lost",
+]);
 
 /**
  * The Public API cannot be called: it is not configured, the server
  * credential cannot be obtained, or the path is not one a route may name.
- * The message is safe to show; details go to the server's log.
+ * Or, from fetchFromServer, API v1 could not be reached or did not answer in
+ * time. The message is safe to show; details go to the server's log.
  */
 export class PublicApiUnavailableError extends Error {
   override name = "PublicApiUnavailableError";
+  /**
+   * False when the request was never sent (an unknown route, no
+   * configuration, or no credential), so sending it again cannot repeat
+   * it. True otherwise: API v1 may have received the request and acted on
+   * it. Fetch doesn't say whether anything was sent, so this is true even
+   * for a connection refused before sending.
+   */
+  readonly requestMayHaveArrived: boolean;
 
   constructor(
     message: string,
     /** The status a route would answer with for this failure. */
     readonly statusCode: number,
+    readonly reason: PublicApiUnavailableReason,
   ) {
     super(message);
+    this.requestMayHaveArrived = REASONS_AFTER_SENDING.has(reason);
   }
+}
+
+/**
+ * Resolves or rejects as `promise` does, but rejects with the signal's
+ * reason as soon as the signal aborts. `promise` keeps running: a token
+ * request it waits on may be serving other requests too.
+ */
+function untilAborted<Value>(
+  promise: Promise<Value>,
+  signal: AbortSignal | undefined,
+): Promise<Value> {
+  if (signal === undefined) {
+    return promise;
+  }
+  return new Promise<Value>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(signal.reason);
+      return;
+    }
+    const onAbort = () => reject(signal.reason);
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(error);
+      },
+    );
+  });
 }
 
 export interface PublicApiForwarder {
@@ -307,7 +380,11 @@ export function createPublicApiForwarder(
     if (!isForwardablePath(publicApiRequest.path)) {
       return {
         ok: false,
-        error: new PublicApiUnavailableError("Unknown route.", 404),
+        error: new PublicApiUnavailableError(
+          "Unknown route.",
+          404,
+          "unknown_route",
+        ),
       };
     }
 
@@ -321,6 +398,7 @@ export function createPublicApiForwarder(
         error: new PublicApiUnavailableError(
           "The Public API is not configured on this deployment.",
           503,
+          "not_configured",
         ),
       };
     }
@@ -340,6 +418,7 @@ export function createPublicApiForwarder(
           error: new PublicApiUnavailableError(
             "Could not obtain a credential for the Public API.",
             502,
+            "credential_unavailable",
           ),
         };
       }
@@ -466,7 +545,15 @@ export function createPublicApiForwarder(
     publicApiRequest: PublicApiRequest,
     serverOptions: ServerRequestOptions = {},
   ): Promise<Response> {
-    const connection = await connect(publicApiRequest);
+    const callerSignal = serverOptions.signal;
+    callerSignal?.throwIfAborted();
+    // Getting the token can take a while; when the caller leaves meanwhile,
+    // the abort is the answer at once, not whatever the token request
+    // ends with.
+    const connection = await untilAborted(
+      connect(publicApiRequest),
+      callerSignal,
+    );
     if (!connection.ok) {
       throw connection.error;
     }
@@ -483,14 +570,18 @@ export function createPublicApiForwarder(
       headers.set("Authorization", `Bearer ${serverToken}`);
     }
 
+    const timeoutSignal = AbortSignal.timeout(
+      serverOptions.timeoutMilliseconds ??
+        DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS,
+    );
     const init: RequestInit & { next?: ServerRequestOptions["next"] } = {
       method: publicApiRequest.method,
       headers,
       body: publicApiRequest.body,
-      signal: AbortSignal.timeout(
-        serverOptions.timeoutMilliseconds ??
-          DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS,
-      ),
+      signal:
+        callerSignal === undefined
+          ? timeoutSignal
+          : AbortSignal.any([timeoutSignal, callerSignal]),
       // Never followed: a redirect would carry the server credential.
       redirect: "manual",
     };
@@ -501,6 +592,9 @@ export function createPublicApiForwarder(
     try {
       upstream = await fetchImplementation(upstreamUrl, init);
     } catch (error) {
+      if (callerSignal?.aborted) {
+        throw callerSignal.reason;
+      }
       const timedOut =
         error instanceof DOMException && error.name === "TimeoutError";
       logger.error(
@@ -509,14 +603,17 @@ export function createPublicApiForwarder(
           : `Could not reach the Public API for ${publicApiRequest.method} ${publicApiRequest.path}:`,
         error instanceof Error ? error.message : error,
       );
+      // The request was sent, so API v1 may have received it.
       throw timedOut
         ? new PublicApiUnavailableError(
             "The Public API did not answer in time.",
             504,
+            "timed_out",
           )
         : new PublicApiUnavailableError(
             "The Public API could not be reached.",
             502,
+            "unreachable",
           );
     }
     warnIfCredentialRefused(publicApiRequest, serverToken, upstream);
