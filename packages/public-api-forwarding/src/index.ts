@@ -31,6 +31,23 @@ export {
   type PublicApiRequest,
   type ServerRequestOptions,
 } from "./forward";
+export {
+  HOUSEHOLD_CALCULATION_OUTAGE_LIMIT_MILLISECONDS,
+  HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS,
+  HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS,
+  HouseholdCalculationFailedError,
+  HouseholdCalculationRefusedError,
+  HouseholdCalculationTimeoutError,
+  createHouseholdCalculator,
+  type CalculatedHousehold,
+  type HouseholdCalculationCountry,
+  type HouseholdCalculationOptions,
+  type HouseholdCalculationRefusal,
+  type HouseholdCalculationStatus,
+  type HouseholdCalculator,
+  type HouseholdCalculatorDependencies,
+  type InlineHouseholdCalculationRequest,
+} from "./householdCalculation";
 export { isJsonMediaType } from "./mediaType";
 export { ROUTE_ERROR_HEADER, errorResponse } from "./responses";
 export {

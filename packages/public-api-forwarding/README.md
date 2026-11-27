@@ -18,19 +18,20 @@ The calculator's pages reach the Public API only through its route (`BASE_URL` i
   - without one, it stays in `Authorization`, as on a direct browser call.
 
   Cookies, `Origin`, `Referer` and any `PolicyEngine-User-Authorization` the browser sends are dropped.
+
 - **Streams the answer back** with an allow list of response headers (`Content-Type`, `ETag`, `Last-Modified`, `Retry-After`, `WWW-Authenticate` and the Public API's request IDs). `Content-Encoding` and `Content-Length` are dropped, because `fetch` has already decompressed the body. Streaming matters because Vercel caps a buffered function answer at 4.5 MB.
 - **Caches nothing it should not**: the route's `cacheControl` applies only to 2xx and 304 answers; every other answer is `no-store`, and so is every answer when the route gives none.
 - **Maps failures to JSON** in the Public API's own error shape, `{"status": "error", "message": ..., "result": null}`, marked with `X-PolicyEngine-Route-Error: true` (`ROUTE_ERROR_HEADER`) so a same-origin caller, such as the calculator's pages, can tell them from the Public API's own errors, such as its 502 for a failed calculation. A cross-origin caller sees the header only if the route's CORS policy exposes it, and the website's dashboard API doesn't:
 
-  | Failure | Status |
-  | --- | --- |
-  | A path outside the letters, digits and `-_.~` segments a route may name | 404 |
-  | `POLICYENGINE_API_URL` missing outside production, or a partial credential | 503 |
-  | Auth0 refuses or does not answer the token request | 502 |
-  | The Public API cannot be reached | 502 |
-  | The Public API answers with a redirect (never followed: it would carry the credential) | 502 |
-  | No response headers within the route's timeout | 504 |
-  | A non-JSON error from in front of the Public API, such as the load balancer's 429 | same status, JSON body |
+  | Failure                                                                                | Status                 |
+  | -------------------------------------------------------------------------------------- | ---------------------- |
+  | A path outside the letters, digits and `-_.~` segments a route may name                | 404                    |
+  | `POLICYENGINE_API_URL` missing outside production, or a partial credential             | 503                    |
+  | Auth0 refuses or does not answer the token request                                     | 502                    |
+  | The Public API cannot be reached                                                       | 502                    |
+  | The Public API answers with a redirect (never followed: it would carry the credential) | 502                    |
+  | No response headers within the route's timeout                                         | 504                    |
+  | A non-JSON error from in front of the Public API, such as the load balancer's 429      | same status, JSON body |
 
   JSON errors from the Public API itself pass through unchanged.
 
@@ -44,15 +45,62 @@ The Auth0 token request never follows a redirect, which would re-send the client
 
 `isJsonMediaType()` is the JSON content-type check the package and its routes share: `application/json` or any `application/...+json` type.
 
+`fetchFromServer()` also takes a `signal`. When it aborts, the request stops and `fetchFromServer()` rejects with the signal's reason. Its `PublicApiUnavailableError` says in `requestMayHaveArrived` whether API v1 may have received the request: `false` when it was never sent (an unknown path, no configuration, or no credential), `true` when the connection failed or timed out after sending.
+
+## Household calculations
+
+`createHouseholdCalculator({ forwarder })` returns `calculateHousehold(request, options)`, which calculates a household on API v1 without storing it. It is for server code that used to send API v1's synchronous `POST /{country}/calculate`, and takes the same household and policy:
+
+```ts
+import { createHouseholdCalculator } from "@policyengine/public-api-forwarding";
+
+const calculator = createHouseholdCalculator({ forwarder: websitePublicApi });
+const calculated = await calculator.calculateHousehold(
+  {
+    country: "us",
+    household: situation, // /calculate's situation, axes included
+    policy: {
+      "gov.irs.credits.ctc.amount.base[0].amount": {
+        "2026-01-01.2100-12-31": 3000,
+      },
+    },
+  },
+  { signal: request.signal },
+);
+calculated.household; // what /calculate answered as `result`
+```
+
+What it does, through `fetchFromServer()`:
+
+1. Submits `{country_id, household, policy?, add_missing_variables?, spm?}` to `POST /v2/household-calculations`. API v1 keeps the calculation as a household job only: no stored household, policy or user association.
+2. Reads `GET /v2/household-calculations/{calculation_id}` every 2 seconds until the calculation succeeds or fails.
+3. Gives up 10 minutes after the call starts (`timeLimitMilliseconds`). No wait runs past that deadline; the last read happens at it.
+
+It resolves with the calculated household, `warnings`, `spmConfig`, `spmProvenance`, the calculation ID and the versions it ran with. It throws:
+
+- `HouseholdCalculationFailedError` when the calculation fails, with the household function's `code` (such as `invalid_inputs`), `inputErrors` and `spmError`. A null `code` means the function raised or was cancelled, and submitting again may succeed.
+- `HouseholdCalculationTimeoutError` when the time limit passes, with the calculation ID and the last status read.
+- `HouseholdCalculationRefusedError` when API v1 refuses a request or its answer cannot be read, with the HTTP status, API v1's message and `code` (such as `missing_parameters`), the parsed body, `Retry-After` and the observability and request IDs.
+- `PublicApiUnavailableError` when API v1 cannot be called.
+- The signal's reason when the signal aborts.
+
+Brief outages are retried until 90 seconds pass without a good answer:
+
+- **Reads** are retried on 429, 502, 503 and 504, and when API v1 cannot be reached, does not answer in time, or the credential cannot be obtained. A 429 or 503 with `Retry-After` waits that many seconds, or 2 seconds if that is longer; anything else waits 2 seconds.
+- **The submission** is retried only when no job can exist: on API v1's 503, which it answers when no job of the submission will run, and when the credential cannot be obtained, so the request was never sent. It is not retried on a 502, or when the connection fails or times out after sending, because API v1 may have created the job and submitting again would create a second one.
+- Nothing else is retried, including 400, 401, 403, 404, 409, 413, 422 and 500.
+
+How `calculated` differs from `/calculate`'s answer: there is no `{status, message, result}` envelope; `warnings` and `spm_provenance` are fields of the result, as `warnings` and `spmProvenance`; and inputs the model does not recognise come back as a failed calculation (`code: "invalid_inputs"`, `inputErrors`), thrown as `HouseholdCalculationFailedError`, not as a 400 with `errors`.
+
 ## Configuration
 
-| Variable | Meaning |
-| --- | --- |
-| `POLICYENGINE_API_URL` | The Public API's base URL, https (or http on localhost). Required outside production. |
-| `POLICYENGINE_API_AUTH0_DOMAIN` | Host of the Auth0 token endpoint. Tokens carry this host as their issuer, so it must be the issuer the Public API checks. |
-| `POLICYENGINE_API_AUTH0_AUDIENCE` | The Auth0 API identifier the token is for. |
-| `POLICYENGINE_API_AUTH0_CLIENT_ID` | The caller's own Auth0 machine-to-machine client. |
-| `POLICYENGINE_API_AUTH0_CLIENT_SECRET` | That client's secret. Read on the server only; never put it in a `NEXT_PUBLIC_*` or `VITE_*` variable. |
+| Variable                               | Meaning                                                                                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `POLICYENGINE_API_URL`                 | The Public API's base URL, https (or http on localhost). Required outside production.                                     |
+| `POLICYENGINE_API_AUTH0_DOMAIN`        | Host of the Auth0 token endpoint. Tokens carry this host as their issuer, so it must be the issuer the Public API checks. |
+| `POLICYENGINE_API_AUTH0_AUDIENCE`      | The Auth0 API identifier the token is for.                                                                                |
+| `POLICYENGINE_API_AUTH0_CLIENT_ID`     | The caller's own Auth0 machine-to-machine client.                                                                         |
+| `POLICYENGINE_API_AUTH0_CLIENT_SECRET` | That client's secret. Read on the server only; never put it in a `NEXT_PUBLIC_*` or `VITE_*` variable.                    |
 
 Production deployments use the production Public API and a production Auth0 client. Preview and development deployments use the Public API's staging service and a staging client. For local work, `vercel env pull` writes the development values.
 
