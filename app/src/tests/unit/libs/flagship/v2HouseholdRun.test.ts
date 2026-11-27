@@ -47,6 +47,7 @@ const READ_REFORM = readCalculation(V2_CALCULATION_IDS.REFORM);
 const SINGLE_PARENT_UNDER_REFORM = {
   year: V2_CODEC_YEAR,
   household: US_SINGLE_PARENT,
+  payload: US_SINGLE_PARENT.toV1CreationPayload(),
   baselinePolicyId: null,
   reformPolicyId: V2_REFORM_POLICY_ID,
 };

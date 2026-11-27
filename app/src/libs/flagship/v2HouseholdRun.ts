@@ -27,11 +27,11 @@ export interface V2HouseholdRunArgs {
   year: string;
   household: Household;
   /**
-   * The household as it is sent, when that carries more than the
-   * household model (a UK household's claimant and partner roles); the
-   * household's own v1 payload when left out.
+   * The household as it is sent, which is what is stored: its v1 payload,
+   * which may carry more than the household model (a UK household's
+   * claimant and partner roles). Its year is the household's.
    */
-  payload?: V1HouseholdCreateEnvelope;
+  payload: V1HouseholdCreateEnvelope;
   /** A v2 policy (`/v2/policies`); null for current law. */
   baselinePolicyId: string | null;
   reformPolicyId: string | null;
@@ -172,7 +172,7 @@ export async function runV2FlagshipHousehold(
   options.signal?.addEventListener('abort', stopWithCaller, { once: true });
   try {
     const stored = await storeV2HouseholdBody(
-      v2CreateBodyFromV1Payload(payload ?? household.toV1CreationPayload(), household.year),
+      v2CreateBodyFromV1Payload(payload, household.year),
       householdClient
     );
     onStored?.(stored);

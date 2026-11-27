@@ -17,7 +17,7 @@ function anyoneClient(): V2UserClient {
 }
 
 /** Stores a household's content (`POST /v2/households`), or finds the identical stored one. */
-export function storeV2Household(
+export async function storeV2Household(
   household: Household,
   client: V2UserClient = anyoneClient()
 ): Promise<V2HouseholdItem> {
