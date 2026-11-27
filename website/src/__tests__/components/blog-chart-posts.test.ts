@@ -8,8 +8,10 @@ import {
   niceTicks,
   parseBlogChartSpec,
 } from "@/components/blog/BlogChart";
+import { parseHouseholdSpec } from "@/components/blog/BlogHousehold";
 import {
   CHART_FENCE,
+  HOUSEHOLD_FENCE,
   chartBlocksAsProse,
   readingTimeLabel,
 } from "@/components/blog/chartReadingText";
@@ -25,6 +27,15 @@ const posts = readdirSync(ARTICLES)
   .map((f) => ({ file: f, markdown: readFileSync(join(ARTICLES, f), "utf8") }));
 
 describe("chart blocks in posts", () => {
+  test("every household block in every post parses", () => {
+    const blocks = posts.flatMap(({ file, markdown }) =>
+      [...markdown.matchAll(HOUSEHOLD_FENCE)].map((m) => ({ file, raw: m[1] })),
+    );
+    for (const { file, raw } of blocks) {
+      expect(parseHouseholdSpec(raw), file).not.toBeNull();
+    }
+  });
+
   // An invalid spec renders nothing, so a broken block would vanish silently.
   test("every chart block in every post parses", () => {
     const blocks = posts.flatMap(({ file, markdown }) =>

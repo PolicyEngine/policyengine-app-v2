@@ -64,10 +64,8 @@ describe('createSimulation', () => {
       },
       body: JSON.stringify(mockSimulationPayload),
     });
-    expect(result).toEqual({
-      result: {
-        simulation_id: String(mockCreateSimulationSuccessResponse.result.id),
-      },
+    expect(result.result).toEqual({
+      simulation_id: String(mockCreateSimulationSuccessResponse.result.id),
     });
   });
 
@@ -96,10 +94,8 @@ describe('createSimulation', () => {
       },
       body: JSON.stringify(mockSimulationPayloadGeography),
     });
-    expect(result).toEqual({
-      result: {
-        simulation_id: String(geographyResponse.result.id),
-      },
+    expect(result.result).toEqual({
+      simulation_id: String(geographyResponse.result.id),
     });
   });
 
@@ -128,10 +124,8 @@ describe('createSimulation', () => {
       },
       body: JSON.stringify(mockSimulationPayloadMinimal),
     });
-    expect(result).toEqual({
-      result: {
-        simulation_id: String(minimalResponse.result.id),
-      },
+    expect(result.result).toEqual({
+      simulation_id: String(minimalResponse.result.id),
     });
   });
 
@@ -652,6 +646,21 @@ describe('simulation Northern Ireland region', () => {
 
     // Then
     expect(result).toEqual(mockNorthernIrelandSimulationMetadata);
+  });
+
+  test('given a simulation created for country/ni then the answer reads country/northern_ireland, as fetching it does', async () => {
+    // Given: the Public API answers a create with the simulation as stored
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      mockSuccessResponse(
+        mockSimulationResponse(mockLegacyNorthernIrelandSimulationMetadata)
+      ) as any
+    );
+
+    // When
+    const result = await createSimulation(TEST_COUNTRIES.UK, mockSimulationPayloadGeography);
+
+    // Then
+    expect(result.simulation).toEqual(mockNorthernIrelandSimulationMetadata);
   });
 
   test('given an updated simulation saved for country/ni then the update reads country/northern_ireland', async () => {

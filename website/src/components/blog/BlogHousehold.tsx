@@ -1,0 +1,502 @@
+"use client";
+
+/**
+ * Household example block for blog posts: a ```household fenced block whose
+ * body is a JSON spec of stored household results. Readers choose an example
+ * and a change; a breakdown table gives each income row under current law,
+ * under the change and the difference, with collapsible rows. Posts carry
+ * the figures; the component computes nothing but differences and sums for
+ * the summary line. An invalid spec renders nothing.
+ *
+ * Spec:
+ * {
+ *   "type": "household",
+ *   "title": "...", "subtitle": "...", "note": "...",
+ *   "changes": [{ "id": "removals", "label": "Two removals" }, ...],
+ *   "examples": [{
+ *     "id": "with_parents", "label": "20, living with parents",
+ *     "results": {
+ *       "removals": {
+ *         "net": [11504.33, 4543.49],
+ *         "rows": [{ "label": "Benefits", "values": [11504.33, 4543.49],
+ *                    "children": [{ "label": "Universal Credit", ... }] }]
+ *       }
+ *     }
+ *   }]
+ * }
+ *
+ * "values" is [current law, under the change], in £ a year. Top-level rows
+ * are groups; a group labelled "Taxes" counts as a deduction, so a rise in it
+ * is shown as a loss. An example lists only the changes its results cover.
+ */
+
+import { Fragment, useId, useState } from "react";
+
+import { isFiniteNumber, isRecord } from "./blogChartUtils";
+import { BlogOptionControl, optionControlForm } from "./BlogOptionControl";
+
+export interface HouseholdRow {
+  label: string;
+  values: [number, number];
+  children?: HouseholdRow[];
+}
+
+export interface HouseholdResult {
+  net: [number, number];
+  rows: HouseholdRow[];
+}
+
+export interface HouseholdExample {
+  id: string;
+  label: string;
+  results: Record<string, HouseholdResult>;
+}
+
+export interface BlogHouseholdSpec {
+  type: "household";
+  title?: string;
+  subtitle?: string;
+  note?: string;
+  changes: { id: string; label: string }[];
+  examples: HouseholdExample[];
+}
+
+const TAXES = "Taxes";
+const MINUS = "−";
+/** A change that rounds to under £1 is no change. */
+const isZero = (v: number) => Math.round(v) === 0;
+
+function validPair(v: unknown): v is [number, number] {
+  return Array.isArray(v) && v.length === 2 && v.every(isFiniteNumber);
+}
+
+function validRow(row: unknown, depth = 0): boolean {
+  if (!isRecord(row) || depth > 4) return false;
+  if (typeof row.label !== "string" || !validPair(row.values)) return false;
+  return (
+    row.children === undefined ||
+    (Array.isArray(row.children) &&
+      row.children.every((c) => validRow(c, depth + 1)))
+  );
+}
+
+export function parseHouseholdSpec(raw: string): BlogHouseholdSpec | null {
+  let s: unknown;
+  try {
+    s = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!isRecord(s) || s.type !== "household") return null;
+  if (
+    !["title", "subtitle", "note"].every(
+      (k) => s[k] === undefined || typeof s[k] === "string",
+    )
+  ) {
+    return null;
+  }
+  const { changes, examples } = s;
+  if (!Array.isArray(changes) || changes.length === 0) return null;
+  if (
+    !changes.every(
+      (c) =>
+        isRecord(c) && typeof c.id === "string" && typeof c.label === "string",
+    )
+  ) {
+    return null;
+  }
+  const ids = new Set(changes.map((c) => (c as { id: string }).id));
+  if (!Array.isArray(examples) || examples.length === 0) return null;
+  const valid = examples.every(
+    (e) =>
+      isRecord(e) &&
+      typeof e.id === "string" &&
+      typeof e.label === "string" &&
+      isRecord(e.results) &&
+      Object.keys(e.results).length > 0 &&
+      Object.entries(e.results).every(
+        ([key, r]) =>
+          ids.has(key) &&
+          isRecord(r) &&
+          validPair(r.net) &&
+          Array.isArray(r.rows) &&
+          r.rows.every((row) => validRow(row)),
+      ),
+  );
+  return valid ? (s as unknown as BlogHouseholdSpec) : null;
+}
+
+/** "£6,961", whole pounds. */
+export function pounds(value: number): string {
+  return `£${Math.round(Math.abs(value)).toLocaleString("en-GB")}`;
+}
+
+/** An amount in a value column: "£4,554", or "−£4,554" for a deduction row. */
+export function amount(value: number): string {
+  return `${value < 0 && !isZero(value) ? MINUS : ""}${pounds(value)}`;
+}
+
+/** "+£1,158", "−£6,961", or "—" for no change. */
+export function signedPounds(value: number): string {
+  if (isZero(value)) return "—";
+  return `${value > 0 ? "+" : MINUS}${pounds(value)}`;
+}
+
+/** The change's effect on net income: a rise in taxes is a loss. */
+const effect = (change: number, deduction: boolean) =>
+  deduction ? -change : change;
+
+const GAIN = "var(--primary)";
+// A darker mix of the error token, for text contrast on white
+const LOSS = "color-mix(in srgb, var(--tw-color-error) 75%, black)";
+
+function toneColor(change: number, deduction: boolean): string | undefined {
+  const e = effect(change, deduction);
+  if (isZero(e)) return undefined;
+  return e > 0 ? GAIN : LOSS;
+}
+
+/** A group label read as plural ("Benefits", "Taxes") or not ("Market income"). */
+const isPlural = (label: string) => /s$/i.test(label);
+const rowChange = (row: HouseholdRow) => row.values[1] - row.values[0];
+
+/**
+ * One line on what changes: each group that moves, with the part inside it
+ * that moves most (or both parts, when two move by similar amounts), the
+ * groups that don't, and net income.
+ */
+export function householdSummary(result: HouseholdResult): string {
+  const netChange = result.net[1] - result.net[0];
+  const moved: string[] = [];
+  const still: string[] = [];
+  for (const group of result.rows) {
+    const total = rowChange(group);
+    const plural = isPlural(group.label);
+    if (isZero(total)) {
+      still.push(group.label.toLowerCase());
+      continue;
+    }
+    const verb =
+      total > 0 ? (plural ? "rise" : "rises") : plural ? "fall" : "falls";
+    const parts = (group.children ?? [])
+      .filter((c) => !isZero(rowChange(c)))
+      .sort((a, b) => Math.abs(rowChange(b)) - Math.abs(rowChange(a)));
+    let detail = "";
+    // A singular group ("Market income") is named by its one part already
+    if (parts.length === 1) {
+      if (plural) detail = `, all of it ${parts[0].label}`;
+    } else if (parts.length > 1) {
+      const share = Math.abs(rowChange(parts[0])) / Math.abs(total);
+      if (share >= 2 / 3) detail = `, mostly ${parts[0].label}`;
+      else if (parts.length === 2) {
+        detail = `: ${parts[0].label} ${pounds(rowChange(parts[0]))} and ${parts[1].label} ${pounds(rowChange(parts[1]))}`;
+      }
+    }
+    moved.push(
+      `${group.label.toLowerCase()} ${verb} by ${pounds(total)} a year${detail}`,
+    );
+  }
+  const net = isZero(netChange)
+    ? "Net income doesn't change."
+    : `Net income ${netChange > 0 ? "rises" : "falls"} by ${pounds(netChange)} a year.`;
+  if (moved.length === 0) return net;
+  const clauses = [moved.join("; ")];
+  if (still.length > 0) {
+    const list =
+      still.length === 1
+        ? still[0]
+        : `${still.slice(0, -1).join(", ")} and ${still[still.length - 1]}`;
+    const are = still.length > 1 || isPlural(still[0]);
+    clauses.push(`${list} ${are ? "are" : "is"} unchanged`);
+  }
+  const text = clauses.join("; ");
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}. ${net}`;
+}
+
+const cell = {
+  padding: "8px 12px",
+  borderBottom: "1px solid var(--border)",
+  fontFamily: "var(--font-sans)",
+  fontSize: 14,
+  textAlign: "right" as const,
+  fontVariantNumeric: "tabular-nums" as const,
+  whiteSpace: "nowrap" as const,
+};
+
+function Rows({
+  rows,
+  depth,
+  path,
+  open,
+  toggle,
+  deduction,
+  idBase,
+}: {
+  rows: HouseholdRow[];
+  depth: number;
+  path: string;
+  open: Set<string>;
+  toggle: (key: string) => void;
+  deduction: boolean;
+  idBase: string;
+}) {
+  return (
+    <>
+      {rows.map((row, i) => {
+        const key = `${path}/${i}`;
+        const kids = row.children ?? [];
+        const expanded = open.has(key);
+        const change = row.values[1] - row.values[0];
+        const rowDeduction = depth === 0 ? row.label === TAXES : deduction;
+        const groupId = `${idBase}-${key.replace(/\//g, "-")}`;
+        return (
+          <Fragment key={key}>
+            <tr id={groupId}>
+              <th
+                scope="row"
+                style={{
+                  ...cell,
+                  textAlign: "left",
+                  whiteSpace: "normal",
+                  fontWeight: depth === 0 ? 600 : 400,
+                  paddingLeft: 12 + depth * 20,
+                }}
+              >
+                {kids.length > 0 ? (
+                  <button
+                    type="button"
+                    aria-expanded={expanded}
+                    aria-controls={
+                      expanded
+                        ? kids.map((_, j) => `${groupId}-${j}`).join(" ")
+                        : undefined
+                    }
+                    onClick={() => toggle(key)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      font: "inherit",
+                      color: "inherit",
+                      cursor: "pointer",
+                      textAlign: "left",
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{ display: "inline-block", width: 16 }}
+                    >
+                      {expanded ? "▾" : "▸"}
+                    </span>
+                    {row.label}
+                  </button>
+                ) : (
+                  <span style={{ paddingLeft: depth > 0 ? 16 : 0 }}>
+                    {row.label}
+                  </span>
+                )}
+              </th>
+              <td style={cell}>{amount(row.values[0])}</td>
+              <td style={cell}>{amount(row.values[1])}</td>
+              <td style={{ ...cell, color: toneColor(change, rowDeduction) }}>
+                {signedPounds(change)}
+              </td>
+            </tr>
+            {kids.length > 0 && expanded && (
+              <Rows
+                rows={kids}
+                depth={depth + 1}
+                path={key}
+                open={open}
+                toggle={toggle}
+                deduction={rowDeduction}
+                idBase={idBase}
+              />
+            )}
+          </Fragment>
+        );
+      })}
+    </>
+  );
+}
+
+/** Every row key that has children: all rows open at first. */
+function allKeys(rows: HouseholdRow[], path = ""): string[] {
+  return rows.flatMap((row, i) => {
+    const key = `${path}/${i}`;
+    return row.children?.length ? [key, ...allKeys(row.children, key)] : [];
+  });
+}
+
+export function HouseholdBody({ spec }: { spec: BlogHouseholdSpec }) {
+  const baseId = useId();
+  const [exampleId, setExampleId] = useState(spec.examples[0].id);
+  const example =
+    spec.examples.find((e) => e.id === exampleId) ?? spec.examples[0];
+  const covered = spec.changes.filter((c) => example.results[c.id]);
+  const [changeId, setChangeId] = useState(covered[0].id);
+  const change = covered.find((c) => c.id === changeId) ?? covered[0];
+  const result = example.results[change.id];
+  const [closed, setClosed] = useState<Set<string>>(new Set());
+  const keys = allKeys(result.rows);
+  const open = new Set(keys.filter((k) => !closed.has(k)));
+  const toggle = (key: string) =>
+    setClosed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  const netChange = result.net[1] - result.net[0];
+  // From every change, not only this example's, so the control keeps its
+  // form as the reader switches household.
+  const changeForm = optionControlForm(spec.changes.map((c) => c.label));
+
+  return (
+    <div>
+      <div className="tw:mb-3 tw:grid tw:grid-cols-1 tw:gap-3 tw:sm:grid-cols-2">
+        <BlogOptionControl
+          label="Household"
+          options={spec.examples.map((e) => ({ value: e.id, label: e.label }))}
+          value={example.id}
+          onChange={setExampleId}
+        />
+        <BlogOptionControl
+          label="Change"
+          options={covered.map((c) => ({ value: c.id, label: c.label }))}
+          value={change.id}
+          onChange={setChangeId}
+          form={changeForm}
+        />
+      </div>
+      <p
+        aria-live="polite"
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontSize: 14,
+          lineHeight: 1.5,
+          color: "var(--foreground)",
+          margin: "0 0 8px",
+        }}
+      >
+        {householdSummary(result)}
+      </p>
+      <div
+        role="region"
+        aria-label={`${example.label}: ${change.label}`}
+        tabIndex={0}
+        style={{ overflowX: "auto" }}
+      >
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <caption
+            style={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              overflow: "hidden",
+              clip: "rect(0 0 0 0)",
+            }}
+          >
+            {`${example.label}: ${change.label}, £ a year`}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" style={{ ...cell, textAlign: "left" }}>
+                £ a year
+              </th>
+              <th scope="col" style={cell}>
+                Current law
+              </th>
+              <th scope="col" style={cell}>
+                Under the change
+              </th>
+              <th scope="col" style={cell}>
+                Change
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <Rows
+              rows={result.rows}
+              depth={0}
+              path=""
+              open={open}
+              toggle={toggle}
+              deduction={false}
+              idBase={baseId}
+            />
+            <tr style={{ fontWeight: 600 }}>
+              <th
+                scope="row"
+                style={{ ...cell, textAlign: "left", fontWeight: 600 }}
+              >
+                Net income
+              </th>
+              <td style={cell}>{pounds(result.net[0])}</td>
+              <td style={cell}>{pounds(result.net[1])}</td>
+              <td style={{ ...cell, color: toneColor(netChange, false) }}>
+                {signedPounds(netChange)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export function BlogHousehold({ data }: { data: string | string[] }) {
+  const titleId = useId();
+  const raw = Array.isArray(data) ? data.join("") : data;
+  const spec = parseHouseholdSpec(raw);
+  if (!spec) return null;
+  return (
+    <figure
+      aria-labelledby={spec.title ? titleId : undefined}
+      style={{ margin: "24px 0 32px" }}
+    >
+      {spec.title && (
+        <h3
+          id={titleId}
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: 16,
+            fontWeight: 600,
+            lineHeight: 1.4,
+            color: "var(--foreground)",
+            margin: "0 0 4px",
+          }}
+        >
+          {spec.title}
+        </h3>
+      )}
+      {spec.subtitle && (
+        <p
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: 14,
+            lineHeight: 1.5,
+            color: "var(--muted-foreground)",
+            margin: "0 0 12px",
+          }}
+        >
+          {spec.subtitle}
+        </p>
+      )}
+      <HouseholdBody spec={spec} />
+      {spec.note && (
+        <figcaption
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: 13,
+            lineHeight: 1.5,
+            color: "var(--text-secondary)",
+            marginTop: 8,
+          }}
+        >
+          {spec.note}
+        </figcaption>
+      )}
+    </figure>
+  );
+}

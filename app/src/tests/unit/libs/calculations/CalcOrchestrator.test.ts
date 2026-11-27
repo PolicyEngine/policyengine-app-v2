@@ -16,9 +16,14 @@ import {
   mockSocietyWideQueryOptions,
   TEST_CALC_IDS,
   TEST_COUNTRIES,
+  TEST_POLL_INTERVAL_MS,
   TEST_POPULATION_IDS,
   TEST_YEARS,
 } from '@/tests/fixtures/libs/calculations/orchestratorMocks';
+import {
+  hideBrowserTab,
+  restoreBrowserTabTracking,
+} from '@/tests/fixtures/libs/queries/browserTabMocks';
 import type { CalcStatus } from '@/types/calculation';
 
 // Mock dependencies
@@ -158,6 +163,37 @@ describe('CalcOrchestrator', () => {
         ['calculation', TEST_CALC_IDS.REPORT_1],
         computingStatus
       );
+    });
+  });
+
+  describe('polling while the tab is hidden', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      hideBrowserTab();
+    });
+
+    afterEach(() => {
+      orchestrator.cleanup();
+      restoreBrowserTabTracking();
+      vi.useRealTimers();
+    });
+
+    it('given the tab hidden while a societyWide run computes then it is still polled at its interval', async () => {
+      // Given
+      const mockQueryFn = vi.fn().mockResolvedValue(mockPendingSocietyWideStatus());
+      (calculationQueries.forReport as any).mockReturnValue(
+        mockSocietyWideQueryOptions(TEST_CALC_IDS.REPORT_1, mockQueryFn)
+      );
+      await orchestrator.startCalculation(mockSocietyWideCalcConfig());
+      // The first request, and the fetch the observer sends when it subscribes.
+      await vi.advanceTimersByTimeAsync(0);
+      const requestsBeforePolling = mockQueryFn.mock.calls.length;
+
+      // When
+      await vi.advanceTimersByTimeAsync(TEST_POLL_INTERVAL_MS * 3);
+
+      // Then
+      expect(mockQueryFn.mock.calls.length - requestsBeforePolling).toBe(3);
     });
   });
 

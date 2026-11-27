@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { GeolocationService } from '@/routing/geolocation/GeolocationService';
 import {
+  MOCK_CA_COUNTRY_CODE,
   MOCK_UK_COUNTRY_CODE,
   MOCK_UK_ROUTE,
   MOCK_US_COUNTRY_CODE,
@@ -29,6 +30,21 @@ describe('GeolocationService', () => {
     const service = new GeolocationService();
     // @ts-expect-error - Accessing private property for testing
     service.providers = [new MockSuccessProvider(MOCK_UK_COUNTRY_CODE)];
+
+    // When
+    const result = await service.detectCountry();
+
+    // Then
+    expect(result).toBe(MOCK_UK_ROUTE);
+  });
+
+  test('given an IP in Canada and a British browser then returns uk route', async () => {
+    // Given
+    const service = new GeolocationService();
+    const browserProvider = new MockSuccessProvider(MOCK_UK_COUNTRY_CODE);
+    browserProvider.priority = 2;
+    // @ts-expect-error - Accessing private property for testing
+    service.providers = [new MockSuccessProvider(MOCK_CA_COUNTRY_CODE), browserProvider];
 
     // When
     const result = await service.detectCountry();

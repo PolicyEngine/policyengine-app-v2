@@ -107,6 +107,11 @@ export function growthOf(
   return provision?.growth ?? 'fixed';
 }
 
+/** The parameter paths of the indexes a value can grow with in this country. */
+export function growthIndexPaths(countryId: string): string[] {
+  return (INDEXES[countryId] ?? []).map((index) => index.path);
+}
+
 export function availableIndexes(
   countryId: string,
   parameters: ParameterMetadataCollection

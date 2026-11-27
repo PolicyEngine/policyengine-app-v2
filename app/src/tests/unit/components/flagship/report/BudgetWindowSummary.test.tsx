@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import BudgetWindowSummary from '@/components/flagship/report/BudgetWindowSummary';
+import { budgetWindowQueryKey, type PolledBudgetWindow } from '@/hooks/useBudgetWindow';
+import { BUDGET_WINDOW_CHECK_FAILURE } from '@/tests/fixtures/hooks/useBudgetWindowMocks';
 
 const mockFetchBudgetWindow = vi.fn();
 
@@ -19,16 +21,20 @@ const year = (label: string, budgetaryImpact: number) => ({
   budgetaryImpact,
 });
 
-function renderSummary(onOpen = vi.fn()) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const SUMMARY_PARAMS = { region: 'state/ut', startYear: 2026, windowSize: 10 };
+
+function renderSummary(
+  onOpen = vi.fn(),
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+) {
   render(
     <QueryClientProvider client={queryClient}>
       <BudgetWindowSummary
         countryId="us"
         reformPolicyId="98716"
         baselinePolicyId="2"
-        region="state/ut"
-        window={{ startYear: 2026, windowSize: 10 }}
+        region={SUMMARY_PARAMS.region}
+        window={{ startYear: SUMMARY_PARAMS.startYear, windowSize: SUMMARY_PARAMS.windowSize }}
         onOpen={onOpen}
       />
     </QueryClientProvider>
@@ -102,5 +108,28 @@ describe('BudgetWindowSummary', () => {
     // Then
     expect(await screen.findByText('Calculating · 40%')).toBeInTheDocument();
     expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(2);
+  });
+
+  test('given the window failed after its failed checks then the overview opened again shows it calculating', async () => {
+    // Given: the failure kept in the cache, and the window's new request still in flight.
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    queryClient.setQueryData<PolledBudgetWindow>(
+      budgetWindowQueryKey('us', '98716', '2', SUMMARY_PARAMS),
+      {
+        status: 'error',
+        result: null,
+        error: BUDGET_WINDOW_CHECK_FAILURE.message,
+        fromFailedChecks: true,
+      }
+    );
+    mockFetchBudgetWindow.mockReturnValue(new Promise(() => {}));
+
+    // When
+    renderSummary(vi.fn(), queryClient);
+
+    // Then: as the Budget window card and the All years view show it.
+    expect(await screen.findByText('Calculating · 0%')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(1);
   });
 });

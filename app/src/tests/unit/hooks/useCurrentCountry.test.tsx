@@ -4,6 +4,7 @@ import { CountryProvider } from '@/contexts/CountryContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CountryId } from '@/libs/countries';
 import { TEST_COUNTRIES } from '@/tests/fixtures/hooks/useCurrentCountryMocks';
+import { REMOVED_COUNTRY_IDS } from '@/tests/fixtures/libs/countriesMocks';
 
 function createWrapper(countryId: CountryId) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
@@ -24,24 +25,6 @@ describe('useCurrentCountry', () => {
       const { result } = renderHook(() => useCurrentCountry(), { wrapper });
       expect(result.current).toBe(TEST_COUNTRIES.US);
     });
-
-    test('given CA in context then returns ca', () => {
-      const wrapper = createWrapper(TEST_COUNTRIES.CA as CountryId);
-      const { result } = renderHook(() => useCurrentCountry(), { wrapper });
-      expect(result.current).toBe(TEST_COUNTRIES.CA);
-    });
-
-    test('given NG in context then returns ng', () => {
-      const wrapper = createWrapper('ng' as CountryId);
-      const { result } = renderHook(() => useCurrentCountry(), { wrapper });
-      expect(result.current).toBe(TEST_COUNTRIES.NG);
-    });
-
-    test('given IL in context then returns il', () => {
-      const wrapper = createWrapper('il' as CountryId);
-      const { result } = renderHook(() => useCurrentCountry(), { wrapper });
-      expect(result.current).toBe('il');
-    });
   });
 
   describe('Error Handling', () => {
@@ -50,6 +33,17 @@ describe('useCurrentCountry', () => {
         renderHook(() => useCurrentCountry());
       }).toThrow('useCurrentCountry must be used within a CountryProvider');
     });
+
+    test.each(REMOVED_COUNTRY_IDS)(
+      'given %s, a country the app no longer offers, in context then throws error',
+      (removedCountryId) => {
+        expect(() => {
+          renderHook(() => useCurrentCountry(), {
+            wrapper: createWrapper(removedCountryId as string as CountryId),
+          });
+        }).toThrow('useCurrentCountry must be used within a CountryProvider');
+      }
+    );
 
     test('given invalid country in context then throws error', () => {
       expect(() => {

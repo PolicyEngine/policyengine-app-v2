@@ -19,9 +19,6 @@ export interface SavedGeographySelection {
 const COUNTRY_LABELS: Record<CountryId, string> = {
   us: 'United States',
   uk: 'United Kingdom',
-  ca: 'Canada',
-  ng: 'Nigeria',
-  il: 'Israel',
 };
 
 export function getCountryDisplayName(countryId: CountryId): string {

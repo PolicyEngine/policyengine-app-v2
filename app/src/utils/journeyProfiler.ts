@@ -326,8 +326,9 @@ class JourneyProfiler {
   }
 
   /**
-   * Install a global fetch interceptor that wraps calls to api.policyengine.org
-   * with performance marks. Non-API calls pass through unmodified.
+   * Install a global fetch interceptor that wraps calls to the Public API,
+   * through the calculator's own route, with performance marks. Other calls
+   * pass through unmodified.
    */
   private installFetchInterceptor(): void {
     const origFetch = window.fetch.bind(window);
@@ -338,12 +339,18 @@ class JourneyProfiler {
 
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      // The Public API is reached through the calculator's own route, by a
+      // path or by the same URL on the page's origin.
+      const requestUrl = new URL(url, window.location.href);
+      const isPublicApiCall =
+        requestUrl.origin === window.location.origin &&
+        requestUrl.pathname.startsWith(`${BASE_URL}/`);
 
-      if (!url.startsWith(BASE_URL)) {
+      if (!isPublicApiCall) {
         return origFetch(input, init);
       }
 
-      const urlPath = new URL(url).pathname;
+      const urlPath = requestUrl.pathname;
       const method = init?.method?.toUpperCase() || 'GET';
       const markName = `journey:api:${method}:${urlPath}`;
       const startTime = performance.now();

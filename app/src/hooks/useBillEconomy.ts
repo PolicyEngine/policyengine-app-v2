@@ -4,12 +4,13 @@ import { useSelector } from 'react-redux';
 import { billRunYear, type TrackedBill } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import { createReformPolicy } from '@/libs/flagship/runReport';
+import { calculationQueries } from '@/libs/queries/calculationQueries';
 import type { RootState } from '@/store';
-import type { CalcStatus, RunStage } from '@/types/calculation';
+import type { RunStage } from '@/types/calculation';
 
-const strategy = new SocietyWideCalcStrategy();
+/** How often a bill's run still computing is checked on. */
+const POLL_MS = 2000;
 
 export interface BillEconomy {
   output: SocietyWideReportOutput | null;
@@ -81,25 +82,29 @@ export function useBillEconomy(
   );
 
   const economy = useQuery({
-    queryKey: ['flagship-bill-economy', countryId, reformPolicyId, baselinePolicyId, region, year],
-    queryFn: () =>
-      strategy.execute(
-        {
-          countryId,
-          calcType: 'societyWide',
-          policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
-          populationId: region,
-          region,
-          year,
-          calcId: metadata.calcId,
-          estimateByRegion: true,
-        },
-        metadata
-      ),
+    ...calculationQueries.forEconomyRun({
+      queryKey: [
+        'flagship-bill-economy',
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        region,
+        year,
+      ],
+      params: {
+        countryId,
+        calcType: 'societyWide',
+        policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
+        populationId: region,
+        region,
+        year,
+        calcId: metadata.calcId,
+        estimateByRegion: true,
+      },
+      metadata,
+      pollIntervalMs: POLL_MS,
+    }),
     enabled: enabled && !!reformPolicyId && !!baselinePolicyId,
-    refetchInterval: (query) =>
-      (query.state.data as CalcStatus | undefined)?.status === 'pending' ? 2000 : false,
-    staleTime: Infinity,
   });
 
   const status: BillEconomy['status'] =

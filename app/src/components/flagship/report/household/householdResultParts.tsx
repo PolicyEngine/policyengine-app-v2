@@ -1,28 +1,12 @@
 import type { CSSProperties } from 'react';
 import { colors, spacing, typography } from '@/designTokens';
-import type { CountryId } from '@/libs/countries';
-import { formatCurrency } from '@/utils/formatters';
 
 /**
  * What v3's household results share: the household's change in net
  * income with a reform (HouseholdImpactResult) and its net income under
- * one policy (HouseholdNetIncomeResult).
+ * one policy (HouseholdNetIncomeResult). Their money formatting is in
+ * householdMoney.ts.
  */
-
-/** Whole dollars (or pounds), with a true minus sign: "−$1,200", "−£1,200". */
-export function householdMoney(value: number, countryId: CountryId): string {
-  const rounded = Math.round(value);
-  const text = formatCurrency(Math.abs(rounded), countryId, { maximumFractionDigits: 0 });
-  return rounded < 0 ? `−${text}` : text;
-}
-
-/** A change, always signed: "+$1,200", "−$300", "$0". */
-export function signedHouseholdMoney(value: number, countryId: CountryId): string {
-  const rounded = Math.round(value);
-  return rounded > 0
-    ? `+${householdMoney(rounded, countryId)}`
-    : householdMoney(rounded, countryId);
-}
 
 /** The bordered card each household result sits in. */
 export const householdResultCardStyle: CSSProperties = {

@@ -12,9 +12,9 @@ import type { SPMProvenance, SPMSelection } from '@/types/spm';
 /**
  * A household run for the flagship report: a household built in the
  * household builder, run under the report's baseline and reform policies
- * for the report's year, in the household's own country, through the
- * Public API's v1 household routes, as the older household flow uses
- * them: create the household, then calculate it under each policy.
+ * for the report's year, in the household's own country, through API v1's
+ * household routes, as the older household flow uses them: create the
+ * household, then calculate it under each policy.
  */
 
 /** A change smaller than a dollar (or a pound) reads as no change. */
@@ -228,6 +228,8 @@ function linesFor(countryId: string) {
 export interface HouseholdLineChange {
   id: string;
   label: string;
+  /** The model variable the line reads, when it reads one: its description explains the line. */
+  variable?: string;
   /** Null for "Other", which is only a difference. */
   baseline: number | null;
   reform: number | null;
@@ -270,6 +272,7 @@ function lineChange(
   return {
     id: definition.id,
     label: definition.label,
+    ...(definition.sources.length === 1 && { variable: definition.sources[0].variable }),
     baseline: baselineTotal,
     reform: reformTotal,
     change,
@@ -396,11 +399,13 @@ async function calculateOnce(
 async function calculateHousehold(
   payload: V1HouseholdCreateEnvelope,
   baselinePolicyId: string,
-  reformPolicyId: string
+  reformPolicyId: string,
+  onCreated?: (householdId: string) => void
 ) {
   try {
     const created = await createHousehold(payload);
     const householdId = String(created.result.household_id);
+    onCreated?.(householdId);
     const countryId = payload.country_id;
     const [baseline, reform] = await Promise.all([
       calculateOnce(countryId, householdId, baselinePolicyId),
@@ -425,16 +430,20 @@ export async function runFlagshipHouseholdPayload({
   payload,
   baselinePolicyId,
   reformPolicyId,
+  onCreated,
 }: {
   year: string;
   payload: V1HouseholdCreateEnvelope;
   baselinePolicyId: string;
   reformPolicyId: string;
+  /** Called once the API has stored the household, before it is calculated. */
+  onCreated?: (householdId: string) => void;
 }): Promise<FlagshipHouseholdRun> {
   const { householdId, baseline, reform } = await calculateHousehold(
     payload,
     baselinePolicyId,
-    reformPolicyId
+    reformPolicyId,
+    onCreated
   );
   return {
     householdId,

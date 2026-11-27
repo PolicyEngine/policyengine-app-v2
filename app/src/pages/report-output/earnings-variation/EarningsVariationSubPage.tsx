@@ -46,6 +46,8 @@ interface Props {
    * inputs stay out.
    */
   alsoOfferInputs?: string[];
+  /** Tidy the chart's legend and axis title (the v3 report); the v2 report keeps its own. */
+  tidyChart?: boolean;
 }
 
 /**
@@ -64,6 +66,7 @@ export default function EarningsVariationSubPage({
   reformVariation: providedReformVariation = null,
   renderLoading,
   alsoOfferInputs,
+  tidyChart = false,
 }: Props) {
   const [selectedVariable, setSelectedVariable] = useState('household_net_income');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -387,6 +390,7 @@ export default function EarningsVariationSubPage({
           reformVariation={resolvedReformVariation!}
           variableName={selectedVariable}
           year={normalizedReportYear}
+          tidyChart={tidyChart}
         />
       ) : (
         <BaselineOnlyChart
@@ -395,6 +399,7 @@ export default function EarningsVariationSubPage({
           focusPersonName={baselineFocusPersonName}
           variableName={selectedVariable}
           year={normalizedReportYear}
+          tidyChart={tidyChart}
         />
       )}
       <SPMMethodologyFootnote

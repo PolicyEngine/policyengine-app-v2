@@ -234,6 +234,8 @@ describe('ReformReports comparisons without a link', () => {
   test('given metadata still loading then a current-law report shows no comparison', async () => {
     // Given: current law reads 0 until the model's metadata loads
     store.dispatch(clearMetadata());
+    // Only this test's reads count.
+    vi.mocked(fetchSimulationById).mockClear();
     renderReports([record({ id: 'rec-64', apiReportId: '64', baselineReformId: null })]);
 
     // When: its baseline simulation has been read

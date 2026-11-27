@@ -43,9 +43,18 @@ export function HouseholdCalculateRow({
   );
 }
 
-/** A household run on its way. */
-export function HouseholdRunProgress() {
-  return <RunProgress title="Calculating this household" expectedMs={HOUSEHOLD_RUN_EXPECTED_MS} />;
+/**
+ * A household run on its way. Given when the run started, the bar carries
+ * on from then when it mounts again, rather than from 0.
+ */
+export function HouseholdRunProgress({ startedAt }: { startedAt?: number } = {}) {
+  return (
+    <RunProgress
+      title="Calculating this household"
+      expectedMs={HOUSEHOLD_RUN_EXPECTED_MS}
+      startedAt={startedAt}
+    />
+  );
 }
 
 /** A household run that failed, with the Public API's reason and a way to try again. */

@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/tests/fixtures/constants';
+import { REMOVED_COUNTRY_AS_COUNTRY_ID } from '@/tests/fixtures/libs/countriesMocks';
 import type { UserReport } from '@/types/ingredients/UserReport';
 
 /**
@@ -188,7 +189,7 @@ export const mockMultiCountryReportList: UserReport[] = [
     id: 'report-ca-1',
     userId: TEST_USER_ID,
     reportId: 'report-ca-1',
-    countryId: TEST_COUNTRIES.CA,
+    countryId: REMOVED_COUNTRY_AS_COUNTRY_ID,
     label: 'CA Report 1',
     createdAt: `${CURRENT_YEAR}-01-13T10:00:00Z`,
     updatedAt: `${CURRENT_YEAR}-01-13T10:00:00Z`,

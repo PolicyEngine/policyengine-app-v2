@@ -29,7 +29,10 @@ import {
 import { isUntitledReform, periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
+import { windowSizeChoices, windowSizeWithin } from '@/libs/flagship/supportedYears';
+import { getLastSupportedYear } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
+import type { Reform } from '@/types/ingredients/Reform';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { regionKindOf, trackReportAdjusted } from '@/utils/analytics';
@@ -63,6 +66,11 @@ interface ReportAdjustPanelProps {
    * compare with current law instead, so it is off.
    */
   baselineUnknown?: boolean;
+  /**
+   * The report's policies set parameters the model no longer has: it can be
+   * neither recomputed nor taken to Build.
+   */
+  runsBlocked?: boolean;
 }
 
 /**
@@ -102,6 +110,7 @@ function AdjustPanel({
   year,
   baseline,
   baselineUnknown = false,
+  runsBlocked = false,
   budgetWindow,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
@@ -153,11 +162,24 @@ function AdjustPanel({
   const [name, setName] = useState(title);
   const renamed = name.trim() !== '' && name.trim() !== title.trim();
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  // The year a recompute simulates; the current year when the report has none.
+  const runYear = year ? Number(year) : undefined;
+  const windowStart = budgetWindow?.startYear ?? runYear ?? Number(CURRENT_YEAR);
   // How many years a recompute scores, from the report's year: the report's own to start.
-  const reportWindow = budgetWindow?.windowSize ?? 1;
-  const [windowYears, setWindowYears] = useState(reportWindow);
-  const windowChoices = Array.from(new Set([...WINDOW_CHOICES, reportWindow])).sort(
-    (a, b) => a - b
+  // No window runs past the last year the model and data cover (from the
+  // country metadata): a longer one, the report's own too, ends on that year.
+  const lastSupportedYear = useSelector(getLastSupportedYear);
+  const reportWindow = windowSizeWithin(
+    budgetWindow?.windowSize ?? 1,
+    windowStart,
+    lastSupportedYear
+  );
+  const [chosenWindow, setChosenWindow] = useState(budgetWindow?.windowSize ?? 1);
+  const windowYears = windowSizeWithin(chosenWindow, windowStart, lastSupportedYear);
+  const windowChoices = windowSizeChoices(
+    [...WINDOW_CHOICES, reportWindow],
+    windowStart,
+    lastSupportedYear
   );
 
   const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
@@ -175,10 +197,6 @@ function AdjustPanel({
   if (provisions.length === 0) {
     return null;
   }
-
-  // The year a recompute simulates; the current year when the report has none.
-  const runYear = year ? Number(year) : undefined;
-  const windowStart = budgetWindow?.startYear ?? runYear ?? Number(CURRENT_YEAR);
 
   /**
    * The provisions as the panel has them. A value edited here holds from
@@ -303,6 +321,9 @@ function AdjustPanel({
       const label = renamed ? name.trim() : onlyYears ? title : `${title} (adjusted)`;
       let reformId: string;
       let runTitle: string;
+      // The policies the save below makes, for the run to reuse. A reused
+      // reform's policy may predate typed saves, so the run makes its own.
+      let reformPolicies: Pick<Reform, 'policyId' | 'v2PolicyId'> | undefined;
       if (match) {
         reformId = match.id!;
         runTitle = renamed ? label : match.label || label;
@@ -317,9 +338,11 @@ function AdjustPanel({
         queryClient.invalidateQueries({ queryKey: ['reforms'] });
         reformId = created.id!;
         runTitle = created.label || label;
+        reformPolicies = created;
       }
 
       await runReport.run(runTitle, sourceNote, adjusted, reformId, runYear, {
+        reformPolicies,
         region: population,
         baseline,
         // The years chosen here; the report's own unless changed.
@@ -369,7 +392,7 @@ function AdjustPanel({
           </span>
           <Select
             value={String(windowYears)}
-            onValueChange={(next) => setWindowYears(Number(next))}
+            onValueChange={(next) => setChosenWindow(Number(next))}
           >
             <SelectTrigger
               aria-label="Years"
@@ -580,7 +603,13 @@ function AdjustPanel({
             {reconcileError || runReport.error}
           </Text>
         )}
-        {baselineUnknown && (
+        {runsBlocked && (
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            This report uses parameters the model no longer has, so it cannot be recomputed or
+            edited in Build.
+          </Text>
+        )}
+        {!runsBlocked && baselineUnknown && (
           <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
             The baseline policy could not be loaded, so a recompute cannot compare with it.
           </Text>
@@ -590,11 +619,18 @@ function AdjustPanel({
             Nothing differs from current law. Change a value to recompute.
           </Text>
         )}
-        <Button onClick={recompute} disabled={baselineUnknown || !isDirty || busy || !changesLaw}>
+        <Button
+          onClick={recompute}
+          disabled={runsBlocked || baselineUnknown || !isDirty || busy || !changesLaw}
+        >
           <IconChartBar size={16} />
           {busy ? 'Recomputing…' : 'Recompute'}
         </Button>
-        <Button variant="outline" onClick={editInBuild} disabled={busy || active.length === 0}>
+        <Button
+          variant="outline"
+          onClick={editInBuild}
+          disabled={runsBlocked || busy || active.length === 0}
+        >
           <IconPencil size={16} />
           Edit in Build
         </Button>

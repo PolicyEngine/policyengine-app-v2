@@ -776,6 +776,7 @@ export default function HouseholdBuilderForm({
                               onChange={onChange}
                               disabled={disabled}
                               showRemoveColumn
+                              stacked={columns}
                               wholeNumbers={columns}
                               inputLabel={inputLabelOf(field, person)}
                             />
@@ -805,6 +806,7 @@ export default function HouseholdBuilderForm({
                                   : () => handleRemovePersonVariable(varName, person)
                               }
                               disabled={disabled}
+                              stacked={columns}
                               wholeNumbers={columns}
                             />
                           );
@@ -855,7 +857,12 @@ export default function HouseholdBuilderForm({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenPersonSearch(person)}
-                            className="tw:self-start"
+                            // In columns, a long name wraps in a narrow card rather than being cut off.
+                            className={
+                              columns
+                                ? 'tw:self-start tw:h-auto tw:min-h-8 tw:whitespace-normal tw:text-left'
+                                : 'tw:self-start'
+                            }
                           >
                             <IconPlus size={14} />
                             Add variable to {getPersonDisplayName(person)}
@@ -879,7 +886,9 @@ export default function HouseholdBuilderForm({
         >
           {/* In columns, the household's fields sit beside the family's, under their own labels. */}
           <AccordionTrigger className={columns ? 'tw:lg:hidden' : undefined}>
-            <Text fw={typography.fontWeight.medium}>Household</Text>
+            <Text fw={typography.fontWeight.medium}>
+              {columns ? 'Household details' : 'Household'}
+            </Text>
           </AccordionTrigger>
           <AccordionContent
             className={

@@ -1,6 +1,5 @@
 /**
- * The visitor's country, for the root page's choice between /us, /uk and
- * the other country routes.
+ * The visitor's country, for the root page's choice between /us and /uk.
  *
  * Vercel adds an `x-vercel-ip-country` header to every request it receives
  * from a client: the ISO 3166-1 alpha-2 code of the country of the client's

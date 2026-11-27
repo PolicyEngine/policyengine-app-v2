@@ -6,7 +6,7 @@ Key figures:
 - A mortgage-free landlord in England with the same profit pays £200 more.
 - A landlord who lives in Scotland, with £4,000 of fully usable finance costs, pays £80 less income tax. The property income tax rate rise does not apply to Scottish taxpayers, but their finance-cost reduction still rises with the property basic rate.
 - PolicyEngine estimates £399 million of additional net government revenue and a £14 reduction in average household net income in 2027–28.
-- The government's costing, certified by the OBR, has £394 million to £412 million a year of extra income tax from 2029–30 to 2031–32, £539 million in 2028–29 and none in 2027–28. Its total in the Budget's Table 6.1, which adds the costing's other lines, is £35 million in 2027–28, £575 million in 2028–29 and £435 million to £455 million a year from 2029–30.
+- The government's costing, which the OBR certified, has £394 million to £412 million a year of extra income tax from 2029–30 to 2031–32, £539 million in 2028–29 and none in 2027–28. Its total in the Budget's Table 6.1, which adds the costing's other lines, is £35 million in 2027–28, £575 million in 2028–29 and £435 million to £455 million a year from 2029–30.
 
 The 2027–28 and 2028–29 figures use different collection-timing bases and are not directly comparable. From 2029–30, PolicyEngine's estimate exceeds the costing's income tax line by 9% to 11%; see the [budgetary impact section](#budgetary-impact).
 
@@ -59,7 +59,7 @@ We model the property measure alone on a representative sample of UK households.
 
 ### Budgetary impact
 
-PolicyEngine estimates that the measure raises £399 million of net government revenue in 2027–28, rising to £459 million in 2031–32. We compare it with the income tax line of the government's costing, certified by the OBR, in the OBR's [detailed policy table](https://obr.uk/download/october-2026-economic-and-fiscal-outlook-detailed-forecast-tables-zip-file/) (Table 1.1, measure 61). We use that line as the closest comparison; PolicyEngine's estimate also includes interactions with other taxes and benefits. The costing's other non-zero lines carry the labels “Onshore CT”, “Scottish BGA (current)” and “Scottish self-financed expenditure”. The Budget's [Table 6.1, row 61](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) gives the total of all the lines, rounded to the nearest £5 million and on a National Accounts basis; we show it for context.
+PolicyEngine estimates that the measure raises £399 million of net government revenue in 2027–28, rising to £459 million in 2031–32. We compare it with the income tax line of the government's costing, which the OBR certified, in the OBR's [detailed policy table](https://obr.uk/download/october-2026-economic-and-fiscal-outlook-detailed-forecast-tables-zip-file/) (Table 1.1, measure 61). We use that line as the closest comparison; PolicyEngine's estimate also includes interactions with other taxes and benefits. The costing's other non-zero lines carry the labels “Onshore CT”, “Scottish BGA (current)” and “Scottish self-financed expenditure”. The Budget's [Table 6.1, row 61](https://www.gov.uk/government/publications/supporting-documents-for-budget-2026) gives the total of all the lines, rounded to the nearest £5 million and on a National Accounts basis; we show it for context.
 
 | Year | PolicyEngine net government revenue, £ million | OBR income tax line, £ million | PolicyEngine against the OBR line | Table 6.1 total, £ million |
 | --- | ---: | ---: | --- | ---: |

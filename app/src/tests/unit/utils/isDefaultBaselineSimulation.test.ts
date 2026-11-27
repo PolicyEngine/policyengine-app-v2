@@ -12,7 +12,6 @@ import {
   TEST_CURRENT_LAW_ID,
 } from '@/tests/fixtures/utils/isDefaultBaselineSimulationMocks';
 import {
-  countryNames,
   getDefaultBaselineLabel,
   isDefaultBaselineSimulation,
 } from '@/utils/isDefaultBaselineSimulation';
@@ -157,29 +156,20 @@ describe('getDefaultBaselineLabel', () => {
       expect(result).toBe(EXPECTED_LABELS.UK);
     });
 
-    test('given CA country code then returns Canada label', () => {
-      // When
-      const result = getDefaultBaselineLabel(TEST_COUNTRIES.CA);
+    test.each([
+      [TEST_COUNTRIES.CA, EXPECTED_LABELS.CA],
+      [TEST_COUNTRIES.NG, EXPECTED_LABELS.NG],
+      [TEST_COUNTRIES.IL, EXPECTED_LABELS.IL],
+    ])(
+      'given %s, a country the app no longer offers, then the label uses its upper-case code',
+      (countryId, expectedLabel) => {
+        // When
+        const result = getDefaultBaselineLabel(countryId);
 
-      // Then
-      expect(result).toBe(EXPECTED_LABELS.CA);
-    });
-
-    test('given NG country code then returns Nigeria label', () => {
-      // When
-      const result = getDefaultBaselineLabel(TEST_COUNTRIES.NG);
-
-      // Then
-      expect(result).toBe(EXPECTED_LABELS.NG);
-    });
-
-    test('given IL country code then returns Israel label', () => {
-      // When
-      const result = getDefaultBaselineLabel(TEST_COUNTRIES.IL);
-
-      // Then
-      expect(result).toBe(EXPECTED_LABELS.IL);
-    });
+        // Then
+        expect(result).toBe(expectedLabel);
+      }
+    );
   });
 
   describe('Unknown countries', () => {
@@ -190,32 +180,5 @@ describe('getDefaultBaselineLabel', () => {
       // Then
       expect(result).toBe(EXPECTED_LABELS.UNKNOWN);
     });
-  });
-});
-
-describe('countryNames', () => {
-  test('given object then contains expected country mappings', () => {
-    // Then
-    expect(countryNames).toEqual({
-      us: 'United States',
-      uk: 'United Kingdom',
-      ca: 'Canada',
-      ng: 'Nigeria',
-      il: 'Israel',
-    });
-  });
-
-  test('given known country code then returns full name', () => {
-    // Then
-    expect(countryNames[TEST_COUNTRIES.US]).toBe('United States');
-    expect(countryNames[TEST_COUNTRIES.UK]).toBe('United Kingdom');
-    expect(countryNames[TEST_COUNTRIES.CA]).toBe('Canada');
-    expect(countryNames[TEST_COUNTRIES.NG]).toBe('Nigeria');
-    expect(countryNames[TEST_COUNTRIES.IL]).toBe('Israel');
-  });
-
-  test('given unknown country code then returns undefined', () => {
-    // Then
-    expect(countryNames[TEST_COUNTRIES.UNKNOWN]).toBeUndefined();
   });
 });

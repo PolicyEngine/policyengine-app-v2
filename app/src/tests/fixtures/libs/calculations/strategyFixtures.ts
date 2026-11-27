@@ -1,9 +1,17 @@
 import { vi } from 'vitest';
-import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
+import {
+  EconomyCalculationError,
+  SocietyWideCalculationResponse,
+} from '@/api/societyWideCalculation';
+import {
+  economyCalculationError,
+  FAILED_CALCULATION_BODY,
+} from '@/tests/fixtures/api/societyWideMocks';
 import {
   mockHouseholdResult,
   mockSocietyWideResult,
 } from '@/tests/fixtures/types/calculationFixtures';
+import type { CalcStatus } from '@/types/calculation';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
 
 /**
@@ -62,6 +70,71 @@ export const mockSocietyWideErrorResponse = (): SocietyWideCalculationResponse =
   queue_position: undefined,
   average_time: undefined,
 });
+
+/** A society-wide report run's status as last polled: computing, 40% along, third in the queue. */
+export const mockComputingSocietyWideStatus = (
+  overrides: Partial<CalcStatus> = {}
+): CalcStatus => ({
+  status: 'pending',
+  progress: 40,
+  queuePosition: STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION,
+  message: `In queue (position ${STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION})...`,
+  metadata: {
+    calcId: 'test-report',
+    calcType: 'societyWide',
+    targetType: 'report',
+    startedAt: Date.now() - STRATEGY_TEST_CONSTANTS.TEST_PROGRESS_TIME_MS,
+  },
+  ...overrides,
+});
+
+/** The message of a request that failed on the network, as the browser's fetch rejects. */
+export const NETWORK_ERROR_MESSAGE = 'Failed to fetch';
+
+/**
+ * Failed requests, which a computing run outlasts because its job may still
+ * run: a network error, a gateway's 5xx page, and the 5xx answers the
+ * calculator's route writes itself when the Public API cannot be reached or
+ * does not answer in time.
+ */
+export const FAILED_REQUEST_ERRORS: Array<[string, Error]> = [
+  ['a network error', new TypeError(NETWORK_ERROR_MESSAGE)],
+  ['a gateway 502 page', economyCalculationError(502, null)],
+  ['a 503', economyCalculationError(503, null)],
+  [
+    'a 502 the route wrote because the Public API could not be reached',
+    new EconomyCalculationError(
+      'Society-wide calculation failed (502)',
+      502,
+      { status: 'error', message: 'The Public API could not be reached.', result: null },
+      true
+    ),
+  ],
+  [
+    'a 504 the route wrote because the Public API did not answer in time',
+    new EconomyCalculationError(
+      'Society-wide calculation failed (504)',
+      504,
+      { status: 'error', message: 'The Public API did not answer in time.', result: null },
+      true
+    ),
+  ],
+];
+
+/** The Public API's answer for a calculation it ran and that failed: 502 with its error body. */
+export const FAILED_CALCULATION_ERROR = economyCalculationError(502, FAILED_CALCULATION_BODY);
+
+/** Requests the Public API refused, which no later poll would answer differently. */
+export const REFUSED_REQUEST_ERRORS: Array<[string, Error]> = [
+  [
+    'a 404',
+    economyCalculationError(404, { status: 'error', message: 'Policy not found', result: null }),
+  ],
+  [
+    'a 422',
+    economyCalculationError(422, { status: 'error', message: 'Invalid region', result: null }),
+  ],
+];
 
 /**
  * Mock household API response (successful)

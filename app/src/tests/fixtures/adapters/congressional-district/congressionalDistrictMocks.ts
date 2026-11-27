@@ -216,3 +216,34 @@ export const DISTRICT_DATA_WITH_UNKNOWN: USCongressionalDistrictBreakdown = {
     },
   ],
 };
+
+/** A state's districts, as its own run returns them. */
+export const UTAH_DISTRICTS = [
+  {
+    district: 'UT-01',
+    average_household_income_change: 120,
+    relative_household_income_change: 0.004,
+  },
+  {
+    district: 'UT-02',
+    average_household_income_change: 80,
+    relative_household_income_change: 0.003,
+  },
+];
+
+export const WYOMING_DISTRICTS = [
+  {
+    district: 'WY-00', // Backend bug: should be WY-01
+    average_household_income_change: 500,
+    relative_household_income_change: 0.03,
+  },
+];
+
+export const WYOMING_DISTRICTS_NORMALIZED = [{ ...WYOMING_DISTRICTS[0], district: 'WY-01' }];
+
+/** The districts the region metadata lists for Utah, Wyoming and Texas. */
+export const EXPECTED_DISTRICT_IDS = ['UT-01', 'UT-02', 'WY-01', 'TX-01', 'TX-02'];
+
+/** The same states as the state runs name them. */
+export const WYOMING_REGION = 'state/wy';
+export const TEXAS_REGION = 'state/tx';

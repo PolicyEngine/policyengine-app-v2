@@ -17,6 +17,7 @@ import {
   Stack,
   Text,
 } from '@/components/ui';
+import { congressionalDistrictScope } from '@/contexts/congressional-district/utils';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -122,13 +123,7 @@ export function canShowCongressionalDistrictImpactCard({
   if (countryId !== 'us' || !reformPolicyId || !baselinePolicyId || !year) {
     return false;
   }
-
-  if (!region) {
-    return true;
-  }
-
-  const normalizedRegion = region.toLowerCase();
-  return normalizedRegion === 'us' || normalizedRegion.startsWith('state/');
+  return congressionalDistrictScope(region) !== null;
 }
 
 /**

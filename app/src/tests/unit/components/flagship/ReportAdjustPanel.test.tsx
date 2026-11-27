@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import {
@@ -12,6 +12,8 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   seedDeductionMetadata,
+  seedModelYears,
+  UK_REGIONS,
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import {
@@ -22,7 +24,24 @@ import {
   PHASED_CTC_PROVISION,
   PHASED_CTC_REFORM,
   PHASED_REPORT_YEAR,
+  TEN_YEAR_WINDOW_FROM_2026,
+  UK_PERSONAL_ALLOWANCE_PROVISION,
+  UK_WINDOW_CHOICES_TO_2032,
 } from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
+import {
+  UK_FIRST_SUPPORTED_YEAR,
+  UK_LAST_SUPPORTED_YEAR,
+  UK_REPORT_START_YEAR,
+} from '@/tests/fixtures/libs/flagship/calculationErrorMocks';
+import {
+  MATCHING_REFORM_POLICY_ID,
+  SAVED_REFORM_POLICY_ID,
+  SAVED_REFORM_V2_POLICY_ID,
+} from '@/tests/fixtures/libs/flagship/runReportMocks';
+import {
+  US_FIRST_SUPPORTED_YEAR,
+  US_LAST_SUPPORTED_YEAR,
+} from '@/tests/fixtures/libs/flagship/supportedYearsMocks';
 
 const mockRun = vi.fn();
 const mockFindMine = vi.fn();
@@ -131,7 +150,10 @@ describe('ReportAdjustPanel', () => {
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
     const [, , , , year, options] = mockRun.mock.calls[0];
     expect(year).toBe(2027);
-    expect(options).toEqual({ region: 'state/va' });
+    expect(options).toEqual({
+      region: 'state/va',
+      reformPolicies: expect.objectContaining({ id: 'rf-new' }),
+    });
   });
 
   test('given the report population arrives after the panel then the panel follows it', async () => {
@@ -215,7 +237,12 @@ describe('ReportAdjustPanel', () => {
       await user.click(screen.getByRole('button', { name: /recompute/i }));
 
       await waitFor(() => expect(mockRun).toHaveBeenCalled());
-      expect(mockRun.mock.calls[0][5]).toEqual({ region: undefined, baseline: PLAN_B });
+      expect(mockRun.mock.calls[0][5]).toEqual({
+        region: undefined,
+        baseline: PLAN_B,
+        // The reform the recompute saved, whose policy the run reuses.
+        reformPolicies: expect.objectContaining({ id: 'rf-new' }),
+      });
     });
 
     test('then Edit in Build keeps the comparison in the draft', async () => {
@@ -291,7 +318,10 @@ describe('ReportAdjustPanel', () => {
     await user.click(screen.getByRole('button', { name: /recompute/i }));
 
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
-    expect(mockRun.mock.calls[0][5]).toEqual({ region: 'state/ca' });
+    expect(mockRun.mock.calls[0][5]).toEqual({
+      region: 'state/ca',
+      reformPolicies: expect.objectContaining({ id: 'rf-new' }),
+    });
     store.dispatch(clearMetadata());
   });
 
@@ -338,7 +368,10 @@ describe('ReportAdjustPanel', () => {
     await user.click(screen.getByRole('button', { name: /recompute/i }));
 
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
-    expect(mockRun.mock.calls[0][5]).toEqual({ region: undefined });
+    expect(mockRun.mock.calls[0][5]).toEqual({
+      region: undefined,
+      reformPolicies: expect.objectContaining({ id: 'rf-new' }),
+    });
   });
 
   test('given no matching reform then recompute saves a new one and runs linked to it', async () => {
@@ -363,6 +396,29 @@ describe('ReportAdjustPanel', () => {
       expect.objectContaining({ path: PROVISIONS[0].path, value: 3600 }),
       expect.objectContaining({ path: PROVISIONS[1].path, value: 350 }),
     ]);
+  });
+
+  test('given no matching reform then the run reuses the policy the save created', async () => {
+    mockCreate.mockResolvedValue({
+      id: 'rf-new',
+      label: 'CTC expansion (adjusted)',
+      policyId: SAVED_REFORM_POLICY_ID,
+      v2PolicyId: SAVED_REFORM_V2_POLICY_ID,
+    });
+    const user = userEvent.setup();
+    await renderPanel();
+
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockRun.mock.calls[0][3]).toBe('rf-new');
+    expect(mockRun.mock.calls[0][5].reformPolicies).toMatchObject({
+      policyId: SAVED_REFORM_POLICY_ID,
+      v2PolicyId: SAVED_REFORM_V2_POLICY_ID,
+    });
   });
 
   test('given recompute then only this browser’s saved reforms are searched for a match', async () => {
@@ -407,6 +463,41 @@ describe('ReportAdjustPanel', () => {
     const [runTitle, , , reformId] = mockRun.mock.calls[0];
     expect(runTitle).toBe('My CTC reform');
     expect(reformId).toBe('rf-existing');
+  });
+
+  // A reform saved before saves typed their values can hold a v1 policy
+  // with values as text, which simulations cannot read. The run types the
+  // values itself, so a reused reform's policy is not handed over.
+  test('given the adjusted set matches a saved reform then the run is given no policy to reuse', async () => {
+    mockFindMine.mockResolvedValue([
+      {
+        id: 'rf-existing',
+        label: 'My CTC reform',
+        policyId: MATCHING_REFORM_POLICY_ID,
+        parameters: [
+          {
+            name: PROVISIONS[0].path,
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3600 }],
+          },
+          {
+            name: PROVISIONS[1].path,
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 350 }],
+          },
+        ],
+      },
+    ]);
+    const user = userEvent.setup();
+    await renderPanel();
+
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockRun.mock.calls[0][3]).toBe('rf-existing');
+    expect(mockRun.mock.calls[0][5].reformPolicies).toBeUndefined();
   });
 
   test('given a saved reform whose changes could not load then it is skipped, not matched or fatal', async () => {
@@ -703,6 +794,110 @@ describe('ReportAdjustPanel', () => {
       expect(mockCreate).not.toHaveBeenCalled();
       expect(mockRun.mock.calls[0][3]).toBe(PHASED_CTC_REFORM.id);
       store.dispatch(clearMetadata());
+    });
+  });
+  describe('given a UK report and the years the UK model covers', () => {
+    beforeEach(() => {
+      // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+      seedModelYears({
+        countryId: 'uk',
+        firstYear: UK_FIRST_SUPPORTED_YEAR,
+        lastYear: UK_LAST_SUPPORTED_YEAR,
+        regions: UK_REGIONS,
+      });
+    });
+
+    afterEach(() => {
+      store.dispatch(clearMetadata());
+    });
+
+    async function renderUkPanel(budgetWindow?: { startYear: number; windowSize: number }) {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ReportAdjustPanel
+            title="Higher personal allowance"
+            sourceNote=""
+            provisions={[UK_PERSONAL_ALLOWANCE_PROVISION]}
+            year={String(UK_REPORT_START_YEAR)}
+            budgetWindow={budgetWindow}
+          />
+        </QueryClientProvider>,
+        'uk'
+      );
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+      return user;
+    }
+
+    test('given the years choice then no window runs past the last year the model covers', async () => {
+      // Given
+      const user = await renderUkPanel();
+
+      // When
+      await user.click(screen.getByRole('combobox', { name: 'Years' }));
+
+      // Then
+      const offeredWindows = (await screen.findAllByRole('option')).map(
+        (option) => option.textContent
+      );
+      expect(offeredWindows).toEqual(UK_WINDOW_CHOICES_TO_2032);
+    });
+
+    test('given a report window past the last year then the panel offers it ending on that year', async () => {
+      // When
+      await renderUkPanel(TEN_YEAR_WINDOW_FROM_2026);
+
+      // Then
+      expect(screen.getByRole('combobox', { name: 'Years' })).toHaveTextContent(
+        '2026–2032 · 7 years'
+      );
+    });
+
+    test('given a report window past the last year then a recompute scores only the years up to it', async () => {
+      // Given
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'Higher personal allowance (adjusted)' });
+      const user = await renderUkPanel(TEN_YEAR_WINDOW_FROM_2026);
+
+      // When
+      const input = screen.getByLabelText(/new value for/i);
+      await user.clear(input);
+      await user.type(input, '14000');
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockRun.mock.calls[0][5]).toMatchObject({ windowYears: 7 });
+    });
+  });
+
+  describe('given a US report and the years the US model covers', () => {
+    afterEach(() => {
+      store.dispatch(clearMetadata());
+    });
+
+    test('given a report from 2026 then the ten-year window is still offered', async () => {
+      // Given: the US model's years run to 2035
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+      seedModelYears({
+        countryId: 'us',
+        firstYear: US_FIRST_SUPPORTED_YEAR,
+        lastYear: US_LAST_SUPPORTED_YEAR,
+        regions: US_REGIONS,
+      });
+      const user = userEvent.setup();
+      await renderPanel({ year: '2026' });
+
+      // When
+      await user.click(screen.getByRole('combobox', { name: 'Years' }));
+
+      // Then
+      expect(
+        await screen.findByRole('option', { name: '2026–2035 · 10 years' })
+      ).toBeInTheDocument();
     });
   });
 });

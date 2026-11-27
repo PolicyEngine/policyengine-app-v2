@@ -1,5 +1,43 @@
 [
   {
+    "title": "Ofgem's January 2027 energy price cap: what it means for household energy bills",
+    "description": "Ofgem's January to March 2027 cap is £2,166 a year for typical use, +25.7% on October to December. Holding energy use fixed, we estimate average household energy spending in Great Britain changes by +£415 a year.",
+    "date": "2026-11-25 09:00:00",
+    "tags": ["uk", "policy"],
+    "authors": ["vahid-ahmadi", "maria-juaristi"],
+    "filename": "uk-energy-price-cap-january-2027.md",
+    "image": "uk-energy-price-cap-january-2027/cover.webp",
+    "imageCredit": "Nick Kane on Unsplash"
+  },
+  {
+    "title": "The Milburn review: PolicyEngine's briefing on its proposals for young people's benefits",
+    "description": "PolicyEngine estimates how ending the UC health element and PIP for young people, without the replacements Alan Milburn's review proposes, would affect public finances and incomes.",
+    "date": "2026-11-22 09:00:00",
+    "tags": ["uk", "policy"],
+    "authors": ["vahid-ahmadi", "maria-juaristi"],
+    "filename": "uk-milburn-review-briefing.md",
+    "image": "uk-milburn-review-briefing/cover.webp",
+    "imageCredit": "Getty Images"
+  },
+  {
+    "title": "What Cornwall Insight's January 2027 price cap forecast would mean for household energy bills",
+    "description": "Cornwall Insight forecasts a 26% rise in the price cap in January 2027. PolicyEngine estimates it would add £415 a year to average household energy spending.",
+    "date": "2026-11-19 09:00:00",
+    "tags": ["uk", "policy"],
+    "authors": ["vahid-ahmadi", "maria-juaristi"],
+    "filename": "uk-energy-price-cap-january-2027-forecast.md",
+    "image": "energy-autumn-budget.jpg"
+  },
+  {
+    "title": "How states tax military retired pay in 2026",
+    "description": "Twenty-eight states exempt all military retired pay from income tax in 2026. We calculate how the pay changes federal and state income tax for two couples in every state.",
+    "date": "2026-11-11 08:00:00",
+    "tags": ["us", "policy", "tax"],
+    "authors": ["max-ghenis", "david-trimmer"],
+    "filename": "military-retired-pay-state-taxes-2026.md",
+    "image": "military-retired-pay-state-taxes-2026/cover.webp"
+  },
+  {
     "title": "Autumn Budget 2026: our briefing on what it means for households",
     "description": "We estimate the seven household measures we model cost \u00a33.11 billion in 2026-27 and raise net income by \u00a3107 per household on average that year. From 2028-29 they raise \u00a3166 million to \u00a3301 million a year, because the higher rates on property income bring in more than the other measures cost.",
     "date": "2026-10-29 07:00:00",
@@ -110,7 +148,7 @@
   {
     "title": "Who bears the AI shock? Distributional and fiscal incidence in the UK",
     "description": "PolicyEngine traces AI employment, wage and capital shocks through the UK tax-benefit system, estimating the budgetary and distributional impacts across incidence scenarios.",
-    "date": "2026-08-04",
+    "date": "2026-11-16",
     "tags": ["uk", "ai", "featured"],
     "authors": ["vahid-ahmadi"],
     "filename": "uk-ai-study.md",
@@ -1870,5 +1908,14 @@
     "authors": ["vahid-ahmadi"],
     "filename": "multi-agent-workflows-policy-research.md",
     "image": "multi-agent-workflows-policy-research.webp"
+  },
+  {
+    "title": "Federal tax inflation adjustments for tax year 2027",
+    "description": "PolicyEngine has updated its federal tax parameters to the IRS's 2027 inflation-adjusted amounts.",
+    "date": "2026-11-11 11:00:00",
+    "tags": ["us", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "federal-tax-inflation-adjustments-2027.md",
+    "image": "federal-tax-inflation-adjustments-2027/cover.webp"
   }
 ]

@@ -1,4 +1,5 @@
 import React from 'react';
+import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
@@ -16,10 +17,12 @@ import {
   TEST_COUNTRIES,
 } from '@/tests/fixtures/api/simulationMocks';
 import {
+  CACHED_SIMULATION,
   CONSOLE_MESSAGES,
   createMockStoreWithCountry,
   ERROR_MESSAGES,
   mockCreateSimulation,
+  mockCreateSimulationAnswerForCachedSimulation,
   mockCreateSimulationAssociationMutateAsync,
   mockResponseWithoutId,
   setupConsoleSpies,
@@ -422,6 +425,30 @@ describe('useCreateSimulation', () => {
       await waitFor(() => {
         expect(onSuccessMock).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('with the query normalizer the calculator mounts', () => {
+    test('given a cached simulation with the same ID then creating it again leaves the cached one as it was', async () => {
+      // Given: the calculator normalizes each mutation's answer into the cache by ID
+      const normalizedWrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryNormalizerProvider queryClient={queryClient}>
+          {wrapper({ children })}
+        </QueryNormalizerProvider>
+      );
+      const { result } = renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), {
+        wrapper: normalizedWrapper,
+      });
+      const cachedKey = ['simulations', 'simulation_id', SIMULATION_IDS.NEW];
+      queryClient.setQueryData(cachedKey, CACHED_SIMULATION);
+      (createSimulation as any).mockResolvedValue(mockCreateSimulationAnswerForCachedSimulation);
+
+      // When
+      await result.current.createSimulation(mockSimulationPayloadGeography);
+
+      // Then
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+      expect(queryClient.getQueryData(cachedKey)).toEqual(CACHED_SIMULATION);
     });
   });
 });

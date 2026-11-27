@@ -3,6 +3,11 @@
   "installCommand": "cd .. && bun install --frozen-lockfile",
   "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": ".next",
+  "functions": {
+    "src/app/api/household/**/*": {
+      "supportsCancellation": true
+    }
+  },
   "redirects": [
     {
       "source": "/uk/cec",

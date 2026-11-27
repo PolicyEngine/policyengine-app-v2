@@ -12,6 +12,7 @@ import {
 } from '@/components/ui';
 import { FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { useV3SearchCatalog } from '@/hooks/useV3SearchCatalog';
 import {
   currentLawForYear,
   DraftProvision,
@@ -41,7 +42,6 @@ import {
   setValueFromYear,
 } from '@/libs/flagship/uprating';
 import { getDateRange, getTaxYears } from '@/libs/metadataUtils';
-import { selectParameterEntriesByPath } from '@/libs/parameterSearch';
 import { ChangesCard } from '@/pages/reportBuilder/modals/policyCreation/ChangesCard';
 import { RootState } from '@/store';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -99,7 +99,7 @@ function fitsGrid(provision: DraftProvision | undefined): boolean {
  */
 export default function ProvisionDetails({ draft, path, group, focusPath }: ProvisionDetailsProps) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const entriesByPath = useSelector(selectParameterEntriesByPath);
+  const entriesByPath = useV3SearchCatalog().entriesByPath;
   const { minDate, maxDate } = useSelector(getDateRange);
   const taxYears = useSelector(getTaxYears);
   const year = draftYear(draft);

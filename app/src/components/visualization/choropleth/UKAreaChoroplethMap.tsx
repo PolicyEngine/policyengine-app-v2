@@ -5,7 +5,8 @@
  * boundaries with react-simple-maps, the same color scale, legend, tooltip,
  * frame and logo. Each area joins its boundary by ONS code (by name for an
  * older result without codes). A boundary with no result is grey, and its
- * tooltip says why (`missingAreaText`). `focusNation` draws one nation
+ * tooltip says why (`missingAreaText`), or, when `missingAreaTextCodes`
+ * does not name it, that it has no data. `focusNation` draws one nation
  * alone, as `focusState` does for a US state. `navigable` adds the flagship
  * district map's zoom buttons and fixed height; without it the map scales
  * with its width, as the v2 district map does.
@@ -89,6 +90,7 @@ export function UKAreaChoroplethMap({
   focusNation,
   exportRef,
   missingAreaText = DEFAULT_MISSING_AREA_TEXT,
+  missingAreaTextCodes,
   navigable = false,
   selectedId,
   onAreaClick,
@@ -164,6 +166,20 @@ export function UKAreaChoroplethMap({
   useEffect(() => {
     setView(initialView);
   }, [initialView]);
+
+  // The boundaries with no result that missingAreaText describes: all of
+  // them without a list of codes.
+  const describedMissingCodes = useMemo(
+    () => (missingAreaTextCodes ? new Set(missingAreaTextCodes) : null),
+    [missingAreaTextCodes]
+  );
+  const missingTextFor = useCallback(
+    (code: string | undefined) =>
+      !describedMissingCodes || (code && describedMissingCodes.has(code))
+        ? missingAreaText
+        : DEFAULT_MISSING_AREA_TEXT,
+    [describedMissingCodes, missingAreaText]
+  );
 
   const pointFor = useCallback(
     (code: string | undefined, name: string | undefined) =>
@@ -361,7 +377,7 @@ export function UKAreaChoroplethMap({
                         name ?? code ?? '',
                         point,
                         fullConfig.formatValue,
-                        missingAreaText
+                        missingTextFor(code)
                       );
 
                       return (

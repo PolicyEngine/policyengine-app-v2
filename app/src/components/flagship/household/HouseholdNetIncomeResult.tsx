@@ -4,10 +4,10 @@ import HouseholdBreakdowns, {
   type HouseholdBreakdownSource,
   type HouseholdBreakdownView,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
+import { money } from '@/components/flagship/report/household/householdMoney';
 import {
   householdHeadlineFigureStyle,
   householdHeadlineLabelStyle,
-  householdMoney,
   HouseholdOutputTabs,
   householdResultCardStyle,
 } from '@/components/flagship/report/household/householdResultParts';
@@ -73,7 +73,7 @@ export default function HouseholdNetIncomeResult({
           Annual net income
         </span>
         <span style={{ ...householdHeadlineFigureStyle, color: colors.text.primary }}>
-          {householdMoney(netIncome, countryId)}
+          {money(netIncome, countryId)}
         </span>
       </div>
 

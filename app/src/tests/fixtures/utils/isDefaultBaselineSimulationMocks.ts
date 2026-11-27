@@ -13,9 +13,10 @@ export const TEST_COUNTRIES = {
 export const EXPECTED_LABELS = {
   US: 'United States current law for all households nationwide',
   UK: 'United Kingdom current law for all households nationwide',
-  CA: 'Canada current law for all households nationwide',
-  NG: 'Nigeria current law for all households nationwide',
-  IL: 'Israel current law for all households nationwide',
+  // Canada, Nigeria and Israel, which the app no longer offers, have no names.
+  CA: 'CA current law for all households nationwide',
+  NG: 'NG current law for all households nationwide',
+  IL: 'IL current law for all households nationwide',
   UNKNOWN: 'XYZ current law for all households nationwide',
 } as const;
 

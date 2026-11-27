@@ -1,3 +1,8 @@
+import {
+  LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+  LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES,
+} from '@/tests/fixtures/components/visualization/choropleth/ukHexLayoutMocks';
+
 /**
  * A local authority in .py 6.10.0's list and the layout that the Public
  * API's region list names only from PolicyEngine/policyengine-api#4024 on.
@@ -59,3 +64,34 @@ export const WALES_WITHHELD_CONSTITUENCIES = {
 
 /** Scotland's constituencies in the layout. */
 export const SCOTLAND_CONSTITUENCY_COUNT = 57;
+
+/**
+ * A Wales breakdown's withheld constituencies when it lists them: Cardiff
+ * East and Cardiff West of the 32, with the list the hex map draws from.
+ */
+export const WALES_LISTED_WITHHELD_CONSTITUENCIES = {
+  withheld: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES.length,
+  total: WALES_CONSTITUENCY_COUNT,
+  listedCodes: LISTED_WITHHELD_WELSH_CONSTITUENCY_CODES,
+};
+
+/** A Wales breakdown's withheld constituencies when its list is empty. */
+export const WALES_EMPTY_LIST_WITHHELD_CONSTITUENCIES = {
+  withheld: 0,
+  total: WALES_CONSTITUENCY_COUNT,
+  listedCodes: [],
+};
+
+/** A Wales breakdown's withheld local authorities when it lists them: Swansea of the 22. */
+export const WALES_LISTED_WITHHELD_LOCAL_AUTHORITIES = {
+  withheld: LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES.length,
+  total: WALES_LOCAL_AUTHORITY_COUNT,
+  listedCodes: LISTED_WITHHELD_WELSH_LOCAL_AUTHORITY_CODES,
+};
+
+/** A Wales breakdown's withheld local authorities when its list is empty. */
+export const WALES_EMPTY_LIST_WITHHELD_LOCAL_AUTHORITIES = {
+  withheld: 0,
+  total: WALES_LOCAL_AUTHORITY_COUNT,
+  listedCodes: [],
+};

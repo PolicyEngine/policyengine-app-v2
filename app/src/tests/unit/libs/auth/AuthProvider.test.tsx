@@ -85,6 +85,9 @@ function Probe() {
       <button type="button" onClick={() => auth.signIn('/us/reforms?filter=yours')}>
         Sign in
       </button>
+      <button type="button" onClick={() => auth.signIn('/us/invitations/accept', { signUp: true })}>
+        Sign up
+      </button>
       <button type="button" onClick={() => auth.signOut()}>
         Sign out
       </button>
@@ -406,6 +409,26 @@ describe('AuthProvider', () => {
         audience: TEST_AUTH0_CONFIG.audience,
         redirect_uri: `${window.location.origin}/us/callback`,
         scope: 'openid profile email offline_access',
+      },
+    });
+  });
+
+  test('given sign up then Auth0 opens on its sign-up screen and returns to the requested page', async () => {
+    // Given
+    stubAuthEnv(true);
+    renderProvider('us');
+
+    // When
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Sign up' }));
+
+    // Then
+    expect(auth0.loginWithRedirect).toHaveBeenCalledWith({
+      appState: { returnTo: '/us/invitations/accept' },
+      authorizationParams: {
+        audience: TEST_AUTH0_CONFIG.audience,
+        redirect_uri: `${window.location.origin}/us/callback`,
+        scope: 'openid profile email offline_access',
+        screen_hint: 'signup',
       },
     });
   });
