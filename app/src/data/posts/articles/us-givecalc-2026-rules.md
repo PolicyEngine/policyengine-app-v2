@@ -11,23 +11,23 @@ Each household below lives in Texas, which has no state income tax, so the table
 
 ## Filers who take the standard deduction
 
-From 2026, filers who don't itemize can deduct up to $1,000 of cash gifts, or $2,000 on a joint return, on top of the standard deduction. For example, a $1,000 gift saves the $75,000 earner $220 at their 22% rate, and a $2,000 gift saves them the same $220. In 2025, only filers who itemized could deduct gifts, so the same $1,000 gift saved the $75,000 earner nothing.
+From 2026, filers who don't itemize can deduct up to $1,000 of qualifying cash gifts, or $2,000 on a joint return, on top of the standard deduction. For example, a $1,000 gift saves the $75,000 earner $220 at their 22% rate, and a $2,000 gift saves them the same $220. In 2025, only filers who itemized could deduct gifts, so the same $1,000 gift saved the $75,000 earner nothing.
 
 Cash gifts to churches, schools, food banks and other public charities count toward this deduction. Gifts into a donor-advised fund don't, and neither do gifts to most private foundations or to supporting organizations, charities that exist to support specific other charities. GiveCalc doesn't ask where a gift goes, so it counts any cash gift you enter toward the deduction.
 
 ## Filers who itemize
 
-From 2026, itemizers deduct only the part of the year's gifts above a floor of 0.5% of their adjusted gross income. For example, the $200,000 earner pays $20,000 of mortgage interest and $8,000 of property tax, so they itemize. They deduct nothing for the first $1,000 they give, 0.5% of their income. On a $10,000 gift, they deduct $9,000 and save $2,160 at their 24% rate; in 2025, they could deduct all $10,000.
+From 2026, itemizers deduct only the part of the year's gifts above 0.5% of their adjusted gross income before any net operating loss carryback. For example, the $200,000 earner pays $20,000 of mortgage interest and $8,000 of property tax, so they itemize. They deduct nothing for the first $1,000 they give, 0.5% of their income. On a $10,000 gift, they deduct $9,000 and save $2,160 at their 24% rate; in 2025, they could deduct all $10,000.
 
 ## Filers with the highest incomes
 
-In 2026, the 37% bracket starts at $640,600 of taxable income for single filers and $768,700 for joint filers. When a filer's taxable income before itemized deductions exceeds that threshold, they cut their itemized deductions, gifts included, by 2/37 of those deductions or 2/37 of the excess, whichever is less. Once the excess tops their itemized deductions, they keep 35/37 of each extra dollar they itemize.
+In 2026, the 37% bracket starts at $640,600 of taxable income for single filers and $768,700 for joint filers. When a filer's taxable income before itemized deductions exceeds that threshold, they cut their itemized deductions, gifts included, by 2/37 of those deductions or 2/37 of the excess, whichever is less. They apply this cut after the other limits on itemized deductions. Once the excess tops their itemized deductions, they keep 35/37 of each extra dollar they itemize.
 
-For example, the $1 million earner saves $27,978 by giving $100,000 and $31,478 by giving $110,000. The extra $10,000 lowers their taxable income by $9,459 and saves $3,500, or 35 cents a dollar, against 37 cents in 2025.
+For example, we estimate the $1 million earner saves $27,978 by giving $100,000 and $31,478 by giving $110,000. The extra $10,000 lowers their taxable income by $9,459 and saves $3,500, or 35 cents a dollar, against 37 cents in 2025.
 
 ## Giving two years at once
 
-For a 2026 gift, GiveCalc also compares giving it in each of 2026 and 2027 with giving twice as much in 2026 and nothing in 2027. It holds income and expenses the same in both years. For example, a [single filer in Texas earning $120,000](https://givecalc.org/?amount=10000&income=120000&state=TX&year=2026&property_tax=6000) pays $6,000 in property tax. If they give $10,000 in each of 2026 and 2027, they take the standard deduction both years, deduct $1,000 of each gift and save $220 a year. If they give $20,000 in 2026 and nothing in 2027, they itemize in 2026 and save $2,314 over the two years, $1,874 more. That year, they deduct the gift above the floor along with their property tax and the sales tax we estimate from their income.
+For a 2026 gift, GiveCalc also compares giving it in each of 2026 and 2027 with giving twice as much in 2026 and nothing in 2027. It keeps your income and expenses the same in 2027 and adds a year to each person's age. For example, a [single filer in Texas earning $120,000](https://givecalc.org/?amount=10000&income=120000&state=TX&year=2026&property_tax=6000) pays $6,000 in property tax. If they give $10,000 in each of 2026 and 2027, they take the standard deduction both years, deduct $1,000 of each gift and save $220 a year, $440 in all. If they give $20,000 in 2026 and nothing in 2027, they itemize in 2026, and we estimate they save $2,314 over the two years, $1,874 more. That year, they deduct the gift above the floor along with their property tax and the sales tax we estimate from their income.
 
 ## What GiveCalc counts
 
