@@ -123,6 +123,27 @@ describe('calculateV2Household', () => {
     expect(wait).not.toHaveBeenCalled();
   });
 
+  test('given a submission that has already finished and its first read fails with 503 then it is read again', async () => {
+    // Given
+    const { client, fetchMock } = routedClient({
+      [SUBMIT_CALCULATION]: () => submittedResponse(calculationItem()),
+      [READ_BASELINE]: [
+        () => errorResponse(503, 'The simulation service is unavailable.'),
+        () => calculationResponse(calculationItem()),
+      ],
+    });
+
+    // When
+    const calculation = await calculateV2Household(CURRENT_LAW_REQUEST, {
+      client,
+      wait: noWait,
+    });
+
+    // Then
+    expect(calculation).toEqual(calculationItem());
+    expect(requestsFor(fetchMock, READ_BASELINE)).toHaveLength(2);
+  });
+
   test('given a calculation that fails then it rejects with the reason and code the simulation service gave', async () => {
     // Given
     const { client } = routedClient({
