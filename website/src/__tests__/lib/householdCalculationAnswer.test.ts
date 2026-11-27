@@ -11,7 +11,10 @@ import {
 } from "@policyengine/public-api-forwarding";
 import { describe, expect, test, vi } from "vitest";
 
-import { householdCalculationAnswer } from "@/lib/dashboardApi/householdCalculationAnswer";
+import {
+  householdCalculationAnswer,
+  type ApiV1AnswerIds,
+} from "@/lib/dashboardApi/householdCalculationAnswer";
 
 const SITE_URL = "https://www.policyengine.org";
 const DASHBOARD_ORIGIN = "https://keep-your-pay-act.vercel.app";
@@ -97,9 +100,20 @@ function fakeLogger() {
   return { error: vi.fn(), warn: vi.fn() };
 }
 
+const LAST_ANSWER_IDS: ApiV1AnswerIds = {
+  requestId: "request-7f3a",
+  observabilityId: "obs-4d2c1b0a",
+};
+
 async function answerFor(
   outcome: CalculatedHousehold | Error,
-  incomingRequest = browserRequest(),
+  {
+    incomingRequest = browserRequest(),
+    lastAnswerIds,
+  }: {
+    incomingRequest?: Request;
+    lastAnswerIds?: ApiV1AnswerIds;
+  } = {},
 ) {
   const { calculator, calculateHousehold } = calculatorFinishingWith(outcome);
   const logger = fakeLogger();
@@ -107,6 +121,9 @@ async function answerFor(
     incomingRequest,
     responseHeaders: CORS_HEADERS,
     logger,
+    ...(lastAnswerIds === undefined
+      ? {}
+      : { lastAnswerIds: () => lastAnswerIds }),
   });
   return { response, calculateHousehold, logger };
 }
@@ -119,11 +136,13 @@ function refusedWith(
     retryAfterSeconds = null,
     requestId = null,
     observabilityId = null,
+    calculationId = null,
   }: {
     body?: unknown;
     retryAfterSeconds?: number | null;
     requestId?: string | null;
     observabilityId?: string | null;
+    calculationId?: string | null;
   } = {},
 ): HouseholdCalculationRefusedError {
   return new HouseholdCalculationRefusedError(message, {
@@ -133,7 +152,7 @@ function refusedWith(
     retryAfterSeconds,
     observabilityId,
     requestId,
-    calculationId: null,
+    calculationId,
   });
 }
 
@@ -177,6 +196,53 @@ describe("householdCalculationAnswer", () => {
     );
     expect(response.headers.get(ROUTE_ERROR_HEADER)).toBeNull();
   });
+
+  test("given the IDs of the API v1 answer the household came from then the answer carries them, as /calculate's did", async () => {
+    // When
+    const { response } = await answerFor(calculatedHousehold(), {
+      lastAnswerIds: LAST_ANSWER_IDS,
+    });
+
+    // Then
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-policyengine-request-id")).toBe(
+      "request-7f3a",
+    );
+    expect(response.headers.get("x-policyengine-observability-id")).toBe(
+      "obs-4d2c1b0a",
+    );
+  });
+
+  test.each([
+    ["invalid_inputs", 400],
+    ["calculation_failed", 500],
+  ])(
+    "given a calculation that fails with %s then the answer carries the IDs of the API v1 answer that said so",
+    async (code, statusCode) => {
+      // Given
+      const failure = new HouseholdCalculationFailedError(
+        "Error calculating household under policy: model exploded",
+        CALCULATION_ID,
+        code,
+        code === "invalid_inputs" ? [INVALID_INPUT_ERROR] : [],
+        null,
+      );
+
+      // When
+      const { response } = await answerFor(failure, {
+        lastAnswerIds: LAST_ANSWER_IDS,
+      });
+
+      // Then
+      expect(response.status).toBe(statusCode);
+      expect(response.headers.get("x-policyengine-request-id")).toBe(
+        "request-7f3a",
+      );
+      expect(response.headers.get("x-policyengine-observability-id")).toBe(
+        "obs-4d2c1b0a",
+      );
+    },
+  );
 
   test("given no warnings and no SPM provenance then the answer leaves both out, as /calculate's did", async () => {
     // When
@@ -228,15 +294,14 @@ describe("householdCalculationAnswer", () => {
     });
   });
 
-  test("given the browser's request then the calculation stops when the browser goes away", async () => {
+  test("given the browser's request then the calculator gets the request's signal", async () => {
     // Given
     const incomingRequest = browserRequest(new AbortController().signal);
 
     // When
-    const { calculateHousehold } = await answerFor(
-      calculatedHousehold(),
+    const { calculateHousehold } = await answerFor(calculatedHousehold(), {
       incomingRequest,
-    );
+    });
 
     // Then
     expect(calculateHousehold).toHaveBeenCalledWith(US_REQUEST, {
@@ -500,23 +565,68 @@ describe("householdCalculationAnswer", () => {
     expect((await response.json()).message).toBe("Too many requests");
   });
 
-  test("given API v1 accepted a request but its answer can't be read then it answers 502 as the route's own error", async () => {
+  test("given API v1 accepted a request but its answer can't be read then it answers 502 as the route's own error, and logs the helper's reason", async () => {
     // Given
-    const message =
+    const helperReason =
       "API v1 accepted the household calculation, but its answer has no calculation ID the helper can read, so the calculation, if one started, cannot be read.";
 
     // When
-    const { response, logger } = await answerFor(refusedWith(202, message));
+    const { response, logger } = await answerFor(
+      refusedWith(202, helperReason),
+    );
 
     // Then
     expect(response.status).toBe(502);
     expect(await response.json()).toEqual({
       status: "error",
-      message,
+      message: "API v1's answer could not be read.",
       result: null,
     });
     expect(response.headers.get(ROUTE_ERROR_HEADER)).toBe("true");
-    expect(logger.error).toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(helperReason),
+    );
+  });
+
+  test.each([400, 401, 403, 404, 409, 422])(
+    "given API v1 answers %i to a read of a calculation it accepted then it answers 502 as the route's own error and logs it",
+    async (statusCode) => {
+      // Given
+      const message = `Household calculation ${CALCULATION_ID} not found`;
+      const refusal = refusedWith(statusCode, message, {
+        calculationId: CALCULATION_ID,
+      });
+
+      // When
+      const { response, logger } = await answerFor(refusal);
+
+      // Then
+      expect(response.status).toBe(502);
+      expect(await response.json()).toEqual({
+        status: "error",
+        message: "API v1 could not read the household calculation it accepted.",
+        result: null,
+      });
+      expect(response.headers.get(ROUTE_ERROR_HEADER)).toBe("true");
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(CALCULATION_ID),
+      );
+    },
+  );
+
+  test("given API v1 limits the rate of reads of a calculation it accepted then the caller gets 429", async () => {
+    // Given
+    const refusal = refusedWith(429, "Too many requests", {
+      calculationId: CALCULATION_ID,
+      retryAfterSeconds: 30,
+    });
+
+    // When
+    const { response } = await answerFor(refusal);
+
+    // Then
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("30");
   });
 
   test("given the calculation doesn't finish within the helper's time limit then it answers 504 and logs the calculation", async () => {
@@ -592,7 +702,7 @@ describe("householdCalculationAnswer", () => {
     // When
     const { response, logger } = await answerFor(
       browserConnection.signal.reason as Error,
-      browserRequest(browserConnection.signal),
+      { incomingRequest: browserRequest(browserConnection.signal) },
     );
 
     // Then

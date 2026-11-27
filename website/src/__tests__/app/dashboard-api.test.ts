@@ -1,7 +1,9 @@
 // @vitest-environment node
 import {
+  DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS,
   HOUSEHOLD_CALCULATION_POLL_INTERVAL_MILLISECONDS,
   HOUSEHOLD_CALCULATION_TIME_LIMIT_MILLISECONDS,
+  TOKEN_REQUEST_TIMEOUT_MILLISECONDS,
 } from "@policyengine/public-api-forwarding";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -69,7 +71,10 @@ const SLOWEST_RECORDED_HOUSEHOLD_ANSWER_MILLISECONDS = 396_000;
 // submission started just before the limit takes at least 30 s, the read
 // owed after it up to 30 s, and each may first wait up to 10 s for a token.
 // Token waits before then count within the time limit.
-const LONGEST_CALL_AFTER_TIME_LIMIT_MILLISECONDS = 80_000;
+const LONGEST_CALL_AFTER_TIME_LIMIT_MILLISECONDS =
+  2 *
+  (DEFAULT_SERVER_REQUEST_TIMEOUT_MILLISECONDS +
+    TOKEN_REQUEST_TIMEOUT_MILLISECONDS);
 // Reading the request and streaming a large answer back.
 const BODY_TRANSFER_MILLISECONDS = 30_000;
 // Vercel's longest function duration on the Pro plan with Fluid compute.
@@ -78,6 +83,36 @@ const VERCEL_PRO_MAXIMUM_DURATION_SECONDS = 800;
 type CalculationStatus = "pending" | "running" | "succeeded";
 
 const fetchMock = vi.fn<typeof fetch>();
+
+/** The request ID API v1 gives its answer to the request at `requestIndex`. */
+function requestIdOf(requestIndex: number): string {
+  return `request-${requestIndex}`;
+}
+
+/** Adds API v1's request ID header to an answer. */
+function withRequestId(answer: Response, requestIndex: number): Response {
+  answer.headers.set("X-PolicyEngine-Request-Id", requestIdOf(requestIndex));
+  return answer;
+}
+
+/**
+ * Times requests out on the fake clock: fetchFromServer's
+ * AbortSignal.timeout otherwise runs on real time, which fake timers don't
+ * control.
+ */
+function timeOutRequestsOnTheFakeClock(): void {
+  vi.spyOn(AbortSignal, "timeout").mockImplementation((timeoutMilliseconds) => {
+    const timeoutController = new AbortController();
+    setTimeout(
+      () =>
+        timeoutController.abort(
+          new DOMException("The operation timed out.", "TimeoutError"),
+        ),
+      timeoutMilliseconds,
+    );
+    return timeoutController.signal;
+  });
+}
 
 function submittedAnswer(status: CalculationStatus): Response {
   return jsonAnswer(
@@ -137,7 +172,8 @@ function calculationAnswer(status: CalculationStatus): Response {
 /**
  * A fake API v1 whose household calculation goes through `statuses`:
  * the submission's answer gives the first, each read the next, and the
- * last repeats. The submission answers after
+ * last repeats. Each answer's request ID is `request-<n>`: 0 for the
+ * submission, then 1, 2, … for the reads. The submission answers after
  * `submissionAnswerAfterMilliseconds`; aborting it rejects it, as fetch
  * does. Other routes answer OTHER_ROUTE_ANSWER.
  */
@@ -151,7 +187,7 @@ function publicApiCalculating(
     if (url === SUBMISSION_URL && init?.method === "POST") {
       return new Promise<Response>((resolve, reject) => {
         const answerTimer = setTimeout(
-          () => resolve(submittedAnswer(statuses[0])),
+          () => resolve(withRequestId(submittedAnswer(statuses[0]), 0)),
           submissionAnswerAfterMilliseconds,
         );
         init.signal?.addEventListener(
@@ -167,7 +203,9 @@ function publicApiCalculating(
     if (url === CALCULATION_URL && init?.method === "GET") {
       readCount += 1;
       const status = statuses[Math.min(readCount, statuses.length - 1)];
-      return Promise.resolve(calculationAnswer(status));
+      return Promise.resolve(
+        withRequestId(calculationAnswer(status), readCount),
+      );
     }
     return Promise.resolve(jsonAnswer(OTHER_ROUTE_ANSWER));
   };
@@ -281,6 +319,9 @@ describe("POST /api/household/calculate", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(CALCULATION_ANSWER);
     expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("x-policyengine-request-id")).toBe(
+      requestIdOf(2),
+    );
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(publicApiCall(0)).toMatchObject({
       url: SUBMISSION_URL,
@@ -491,6 +532,7 @@ describe("POST /api/household/calculate", () => {
   test("given API v1 takes as long as its slowest recorded household answer to accept the calculation then the route still answers with the calculated household", async () => {
     // Given
     vi.useFakeTimers();
+    timeOutRequestsOnTheFakeClock();
     fetchMock.mockImplementation(
       publicApiCalculating(
         ["succeeded"],
