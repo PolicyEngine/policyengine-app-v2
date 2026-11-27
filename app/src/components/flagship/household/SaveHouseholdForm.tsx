@@ -55,8 +55,10 @@ export default function SaveHouseholdForm({
   saved?: SavedHousehold | null;
   /**
    * The saved household after the save. Not called for a save that
-   * finishes after the form has gone, as when the page opens another
-   * saved household (which gives the form a new key) while it runs.
+   * finishes after the form has gone: when the page opens another saved
+   * household (which gives the form a new key) while it runs, or when the
+   * page stops showing the form, as the standalone report does while the
+   * model's variables load.
    */
   onSaved?: (saved: SavedHousehold) => void;
 }) {

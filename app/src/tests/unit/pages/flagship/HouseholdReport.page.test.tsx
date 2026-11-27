@@ -600,13 +600,22 @@ describe('HouseholdReportPage', () => {
     expect(code).toMatch(new RegExp(`${UK_CLAIMANT_OR_PARTNER_VARIABLE}[^}]*False`));
   });
 
-  test("given the model's variables still loading then the report waits for them, with nothing to describe or calculate", () => {
+  test("given the model's variables still loading then the report waits for them, with nothing to describe, calculate or save", () => {
+    // Signed in, so the saved households and the save form would show.
+    const { fetchMock, context } = createTestApiContext('us');
+    mockSavedWork.mockReturnValue({ account: context, scope: 'account:test' });
+    const requests = routeRequests(fetchMock, {
+      'GET /v2/user-households': () => pageResponse([]),
+    });
     mockV3Variables.mockReturnValue({ status: 'loading', message: null, retry: vi.fn() });
     renderReport({ household: FAMILY_HOUSEHOLD });
 
     expect(screen.getByRole('status', { name: 'Loading the household report' })).toBeVisible();
     expect(screen.queryByLabelText('Household builder')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Saved households' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Household label' })).not.toBeInTheDocument();
+    expect(requests).toEqual([]);
   });
 
   describe('saved households', () => {
