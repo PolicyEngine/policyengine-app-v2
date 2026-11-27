@@ -100,5 +100,9 @@ export const calculationQueries = {
       query.state.data?.status === 'pending' ? pollIntervalMs : false,
     // A finished run doesn't change; the server caches it.
     staleTime: Infinity,
+    // Kept for the session, as UK local areas and state district runs are: a
+    // run still computing keeps its start time and highest progress here, so
+    // its bar carries on after the reader visits another page and returns.
+    gcTime: Infinity,
   }),
 };
