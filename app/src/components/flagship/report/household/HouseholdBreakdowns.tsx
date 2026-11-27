@@ -10,6 +10,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPolicies } from '@/hooks/useFlagshipHousehold';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
 import { useV2HouseholdVariation } from '@/hooks/useV2HouseholdVariation';
+import type { CountryId } from '@/libs/countries';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
 import { normalizeHouseholdGroupAppKey } from '@/models/household/schema';
 import EarningsVariationSubPage from '@/pages/report-output/earnings-variation/EarningsVariationSubPage';
@@ -126,10 +127,18 @@ export interface HouseholdVariationSource {
   household: HouseholdCalculationData;
 }
 
-/** The person a variation varies: the household's head, as the outputs choose them. */
+/**
+ * The person a variation varies: the household's head, found as the
+ * outputs find it, by the country's groups. Every v3 household has "you",
+ * whom the lookup returns first, so the background variation and the
+ * charts name the same person and share one calculation.
+ */
 function variationPersonName(source: HouseholdVariationSource): string | null {
   return getHeadOfHouseholdPersonName(
-    { householdData: toAppCalculationData(source.household) } as HouseholdCalculationOutput,
+    {
+      countryId: source.countryId as CountryId,
+      householdData: toAppCalculationData(source.household),
+    },
     source.year
   );
 }
