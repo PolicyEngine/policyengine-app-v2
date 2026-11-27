@@ -1,5 +1,5 @@
-import { render, screen } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { act, render, screen } from '@test-utils';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import RunProgress, { runStageCaption } from '@/components/flagship/report/RunProgress';
 import { clockProgress, runProgressValue } from '@/libs/calculations/runProgress';
 
@@ -116,6 +116,41 @@ describe('RunProgress', () => {
 
     // Then
     expect(screen.getByText(/· 24%/)).toBeInTheDocument();
+  });
+
+  describe('given the run’s first request is sent after the bar appears', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    test('then the bar measures from that request, as a bar shown later for the run does', () => {
+      // Given - a bill's bar appears while its reform policy is still being created
+      vi.useFakeTimers();
+      const barAppearedAt = Date.now();
+      const typicalStateRunMs = 190_000;
+      const policyCreationMs = 5_000;
+      const { rerender } = render(
+        <RunProgress title="Calculating the full results" expectedMs={typicalStateRunMs} />
+      );
+      act(() => vi.advanceTimersByTime(policyCreationMs));
+
+      // When - the run's first request is sent, then 95 seconds pass
+      rerender(
+        <RunProgress
+          title="Calculating the full results"
+          expectedMs={typicalStateRunMs}
+          progress={0}
+          startedAt={barAppearedAt + policyCreationMs}
+        />
+      );
+      act(() => vi.advanceTimersByTime(95_000));
+
+      // Then - 95 seconds of a 190-second run: half of 85%
+      expect(
+        screen.getByRole('progressbar', { name: 'Calculating the full results, about 43%' })
+      ).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent('1m 35s');
+    });
   });
 
   test('given a run past its typical time then the bar still moves and says it takes longer', () => {

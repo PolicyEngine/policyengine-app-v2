@@ -140,6 +140,14 @@ describe('calculationQueries', () => {
       expect(queryOptions.staleTime).toBe(Infinity);
     });
 
+    it('given an economy run then its cache entry is kept after the page using it closes', () => {
+      // When
+      const queryOptions = economyRunOptions();
+
+      // Then - its start time and highest progress outlast a visit to another page
+      expect(queryOptions.gcTime).toBe(Infinity);
+    });
+
     it('given a status in the cache then queryFn passes it to the strategy', async () => {
       // Given
       const queryClient = new QueryClient();

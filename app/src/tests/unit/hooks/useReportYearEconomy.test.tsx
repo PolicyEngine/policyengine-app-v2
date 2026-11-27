@@ -31,6 +31,9 @@ const args = {
 /** How often a year still computing is checked on. */
 const REPORT_YEAR_POLL_INTERVAL_MS = 2000;
 
+/** How long React Query keeps a query no component uses, unless told otherwise. */
+const REACT_QUERY_DEFAULT_GC_TIME_MS = 5 * 60 * 1000;
+
 const COMPUTING_YEAR = { status: 'pending', progress: 10, message: 'Computing...' };
 
 /** A year still computing, as the strategy answers it: with the request's metadata. */
@@ -157,6 +160,33 @@ describe('report year checks give the strategy the last status', () => {
 
     // Then
     expect(result.current[year].startedAt).toBe(execute.mock.calls[0][1].startedAt);
+  });
+
+  test('given the page is left for longer than the cache keeps unused queries by default then a computing year keeps its first start time', async () => {
+    // Given - one query cache for the page opened, left and opened again
+    execute.mockImplementation(computingYearAsTheStrategyAnswers);
+    const sharedClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const sharedCache = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={sharedClient}>{children}</QueryClientProvider>
+    );
+    const { year, ...windowArgs } = args;
+    const firstVisit = renderHook(() => useReportYearEconomies({ ...windowArgs, years: [year] }), {
+      wrapper: sharedCache,
+    });
+    await waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+    firstVisit.unmount();
+    await act(() => vi.advanceTimersByTimeAsync(REACT_QUERY_DEFAULT_GC_TIME_MS + 60_000));
+
+    // When
+    renderHook(() => useReportYearEconomies({ ...windowArgs, years: [year] }), {
+      wrapper: sharedCache,
+    });
+    await act(() => vi.advanceTimersByTimeAsync(REPORT_YEAR_POLL_INTERVAL_MS));
+
+    // Then
+    const lastRequest = execute.mock.calls[execute.mock.calls.length - 1];
+    expect(execute.mock.calls.length).toBeGreaterThan(1);
+    expect(lastRequest[1].startedAt).toBe(execute.mock.calls[0][1].startedAt);
   });
 
   test('given a requested year of the window failed then trying it again starts a new clock', async () => {
