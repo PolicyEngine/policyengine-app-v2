@@ -1,0 +1,15 @@
+# The comparables gate (docs/engineering/skills/repository-guidance.md,
+# "Research entries need a comparables record"): a change to what it checks,
+# to the lists of entries and pages it exempts, or to the route map other
+# repositories read, asks for Max's review.
+/website/src/data/comparables.ts @MaxGhenis
+/website/src/data/comparablesGrandfathered.json @MaxGhenis
+/website/src/data/analysisRoutes.ts @MaxGhenis
+/website/src/data/analysisRoutes.json @MaxGhenis
+/website/scripts/build-analysis-routes.ts @MaxGhenis
+/website/src/__tests__/content/comparables*.test.ts @MaxGhenis
+/website/src/__tests__/content/posts-and-apps-data.test.ts @MaxGhenis
+/website/src/__tests__/content/routing.ts @MaxGhenis
+/website/src/__tests__/content/fixtures/comparables_fresh_cases.json @MaxGhenis
+/.github/workflows/comparables-gate.yml @MaxGhenis
+/.github/CODEOWNERS @MaxGhenis

@@ -9,6 +9,13 @@ This folder contains the blog posts for PolicyEngine.
 - `authors.json` - Author information
 - `images/` - Legacy image folder (do not use for new posts)
 
+## Comparables
+
+A new post needs a `comparables` block in its `posts.json` entry, a record of its
+comparables search (or, for an event or announcement, a `no_estimate` declaration): see
+"Research entries need a comparables record" in
+`docs/engineering/skills/repository-guidance.md`.
+
 ## Adding Images to Blog Posts
 
 **Important**: Images should be stored in `app/public/assets/posts/{post-name}/` and referenced with absolute paths.
